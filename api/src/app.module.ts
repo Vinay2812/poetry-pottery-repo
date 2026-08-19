@@ -12,11 +12,13 @@ import { APP_FILTER, APP_GUARD } from "@nestjs/core";
 import { GraphQLModule } from "@nestjs/graphql";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
-import { WinstonModule } from "nest-winston";
+import { WINSTON_MODULE_PROVIDER, WinstonModule } from "nest-winston";
+import type { Logger } from "winston";
 
 import { ClerkModule } from "@/common/clerk/clerk.module";
 import { AllExceptionsFilter } from "@/common/filters/all-exceptions.filter";
 import { createIntrospectionGuard } from "@/common/graphql/introspection.plugin";
+import { createGraphqlLoggingPlugin } from "@/common/graphql/logging.plugin";
 import {
   GqlThrottlerGuard,
   isStrictThrottled,
@@ -59,25 +61,29 @@ import { UsersModule } from "@/users/users.module";
         },
       ],
     }),
-    GraphQLModule.forRoot<ApolloDriverConfig>({
+    GraphQLModule.forRootAsync<ApolloDriverConfig>({
       driver: ApolloDriver,
-      // Dev writes schema.gql for tooling; production keeps the schema in memory
-      // (the container runs as a non-root user with a read-only app dir).
-      autoSchemaFile: env.isProduction
-        ? true
-        : join(process.cwd(), "schema.gql"),
-      sortSchema: true,
-      playground: false,
-      // Introspection is gated per-request: open in dev, key-protected in production.
-      introspection: true,
-      includeStacktraceInErrorResponses: !env.isProduction,
-      plugins: [
-        createIntrospectionGuard(),
-        ...(env.isProduction
-          ? []
-          : [ApolloServerPluginLandingPageLocalDefault({ embed: true })]),
-      ],
-      context: ({ req, res }: GqlContext): GqlContext => ({ req, res }),
+      inject: [WINSTON_MODULE_PROVIDER],
+      useFactory: (logger: Logger): ApolloDriverConfig => ({
+        // Dev writes schema.gql for tooling; production keeps the schema in memory
+        // (the container runs as a non-root user with a read-only app dir).
+        autoSchemaFile: env.isProduction
+          ? true
+          : join(process.cwd(), "schema.gql"),
+        sortSchema: true,
+        playground: false,
+        // Introspection is gated per-request: open in dev, key-protected in production.
+        introspection: true,
+        includeStacktraceInErrorResponses: !env.isProduction,
+        plugins: [
+          createIntrospectionGuard(),
+          createGraphqlLoggingPlugin(logger),
+          ...(env.isProduction
+            ? []
+            : [ApolloServerPluginLandingPageLocalDefault({ embed: true })]),
+        ],
+        context: ({ req, res }: GqlContext): GqlContext => ({ req, res }),
+      }),
     }),
     ClerkModule,
     PrismaModule,
