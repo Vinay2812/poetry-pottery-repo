@@ -26,6 +26,7 @@ import { createWinstonOptions } from "@/common/logger/winston.config";
 import { RequestIdMiddleware } from "@/common/middleware/request-id.middleware";
 import type { GqlContext } from "@/common/types/express";
 import { env } from "@/config/env";
+import { CategoriesModule } from "@/categories/categories.module";
 import { HealthModule } from "@/health/health.module";
 import { PrismaModule } from "@/prisma/prisma.module";
 import { UsersModule } from "@/users/users.module";
@@ -82,6 +83,7 @@ import { UsersModule } from "@/users/users.module";
     PrismaModule,
     HealthModule,
     UsersModule,
+    CategoriesModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: GqlThrottlerGuard },
