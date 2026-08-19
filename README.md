@@ -1,12 +1,14 @@
-# Next.js, NextJS, GraphQL API
+# Poetry & Pottery
 
-Fresh boilerplate: Next.js frontend, NestJS GraphQL API, and local infra — three independent apps in one repo (no workspace, nothing shared; each folder has its own `package.json` and lockfile).
+E-commerce platform for handcrafted pottery with workshop/event management — the `poetry-and-pottery-workspace` projects combined into this repo. Next.js frontend, NestJS GraphQL API, and local infra — three independent apps in one repo (no workspace, nothing shared; each folder has its own `package.json` and lockfile).
 
 | Folder      | What                                             | Port        |
 | ----------- | ------------------------------------------------ | ----------- |
-| `frontend/` | Next.js 16 (App Router, React 19, Tailwind 4)    | 3005        |
-| `api/`      | NestJS 11 GraphQL API (Apollo, Prisma, Postgres) | 5050        |
+| `frontend/` | Next.js 16 (App Router, React 19, Tailwind 4)    | 3030        |
+| `api/`      | NestJS 11 GraphQL API (Apollo, Prisma, Postgres) | 6060        |
 | `infra/`    | docker (Postgres 17 + pgvector, Redis 8) + k8s   | 5433 / 6381 |
+
+> Local dev currently uses the `poetry-and-pottery-infra` Postgres from the parent workspace (`localhost:5435`, db `poetry-and-pottery`) via `api/.env` `DATABASE_URL` — not this repo's `infra/` compose on 5433.
 
 ## Prerequisites
 
@@ -24,14 +26,14 @@ cd api
 cp .env.example .env            # fill in Clerk keys
 pnpm install
 pnpm migration:apply
-pnpm dev                        # http://localhost:5050/graphql
+pnpm dev                        # http://localhost:6060/graphql
 
 # 3. Frontend (new terminal)
 cd frontend
 cp .env.example .env.local      # fill in Clerk keys
 pnpm install
 pnpm codegen                    # introspects the running API (or SCHEMA_URL=../api/schema.gql offline)
-pnpm dev                        # http://localhost:3005
+pnpm dev                        # http://localhost:3030
 
 # 4. Git hooks (repo root, once)
 pnpm install
@@ -46,7 +48,7 @@ pnpm install
 | `api/`      | `pnpm migration:create`                                         | Create a migration from schema changes                     |
 | `api/`      | `pnpm db:studio`                                                | Prisma Studio                                              |
 | `api/`      | `pnpm test` / `pnpm build`                                      | Vitest / production build                                  |
-| `frontend/` | `pnpm dev`                                                      | Next dev server on 3005                                    |
+| `frontend/` | `pnpm dev`                                                      | Next dev server on 3030                                    |
 | `frontend/` | `pnpm codegen`                                                  | Regenerate typed hooks (running API or schema file)        |
 | `frontend/` | `pnpm storybook`                                                | Storybook on 6006                                          |
 | `frontend/` | `pnpm test` / `pnpm tsc`                                        | Vitest / typecheck                                         |

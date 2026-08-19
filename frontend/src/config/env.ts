@@ -7,7 +7,7 @@ const logLevelSchema = z.enum(["error", "warn", "info", "debug"]);
 export type LogLevel = z.infer<typeof logLevelSchema>;
 
 const clientSchema = z.object({
-  NEXT_PUBLIC_API_URL: z.url().default("http://localhost:5050/graphql"),
+  NEXT_PUBLIC_API_URL: z.url().default("http://localhost:6060/graphql"),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z
     .string()
     .min(1, "must be a Clerk publishable key"),

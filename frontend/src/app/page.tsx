@@ -8,10 +8,10 @@ export default function HomePage() {
       <main className="flex flex-1 flex-col items-center justify-center gap-12 px-6 py-20">
         <div className="flex max-w-xl flex-col items-center gap-4 text-center">
           <h1 className="font-heading text-4xl font-medium tracking-tight text-balance">
-            Next.js, NextJS, GraphQL API
+            Poetry & Pottery
           </h1>
           <p className="text-muted-foreground">
-            A typed GraphQL starter for the Next.js, NextJS, GraphQL API
+            Handcrafted pottery, workshops, and events — the Poetry & Pottery
             platform.
           </p>
         </div>

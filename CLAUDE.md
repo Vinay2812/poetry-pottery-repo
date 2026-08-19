@@ -1,6 +1,6 @@
-# CLAUDE.md — boilerplate repo
+# CLAUDE.md — poetry-pottery repo
 
-Three independent apps, no workspace, nothing shared: `frontend/` (Next.js 16, port 3005), `api/` (NestJS 11 GraphQL, port 5050), `infra/` (docker compose: Postgres 17 + pgvector on 5433, Redis 8 on 6381). Package manager is pnpm everywhere. Node 24.
+Poetry & Pottery: e-commerce for handcrafted pottery with workshop/event management (combined here from `poetry-and-pottery-workspace`). Three independent apps, no workspace, nothing shared: `frontend/` (Next.js 16, port 3030), `api/` (NestJS 11 GraphQL, port 6060), `infra/` (docker compose: Postgres 17 + pgvector on 5433, Redis 8 on 6381; local dev currently points `DATABASE_URL` at the parent workspace's Postgres on 5435 instead). Package manager is pnpm everywhere. Node 24.
 
 This file OVERRIDES any parent/workspace CLAUDE.md where they conflict.
 

@@ -1,12 +1,12 @@
 {
-  "name": "frontend",
+  "name": "poetry-pottery-frontend",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "pnpm codegen && next dev -p 3030",
     "build": "next build",
-    "start": "next start -p 3000",
+    "start": "next start -p 3030",
     "tsc": "tsc --noEmit",
     "lint": "eslint",
     "prettier": "prettier --check .",

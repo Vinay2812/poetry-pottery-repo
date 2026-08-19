@@ -8,7 +8,7 @@ export function Header() {
     <header className="w-full bg-cream">
       <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-6">
         <span className="font-heading text-lg font-medium tracking-tight text-primary">
-          Next.js, NextJS, GraphQL API
+          Poetry & Pottery
         </span>
         <div className="flex items-center gap-3">
           <Show when="signed-out">

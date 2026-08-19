@@ -9,8 +9,8 @@ import { fontVariables } from "@/lib/fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Next.js, NextJS, GraphQL API",
-  description: "Next.js, NextJS, GraphQL API",
+  title: "Poetry & Pottery",
+  description: "Handcrafted pottery e-commerce and pottery workshops",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

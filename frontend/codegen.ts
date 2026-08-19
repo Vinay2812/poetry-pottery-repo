@@ -13,7 +13,7 @@ for (const file of [".env.local", ".env"]) {
 
 // http(s) URLs introspect the protected endpoint; anything else is a schema file path
 // (the pre-push hook uses ../api/schema.gql so pushes never need a running server).
-const schemaUrl = process.env.SCHEMA_URL ?? "http://localhost:5050/graphql";
+const schemaUrl = process.env.SCHEMA_URL ?? "http://localhost:6060/graphql";
 const schemaPointer = schemaUrl.startsWith("http")
   ? {
       [schemaUrl]: {

@@ -1,7 +1,7 @@
 # Frontend
 
 Next.js 16 (App Router, Turbopack) + React 19 + Tailwind 4 + Apollo Client 4 +
-Clerk, wired to the sibling NestJS GraphQL API in `../api` (port 5050).
+Clerk, wired to the sibling NestJS GraphQL API in `../api` (port 6060).
 
 ## Setup
 
@@ -9,7 +9,7 @@ Clerk, wired to the sibling NestJS GraphQL API in `../api` (port 5050).
 pnpm install
 cp .env.example .env.local   # fill in real Clerk keys
 pnpm codegen                 # regenerate typed hooks (introspects the running API)
-pnpm dev                     # http://localhost:3005
+pnpm dev                     # http://localhost:3030
 ```
 
 Environment variables are validated by zod in `src/config/env.ts` and the app
@@ -17,7 +17,7 @@ fails fast with a readable message when one is missing or invalid.
 
 | Variable                            | Scope   | Notes                                       |
 | ----------------------------------- | ------- | ------------------------------------------- |
-| `NEXT_PUBLIC_API_URL`               | client  | Defaults to `http://localhost:5050/graphql` |
+| `NEXT_PUBLIC_API_URL`               | client  | Defaults to `http://localhost:6060/graphql` |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | client  | Required                                    |
 | `CLERK_SECRET_KEY`                  | server  | Required                                    |
 | `NEXT_PUBLIC_LOG_LEVEL`             | client  | `error\|warn\|info\|debug`                  |
@@ -54,9 +54,9 @@ reaches the client bundle.
 
 | Command                | What it does                                                                              |
 | ---------------------- | ----------------------------------------------------------------------------------------- |
-| `pnpm dev`             | Dev server on port 3005                                                                   |
+| `pnpm dev`             | Dev server on port 3030                                                                   |
 | `pnpm build`           | Production build (Turbopack, React Compiler enabled)                                      |
-| `pnpm start`           | Serve the production build on port 3005                                                   |
+| `pnpm start`           | Serve the production build on port 3030                                                   |
 | `pnpm codegen`         | Regenerate hooks via protected introspection (`SCHEMA_URL=../api/schema.gql` for offline) |
 | `pnpm tsc`             | `tsc --noEmit`                                                                            |
 | `pnpm lint`            | ESLint (incl. React Compiler rules)                                                       |

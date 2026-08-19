@@ -15,8 +15,8 @@ describe("envSchema", () => {
     const parsed = envSchema.parse(validSource);
 
     expect(parsed.NODE_ENV).toBe("development");
-    expect(parsed.PORT).toBe(5050);
-    expect(parsed.CORS_ORIGINS).toEqual(["http://localhost:3005"]);
+    expect(parsed.PORT).toBe(6060);
+    expect(parsed.CORS_ORIGINS).toEqual(["http://localhost:3030"]);
     expect(parsed.THROTTLE_DEFAULT_LIMIT).toBe(100);
     expect(parsed.THROTTLE_SHORT_TTL_MS).toBe(1000);
     expect(parsed.THROTTLE_STRICT_LIMIT).toBe(5);

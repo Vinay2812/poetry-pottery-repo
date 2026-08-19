@@ -1,7 +1,7 @@
 {
-  "name": "api",
+  "name": "poetry-pottery-api",
   "version": "0.0.1",
-  "description": "Next.js, NextJS, GraphQL API",
+  "description": "Poetry & Pottery GraphQL API (NestJS)",
   "author": "",
   "private": true,
   "license": "UNLICENSED",

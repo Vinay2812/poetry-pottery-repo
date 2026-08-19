@@ -57,7 +57,7 @@ export function UserProfile({
     return (
       <Card className="w-full max-w-sm">
         <CardHeader>
-          <CardTitle>Welcome to Next.js, NextJS, GraphQL API</CardTitle>
+          <CardTitle>Welcome to Poetry & Pottery</CardTitle>
           <CardDescription>Sign in to see your profile.</CardDescription>
         </CardHeader>
         <CardContent>

@@ -14,7 +14,7 @@ services:
     # Runtime app env (Clerk keys, schema key, log level, throttles) comes from api/.env.
     env_file: ../../api/.env
     ports:
-      - "5050:5050"
+      - "6060:6060"
     networks:
       - backend
     depends_on:

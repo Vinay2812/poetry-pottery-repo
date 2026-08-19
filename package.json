@@ -1,8 +1,8 @@
 {
-  "name": "boilerplate",
+  "name": "poetry-pottery",
   "version": "0.0.1",
   "private": true,
-  "description": "Git hook host only — app code lives in frontend/ and api/, each with its own packages.",
+  "description": "Poetry & Pottery — handcrafted pottery e-commerce and workshops. Root is the git hook host only; app code lives in frontend/ and api/, each with its own packages.",
   "engines": {
     "node": ">=24"
   },

@@ -35,9 +35,9 @@ export const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
     .default("development"),
-  PORT: port(5050),
+  PORT: port(6060),
   DATABASE_URL: z.url(),
-  CORS_ORIGINS: csv("http://localhost:3005"),
+  CORS_ORIGINS: csv("http://localhost:3030"),
   LOG_LEVEL: z.enum(logLevels).optional(),
   CLERK_PUBLISHABLE_KEY: z.string().min(1),
   CLERK_SECRET_KEY: z.string().min(1),
