@@ -1,6 +1,6 @@
 import { ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { AuthProvider, Role, type User } from "@prisma/client";
+import { UserRole, type User } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createHttpExecutionContext } from "@test/helpers/execution-context";
@@ -13,19 +13,21 @@ import { AuthGuard } from "./auth.guard";
 function makeUser(overrides: Partial<User> = {}): User {
   return {
     id: 1,
-    authId: "user_1",
-    authProvider: AuthProvider.CLERK,
+    auth_id: "user_1",
     email: "potter@example.com",
+    phone: null,
     name: "Potter",
-    role: Role.USER,
-    createdAt: new Date("2026-01-01T00:00:00.000Z"),
-    updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    image: null,
+    role: UserRole.USER,
+    subscribed_to_newsletter: false,
+    newsletter_subscribed_at: null,
+    created_at: new Date("2026-01-01T00:00:00.000Z"),
+    updated_at: new Date("2026-01-01T00:00:00.000Z"),
     ...overrides,
   };
 }
 
 const clerkMock = {
-  provider: AuthProvider.CLERK,
   getAuthId: vi.fn(),
   fetchProfile: vi.fn(),
 };
@@ -42,7 +44,6 @@ describe("AuthGuard", () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
-    clerkMock.provider = AuthProvider.CLERK;
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -67,7 +68,7 @@ describe("AuthGuard", () => {
   });
 
   it("provisions the user on first sight and attaches it to the request", async () => {
-    const created = makeUser({ id: 42, authId: "user_42" });
+    const created = makeUser({ id: 42, auth_id: "user_42" });
     clerkMock.getAuthId.mockReturnValue("user_42");
     clerkMock.fetchProfile.mockResolvedValue({
       email: "potter@example.com",
@@ -84,12 +85,7 @@ describe("AuthGuard", () => {
     expect(clerkMock.fetchProfile).toHaveBeenCalledWith("user_42");
     expect(prismaMock.user.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: {
-          authProvider_authId: {
-            authProvider: AuthProvider.CLERK,
-            authId: "user_42",
-          },
-        },
+        where: { auth_id: "user_42" },
       }),
     );
     expect(request.currentUser).toEqual(created);
@@ -127,7 +123,6 @@ describe("AdminGuard", () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
-    clerkMock.provider = AuthProvider.CLERK;
 
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -144,7 +139,7 @@ describe("AdminGuard", () => {
   it("allows administrators", async () => {
     clerkMock.getAuthId.mockReturnValue("user_1");
     prismaMock.user.findUnique.mockResolvedValue(
-      makeUser({ role: Role.ADMIN }),
+      makeUser({ role: UserRole.ADMIN }),
     );
 
     await expect(
@@ -154,7 +149,9 @@ describe("AdminGuard", () => {
 
   it("rejects non-administrators", async () => {
     clerkMock.getAuthId.mockReturnValue("user_1");
-    prismaMock.user.findUnique.mockResolvedValue(makeUser({ role: Role.USER }));
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeUser({ role: UserRole.USER }),
+    );
 
     await expect(
       adminGuard.canActivate(createHttpExecutionContext({ request: {} })),

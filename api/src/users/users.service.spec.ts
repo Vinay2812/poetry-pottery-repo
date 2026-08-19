@@ -1,5 +1,5 @@
 import { Test } from "@nestjs/testing";
-import { AuthProvider, Role, type User } from "@prisma/client";
+import { UserRole, type User } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
@@ -8,13 +8,16 @@ import { MAX_PAGE_SIZE, UsersService } from "./users.service";
 function makeUser(overrides: Partial<User> = {}): User {
   return {
     id: 1,
-    authId: "user_1",
-    authProvider: AuthProvider.CLERK,
+    auth_id: "user_1",
     email: "potter@example.com",
+    phone: null,
     name: "Potter",
-    role: Role.USER,
-    createdAt: new Date("2026-01-01T00:00:00.000Z"),
-    updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    image: null,
+    role: UserRole.USER,
+    subscribed_to_newsletter: false,
+    newsletter_subscribed_at: null,
+    created_at: new Date("2026-01-01T00:00:00.000Z"),
+    updated_at: new Date("2026-01-01T00:00:00.000Z"),
     ...overrides,
   };
 }
@@ -55,7 +58,7 @@ describe("UsersService", () => {
       expect(prismaMock.user.findMany).toHaveBeenCalledWith({
         skip: 0,
         take: 20,
-        orderBy: { createdAt: "desc" },
+        orderBy: { created_at: "desc" },
       });
     });
 
@@ -68,7 +71,7 @@ describe("UsersService", () => {
       expect(prismaMock.user.findMany).toHaveBeenCalledWith({
         skip: 20,
         take: 10,
-        orderBy: { createdAt: "desc" },
+        orderBy: { created_at: "desc" },
       });
     });
 
@@ -84,20 +87,13 @@ describe("UsersService", () => {
   });
 
   describe("findByAuth", () => {
-    it("looks the user up by the composite unique key", async () => {
+    it("looks the user up by the unique auth id", async () => {
       const user = makeUser();
       prismaMock.user.findUnique.mockResolvedValue(user);
 
-      await expect(
-        service.findByAuth(AuthProvider.CLERK, "user_1"),
-      ).resolves.toEqual(user);
+      await expect(service.findByAuth("user_1")).resolves.toEqual(user);
       expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
-        where: {
-          authProvider_authId: {
-            authProvider: AuthProvider.CLERK,
-            authId: "user_1",
-          },
-        },
+        where: { auth_id: "user_1" },
       });
     });
   });
@@ -109,7 +105,6 @@ describe("UsersService", () => {
       const loadProfile = vi.fn();
 
       const result = await service.provisionFromAuth({
-        provider: AuthProvider.CLERK,
         authId: "user_1",
         loadProfile,
       });
@@ -120,7 +115,7 @@ describe("UsersService", () => {
     });
 
     it("provisions a new user with the USER role on first sight", async () => {
-      const created = makeUser({ id: 7, authId: "user_7" });
+      const created = makeUser({ id: 7, auth_id: "user_7" });
       prismaMock.user.findUnique.mockResolvedValue(null);
       prismaMock.user.upsert.mockResolvedValue(created);
       const loadProfile = vi
@@ -128,7 +123,6 @@ describe("UsersService", () => {
         .mockResolvedValue({ email: "potter@example.com", name: "Potter" });
 
       const result = await service.provisionFromAuth({
-        provider: AuthProvider.CLERK,
         authId: "user_7",
         loadProfile,
       });
@@ -136,18 +130,12 @@ describe("UsersService", () => {
       expect(result).toEqual(created);
       expect(loadProfile).toHaveBeenCalledTimes(1);
       expect(prismaMock.user.upsert).toHaveBeenCalledWith({
-        where: {
-          authProvider_authId: {
-            authProvider: AuthProvider.CLERK,
-            authId: "user_7",
-          },
-        },
+        where: { auth_id: "user_7" },
         create: {
-          authProvider: AuthProvider.CLERK,
-          authId: "user_7",
+          auth_id: "user_7",
           email: "potter@example.com",
           name: "Potter",
-          role: Role.USER,
+          role: UserRole.USER,
         },
         update: { email: "potter@example.com", name: "Potter" },
       });

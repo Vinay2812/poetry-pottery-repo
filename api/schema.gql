@@ -2,10 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-enum AuthProvider {
-  CLERK
-}
-
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -16,20 +12,23 @@ type Query {
   users(limit: Int = 20, page: Int = 1): UsersResponse!
 }
 
-enum Role {
-  ADMIN
-  USER
-}
-
 type User {
-  authId: String!
-  authProvider: AuthProvider!
-  createdAt: DateTime!
+  auth_id: String!
+  created_at: DateTime!
   email: String!
   id: Int!
+  image: String
   name: String
-  role: Role!
-  updatedAt: DateTime!
+  newsletter_subscribed_at: DateTime
+  phone: String
+  role: UserRole!
+  subscribed_to_newsletter: Boolean!
+  updated_at: DateTime!
+}
+
+enum UserRole {
+  ADMIN
+  USER
 }
 
 type UsersResponse {

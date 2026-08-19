@@ -18,7 +18,8 @@ export default defineConfig({
     include: ["src/**/*.spec.ts", "test/**/*.e2e-spec.ts"],
     env: {
       NODE_ENV: "test",
-      DATABASE_URL: "postgresql://boilerplate:boilerplate@localhost:5433/boilerplate",
+      DATABASE_URL:
+        "postgresql://boilerplate:boilerplate@localhost:5433/boilerplate",
       CLERK_PUBLISHABLE_KEY: "pk_test_Y2xlcmsuZXhhbXBsZS5jb20k",
       CLERK_SECRET_KEY: "sk_test_placeholder",
       SCHEMA_SYNC_KEY: "test-schema-key",

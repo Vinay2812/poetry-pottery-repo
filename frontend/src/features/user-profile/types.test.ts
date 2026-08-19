@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 
-import { AuthProvider, Role } from "@/graphql/generated/graphql";
+import { UserRole } from "@/graphql/generated/graphql";
 
 import {
-  toAuthProviderLabel,
   toDisplayName,
   toInitial,
   toMemberSince,
@@ -13,13 +12,15 @@ import {
 
 const user: ProfileUser = {
   id: 1,
-  authId: "user_123",
-  authProvider: AuthProvider.Clerk,
+  auth_id: "user_123",
   email: "maya@example.com",
+  phone: null,
   name: "Maya Iyer",
-  role: Role.User,
-  createdAt: "2024-03-14T10:00:00.000Z",
-  updatedAt: "2024-03-14T10:00:00.000Z",
+  image: null,
+  role: UserRole.User,
+  subscribed_to_newsletter: false,
+  created_at: "2024-03-14T10:00:00.000Z",
+  updated_at: "2024-03-14T10:00:00.000Z",
 };
 
 describe("toDisplayName", () => {
@@ -60,11 +61,7 @@ describe("toMemberSince", () => {
 
 describe("labels", () => {
   it("maps roles", () => {
-    expect(toRoleLabel(Role.Admin)).toBe("Admin");
-    expect(toRoleLabel(Role.User)).toBe("Member");
-  });
-
-  it("maps auth providers", () => {
-    expect(toAuthProviderLabel(AuthProvider.Clerk)).toBe("Clerk");
+    expect(toRoleLabel(UserRole.Admin)).toBe("Admin");
+    expect(toRoleLabel(UserRole.User)).toBe("Member");
   });
 });

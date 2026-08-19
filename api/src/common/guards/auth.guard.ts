@@ -37,7 +37,6 @@ export class AuthGuard implements CanActivate {
     }
 
     const user = await this.users.provisionFromAuth({
-      provider: this.clerk.provider,
       authId,
       loadProfile: () => this.clerk.fetchProfile(authId),
     });

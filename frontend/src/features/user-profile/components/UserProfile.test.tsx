@@ -14,7 +14,6 @@ const base: UserProfileProps = {
   roleLabel: "Member",
   isAdmin: false,
   memberSince: "March 2024",
-  authProviderLabel: "Clerk",
   onSignInClick: vi.fn(),
 };
 

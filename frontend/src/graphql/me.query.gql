@@ -1,12 +1,14 @@
 query Me {
   me {
     id
-    authId
-    authProvider
+    auth_id
     email
+    phone
     name
+    image
     role
-    createdAt
-    updatedAt
+    subscribed_to_newsletter
+    created_at
+    updated_at
   }
 }

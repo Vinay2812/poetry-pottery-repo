@@ -5,7 +5,6 @@ export {
 } from "@/features/user-profile/components/UserProfile";
 export { UserProfileContainer } from "@/features/user-profile/containers/UserProfileContainer";
 export {
-  toAuthProviderLabel,
   toDisplayName,
   toInitial,
   toMemberSince,

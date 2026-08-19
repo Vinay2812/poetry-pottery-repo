@@ -18,10 +18,6 @@ export type Scalars = {
   DateTime: { input: string; output: string; }
 };
 
-export enum AuthProvider {
-  Clerk = 'CLERK'
-}
-
 export type Query = {
   __typename?: 'Query';
   me: User;
@@ -34,22 +30,25 @@ export type QueryUsersArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
 };
 
-export enum Role {
+export type User = {
+  __typename?: 'User';
+  auth_id: Scalars['String']['output'];
+  created_at: Scalars['DateTime']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  image?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+  newsletter_subscribed_at?: Maybe<Scalars['DateTime']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  role: UserRole;
+  subscribed_to_newsletter: Scalars['Boolean']['output'];
+  updated_at: Scalars['DateTime']['output'];
+};
+
+export enum UserRole {
   Admin = 'ADMIN',
   User = 'USER'
 }
-
-export type User = {
-  __typename?: 'User';
-  authId: Scalars['String']['output'];
-  authProvider: AuthProvider;
-  createdAt: Scalars['DateTime']['output'];
-  email: Scalars['String']['output'];
-  id: Scalars['Int']['output'];
-  name?: Maybe<Scalars['String']['output']>;
-  role: Role;
-  updatedAt: Scalars['DateTime']['output'];
-};
 
 export type UsersResponse = {
   __typename?: 'UsersResponse';
@@ -62,20 +61,22 @@ export type UsersResponse = {
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MeQuery = { me: { id: number, authId: string, authProvider: AuthProvider, email: string, name: string | null, role: Role, createdAt: string, updatedAt: string } };
+export type MeQuery = { me: { id: number, auth_id: string, email: string, phone: string | null, name: string | null, image: string | null, role: UserRole, subscribed_to_newsletter: boolean, created_at: string, updated_at: string } };
 
 
 export const MeDocument = gql`
     query Me {
   me {
     id
-    authId
-    authProvider
+    auth_id
     email
+    phone
     name
+    image
     role
-    createdAt
-    updatedAt
+    subscribed_to_newsletter
+    created_at
+    updated_at
   }
 }
     `;

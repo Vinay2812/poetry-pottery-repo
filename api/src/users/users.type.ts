@@ -1,8 +1,7 @@
 import { Field, Int, ObjectType, registerEnumType } from "@nestjs/graphql";
-import { AuthProvider, Role } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 
-registerEnumType(Role, { name: "Role" });
-registerEnumType(AuthProvider, { name: "AuthProvider" });
+registerEnumType(UserRole, { name: "UserRole" });
 
 @ObjectType()
 export class User {
@@ -10,25 +9,34 @@ export class User {
   id!: number;
 
   @Field()
-  authId!: string;
-
-  @Field(() => AuthProvider)
-  authProvider!: AuthProvider;
+  auth_id!: string;
 
   @Field()
   email!: string;
 
   @Field(() => String, { nullable: true })
+  phone!: string | null;
+
+  @Field(() => String, { nullable: true })
   name!: string | null;
 
-  @Field(() => Role)
-  role!: Role;
+  @Field(() => String, { nullable: true })
+  image!: string | null;
+
+  @Field(() => UserRole)
+  role!: UserRole;
 
   @Field()
-  createdAt!: Date;
+  subscribed_to_newsletter!: boolean;
+
+  @Field(() => Date, { nullable: true })
+  newsletter_subscribed_at!: Date | null;
 
   @Field()
-  updatedAt!: Date;
+  created_at!: Date;
+
+  @Field()
+  updated_at!: Date;
 }
 
 @ObjectType()

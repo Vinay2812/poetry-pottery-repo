@@ -3,7 +3,7 @@ import {
   ForbiddenException,
   Injectable,
 } from "@nestjs/common";
-import { Role } from "@prisma/client";
+import { UserRole } from "@prisma/client";
 
 import { UsersService } from "@/users/users.service";
 import { ClerkService } from "@/common/clerk/clerk.service";
@@ -20,7 +20,7 @@ export class AdminGuard extends AuthGuard {
 
   override async canActivate(context: ExecutionContext): Promise<boolean> {
     const user = await this.authenticate(getRequest(context));
-    if (user.role !== Role.ADMIN) {
+    if (user.role !== UserRole.ADMIN) {
       throw new ForbiddenException(FORBIDDEN_MESSAGE);
     }
     return true;

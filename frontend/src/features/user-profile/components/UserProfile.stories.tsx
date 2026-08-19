@@ -26,7 +26,6 @@ const meta = {
     roleLabel: "Member",
     isAdmin: false,
     memberSince: "March 2024",
-    authProviderLabel: "Clerk",
     onSignInClick: fn(),
   },
 } satisfies Meta<typeof UserProfile>;

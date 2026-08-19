@@ -17,7 +17,6 @@ export interface UserProfileProps {
   roleLabel: string;
   isAdmin: boolean;
   memberSince: string;
-  authProviderLabel: string;
   onSignInClick: () => void;
 }
 
@@ -31,7 +30,6 @@ export function UserProfile({
   roleLabel,
   isAdmin,
   memberSince,
-  authProviderLabel,
   onSignInClick,
 }: UserProfileProps) {
   if (isLoading) {
@@ -107,7 +105,7 @@ export function UserProfile({
           {roleLabel}
         </span>
         <p className="text-xs text-muted-foreground">
-          Member since {memberSince} &middot; via {authProviderLabel}
+          Member since {memberSince}
         </p>
       </CardContent>
     </Card>

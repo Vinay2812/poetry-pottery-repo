@@ -1,14 +1,10 @@
-import { AuthProvider, Role, type MeQuery } from "@/graphql/generated/graphql";
+import { UserRole, type MeQuery } from "@/graphql/generated/graphql";
 
 export type ProfileUser = MeQuery["me"];
 
-const ROLE_LABEL: Record<Role, string> = {
-  [Role.Admin]: "Admin",
-  [Role.User]: "Member",
-};
-
-const AUTH_PROVIDER_LABEL: Record<AuthProvider, string> = {
-  [AuthProvider.Clerk]: "Clerk",
+const ROLE_LABEL: Record<UserRole, string> = {
+  [UserRole.Admin]: "Admin",
+  [UserRole.User]: "Member",
 };
 
 const MEMBER_SINCE_FORMAT = new Intl.DateTimeFormat("en-US", {
@@ -36,10 +32,6 @@ export function toMemberSince(createdAt: string): string {
   return MEMBER_SINCE_FORMAT.format(date);
 }
 
-export function toRoleLabel(role: Role): string {
+export function toRoleLabel(role: UserRole): string {
   return ROLE_LABEL[role];
-}
-
-export function toAuthProviderLabel(provider: AuthProvider): string {
-  return AUTH_PROVIDER_LABEL[provider];
 }

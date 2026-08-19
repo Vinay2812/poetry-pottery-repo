@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { type AuthProvider, Role, type User } from "@prisma/client";
+import { UserRole, type User } from "@prisma/client";
 
 import type { AuthProvisionRequest } from "@/common/auth/auth-profile";
 import { PrismaService } from "@/prisma/prisma.service";
@@ -19,7 +19,7 @@ export class UsersService {
       this.prisma.user.findMany({
         skip: (safePage - 1) * safeLimit,
         take: safeLimit,
-        orderBy: { createdAt: "desc" },
+        orderBy: { created_at: "desc" },
       }),
       this.prisma.user.count(),
     ]);
@@ -27,29 +27,28 @@ export class UsersService {
     return { items, total, page: safePage, limit: safeLimit };
   }
 
-  findByAuth(provider: AuthProvider, authId: string): Promise<User | null> {
+  findByAuth(authId: string): Promise<User | null> {
     return this.prisma.user.findUnique({
-      where: { authProvider_authId: { authProvider: provider, authId } },
+      where: { auth_id: authId },
     });
   }
 
   // Just-in-time provisioning: the profile is only loaded when the user is unknown.
   async provisionFromAuth(request: AuthProvisionRequest): Promise<User> {
-    const { provider, authId, loadProfile } = request;
-    const existing = await this.findByAuth(provider, authId);
+    const { authId, loadProfile } = request;
+    const existing = await this.findByAuth(authId);
     if (existing) {
       return existing;
     }
 
     const profile = await loadProfile();
     return this.prisma.user.upsert({
-      where: { authProvider_authId: { authProvider: provider, authId } },
+      where: { auth_id: authId },
       create: {
-        authProvider: provider,
-        authId,
+        auth_id: authId,
         email: profile.email,
         name: profile.name,
-        role: Role.USER,
+        role: UserRole.USER,
       },
       update: { email: profile.email, name: profile.name },
     });

@@ -3,14 +3,13 @@
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { useCallback, useEffect } from "react";
 
-import { Role, useMeQuery } from "@/graphql/generated/graphql";
+import { UserRole, useMeQuery } from "@/graphql/generated/graphql";
 import { logger } from "@/lib/logger";
 import { useUIStore } from "@/store/ui-store";
 
 import { SignInPromptDialog } from "@/features/user-profile/components/SignInPromptDialog";
 import { UserProfile } from "@/features/user-profile/components/UserProfile";
 import {
-  toAuthProviderLabel,
   toDisplayName,
   toInitial,
   toMemberSince,
@@ -65,9 +64,8 @@ export function UserProfileContainer() {
         initial={toInitial(displayName)}
         email={user?.email ?? ""}
         roleLabel={user ? toRoleLabel(user.role) : ""}
-        isAdmin={user?.role === Role.Admin}
-        memberSince={user ? toMemberSince(user.createdAt) : ""}
-        authProviderLabel={user ? toAuthProviderLabel(user.authProvider) : ""}
+        isAdmin={user?.role === UserRole.Admin}
+        memberSince={user ? toMemberSince(user.created_at) : ""}
         onSignInClick={handleSignInClick}
       />
       <SignInPromptDialog
