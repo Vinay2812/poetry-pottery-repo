@@ -1,18 +1,20 @@
 import {
   createParamDecorator,
   type ExecutionContext,
-  UnauthorizedException,
+  InternalServerErrorException,
 } from "@nestjs/common";
-import type { User } from "@prisma/client";
 
 import { getRequest } from "@/common/graphql/execution-context";
-import { UNAUTHENTICATED_MESSAGE } from "@/common/guards/auth.guard";
+import type { AuthUser } from "../clerk/clerk.type";
 
 export const CurrentUser = createParamDecorator(
-  (_data: unknown, context: ExecutionContext): User => {
-    const user = getRequest(context).currentUser;
+  (_data: undefined, context: ExecutionContext): AuthUser => {
+    const user = getRequest(context).authenticatedUser;
     if (!user) {
-      throw new UnauthorizedException(UNAUTHENTICATED_MESSAGE);
+      // Only reachable when the resolver forgot @AuthRequired()/@AdminRequired().
+      throw new InternalServerErrorException(
+        "CurrentUser requires an auth guard on the resolver",
+      );
     }
     return user;
   },

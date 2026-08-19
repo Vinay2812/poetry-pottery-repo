@@ -1,8 +1,10 @@
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { z } from "zod";
 
 import { AppModule } from "@/app.module";
+import { clerkAuthMiddleware } from "@/common/clerk/clerk.util";
 import { REQUEST_ID_HEADER } from "@/common/middleware/request-id.middleware";
 import { PrismaService } from "@/prisma/prisma.service";
 import {
@@ -22,7 +24,14 @@ const prismaMock = {
     findUnique: vi.fn().mockResolvedValue(null),
     upsert: vi.fn(),
   },
+  productCategory: {
+    findMany: vi.fn().mockResolvedValue([{ category: "Mugs" }]),
+  },
 };
+
+const categoriesSchema = z.object({
+  data: z.object({ categories: z.array(z.string()) }),
+});
 
 describe("API (e2e)", () => {
   let app: INestApplication;
@@ -36,6 +45,8 @@ describe("API (e2e)", () => {
       .compile();
 
     app = moduleRef.createNestApplication();
+    // Same auth middleware as main.ts, so guards see a real Clerk auth state.
+    app.use(clerkAuthMiddleware());
     await app.init();
   });
 
@@ -58,12 +69,12 @@ describe("API (e2e)", () => {
     expect(response.headers[REQUEST_ID_HEADER]).toBeTypeOf("string");
   });
 
-  it("rejects the me query when unauthenticated", async () => {
-    const response = await postGraphql(app, "{ me { id email } }");
+  it("serves the public categories query without authentication", async () => {
+    const response = await postGraphql(app, "{ categories }");
 
-    const { errors } = graphqlErrorSchema.parse(response.body);
-    expect(errors[0]?.message).toBe("Authentication required");
-    expect(errors[0]?.extensions?.code).toBe("UNAUTHENTICATED");
+    expect(response.status).toBe(200);
+    const { data } = categoriesSchema.parse(response.body);
+    expect(data.categories).toEqual(["Mugs"]);
   });
 
   it("rejects the users query when unauthenticated", async () => {
@@ -71,5 +82,6 @@ describe("API (e2e)", () => {
 
     const { errors } = graphqlErrorSchema.parse(response.body);
     expect(errors[0]?.message).toBe("Authentication required");
+    expect(errors[0]?.extensions?.code).toBe("UNAUTHENTICATED");
   });
 });

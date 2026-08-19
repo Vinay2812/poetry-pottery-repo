@@ -1,31 +1,13 @@
 import { Args, Int, Query, Resolver } from "@nestjs/graphql";
-import type { User as DbUser } from "@prisma/client";
 
-import {
-  AdminRequired,
-  AuthRequired,
-} from "@/common/decorators/auth.decorators";
-import { CurrentUser } from "@/common/decorators/current-user.decorator";
+import { AdminRequired } from "@/common/decorators/auth.decorators";
 import { StrictThrottle } from "@/common/decorators/throttle.decorators";
 import { UsersService } from "./users.service";
 import { User, UsersResponse } from "./users.type";
-import { Throttle } from "@nestjs/throttler";
 
 @Resolver(() => User)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
-
-  @AuthRequired()
-  @Throttle({
-    short: {
-      limit: 10,
-      ttl: 1000,
-    },
-  })
-  @Query(() => User)
-  me(@CurrentUser() user: DbUser): DbUser {
-    return user;
-  }
 
   @AdminRequired()
   @StrictThrottle()

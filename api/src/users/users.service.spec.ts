@@ -98,47 +98,18 @@ describe("UsersService", () => {
     });
   });
 
-  describe("provisionFromAuth", () => {
-    it("returns the existing user without loading a profile", async () => {
+  describe("upsertUser", () => {
+    it("passes the upsert through to prisma", async () => {
       const user = makeUser();
-      prismaMock.user.findUnique.mockResolvedValue(user);
-      const loadProfile = vi.fn();
+      prismaMock.user.upsert.mockResolvedValue(user);
+      const input = {
+        where: { auth_id: "user_1" },
+        create: { auth_id: "user_1", email: user.email, name: user.name },
+        update: { email: user.email, name: user.name },
+      };
 
-      const result = await service.provisionFromAuth({
-        authId: "user_1",
-        loadProfile,
-      });
-
-      expect(result).toEqual(user);
-      expect(loadProfile).not.toHaveBeenCalled();
-      expect(prismaMock.user.upsert).not.toHaveBeenCalled();
-    });
-
-    it("provisions a new user with the USER role on first sight", async () => {
-      const created = makeUser({ id: 7, auth_id: "user_7" });
-      prismaMock.user.findUnique.mockResolvedValue(null);
-      prismaMock.user.upsert.mockResolvedValue(created);
-      const loadProfile = vi
-        .fn()
-        .mockResolvedValue({ email: "potter@example.com", name: "Potter" });
-
-      const result = await service.provisionFromAuth({
-        authId: "user_7",
-        loadProfile,
-      });
-
-      expect(result).toEqual(created);
-      expect(loadProfile).toHaveBeenCalledTimes(1);
-      expect(prismaMock.user.upsert).toHaveBeenCalledWith({
-        where: { auth_id: "user_7" },
-        create: {
-          auth_id: "user_7",
-          email: "potter@example.com",
-          name: "Potter",
-          role: UserRole.USER,
-        },
-        update: { email: "potter@example.com", name: "Potter" },
-      });
+      await expect(service.upsertUser(input)).resolves.toEqual(user);
+      expect(prismaMock.user.upsert).toHaveBeenCalledWith(input);
     });
   });
 });

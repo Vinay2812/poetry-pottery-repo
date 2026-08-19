@@ -9,5 +9,4 @@ export {
   toInitial,
   toMemberSince,
   toRoleLabel,
-  type ProfileUser,
 } from "@/features/user-profile/types";

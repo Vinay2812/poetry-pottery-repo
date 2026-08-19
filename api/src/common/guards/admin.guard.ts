@@ -9,13 +9,14 @@ import { UsersService } from "@/users/users.service";
 import { ClerkService } from "@/common/clerk/clerk.service";
 import { getRequest } from "@/common/graphql/execution-context";
 import { AuthGuard } from "./auth.guard";
+import { PrismaService } from "@/prisma/prisma.service";
 
 export const FORBIDDEN_MESSAGE = "Administrator access required";
 
 @Injectable()
 export class AdminGuard extends AuthGuard {
-  constructor(clerk: ClerkService, users: UsersService) {
-    super(clerk, users);
+  constructor(clerk: ClerkService, users: UsersService, prisma: PrismaService) {
+    super(clerk, users, prisma);
   }
 
   override async canActivate(context: ExecutionContext): Promise<boolean> {

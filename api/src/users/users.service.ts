@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
-import { UserRole, type User } from "@prisma/client";
+import { Prisma, type User } from "@prisma/client";
 
-import type { AuthProvisionRequest } from "@/common/auth/auth-profile";
 import { PrismaService } from "@/prisma/prisma.service";
 import type { UsersResponse } from "./users.type";
 
@@ -33,24 +32,8 @@ export class UsersService {
     });
   }
 
-  // Just-in-time provisioning: the profile is only loaded when the user is unknown.
-  async provisionFromAuth(request: AuthProvisionRequest): Promise<User> {
-    const { authId, loadProfile } = request;
-    const existing = await this.findByAuth(authId);
-    if (existing) {
-      return existing;
-    }
-
-    const profile = await loadProfile();
-    return this.prisma.user.upsert({
-      where: { auth_id: authId },
-      create: {
-        auth_id: authId,
-        email: profile.email,
-        name: profile.name,
-        role: UserRole.USER,
-      },
-      update: { email: profile.email, name: profile.name },
-    });
+  // Not async on purpose: the lazy PrismaPromise stays composable with $transaction([...]).
+  upsertUser(input: Prisma.UserUpsertArgs): Prisma.PrismaPromise<User> {
+    return this.prisma.user.upsert(input);
   }
 }

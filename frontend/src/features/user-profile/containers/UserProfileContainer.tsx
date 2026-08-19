@@ -1,10 +1,9 @@
 "use client";
 
-import { useAuth, useClerk } from "@clerk/nextjs";
-import { useCallback, useEffect } from "react";
+import { useClerk, useUser } from "@clerk/nextjs";
+import { useCallback } from "react";
 
-import { UserRole, useMeQuery } from "@/graphql/generated/graphql";
-import { logger } from "@/lib/logger";
+import { UserRole } from "@/graphql/generated/graphql";
 import { useUIStore } from "@/store/ui-store";
 
 import { SignInPromptDialog } from "@/features/user-profile/components/SignInPromptDialog";
@@ -17,26 +16,16 @@ import {
 } from "@/features/user-profile/types";
 
 export function UserProfileContainer() {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoaded, isSignedIn, user } = useUser();
   const { openSignIn } = useClerk();
 
   const isSignInPromptOpen = useUIStore((state) => state.isSignInPromptOpen);
   const openSignInPrompt = useUIStore((state) => state.openSignInPrompt);
   const closeSignInPrompt = useUIStore((state) => state.closeSignInPrompt);
-  const showToast = useUIStore((state) => state.showToast);
 
-  const { data, loading, error } = useMeQuery({
-    skip: !isLoaded || !isSignedIn,
-  });
-
-  useEffect(() => {
-    if (!error) return;
-    logger.warn("Failed to load the current user", { message: error.message });
-    showToast("We could not load your profile.");
-  }, [error, showToast]);
-
-  const user = data?.me ?? null;
-  const displayName = user ? toDisplayName(user) : "";
+  const email = user?.primaryEmailAddress?.emailAddress ?? "";
+  const displayName = user ? toDisplayName(user.fullName, email) : "";
+  const role = user?.publicMetadata.role;
 
   const handleSignInClick = useCallback(() => {
     openSignInPrompt();
@@ -57,15 +46,15 @@ export function UserProfileContainer() {
   return (
     <>
       <UserProfile
-        isLoading={!isLoaded || loading}
+        isLoading={!isLoaded}
         isSignedIn={Boolean(isSignedIn)}
-        hasError={Boolean(error)}
+        hasError={false}
         displayName={displayName}
         initial={toInitial(displayName)}
-        email={user?.email ?? ""}
-        roleLabel={user ? toRoleLabel(user.role) : ""}
-        isAdmin={user?.role === UserRole.Admin}
-        memberSince={user ? toMemberSince(user.created_at) : ""}
+        email={email}
+        roleLabel={user ? toRoleLabel(role) : ""}
+        isAdmin={role === UserRole.Admin}
+        memberSince={user ? toMemberSince(user.createdAt) : ""}
         onSignInClick={handleSignInClick}
       />
       <SignInPromptDialog
