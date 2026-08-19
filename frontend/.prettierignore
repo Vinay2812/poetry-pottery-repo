@@ -1,0 +1,8 @@
+.next
+.lighthouse
+.lighthouseci
+storybook-static
+coverage
+src/graphql/generated
+pnpm-lock.yaml
+next-env.d.ts

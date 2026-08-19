@@ -1,0 +1,3 @@
+# Editor intellisense for .gql files (VS Code/Cursor "GraphQL: Language Feature Support" extension).
+schema: ../api/schema.gql
+documents: src/graphql/**/*.gql

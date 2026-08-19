@@ -1,0 +1,40 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+enum AuthProvider {
+  CLERK
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Query {
+  me: User!
+  users(limit: Int = 20, page: Int = 1): UsersResponse!
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+type User {
+  authId: String!
+  authProvider: AuthProvider!
+  createdAt: DateTime!
+  email: String!
+  id: Int!
+  name: String
+  role: Role!
+  updatedAt: DateTime!
+}
+
+type UsersResponse {
+  items: [User!]!
+  limit: Int!
+  page: Int!
+  total: Int!
+}

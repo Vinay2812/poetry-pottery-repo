@@ -1,0 +1,7 @@
+echo "🔎 pre-commit: formatting staged files"
+if pnpm exec lint-staged; then
+  echo "✅ pre-commit: passed"
+else
+  echo "❌ pre-commit: failed — fix the issues above and retry" >&2
+  exit 1
+fi

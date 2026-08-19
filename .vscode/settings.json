@@ -1,0 +1,16 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "files.eol": "\n",
+  "eslint.workingDirectories": [
+    { "directory": "api", "changeProcessCWD": true },
+    { "directory": "frontend", "changeProcessCWD": true }
+  ],
+  "eslint.validate": ["javascript", "typescript", "typescriptreact"],
+  "typescript.tsdk": "frontend/node_modules/typescript/lib",
+  "prisma.schemaPath": "api/prisma/schema.prisma",
+  "js/ts.tsdk.path": "frontend/node_modules/typescript/lib"
+}

@@ -1,0 +1,24 @@
+name: boilerplate
+
+include:
+  - docker-compose.db.yml
+
+services:
+  api:
+    build:
+      context: ../../api
+      # Dockerfile lives outside the build context (relative to the context dir).
+      dockerfile: ../infra/docker/Dockerfile.api
+    container_name: boilerplate-api
+    restart: unless-stopped
+    # Runtime app env (Clerk keys, schema key, log level, throttles) comes from api/.env.
+    env_file: ../../api/.env
+    ports:
+      - "5050:5050"
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy

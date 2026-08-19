@@ -1,0 +1,6 @@
+if sh scripts/check-schema-sync.sh; then
+  echo "✅ pre-push: passed"
+else
+  echo "❌ pre-push: blocked — see above" >&2
+  exit 1
+fi
