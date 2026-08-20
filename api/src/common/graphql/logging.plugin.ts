@@ -11,12 +11,18 @@ import { env } from "@/config/env";
 
 const INTROSPECTION_OPERATION = "IntrospectionQuery";
 
-function countErrors(
-  response: GraphQLRequestContextWillSendResponse<GqlContext>["response"],
-): number {
+type GraphqlResponse =
+  GraphQLRequestContextWillSendResponse<GqlContext>["response"];
+
+// The actual graphql payload (data + errors); incremental (@defer) responses stay opaque.
+function extractPayload(response: GraphqlResponse) {
   return response.body.kind === "single"
-    ? (response.body.singleResult.errors?.length ?? 0)
-    : 0;
+    ? response.body.singleResult
+    : undefined;
+}
+
+function countErrors(response: GraphqlResponse): number {
+  return extractPayload(response)?.errors?.length ?? 0;
 }
 
 // One line per operation on the way in and one on the way out (duration + error count).
@@ -55,6 +61,9 @@ export function createGraphqlLoggingPlugin(
               userId: ctx.contextValue.req.authenticatedUser?.db_user_id,
               durationMs: Date.now() - startedAt,
               errorCount: countErrors(ctx.response),
+              ...(env.isProduction
+                ? {}
+                : { response: extractPayload(ctx.response) }),
             });
           }
           return Promise.resolve();

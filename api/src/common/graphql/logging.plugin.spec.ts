@@ -37,10 +37,12 @@ function makeResponseContext(errorCount: number) {
     response: {
       body: {
         kind: "single",
-        singleResult:
-          errorCount > 0
+        singleResult: {
+          data: { categories: ["Mugs"] },
+          ...(errorCount > 0
             ? { errors: Array.from({ length: errorCount }, () => ({})) }
-            : {},
+            : {}),
+        },
       },
     },
   } as unknown as GraphQLRequestContextWillSendResponse<GqlContext>;
@@ -87,7 +89,14 @@ describe("createGraphqlLoggingPlugin", () => {
 
     expect(loggerMock.info).toHaveBeenCalledWith(
       "graphql:out query Categories",
-      expect.objectContaining({ requestId: "req-1", userId: 7, errorCount: 2 }),
+      expect.objectContaining({
+        requestId: "req-1",
+        userId: 7,
+        errorCount: 2,
+        response: expect.objectContaining({
+          data: { categories: ["Mugs"] },
+        }) as unknown,
+      }),
     );
     const [, meta] = loggerMock.info.mock.calls[0] as [
       string,
