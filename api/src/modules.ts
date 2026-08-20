@@ -77,5 +77,6 @@ export { ClerkModule } from "@/common/clerk/clerk.module";
 export { PrismaModule } from "@/prisma/prisma.module";
 export { HealthModule } from "@/health/health.module";
 
+export { CollectionsModule } from "@/features/collections/collections.module";
 export { UsersModule } from "@/features/users/users.module";
 export { CategoriesModule } from "@/features/categories/categories.module";

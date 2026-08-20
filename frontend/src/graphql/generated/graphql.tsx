@@ -18,10 +18,24 @@ export type Scalars = {
   DateTime: { input: string; output: string; }
 };
 
+export type CollectionsWithProductsCount = {
+  __typename?: 'CollectionsWithProductsCount';
+  image_url?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  products_count: Scalars['Int']['output'];
+};
+
 export type Query = {
   __typename?: 'Query';
   categories: Array<Scalars['String']['output']>;
+  collectionsWithProductsCount: Array<CollectionsWithProductsCount>;
   users: UsersResponse;
+};
+
+
+export type QueryCollectionsWithProductsCountArgs = {
+  limit: Scalars['Int']['input'];
+  offset: Scalars['Int']['input'];
 };
 
 

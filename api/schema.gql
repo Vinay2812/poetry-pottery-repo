@@ -2,6 +2,12 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type CollectionsWithProductsCount {
+  image_url: String
+  name: String!
+  products_count: Int!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -9,6 +15,7 @@ scalar DateTime
 
 type Query {
   categories: [String!]!
+  collectionsWithProductsCount(limit: Int!, offset: Int!): [CollectionsWithProductsCount!]!
   users(limit: Int = 20, page: Int = 1): UsersResponse!
 }
 
