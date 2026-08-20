@@ -5,7 +5,7 @@ import {
 } from "@nestjs/common";
 import { UserRole } from "@prisma/client";
 
-import { UsersService } from "@/users/users.service";
+import { UsersService } from "@/features/users/users.service";
 import { ClerkService } from "@/common/clerk/clerk.service";
 import { getRequest } from "@/common/graphql/execution-context";
 import { AuthGuard } from "./auth.guard";

@@ -6,7 +6,7 @@ import {
 } from "@nestjs/common";
 import { getAuth } from "@clerk/express";
 
-import { UsersService } from "@/users/users.service";
+import { UsersService } from "@/features/users/users.service";
 import { ClerkService } from "@/common/clerk/clerk.service";
 import { getRequest } from "@/common/graphql/execution-context";
 import type { AppRequest } from "@/common/types/express";

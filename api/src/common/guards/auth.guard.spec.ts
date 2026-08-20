@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createHttpExecutionContext } from "@test/helpers/execution-context";
 import { PrismaService } from "@/prisma/prisma.service";
-import { UsersService } from "@/users/users.service";
+import { UsersService } from "@/features/users/users.service";
 import { ClerkService } from "@/common/clerk/clerk.service";
 import type { AuthUser } from "@/common/clerk/clerk.type";
 import { AdminGuard } from "./admin.guard";
