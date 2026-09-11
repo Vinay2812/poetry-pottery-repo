@@ -1,4 +1,11 @@
-import { ChevronRight, Heart, MapPin, Package, Settings } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronRight,
+  Heart,
+  MapPin,
+  Package,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +26,12 @@ const LINKS = [
     label: "Orders",
     hint: "Progress and past orders",
     Icon: Package,
+  },
+  {
+    href: "/registrations",
+    label: "Bookings",
+    hint: "Workshops and open mics",
+    Icon: CalendarDays,
   },
   {
     href: "/wishlist",

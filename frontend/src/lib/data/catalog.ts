@@ -8,12 +8,18 @@ import {
   CollectionsDocument,
   type CollectionsQuery,
   type CollectionsQueryVariables,
+  EventDocument,
+  type EventQuery,
+  type EventQueryVariables,
   FeaturedProductsDocument,
   type FeaturedProductsQuery,
   type FeaturedProductsQueryVariables,
   ProductDocument,
   type ProductQuery,
   type ProductQueryVariables,
+  UpcomingEventsDocument,
+  type UpcomingEventsQuery,
+  type UpcomingEventsQueryVariables,
 } from "@/graphql/generated/graphql";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
@@ -82,4 +88,26 @@ export async function getProduct(
   if (data?.product) return data.product;
   if (isNotFoundError(error)) return null;
   throw error ?? new Error("Product query failed");
+}
+
+export async function getUpcomingEvents(
+  limit = 3,
+): Promise<UpcomingEventsQuery["upcomingEvents"]> {
+  const { data } = await getClient().query<
+    UpcomingEventsQuery,
+    UpcomingEventsQueryVariables
+  >({ query: UpcomingEventsDocument, variables: { limit } });
+  return data?.upcomingEvents ?? [];
+}
+
+export async function getEvent(
+  slug: string,
+): Promise<EventQuery["event"] | null> {
+  const { data, error } = await getClient().query<
+    EventQuery,
+    EventQueryVariables
+  >({ query: EventDocument, variables: { slug }, errorPolicy: "all" });
+  if (data?.event) return data.event;
+  if (isNotFoundError(error)) return null;
+  throw error ?? new Error("Event query failed");
 }
