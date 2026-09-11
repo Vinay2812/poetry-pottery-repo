@@ -13,6 +13,12 @@ services:
     restart: unless-stopped
     # Runtime app env (Clerk keys, schema key, log level, throttles) comes from api/.env.
     env_file: ../../api/.env
+    # api/.env points at host ports; inside the network the siblings are reached by service name.
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-poetry}:${POSTGRES_PASSWORD:-poetry}@postgres:5432/${POSTGRES_DB:-poetry_pottery}"
+      REDIS_URL: "redis://redis:6379"
+      RABBITMQ_URL: "amqp://${RABBITMQ_USER:-poetry}:${RABBITMQ_PASSWORD:-poetry}@rabbitmq:5672"
+      EMBEDDINGS_CACHE_DIR: "/app/.cache/models"
     ports:
       - "6060:6060"
     networks:

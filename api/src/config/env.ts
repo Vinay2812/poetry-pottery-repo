@@ -87,6 +87,8 @@ export const envSchema = z.object({
   R2_BUCKET: optionalString,
   R2_PUBLIC_URL: optionalUrl,
   FRONTEND_URL: z.url().default("http://localhost:3030"),
+  // Reverse proxies (and the Next server) in front of the API whose X-Forwarded-For is trusted.
+  TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
 });
 
 export type RawEnv = z.infer<typeof envSchema>;

@@ -1,6 +1,6 @@
 import { type ExecutionContext, Injectable } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
-import { ThrottlerGuard } from "@nestjs/throttler";
+import { ThrottlerException, ThrottlerGuard } from "@nestjs/throttler";
 
 import { readAuthId } from "@/common/clerk/clerk.util";
 import { getRequestResponse } from "@/common/graphql/execution-context";
@@ -21,18 +21,30 @@ export function isStrictThrottled(context: ExecutionContext): boolean {
   );
 }
 
+// request.ip honours express "trust proxy", so forwarded headers only count from trusted hops.
 export function resolveClientIp(request: AppRequest): string {
-  const forwarded = request.headers["x-forwarded-for"];
-  const header = Array.isArray(forwarded) ? forwarded[0] : forwarded;
-  const first = header?.split(",")[0]?.trim();
-  if (first !== undefined && first.length > 0) {
-    return first;
-  }
-  return request.ip ?? request.socket.remoteAddress ?? "unknown";
+  return request.ip ?? request.socket?.remoteAddress ?? "unknown";
 }
 
 @Injectable()
 export class GqlThrottlerGuard extends ThrottlerGuard {
+  // Queue consumers also pass through global guards; only web traffic is rate limited,
+  // and a storage outage must not take the API down.
+  override async canActivate(context: ExecutionContext): Promise<boolean> {
+    const type = context.getType<string>();
+    if (type !== "http" && type !== "graphql") {
+      return true;
+    }
+    try {
+      return await super.canActivate(context);
+    } catch (error) {
+      if (error instanceof ThrottlerException) {
+        throw error;
+      }
+      return true;
+    }
+  }
+
   // Mandatory: the base implementation only understands http contexts.
   protected override getRequestResponse(context: ExecutionContext): {
     req: AppRequest;
