@@ -124,7 +124,7 @@ export function SiteFooter({
 
         {newsletter && <div className="mt-12">{newsletter}</div>}
 
-        <p className="mt-12 text-xs text-muted-foreground">
+        <p className="mt-12 text-xs text-clay-dark">
           © {year} Poetry &amp; Pottery. Every piece is handmade, so expect
           small differences from the photos.
         </p>
