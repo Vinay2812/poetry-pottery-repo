@@ -28,6 +28,7 @@ cp .env.example .env            # fill in Clerk keys (SMTP and R2 are optional)
 pnpm install
 pnpm migration:apply
 pnpm db:seed                    # catalogue, events, workshop config, content, coupons
+pnpm search:reindex             # embeddings for search (downloads the model on first run)
 pnpm dev                        # http://localhost:6060/graphql
 
 # 3. Frontend (new terminal)
@@ -48,7 +49,8 @@ pnpm install
 | `api/`      | `pnpm dev`                                                      | API with watch mode                                        |
 | `api/`      | `pnpm schema:emit`                                              | Regenerate `schema.gql` (no DB needed)                     |
 | `api/`      | `pnpm migration:create`                                         | Create a migration from schema changes                     |
-| `api/`      | `pnpm db:seed` / `pnpm db:reset`                                | Seed demo data / drop, migrate and reseed                  |
+| `api/`      | `pnpm db:seed` / `pnpm db:reset`                                | Seed demo data / drop, migrate, reseed and reindex         |
+| `api/`      | `pnpm search:reindex`                                           | Recompute product and event embeddings                     |
 | `api/`      | `pnpm make-admin you@example.com`                               | Promote a signed-in user to admin                          |
 | `api/`      | `pnpm db:studio`                                                | Prisma Studio                                              |
 | `api/`      | `pnpm test` / `pnpm build`                                      | Vitest / production build                                  |

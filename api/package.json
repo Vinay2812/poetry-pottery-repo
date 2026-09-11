@@ -25,8 +25,9 @@
     "migration:apply": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "ts-node -r tsconfig-paths/register --project tsconfig.json prisma/seed/index.ts",
-    "db:reset": "prisma migrate reset --force && pnpm db:seed",
+    "db:reset": "prisma migrate reset --force --skip-seed && pnpm db:seed && pnpm search:reindex",
     "make-admin": "ts-node -r tsconfig-paths/register --project tsconfig.json scripts/make-admin.ts",
+    "search:reindex": "ts-node -r tsconfig-paths/register --project tsconfig.json scripts/reindex-search.ts",
     "tsc": "tsc --noEmit"
   },
   "dependencies": {

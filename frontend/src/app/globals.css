@@ -11,6 +11,8 @@
   --color-terracotta: #c4785a;
   --color-terracotta-hover: #b06847;
   --color-terracotta-light: #f5ebe6;
+  /* Contrast-safe terracotta for small text on light surfaces (>=4.5:1). */
+  --color-terracotta-dark: #9a5a3f;
   --color-cream: #f5f0e8;
   --color-clay: #8b7355;
   /* Contrast-safe clay for small text on cream (>=4.5:1). */
@@ -80,7 +82,7 @@
   --secondary: #f5f0e8;
   --secondary-foreground: #3d5640;
   --muted: #e8ece8;
-  --muted-foreground: #737373;
+  --muted-foreground: #666666;
   --accent: #e8ece8;
   --accent-foreground: #3d5640;
   --destructive: #b91c1c;
