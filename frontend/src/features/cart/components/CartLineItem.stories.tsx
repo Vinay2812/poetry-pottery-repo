@@ -25,6 +25,7 @@ const meta = {
     maxQuantity: 10,
     selectionSummary: null,
     isAvailable: true,
+    canAdjustQuantity: true,
     unavailableReason: null,
     onQuantityChange: fn(),
     onRemove: fn(),

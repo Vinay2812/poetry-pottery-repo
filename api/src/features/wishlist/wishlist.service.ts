@@ -3,6 +3,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@/prisma/prisma.service";
 import {
   productListInclude,
+  sellableProductWhere,
   toProduct,
 } from "@/features/products/products.service";
 import type { Product } from "@/features/products/products.type";
@@ -14,7 +15,7 @@ export class WishlistService {
 
   async list(userId: number): Promise<Product[]> {
     const rows = await this.prisma.wishlistItem.findMany({
-      where: { user_id: userId },
+      where: { user_id: userId, product: sellableProductWhere() },
       include: { product: { include: productListInclude } },
       orderBy: { created_at: "desc" },
     });
@@ -23,7 +24,7 @@ export class WishlistService {
 
   async ids(userId: number): Promise<number[]> {
     const rows = await this.prisma.wishlistItem.findMany({
-      where: { user_id: userId },
+      where: { user_id: userId, product: sellableProductWhere() },
       select: { product_id: true },
     });
     return rows.map((row) => row.product_id);
@@ -45,8 +46,10 @@ export class WishlistService {
         where: { user_id: userId, product_id: productId },
       });
       if (removed.count > 0) return false;
-      await this.prisma.wishlistItem.create({
+      // A double tap can race the insert; duplicates are simply skipped.
+      await this.prisma.wishlistItem.createMany({
         data: { user_id: userId, product_id: productId },
+        skipDuplicates: true,
       });
       return true;
     });

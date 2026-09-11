@@ -104,7 +104,6 @@ export type Mutation = {
   __typename?: 'Mutation';
   addToCart: Cart;
   clearCart: Cart;
-  moveWishlistItemToCart: Cart;
   removeCartItem: Cart;
   toggleWishlist: WishlistToggleResult;
   updateCartItem: Cart;
@@ -113,11 +112,6 @@ export type Mutation = {
 
 export type MutationAddToCartArgs = {
   input: AddToCartInput;
-};
-
-
-export type MutationMoveWishlistItemToCartArgs = {
-  product_id: Scalars['Int']['input'];
 };
 
 
@@ -445,13 +439,6 @@ export type ToggleWishlistMutationVariables = Exact<{
 
 
 export type ToggleWishlistMutation = { toggleWishlist: { product_id: number, is_wishlisted: boolean, wishlist_count: number } };
-
-export type MoveWishlistItemToCartMutationVariables = Exact<{
-  productId: number;
-}>;
-
-
-export type MoveWishlistItemToCartMutation = { moveWishlistItemToCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
 
 export const ProductCardFragmentDoc = gql`
     fragment ProductCard on Product {
@@ -1122,35 +1109,3 @@ export function useToggleWishlistMutation(baseOptions?: ApolloReactHooks.Mutatio
       }
 export type ToggleWishlistMutationHookResult = ReturnType<typeof useToggleWishlistMutation>;
 export type ToggleWishlistMutationResult = ApolloReactCommon.MutationResult<ToggleWishlistMutation>;
-export const MoveWishlistItemToCartDocument = gql`
-    mutation MoveWishlistItemToCart($productId: Int!) {
-  moveWishlistItemToCart(product_id: $productId) {
-    ...CartFields
-  }
-}
-    ${CartFieldsFragmentDoc}
-${ProductCardFragmentDoc}`;
-
-/**
- * __useMoveWishlistItemToCartMutation__
- *
- * To run a mutation, you first call `useMoveWishlistItemToCartMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useMoveWishlistItemToCartMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [moveWishlistItemToCartMutation, { data, loading, error }] = useMoveWishlistItemToCartMutation({
- *   variables: {
- *      productId: // value for 'productId'
- *   },
- * });
- */
-export function useMoveWishlistItemToCartMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<MoveWishlistItemToCartMutation, MoveWishlistItemToCartMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<MoveWishlistItemToCartMutation, MoveWishlistItemToCartMutationVariables>(MoveWishlistItemToCartDocument, options);
-      }
-export type MoveWishlistItemToCartMutationHookResult = ReturnType<typeof useMoveWishlistItemToCartMutation>;
-export type MoveWishlistItemToCartMutationResult = ApolloReactCommon.MutationResult<MoveWishlistItemToCartMutation>;

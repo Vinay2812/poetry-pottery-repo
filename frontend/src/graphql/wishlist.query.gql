@@ -15,9 +15,3 @@ mutation ToggleWishlist($productId: Int!) {
     wishlist_count
   }
 }
-
-mutation MoveWishlistItemToCart($productId: Int!) {
-  moveWishlistItemToCart(product_id: $productId) {
-    ...CartFields
-  }
-}

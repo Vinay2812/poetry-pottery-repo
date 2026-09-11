@@ -98,10 +98,11 @@ export function resolveSelections(
 // Same choices in any order produce the same key, so they merge into one cart line.
 export function selectionKey(selections: Selection[]): string {
   if (selections.length === 0) return "";
-  const normalised = [...selections]
-    .sort((a, b) => a.group_id - b.group_id)
-    .map((s) => `${s.group_id}:${s.option_id ?? ""}:${s.text ?? ""}`)
-    .join("|");
+  const normalised = JSON.stringify(
+    [...selections]
+      .sort((a, b) => a.group_id - b.group_id)
+      .map((s) => [s.group_id, s.option_id, s.text]),
+  );
   return createHash("sha256").update(normalised).digest("hex").slice(0, 32);
 }
 

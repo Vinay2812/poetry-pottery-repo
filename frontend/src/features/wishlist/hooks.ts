@@ -5,9 +5,7 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 
 import {
-  CartDocument,
-  type CartQuery,
-  useMoveWishlistItemToCartMutation,
+  type ToggleWishlistMutation,
   useToggleWishlistMutation,
   useWishlistIdsQuery,
   useWishlistQuery,
@@ -42,7 +40,7 @@ export function useWishlist() {
     nextFetchPolicy: "cache-first",
   });
   return {
-    items: data?.wishlist ?? previousData?.wishlist ?? [],
+    items: isSignedIn ? (data?.wishlist ?? previousData?.wishlist ?? []) : [],
     isLoading: !isLoaded || (loading && !data && !previousData),
     hasError: Boolean(error),
     isSignedIn: Boolean(isSignedIn),
@@ -66,10 +64,11 @@ export function useToggleWishlist() {
           variables: { productId },
           optimisticResponse: {
             toggleWishlist: {
+              __typename: "WishlistToggleResult",
               product_id: productId,
               is_wishlisted: !wasWishlisted,
               wishlist_count: nextIds.length,
-            },
+            } as ToggleWishlistMutation["toggleWishlist"],
           },
           update: (cache, { data }) => {
             if (!data) return;
@@ -121,49 +120,4 @@ export function useToggleWishlist() {
   );
 
   return { toggle };
-}
-
-export function useMoveToCart() {
-  const [mutate, { loading }] = useMoveWishlistItemToCartMutation();
-  const moveToCart = useCallback(
-    (productId: number, productName: string) => {
-      void mutate({
-        variables: { productId },
-        update: (cache, { data }) => {
-          if (!data) return;
-          cache.writeQuery<CartQuery>({
-            query: CartDocument,
-            data: { cart: data.moveWishlistItemToCart },
-          });
-          const ids =
-            cache.readQuery<WishlistIdsQuery>({ query: WishlistIdsDocument })
-              ?.wishlistIds ?? [];
-          cache.writeQuery<WishlistIdsQuery>({
-            query: WishlistIdsDocument,
-            data: { wishlistIds: ids.filter((id) => id !== productId) },
-          });
-          const list = cache.readQuery<WishlistQuery>({
-            query: WishlistDocument,
-          });
-          if (list)
-            cache.writeQuery<WishlistQuery>({
-              query: WishlistDocument,
-              data: {
-                wishlist: list.wishlist.filter((item) => item.id !== productId),
-              },
-            });
-        },
-      })
-        .then(() => toast.success(`${productName} moved to your cart`))
-        .catch((error: unknown) =>
-          toast.error(
-            error instanceof Error
-              ? error.message
-              : "Could not move this piece",
-          ),
-        );
-    },
-    [mutate],
-  );
-  return { moveToCart, isMoving: loading };
 }

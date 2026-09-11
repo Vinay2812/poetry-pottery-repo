@@ -17,6 +17,7 @@ export interface CartLineItemProps {
   maxQuantity: number;
   selectionSummary: string | null;
   isAvailable: boolean;
+  canAdjustQuantity: boolean;
   unavailableReason: string | null;
   onQuantityChange: (quantity: number) => void;
   onRemove: () => void;
@@ -33,6 +34,7 @@ export function CartLineItem({
   maxQuantity,
   selectionSummary,
   isAvailable,
+  canAdjustQuantity,
   unavailableReason,
   onQuantityChange,
   onRemove,
@@ -86,7 +88,7 @@ export function CartLineItem({
           </p>
         )}
         <div className="mt-auto flex flex-wrap items-center gap-3">
-          {isAvailable && (
+          {canAdjustQuantity && (
             <QuantityStepper
               value={quantity}
               max={maxQuantity}

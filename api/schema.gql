@@ -84,7 +84,6 @@ type FacetCount {
 type Mutation {
   addToCart(input: AddToCartInput!): Cart!
   clearCart: Cart!
-  moveWishlistItemToCart(product_id: Int!): Cart!
   removeCartItem(id: Int!): Cart!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
   updateCartItem(id: Int!, quantity: Int!): Cart!

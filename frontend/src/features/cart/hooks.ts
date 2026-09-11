@@ -30,7 +30,7 @@ export function useCart() {
     nextFetchPolicy: "cache-first",
   });
   return {
-    cart: data?.cart ?? previousData?.cart ?? null,
+    cart: isSignedIn ? (data?.cart ?? previousData?.cart ?? null) : null,
     isLoading: !isLoaded || (loading && !data && !previousData),
     hasError: Boolean(error),
     isSignedIn: Boolean(isSignedIn),
@@ -86,7 +86,7 @@ export function useCartMutations(cart: CartData | null) {
 
   // Optimistic responses patch the cached cart so the stepper feels instant; totals settle on reply.
   const optimistic = useCallback(
-    (items: CartData["items"]): CartData => {
+    (items: CartData["items"]): CartData & { __typename: "Cart" } => {
       const available = items.filter((item) => item.is_available);
       const subtotal = available.reduce(
         (sum, item) => sum + item.line_total,
@@ -99,6 +99,7 @@ export function useCartMutations(cart: CartData | null) {
           ? 0
           : flatFee;
       return {
+        __typename: "Cart",
         items,
         item_count: items.reduce((sum, item) => sum + item.quantity, 0),
         subtotal,

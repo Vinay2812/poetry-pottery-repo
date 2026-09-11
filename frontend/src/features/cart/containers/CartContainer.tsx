@@ -72,6 +72,10 @@ export function CartContainer() {
                 )}
                 selectionSummary={toSelectionSummary(item.selections)}
                 isAvailable={item.is_available}
+                canAdjustQuantity={
+                  item.is_available ||
+                  (item.product.stock > 0 && item.quantity > item.product.stock)
+                }
                 unavailableReason={item.unavailable_reason}
                 onQuantityChange={(quantity) => setQuantity(item.id, quantity)}
                 onRemove={() => remove(item.id)}
