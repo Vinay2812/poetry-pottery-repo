@@ -2,6 +2,41 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input AddToCartInput {
+  product_id: Int!
+  quantity: Int = 1
+  selections: [SelectionInputType!]
+}
+
+type Cart {
+  free_shipping_above: Int
+  item_count: Int!
+  items: [CartItem!]!
+  shipping_fee: Int!
+  subtotal: Int!
+  total: Int!
+}
+
+type CartItem {
+  id: Int!
+  is_available: Boolean!
+  line_total: Int!
+  product: Product!
+  quantity: Int!
+  selections: [CartSelection!]!
+  unavailable_reason: String
+  unit_price: Int!
+}
+
+type CartSelection {
+  group_id: Int!
+  group_name: String!
+  option_id: Int
+  option_name: String
+  price_modifier: Int!
+  text: String
+}
+
 type Category {
   icon: String
   id: Int!
@@ -46,6 +81,15 @@ type FacetCount {
   value: String!
 }
 
+type Mutation {
+  addToCart(input: AddToCartInput!): Cart!
+  clearCart: Cart!
+  moveWishlistItemToCart(product_id: Int!): Cart!
+  removeCartItem(id: Int!): Cart!
+  toggleWishlist(product_id: Int!): WishlistToggleResult!
+  updateCartItem(id: Int!, quantity: Int!): Cart!
+}
+
 enum OptionGroupKind {
   CHOICE
   TEXT
@@ -70,6 +114,7 @@ type Product {
   dimensions: String
   id: Int!
   image_urls: [String!]!
+  in_wishlist: Boolean!
   is_active: Boolean!
   is_customizable: Boolean!
   is_featured: Boolean!
@@ -137,6 +182,7 @@ type ProductsResult {
 }
 
 type Query {
+  cart: Cart!
   categories: [Category!]!
   collection(slug: String!): Collection!
   collections: [Collection!]!
@@ -146,6 +192,14 @@ type Query {
   relatedProducts(limit: Int = 8, slug: String!): [Product!]!
   siteSettings: SiteSettings!
   users(limit: Int = 20, page: Int = 1): UsersResponse!
+  wishlist: [Product!]!
+  wishlistIds: [Int!]!
+}
+
+input SelectionInputType {
+  group_id: Int!
+  option_id: Int
+  text: String
 }
 
 type SiteSettings {
@@ -191,4 +245,10 @@ type UsersResponse {
   limit: Int!
   page: Int!
   total: Int!
+}
+
+type WishlistToggleResult {
+  is_wishlisted: Boolean!
+  product_id: Int!
+  wishlist_count: Int!
 }

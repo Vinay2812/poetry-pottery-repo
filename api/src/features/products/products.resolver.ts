@@ -1,11 +1,16 @@
 import {
   Args,
+  Context,
   Int,
   Parent,
   Query,
   ResolveField,
   Resolver,
 } from "@nestjs/graphql";
+
+import { AuthGuard } from "@/common/guards/auth.guard";
+import type { GqlContext } from "@/common/types/express";
+import { WishlistService } from "@/features/wishlist/wishlist.service";
 
 import { ProductsService } from "./products.service";
 import {
@@ -19,7 +24,11 @@ import {
 
 @Resolver(() => Product)
 export class ProductsResolver {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(
+    private readonly productsService: ProductsService,
+    private readonly wishlistService: WishlistService,
+    private readonly authGuard: AuthGuard,
+  ) {}
 
   @Query(() => ProductsResult)
   products(
@@ -32,6 +41,20 @@ export class ProductsResolver {
   @Query(() => Product)
   product(@Args("slug") slug: string): Promise<Product> {
     return this.productsService.bySlug(slug);
+  }
+
+  // Personalised for signed-in visitors on public queries; anonymous callers always get false.
+  @ResolveField(() => Boolean)
+  async in_wishlist(
+    @Parent() product: Product,
+    @Context() context: GqlContext,
+  ): Promise<boolean> {
+    const { req } = context;
+    req.wishlistIds ??= this.authGuard
+      .tryAuthenticate(req)
+      .then((user) => (user ? this.wishlistService.ids(user.db_user_id) : []))
+      .then((ids) => new Set(ids));
+    return (await req.wishlistIds).has(product.id);
   }
 
   @ResolveField(() => [ProductOptionGroup])

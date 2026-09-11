@@ -6,18 +6,14 @@ import { useCallback, useMemo } from "react";
 
 import { UserRole } from "@/graphql/generated/graphql";
 
+import { useCartCount } from "@/features/cart/hooks";
 import { SiteHeader } from "@/features/layout/components/SiteHeader";
 import { isActivePath, NAV_LINKS } from "@/features/layout/types";
+import { useWishlistIds } from "@/features/wishlist/hooks";
 
-export interface SiteHeaderContainerProps {
-  cartCount: number;
-  wishlistCount: number;
-}
-
-export function SiteHeaderContainer({
-  cartCount,
-  wishlistCount,
-}: SiteHeaderContainerProps) {
+export function SiteHeaderContainer() {
+  const cartCount = useCartCount();
+  const { count: wishlistCount } = useWishlistIds();
   const pathname = usePathname();
   const router = useRouter();
   const { isSignedIn, user } = useUser();

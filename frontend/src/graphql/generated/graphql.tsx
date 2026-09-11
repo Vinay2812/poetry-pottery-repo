@@ -18,6 +18,44 @@ export type Scalars = {
   DateTime: { input: string; output: string; }
 };
 
+export type AddToCartInput = {
+  product_id: Scalars['Int']['input'];
+  quantity?: InputMaybe<Scalars['Int']['input']>;
+  selections?: InputMaybe<Array<SelectionInputType>>;
+};
+
+export type Cart = {
+  __typename?: 'Cart';
+  free_shipping_above?: Maybe<Scalars['Int']['output']>;
+  item_count: Scalars['Int']['output'];
+  items: Array<CartItem>;
+  shipping_fee: Scalars['Int']['output'];
+  subtotal: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type CartItem = {
+  __typename?: 'CartItem';
+  id: Scalars['Int']['output'];
+  is_available: Scalars['Boolean']['output'];
+  line_total: Scalars['Int']['output'];
+  product: Product;
+  quantity: Scalars['Int']['output'];
+  selections: Array<CartSelection>;
+  unavailable_reason?: Maybe<Scalars['String']['output']>;
+  unit_price: Scalars['Int']['output'];
+};
+
+export type CartSelection = {
+  __typename?: 'CartSelection';
+  group_id: Scalars['Int']['output'];
+  group_name: Scalars['String']['output'];
+  option_id?: Maybe<Scalars['Int']['output']>;
+  option_name?: Maybe<Scalars['String']['output']>;
+  price_modifier: Scalars['Int']['output'];
+  text?: Maybe<Scalars['String']['output']>;
+};
+
 export type Category = {
   __typename?: 'Category';
   icon?: Maybe<Scalars['String']['output']>;
@@ -62,6 +100,42 @@ export type FacetCount = {
   value: Scalars['String']['output'];
 };
 
+export type Mutation = {
+  __typename?: 'Mutation';
+  addToCart: Cart;
+  clearCart: Cart;
+  moveWishlistItemToCart: Cart;
+  removeCartItem: Cart;
+  toggleWishlist: WishlistToggleResult;
+  updateCartItem: Cart;
+};
+
+
+export type MutationAddToCartArgs = {
+  input: AddToCartInput;
+};
+
+
+export type MutationMoveWishlistItemToCartArgs = {
+  product_id: Scalars['Int']['input'];
+};
+
+
+export type MutationRemoveCartItemArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationToggleWishlistArgs = {
+  product_id: Scalars['Int']['input'];
+};
+
+
+export type MutationUpdateCartItemArgs = {
+  id: Scalars['Int']['input'];
+  quantity: Scalars['Int']['input'];
+};
+
 export enum OptionGroupKind {
   Choice = 'CHOICE',
   Text = 'TEXT'
@@ -88,6 +162,7 @@ export type Product = {
   dimensions?: Maybe<Scalars['String']['output']>;
   id: Scalars['Int']['output'];
   image_urls: Array<Scalars['String']['output']>;
+  in_wishlist: Scalars['Boolean']['output'];
   is_active: Scalars['Boolean']['output'];
   is_customizable: Scalars['Boolean']['output'];
   is_featured: Scalars['Boolean']['output'];
@@ -160,6 +235,7 @@ export type ProductsResult = {
 
 export type Query = {
   __typename?: 'Query';
+  cart: Cart;
   categories: Array<Category>;
   collection: Collection;
   collections: Array<Collection>;
@@ -169,6 +245,8 @@ export type Query = {
   relatedProducts: Array<Product>;
   siteSettings: SiteSettings;
   users: UsersResponse;
+  wishlist: Array<Product>;
+  wishlistIds: Array<Scalars['Int']['output']>;
 };
 
 
@@ -201,6 +279,12 @@ export type QueryRelatedProductsArgs = {
 export type QueryUsersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type SelectionInputType = {
+  group_id: Scalars['Int']['input'];
+  option_id?: InputMaybe<Scalars['Int']['input']>;
+  text?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type SiteSettings = {
@@ -250,6 +334,47 @@ export type UsersResponse = {
   page: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
 };
+
+export type WishlistToggleResult = {
+  __typename?: 'WishlistToggleResult';
+  is_wishlisted: Scalars['Boolean']['output'];
+  product_id: Scalars['Int']['output'];
+  wishlist_count: Scalars['Int']['output'];
+};
+
+export type CartFieldsFragment = { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> };
+
+export type CartQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CartQuery = { cart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+
+export type AddToCartMutationVariables = Exact<{
+  input: AddToCartInput;
+}>;
+
+
+export type AddToCartMutation = { addToCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+
+export type UpdateCartItemMutationVariables = Exact<{
+  id: number;
+  quantity: number;
+}>;
+
+
+export type UpdateCartItemMutation = { updateCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+
+export type RemoveCartItemMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type RemoveCartItemMutation = { removeCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+
+export type ClearCartMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
 
 export type ProductCardFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null };
 
@@ -304,6 +429,30 @@ export type SiteSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type SiteSettingsQuery = { siteSettings: { contact_phone: string, whatsapp_number: string, contact_email: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, announcement_text: string | null, announcement_href: string | null, hero_heading: string, hero_subheading: string, hero_image_url: string, hero_cta_text: string, hero_cta_href: string } };
 
+export type WishlistQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type WishlistQuery = { wishlist: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null }> };
+
+export type WishlistIdsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type WishlistIdsQuery = { wishlistIds: Array<number> };
+
+export type ToggleWishlistMutationVariables = Exact<{
+  productId: number;
+}>;
+
+
+export type ToggleWishlistMutation = { toggleWishlist: { product_id: number, is_wishlisted: boolean, wishlist_count: number } };
+
+export type MoveWishlistItemToCartMutationVariables = Exact<{
+  productId: number;
+}>;
+
+
+export type MoveWishlistItemToCartMutation = { moveWishlistItemToCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+
 export const ProductCardFragmentDoc = gql`
     fragment ProductCard on Product {
   id
@@ -328,6 +477,197 @@ export const ProductCardFragmentDoc = gql`
   }
 }
     `;
+export const CartFieldsFragmentDoc = gql`
+    fragment CartFields on Cart {
+  item_count
+  subtotal
+  shipping_fee
+  free_shipping_above
+  total
+  items {
+    id
+    quantity
+    unit_price
+    line_total
+    is_available
+    unavailable_reason
+    selections {
+      group_id
+      group_name
+      option_id
+      option_name
+      text
+      price_modifier
+    }
+    product {
+      ...ProductCard
+    }
+  }
+}
+    `;
+export const CartDocument = gql`
+    query Cart {
+  cart {
+    ...CartFields
+  }
+}
+    ${CartFieldsFragmentDoc}
+${ProductCardFragmentDoc}`;
+
+/**
+ * __useCartQuery__
+ *
+ * To run a query within a React component, call `useCartQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCartQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCartQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useCartQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<CartQuery, CartQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<CartQuery, CartQueryVariables>(CartDocument, options);
+      }
+export function useCartLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<CartQuery, CartQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<CartQuery, CartQueryVariables>(CartDocument, options);
+        }
+export type CartQueryHookResult = ReturnType<typeof useCartQuery>;
+export type CartLazyQueryHookResult = ReturnType<typeof useCartLazyQuery>;
+export type CartQueryResult = ApolloReactCommon.QueryResult<CartQuery, CartQueryVariables>;
+export const AddToCartDocument = gql`
+    mutation AddToCart($input: AddToCartInput!) {
+  addToCart(input: $input) {
+    ...CartFields
+  }
+}
+    ${CartFieldsFragmentDoc}
+${ProductCardFragmentDoc}`;
+
+/**
+ * __useAddToCartMutation__
+ *
+ * To run a mutation, you first call `useAddToCartMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddToCartMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addToCartMutation, { data, loading, error }] = useAddToCartMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddToCartMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<AddToCartMutation, AddToCartMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<AddToCartMutation, AddToCartMutationVariables>(AddToCartDocument, options);
+      }
+export type AddToCartMutationHookResult = ReturnType<typeof useAddToCartMutation>;
+export type AddToCartMutationResult = ApolloReactCommon.MutationResult<AddToCartMutation>;
+export const UpdateCartItemDocument = gql`
+    mutation UpdateCartItem($id: Int!, $quantity: Int!) {
+  updateCartItem(id: $id, quantity: $quantity) {
+    ...CartFields
+  }
+}
+    ${CartFieldsFragmentDoc}
+${ProductCardFragmentDoc}`;
+
+/**
+ * __useUpdateCartItemMutation__
+ *
+ * To run a mutation, you first call `useUpdateCartItemMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateCartItemMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateCartItemMutation, { data, loading, error }] = useUpdateCartItemMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      quantity: // value for 'quantity'
+ *   },
+ * });
+ */
+export function useUpdateCartItemMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateCartItemMutation, UpdateCartItemMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateCartItemMutation, UpdateCartItemMutationVariables>(UpdateCartItemDocument, options);
+      }
+export type UpdateCartItemMutationHookResult = ReturnType<typeof useUpdateCartItemMutation>;
+export type UpdateCartItemMutationResult = ApolloReactCommon.MutationResult<UpdateCartItemMutation>;
+export const RemoveCartItemDocument = gql`
+    mutation RemoveCartItem($id: Int!) {
+  removeCartItem(id: $id) {
+    ...CartFields
+  }
+}
+    ${CartFieldsFragmentDoc}
+${ProductCardFragmentDoc}`;
+
+/**
+ * __useRemoveCartItemMutation__
+ *
+ * To run a mutation, you first call `useRemoveCartItemMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRemoveCartItemMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [removeCartItemMutation, { data, loading, error }] = useRemoveCartItemMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useRemoveCartItemMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<RemoveCartItemMutation, RemoveCartItemMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<RemoveCartItemMutation, RemoveCartItemMutationVariables>(RemoveCartItemDocument, options);
+      }
+export type RemoveCartItemMutationHookResult = ReturnType<typeof useRemoveCartItemMutation>;
+export type RemoveCartItemMutationResult = ApolloReactCommon.MutationResult<RemoveCartItemMutation>;
+export const ClearCartDocument = gql`
+    mutation ClearCart {
+  clearCart {
+    ...CartFields
+  }
+}
+    ${CartFieldsFragmentDoc}
+${ProductCardFragmentDoc}`;
+
+/**
+ * __useClearCartMutation__
+ *
+ * To run a mutation, you first call `useClearCartMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useClearCartMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [clearCartMutation, { data, loading, error }] = useClearCartMutation({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useClearCartMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ClearCartMutation, ClearCartMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<ClearCartMutation, ClearCartMutationVariables>(ClearCartDocument, options);
+      }
+export type ClearCartMutationHookResult = ReturnType<typeof useClearCartMutation>;
+export type ClearCartMutationResult = ApolloReactCommon.MutationResult<ClearCartMutation>;
 export const ProductsDocument = gql`
     query Products($filter: ProductsFilterInput) {
   products(filter: $filter) {
@@ -683,3 +1023,134 @@ export function useSiteSettingsLazyQuery(baseOptions?: ApolloReactHooks.LazyQuer
 export type SiteSettingsQueryHookResult = ReturnType<typeof useSiteSettingsQuery>;
 export type SiteSettingsLazyQueryHookResult = ReturnType<typeof useSiteSettingsLazyQuery>;
 export type SiteSettingsQueryResult = ApolloReactCommon.QueryResult<SiteSettingsQuery, SiteSettingsQueryVariables>;
+export const WishlistDocument = gql`
+    query Wishlist {
+  wishlist {
+    ...ProductCard
+  }
+}
+    ${ProductCardFragmentDoc}`;
+
+/**
+ * __useWishlistQuery__
+ *
+ * To run a query within a React component, call `useWishlistQuery` and pass it any options that fit your needs.
+ * When your component renders, `useWishlistQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useWishlistQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useWishlistQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<WishlistQuery, WishlistQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<WishlistQuery, WishlistQueryVariables>(WishlistDocument, options);
+      }
+export function useWishlistLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<WishlistQuery, WishlistQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<WishlistQuery, WishlistQueryVariables>(WishlistDocument, options);
+        }
+export type WishlistQueryHookResult = ReturnType<typeof useWishlistQuery>;
+export type WishlistLazyQueryHookResult = ReturnType<typeof useWishlistLazyQuery>;
+export type WishlistQueryResult = ApolloReactCommon.QueryResult<WishlistQuery, WishlistQueryVariables>;
+export const WishlistIdsDocument = gql`
+    query WishlistIds {
+  wishlistIds
+}
+    `;
+
+/**
+ * __useWishlistIdsQuery__
+ *
+ * To run a query within a React component, call `useWishlistIdsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useWishlistIdsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useWishlistIdsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useWishlistIdsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<WishlistIdsQuery, WishlistIdsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<WishlistIdsQuery, WishlistIdsQueryVariables>(WishlistIdsDocument, options);
+      }
+export function useWishlistIdsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<WishlistIdsQuery, WishlistIdsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<WishlistIdsQuery, WishlistIdsQueryVariables>(WishlistIdsDocument, options);
+        }
+export type WishlistIdsQueryHookResult = ReturnType<typeof useWishlistIdsQuery>;
+export type WishlistIdsLazyQueryHookResult = ReturnType<typeof useWishlistIdsLazyQuery>;
+export type WishlistIdsQueryResult = ApolloReactCommon.QueryResult<WishlistIdsQuery, WishlistIdsQueryVariables>;
+export const ToggleWishlistDocument = gql`
+    mutation ToggleWishlist($productId: Int!) {
+  toggleWishlist(product_id: $productId) {
+    product_id
+    is_wishlisted
+    wishlist_count
+  }
+}
+    `;
+
+/**
+ * __useToggleWishlistMutation__
+ *
+ * To run a mutation, you first call `useToggleWishlistMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useToggleWishlistMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [toggleWishlistMutation, { data, loading, error }] = useToggleWishlistMutation({
+ *   variables: {
+ *      productId: // value for 'productId'
+ *   },
+ * });
+ */
+export function useToggleWishlistMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ToggleWishlistMutation, ToggleWishlistMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<ToggleWishlistMutation, ToggleWishlistMutationVariables>(ToggleWishlistDocument, options);
+      }
+export type ToggleWishlistMutationHookResult = ReturnType<typeof useToggleWishlistMutation>;
+export type ToggleWishlistMutationResult = ApolloReactCommon.MutationResult<ToggleWishlistMutation>;
+export const MoveWishlistItemToCartDocument = gql`
+    mutation MoveWishlistItemToCart($productId: Int!) {
+  moveWishlistItemToCart(product_id: $productId) {
+    ...CartFields
+  }
+}
+    ${CartFieldsFragmentDoc}
+${ProductCardFragmentDoc}`;
+
+/**
+ * __useMoveWishlistItemToCartMutation__
+ *
+ * To run a mutation, you first call `useMoveWishlistItemToCartMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useMoveWishlistItemToCartMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [moveWishlistItemToCartMutation, { data, loading, error }] = useMoveWishlistItemToCartMutation({
+ *   variables: {
+ *      productId: // value for 'productId'
+ *   },
+ * });
+ */
+export function useMoveWishlistItemToCartMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<MoveWishlistItemToCartMutation, MoveWishlistItemToCartMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<MoveWishlistItemToCartMutation, MoveWishlistItemToCartMutationVariables>(MoveWishlistItemToCartDocument, options);
+      }
+export type MoveWishlistItemToCartMutationHookResult = ReturnType<typeof useMoveWishlistItemToCartMutation>;
+export type MoveWishlistItemToCartMutationResult = ApolloReactCommon.MutationResult<MoveWishlistItemToCartMutation>;

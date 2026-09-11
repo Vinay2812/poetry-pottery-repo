@@ -29,6 +29,18 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
+  // For public resolvers that personalise when a session happens to exist.
+  async tryAuthenticate(request: AppRequest): Promise<AuthUser | null> {
+    try {
+      return await this.authenticate(request);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
   protected async authenticate(request: AppRequest): Promise<AuthUser> {
     const cached = request.authenticatedUser;
     if (cached) {
