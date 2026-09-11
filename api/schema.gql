@@ -8,6 +8,31 @@ input AddToCartInput {
   selections: [SelectionInputType!]
 }
 
+type Address {
+  city: String!
+  id: Int!
+  is_default: Boolean!
+  landmark: String
+  line1: String!
+  line2: String
+  name: String!
+  phone: String!
+  pincode: String!
+  state: String!
+}
+
+input AddressInput {
+  city: String!
+  is_default: Boolean
+  landmark: String
+  line1: String!
+  line2: String
+  name: String!
+  phone: String!
+  pincode: String!
+  state: String!
+}
+
 type Cart {
   free_shipping_above: Int
   item_count: Int!
@@ -52,6 +77,21 @@ type CategoryRef {
   slug: String!
 }
 
+type CheckoutQuote {
+  coupon_code: String
+  coupon_message: String
+  discount: Int!
+  item_count: Int!
+  problems: [String!]!
+  shipping_fee: Int!
+  subtotal: Int!
+  total: Int!
+}
+
+input CheckoutQuoteInput {
+  coupon_code: String
+}
+
 type Collection {
   description: String
   ends_at: DateTime
@@ -83,9 +123,15 @@ type FacetCount {
 
 type Mutation {
   addToCart(input: AddToCartInput!): Cart!
+  cancelOrder(id: String!, reason: String): Order!
   clearCart: Cart!
+  createAddress(input: AddressInput!): Address!
+  deleteAddress(id: Int!): Boolean!
+  placeOrder(input: PlaceOrderInput!): Order!
   removeCartItem(id: Int!): Cart!
+  setDefaultAddress(id: Int!): Address!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
+  updateAddress(id: Int!, input: AddressInput!): Address!
   updateCartItem(id: Int!, quantity: Int!): Cart!
 }
 
@@ -94,11 +140,67 @@ enum OptionGroupKind {
   TEXT
 }
 
+type Order {
+  can_cancel: Boolean!
+  cancel_reason: String
+  cancelled_at: DateTime
+  confirmed_at: DateTime
+  coupon_code: String
+  created_at: DateTime!
+  customer_note: String
+  delivered_at: DateTime
+  discount: Int!
+  id: String!
+  item_count: Int!
+  items: [OrderItem!]!
+  paid_at: DateTime
+  refunded_at: DateTime
+  shipped_at: DateTime
+  shipping_address: ShippingAddress!
+  shipping_fee: Int!
+  status: OrderStatus!
+  subtotal: Int!
+  total: Int!
+  tracking_note: String
+}
+
+type OrderItem {
+  id: Int!
+  line_total: Int!
+  product: Product
+  product_image: String
+  product_name: String!
+  quantity: Int!
+  selections: [CartSelection!]!
+  unit_price: Int!
+}
+
+enum OrderStatus {
+  CANCELLED
+  CONFIRMED
+  DELIVERED
+  PAID
+  PENDING
+  REFUNDED
+  SHIPPED
+}
+
+type OrdersResult {
+  items: [Order!]!
+  page_info: PageInfo!
+}
+
 type PageInfo {
   has_more: Boolean!
   limit: Int!
   page: Int!
   total: Int!
+}
+
+input PlaceOrderInput {
+  address_id: Int!
+  coupon_code: String
+  customer_note: String
 }
 
 type Product {
@@ -181,11 +283,15 @@ type ProductsResult {
 }
 
 type Query {
+  addresses: [Address!]!
   cart: Cart!
   categories: [Category!]!
+  checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
   collection(slug: String!): Collection!
   collections: [Collection!]!
   featuredProducts(limit: Int = 8): [Product!]!
+  order(id: String!): Order!
+  orders(limit: Int, page: Int): OrdersResult!
   product(slug: String!): Product!
   products(filter: ProductsFilterInput): ProductsResult!
   relatedProducts(limit: Int = 8, slug: String!): [Product!]!
@@ -199,6 +305,17 @@ input SelectionInputType {
   group_id: Int!
   option_id: Int
   text: String
+}
+
+type ShippingAddress {
+  city: String!
+  landmark: String
+  line1: String!
+  line2: String
+  name: String!
+  phone: String!
+  pincode: String!
+  state: String!
 }
 
 type SiteSettings {

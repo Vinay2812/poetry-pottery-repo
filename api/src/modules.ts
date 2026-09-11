@@ -97,3 +97,5 @@ export { SearchModule } from "@/features/search/search.module";
 export { ProductsModule } from "@/features/products/products.module";
 export { CartModule } from "@/features/cart/cart.module";
 export { WishlistModule } from "@/features/wishlist/wishlist.module";
+export { AddressesModule } from "@/features/addresses/addresses.module";
+export { OrdersModule } from "@/features/orders/orders.module";
