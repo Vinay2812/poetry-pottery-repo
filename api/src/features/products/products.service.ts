@@ -66,6 +66,16 @@ export function sellableProductWhere(
   };
 }
 
+// Sellable and either on the shelf or thrown to order.
+export function availableProductWhere(): Prisma.ProductWhereInput {
+  return {
+    AND: [
+      sellableProductWhere(),
+      { OR: [{ stock: { gt: 0 } }, { is_customizable: true }] },
+    ],
+  };
+}
+
 export function toProduct(row: ProductRow): Product {
   return row;
 }
@@ -151,7 +161,7 @@ export class ProductsService {
 
   async bySlug(slug: string): Promise<Product> {
     const row = await this.prisma.product.findFirst({
-      where: { slug, is_active: true },
+      where: { slug, ...sellableProductWhere() },
       include: productListInclude,
     });
     if (!row) {
@@ -179,9 +189,8 @@ export class ProductsService {
     const take = Math.min(12, Math.max(1, limit));
     const rows = await this.prisma.product.findMany({
       where: {
-        ...sellableProductWhere(),
+        ...availableProductWhere(),
         id: { not: product.id },
-        stock: { gt: 0 },
         categories: {
           some: { id: { in: product.categories.map((c) => c.id) } },
         },
@@ -196,7 +205,7 @@ export class ProductsService {
   async featured(limit: number): Promise<Product[]> {
     const take = Math.min(12, Math.max(1, limit));
     const rows = await this.prisma.product.findMany({
-      where: { ...sellableProductWhere(), stock: { gt: 0 } },
+      where: availableProductWhere(),
       include: productListInclude,
       orderBy: SORT_ORDER[ProductSort.FEATURED],
       take,

@@ -14,6 +14,7 @@ import {
 } from "@/features/products/components/CategoryStrip";
 import { EmptyResults } from "@/features/products/components/EmptyResults";
 import { FilterSheet } from "@/features/products/components/FilterSheet";
+import { LoadFailed } from "@/features/products/components/LoadFailed";
 import { LoadMore } from "@/features/products/components/LoadMore";
 import { ProductCard } from "@/features/products/components/ProductCard";
 import { ProductCardSkeleton } from "@/features/products/components/ProductCardSkeleton";
@@ -60,10 +61,11 @@ export function ProductListContainer({
   const [searchDraft, setSearchDraft] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data, previousData, loading, fetchMore } = useProductsQuery({
-    variables: { filter: toFilterInput(filters, 1) },
-    notifyOnNetworkStatusChange: true,
-  });
+  const { data, previousData, loading, error, fetchMore, refetch } =
+    useProductsQuery({
+      variables: { filter: toFilterInput(filters, 1) },
+      notifyOnNetworkStatusChange: true,
+    });
   const result = data?.products ?? previousData?.products;
   const items = result?.items ?? [];
   const pageInfo = result?.page_info;
@@ -87,7 +89,6 @@ export function ProductListContainer({
       setSearchDraft(value);
       if (searchTimer.current) clearTimeout(searchTimer.current);
       searchTimer.current = setTimeout(() => {
-        setSearchDraft(null);
         applyFilters({ ...filters, search: value.trim() });
       }, SEARCH_DEBOUNCE_MS);
     },
@@ -95,9 +96,14 @@ export function ProductListContainer({
   );
   const handleSearchClear = useCallback(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
-    setSearchDraft(null);
+    setSearchDraft("");
     applyFilters({ ...filters, search: "" });
   }, [applyFilters, filters]);
+  // The draft stays on screen until the URL has caught up, so the field never snaps back mid-navigation.
+  const searchValue =
+    searchDraft !== null && searchDraft.trim() !== filters.search
+      ? searchDraft
+      : filters.search;
   useEffect(
     () => () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -241,7 +247,7 @@ export function ProductListContainer({
       {(isSearchPage || filters.search) && (
         <div className="max-w-xl">
           <SearchField
-            value={searchDraft ?? filters.search}
+            value={searchValue}
             placeholder="Try “tea cup”, “sage green” or “planter”"
             onChange={handleSearchChange}
             onClear={handleSearchClear}
@@ -277,6 +283,8 @@ export function ProductListContainer({
                 <ProductCardSkeleton key={index} />
               ))}
             </ProductGrid>
+          ) : error && !result ? (
+            <LoadFailed onRetry={() => void refetch()} />
           ) : items.length === 0 ? (
             <EmptyResults
               search={filters.search}

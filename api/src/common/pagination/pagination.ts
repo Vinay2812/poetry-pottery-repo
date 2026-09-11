@@ -1,4 +1,4 @@
-import { ArgsType, Field, InputType, Int, ObjectType } from "@nestjs/graphql";
+import { Field, Int, ObjectType } from "@nestjs/graphql";
 
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 60;
@@ -24,24 +24,6 @@ export function clampPage(
 
 export function hasMore(bounds: PageBounds, total: number): boolean {
   return bounds.skip + bounds.limit < total;
-}
-
-@ArgsType()
-export class PageArgs {
-  @Field(() => Int, { nullable: true, defaultValue: 1 })
-  page!: number;
-
-  @Field(() => Int, { nullable: true, defaultValue: DEFAULT_PAGE_SIZE })
-  limit!: number;
-}
-
-@InputType()
-export class PageInput {
-  @Field(() => Int, { nullable: true, defaultValue: 1 })
-  page!: number;
-
-  @Field(() => Int, { nullable: true, defaultValue: DEFAULT_PAGE_SIZE })
-  limit!: number;
 }
 
 @ObjectType()
