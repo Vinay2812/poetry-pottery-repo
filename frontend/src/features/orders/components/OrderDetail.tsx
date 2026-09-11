@@ -24,7 +24,7 @@ export interface OrderDetailProps {
   currentStepIndex: number;
   isClosed: boolean;
   closedLabel: string | null;
-  items: OrderItemRowProps[];
+  items: (OrderItemRowProps & { id: number })[];
   subtotal: number;
   discount: number;
   couponCode: string | null;
@@ -131,8 +131,14 @@ export function OrderDetail({
             <ul className="divide-y divide-border">
               {items.map((item) => (
                 <OrderItemRow
-                  key={`${item.name}-${item.lineTotal}-${item.quantity}`}
-                  {...item}
+                  key={item.id}
+                  href={item.href}
+                  name={item.name}
+                  imageUrl={item.imageUrl}
+                  quantity={item.quantity}
+                  unitPrice={item.unitPrice}
+                  lineTotal={item.lineTotal}
+                  selectionSummary={item.selectionSummary}
                 />
               ))}
             </ul>

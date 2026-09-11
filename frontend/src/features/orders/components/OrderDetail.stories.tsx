@@ -8,6 +8,7 @@ import type { OrderTimelineStep } from "./OrderTimeline";
 
 const items = [
   {
+    id: 1,
     href: "/products/slate-morning-mug",
     name: "Slate Morning Mug",
     imageUrl:
@@ -18,6 +19,7 @@ const items = [
     selectionSummary: null,
   },
   {
+    id: 2,
     href: "/products/carved-initial-mug",
     name: "Carved Initial Mug",
     imageUrl:

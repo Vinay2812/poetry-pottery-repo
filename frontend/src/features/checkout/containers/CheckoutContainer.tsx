@@ -49,6 +49,9 @@ export function CheckoutContainer() {
   const [placeOrder, { loading: isPlacing }] = usePlaceOrderMutation({
     update: (cache, { data }) => {
       if (!data) return;
+      // The cached orders list predates this order; drop it so the next visit refetches.
+      cache.evict({ id: "ROOT_QUERY", fieldName: "orders" });
+      cache.gc();
       const current = cache.readQuery<CartQuery>({ query: CartDocument });
       if (current) {
         cache.writeQuery<CartQuery>({

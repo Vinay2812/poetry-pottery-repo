@@ -1,10 +1,12 @@
 "use client";
 
+import { useClerk } from "@clerk/nextjs";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/format";
 
+import { SignInWall } from "@/features/auth/components/SignInWall";
 import { EmptyOrders } from "@/features/orders/components/EmptyOrders";
 import { OrderCard } from "@/features/orders/components/OrderCard";
 import { useOrders } from "@/features/orders/hooks";
@@ -16,7 +18,9 @@ import {
 
 export function OrdersListContainer() {
   const [page, setPage] = useState(1);
-  const { orders, pageInfo, isLoading, hasError, refetch } = useOrders(page);
+  const { orders, pageInfo, isLoading, hasError, isSignedIn, refetch } =
+    useOrders(page);
+  const { openSignIn } = useClerk();
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
@@ -30,6 +34,11 @@ export function OrdersListContainer() {
             />
           ))}
         </div>
+      ) : !isSignedIn ? (
+        <SignInWall
+          message="Sign in to see your orders"
+          onSignIn={() => openSignIn()}
+        />
       ) : hasError ? (
         <div className="flex flex-col items-center gap-3 rounded-3xl bg-cream px-6 py-16 text-center">
           <p className="text-sm text-muted-foreground">

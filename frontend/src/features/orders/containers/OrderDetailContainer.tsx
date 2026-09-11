@@ -1,6 +1,6 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { useCallback, useState } from "react";
 
 import { formatDateTime, formatInr } from "@/lib/format";
@@ -9,6 +9,7 @@ import { toSelectionSummary } from "@/features/cart/types";
 import { buildWhatsAppUrl } from "@/features/layout/types";
 import { CancelOrderDialog } from "@/features/orders/components/CancelOrderDialog";
 import { OrderDetail } from "@/features/orders/components/OrderDetail";
+import { SignInWall } from "@/features/auth/components/SignInWall";
 import { useCancelOrder, useOrder } from "@/features/orders/hooks";
 import {
   isClosed,
@@ -31,7 +32,8 @@ export function OrderDetailContainer({
   isJustPlaced,
   whatsappNumber,
 }: OrderDetailContainerProps) {
-  const { order, isLoading, hasError, refetch } = useOrder(orderId);
+  const { order, isLoading, hasError, isSignedIn, refetch } = useOrder(orderId);
+  const { openSignIn } = useClerk();
   const { cancel, isCancelling } = useCancelOrder();
   const { user } = useUser();
   const [isCancelOpen, setIsCancelOpen] = useState(false);
@@ -51,6 +53,14 @@ export function OrderDetailContainer({
         <div className="h-8 w-56 animate-pulse rounded-full bg-primary-light" />
         <div className="mt-8 h-64 animate-pulse rounded-3xl bg-primary-light/70" />
       </div>
+    );
+  }
+  if (!isSignedIn) {
+    return (
+      <SignInWall
+        message="Sign in to see this order"
+        onSignIn={() => openSignIn()}
+      />
     );
   }
   if (hasError || !order) {
@@ -115,6 +125,7 @@ export function OrderDetailContainer({
         isClosed={closed}
         closedLabel={closedLabel}
         items={order.items.map((item) => ({
+          id: item.id,
           href: item.product ? toProductPath(item.product.slug) : null,
           name: item.product_name,
           imageUrl: item.product_image,

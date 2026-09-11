@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -28,6 +29,7 @@ import {
   STATUS_TIMESTAMP,
   STOCK_HOLDING,
 } from "./order-status";
+import type { Cart } from "@/features/cart/cart.type";
 import type {
   CheckoutQuote,
   Order,
@@ -45,7 +47,16 @@ export const orderInclude = {
 
 type OrderRow = Prisma.OrderGetPayload<{ include: typeof orderInclude }>;
 
-export function toOrder(row: OrderRow): Order {
+// Lines link to the shop only while the piece can still be bought there.
+function isLinkable(
+  product: OrderRow["items"][number]["product"],
+  now: Date,
+): boolean {
+  if (!product.is_active) return false;
+  return !(product.collection?.ends_at && product.collection.ends_at < now);
+}
+
+export function toOrder(row: OrderRow, now = new Date()): Order {
   return {
     id: row.id,
     status: row.status,
@@ -62,7 +73,7 @@ export function toOrder(row: OrderRow): Order {
     item_count: row.items.reduce((sum, item) => sum + item.quantity, 0),
     items: row.items.map((item) => ({
       id: item.id,
-      product: item.product.is_active ? toProduct(item.product) : null,
+      product: isLinkable(item.product, now) ? toProduct(item.product) : null,
       product_name: item.product_name,
       product_image: item.product_image,
       unit_price: item.unit_price,
@@ -93,9 +104,10 @@ export class OrdersService {
   async quote(
     userId: number,
     couponCode: string | null | undefined,
+    snapshot?: Cart,
   ): Promise<CheckoutQuote> {
     const [cart, settings] = await Promise.all([
-      this.cart.get(userId),
+      snapshot ?? this.cart.get(userId),
       this.settings.get(),
     ]);
     const available = cart.items.filter((item) => item.is_available);
@@ -138,13 +150,14 @@ export class OrdersService {
   }
 
   async place(userId: number, input: PlaceOrderInput): Promise<Order> {
-    const [address, quote, cart] = await Promise.all([
+    const [address, cart] = await Promise.all([
       this.prisma.address.findFirst({
         where: { id: input.address_id, user_id: userId },
       }),
-      this.quote(userId, input.coupon_code),
       this.cart.get(userId),
     ]);
+    // One cart snapshot feeds both the totals and the order lines.
+    const quote = await this.quote(userId, input.coupon_code, cart);
     if (!address) {
       throw new NotFoundException("Choose a delivery address");
     }
@@ -245,7 +258,12 @@ export class OrdersService {
         },
         include: orderInclude,
       });
-      await this.prisma.cartItem.deleteMany({ where: { user_id: userId } });
+      await this.prisma.cartItem.deleteMany({
+        where: {
+          user_id: userId,
+          id: { in: available.map((item) => item.id) },
+        },
+      });
       return created;
     });
 
@@ -270,7 +288,10 @@ export class OrdersService {
       }),
       this.prisma.order.count({ where: { user_id: userId } }),
     ]);
-    return { items: rows.map(toOrder), page_info: toPageInfo(bounds, total) };
+    return {
+      items: rows.map((row) => toOrder(row)),
+      page_info: toPageInfo(bounds, total),
+    };
   }
 
   async byId(userId: number, id: string): Promise<Order> {
@@ -327,36 +348,47 @@ export class OrdersService {
         `An order cannot move from ${current.status.toLowerCase()} to ${next.toLowerCase()}`,
       );
     }
-    const releasesStock =
-      STOCK_HOLDING.includes(current.status) && !STOCK_HOLDING.includes(next);
-    if (releasesStock) {
-      for (const item of current.items) {
-        await this.prisma.product.update({
-          where: { id: item.product_id },
-          data: {
-            sales_count: { decrement: item.quantity },
-            ...(item.product.is_customizable
-              ? {}
-              : { stock: { increment: item.quantity } }),
-          },
-        });
+    return this.prisma.withTransaction(async () => {
+      const stamp = STATUS_TIMESTAMP[next];
+      // Predicated on the status we read, so two concurrent transitions cannot both release stock.
+      const moved = await this.prisma.order.updateMany({
+        where: { id: current.id, status: current.status },
+        data: {
+          status: next,
+          ...(stamp ? { [stamp]: new Date() } : {}),
+          ...extra,
+        },
+      });
+      if (moved.count === 0) {
+        throw new ConflictException(
+          "This order was just updated, refresh and try again",
+        );
       }
-      if (current.coupon_id !== null) {
-        await this.prisma.coupon.updateMany({
-          where: { id: current.coupon_id, uses_count: { gt: 0 } },
-          data: { uses_count: { decrement: 1 } },
-        });
+      const releasesStock =
+        STOCK_HOLDING.includes(current.status) && !STOCK_HOLDING.includes(next);
+      if (releasesStock) {
+        for (const item of current.items) {
+          await this.prisma.product.update({
+            where: { id: item.product_id },
+            data: {
+              sales_count: { decrement: item.quantity },
+              ...(item.product.is_customizable
+                ? {}
+                : { stock: { increment: item.quantity } }),
+            },
+          });
+        }
+        if (current.coupon_id !== null) {
+          await this.prisma.coupon.updateMany({
+            where: { id: current.coupon_id, uses_count: { gt: 0 } },
+            data: { uses_count: { decrement: 1 } },
+          });
+        }
       }
-    }
-    const stamp = STATUS_TIMESTAMP[next];
-    return this.prisma.order.update({
-      where: { id: current.id },
-      data: {
-        status: next,
-        ...(stamp ? { [stamp]: new Date() } : {}),
-        ...extra,
-      },
-      include: orderInclude,
+      return this.prisma.order.findUniqueOrThrow({
+        where: { id: current.id },
+        include: orderInclude,
+      });
     });
   }
 

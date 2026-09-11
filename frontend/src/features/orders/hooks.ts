@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { useCallback } from "react";
 import { toast } from "sonner";
 
@@ -11,29 +12,38 @@ import {
   useOrdersQuery,
 } from "@/graphql/generated/graphql";
 
+// Signed-out visitors get a sign-in prompt instead of an auth error from the API.
 export function useOrders(page: number) {
+  const { isSignedIn, isLoaded } = useAuth();
   const { data, previousData, loading, error, refetch } = useOrdersQuery({
     variables: { page, limit: 12 },
+    skip: !isSignedIn,
     notifyOnNetworkStatusChange: true,
   });
-  const result = data?.orders ?? previousData?.orders;
+  const result = isSignedIn
+    ? (data?.orders ?? previousData?.orders)
+    : undefined;
   return {
     orders: result?.items ?? [],
     pageInfo: result?.page_info ?? null,
-    isLoading: loading && !result,
+    isLoading: !isLoaded || (loading && !result),
     hasError: Boolean(error) && !result,
+    isSignedIn: Boolean(isSignedIn),
     refetch,
   };
 }
 
 export function useOrder(id: string) {
+  const { isSignedIn, isLoaded } = useAuth();
   const { data, loading, error, refetch } = useOrderQuery({
     variables: { id },
+    skip: !isSignedIn,
   });
   return {
-    order: data?.order ?? null,
-    isLoading: loading && !data,
+    order: isSignedIn ? (data?.order ?? null) : null,
+    isLoading: !isLoaded || (loading && !data),
     hasError: Boolean(error) && !data,
+    isSignedIn: Boolean(isSignedIn),
     refetch,
   };
 }

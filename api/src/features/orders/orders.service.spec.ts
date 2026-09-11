@@ -20,8 +20,9 @@ const prismaMock = {
     create: vi.fn(),
     findMany: vi.fn(),
     findFirst: vi.fn(),
+    findUniqueOrThrow: vi.fn(),
     count: vi.fn(),
-    update: vi.fn(),
+    updateMany: vi.fn(),
   },
   cartItem: { deleteMany: vi.fn() },
   user: { findUnique: vi.fn() },
@@ -124,6 +125,8 @@ describe("OrdersService", () => {
     prismaMock.product.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.order.create.mockResolvedValue(orderRow());
     prismaMock.user.findUnique.mockResolvedValue({ email: "maya@example.com" });
+    prismaMock.order.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.coupon.updateMany.mockResolvedValue({ count: 1 });
     const moduleRef = await Test.createTestingModule({
       providers: [
         OrdersService,
@@ -211,7 +214,7 @@ describe("OrdersService", () => {
         }),
       );
       expect(prismaMock.cartItem.deleteMany).toHaveBeenCalledWith({
-        where: { user_id: 1 },
+        where: { user_id: 1, id: { in: [1] } },
       });
       expect(mailMock.enqueue).toHaveBeenCalledTimes(2);
       expect(order.can_cancel).toBe(true);
@@ -247,10 +250,61 @@ describe("OrdersService", () => {
     });
   });
 
+  describe("coupons", () => {
+    const coupon = {
+      id: 2,
+      code: "STUDIO500",
+      kind: "FIXED",
+      value: 500,
+      min_order: 0,
+      max_uses: 1,
+      uses_count: 0,
+      starts_at: null,
+      expires_at: null,
+      is_active: true,
+    };
+
+    it("redeems once and refuses when it sells out between quote and place", async () => {
+      cartMock.get.mockResolvedValue({
+        items: [cartItem({ line_total: 3000, quantity: 1 })],
+      });
+      prismaMock.coupon.findUnique.mockResolvedValue(coupon);
+      prismaMock.coupon.updateMany.mockResolvedValueOnce({ count: 1 });
+
+      await service.place(1, { address_id: 5, coupon_code: "studio500" });
+
+      expect(prismaMock.coupon.updateMany).toHaveBeenCalledWith(
+        containing({ where: containing({ id: 2, is_active: true }) }),
+      );
+      expect(prismaMock.order.create).toHaveBeenCalledWith(
+        containing({ data: containing({ coupon_id: 2, discount: 500 }) }),
+      );
+
+      prismaMock.coupon.updateMany.mockResolvedValueOnce({ count: 0 });
+      await expect(
+        service.place(1, { address_id: 5, coupon_code: "STUDIO500" }),
+      ).rejects.toThrow("fully redeemed");
+    });
+
+    it("gives the use back when a couponed order is cancelled", async () => {
+      prismaMock.order.findFirst.mockResolvedValue(orderRow({ coupon_id: 2 }));
+      prismaMock.order.findUniqueOrThrow.mockResolvedValue(
+        orderRow({ status: OrderStatus.CANCELLED }),
+      );
+
+      await service.cancel(1, "ORD123", null);
+
+      expect(prismaMock.coupon.updateMany).toHaveBeenCalledWith({
+        where: { id: 2, uses_count: { gt: 0 } },
+        data: { uses_count: { decrement: 1 } },
+      });
+    });
+  });
+
   describe("cancel", () => {
     it("releases stock and stamps the cancellation while pending", async () => {
       prismaMock.order.findFirst.mockResolvedValue(orderRow());
-      prismaMock.order.update.mockResolvedValue(
+      prismaMock.order.findUniqueOrThrow.mockResolvedValue(
         orderRow({ status: OrderStatus.CANCELLED, cancelled_at: new Date() }),
       );
 
@@ -260,8 +314,9 @@ describe("OrdersService", () => {
         where: { id: 10 },
         data: { sales_count: { decrement: 2 }, stock: { increment: 2 } },
       });
-      expect(prismaMock.order.update).toHaveBeenCalledWith(
+      expect(prismaMock.order.updateMany).toHaveBeenCalledWith(
         containing({
+          where: { id: "ORD123", status: OrderStatus.PENDING },
           data: containing({
             status: OrderStatus.CANCELLED,
             cancel_reason: "Changed my mind",
@@ -281,7 +336,7 @@ describe("OrdersService", () => {
       await expect(service.cancel(1, "ORD123", null)).rejects.toThrow(
         "no longer be cancelled",
       );
-      expect(prismaMock.order.update).not.toHaveBeenCalled();
+      expect(prismaMock.order.updateMany).not.toHaveBeenCalled();
     });
   });
 
@@ -296,7 +351,7 @@ describe("OrdersService", () => {
     });
 
     it("does not touch stock when moving forward within the holding states", async () => {
-      prismaMock.order.update.mockResolvedValue(
+      prismaMock.order.findUniqueOrThrow.mockResolvedValue(
         orderRow({ status: OrderStatus.PAID }),
       );
 
@@ -306,7 +361,7 @@ describe("OrdersService", () => {
       );
 
       expect(prismaMock.product.update).not.toHaveBeenCalled();
-      expect(prismaMock.order.update).toHaveBeenCalledWith(
+      expect(prismaMock.order.updateMany).toHaveBeenCalledWith(
         containing({
           data: containing({
             status: OrderStatus.PAID,
@@ -314,6 +369,15 @@ describe("OrdersService", () => {
           }),
         }),
       );
+    });
+
+    it("refuses when another transition won the race", async () => {
+      prismaMock.order.updateMany.mockResolvedValue({ count: 0 });
+
+      await expect(
+        service.applyStatus(orderRow() as never, OrderStatus.CANCELLED),
+      ).rejects.toThrow("just updated");
+      expect(prismaMock.product.update).not.toHaveBeenCalled();
     });
   });
 });
