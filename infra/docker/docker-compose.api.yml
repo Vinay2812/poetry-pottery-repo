@@ -1,4 +1,4 @@
-name: boilerplate
+name: poetry-pottery
 
 include:
   - docker-compose.db.yml
@@ -9,7 +9,7 @@ services:
       context: ../../api
       # Dockerfile lives outside the build context (relative to the context dir).
       dockerfile: ../infra/docker/Dockerfile.api
-    container_name: boilerplate-api
+    container_name: poetry-pottery-api
     restart: unless-stopped
     # Runtime app env (Clerk keys, schema key, log level, throttles) comes from api/.env.
     env_file: ../../api/.env
@@ -21,4 +21,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy

@@ -35,6 +35,7 @@
     "src/**/*.ts",
     "test/**/*.ts",
     "scripts/**/*.ts",
+    "prisma/seed/**/*.ts",
     "prisma.config.ts",
     "vitest.config.mts"
   ],

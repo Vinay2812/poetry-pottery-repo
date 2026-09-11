@@ -1,6 +1,6 @@
 # CLAUDE.md — poetry-pottery repo
 
-Poetry & Pottery: e-commerce for handcrafted pottery with workshop/event management (combined here from `poetry-and-pottery-workspace`). Three independent apps, no workspace, nothing shared: `frontend/` (Next.js 16, port 3030), `api/` (NestJS 11 GraphQL, port 6060), `infra/` (docker compose: Postgres 17 + pgvector on 5433, Redis 8 on 6381; local dev currently points `DATABASE_URL` at the parent workspace's Postgres on 5435 instead). Package manager is pnpm everywhere. Node 24.
+Poetry & Pottery: e-commerce for handcrafted pottery with workshop/event management (a from-scratch rewrite of `poetry-and-pottery-workspace`). Three independent apps, no workspace, nothing shared: `frontend/` (Next.js 16, port 3030), `api/` (NestJS 11 GraphQL, port 6060), `infra/` (docker compose: Postgres 17 + pgvector on 5433, Redis 8 on 6381, RabbitMQ 4 on 5672). Package manager is pnpm everywhere. Node 24.
 
 This file OVERRIDES any parent/workspace CLAUDE.md where they conflict.
 
@@ -21,6 +21,10 @@ This file OVERRIDES any parent/workspace CLAUDE.md where they conflict.
 - API is code-first GraphQL: types/services/resolvers per domain module (copy `api/src/users/`). New resolvers must be exported from the resolvers barrel or `schema:emit` silently omits them.
 - Auth: identity from Clerk context only, never from GraphQL inputs. `@AuthRequired()`/`@AdminRequired()` decorators; JIT user provisioning in the guard.
 - Env is zod-validated in both apps; `.env.example` files list exactly what the code reads — update them together.
+- Slow or external work (email, search embeddings) goes through RabbitMQ jobs declared in `api/src/queue/jobs.ts`; consumers validate payloads with zod and run in the API process.
+- Money is integer rupees. Stock, seats and slot capacity change only inside transactions with conditional updates; never trust client-sent prices.
+- Redis is for throttling and short-lived caches of settings/categories only; invalidate on admin writes.
+- `pnpm db:seed` (api) loads the demo catalogue; `pnpm make-admin <email>` promotes a signed-in user.
 - Comments: single-line, sparse, no ticket numbers. No `any`/`@ts-ignore`.
 
 ## Verification commands

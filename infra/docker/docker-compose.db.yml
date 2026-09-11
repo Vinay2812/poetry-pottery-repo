@@ -1,4 +1,4 @@
-name: boilerplate
+name: poetry-pottery
 
 networks:
   backend:
@@ -6,12 +6,12 @@ networks:
 services:
   postgres:
     image: pgvector/pgvector:pg17-trixie
-    container_name: boilerplate-db
+    container_name: poetry-pottery-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-boilerplate}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-boilerplate}
-      POSTGRES_DB: ${POSTGRES_DB:-boilerplate}
+      POSTGRES_USER: ${POSTGRES_USER:-poetry}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-poetry}
+      POSTGRES_DB: ${POSTGRES_DB:-poetry_pottery}
     ports:
       - "${POSTGRES_PORT:-5433}:5432"
     networks:
@@ -23,7 +23,7 @@ services:
       test:
         [
           "CMD-SHELL",
-          "pg_isready -U ${POSTGRES_USER:-boilerplate} -d ${POSTGRES_DB:-boilerplate}",
+          "pg_isready -U ${POSTGRES_USER:-poetry} -d ${POSTGRES_DB:-poetry_pottery}",
         ]
       interval: 5s
       timeout: 5s
@@ -31,7 +31,7 @@ services:
 
   redis:
     image: redis:8-alpine
-    container_name: boilerplate-redis
+    container_name: poetry-pottery-redis
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     ports:
@@ -46,6 +46,27 @@ services:
       timeout: 3s
       retries: 10
 
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: poetry-pottery-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-poetry}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-poetry}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    networks:
+      - backend
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
   redis_data:
+  rabbitmq_data:

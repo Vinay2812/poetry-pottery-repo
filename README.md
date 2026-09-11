@@ -2,13 +2,13 @@
 
 E-commerce platform for handcrafted pottery with workshop/event management — the `poetry-and-pottery-workspace` projects combined into this repo. Next.js frontend, NestJS GraphQL API, and local infra — three independent apps in one repo (no workspace, nothing shared; each folder has its own `package.json` and lockfile).
 
-| Folder      | What                                             | Port        |
-| ----------- | ------------------------------------------------ | ----------- |
-| `frontend/` | Next.js 16 (App Router, React 19, Tailwind 4)    | 3030        |
-| `api/`      | NestJS 11 GraphQL API (Apollo, Prisma, Postgres) | 6060        |
-| `infra/`    | docker (Postgres 17 + pgvector, Redis 8) + k8s   | 5433 / 6381 |
+| Folder      | What                                                 | Port               |
+| ----------- | ---------------------------------------------------- | ------------------ |
+| `frontend/` | Next.js 16 (App Router, React 19, Tailwind 4)        | 3030               |
+| `api/`      | NestJS 11 GraphQL API (Apollo, Prisma, Postgres)     | 6060               |
+| `infra/`    | docker (Postgres 17 + pgvector, Redis 8, RabbitMQ 4) | 5433 / 6381 / 5672 |
 
-> Local dev currently uses the `poetry-and-pottery-infra` Postgres from the parent workspace (`localhost:5435`, db `poetry-and-pottery`) via `api/.env` `DATABASE_URL` — not this repo's `infra/` compose on 5433.
+Local dev uses this repo's own compose stack: Postgres `poetry_pottery` on 5433, Redis on 6381, RabbitMQ on 5672 (management UI on 15672, user/password `poetry`).
 
 ## Prerequisites
 
@@ -18,14 +18,16 @@ E-commerce platform for handcrafted pottery with workshop/event management — t
 ## First run
 
 ```bash
-# 1. Database + Redis
+# 1. Database + Redis + RabbitMQ
+cp infra/docker/.env.example infra/docker/.env
 docker compose -f infra/docker/docker-compose.db.yml up -d
 
 # 2. API
 cd api
-cp .env.example .env            # fill in Clerk keys
+cp .env.example .env            # fill in Clerk keys (SMTP and R2 are optional)
 pnpm install
 pnpm migration:apply
+pnpm db:seed                    # catalogue, events, workshop config, content, coupons
 pnpm dev                        # http://localhost:6060/graphql
 
 # 3. Frontend (new terminal)
@@ -46,6 +48,8 @@ pnpm install
 | `api/`      | `pnpm dev`                                                      | API with watch mode                                        |
 | `api/`      | `pnpm schema:emit`                                              | Regenerate `schema.gql` (no DB needed)                     |
 | `api/`      | `pnpm migration:create`                                         | Create a migration from schema changes                     |
+| `api/`      | `pnpm db:seed` / `pnpm db:reset`                                | Seed demo data / drop, migrate and reseed                  |
+| `api/`      | `pnpm make-admin you@example.com`                               | Promote a signed-in user to admin                          |
 | `api/`      | `pnpm db:studio`                                                | Prisma Studio                                              |
 | `api/`      | `pnpm test` / `pnpm build`                                      | Vitest / production build                                  |
 | `frontend/` | `pnpm dev`                                                      | Next dev server on 3030                                    |
@@ -73,9 +77,17 @@ A husky pre-push hook (`scripts/check-schema-sync.sh`) enforces sync: it re-emit
 
 Clerk on both sides. The API JIT-provisions a `User` row on the first authenticated request (no webhook, no seed needed). User identity always comes from the Clerk context, never from GraphQL inputs.
 
+## Background jobs
+
+Slow work leaves the request path through RabbitMQ (`api/src/queue`): search embeddings for products and events, and transactional email. Consumers run inside the API process; set `QUEUE_CONSUMERS_ENABLED=false` on replicas that should only serve GraphQL. Failed messages are dead-lettered to `poetry.dead-letters`.
+
+## Search
+
+Postgres keeps a weighted `tsvector` per product and event (maintained by triggers in the initial migration). A pgvector column holds a 384-dimension embedding from `Xenova/all-MiniLM-L6-v2`, computed locally with `@huggingface/transformers` (the model downloads once into `api/.cache/models`). Search ranks keyword and semantic matches together.
+
 ## Rate limiting
 
-Three named throttler profiles (env-tunable): `default` 100/60s (global), `short` 10/1s, `strict` 5/60s — applied per resolver with `@Throttle(...)`, keyed by user id (falls back to IP).
+Three named throttler profiles (env-tunable): `default` 100/60s (global), `short` 10/1s, `strict` 5/60s — applied per resolver with `@Throttle(...)`, keyed by user id (falls back to IP). Counters live in Redis so limits hold across replicas.
 
 ## Infra
 

@@ -2,6 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  images: {
+    remotePatterns: [
+      { protocol: "https", hostname: "images.pexels.com" },
+      { protocol: "https", hostname: "images.unsplash.com" },
+      { protocol: "https", hostname: "**.r2.dev" },
+      { protocol: "https", hostname: "cdn.poetryandpottery.prodapp.club" },
+      { protocol: "https", hostname: "img.clerk.com" },
+    ],
+  },
   // Keeps winston resolved by Node at runtime instead of bundled.
   serverExternalPackages: ["winston"],
   turbopack: {
