@@ -1929,6 +1929,7 @@ export type WorkshopSlot = {
 export type WorkshopTier = {
   __typename?: 'WorkshopTier';
   hours: Scalars['Int']['output'];
+  id: Scalars['Int']['output'];
   pieces_per_person: Scalars['Int']['output'];
   price_per_person: Scalars['Int']['output'];
 };
@@ -1968,6 +1969,603 @@ export type SetDefaultAddressMutationVariables = Exact<{
 
 
 export type SetDefaultAddressMutation = { setDefaultAddress: { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean } };
+
+export type AdminCategoryFieldsFragment = { id: number, slug: string, name: string, icon: string | null, image_url: string | null, product_count: number };
+
+export type AdminCollectionFieldsFragment = { id: number, slug: string, name: string, description: string | null, image_url: string | null, starts_at: string | null, ends_at: string | null, product_count: number };
+
+export type AdminCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminCategoriesQuery = { adminCategories: Array<{ id: number, slug: string, name: string, icon: string | null, image_url: string | null, product_count: number }> };
+
+export type AdminCollectionsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminCollectionsQuery = { adminCollections: Array<{ id: number, slug: string, name: string, description: string | null, image_url: string | null, starts_at: string | null, ends_at: string | null, product_count: number }> };
+
+export type CreateCategoryMutationVariables = Exact<{
+  input: AdminCategoryInput;
+}>;
+
+
+export type CreateCategoryMutation = { createCategory: { id: number, slug: string, name: string, icon: string | null, image_url: string | null, product_count: number } };
+
+export type UpdateCategoryMutationVariables = Exact<{
+  id: number;
+  input: AdminCategoryInput;
+}>;
+
+
+export type UpdateCategoryMutation = { updateCategory: { id: number, slug: string, name: string, icon: string | null, image_url: string | null, product_count: number } };
+
+export type DeleteCategoryMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteCategoryMutation = { deleteCategory: boolean };
+
+export type CreateCollectionMutationVariables = Exact<{
+  input: AdminCollectionInput;
+}>;
+
+
+export type CreateCollectionMutation = { createCollection: { id: number, slug: string, name: string, description: string | null, image_url: string | null, starts_at: string | null, ends_at: string | null, product_count: number } };
+
+export type UpdateCollectionMutationVariables = Exact<{
+  id: number;
+  input: AdminCollectionInput;
+}>;
+
+
+export type UpdateCollectionMutation = { updateCollection: { id: number, slug: string, name: string, description: string | null, image_url: string | null, starts_at: string | null, ends_at: string | null, product_count: number } };
+
+export type DeleteCollectionMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteCollectionMutation = { deleteCollection: boolean };
+
+export type AdminContentPageFieldsFragment = { slug: string, title: string, subtitle: string | null, hero_image_url: string | null, is_published: boolean, updated_at: string, sections: Array<{ heading: string, body: string, items: Array<{ title: string, body: string }> }> };
+
+export type AdminSiteSettingsFieldsFragment = { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string };
+
+export type AdminContentPagesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminContentPagesQuery = { adminContentPages: Array<{ slug: string, title: string, is_published: boolean }> };
+
+export type AdminContentPageQueryVariables = Exact<{
+  slug: string;
+}>;
+
+
+export type AdminContentPageQuery = { adminContentPage: { slug: string, title: string, subtitle: string | null, hero_image_url: string | null, is_published: boolean, updated_at: string, sections: Array<{ heading: string, body: string, items: Array<{ title: string, body: string }> }> } };
+
+export type AdminSiteSettingsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminSiteSettingsQuery = { siteSettings: { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string } };
+
+export type SaveContentPageMutationVariables = Exact<{
+  slug: string;
+  input: ContentPageInput;
+}>;
+
+
+export type SaveContentPageMutation = { saveContentPage: { slug: string, title: string, subtitle: string | null, hero_image_url: string | null, is_published: boolean, updated_at: string, sections: Array<{ heading: string, body: string, items: Array<{ title: string, body: string }> }> } };
+
+export type DeleteContentPageMutationVariables = Exact<{
+  slug: string;
+}>;
+
+
+export type DeleteContentPageMutation = { deleteContentPage: boolean };
+
+export type UpdateSiteSettingsMutationVariables = Exact<{
+  input: AdminSiteSettingsInput;
+}>;
+
+
+export type UpdateSiteSettingsMutation = { updateSiteSettings: { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string } };
+
+export type UpdateAnnouncementMutationVariables = Exact<{
+  input: AdminAnnouncementInput;
+}>;
+
+
+export type UpdateAnnouncementMutation = { updateAnnouncement: { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string } };
+
+export type AdminCouponFieldsFragment = { id: number, code: string, kind: CouponKind, value: number, min_order: number, max_uses: number | null, uses_count: number, starts_at: string | null, expires_at: string | null, is_active: boolean, created_at: string };
+
+export type AdminCouponsQueryVariables = Exact<{
+  filter?: AdminCouponsFilterInput | null | undefined;
+}>;
+
+
+export type AdminCouponsQuery = { adminCoupons: { items: Array<{ id: number, code: string, kind: CouponKind, value: number, min_order: number, max_uses: number | null, uses_count: number, starts_at: string | null, expires_at: string | null, is_active: boolean, created_at: string }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type CreateCouponMutationVariables = Exact<{
+  input: AdminCouponInput;
+}>;
+
+
+export type CreateCouponMutation = { createCoupon: { id: number, code: string, kind: CouponKind, value: number, min_order: number, max_uses: number | null, uses_count: number, starts_at: string | null, expires_at: string | null, is_active: boolean, created_at: string } };
+
+export type UpdateCouponMutationVariables = Exact<{
+  id: number;
+  input: AdminCouponInput;
+}>;
+
+
+export type UpdateCouponMutation = { updateCoupon: { id: number, code: string, kind: CouponKind, value: number, min_order: number, max_uses: number | null, uses_count: number, starts_at: string | null, expires_at: string | null, is_active: boolean, created_at: string } };
+
+export type DeleteCouponMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteCouponMutation = { deleteCoupon: boolean };
+
+export type AdminDashboardQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminDashboardQuery = { adminDashboard: { orders_last_30_days: number, revenue_last_30_days: number, pending_registrations: number, pending_bookings: number, unread_messages: number, orders_by_status: Array<{ status: OrderStatus, count: number }>, recent_orders: Array<{ id: string, status: OrderStatus, total: number, item_count: number, created_at: string, customer: { id: number, name: string | null, email: string, image: string | null } }>, recent_bookings: Array<{ id: string, status: RegistrationStatus, total: number, hours: number, participants: number, starts_at: string, created_at: string, customer: { id: number, name: string | null, email: string, image: string | null } }>, low_stock: Array<{ id: number, name: string, slug: string, stock: number }> } };
+
+export type AdminEventRowFragment = { id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean };
+
+export type AdminEventDetailFragment = { address: string, description: string, instructor: string | null, gallery: Array<string>, highlights: Array<string>, includes: Array<string>, performers: Array<string>, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean };
+
+export type AdminRegistrationRowFragment = { next_statuses: Array<RegistrationStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, registration: { id: string, seats: number, unit_price: number, total: number, status: RegistrationStatus, note: string | null, created_at: string, event: { id: number, title: string, starts_at: string } } };
+
+export type AdminEventsQueryVariables = Exact<{
+  filter?: AdminEventsFilterInput | null | undefined;
+}>;
+
+
+export type AdminEventsQuery = { adminEvents: { items: Array<{ id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type AdminEventQueryVariables = Exact<{
+  id: number;
+}>;
+
+
+export type AdminEventQuery = { adminEvent: { address: string, description: string, instructor: string | null, gallery: Array<string>, highlights: Array<string>, includes: Array<string>, performers: Array<string>, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean } };
+
+export type AdminEventRegistrationsQueryVariables = Exact<{
+  filter?: AdminRegistrationsFilterInput | null | undefined;
+}>;
+
+
+export type AdminEventRegistrationsQuery = { adminEventRegistrations: { items: Array<{ next_statuses: Array<RegistrationStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, registration: { id: string, seats: number, unit_price: number, total: number, status: RegistrationStatus, note: string | null, created_at: string, event: { id: number, title: string, starts_at: string } } }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type CreateEventMutationVariables = Exact<{
+  input: AdminEventInput;
+}>;
+
+
+export type CreateEventMutation = { createEvent: { address: string, description: string, instructor: string | null, gallery: Array<string>, highlights: Array<string>, includes: Array<string>, performers: Array<string>, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean } };
+
+export type UpdateEventMutationVariables = Exact<{
+  id: number;
+  input: AdminEventInput;
+}>;
+
+
+export type UpdateEventMutation = { updateEvent: { address: string, description: string, instructor: string | null, gallery: Array<string>, highlights: Array<string>, includes: Array<string>, performers: Array<string>, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean } };
+
+export type PublishEventMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type PublishEventMutation = { publishEvent: { id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean } };
+
+export type UnpublishEventMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type UnpublishEventMutation = { unpublishEvent: { id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean } };
+
+export type CompleteEventMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type CompleteEventMutation = { completeEvent: { id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean } };
+
+export type CancelEventMutationVariables = Exact<{
+  id: number;
+  reason?: string | null | undefined;
+}>;
+
+
+export type CancelEventMutation = { cancelEvent: { id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean } };
+
+export type SetRegistrationStatusMutationVariables = Exact<{
+  id: string;
+  status: RegistrationStatus;
+  reason?: string | null | undefined;
+}>;
+
+
+export type SetRegistrationStatusMutation = { setRegistrationStatus: { next_statuses: Array<RegistrationStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, registration: { id: string, seats: number, unit_price: number, total: number, status: RegistrationStatus, note: string | null, created_at: string, event: { id: number, title: string, starts_at: string } } } };
+
+export type AdminContactMessageFieldsFragment = { id: number, name: string, email: string, phone: string | null, subject: string | null, message: string, is_read: boolean, created_at: string };
+
+export type AdminSubscriberFieldsFragment = { id: number, email: string, user_id: number | null, is_active: boolean, created_at: string, unsubscribed_at: string | null };
+
+export type AdminContactMessagesQueryVariables = Exact<{
+  filter?: AdminContactFilterInput | null | undefined;
+}>;
+
+
+export type AdminContactMessagesQuery = { adminContactMessages: { items: Array<{ id: number, name: string, email: string, phone: string | null, subject: string | null, message: string, is_read: boolean, created_at: string }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type AdminNewsletterSubscribersQueryVariables = Exact<{
+  filter?: AdminSubscribersFilterInput | null | undefined;
+}>;
+
+
+export type AdminNewsletterSubscribersQuery = { adminNewsletterSubscribers: { items: Array<{ id: number, email: string, user_id: number | null, is_active: boolean, created_at: string, unsubscribed_at: string | null }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type ExportNewsletterSubscribersQueryVariables = Exact<{
+  filter?: AdminSubscribersFilterInput | null | undefined;
+}>;
+
+
+export type ExportNewsletterSubscribersQuery = { exportNewsletterSubscribers: string };
+
+export type SetContactMessageReadMutationVariables = Exact<{
+  id: number;
+  is_read: boolean;
+}>;
+
+
+export type SetContactMessageReadMutation = { setContactMessageRead: { id: number, name: string, email: string, phone: string | null, subject: string | null, message: string, is_read: boolean, created_at: string } };
+
+export type DeleteContactMessageMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteContactMessageMutation = { deleteContactMessage: boolean };
+
+export type UnsubscribeSubscriberMutationVariables = Exact<{
+  email: string;
+}>;
+
+
+export type UnsubscribeSubscriberMutation = { unsubscribeSubscriber: boolean };
+
+export type AdminOrderRowFragment = { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, total: number, item_count: number, created_at: string, paid_at: string | null, coupon_code: string | null } };
+
+export type AdminOrderDetailFragment = { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } };
+
+export type AdminOrdersQueryVariables = Exact<{
+  filter?: AdminOrdersFilterInput | null | undefined;
+}>;
+
+
+export type AdminOrdersQuery = { adminOrders: { items: Array<{ admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, total: number, item_count: number, created_at: string, paid_at: string | null, coupon_code: string | null } }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type AdminOrderQueryVariables = Exact<{
+  id: string;
+}>;
+
+
+export type AdminOrderQuery = { adminOrder: { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } } };
+
+export type SetOrderStatusMutationVariables = Exact<{
+  id: string;
+  status: OrderStatus;
+  tracking_note?: string | null | undefined;
+  cancel_reason?: string | null | undefined;
+}>;
+
+
+export type SetOrderStatusMutation = { setOrderStatus: { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } } };
+
+export type MarkOrderPaidMutationVariables = Exact<{
+  id: string;
+}>;
+
+
+export type MarkOrderPaidMutation = { markOrderPaid: { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } } };
+
+export type CancelOrderAsAdminMutationVariables = Exact<{
+  id: string;
+  reason?: string | null | undefined;
+}>;
+
+
+export type CancelOrderAsAdminMutation = { cancelOrderAsAdmin: { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } } };
+
+export type SetOrderAdminNoteMutationVariables = Exact<{
+  id: string;
+  note?: string | null | undefined;
+}>;
+
+
+export type SetOrderAdminNoteMutation = { setOrderAdminNote: { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } } };
+
+export type AdminProductRowFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null };
+
+export type AdminOptionGroupFieldsFragment = { id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> };
+
+export type AdminProductDetailFragment = { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null };
+
+export type AdminProductsQueryVariables = Exact<{
+  filter?: AdminProductsFilterInput | null | undefined;
+}>;
+
+
+export type AdminProductsQuery = { adminProducts: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type AdminProductQueryVariables = Exact<{
+  id: number;
+}>;
+
+
+export type AdminProductQuery = { adminProduct: { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+
+export type AdminProductOptionGroupsQueryVariables = Exact<{
+  product_id: number;
+}>;
+
+
+export type AdminProductOptionGroupsQuery = { adminProductOptionGroups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }> };
+
+export type CreateProductMutationVariables = Exact<{
+  input: AdminProductInput;
+}>;
+
+
+export type CreateProductMutation = { createProduct: { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+
+export type UpdateProductMutationVariables = Exact<{
+  id: number;
+  input: AdminProductUpdateInput;
+}>;
+
+
+export type UpdateProductMutation = { updateProduct: { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+
+export type SetProductActiveMutationVariables = Exact<{
+  id: number;
+  is_active: boolean;
+}>;
+
+
+export type SetProductActiveMutation = { setProductActive: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+
+export type SetProductFeaturedMutationVariables = Exact<{
+  id: number;
+  is_featured: boolean;
+}>;
+
+
+export type SetProductFeaturedMutation = { setProductFeatured: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+
+export type AdjustProductStockMutationVariables = Exact<{
+  id: number;
+  delta: number;
+  reason: string;
+}>;
+
+
+export type AdjustProductStockMutation = { adjustProductStock: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+
+export type ReorderProductImagesMutationVariables = Exact<{
+  id: number;
+  image_urls: Array<string> | string;
+}>;
+
+
+export type ReorderProductImagesMutation = { reorderProductImages: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+
+export type CreateProductOptionGroupMutationVariables = Exact<{
+  product_id: number;
+  input: AdminOptionGroupInput;
+}>;
+
+
+export type CreateProductOptionGroupMutation = { createProductOptionGroup: { id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> } };
+
+export type UpdateProductOptionGroupMutationVariables = Exact<{
+  id: number;
+  input: AdminOptionGroupInput;
+}>;
+
+
+export type UpdateProductOptionGroupMutation = { updateProductOptionGroup: { id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> } };
+
+export type DeleteProductOptionGroupMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteProductOptionGroupMutation = { deleteProductOptionGroup: boolean };
+
+export type CreateProductOptionMutationVariables = Exact<{
+  group_id: number;
+  input: AdminOptionInput;
+}>;
+
+
+export type CreateProductOptionMutation = { createProductOption: { id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> } };
+
+export type UpdateProductOptionMutationVariables = Exact<{
+  id: number;
+  input: AdminOptionInput;
+}>;
+
+
+export type UpdateProductOptionMutation = { updateProductOption: { id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> } };
+
+export type DeleteProductOptionMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteProductOptionMutation = { deleteProductOption: boolean };
+
+export type AdminReviewRowFragment = { is_hidden: boolean, subject_kind: ReviewSubjectKind, customer: { id: number, name: string | null, email: string, image: string | null }, review: { id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } } };
+
+export type AdminReviewsQueryVariables = Exact<{
+  filter?: AdminReviewsFilterInput | null | undefined;
+}>;
+
+
+export type AdminReviewsQuery = { adminReviews: { items: Array<{ is_hidden: boolean, subject_kind: ReviewSubjectKind, customer: { id: number, name: string | null, email: string, image: string | null }, review: { id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } } }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type SetReviewHiddenMutationVariables = Exact<{
+  id: number;
+  is_hidden: boolean;
+}>;
+
+
+export type SetReviewHiddenMutation = { setReviewHidden: { is_hidden: boolean, subject_kind: ReviewSubjectKind, customer: { id: number, name: string | null, email: string, image: string | null }, review: { id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } } } };
+
+export type DeleteReviewAsAdminMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteReviewAsAdminMutation = { deleteReviewAsAdmin: boolean };
+
+export type AdminPageInfoFieldsFragment = { page: number, limit: number, total: number, has_more: boolean };
+
+export type AdminUserRefFieldsFragment = { id: number, name: string | null, email: string, image: string | null };
+
+export type ImageSpecsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ImageSpecsQuery = { imageSpecs: Array<{ purpose: UploadPurpose, ratio: number | null, ratio_label: string, min_width: number, min_height: number, max_bytes: number, content_types: Array<string>, renders_at: string }> };
+
+export type CreateAdminUploadMutationVariables = Exact<{
+  purpose: UploadPurpose;
+  content_type: string;
+  size: number;
+}>;
+
+
+export type CreateAdminUploadMutation = { createAdminUpload: { key: string, upload_url: string, public_url: string } };
+
+export type ConfirmUploadMutationVariables = Exact<{
+  key: string;
+  purpose: UploadPurpose;
+}>;
+
+
+export type ConfirmUploadMutation = { confirmUpload: { key: string, public_url: string, width: number, height: number, bytes: number } };
+
+export type AdminUserFieldsFragment = { role: UserRole, phone: string | null, created_at: string, orders_count: number, registrations_count: number, bookings_count: number, reviews_count: number, user: { id: number, name: string | null, email: string, image: string | null } };
+
+export type AdminUsersQueryVariables = Exact<{
+  filter?: AdminUsersFilterInput | null | undefined;
+}>;
+
+
+export type AdminUsersQuery = { adminUsers: { items: Array<{ role: UserRole, phone: string | null, created_at: string, orders_count: number, registrations_count: number, bookings_count: number, reviews_count: number, user: { id: number, name: string | null, email: string, image: string | null } }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type AdminUserQueryVariables = Exact<{
+  id: number;
+}>;
+
+
+export type AdminUserQuery = { adminUser: { role: UserRole, phone: string | null, created_at: string, orders_count: number, registrations_count: number, bookings_count: number, reviews_count: number, user: { id: number, name: string | null, email: string, image: string | null } } };
+
+export type SetUserRoleMutationVariables = Exact<{
+  id: number;
+  role: UserRole;
+}>;
+
+
+export type SetUserRoleMutation = { setUserRole: { role: UserRole, phone: string | null, created_at: string, orders_count: number, registrations_count: number, bookings_count: number, reviews_count: number, user: { id: number, name: string | null, email: string, image: string | null } } };
+
+export type AdminWorkshopConfigFieldsFragment = { id: number, slug: string, name: string, description: string | null, image_url: string | null, is_active: boolean, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ id: number, hours: number, price_per_person: number, pieces_per_person: number }> };
+
+export type AdminWorkshopBlackoutFieldsFragment = { id: number, config_id: number, starts_at: string, ends_at: string, reason: string | null };
+
+export type AdminWorkshopBookingRowFragment = { next_statuses: Array<RegistrationStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, booking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, total: number, status: RegistrationStatus, note: string | null, created_at: string, config: { id: number, name: string, slug: string } } };
+
+export type AdminWorkshopConfigsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AdminWorkshopConfigsQuery = { adminWorkshopConfigs: Array<{ id: number, slug: string, name: string, description: string | null, image_url: string | null, is_active: boolean, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ id: number, hours: number, price_per_person: number, pieces_per_person: number }> }> };
+
+export type AdminWorkshopBlackoutsQueryVariables = Exact<{
+  config_id: number;
+}>;
+
+
+export type AdminWorkshopBlackoutsQuery = { adminWorkshopBlackouts: Array<{ id: number, config_id: number, starts_at: string, ends_at: string, reason: string | null }> };
+
+export type AdminWorkshopBookingsQueryVariables = Exact<{
+  filter?: AdminWorkshopBookingsFilterInput | null | undefined;
+}>;
+
+
+export type AdminWorkshopBookingsQuery = { adminWorkshopBookings: { items: Array<{ next_statuses: Array<RegistrationStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, booking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, total: number, status: RegistrationStatus, note: string | null, created_at: string, config: { id: number, name: string, slug: string } } }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type UpdateWorkshopConfigMutationVariables = Exact<{
+  id: number;
+  input: AdminWorkshopConfigInput;
+}>;
+
+
+export type UpdateWorkshopConfigMutation = { updateWorkshopConfig: { id: number, slug: string, name: string, description: string | null, image_url: string | null, is_active: boolean, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ id: number, hours: number, price_per_person: number, pieces_per_person: number }> } };
+
+export type SaveWorkshopTierMutationVariables = Exact<{
+  config_id: number;
+  input: AdminWorkshopTierInput;
+}>;
+
+
+export type SaveWorkshopTierMutation = { saveWorkshopTier: { id: number, slug: string, name: string, description: string | null, image_url: string | null, is_active: boolean, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ id: number, hours: number, price_per_person: number, pieces_per_person: number }> } };
+
+export type DeleteWorkshopTierMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteWorkshopTierMutation = { deleteWorkshopTier: boolean };
+
+export type CreateWorkshopBlackoutMutationVariables = Exact<{
+  config_id: number;
+  input: AdminWorkshopBlackoutInput;
+}>;
+
+
+export type CreateWorkshopBlackoutMutation = { createWorkshopBlackout: { id: number, config_id: number, starts_at: string, ends_at: string, reason: string | null } };
+
+export type UpdateWorkshopBlackoutMutationVariables = Exact<{
+  id: number;
+  input: AdminWorkshopBlackoutInput;
+}>;
+
+
+export type UpdateWorkshopBlackoutMutation = { updateWorkshopBlackout: { id: number, config_id: number, starts_at: string, ends_at: string, reason: string | null } };
+
+export type DeleteWorkshopBlackoutMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteWorkshopBlackoutMutation = { deleteWorkshopBlackout: boolean };
+
+export type SetWorkshopBookingStatusMutationVariables = Exact<{
+  id: string;
+  status: RegistrationStatus;
+  reason?: string | null | undefined;
+}>;
+
+
+export type SetWorkshopBookingStatusMutation = { setWorkshopBookingStatus: { next_statuses: Array<RegistrationStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, booking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, total: number, status: RegistrationStatus, note: string | null, created_at: string, config: { id: number, name: string, slug: string } } } };
 
 export type CartFieldsFragment = { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> };
 
@@ -2355,6 +2953,409 @@ export const AddressFieldsFragmentDoc = gql`
   is_default
 }
     `;
+export const AdminCategoryFieldsFragmentDoc = gql`
+    fragment AdminCategoryFields on Category {
+  id
+  slug
+  name
+  icon
+  image_url
+  product_count
+}
+    `;
+export const AdminCollectionFieldsFragmentDoc = gql`
+    fragment AdminCollectionFields on Collection {
+  id
+  slug
+  name
+  description
+  image_url
+  starts_at
+  ends_at
+  product_count
+}
+    `;
+export const AdminContentPageFieldsFragmentDoc = gql`
+    fragment AdminContentPageFields on ContentPage {
+  slug
+  title
+  subtitle
+  hero_image_url
+  is_published
+  updated_at
+  sections {
+    heading
+    body
+    items {
+      title
+      body
+    }
+  }
+}
+    `;
+export const AdminSiteSettingsFieldsFragmentDoc = gql`
+    fragment AdminSiteSettingsFields on SiteSettings {
+  contact_email
+  contact_phone
+  whatsapp_number
+  address
+  opening_hours
+  instagram_url
+  facebook_url
+  youtube_url
+  shipping_flat_fee
+  free_shipping_above
+  hero_heading
+  hero_subheading
+  hero_cta_text
+  hero_cta_href
+  hero_image_url
+  announcement_text
+  announcement_href
+  updated_at
+}
+    `;
+export const AdminCouponFieldsFragmentDoc = gql`
+    fragment AdminCouponFields on AdminCoupon {
+  id
+  code
+  kind
+  value
+  min_order
+  max_uses
+  uses_count
+  starts_at
+  expires_at
+  is_active
+  created_at
+}
+    `;
+export const AdminEventRowFragmentDoc = gql`
+    fragment AdminEventRow on Event {
+  id
+  slug
+  title
+  event_type
+  status
+  level
+  starts_at
+  ends_at
+  location
+  price
+  total_seats
+  available_seats
+  image_url
+  is_past
+}
+    `;
+export const AdminEventDetailFragmentDoc = gql`
+    fragment AdminEventDetail on Event {
+  ...AdminEventRow
+  address
+  description
+  instructor
+  gallery
+  highlights
+  includes
+  performers
+}
+    `;
+export const AdminUserRefFieldsFragmentDoc = gql`
+    fragment AdminUserRefFields on AdminUserRef {
+  id
+  name
+  email
+  image
+}
+    `;
+export const AdminRegistrationRowFragmentDoc = gql`
+    fragment AdminRegistrationRow on AdminRegistration {
+  next_statuses
+  customer {
+    ...AdminUserRefFields
+  }
+  registration {
+    id
+    seats
+    unit_price
+    total
+    status
+    note
+    created_at
+    event {
+      id
+      title
+      starts_at
+    }
+  }
+}
+    `;
+export const AdminContactMessageFieldsFragmentDoc = gql`
+    fragment AdminContactMessageFields on ContactMessage {
+  id
+  name
+  email
+  phone
+  subject
+  message
+  is_read
+  created_at
+}
+    `;
+export const AdminSubscriberFieldsFragmentDoc = gql`
+    fragment AdminSubscriberFields on AdminSubscriber {
+  id
+  email
+  user_id
+  is_active
+  created_at
+  unsubscribed_at
+}
+    `;
+export const AdminOrderRowFragmentDoc = gql`
+    fragment AdminOrderRow on AdminOrder {
+  admin_note
+  next_statuses
+  customer {
+    ...AdminUserRefFields
+  }
+  order {
+    id
+    status
+    total
+    item_count
+    created_at
+    paid_at
+    coupon_code
+  }
+}
+    `;
+export const OrderFieldsFragmentDoc = gql`
+    fragment OrderFields on Order {
+  id
+  status
+  subtotal
+  discount
+  shipping_fee
+  total
+  coupon_code
+  customer_note
+  tracking_note
+  cancel_reason
+  can_cancel
+  item_count
+  created_at
+  confirmed_at
+  paid_at
+  shipped_at
+  delivered_at
+  cancelled_at
+  refunded_at
+  shipping_address {
+    name
+    phone
+    line1
+    line2
+    landmark
+    city
+    state
+    pincode
+  }
+  items {
+    id
+    product_name
+    product_image
+    unit_price
+    quantity
+    line_total
+    selections {
+      group_id
+      group_name
+      option_id
+      option_name
+      text
+      price_modifier
+    }
+    product {
+      id
+      slug
+      is_customizable
+    }
+  }
+}
+    `;
+export const AdminOrderDetailFragmentDoc = gql`
+    fragment AdminOrderDetail on AdminOrder {
+  admin_note
+  next_statuses
+  customer {
+    ...AdminUserRefFields
+  }
+  order {
+    ...OrderFields
+  }
+}
+    `;
+export const AdminProductRowFragmentDoc = gql`
+    fragment AdminProductRow on Product {
+  id
+  slug
+  name
+  price
+  compare_at_price
+  stock
+  is_active
+  is_featured
+  is_archived
+  is_customizable
+  image_urls
+  material
+  categories {
+    id
+    name
+    slug
+  }
+  collection {
+    id
+    name
+    slug
+  }
+}
+    `;
+export const AdminOptionGroupFieldsFragmentDoc = gql`
+    fragment AdminOptionGroupFields on ProductOptionGroup {
+  id
+  name
+  kind
+  is_required
+  max_length
+  price_modifier
+  sort_order
+  options {
+    id
+    name
+    price_modifier
+    sort_order
+    is_active
+  }
+}
+    `;
+export const AdminProductDetailFragmentDoc = gql`
+    fragment AdminProductDetail on Product {
+  ...AdminProductRow
+  description
+  dimensions
+  color_name
+  color_code
+  care_notes
+  created_at
+  sales_count
+  option_groups {
+    ...AdminOptionGroupFields
+  }
+}
+    `;
+export const AdminReviewRowFragmentDoc = gql`
+    fragment AdminReviewRow on AdminReview {
+  is_hidden
+  subject_kind
+  customer {
+    ...AdminUserRefFields
+  }
+  review {
+    id
+    rating
+    body
+    image_urls
+    created_at
+    subject_name
+    subject_href
+    author {
+      name
+      image
+    }
+  }
+}
+    `;
+export const AdminPageInfoFieldsFragmentDoc = gql`
+    fragment AdminPageInfoFields on PageInfo {
+  page
+  limit
+  total
+  has_more
+}
+    `;
+export const AdminUserFieldsFragmentDoc = gql`
+    fragment AdminUserFields on AdminUser {
+  role
+  phone
+  created_at
+  orders_count
+  registrations_count
+  bookings_count
+  reviews_count
+  user {
+    ...AdminUserRefFields
+  }
+}
+    `;
+export const AdminWorkshopConfigFieldsFragmentDoc = gql`
+    fragment AdminWorkshopConfigFields on WorkshopConfig {
+  id
+  slug
+  name
+  description
+  image_url
+  is_active
+  timezone
+  opening_minutes
+  closing_minutes
+  slot_minutes
+  capacity_per_slot
+  booking_window_days
+  slot_span_days
+  closed_weekdays
+  tiers {
+    id
+    hours
+    price_per_person
+    pieces_per_person
+  }
+}
+    `;
+export const AdminWorkshopBlackoutFieldsFragmentDoc = gql`
+    fragment AdminWorkshopBlackoutFields on AdminWorkshopBlackout {
+  id
+  config_id
+  starts_at
+  ends_at
+  reason
+}
+    `;
+export const AdminWorkshopBookingRowFragmentDoc = gql`
+    fragment AdminWorkshopBookingRow on AdminWorkshopBooking {
+  next_statuses
+  customer {
+    ...AdminUserRefFields
+  }
+  booking {
+    id
+    starts_at
+    ends_at
+    hours
+    participants
+    total
+    status
+    note
+    created_at
+    config {
+      id
+      name
+      slug
+    }
+  }
+}
+    `;
 export const ProductCardFragmentDoc = gql`
     fragment ProductCard on Product {
   id
@@ -2450,60 +3451,6 @@ export const RegistrationFieldsFragmentDoc = gql`
   event {
     ...EventCard
     address
-  }
-}
-    `;
-export const OrderFieldsFragmentDoc = gql`
-    fragment OrderFields on Order {
-  id
-  status
-  subtotal
-  discount
-  shipping_fee
-  total
-  coupon_code
-  customer_note
-  tracking_note
-  cancel_reason
-  can_cancel
-  item_count
-  created_at
-  confirmed_at
-  paid_at
-  shipped_at
-  delivered_at
-  cancelled_at
-  refunded_at
-  shipping_address {
-    name
-    phone
-    line1
-    line2
-    landmark
-    city
-    state
-    pincode
-  }
-  items {
-    id
-    product_name
-    product_image
-    unit_price
-    quantity
-    line_total
-    selections {
-      group_id
-      group_name
-      option_id
-      option_name
-      text
-      price_modifier
-    }
-    product {
-      id
-      slug
-      is_customizable
-    }
   }
 }
     `;
@@ -2749,6 +3696,2611 @@ export function useSetDefaultAddressMutation(baseOptions?: ApolloReactHooks.Muta
       }
 export type SetDefaultAddressMutationHookResult = ReturnType<typeof useSetDefaultAddressMutation>;
 export type SetDefaultAddressMutationResult = ApolloReactCommon.MutationResult<SetDefaultAddressMutation>;
+export const AdminCategoriesDocument = gql`
+    query AdminCategories {
+  adminCategories {
+    ...AdminCategoryFields
+  }
+}
+    ${AdminCategoryFieldsFragmentDoc}`;
+
+/**
+ * __useAdminCategoriesQuery__
+ *
+ * To run a query within a React component, call `useAdminCategoriesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminCategoriesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminCategoriesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useAdminCategoriesQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminCategoriesQuery, AdminCategoriesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminCategoriesQuery, AdminCategoriesQueryVariables>(AdminCategoriesDocument, options);
+      }
+export function useAdminCategoriesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminCategoriesQuery, AdminCategoriesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminCategoriesQuery, AdminCategoriesQueryVariables>(AdminCategoriesDocument, options);
+        }
+export type AdminCategoriesQueryHookResult = ReturnType<typeof useAdminCategoriesQuery>;
+export type AdminCategoriesLazyQueryHookResult = ReturnType<typeof useAdminCategoriesLazyQuery>;
+export type AdminCategoriesQueryResult = ApolloReactCommon.QueryResult<AdminCategoriesQuery, AdminCategoriesQueryVariables>;
+export const AdminCollectionsDocument = gql`
+    query AdminCollections {
+  adminCollections {
+    ...AdminCollectionFields
+  }
+}
+    ${AdminCollectionFieldsFragmentDoc}`;
+
+/**
+ * __useAdminCollectionsQuery__
+ *
+ * To run a query within a React component, call `useAdminCollectionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminCollectionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminCollectionsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useAdminCollectionsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminCollectionsQuery, AdminCollectionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminCollectionsQuery, AdminCollectionsQueryVariables>(AdminCollectionsDocument, options);
+      }
+export function useAdminCollectionsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminCollectionsQuery, AdminCollectionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminCollectionsQuery, AdminCollectionsQueryVariables>(AdminCollectionsDocument, options);
+        }
+export type AdminCollectionsQueryHookResult = ReturnType<typeof useAdminCollectionsQuery>;
+export type AdminCollectionsLazyQueryHookResult = ReturnType<typeof useAdminCollectionsLazyQuery>;
+export type AdminCollectionsQueryResult = ApolloReactCommon.QueryResult<AdminCollectionsQuery, AdminCollectionsQueryVariables>;
+export const CreateCategoryDocument = gql`
+    mutation CreateCategory($input: AdminCategoryInput!) {
+  createCategory(input: $input) {
+    ...AdminCategoryFields
+  }
+}
+    ${AdminCategoryFieldsFragmentDoc}`;
+
+/**
+ * __useCreateCategoryMutation__
+ *
+ * To run a mutation, you first call `useCreateCategoryMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateCategoryMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createCategoryMutation, { data, loading, error }] = useCreateCategoryMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateCategoryMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateCategoryMutation, CreateCategoryMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateCategoryMutation, CreateCategoryMutationVariables>(CreateCategoryDocument, options);
+      }
+export type CreateCategoryMutationHookResult = ReturnType<typeof useCreateCategoryMutation>;
+export type CreateCategoryMutationResult = ApolloReactCommon.MutationResult<CreateCategoryMutation>;
+export const UpdateCategoryDocument = gql`
+    mutation UpdateCategory($id: Int!, $input: AdminCategoryInput!) {
+  updateCategory(id: $id, input: $input) {
+    ...AdminCategoryFields
+  }
+}
+    ${AdminCategoryFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateCategoryMutation__
+ *
+ * To run a mutation, you first call `useUpdateCategoryMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateCategoryMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateCategoryMutation, { data, loading, error }] = useUpdateCategoryMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateCategoryMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateCategoryMutation, UpdateCategoryMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateCategoryMutation, UpdateCategoryMutationVariables>(UpdateCategoryDocument, options);
+      }
+export type UpdateCategoryMutationHookResult = ReturnType<typeof useUpdateCategoryMutation>;
+export type UpdateCategoryMutationResult = ApolloReactCommon.MutationResult<UpdateCategoryMutation>;
+export const DeleteCategoryDocument = gql`
+    mutation DeleteCategory($id: Int!) {
+  deleteCategory(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteCategoryMutation__
+ *
+ * To run a mutation, you first call `useDeleteCategoryMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteCategoryMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteCategoryMutation, { data, loading, error }] = useDeleteCategoryMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteCategoryMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteCategoryMutation, DeleteCategoryMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteCategoryMutation, DeleteCategoryMutationVariables>(DeleteCategoryDocument, options);
+      }
+export type DeleteCategoryMutationHookResult = ReturnType<typeof useDeleteCategoryMutation>;
+export type DeleteCategoryMutationResult = ApolloReactCommon.MutationResult<DeleteCategoryMutation>;
+export const CreateCollectionDocument = gql`
+    mutation CreateCollection($input: AdminCollectionInput!) {
+  createCollection(input: $input) {
+    ...AdminCollectionFields
+  }
+}
+    ${AdminCollectionFieldsFragmentDoc}`;
+
+/**
+ * __useCreateCollectionMutation__
+ *
+ * To run a mutation, you first call `useCreateCollectionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateCollectionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createCollectionMutation, { data, loading, error }] = useCreateCollectionMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateCollectionMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateCollectionMutation, CreateCollectionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateCollectionMutation, CreateCollectionMutationVariables>(CreateCollectionDocument, options);
+      }
+export type CreateCollectionMutationHookResult = ReturnType<typeof useCreateCollectionMutation>;
+export type CreateCollectionMutationResult = ApolloReactCommon.MutationResult<CreateCollectionMutation>;
+export const UpdateCollectionDocument = gql`
+    mutation UpdateCollection($id: Int!, $input: AdminCollectionInput!) {
+  updateCollection(id: $id, input: $input) {
+    ...AdminCollectionFields
+  }
+}
+    ${AdminCollectionFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateCollectionMutation__
+ *
+ * To run a mutation, you first call `useUpdateCollectionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateCollectionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateCollectionMutation, { data, loading, error }] = useUpdateCollectionMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateCollectionMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateCollectionMutation, UpdateCollectionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateCollectionMutation, UpdateCollectionMutationVariables>(UpdateCollectionDocument, options);
+      }
+export type UpdateCollectionMutationHookResult = ReturnType<typeof useUpdateCollectionMutation>;
+export type UpdateCollectionMutationResult = ApolloReactCommon.MutationResult<UpdateCollectionMutation>;
+export const DeleteCollectionDocument = gql`
+    mutation DeleteCollection($id: Int!) {
+  deleteCollection(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteCollectionMutation__
+ *
+ * To run a mutation, you first call `useDeleteCollectionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteCollectionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteCollectionMutation, { data, loading, error }] = useDeleteCollectionMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteCollectionMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteCollectionMutation, DeleteCollectionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteCollectionMutation, DeleteCollectionMutationVariables>(DeleteCollectionDocument, options);
+      }
+export type DeleteCollectionMutationHookResult = ReturnType<typeof useDeleteCollectionMutation>;
+export type DeleteCollectionMutationResult = ApolloReactCommon.MutationResult<DeleteCollectionMutation>;
+export const AdminContentPagesDocument = gql`
+    query AdminContentPages {
+  adminContentPages {
+    slug
+    title
+    is_published
+  }
+}
+    `;
+
+/**
+ * __useAdminContentPagesQuery__
+ *
+ * To run a query within a React component, call `useAdminContentPagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminContentPagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminContentPagesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useAdminContentPagesQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminContentPagesQuery, AdminContentPagesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminContentPagesQuery, AdminContentPagesQueryVariables>(AdminContentPagesDocument, options);
+      }
+export function useAdminContentPagesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminContentPagesQuery, AdminContentPagesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminContentPagesQuery, AdminContentPagesQueryVariables>(AdminContentPagesDocument, options);
+        }
+export type AdminContentPagesQueryHookResult = ReturnType<typeof useAdminContentPagesQuery>;
+export type AdminContentPagesLazyQueryHookResult = ReturnType<typeof useAdminContentPagesLazyQuery>;
+export type AdminContentPagesQueryResult = ApolloReactCommon.QueryResult<AdminContentPagesQuery, AdminContentPagesQueryVariables>;
+export const AdminContentPageDocument = gql`
+    query AdminContentPage($slug: String!) {
+  adminContentPage(slug: $slug) {
+    ...AdminContentPageFields
+  }
+}
+    ${AdminContentPageFieldsFragmentDoc}`;
+
+/**
+ * __useAdminContentPageQuery__
+ *
+ * To run a query within a React component, call `useAdminContentPageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminContentPageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminContentPageQuery({
+ *   variables: {
+ *      slug: // value for 'slug'
+ *   },
+ * });
+ */
+export function useAdminContentPageQuery(baseOptions: ApolloReactHooks.QueryHookOptions<AdminContentPageQuery, AdminContentPageQueryVariables> & ({ variables: AdminContentPageQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminContentPageQuery, AdminContentPageQueryVariables>(AdminContentPageDocument, options);
+      }
+export function useAdminContentPageLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminContentPageQuery, AdminContentPageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminContentPageQuery, AdminContentPageQueryVariables>(AdminContentPageDocument, options);
+        }
+export type AdminContentPageQueryHookResult = ReturnType<typeof useAdminContentPageQuery>;
+export type AdminContentPageLazyQueryHookResult = ReturnType<typeof useAdminContentPageLazyQuery>;
+export type AdminContentPageQueryResult = ApolloReactCommon.QueryResult<AdminContentPageQuery, AdminContentPageQueryVariables>;
+export const AdminSiteSettingsDocument = gql`
+    query AdminSiteSettings {
+  siteSettings {
+    ...AdminSiteSettingsFields
+  }
+}
+    ${AdminSiteSettingsFieldsFragmentDoc}`;
+
+/**
+ * __useAdminSiteSettingsQuery__
+ *
+ * To run a query within a React component, call `useAdminSiteSettingsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminSiteSettingsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminSiteSettingsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useAdminSiteSettingsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminSiteSettingsQuery, AdminSiteSettingsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminSiteSettingsQuery, AdminSiteSettingsQueryVariables>(AdminSiteSettingsDocument, options);
+      }
+export function useAdminSiteSettingsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminSiteSettingsQuery, AdminSiteSettingsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminSiteSettingsQuery, AdminSiteSettingsQueryVariables>(AdminSiteSettingsDocument, options);
+        }
+export type AdminSiteSettingsQueryHookResult = ReturnType<typeof useAdminSiteSettingsQuery>;
+export type AdminSiteSettingsLazyQueryHookResult = ReturnType<typeof useAdminSiteSettingsLazyQuery>;
+export type AdminSiteSettingsQueryResult = ApolloReactCommon.QueryResult<AdminSiteSettingsQuery, AdminSiteSettingsQueryVariables>;
+export const SaveContentPageDocument = gql`
+    mutation SaveContentPage($slug: String!, $input: ContentPageInput!) {
+  saveContentPage(slug: $slug, input: $input) {
+    ...AdminContentPageFields
+  }
+}
+    ${AdminContentPageFieldsFragmentDoc}`;
+
+/**
+ * __useSaveContentPageMutation__
+ *
+ * To run a mutation, you first call `useSaveContentPageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSaveContentPageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [saveContentPageMutation, { data, loading, error }] = useSaveContentPageMutation({
+ *   variables: {
+ *      slug: // value for 'slug'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSaveContentPageMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SaveContentPageMutation, SaveContentPageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SaveContentPageMutation, SaveContentPageMutationVariables>(SaveContentPageDocument, options);
+      }
+export type SaveContentPageMutationHookResult = ReturnType<typeof useSaveContentPageMutation>;
+export type SaveContentPageMutationResult = ApolloReactCommon.MutationResult<SaveContentPageMutation>;
+export const DeleteContentPageDocument = gql`
+    mutation DeleteContentPage($slug: String!) {
+  deleteContentPage(slug: $slug)
+}
+    `;
+
+/**
+ * __useDeleteContentPageMutation__
+ *
+ * To run a mutation, you first call `useDeleteContentPageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteContentPageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteContentPageMutation, { data, loading, error }] = useDeleteContentPageMutation({
+ *   variables: {
+ *      slug: // value for 'slug'
+ *   },
+ * });
+ */
+export function useDeleteContentPageMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteContentPageMutation, DeleteContentPageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteContentPageMutation, DeleteContentPageMutationVariables>(DeleteContentPageDocument, options);
+      }
+export type DeleteContentPageMutationHookResult = ReturnType<typeof useDeleteContentPageMutation>;
+export type DeleteContentPageMutationResult = ApolloReactCommon.MutationResult<DeleteContentPageMutation>;
+export const UpdateSiteSettingsDocument = gql`
+    mutation UpdateSiteSettings($input: AdminSiteSettingsInput!) {
+  updateSiteSettings(input: $input) {
+    ...AdminSiteSettingsFields
+  }
+}
+    ${AdminSiteSettingsFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateSiteSettingsMutation__
+ *
+ * To run a mutation, you first call `useUpdateSiteSettingsMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateSiteSettingsMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateSiteSettingsMutation, { data, loading, error }] = useUpdateSiteSettingsMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateSiteSettingsMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateSiteSettingsMutation, UpdateSiteSettingsMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateSiteSettingsMutation, UpdateSiteSettingsMutationVariables>(UpdateSiteSettingsDocument, options);
+      }
+export type UpdateSiteSettingsMutationHookResult = ReturnType<typeof useUpdateSiteSettingsMutation>;
+export type UpdateSiteSettingsMutationResult = ApolloReactCommon.MutationResult<UpdateSiteSettingsMutation>;
+export const UpdateAnnouncementDocument = gql`
+    mutation UpdateAnnouncement($input: AdminAnnouncementInput!) {
+  updateAnnouncement(input: $input) {
+    ...AdminSiteSettingsFields
+  }
+}
+    ${AdminSiteSettingsFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateAnnouncementMutation__
+ *
+ * To run a mutation, you first call `useUpdateAnnouncementMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAnnouncementMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAnnouncementMutation, { data, loading, error }] = useUpdateAnnouncementMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateAnnouncementMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateAnnouncementMutation, UpdateAnnouncementMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateAnnouncementMutation, UpdateAnnouncementMutationVariables>(UpdateAnnouncementDocument, options);
+      }
+export type UpdateAnnouncementMutationHookResult = ReturnType<typeof useUpdateAnnouncementMutation>;
+export type UpdateAnnouncementMutationResult = ApolloReactCommon.MutationResult<UpdateAnnouncementMutation>;
+export const AdminCouponsDocument = gql`
+    query AdminCoupons($filter: AdminCouponsFilterInput) {
+  adminCoupons(filter: $filter) {
+    items {
+      ...AdminCouponFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminCouponFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminCouponsQuery__
+ *
+ * To run a query within a React component, call `useAdminCouponsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminCouponsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminCouponsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminCouponsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminCouponsQuery, AdminCouponsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminCouponsQuery, AdminCouponsQueryVariables>(AdminCouponsDocument, options);
+      }
+export function useAdminCouponsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminCouponsQuery, AdminCouponsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminCouponsQuery, AdminCouponsQueryVariables>(AdminCouponsDocument, options);
+        }
+export type AdminCouponsQueryHookResult = ReturnType<typeof useAdminCouponsQuery>;
+export type AdminCouponsLazyQueryHookResult = ReturnType<typeof useAdminCouponsLazyQuery>;
+export type AdminCouponsQueryResult = ApolloReactCommon.QueryResult<AdminCouponsQuery, AdminCouponsQueryVariables>;
+export const CreateCouponDocument = gql`
+    mutation CreateCoupon($input: AdminCouponInput!) {
+  createCoupon(input: $input) {
+    ...AdminCouponFields
+  }
+}
+    ${AdminCouponFieldsFragmentDoc}`;
+
+/**
+ * __useCreateCouponMutation__
+ *
+ * To run a mutation, you first call `useCreateCouponMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateCouponMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createCouponMutation, { data, loading, error }] = useCreateCouponMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateCouponMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateCouponMutation, CreateCouponMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateCouponMutation, CreateCouponMutationVariables>(CreateCouponDocument, options);
+      }
+export type CreateCouponMutationHookResult = ReturnType<typeof useCreateCouponMutation>;
+export type CreateCouponMutationResult = ApolloReactCommon.MutationResult<CreateCouponMutation>;
+export const UpdateCouponDocument = gql`
+    mutation UpdateCoupon($id: Int!, $input: AdminCouponInput!) {
+  updateCoupon(id: $id, input: $input) {
+    ...AdminCouponFields
+  }
+}
+    ${AdminCouponFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateCouponMutation__
+ *
+ * To run a mutation, you first call `useUpdateCouponMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateCouponMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateCouponMutation, { data, loading, error }] = useUpdateCouponMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateCouponMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateCouponMutation, UpdateCouponMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateCouponMutation, UpdateCouponMutationVariables>(UpdateCouponDocument, options);
+      }
+export type UpdateCouponMutationHookResult = ReturnType<typeof useUpdateCouponMutation>;
+export type UpdateCouponMutationResult = ApolloReactCommon.MutationResult<UpdateCouponMutation>;
+export const DeleteCouponDocument = gql`
+    mutation DeleteCoupon($id: Int!) {
+  deleteCoupon(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteCouponMutation__
+ *
+ * To run a mutation, you first call `useDeleteCouponMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteCouponMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteCouponMutation, { data, loading, error }] = useDeleteCouponMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteCouponMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteCouponMutation, DeleteCouponMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteCouponMutation, DeleteCouponMutationVariables>(DeleteCouponDocument, options);
+      }
+export type DeleteCouponMutationHookResult = ReturnType<typeof useDeleteCouponMutation>;
+export type DeleteCouponMutationResult = ApolloReactCommon.MutationResult<DeleteCouponMutation>;
+export const AdminDashboardDocument = gql`
+    query AdminDashboard {
+  adminDashboard {
+    orders_last_30_days
+    revenue_last_30_days
+    pending_registrations
+    pending_bookings
+    unread_messages
+    orders_by_status {
+      status
+      count
+    }
+    recent_orders {
+      id
+      status
+      total
+      item_count
+      created_at
+      customer {
+        ...AdminUserRefFields
+      }
+    }
+    recent_bookings {
+      id
+      status
+      total
+      hours
+      participants
+      starts_at
+      created_at
+      customer {
+        ...AdminUserRefFields
+      }
+    }
+    low_stock {
+      id
+      name
+      slug
+      stock
+    }
+  }
+}
+    ${AdminUserRefFieldsFragmentDoc}`;
+
+/**
+ * __useAdminDashboardQuery__
+ *
+ * To run a query within a React component, call `useAdminDashboardQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminDashboardQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminDashboardQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useAdminDashboardQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminDashboardQuery, AdminDashboardQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminDashboardQuery, AdminDashboardQueryVariables>(AdminDashboardDocument, options);
+      }
+export function useAdminDashboardLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminDashboardQuery, AdminDashboardQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminDashboardQuery, AdminDashboardQueryVariables>(AdminDashboardDocument, options);
+        }
+export type AdminDashboardQueryHookResult = ReturnType<typeof useAdminDashboardQuery>;
+export type AdminDashboardLazyQueryHookResult = ReturnType<typeof useAdminDashboardLazyQuery>;
+export type AdminDashboardQueryResult = ApolloReactCommon.QueryResult<AdminDashboardQuery, AdminDashboardQueryVariables>;
+export const AdminEventsDocument = gql`
+    query AdminEvents($filter: AdminEventsFilterInput) {
+  adminEvents(filter: $filter) {
+    items {
+      ...AdminEventRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminEventRowFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminEventsQuery__
+ *
+ * To run a query within a React component, call `useAdminEventsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminEventsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminEventsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminEventsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminEventsQuery, AdminEventsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminEventsQuery, AdminEventsQueryVariables>(AdminEventsDocument, options);
+      }
+export function useAdminEventsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminEventsQuery, AdminEventsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminEventsQuery, AdminEventsQueryVariables>(AdminEventsDocument, options);
+        }
+export type AdminEventsQueryHookResult = ReturnType<typeof useAdminEventsQuery>;
+export type AdminEventsLazyQueryHookResult = ReturnType<typeof useAdminEventsLazyQuery>;
+export type AdminEventsQueryResult = ApolloReactCommon.QueryResult<AdminEventsQuery, AdminEventsQueryVariables>;
+export const AdminEventDocument = gql`
+    query AdminEvent($id: Int!) {
+  adminEvent(id: $id) {
+    ...AdminEventDetail
+  }
+}
+    ${AdminEventDetailFragmentDoc}
+${AdminEventRowFragmentDoc}`;
+
+/**
+ * __useAdminEventQuery__
+ *
+ * To run a query within a React component, call `useAdminEventQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminEventQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminEventQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useAdminEventQuery(baseOptions: ApolloReactHooks.QueryHookOptions<AdminEventQuery, AdminEventQueryVariables> & ({ variables: AdminEventQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminEventQuery, AdminEventQueryVariables>(AdminEventDocument, options);
+      }
+export function useAdminEventLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminEventQuery, AdminEventQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminEventQuery, AdminEventQueryVariables>(AdminEventDocument, options);
+        }
+export type AdminEventQueryHookResult = ReturnType<typeof useAdminEventQuery>;
+export type AdminEventLazyQueryHookResult = ReturnType<typeof useAdminEventLazyQuery>;
+export type AdminEventQueryResult = ApolloReactCommon.QueryResult<AdminEventQuery, AdminEventQueryVariables>;
+export const AdminEventRegistrationsDocument = gql`
+    query AdminEventRegistrations($filter: AdminRegistrationsFilterInput) {
+  adminEventRegistrations(filter: $filter) {
+    items {
+      ...AdminRegistrationRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminRegistrationRowFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminEventRegistrationsQuery__
+ *
+ * To run a query within a React component, call `useAdminEventRegistrationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminEventRegistrationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminEventRegistrationsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminEventRegistrationsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminEventRegistrationsQuery, AdminEventRegistrationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminEventRegistrationsQuery, AdminEventRegistrationsQueryVariables>(AdminEventRegistrationsDocument, options);
+      }
+export function useAdminEventRegistrationsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminEventRegistrationsQuery, AdminEventRegistrationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminEventRegistrationsQuery, AdminEventRegistrationsQueryVariables>(AdminEventRegistrationsDocument, options);
+        }
+export type AdminEventRegistrationsQueryHookResult = ReturnType<typeof useAdminEventRegistrationsQuery>;
+export type AdminEventRegistrationsLazyQueryHookResult = ReturnType<typeof useAdminEventRegistrationsLazyQuery>;
+export type AdminEventRegistrationsQueryResult = ApolloReactCommon.QueryResult<AdminEventRegistrationsQuery, AdminEventRegistrationsQueryVariables>;
+export const CreateEventDocument = gql`
+    mutation CreateEvent($input: AdminEventInput!) {
+  createEvent(input: $input) {
+    ...AdminEventDetail
+  }
+}
+    ${AdminEventDetailFragmentDoc}
+${AdminEventRowFragmentDoc}`;
+
+/**
+ * __useCreateEventMutation__
+ *
+ * To run a mutation, you first call `useCreateEventMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateEventMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createEventMutation, { data, loading, error }] = useCreateEventMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateEventMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateEventMutation, CreateEventMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateEventMutation, CreateEventMutationVariables>(CreateEventDocument, options);
+      }
+export type CreateEventMutationHookResult = ReturnType<typeof useCreateEventMutation>;
+export type CreateEventMutationResult = ApolloReactCommon.MutationResult<CreateEventMutation>;
+export const UpdateEventDocument = gql`
+    mutation UpdateEvent($id: Int!, $input: AdminEventInput!) {
+  updateEvent(id: $id, input: $input) {
+    ...AdminEventDetail
+  }
+}
+    ${AdminEventDetailFragmentDoc}
+${AdminEventRowFragmentDoc}`;
+
+/**
+ * __useUpdateEventMutation__
+ *
+ * To run a mutation, you first call `useUpdateEventMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateEventMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateEventMutation, { data, loading, error }] = useUpdateEventMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateEventMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateEventMutation, UpdateEventMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateEventMutation, UpdateEventMutationVariables>(UpdateEventDocument, options);
+      }
+export type UpdateEventMutationHookResult = ReturnType<typeof useUpdateEventMutation>;
+export type UpdateEventMutationResult = ApolloReactCommon.MutationResult<UpdateEventMutation>;
+export const PublishEventDocument = gql`
+    mutation PublishEvent($id: Int!) {
+  publishEvent(id: $id) {
+    ...AdminEventRow
+  }
+}
+    ${AdminEventRowFragmentDoc}`;
+
+/**
+ * __usePublishEventMutation__
+ *
+ * To run a mutation, you first call `usePublishEventMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `usePublishEventMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [publishEventMutation, { data, loading, error }] = usePublishEventMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function usePublishEventMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<PublishEventMutation, PublishEventMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<PublishEventMutation, PublishEventMutationVariables>(PublishEventDocument, options);
+      }
+export type PublishEventMutationHookResult = ReturnType<typeof usePublishEventMutation>;
+export type PublishEventMutationResult = ApolloReactCommon.MutationResult<PublishEventMutation>;
+export const UnpublishEventDocument = gql`
+    mutation UnpublishEvent($id: Int!) {
+  unpublishEvent(id: $id) {
+    ...AdminEventRow
+  }
+}
+    ${AdminEventRowFragmentDoc}`;
+
+/**
+ * __useUnpublishEventMutation__
+ *
+ * To run a mutation, you first call `useUnpublishEventMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnpublishEventMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unpublishEventMutation, { data, loading, error }] = useUnpublishEventMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useUnpublishEventMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UnpublishEventMutation, UnpublishEventMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UnpublishEventMutation, UnpublishEventMutationVariables>(UnpublishEventDocument, options);
+      }
+export type UnpublishEventMutationHookResult = ReturnType<typeof useUnpublishEventMutation>;
+export type UnpublishEventMutationResult = ApolloReactCommon.MutationResult<UnpublishEventMutation>;
+export const CompleteEventDocument = gql`
+    mutation CompleteEvent($id: Int!) {
+  completeEvent(id: $id) {
+    ...AdminEventRow
+  }
+}
+    ${AdminEventRowFragmentDoc}`;
+
+/**
+ * __useCompleteEventMutation__
+ *
+ * To run a mutation, you first call `useCompleteEventMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCompleteEventMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [completeEventMutation, { data, loading, error }] = useCompleteEventMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useCompleteEventMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CompleteEventMutation, CompleteEventMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CompleteEventMutation, CompleteEventMutationVariables>(CompleteEventDocument, options);
+      }
+export type CompleteEventMutationHookResult = ReturnType<typeof useCompleteEventMutation>;
+export type CompleteEventMutationResult = ApolloReactCommon.MutationResult<CompleteEventMutation>;
+export const CancelEventDocument = gql`
+    mutation CancelEvent($id: Int!, $reason: String) {
+  cancelEvent(id: $id, reason: $reason) {
+    ...AdminEventRow
+  }
+}
+    ${AdminEventRowFragmentDoc}`;
+
+/**
+ * __useCancelEventMutation__
+ *
+ * To run a mutation, you first call `useCancelEventMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCancelEventMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [cancelEventMutation, { data, loading, error }] = useCancelEventMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      reason: // value for 'reason'
+ *   },
+ * });
+ */
+export function useCancelEventMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CancelEventMutation, CancelEventMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CancelEventMutation, CancelEventMutationVariables>(CancelEventDocument, options);
+      }
+export type CancelEventMutationHookResult = ReturnType<typeof useCancelEventMutation>;
+export type CancelEventMutationResult = ApolloReactCommon.MutationResult<CancelEventMutation>;
+export const SetRegistrationStatusDocument = gql`
+    mutation SetRegistrationStatus($id: String!, $status: RegistrationStatus!, $reason: String) {
+  setRegistrationStatus(id: $id, status: $status, reason: $reason) {
+    ...AdminRegistrationRow
+  }
+}
+    ${AdminRegistrationRowFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}`;
+
+/**
+ * __useSetRegistrationStatusMutation__
+ *
+ * To run a mutation, you first call `useSetRegistrationStatusMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetRegistrationStatusMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setRegistrationStatusMutation, { data, loading, error }] = useSetRegistrationStatusMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      status: // value for 'status'
+ *      reason: // value for 'reason'
+ *   },
+ * });
+ */
+export function useSetRegistrationStatusMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetRegistrationStatusMutation, SetRegistrationStatusMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetRegistrationStatusMutation, SetRegistrationStatusMutationVariables>(SetRegistrationStatusDocument, options);
+      }
+export type SetRegistrationStatusMutationHookResult = ReturnType<typeof useSetRegistrationStatusMutation>;
+export type SetRegistrationStatusMutationResult = ApolloReactCommon.MutationResult<SetRegistrationStatusMutation>;
+export const AdminContactMessagesDocument = gql`
+    query AdminContactMessages($filter: AdminContactFilterInput) {
+  adminContactMessages(filter: $filter) {
+    items {
+      ...AdminContactMessageFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminContactMessageFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminContactMessagesQuery__
+ *
+ * To run a query within a React component, call `useAdminContactMessagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminContactMessagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminContactMessagesQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminContactMessagesQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminContactMessagesQuery, AdminContactMessagesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminContactMessagesQuery, AdminContactMessagesQueryVariables>(AdminContactMessagesDocument, options);
+      }
+export function useAdminContactMessagesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminContactMessagesQuery, AdminContactMessagesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminContactMessagesQuery, AdminContactMessagesQueryVariables>(AdminContactMessagesDocument, options);
+        }
+export type AdminContactMessagesQueryHookResult = ReturnType<typeof useAdminContactMessagesQuery>;
+export type AdminContactMessagesLazyQueryHookResult = ReturnType<typeof useAdminContactMessagesLazyQuery>;
+export type AdminContactMessagesQueryResult = ApolloReactCommon.QueryResult<AdminContactMessagesQuery, AdminContactMessagesQueryVariables>;
+export const AdminNewsletterSubscribersDocument = gql`
+    query AdminNewsletterSubscribers($filter: AdminSubscribersFilterInput) {
+  adminNewsletterSubscribers(filter: $filter) {
+    items {
+      ...AdminSubscriberFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminSubscriberFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminNewsletterSubscribersQuery__
+ *
+ * To run a query within a React component, call `useAdminNewsletterSubscribersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminNewsletterSubscribersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminNewsletterSubscribersQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminNewsletterSubscribersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminNewsletterSubscribersQuery, AdminNewsletterSubscribersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminNewsletterSubscribersQuery, AdminNewsletterSubscribersQueryVariables>(AdminNewsletterSubscribersDocument, options);
+      }
+export function useAdminNewsletterSubscribersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminNewsletterSubscribersQuery, AdminNewsletterSubscribersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminNewsletterSubscribersQuery, AdminNewsletterSubscribersQueryVariables>(AdminNewsletterSubscribersDocument, options);
+        }
+export type AdminNewsletterSubscribersQueryHookResult = ReturnType<typeof useAdminNewsletterSubscribersQuery>;
+export type AdminNewsletterSubscribersLazyQueryHookResult = ReturnType<typeof useAdminNewsletterSubscribersLazyQuery>;
+export type AdminNewsletterSubscribersQueryResult = ApolloReactCommon.QueryResult<AdminNewsletterSubscribersQuery, AdminNewsletterSubscribersQueryVariables>;
+export const ExportNewsletterSubscribersDocument = gql`
+    query ExportNewsletterSubscribers($filter: AdminSubscribersFilterInput) {
+  exportNewsletterSubscribers(filter: $filter)
+}
+    `;
+
+/**
+ * __useExportNewsletterSubscribersQuery__
+ *
+ * To run a query within a React component, call `useExportNewsletterSubscribersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useExportNewsletterSubscribersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useExportNewsletterSubscribersQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useExportNewsletterSubscribersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<ExportNewsletterSubscribersQuery, ExportNewsletterSubscribersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ExportNewsletterSubscribersQuery, ExportNewsletterSubscribersQueryVariables>(ExportNewsletterSubscribersDocument, options);
+      }
+export function useExportNewsletterSubscribersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ExportNewsletterSubscribersQuery, ExportNewsletterSubscribersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ExportNewsletterSubscribersQuery, ExportNewsletterSubscribersQueryVariables>(ExportNewsletterSubscribersDocument, options);
+        }
+export type ExportNewsletterSubscribersQueryHookResult = ReturnType<typeof useExportNewsletterSubscribersQuery>;
+export type ExportNewsletterSubscribersLazyQueryHookResult = ReturnType<typeof useExportNewsletterSubscribersLazyQuery>;
+export type ExportNewsletterSubscribersQueryResult = ApolloReactCommon.QueryResult<ExportNewsletterSubscribersQuery, ExportNewsletterSubscribersQueryVariables>;
+export const SetContactMessageReadDocument = gql`
+    mutation SetContactMessageRead($id: Int!, $is_read: Boolean!) {
+  setContactMessageRead(id: $id, is_read: $is_read) {
+    ...AdminContactMessageFields
+  }
+}
+    ${AdminContactMessageFieldsFragmentDoc}`;
+
+/**
+ * __useSetContactMessageReadMutation__
+ *
+ * To run a mutation, you first call `useSetContactMessageReadMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetContactMessageReadMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setContactMessageReadMutation, { data, loading, error }] = useSetContactMessageReadMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      is_read: // value for 'is_read'
+ *   },
+ * });
+ */
+export function useSetContactMessageReadMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetContactMessageReadMutation, SetContactMessageReadMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetContactMessageReadMutation, SetContactMessageReadMutationVariables>(SetContactMessageReadDocument, options);
+      }
+export type SetContactMessageReadMutationHookResult = ReturnType<typeof useSetContactMessageReadMutation>;
+export type SetContactMessageReadMutationResult = ApolloReactCommon.MutationResult<SetContactMessageReadMutation>;
+export const DeleteContactMessageDocument = gql`
+    mutation DeleteContactMessage($id: Int!) {
+  deleteContactMessage(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteContactMessageMutation__
+ *
+ * To run a mutation, you first call `useDeleteContactMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteContactMessageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteContactMessageMutation, { data, loading, error }] = useDeleteContactMessageMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteContactMessageMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteContactMessageMutation, DeleteContactMessageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteContactMessageMutation, DeleteContactMessageMutationVariables>(DeleteContactMessageDocument, options);
+      }
+export type DeleteContactMessageMutationHookResult = ReturnType<typeof useDeleteContactMessageMutation>;
+export type DeleteContactMessageMutationResult = ApolloReactCommon.MutationResult<DeleteContactMessageMutation>;
+export const UnsubscribeSubscriberDocument = gql`
+    mutation UnsubscribeSubscriber($email: String!) {
+  unsubscribeSubscriber(email: $email)
+}
+    `;
+
+/**
+ * __useUnsubscribeSubscriberMutation__
+ *
+ * To run a mutation, you first call `useUnsubscribeSubscriberMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnsubscribeSubscriberMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unsubscribeSubscriberMutation, { data, loading, error }] = useUnsubscribeSubscriberMutation({
+ *   variables: {
+ *      email: // value for 'email'
+ *   },
+ * });
+ */
+export function useUnsubscribeSubscriberMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UnsubscribeSubscriberMutation, UnsubscribeSubscriberMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UnsubscribeSubscriberMutation, UnsubscribeSubscriberMutationVariables>(UnsubscribeSubscriberDocument, options);
+      }
+export type UnsubscribeSubscriberMutationHookResult = ReturnType<typeof useUnsubscribeSubscriberMutation>;
+export type UnsubscribeSubscriberMutationResult = ApolloReactCommon.MutationResult<UnsubscribeSubscriberMutation>;
+export const AdminOrdersDocument = gql`
+    query AdminOrders($filter: AdminOrdersFilterInput) {
+  adminOrders(filter: $filter) {
+    items {
+      ...AdminOrderRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminOrderRowFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminOrdersQuery__
+ *
+ * To run a query within a React component, call `useAdminOrdersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminOrdersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminOrdersQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminOrdersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminOrdersQuery, AdminOrdersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminOrdersQuery, AdminOrdersQueryVariables>(AdminOrdersDocument, options);
+      }
+export function useAdminOrdersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminOrdersQuery, AdminOrdersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminOrdersQuery, AdminOrdersQueryVariables>(AdminOrdersDocument, options);
+        }
+export type AdminOrdersQueryHookResult = ReturnType<typeof useAdminOrdersQuery>;
+export type AdminOrdersLazyQueryHookResult = ReturnType<typeof useAdminOrdersLazyQuery>;
+export type AdminOrdersQueryResult = ApolloReactCommon.QueryResult<AdminOrdersQuery, AdminOrdersQueryVariables>;
+export const AdminOrderDocument = gql`
+    query AdminOrder($id: String!) {
+  adminOrder(id: $id) {
+    ...AdminOrderDetail
+  }
+}
+    ${AdminOrderDetailFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${OrderFieldsFragmentDoc}`;
+
+/**
+ * __useAdminOrderQuery__
+ *
+ * To run a query within a React component, call `useAdminOrderQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminOrderQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminOrderQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useAdminOrderQuery(baseOptions: ApolloReactHooks.QueryHookOptions<AdminOrderQuery, AdminOrderQueryVariables> & ({ variables: AdminOrderQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminOrderQuery, AdminOrderQueryVariables>(AdminOrderDocument, options);
+      }
+export function useAdminOrderLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminOrderQuery, AdminOrderQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminOrderQuery, AdminOrderQueryVariables>(AdminOrderDocument, options);
+        }
+export type AdminOrderQueryHookResult = ReturnType<typeof useAdminOrderQuery>;
+export type AdminOrderLazyQueryHookResult = ReturnType<typeof useAdminOrderLazyQuery>;
+export type AdminOrderQueryResult = ApolloReactCommon.QueryResult<AdminOrderQuery, AdminOrderQueryVariables>;
+export const SetOrderStatusDocument = gql`
+    mutation SetOrderStatus($id: String!, $status: OrderStatus!, $tracking_note: String, $cancel_reason: String) {
+  setOrderStatus(
+    id: $id
+    status: $status
+    tracking_note: $tracking_note
+    cancel_reason: $cancel_reason
+  ) {
+    ...AdminOrderDetail
+  }
+}
+    ${AdminOrderDetailFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${OrderFieldsFragmentDoc}`;
+
+/**
+ * __useSetOrderStatusMutation__
+ *
+ * To run a mutation, you first call `useSetOrderStatusMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetOrderStatusMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setOrderStatusMutation, { data, loading, error }] = useSetOrderStatusMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      status: // value for 'status'
+ *      tracking_note: // value for 'tracking_note'
+ *      cancel_reason: // value for 'cancel_reason'
+ *   },
+ * });
+ */
+export function useSetOrderStatusMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetOrderStatusMutation, SetOrderStatusMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetOrderStatusMutation, SetOrderStatusMutationVariables>(SetOrderStatusDocument, options);
+      }
+export type SetOrderStatusMutationHookResult = ReturnType<typeof useSetOrderStatusMutation>;
+export type SetOrderStatusMutationResult = ApolloReactCommon.MutationResult<SetOrderStatusMutation>;
+export const MarkOrderPaidDocument = gql`
+    mutation MarkOrderPaid($id: String!) {
+  markOrderPaid(id: $id) {
+    ...AdminOrderDetail
+  }
+}
+    ${AdminOrderDetailFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${OrderFieldsFragmentDoc}`;
+
+/**
+ * __useMarkOrderPaidMutation__
+ *
+ * To run a mutation, you first call `useMarkOrderPaidMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useMarkOrderPaidMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [markOrderPaidMutation, { data, loading, error }] = useMarkOrderPaidMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useMarkOrderPaidMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<MarkOrderPaidMutation, MarkOrderPaidMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<MarkOrderPaidMutation, MarkOrderPaidMutationVariables>(MarkOrderPaidDocument, options);
+      }
+export type MarkOrderPaidMutationHookResult = ReturnType<typeof useMarkOrderPaidMutation>;
+export type MarkOrderPaidMutationResult = ApolloReactCommon.MutationResult<MarkOrderPaidMutation>;
+export const CancelOrderAsAdminDocument = gql`
+    mutation CancelOrderAsAdmin($id: String!, $reason: String) {
+  cancelOrderAsAdmin(id: $id, reason: $reason) {
+    ...AdminOrderDetail
+  }
+}
+    ${AdminOrderDetailFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${OrderFieldsFragmentDoc}`;
+
+/**
+ * __useCancelOrderAsAdminMutation__
+ *
+ * To run a mutation, you first call `useCancelOrderAsAdminMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCancelOrderAsAdminMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [cancelOrderAsAdminMutation, { data, loading, error }] = useCancelOrderAsAdminMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      reason: // value for 'reason'
+ *   },
+ * });
+ */
+export function useCancelOrderAsAdminMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CancelOrderAsAdminMutation, CancelOrderAsAdminMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CancelOrderAsAdminMutation, CancelOrderAsAdminMutationVariables>(CancelOrderAsAdminDocument, options);
+      }
+export type CancelOrderAsAdminMutationHookResult = ReturnType<typeof useCancelOrderAsAdminMutation>;
+export type CancelOrderAsAdminMutationResult = ApolloReactCommon.MutationResult<CancelOrderAsAdminMutation>;
+export const SetOrderAdminNoteDocument = gql`
+    mutation SetOrderAdminNote($id: String!, $note: String) {
+  setOrderAdminNote(id: $id, note: $note) {
+    ...AdminOrderDetail
+  }
+}
+    ${AdminOrderDetailFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${OrderFieldsFragmentDoc}`;
+
+/**
+ * __useSetOrderAdminNoteMutation__
+ *
+ * To run a mutation, you first call `useSetOrderAdminNoteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetOrderAdminNoteMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setOrderAdminNoteMutation, { data, loading, error }] = useSetOrderAdminNoteMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      note: // value for 'note'
+ *   },
+ * });
+ */
+export function useSetOrderAdminNoteMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetOrderAdminNoteMutation, SetOrderAdminNoteMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetOrderAdminNoteMutation, SetOrderAdminNoteMutationVariables>(SetOrderAdminNoteDocument, options);
+      }
+export type SetOrderAdminNoteMutationHookResult = ReturnType<typeof useSetOrderAdminNoteMutation>;
+export type SetOrderAdminNoteMutationResult = ApolloReactCommon.MutationResult<SetOrderAdminNoteMutation>;
+export const AdminProductsDocument = gql`
+    query AdminProducts($filter: AdminProductsFilterInput) {
+  adminProducts(filter: $filter) {
+    items {
+      ...AdminProductRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminProductRowFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminProductsQuery__
+ *
+ * To run a query within a React component, call `useAdminProductsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminProductsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminProductsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminProductsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminProductsQuery, AdminProductsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminProductsQuery, AdminProductsQueryVariables>(AdminProductsDocument, options);
+      }
+export function useAdminProductsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminProductsQuery, AdminProductsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminProductsQuery, AdminProductsQueryVariables>(AdminProductsDocument, options);
+        }
+export type AdminProductsQueryHookResult = ReturnType<typeof useAdminProductsQuery>;
+export type AdminProductsLazyQueryHookResult = ReturnType<typeof useAdminProductsLazyQuery>;
+export type AdminProductsQueryResult = ApolloReactCommon.QueryResult<AdminProductsQuery, AdminProductsQueryVariables>;
+export const AdminProductDocument = gql`
+    query AdminProduct($id: Int!) {
+  adminProduct(id: $id) {
+    ...AdminProductDetail
+  }
+}
+    ${AdminProductDetailFragmentDoc}
+${AdminProductRowFragmentDoc}
+${AdminOptionGroupFieldsFragmentDoc}`;
+
+/**
+ * __useAdminProductQuery__
+ *
+ * To run a query within a React component, call `useAdminProductQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminProductQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminProductQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useAdminProductQuery(baseOptions: ApolloReactHooks.QueryHookOptions<AdminProductQuery, AdminProductQueryVariables> & ({ variables: AdminProductQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminProductQuery, AdminProductQueryVariables>(AdminProductDocument, options);
+      }
+export function useAdminProductLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminProductQuery, AdminProductQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminProductQuery, AdminProductQueryVariables>(AdminProductDocument, options);
+        }
+export type AdminProductQueryHookResult = ReturnType<typeof useAdminProductQuery>;
+export type AdminProductLazyQueryHookResult = ReturnType<typeof useAdminProductLazyQuery>;
+export type AdminProductQueryResult = ApolloReactCommon.QueryResult<AdminProductQuery, AdminProductQueryVariables>;
+export const AdminProductOptionGroupsDocument = gql`
+    query AdminProductOptionGroups($product_id: Int!) {
+  adminProductOptionGroups(product_id: $product_id) {
+    ...AdminOptionGroupFields
+  }
+}
+    ${AdminOptionGroupFieldsFragmentDoc}`;
+
+/**
+ * __useAdminProductOptionGroupsQuery__
+ *
+ * To run a query within a React component, call `useAdminProductOptionGroupsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminProductOptionGroupsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminProductOptionGroupsQuery({
+ *   variables: {
+ *      product_id: // value for 'product_id'
+ *   },
+ * });
+ */
+export function useAdminProductOptionGroupsQuery(baseOptions: ApolloReactHooks.QueryHookOptions<AdminProductOptionGroupsQuery, AdminProductOptionGroupsQueryVariables> & ({ variables: AdminProductOptionGroupsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminProductOptionGroupsQuery, AdminProductOptionGroupsQueryVariables>(AdminProductOptionGroupsDocument, options);
+      }
+export function useAdminProductOptionGroupsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminProductOptionGroupsQuery, AdminProductOptionGroupsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminProductOptionGroupsQuery, AdminProductOptionGroupsQueryVariables>(AdminProductOptionGroupsDocument, options);
+        }
+export type AdminProductOptionGroupsQueryHookResult = ReturnType<typeof useAdminProductOptionGroupsQuery>;
+export type AdminProductOptionGroupsLazyQueryHookResult = ReturnType<typeof useAdminProductOptionGroupsLazyQuery>;
+export type AdminProductOptionGroupsQueryResult = ApolloReactCommon.QueryResult<AdminProductOptionGroupsQuery, AdminProductOptionGroupsQueryVariables>;
+export const CreateProductDocument = gql`
+    mutation CreateProduct($input: AdminProductInput!) {
+  createProduct(input: $input) {
+    ...AdminProductDetail
+  }
+}
+    ${AdminProductDetailFragmentDoc}
+${AdminProductRowFragmentDoc}
+${AdminOptionGroupFieldsFragmentDoc}`;
+
+/**
+ * __useCreateProductMutation__
+ *
+ * To run a mutation, you first call `useCreateProductMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateProductMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createProductMutation, { data, loading, error }] = useCreateProductMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateProductMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateProductMutation, CreateProductMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateProductMutation, CreateProductMutationVariables>(CreateProductDocument, options);
+      }
+export type CreateProductMutationHookResult = ReturnType<typeof useCreateProductMutation>;
+export type CreateProductMutationResult = ApolloReactCommon.MutationResult<CreateProductMutation>;
+export const UpdateProductDocument = gql`
+    mutation UpdateProduct($id: Int!, $input: AdminProductUpdateInput!) {
+  updateProduct(id: $id, input: $input) {
+    ...AdminProductDetail
+  }
+}
+    ${AdminProductDetailFragmentDoc}
+${AdminProductRowFragmentDoc}
+${AdminOptionGroupFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateProductMutation__
+ *
+ * To run a mutation, you first call `useUpdateProductMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProductMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProductMutation, { data, loading, error }] = useUpdateProductMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProductMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateProductMutation, UpdateProductMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateProductMutation, UpdateProductMutationVariables>(UpdateProductDocument, options);
+      }
+export type UpdateProductMutationHookResult = ReturnType<typeof useUpdateProductMutation>;
+export type UpdateProductMutationResult = ApolloReactCommon.MutationResult<UpdateProductMutation>;
+export const SetProductActiveDocument = gql`
+    mutation SetProductActive($id: Int!, $is_active: Boolean!) {
+  setProductActive(id: $id, is_active: $is_active) {
+    ...AdminProductRow
+  }
+}
+    ${AdminProductRowFragmentDoc}`;
+
+/**
+ * __useSetProductActiveMutation__
+ *
+ * To run a mutation, you first call `useSetProductActiveMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetProductActiveMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setProductActiveMutation, { data, loading, error }] = useSetProductActiveMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      is_active: // value for 'is_active'
+ *   },
+ * });
+ */
+export function useSetProductActiveMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetProductActiveMutation, SetProductActiveMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetProductActiveMutation, SetProductActiveMutationVariables>(SetProductActiveDocument, options);
+      }
+export type SetProductActiveMutationHookResult = ReturnType<typeof useSetProductActiveMutation>;
+export type SetProductActiveMutationResult = ApolloReactCommon.MutationResult<SetProductActiveMutation>;
+export const SetProductFeaturedDocument = gql`
+    mutation SetProductFeatured($id: Int!, $is_featured: Boolean!) {
+  setProductFeatured(id: $id, is_featured: $is_featured) {
+    ...AdminProductRow
+  }
+}
+    ${AdminProductRowFragmentDoc}`;
+
+/**
+ * __useSetProductFeaturedMutation__
+ *
+ * To run a mutation, you first call `useSetProductFeaturedMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetProductFeaturedMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setProductFeaturedMutation, { data, loading, error }] = useSetProductFeaturedMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      is_featured: // value for 'is_featured'
+ *   },
+ * });
+ */
+export function useSetProductFeaturedMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetProductFeaturedMutation, SetProductFeaturedMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetProductFeaturedMutation, SetProductFeaturedMutationVariables>(SetProductFeaturedDocument, options);
+      }
+export type SetProductFeaturedMutationHookResult = ReturnType<typeof useSetProductFeaturedMutation>;
+export type SetProductFeaturedMutationResult = ApolloReactCommon.MutationResult<SetProductFeaturedMutation>;
+export const AdjustProductStockDocument = gql`
+    mutation AdjustProductStock($id: Int!, $delta: Int!, $reason: String!) {
+  adjustProductStock(id: $id, delta: $delta, reason: $reason) {
+    ...AdminProductRow
+  }
+}
+    ${AdminProductRowFragmentDoc}`;
+
+/**
+ * __useAdjustProductStockMutation__
+ *
+ * To run a mutation, you first call `useAdjustProductStockMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAdjustProductStockMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [adjustProductStockMutation, { data, loading, error }] = useAdjustProductStockMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      delta: // value for 'delta'
+ *      reason: // value for 'reason'
+ *   },
+ * });
+ */
+export function useAdjustProductStockMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<AdjustProductStockMutation, AdjustProductStockMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<AdjustProductStockMutation, AdjustProductStockMutationVariables>(AdjustProductStockDocument, options);
+      }
+export type AdjustProductStockMutationHookResult = ReturnType<typeof useAdjustProductStockMutation>;
+export type AdjustProductStockMutationResult = ApolloReactCommon.MutationResult<AdjustProductStockMutation>;
+export const ReorderProductImagesDocument = gql`
+    mutation ReorderProductImages($id: Int!, $image_urls: [String!]!) {
+  reorderProductImages(id: $id, image_urls: $image_urls) {
+    ...AdminProductRow
+  }
+}
+    ${AdminProductRowFragmentDoc}`;
+
+/**
+ * __useReorderProductImagesMutation__
+ *
+ * To run a mutation, you first call `useReorderProductImagesMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useReorderProductImagesMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [reorderProductImagesMutation, { data, loading, error }] = useReorderProductImagesMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      image_urls: // value for 'image_urls'
+ *   },
+ * });
+ */
+export function useReorderProductImagesMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ReorderProductImagesMutation, ReorderProductImagesMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<ReorderProductImagesMutation, ReorderProductImagesMutationVariables>(ReorderProductImagesDocument, options);
+      }
+export type ReorderProductImagesMutationHookResult = ReturnType<typeof useReorderProductImagesMutation>;
+export type ReorderProductImagesMutationResult = ApolloReactCommon.MutationResult<ReorderProductImagesMutation>;
+export const CreateProductOptionGroupDocument = gql`
+    mutation CreateProductOptionGroup($product_id: Int!, $input: AdminOptionGroupInput!) {
+  createProductOptionGroup(product_id: $product_id, input: $input) {
+    ...AdminOptionGroupFields
+  }
+}
+    ${AdminOptionGroupFieldsFragmentDoc}`;
+
+/**
+ * __useCreateProductOptionGroupMutation__
+ *
+ * To run a mutation, you first call `useCreateProductOptionGroupMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateProductOptionGroupMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createProductOptionGroupMutation, { data, loading, error }] = useCreateProductOptionGroupMutation({
+ *   variables: {
+ *      product_id: // value for 'product_id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateProductOptionGroupMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateProductOptionGroupMutation, CreateProductOptionGroupMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateProductOptionGroupMutation, CreateProductOptionGroupMutationVariables>(CreateProductOptionGroupDocument, options);
+      }
+export type CreateProductOptionGroupMutationHookResult = ReturnType<typeof useCreateProductOptionGroupMutation>;
+export type CreateProductOptionGroupMutationResult = ApolloReactCommon.MutationResult<CreateProductOptionGroupMutation>;
+export const UpdateProductOptionGroupDocument = gql`
+    mutation UpdateProductOptionGroup($id: Int!, $input: AdminOptionGroupInput!) {
+  updateProductOptionGroup(id: $id, input: $input) {
+    ...AdminOptionGroupFields
+  }
+}
+    ${AdminOptionGroupFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateProductOptionGroupMutation__
+ *
+ * To run a mutation, you first call `useUpdateProductOptionGroupMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProductOptionGroupMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProductOptionGroupMutation, { data, loading, error }] = useUpdateProductOptionGroupMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProductOptionGroupMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateProductOptionGroupMutation, UpdateProductOptionGroupMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateProductOptionGroupMutation, UpdateProductOptionGroupMutationVariables>(UpdateProductOptionGroupDocument, options);
+      }
+export type UpdateProductOptionGroupMutationHookResult = ReturnType<typeof useUpdateProductOptionGroupMutation>;
+export type UpdateProductOptionGroupMutationResult = ApolloReactCommon.MutationResult<UpdateProductOptionGroupMutation>;
+export const DeleteProductOptionGroupDocument = gql`
+    mutation DeleteProductOptionGroup($id: Int!) {
+  deleteProductOptionGroup(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteProductOptionGroupMutation__
+ *
+ * To run a mutation, you first call `useDeleteProductOptionGroupMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteProductOptionGroupMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteProductOptionGroupMutation, { data, loading, error }] = useDeleteProductOptionGroupMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteProductOptionGroupMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteProductOptionGroupMutation, DeleteProductOptionGroupMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteProductOptionGroupMutation, DeleteProductOptionGroupMutationVariables>(DeleteProductOptionGroupDocument, options);
+      }
+export type DeleteProductOptionGroupMutationHookResult = ReturnType<typeof useDeleteProductOptionGroupMutation>;
+export type DeleteProductOptionGroupMutationResult = ApolloReactCommon.MutationResult<DeleteProductOptionGroupMutation>;
+export const CreateProductOptionDocument = gql`
+    mutation CreateProductOption($group_id: Int!, $input: AdminOptionInput!) {
+  createProductOption(group_id: $group_id, input: $input) {
+    ...AdminOptionGroupFields
+  }
+}
+    ${AdminOptionGroupFieldsFragmentDoc}`;
+
+/**
+ * __useCreateProductOptionMutation__
+ *
+ * To run a mutation, you first call `useCreateProductOptionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateProductOptionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createProductOptionMutation, { data, loading, error }] = useCreateProductOptionMutation({
+ *   variables: {
+ *      group_id: // value for 'group_id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateProductOptionMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateProductOptionMutation, CreateProductOptionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateProductOptionMutation, CreateProductOptionMutationVariables>(CreateProductOptionDocument, options);
+      }
+export type CreateProductOptionMutationHookResult = ReturnType<typeof useCreateProductOptionMutation>;
+export type CreateProductOptionMutationResult = ApolloReactCommon.MutationResult<CreateProductOptionMutation>;
+export const UpdateProductOptionDocument = gql`
+    mutation UpdateProductOption($id: Int!, $input: AdminOptionInput!) {
+  updateProductOption(id: $id, input: $input) {
+    ...AdminOptionGroupFields
+  }
+}
+    ${AdminOptionGroupFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateProductOptionMutation__
+ *
+ * To run a mutation, you first call `useUpdateProductOptionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateProductOptionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateProductOptionMutation, { data, loading, error }] = useUpdateProductOptionMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateProductOptionMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateProductOptionMutation, UpdateProductOptionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateProductOptionMutation, UpdateProductOptionMutationVariables>(UpdateProductOptionDocument, options);
+      }
+export type UpdateProductOptionMutationHookResult = ReturnType<typeof useUpdateProductOptionMutation>;
+export type UpdateProductOptionMutationResult = ApolloReactCommon.MutationResult<UpdateProductOptionMutation>;
+export const DeleteProductOptionDocument = gql`
+    mutation DeleteProductOption($id: Int!) {
+  deleteProductOption(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteProductOptionMutation__
+ *
+ * To run a mutation, you first call `useDeleteProductOptionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteProductOptionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteProductOptionMutation, { data, loading, error }] = useDeleteProductOptionMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteProductOptionMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteProductOptionMutation, DeleteProductOptionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteProductOptionMutation, DeleteProductOptionMutationVariables>(DeleteProductOptionDocument, options);
+      }
+export type DeleteProductOptionMutationHookResult = ReturnType<typeof useDeleteProductOptionMutation>;
+export type DeleteProductOptionMutationResult = ApolloReactCommon.MutationResult<DeleteProductOptionMutation>;
+export const AdminReviewsDocument = gql`
+    query AdminReviews($filter: AdminReviewsFilterInput) {
+  adminReviews(filter: $filter) {
+    items {
+      ...AdminReviewRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminReviewRowFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminReviewsQuery__
+ *
+ * To run a query within a React component, call `useAdminReviewsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminReviewsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminReviewsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminReviewsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminReviewsQuery, AdminReviewsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminReviewsQuery, AdminReviewsQueryVariables>(AdminReviewsDocument, options);
+      }
+export function useAdminReviewsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminReviewsQuery, AdminReviewsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminReviewsQuery, AdminReviewsQueryVariables>(AdminReviewsDocument, options);
+        }
+export type AdminReviewsQueryHookResult = ReturnType<typeof useAdminReviewsQuery>;
+export type AdminReviewsLazyQueryHookResult = ReturnType<typeof useAdminReviewsLazyQuery>;
+export type AdminReviewsQueryResult = ApolloReactCommon.QueryResult<AdminReviewsQuery, AdminReviewsQueryVariables>;
+export const SetReviewHiddenDocument = gql`
+    mutation SetReviewHidden($id: Int!, $is_hidden: Boolean!) {
+  setReviewHidden(id: $id, is_hidden: $is_hidden) {
+    ...AdminReviewRow
+  }
+}
+    ${AdminReviewRowFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}`;
+
+/**
+ * __useSetReviewHiddenMutation__
+ *
+ * To run a mutation, you first call `useSetReviewHiddenMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetReviewHiddenMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setReviewHiddenMutation, { data, loading, error }] = useSetReviewHiddenMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      is_hidden: // value for 'is_hidden'
+ *   },
+ * });
+ */
+export function useSetReviewHiddenMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetReviewHiddenMutation, SetReviewHiddenMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetReviewHiddenMutation, SetReviewHiddenMutationVariables>(SetReviewHiddenDocument, options);
+      }
+export type SetReviewHiddenMutationHookResult = ReturnType<typeof useSetReviewHiddenMutation>;
+export type SetReviewHiddenMutationResult = ApolloReactCommon.MutationResult<SetReviewHiddenMutation>;
+export const DeleteReviewAsAdminDocument = gql`
+    mutation DeleteReviewAsAdmin($id: Int!) {
+  deleteReviewAsAdmin(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteReviewAsAdminMutation__
+ *
+ * To run a mutation, you first call `useDeleteReviewAsAdminMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteReviewAsAdminMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteReviewAsAdminMutation, { data, loading, error }] = useDeleteReviewAsAdminMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteReviewAsAdminMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteReviewAsAdminMutation, DeleteReviewAsAdminMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteReviewAsAdminMutation, DeleteReviewAsAdminMutationVariables>(DeleteReviewAsAdminDocument, options);
+      }
+export type DeleteReviewAsAdminMutationHookResult = ReturnType<typeof useDeleteReviewAsAdminMutation>;
+export type DeleteReviewAsAdminMutationResult = ApolloReactCommon.MutationResult<DeleteReviewAsAdminMutation>;
+export const ImageSpecsDocument = gql`
+    query ImageSpecs {
+  imageSpecs {
+    purpose
+    ratio
+    ratio_label
+    min_width
+    min_height
+    max_bytes
+    content_types
+    renders_at
+  }
+}
+    `;
+
+/**
+ * __useImageSpecsQuery__
+ *
+ * To run a query within a React component, call `useImageSpecsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useImageSpecsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useImageSpecsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useImageSpecsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<ImageSpecsQuery, ImageSpecsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ImageSpecsQuery, ImageSpecsQueryVariables>(ImageSpecsDocument, options);
+      }
+export function useImageSpecsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ImageSpecsQuery, ImageSpecsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ImageSpecsQuery, ImageSpecsQueryVariables>(ImageSpecsDocument, options);
+        }
+export type ImageSpecsQueryHookResult = ReturnType<typeof useImageSpecsQuery>;
+export type ImageSpecsLazyQueryHookResult = ReturnType<typeof useImageSpecsLazyQuery>;
+export type ImageSpecsQueryResult = ApolloReactCommon.QueryResult<ImageSpecsQuery, ImageSpecsQueryVariables>;
+export const CreateAdminUploadDocument = gql`
+    mutation CreateAdminUpload($purpose: UploadPurpose!, $content_type: String!, $size: Int!) {
+  createAdminUpload(purpose: $purpose, content_type: $content_type, size: $size) {
+    key
+    upload_url
+    public_url
+  }
+}
+    `;
+
+/**
+ * __useCreateAdminUploadMutation__
+ *
+ * To run a mutation, you first call `useCreateAdminUploadMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateAdminUploadMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createAdminUploadMutation, { data, loading, error }] = useCreateAdminUploadMutation({
+ *   variables: {
+ *      purpose: // value for 'purpose'
+ *      content_type: // value for 'content_type'
+ *      size: // value for 'size'
+ *   },
+ * });
+ */
+export function useCreateAdminUploadMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateAdminUploadMutation, CreateAdminUploadMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateAdminUploadMutation, CreateAdminUploadMutationVariables>(CreateAdminUploadDocument, options);
+      }
+export type CreateAdminUploadMutationHookResult = ReturnType<typeof useCreateAdminUploadMutation>;
+export type CreateAdminUploadMutationResult = ApolloReactCommon.MutationResult<CreateAdminUploadMutation>;
+export const ConfirmUploadDocument = gql`
+    mutation ConfirmUpload($key: String!, $purpose: UploadPurpose!) {
+  confirmUpload(key: $key, purpose: $purpose) {
+    key
+    public_url
+    width
+    height
+    bytes
+  }
+}
+    `;
+
+/**
+ * __useConfirmUploadMutation__
+ *
+ * To run a mutation, you first call `useConfirmUploadMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useConfirmUploadMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [confirmUploadMutation, { data, loading, error }] = useConfirmUploadMutation({
+ *   variables: {
+ *      key: // value for 'key'
+ *      purpose: // value for 'purpose'
+ *   },
+ * });
+ */
+export function useConfirmUploadMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ConfirmUploadMutation, ConfirmUploadMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<ConfirmUploadMutation, ConfirmUploadMutationVariables>(ConfirmUploadDocument, options);
+      }
+export type ConfirmUploadMutationHookResult = ReturnType<typeof useConfirmUploadMutation>;
+export type ConfirmUploadMutationResult = ApolloReactCommon.MutationResult<ConfirmUploadMutation>;
+export const AdminUsersDocument = gql`
+    query AdminUsers($filter: AdminUsersFilterInput) {
+  adminUsers(filter: $filter) {
+    items {
+      ...AdminUserFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminUserFieldsFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminUsersQuery__
+ *
+ * To run a query within a React component, call `useAdminUsersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminUsersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminUsersQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminUsersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminUsersQuery, AdminUsersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminUsersQuery, AdminUsersQueryVariables>(AdminUsersDocument, options);
+      }
+export function useAdminUsersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminUsersQuery, AdminUsersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminUsersQuery, AdminUsersQueryVariables>(AdminUsersDocument, options);
+        }
+export type AdminUsersQueryHookResult = ReturnType<typeof useAdminUsersQuery>;
+export type AdminUsersLazyQueryHookResult = ReturnType<typeof useAdminUsersLazyQuery>;
+export type AdminUsersQueryResult = ApolloReactCommon.QueryResult<AdminUsersQuery, AdminUsersQueryVariables>;
+export const AdminUserDocument = gql`
+    query AdminUser($id: Int!) {
+  adminUser(id: $id) {
+    ...AdminUserFields
+  }
+}
+    ${AdminUserFieldsFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}`;
+
+/**
+ * __useAdminUserQuery__
+ *
+ * To run a query within a React component, call `useAdminUserQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminUserQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminUserQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useAdminUserQuery(baseOptions: ApolloReactHooks.QueryHookOptions<AdminUserQuery, AdminUserQueryVariables> & ({ variables: AdminUserQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminUserQuery, AdminUserQueryVariables>(AdminUserDocument, options);
+      }
+export function useAdminUserLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminUserQuery, AdminUserQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminUserQuery, AdminUserQueryVariables>(AdminUserDocument, options);
+        }
+export type AdminUserQueryHookResult = ReturnType<typeof useAdminUserQuery>;
+export type AdminUserLazyQueryHookResult = ReturnType<typeof useAdminUserLazyQuery>;
+export type AdminUserQueryResult = ApolloReactCommon.QueryResult<AdminUserQuery, AdminUserQueryVariables>;
+export const SetUserRoleDocument = gql`
+    mutation SetUserRole($id: Int!, $role: UserRole!) {
+  setUserRole(id: $id, role: $role) {
+    ...AdminUserFields
+  }
+}
+    ${AdminUserFieldsFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}`;
+
+/**
+ * __useSetUserRoleMutation__
+ *
+ * To run a mutation, you first call `useSetUserRoleMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetUserRoleMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setUserRoleMutation, { data, loading, error }] = useSetUserRoleMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      role: // value for 'role'
+ *   },
+ * });
+ */
+export function useSetUserRoleMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetUserRoleMutation, SetUserRoleMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetUserRoleMutation, SetUserRoleMutationVariables>(SetUserRoleDocument, options);
+      }
+export type SetUserRoleMutationHookResult = ReturnType<typeof useSetUserRoleMutation>;
+export type SetUserRoleMutationResult = ApolloReactCommon.MutationResult<SetUserRoleMutation>;
+export const AdminWorkshopConfigsDocument = gql`
+    query AdminWorkshopConfigs {
+  adminWorkshopConfigs {
+    ...AdminWorkshopConfigFields
+  }
+}
+    ${AdminWorkshopConfigFieldsFragmentDoc}`;
+
+/**
+ * __useAdminWorkshopConfigsQuery__
+ *
+ * To run a query within a React component, call `useAdminWorkshopConfigsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminWorkshopConfigsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminWorkshopConfigsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useAdminWorkshopConfigsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminWorkshopConfigsQuery, AdminWorkshopConfigsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminWorkshopConfigsQuery, AdminWorkshopConfigsQueryVariables>(AdminWorkshopConfigsDocument, options);
+      }
+export function useAdminWorkshopConfigsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminWorkshopConfigsQuery, AdminWorkshopConfigsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminWorkshopConfigsQuery, AdminWorkshopConfigsQueryVariables>(AdminWorkshopConfigsDocument, options);
+        }
+export type AdminWorkshopConfigsQueryHookResult = ReturnType<typeof useAdminWorkshopConfigsQuery>;
+export type AdminWorkshopConfigsLazyQueryHookResult = ReturnType<typeof useAdminWorkshopConfigsLazyQuery>;
+export type AdminWorkshopConfigsQueryResult = ApolloReactCommon.QueryResult<AdminWorkshopConfigsQuery, AdminWorkshopConfigsQueryVariables>;
+export const AdminWorkshopBlackoutsDocument = gql`
+    query AdminWorkshopBlackouts($config_id: Int!) {
+  adminWorkshopBlackouts(config_id: $config_id) {
+    ...AdminWorkshopBlackoutFields
+  }
+}
+    ${AdminWorkshopBlackoutFieldsFragmentDoc}`;
+
+/**
+ * __useAdminWorkshopBlackoutsQuery__
+ *
+ * To run a query within a React component, call `useAdminWorkshopBlackoutsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminWorkshopBlackoutsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminWorkshopBlackoutsQuery({
+ *   variables: {
+ *      config_id: // value for 'config_id'
+ *   },
+ * });
+ */
+export function useAdminWorkshopBlackoutsQuery(baseOptions: ApolloReactHooks.QueryHookOptions<AdminWorkshopBlackoutsQuery, AdminWorkshopBlackoutsQueryVariables> & ({ variables: AdminWorkshopBlackoutsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminWorkshopBlackoutsQuery, AdminWorkshopBlackoutsQueryVariables>(AdminWorkshopBlackoutsDocument, options);
+      }
+export function useAdminWorkshopBlackoutsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminWorkshopBlackoutsQuery, AdminWorkshopBlackoutsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminWorkshopBlackoutsQuery, AdminWorkshopBlackoutsQueryVariables>(AdminWorkshopBlackoutsDocument, options);
+        }
+export type AdminWorkshopBlackoutsQueryHookResult = ReturnType<typeof useAdminWorkshopBlackoutsQuery>;
+export type AdminWorkshopBlackoutsLazyQueryHookResult = ReturnType<typeof useAdminWorkshopBlackoutsLazyQuery>;
+export type AdminWorkshopBlackoutsQueryResult = ApolloReactCommon.QueryResult<AdminWorkshopBlackoutsQuery, AdminWorkshopBlackoutsQueryVariables>;
+export const AdminWorkshopBookingsDocument = gql`
+    query AdminWorkshopBookings($filter: AdminWorkshopBookingsFilterInput) {
+  adminWorkshopBookings(filter: $filter) {
+    items {
+      ...AdminWorkshopBookingRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminWorkshopBookingRowFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminWorkshopBookingsQuery__
+ *
+ * To run a query within a React component, call `useAdminWorkshopBookingsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminWorkshopBookingsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminWorkshopBookingsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminWorkshopBookingsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminWorkshopBookingsQuery, AdminWorkshopBookingsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminWorkshopBookingsQuery, AdminWorkshopBookingsQueryVariables>(AdminWorkshopBookingsDocument, options);
+      }
+export function useAdminWorkshopBookingsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminWorkshopBookingsQuery, AdminWorkshopBookingsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminWorkshopBookingsQuery, AdminWorkshopBookingsQueryVariables>(AdminWorkshopBookingsDocument, options);
+        }
+export type AdminWorkshopBookingsQueryHookResult = ReturnType<typeof useAdminWorkshopBookingsQuery>;
+export type AdminWorkshopBookingsLazyQueryHookResult = ReturnType<typeof useAdminWorkshopBookingsLazyQuery>;
+export type AdminWorkshopBookingsQueryResult = ApolloReactCommon.QueryResult<AdminWorkshopBookingsQuery, AdminWorkshopBookingsQueryVariables>;
+export const UpdateWorkshopConfigDocument = gql`
+    mutation UpdateWorkshopConfig($id: Int!, $input: AdminWorkshopConfigInput!) {
+  updateWorkshopConfig(id: $id, input: $input) {
+    ...AdminWorkshopConfigFields
+  }
+}
+    ${AdminWorkshopConfigFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateWorkshopConfigMutation__
+ *
+ * To run a mutation, you first call `useUpdateWorkshopConfigMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateWorkshopConfigMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateWorkshopConfigMutation, { data, loading, error }] = useUpdateWorkshopConfigMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateWorkshopConfigMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateWorkshopConfigMutation, UpdateWorkshopConfigMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateWorkshopConfigMutation, UpdateWorkshopConfigMutationVariables>(UpdateWorkshopConfigDocument, options);
+      }
+export type UpdateWorkshopConfigMutationHookResult = ReturnType<typeof useUpdateWorkshopConfigMutation>;
+export type UpdateWorkshopConfigMutationResult = ApolloReactCommon.MutationResult<UpdateWorkshopConfigMutation>;
+export const SaveWorkshopTierDocument = gql`
+    mutation SaveWorkshopTier($config_id: Int!, $input: AdminWorkshopTierInput!) {
+  saveWorkshopTier(config_id: $config_id, input: $input) {
+    ...AdminWorkshopConfigFields
+  }
+}
+    ${AdminWorkshopConfigFieldsFragmentDoc}`;
+
+/**
+ * __useSaveWorkshopTierMutation__
+ *
+ * To run a mutation, you first call `useSaveWorkshopTierMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSaveWorkshopTierMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [saveWorkshopTierMutation, { data, loading, error }] = useSaveWorkshopTierMutation({
+ *   variables: {
+ *      config_id: // value for 'config_id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSaveWorkshopTierMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SaveWorkshopTierMutation, SaveWorkshopTierMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SaveWorkshopTierMutation, SaveWorkshopTierMutationVariables>(SaveWorkshopTierDocument, options);
+      }
+export type SaveWorkshopTierMutationHookResult = ReturnType<typeof useSaveWorkshopTierMutation>;
+export type SaveWorkshopTierMutationResult = ApolloReactCommon.MutationResult<SaveWorkshopTierMutation>;
+export const DeleteWorkshopTierDocument = gql`
+    mutation DeleteWorkshopTier($id: Int!) {
+  deleteWorkshopTier(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteWorkshopTierMutation__
+ *
+ * To run a mutation, you first call `useDeleteWorkshopTierMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteWorkshopTierMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteWorkshopTierMutation, { data, loading, error }] = useDeleteWorkshopTierMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteWorkshopTierMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteWorkshopTierMutation, DeleteWorkshopTierMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteWorkshopTierMutation, DeleteWorkshopTierMutationVariables>(DeleteWorkshopTierDocument, options);
+      }
+export type DeleteWorkshopTierMutationHookResult = ReturnType<typeof useDeleteWorkshopTierMutation>;
+export type DeleteWorkshopTierMutationResult = ApolloReactCommon.MutationResult<DeleteWorkshopTierMutation>;
+export const CreateWorkshopBlackoutDocument = gql`
+    mutation CreateWorkshopBlackout($config_id: Int!, $input: AdminWorkshopBlackoutInput!) {
+  createWorkshopBlackout(config_id: $config_id, input: $input) {
+    ...AdminWorkshopBlackoutFields
+  }
+}
+    ${AdminWorkshopBlackoutFieldsFragmentDoc}`;
+
+/**
+ * __useCreateWorkshopBlackoutMutation__
+ *
+ * To run a mutation, you first call `useCreateWorkshopBlackoutMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateWorkshopBlackoutMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createWorkshopBlackoutMutation, { data, loading, error }] = useCreateWorkshopBlackoutMutation({
+ *   variables: {
+ *      config_id: // value for 'config_id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateWorkshopBlackoutMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateWorkshopBlackoutMutation, CreateWorkshopBlackoutMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateWorkshopBlackoutMutation, CreateWorkshopBlackoutMutationVariables>(CreateWorkshopBlackoutDocument, options);
+      }
+export type CreateWorkshopBlackoutMutationHookResult = ReturnType<typeof useCreateWorkshopBlackoutMutation>;
+export type CreateWorkshopBlackoutMutationResult = ApolloReactCommon.MutationResult<CreateWorkshopBlackoutMutation>;
+export const UpdateWorkshopBlackoutDocument = gql`
+    mutation UpdateWorkshopBlackout($id: Int!, $input: AdminWorkshopBlackoutInput!) {
+  updateWorkshopBlackout(id: $id, input: $input) {
+    ...AdminWorkshopBlackoutFields
+  }
+}
+    ${AdminWorkshopBlackoutFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateWorkshopBlackoutMutation__
+ *
+ * To run a mutation, you first call `useUpdateWorkshopBlackoutMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateWorkshopBlackoutMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateWorkshopBlackoutMutation, { data, loading, error }] = useUpdateWorkshopBlackoutMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateWorkshopBlackoutMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateWorkshopBlackoutMutation, UpdateWorkshopBlackoutMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateWorkshopBlackoutMutation, UpdateWorkshopBlackoutMutationVariables>(UpdateWorkshopBlackoutDocument, options);
+      }
+export type UpdateWorkshopBlackoutMutationHookResult = ReturnType<typeof useUpdateWorkshopBlackoutMutation>;
+export type UpdateWorkshopBlackoutMutationResult = ApolloReactCommon.MutationResult<UpdateWorkshopBlackoutMutation>;
+export const DeleteWorkshopBlackoutDocument = gql`
+    mutation DeleteWorkshopBlackout($id: Int!) {
+  deleteWorkshopBlackout(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteWorkshopBlackoutMutation__
+ *
+ * To run a mutation, you first call `useDeleteWorkshopBlackoutMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteWorkshopBlackoutMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteWorkshopBlackoutMutation, { data, loading, error }] = useDeleteWorkshopBlackoutMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteWorkshopBlackoutMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteWorkshopBlackoutMutation, DeleteWorkshopBlackoutMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteWorkshopBlackoutMutation, DeleteWorkshopBlackoutMutationVariables>(DeleteWorkshopBlackoutDocument, options);
+      }
+export type DeleteWorkshopBlackoutMutationHookResult = ReturnType<typeof useDeleteWorkshopBlackoutMutation>;
+export type DeleteWorkshopBlackoutMutationResult = ApolloReactCommon.MutationResult<DeleteWorkshopBlackoutMutation>;
+export const SetWorkshopBookingStatusDocument = gql`
+    mutation SetWorkshopBookingStatus($id: String!, $status: RegistrationStatus!, $reason: String) {
+  setWorkshopBookingStatus(id: $id, status: $status, reason: $reason) {
+    ...AdminWorkshopBookingRow
+  }
+}
+    ${AdminWorkshopBookingRowFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}`;
+
+/**
+ * __useSetWorkshopBookingStatusMutation__
+ *
+ * To run a mutation, you first call `useSetWorkshopBookingStatusMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetWorkshopBookingStatusMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setWorkshopBookingStatusMutation, { data, loading, error }] = useSetWorkshopBookingStatusMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      status: // value for 'status'
+ *      reason: // value for 'reason'
+ *   },
+ * });
+ */
+export function useSetWorkshopBookingStatusMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetWorkshopBookingStatusMutation, SetWorkshopBookingStatusMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetWorkshopBookingStatusMutation, SetWorkshopBookingStatusMutationVariables>(SetWorkshopBookingStatusDocument, options);
+      }
+export type SetWorkshopBookingStatusMutationHookResult = ReturnType<typeof useSetWorkshopBookingStatusMutation>;
+export type SetWorkshopBookingStatusMutationResult = ApolloReactCommon.MutationResult<SetWorkshopBookingStatusMutation>;
 export const CartDocument = gql`
     query Cart {
   cart {

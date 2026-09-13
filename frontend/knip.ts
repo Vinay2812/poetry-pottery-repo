@@ -8,6 +8,7 @@ const config: KnipConfig = {
     "src/lib/apollo/rsc-client.ts!",
     // Feature barrels are each feature's public API.
     "src/features/*/index.ts!",
+    "src/features/admin/*/index.ts!",
     "src/lib/format.ts!",
   ],
   ignore: [

@@ -1,0 +1,79 @@
+fragment AdminContentPageFields on ContentPage {
+  slug
+  title
+  subtitle
+  hero_image_url
+  is_published
+  updated_at
+  sections {
+    heading
+    body
+    items {
+      title
+      body
+    }
+  }
+}
+
+fragment AdminSiteSettingsFields on SiteSettings {
+  contact_email
+  contact_phone
+  whatsapp_number
+  address
+  opening_hours
+  instagram_url
+  facebook_url
+  youtube_url
+  shipping_flat_fee
+  free_shipping_above
+  hero_heading
+  hero_subheading
+  hero_cta_text
+  hero_cta_href
+  hero_image_url
+  announcement_text
+  announcement_href
+  updated_at
+}
+
+query AdminContentPages {
+  adminContentPages {
+    slug
+    title
+    is_published
+  }
+}
+
+query AdminContentPage($slug: String!) {
+  adminContentPage(slug: $slug) {
+    ...AdminContentPageFields
+  }
+}
+
+query AdminSiteSettings {
+  siteSettings {
+    ...AdminSiteSettingsFields
+  }
+}
+
+mutation SaveContentPage($slug: String!, $input: ContentPageInput!) {
+  saveContentPage(slug: $slug, input: $input) {
+    ...AdminContentPageFields
+  }
+}
+
+mutation DeleteContentPage($slug: String!) {
+  deleteContentPage(slug: $slug)
+}
+
+mutation UpdateSiteSettings($input: AdminSiteSettingsInput!) {
+  updateSiteSettings(input: $input) {
+    ...AdminSiteSettingsFields
+  }
+}
+
+mutation UpdateAnnouncement($input: AdminAnnouncementInput!) {
+  updateAnnouncement(input: $input) {
+    ...AdminSiteSettingsFields
+  }
+}

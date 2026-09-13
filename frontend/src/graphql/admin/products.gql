@@ -1,0 +1,149 @@
+fragment AdminProductRow on Product {
+  id
+  slug
+  name
+  price
+  compare_at_price
+  stock
+  is_active
+  is_featured
+  is_archived
+  is_customizable
+  image_urls
+  material
+  categories {
+    id
+    name
+    slug
+  }
+  collection {
+    id
+    name
+    slug
+  }
+}
+
+fragment AdminOptionGroupFields on ProductOptionGroup {
+  id
+  name
+  kind
+  is_required
+  max_length
+  price_modifier
+  sort_order
+  options {
+    id
+    name
+    price_modifier
+    sort_order
+    is_active
+  }
+}
+
+fragment AdminProductDetail on Product {
+  ...AdminProductRow
+  description
+  dimensions
+  color_name
+  color_code
+  care_notes
+  created_at
+  sales_count
+  option_groups {
+    ...AdminOptionGroupFields
+  }
+}
+
+query AdminProducts($filter: AdminProductsFilterInput) {
+  adminProducts(filter: $filter) {
+    items {
+      ...AdminProductRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+query AdminProduct($id: Int!) {
+  adminProduct(id: $id) {
+    ...AdminProductDetail
+  }
+}
+
+query AdminProductOptionGroups($product_id: Int!) {
+  adminProductOptionGroups(product_id: $product_id) {
+    ...AdminOptionGroupFields
+  }
+}
+
+mutation CreateProduct($input: AdminProductInput!) {
+  createProduct(input: $input) {
+    ...AdminProductDetail
+  }
+}
+
+mutation UpdateProduct($id: Int!, $input: AdminProductUpdateInput!) {
+  updateProduct(id: $id, input: $input) {
+    ...AdminProductDetail
+  }
+}
+
+mutation SetProductActive($id: Int!, $is_active: Boolean!) {
+  setProductActive(id: $id, is_active: $is_active) {
+    ...AdminProductRow
+  }
+}
+
+mutation SetProductFeatured($id: Int!, $is_featured: Boolean!) {
+  setProductFeatured(id: $id, is_featured: $is_featured) {
+    ...AdminProductRow
+  }
+}
+
+mutation AdjustProductStock($id: Int!, $delta: Int!, $reason: String!) {
+  adjustProductStock(id: $id, delta: $delta, reason: $reason) {
+    ...AdminProductRow
+  }
+}
+
+mutation ReorderProductImages($id: Int!, $image_urls: [String!]!) {
+  reorderProductImages(id: $id, image_urls: $image_urls) {
+    ...AdminProductRow
+  }
+}
+
+mutation CreateProductOptionGroup(
+  $product_id: Int!
+  $input: AdminOptionGroupInput!
+) {
+  createProductOptionGroup(product_id: $product_id, input: $input) {
+    ...AdminOptionGroupFields
+  }
+}
+
+mutation UpdateProductOptionGroup($id: Int!, $input: AdminOptionGroupInput!) {
+  updateProductOptionGroup(id: $id, input: $input) {
+    ...AdminOptionGroupFields
+  }
+}
+
+mutation DeleteProductOptionGroup($id: Int!) {
+  deleteProductOptionGroup(id: $id)
+}
+
+mutation CreateProductOption($group_id: Int!, $input: AdminOptionInput!) {
+  createProductOption(group_id: $group_id, input: $input) {
+    ...AdminOptionGroupFields
+  }
+}
+
+mutation UpdateProductOption($id: Int!, $input: AdminOptionInput!) {
+  updateProductOption(id: $id, input: $input) {
+    ...AdminOptionGroupFields
+  }
+}
+
+mutation DeleteProductOption($id: Int!) {
+  deleteProductOption(id: $id)
+}
