@@ -107,8 +107,7 @@ interface LegacyBooking {
   cancelled_at: Date | null;
   cancelled_reason: string | null;
   created_at: Date;
-  slot_start_at: Date | null;
-  slot_end_at: Date | null;
+  slots: { starts_at: string; ends_at: string }[];
 }
 
 interface LegacyCartItem {
@@ -214,7 +213,8 @@ async function readLegacy(): Promise<{
          where c.is_active group by c.id order by c.id limit 1`,
     );
     const bookings = await rows<LegacyBooking>(
-      `select r.*, min(s.slot_start_at) as slot_start_at, max(s.slot_end_at) as slot_end_at
+      `select r.*, coalesce(json_agg(json_build_object('starts_at', s.slot_start_at, 'ends_at', s.slot_end_at) order by s.slot_start_at)
+           filter (where s.id is not null), '[]') as slots
          from daily_workshop_registrations r left join daily_workshop_registration_slots s on s.registration_id = r.id
          group by r.id order by r.created_at`,
     );
@@ -477,12 +477,17 @@ async function importWorkshop(
   let imported = 0;
   for (const booking of bookings) {
     const user_id = userIds.get(booking.user_id);
-    if (!user_id || !booking.slot_start_at || !booking.slot_end_at) continue;
+    // Legacy kept one row per booked hour; those rows become the booking's slots.
+    const slots = booking.slots.map((slot) => ({
+      starts_at: new Date(slot.starts_at),
+      ends_at: new Date(slot.ends_at),
+    }));
+    if (!user_id || slots.length === 0) continue;
     const row = {
       config_id: config.id,
       user_id,
-      starts_at: booking.slot_start_at,
-      ends_at: booking.slot_end_at,
+      starts_at: slots[0]!.starts_at,
+      ends_at: slots[slots.length - 1]!.ends_at,
       hours: booking.total_hours,
       participants: booking.participants,
       price_per_person: booking.price_per_person,
@@ -499,8 +504,8 @@ async function importWorkshop(
     };
     await prisma.workshopBooking.upsert({
       where: { id: booking.id },
-      create: { id: booking.id, ...row },
-      update: row,
+      create: { id: booking.id, ...row, slots: { create: slots } },
+      update: { ...row, slots: { deleteMany: {}, create: slots } },
     });
     imported++;
   }

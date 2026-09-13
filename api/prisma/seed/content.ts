@@ -209,6 +209,7 @@ export const workshopConfig = {
   slot_minutes: 60,
   capacity_per_slot: 6,
   booking_window_days: 60,
+  slot_span_days: 7,
   closed_weekdays: [1],
   tiers: [
     { hours: 1, price_per_person: 1100, pieces_per_person: 1 },
