@@ -61,8 +61,10 @@ export function ProductCard({
   const { carouselRef, selectedIndex, scrollTo } = useImageCarousel();
   const isSoldOut = stockTone === "sold_out";
   const hasMany = imageUrls.length > 1;
+  const hoverImageUrl = imageUrls[1] ?? null;
   // The old hover crossfade still reads on desktop, but only from the first photo.
-  const hoverImageUrl = selectedIndex === 0 ? (imageUrls[1] ?? null) : null;
+  // Both images stay mounted so turning it off fades them across instead of flashing white.
+  const isHoverFade = selectedIndex === 0 && hoverImageUrl !== null;
 
   return (
     <article className="group flex flex-col gap-2.5">
@@ -97,7 +99,7 @@ export function ProductCard({
                     className={cn(
                       "object-cover transition-opacity duration-500 ease-out",
                       index === 0 &&
-                        hoverImageUrl &&
+                        isHoverFade &&
                         "group-focus-within:opacity-0 group-hover:opacity-0",
                     )}
                   />
@@ -107,7 +109,11 @@ export function ProductCard({
                       alt=""
                       fill
                       sizes={SIZES}
-                      className="object-cover opacity-0 transition-opacity duration-500 ease-out group-focus-within:opacity-100 group-hover:opacity-100"
+                      className={cn(
+                        "object-cover opacity-0 transition-opacity duration-500 ease-out",
+                        isHoverFade &&
+                          "group-focus-within:opacity-100 group-hover:opacity-100",
+                      )}
                     />
                   )}
                 </div>
