@@ -2,13 +2,18 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { UserRole } from "@/graphql/generated/graphql";
 
 import { useCartCount } from "@/features/cart/hooks";
+import { MobileMenuSheet } from "@/features/layout/components/MobileMenuSheet";
 import { SiteHeader } from "@/features/layout/components/SiteHeader";
-import { isActivePath, NAV_LINKS } from "@/features/layout/types";
+import {
+  isActivePath,
+  MOBILE_MENU_LINKS,
+  NAV_LINKS,
+} from "@/features/layout/types";
 import { useWishlistIds } from "@/features/wishlist/hooks";
 
 export function SiteHeaderContainer() {
@@ -17,11 +22,18 @@ export function SiteHeaderContainer() {
   const pathname = usePathname();
   const router = useRouter();
   const { isSignedIn, user } = useUser();
-  const { openSignIn } = useClerk();
+  const { openSignIn, signOut } = useClerk();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const activeHref = useMemo(
     () =>
       NAV_LINKS.find((link) => isActivePath(pathname, link.href))?.href ?? null,
+    [pathname],
+  );
+  const menuActiveHref = useMemo(
+    () =>
+      MOBILE_MENU_LINKS.find((link) => isActivePath(pathname, link.href))
+        ?.href ?? null,
     [pathname],
   );
 
@@ -30,6 +42,7 @@ export function SiteHeaderContainer() {
   }, [router]);
 
   const handleAccountClick = useCallback(() => {
+    setIsMenuOpen(false);
     if (isSignedIn) {
       router.push("/account");
     } else {
@@ -37,18 +50,39 @@ export function SiteHeaderContainer() {
     }
   }, [isSignedIn, openSignIn, router]);
 
+  const handleSignOut = useCallback(() => {
+    setIsMenuOpen(false);
+    void signOut();
+  }, [signOut]);
+
+  const handleCloseMenu = useCallback(() => setIsMenuOpen(false), []);
+
   return (
-    <SiteHeader
-      navLinks={NAV_LINKS}
-      activeHref={activeHref}
-      cartCount={cartCount}
-      wishlistCount={wishlistCount}
-      isSignedIn={Boolean(isSignedIn)}
-      isAdmin={user?.publicMetadata.role === UserRole.Admin}
-      userImageUrl={user?.imageUrl ?? null}
-      isHome={pathname === "/"}
-      onSearchClick={handleSearchClick}
-      onAccountClick={handleAccountClick}
-    />
+    <>
+      <SiteHeader
+        navLinks={NAV_LINKS}
+        activeHref={activeHref}
+        cartCount={cartCount}
+        wishlistCount={wishlistCount}
+        isSignedIn={Boolean(isSignedIn)}
+        isAdmin={user?.publicMetadata.role === UserRole.Admin}
+        userImageUrl={user?.imageUrl ?? null}
+        isHome={pathname === "/"}
+        onSearchClick={handleSearchClick}
+        onAccountClick={handleAccountClick}
+        onMenuClick={() => setIsMenuOpen(true)}
+      />
+      <MobileMenuSheet
+        isOpen={isMenuOpen}
+        links={MOBILE_MENU_LINKS}
+        activeHref={menuActiveHref}
+        isSignedIn={Boolean(isSignedIn)}
+        wishlistCount={wishlistCount}
+        onOpenChange={setIsMenuOpen}
+        onNavigate={handleCloseMenu}
+        onAccountClick={handleAccountClick}
+        onSignOut={handleSignOut}
+      />
+    </>
   );
 }

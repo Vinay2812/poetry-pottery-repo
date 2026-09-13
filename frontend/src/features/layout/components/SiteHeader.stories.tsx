@@ -24,6 +24,7 @@ const meta = {
     isHome: false,
     onSearchClick: fn(),
     onAccountClick: fn(),
+    onMenuClick: fn(),
   },
 } satisfies Meta<typeof SiteHeader>;
 
