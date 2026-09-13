@@ -1,0 +1,29 @@
+mutation CreateProductReview($product_id: Int!, $input: ReviewInput!) {
+  createProductReview(product_id: $product_id, input: $input) {
+    ...ReviewFields
+  }
+}
+
+mutation CreateEventReview($event_id: Int!, $input: ReviewInput!) {
+  createEventReview(event_id: $event_id, input: $input) {
+    ...ReviewFields
+  }
+}
+
+mutation UpdateReview($id: Int!, $input: ReviewInput!) {
+  updateReview(id: $id, input: $input) {
+    ...ReviewFields
+  }
+}
+
+mutation DeleteReview($id: Int!) {
+  deleteReview(id: $id)
+}
+
+mutation CreateReviewImageUpload($input: ReviewUploadInput!) {
+  createReviewImageUpload(input: $input) {
+    upload_url
+    public_url
+    key
+  }
+}

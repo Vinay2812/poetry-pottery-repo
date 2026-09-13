@@ -241,6 +241,7 @@ export type Event = {
   price: Scalars['Int']['output'];
   rating_avg: Scalars['Float']['output'];
   rating_count: Scalars['Int']['output'];
+  review_eligibility: ReviewEligibility;
   slug: Scalars['String']['output'];
   starts_at: Scalars['DateTime']['output'];
   status: EventStatus;
@@ -303,7 +304,11 @@ export type Mutation = {
   cancelWorkshopBooking: WorkshopBooking;
   clearCart: Cart;
   createAddress: Address;
+  createEventReview: Review;
+  createProductReview: Review;
+  createReviewImageUpload: UploadTarget;
   deleteAddress: Scalars['Boolean']['output'];
+  deleteReview: Scalars['Boolean']['output'];
   markContactMessageRead: ContactMessage;
   placeOrder: Order;
   registerForEvent: Registration;
@@ -317,6 +322,7 @@ export type Mutation = {
   updateAddress: Address;
   updateCartItem: Cart;
   updateContentPage: ContentPage;
+  updateReview: Review;
 };
 
 
@@ -353,7 +359,29 @@ export type MutationCreateAddressArgs = {
 };
 
 
+export type MutationCreateEventReviewArgs = {
+  event_id: Scalars['Int']['input'];
+  input: ReviewInput;
+};
+
+
+export type MutationCreateProductReviewArgs = {
+  input: ReviewInput;
+  product_id: Scalars['Int']['input'];
+};
+
+
+export type MutationCreateReviewImageUploadArgs = {
+  input: ReviewUploadInput;
+};
+
+
 export type MutationDeleteAddressArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationDeleteReviewArgs = {
   id: Scalars['Int']['input'];
 };
 
@@ -423,6 +451,12 @@ export type MutationUpdateCartItemArgs = {
 export type MutationUpdateContentPageArgs = {
   input: ContentPageInput;
   slug: Scalars['String']['input'];
+};
+
+
+export type MutationUpdateReviewArgs = {
+  id: Scalars['Int']['input'];
+  input: ReviewInput;
 };
 
 export type NewsletterResult = {
@@ -534,6 +568,7 @@ export type Product = {
   price: Scalars['Int']['output'];
   rating_avg: Scalars['Float']['output'];
   rating_count: Scalars['Int']['output'];
+  review_eligibility: ReviewEligibility;
   sales_count: Scalars['Int']['output'];
   slug: Scalars['String']['output'];
   stock: Scalars['Int']['output'];
@@ -611,6 +646,7 @@ export type Query = {
   contentPage: ContentPage;
   contentPages: Array<ContentPageSummary>;
   event: Event;
+  eventReviews: ReviewsResult;
   events: EventsResult;
   featuredProducts: Array<Product>;
   myRegistrations: RegistrationsResult;
@@ -619,7 +655,9 @@ export type Query = {
   order: Order;
   orders: OrdersResult;
   product: Product;
+  productReviews: ReviewsResult;
   products: ProductsResult;
+  recentReviews: Array<Review>;
   registration: Registration;
   relatedProducts: Array<Product>;
   siteSettings: SiteSettings;
@@ -666,6 +704,13 @@ export type QueryEventArgs = {
 };
 
 
+export type QueryEventReviewsArgs = {
+  event_id: Scalars['Int']['input'];
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryEventsArgs = {
   filter?: InputMaybe<EventsFilterInput>;
 };
@@ -704,8 +749,20 @@ export type QueryProductArgs = {
 };
 
 
+export type QueryProductReviewsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  product_id: Scalars['Int']['input'];
+};
+
+
 export type QueryProductsArgs = {
   filter?: InputMaybe<ProductsFilterInput>;
+};
+
+
+export type QueryRecentReviewsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -743,6 +800,13 @@ export type QueryWorkshopAvailabilityArgs = {
 
 export type QueryWorkshopBookingArgs = {
   id: Scalars['String']['input'];
+};
+
+export type RatingSummary = {
+  __typename?: 'RatingSummary';
+  average: Scalars['Float']['output'];
+  count: Scalars['Int']['output'];
+  distribution: Array<Scalars['Int']['output']>;
 };
 
 export type RegisterForEventInput = {
@@ -789,6 +853,51 @@ export type RescheduleWorkshopInput = {
   slot_starts: Array<Scalars['DateTime']['input']>;
 };
 
+export type Review = {
+  __typename?: 'Review';
+  author: ReviewAuthor;
+  body?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['DateTime']['output'];
+  id: Scalars['Int']['output'];
+  image_urls: Array<Scalars['String']['output']>;
+  is_mine: Scalars['Boolean']['output'];
+  rating: Scalars['Int']['output'];
+  subject_href?: Maybe<Scalars['String']['output']>;
+  subject_name?: Maybe<Scalars['String']['output']>;
+};
+
+export type ReviewAuthor = {
+  __typename?: 'ReviewAuthor';
+  image?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+};
+
+export type ReviewEligibility = {
+  __typename?: 'ReviewEligibility';
+  can_review: Scalars['Boolean']['output'];
+  my_review?: Maybe<Review>;
+  reason?: Maybe<Scalars['String']['output']>;
+};
+
+export type ReviewInput = {
+  body?: InputMaybe<Scalars['String']['input']>;
+  image_urls?: InputMaybe<Array<Scalars['String']['input']>>;
+  rating: Scalars['Int']['input'];
+};
+
+export type ReviewUploadInput = {
+  content_type: Scalars['String']['input'];
+  filename: Scalars['String']['input'];
+  size: Scalars['Int']['input'];
+};
+
+export type ReviewsResult = {
+  __typename?: 'ReviewsResult';
+  items: Array<Review>;
+  page_info: PageInfo;
+  summary: RatingSummary;
+};
+
 export type SelectionInputType = {
   group_id: Scalars['Int']['input'];
   option_id?: InputMaybe<Scalars['Int']['input']>;
@@ -827,6 +936,13 @@ export type SiteSettings = {
   updated_at: Scalars['DateTime']['output'];
   whatsapp_number: Scalars['String']['output'];
   youtube_url: Scalars['String']['output'];
+};
+
+export type UploadTarget = {
+  __typename?: 'UploadTarget';
+  key: Scalars['String']['output'];
+  public_url: Scalars['String']['output'];
+  upload_url: Scalars['String']['output'];
 };
 
 export type User = {
@@ -1192,6 +1308,89 @@ export type CollectionQueryVariables = Exact<{
 
 export type CollectionQuery = { collection: { id: number, slug: string, name: string, description: string | null, image_url: string | null, ends_at: string | null, product_count: number } };
 
+export type CreateProductReviewMutationVariables = Exact<{
+  product_id: number;
+  input: ReviewInput;
+}>;
+
+
+export type CreateProductReviewMutation = { createProductReview: { id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, is_mine: boolean, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } } };
+
+export type CreateEventReviewMutationVariables = Exact<{
+  event_id: number;
+  input: ReviewInput;
+}>;
+
+
+export type CreateEventReviewMutation = { createEventReview: { id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, is_mine: boolean, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } } };
+
+export type UpdateReviewMutationVariables = Exact<{
+  id: number;
+  input: ReviewInput;
+}>;
+
+
+export type UpdateReviewMutation = { updateReview: { id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, is_mine: boolean, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } } };
+
+export type DeleteReviewMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteReviewMutation = { deleteReview: boolean };
+
+export type CreateReviewImageUploadMutationVariables = Exact<{
+  input: ReviewUploadInput;
+}>;
+
+
+export type CreateReviewImageUploadMutation = { createReviewImageUpload: { upload_url: string, public_url: string, key: string } };
+
+export type ReviewFieldsFragment = { id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, is_mine: boolean, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } };
+
+export type ReviewSummaryFieldsFragment = { average: number, count: number, distribution: Array<number> };
+
+export type ReviewEligibilityFieldsFragment = { can_review: boolean, reason: string | null, my_review: { id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, is_mine: boolean, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } } | null };
+
+export type ProductReviewsQueryVariables = Exact<{
+  product_id: number;
+  page?: number | null | undefined;
+  limit?: number | null | undefined;
+}>;
+
+
+export type ProductReviewsQuery = { productReviews: { items: Array<{ id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, is_mine: boolean, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } }>, page_info: { total: number, page: number, limit: number, has_more: boolean }, summary: { average: number, count: number, distribution: Array<number> } } };
+
+export type EventReviewsQueryVariables = Exact<{
+  event_id: number;
+  page?: number | null | undefined;
+  limit?: number | null | undefined;
+}>;
+
+
+export type EventReviewsQuery = { eventReviews: { items: Array<{ id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, is_mine: boolean, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } }>, page_info: { total: number, page: number, limit: number, has_more: boolean }, summary: { average: number, count: number, distribution: Array<number> } } };
+
+export type ProductReviewEligibilityQueryVariables = Exact<{
+  slug: string;
+}>;
+
+
+export type ProductReviewEligibilityQuery = { product: { id: number, review_eligibility: { can_review: boolean, reason: string | null, my_review: { id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, is_mine: boolean, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } } | null } } };
+
+export type EventReviewEligibilityQueryVariables = Exact<{
+  slug: string;
+}>;
+
+
+export type EventReviewEligibilityQuery = { event: { id: number, review_eligibility: { can_review: boolean, reason: string | null, my_review: { id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, is_mine: boolean, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } } | null } } };
+
+export type RecentReviewsQueryVariables = Exact<{
+  limit?: number | null | undefined;
+}>;
+
+
+export type RecentReviewsQuery = { recentReviews: Array<{ id: number, rating: number, body: string | null, image_urls: Array<string>, created_at: string, is_mine: boolean, subject_name: string | null, subject_href: string | null, author: { name: string, image: string | null } }> };
+
 export type SiteSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1437,6 +1636,38 @@ export const OrderFieldsFragmentDoc = gql`
       slug
       is_customizable
     }
+  }
+}
+    `;
+export const ReviewSummaryFieldsFragmentDoc = gql`
+    fragment ReviewSummaryFields on RatingSummary {
+  average
+  count
+  distribution
+}
+    `;
+export const ReviewFieldsFragmentDoc = gql`
+    fragment ReviewFields on Review {
+  id
+  rating
+  body
+  image_urls
+  created_at
+  is_mine
+  subject_name
+  subject_href
+  author {
+    name
+    image
+  }
+}
+    `;
+export const ReviewEligibilityFieldsFragmentDoc = gql`
+    fragment ReviewEligibilityFields on ReviewEligibility {
+  can_review
+  reason
+  my_review {
+    ...ReviewFields
   }
 }
     `;
@@ -2719,6 +2950,375 @@ export function useCollectionLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryH
 export type CollectionQueryHookResult = ReturnType<typeof useCollectionQuery>;
 export type CollectionLazyQueryHookResult = ReturnType<typeof useCollectionLazyQuery>;
 export type CollectionQueryResult = ApolloReactCommon.QueryResult<CollectionQuery, CollectionQueryVariables>;
+export const CreateProductReviewDocument = gql`
+    mutation CreateProductReview($product_id: Int!, $input: ReviewInput!) {
+  createProductReview(product_id: $product_id, input: $input) {
+    ...ReviewFields
+  }
+}
+    ${ReviewFieldsFragmentDoc}`;
+
+/**
+ * __useCreateProductReviewMutation__
+ *
+ * To run a mutation, you first call `useCreateProductReviewMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateProductReviewMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createProductReviewMutation, { data, loading, error }] = useCreateProductReviewMutation({
+ *   variables: {
+ *      product_id: // value for 'product_id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateProductReviewMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateProductReviewMutation, CreateProductReviewMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateProductReviewMutation, CreateProductReviewMutationVariables>(CreateProductReviewDocument, options);
+      }
+export type CreateProductReviewMutationHookResult = ReturnType<typeof useCreateProductReviewMutation>;
+export type CreateProductReviewMutationResult = ApolloReactCommon.MutationResult<CreateProductReviewMutation>;
+export const CreateEventReviewDocument = gql`
+    mutation CreateEventReview($event_id: Int!, $input: ReviewInput!) {
+  createEventReview(event_id: $event_id, input: $input) {
+    ...ReviewFields
+  }
+}
+    ${ReviewFieldsFragmentDoc}`;
+
+/**
+ * __useCreateEventReviewMutation__
+ *
+ * To run a mutation, you first call `useCreateEventReviewMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateEventReviewMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createEventReviewMutation, { data, loading, error }] = useCreateEventReviewMutation({
+ *   variables: {
+ *      event_id: // value for 'event_id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateEventReviewMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateEventReviewMutation, CreateEventReviewMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateEventReviewMutation, CreateEventReviewMutationVariables>(CreateEventReviewDocument, options);
+      }
+export type CreateEventReviewMutationHookResult = ReturnType<typeof useCreateEventReviewMutation>;
+export type CreateEventReviewMutationResult = ApolloReactCommon.MutationResult<CreateEventReviewMutation>;
+export const UpdateReviewDocument = gql`
+    mutation UpdateReview($id: Int!, $input: ReviewInput!) {
+  updateReview(id: $id, input: $input) {
+    ...ReviewFields
+  }
+}
+    ${ReviewFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateReviewMutation__
+ *
+ * To run a mutation, you first call `useUpdateReviewMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateReviewMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateReviewMutation, { data, loading, error }] = useUpdateReviewMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateReviewMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateReviewMutation, UpdateReviewMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateReviewMutation, UpdateReviewMutationVariables>(UpdateReviewDocument, options);
+      }
+export type UpdateReviewMutationHookResult = ReturnType<typeof useUpdateReviewMutation>;
+export type UpdateReviewMutationResult = ApolloReactCommon.MutationResult<UpdateReviewMutation>;
+export const DeleteReviewDocument = gql`
+    mutation DeleteReview($id: Int!) {
+  deleteReview(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteReviewMutation__
+ *
+ * To run a mutation, you first call `useDeleteReviewMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteReviewMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteReviewMutation, { data, loading, error }] = useDeleteReviewMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteReviewMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteReviewMutation, DeleteReviewMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteReviewMutation, DeleteReviewMutationVariables>(DeleteReviewDocument, options);
+      }
+export type DeleteReviewMutationHookResult = ReturnType<typeof useDeleteReviewMutation>;
+export type DeleteReviewMutationResult = ApolloReactCommon.MutationResult<DeleteReviewMutation>;
+export const CreateReviewImageUploadDocument = gql`
+    mutation CreateReviewImageUpload($input: ReviewUploadInput!) {
+  createReviewImageUpload(input: $input) {
+    upload_url
+    public_url
+    key
+  }
+}
+    `;
+
+/**
+ * __useCreateReviewImageUploadMutation__
+ *
+ * To run a mutation, you first call `useCreateReviewImageUploadMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateReviewImageUploadMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createReviewImageUploadMutation, { data, loading, error }] = useCreateReviewImageUploadMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateReviewImageUploadMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateReviewImageUploadMutation, CreateReviewImageUploadMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateReviewImageUploadMutation, CreateReviewImageUploadMutationVariables>(CreateReviewImageUploadDocument, options);
+      }
+export type CreateReviewImageUploadMutationHookResult = ReturnType<typeof useCreateReviewImageUploadMutation>;
+export type CreateReviewImageUploadMutationResult = ApolloReactCommon.MutationResult<CreateReviewImageUploadMutation>;
+export const ProductReviewsDocument = gql`
+    query ProductReviews($product_id: Int!, $page: Int, $limit: Int) {
+  productReviews(product_id: $product_id, page: $page, limit: $limit) {
+    items {
+      ...ReviewFields
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+    summary {
+      ...ReviewSummaryFields
+    }
+  }
+}
+    ${ReviewFieldsFragmentDoc}
+${ReviewSummaryFieldsFragmentDoc}`;
+
+/**
+ * __useProductReviewsQuery__
+ *
+ * To run a query within a React component, call `useProductReviewsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProductReviewsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProductReviewsQuery({
+ *   variables: {
+ *      product_id: // value for 'product_id'
+ *      page: // value for 'page'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useProductReviewsQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ProductReviewsQuery, ProductReviewsQueryVariables> & ({ variables: ProductReviewsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ProductReviewsQuery, ProductReviewsQueryVariables>(ProductReviewsDocument, options);
+      }
+export function useProductReviewsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ProductReviewsQuery, ProductReviewsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ProductReviewsQuery, ProductReviewsQueryVariables>(ProductReviewsDocument, options);
+        }
+export type ProductReviewsQueryHookResult = ReturnType<typeof useProductReviewsQuery>;
+export type ProductReviewsLazyQueryHookResult = ReturnType<typeof useProductReviewsLazyQuery>;
+export type ProductReviewsQueryResult = ApolloReactCommon.QueryResult<ProductReviewsQuery, ProductReviewsQueryVariables>;
+export const EventReviewsDocument = gql`
+    query EventReviews($event_id: Int!, $page: Int, $limit: Int) {
+  eventReviews(event_id: $event_id, page: $page, limit: $limit) {
+    items {
+      ...ReviewFields
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+    summary {
+      ...ReviewSummaryFields
+    }
+  }
+}
+    ${ReviewFieldsFragmentDoc}
+${ReviewSummaryFieldsFragmentDoc}`;
+
+/**
+ * __useEventReviewsQuery__
+ *
+ * To run a query within a React component, call `useEventReviewsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useEventReviewsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useEventReviewsQuery({
+ *   variables: {
+ *      event_id: // value for 'event_id'
+ *      page: // value for 'page'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useEventReviewsQuery(baseOptions: ApolloReactHooks.QueryHookOptions<EventReviewsQuery, EventReviewsQueryVariables> & ({ variables: EventReviewsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<EventReviewsQuery, EventReviewsQueryVariables>(EventReviewsDocument, options);
+      }
+export function useEventReviewsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<EventReviewsQuery, EventReviewsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<EventReviewsQuery, EventReviewsQueryVariables>(EventReviewsDocument, options);
+        }
+export type EventReviewsQueryHookResult = ReturnType<typeof useEventReviewsQuery>;
+export type EventReviewsLazyQueryHookResult = ReturnType<typeof useEventReviewsLazyQuery>;
+export type EventReviewsQueryResult = ApolloReactCommon.QueryResult<EventReviewsQuery, EventReviewsQueryVariables>;
+export const ProductReviewEligibilityDocument = gql`
+    query ProductReviewEligibility($slug: String!) {
+  product(slug: $slug) {
+    id
+    review_eligibility {
+      ...ReviewEligibilityFields
+    }
+  }
+}
+    ${ReviewEligibilityFieldsFragmentDoc}
+${ReviewFieldsFragmentDoc}`;
+
+/**
+ * __useProductReviewEligibilityQuery__
+ *
+ * To run a query within a React component, call `useProductReviewEligibilityQuery` and pass it any options that fit your needs.
+ * When your component renders, `useProductReviewEligibilityQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useProductReviewEligibilityQuery({
+ *   variables: {
+ *      slug: // value for 'slug'
+ *   },
+ * });
+ */
+export function useProductReviewEligibilityQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ProductReviewEligibilityQuery, ProductReviewEligibilityQueryVariables> & ({ variables: ProductReviewEligibilityQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ProductReviewEligibilityQuery, ProductReviewEligibilityQueryVariables>(ProductReviewEligibilityDocument, options);
+      }
+export function useProductReviewEligibilityLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ProductReviewEligibilityQuery, ProductReviewEligibilityQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ProductReviewEligibilityQuery, ProductReviewEligibilityQueryVariables>(ProductReviewEligibilityDocument, options);
+        }
+export type ProductReviewEligibilityQueryHookResult = ReturnType<typeof useProductReviewEligibilityQuery>;
+export type ProductReviewEligibilityLazyQueryHookResult = ReturnType<typeof useProductReviewEligibilityLazyQuery>;
+export type ProductReviewEligibilityQueryResult = ApolloReactCommon.QueryResult<ProductReviewEligibilityQuery, ProductReviewEligibilityQueryVariables>;
+export const EventReviewEligibilityDocument = gql`
+    query EventReviewEligibility($slug: String!) {
+  event(slug: $slug) {
+    id
+    review_eligibility {
+      ...ReviewEligibilityFields
+    }
+  }
+}
+    ${ReviewEligibilityFieldsFragmentDoc}
+${ReviewFieldsFragmentDoc}`;
+
+/**
+ * __useEventReviewEligibilityQuery__
+ *
+ * To run a query within a React component, call `useEventReviewEligibilityQuery` and pass it any options that fit your needs.
+ * When your component renders, `useEventReviewEligibilityQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useEventReviewEligibilityQuery({
+ *   variables: {
+ *      slug: // value for 'slug'
+ *   },
+ * });
+ */
+export function useEventReviewEligibilityQuery(baseOptions: ApolloReactHooks.QueryHookOptions<EventReviewEligibilityQuery, EventReviewEligibilityQueryVariables> & ({ variables: EventReviewEligibilityQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<EventReviewEligibilityQuery, EventReviewEligibilityQueryVariables>(EventReviewEligibilityDocument, options);
+      }
+export function useEventReviewEligibilityLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<EventReviewEligibilityQuery, EventReviewEligibilityQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<EventReviewEligibilityQuery, EventReviewEligibilityQueryVariables>(EventReviewEligibilityDocument, options);
+        }
+export type EventReviewEligibilityQueryHookResult = ReturnType<typeof useEventReviewEligibilityQuery>;
+export type EventReviewEligibilityLazyQueryHookResult = ReturnType<typeof useEventReviewEligibilityLazyQuery>;
+export type EventReviewEligibilityQueryResult = ApolloReactCommon.QueryResult<EventReviewEligibilityQuery, EventReviewEligibilityQueryVariables>;
+export const RecentReviewsDocument = gql`
+    query RecentReviews($limit: Int) {
+  recentReviews(limit: $limit) {
+    ...ReviewFields
+  }
+}
+    ${ReviewFieldsFragmentDoc}`;
+
+/**
+ * __useRecentReviewsQuery__
+ *
+ * To run a query within a React component, call `useRecentReviewsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useRecentReviewsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useRecentReviewsQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useRecentReviewsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<RecentReviewsQuery, RecentReviewsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<RecentReviewsQuery, RecentReviewsQueryVariables>(RecentReviewsDocument, options);
+      }
+export function useRecentReviewsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<RecentReviewsQuery, RecentReviewsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<RecentReviewsQuery, RecentReviewsQueryVariables>(RecentReviewsDocument, options);
+        }
+export type RecentReviewsQueryHookResult = ReturnType<typeof useRecentReviewsQuery>;
+export type RecentReviewsLazyQueryHookResult = ReturnType<typeof useRecentReviewsLazyQuery>;
+export type RecentReviewsQueryResult = ApolloReactCommon.QueryResult<RecentReviewsQuery, RecentReviewsQueryVariables>;
 export const SiteSettingsDocument = gql`
     query SiteSettings {
   siteSettings {
