@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 
 import {
   DeleteObjectCommand,
+  GetObjectCommand,
   PutObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
@@ -16,6 +17,7 @@ export const UPLOAD_FOLDERS = [
   "collections",
   "categories",
   "content",
+  "hero",
   "reviews",
   "customization",
   "orders",
@@ -91,10 +93,31 @@ export class StorageService {
     return this.config !== null && url.startsWith(`${this.config.publicUrl}/`);
   }
 
+  publicUrlFor(key: string): string {
+    if (!this.config) {
+      throw new BadRequestException("Image uploads are not configured");
+    }
+    return `${this.config.publicUrl}/${key}`;
+  }
+
   // The object key behind one of our own public urls, or null for anyone else's.
   keyFor(url: string): string | null {
     if (!this.config || !this.isOwnUrl(url)) return null;
     return url.slice(this.config.publicUrl.length + 1) || null;
+  }
+
+  // Reads the stored object back so the API can verify what actually landed in the bucket.
+  async readObject(key: string): Promise<Buffer> {
+    if (!this.client || !this.config) {
+      throw new BadRequestException("Image uploads are not configured");
+    }
+    const result = await this.client.send(
+      new GetObjectCommand({ Bucket: this.config.bucket, Key: key }),
+    );
+    if (!result.Body) {
+      throw new BadRequestException("That upload is no longer in the bucket");
+    }
+    return Buffer.from(await result.Body.transformToByteArray());
   }
 
   async deleteObject(key: string): Promise<void> {

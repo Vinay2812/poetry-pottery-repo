@@ -1,5 +1,4 @@
 export { StorageResolver } from "@/storage/storage.resolver";
-export { UsersResolver } from "@/features/users/users.resolver";
 export { SettingsResolver } from "@/features/settings/settings.resolver";
 export {
   GlazeResolver,
@@ -23,3 +22,5 @@ export {
   ProductReviewEligibilityResolver,
   ReviewsResolver,
 } from "@/features/reviews/reviews.resolver";
+
+export { AdminUploadsResolver } from "@/features/admin/uploads/uploads.resolver";

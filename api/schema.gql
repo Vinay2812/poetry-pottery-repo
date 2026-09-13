@@ -181,6 +181,14 @@ type CommissionRequestsResult {
   page_info: PageInfo!
 }
 
+type ConfirmedImage {
+  bytes: Int!
+  height: Int!
+  key: String!
+  public_url: String!
+  width: Int!
+}
+
 type ContactMessage {
   created_at: DateTime!
   email: String!
@@ -339,6 +347,17 @@ type Glaze {
   variation_note: String
 }
 
+type ImageSpec {
+  content_types: [String!]!
+  max_bytes: Int!
+  min_height: Int!
+  min_width: Int!
+  purpose: UploadPurpose!
+  ratio: Float
+  ratio_label: String!
+  renders_at: String!
+}
+
 type Mutation {
   addOrderNote(input: AddOrderNoteInput!): Order!
   addToCart(input: AddToCartInput!): Cart!
@@ -348,7 +367,9 @@ type Mutation {
   cancelRegistration(id: String!, reason: String): Registration!
   cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
+  confirmUpload(key: String!, purpose: UploadPurpose!): ConfirmedImage!
   createAddress(input: AddressInput!): Address!
+  createAdminUpload(content_type: String!, purpose: UploadPurpose!, size: Int!): UploadTarget!
   createCommissionRequest(input: CommissionRequestInput!): CommissionRequest!
   createCustomizationUpload(content_type: String!, size: Int!): UploadTicket!
   createEventReview(event_id: Int!, input: ReviewInput!): Review!
@@ -585,6 +606,7 @@ type Query {
   featuredProducts(limit: Int = 8): [Product!]!
   glaze(slug: String!): Glaze!
   glazes: [Glaze!]!
+  imageSpecs: [ImageSpec!]!
   myRegistrations(limit: Int, page: Int): RegistrationsResult!
   myWorkshopBookings(limit: Int, page: Int): WorkshopBookingsResult!
   newsletterStatus: NewsletterStatus!
@@ -600,7 +622,6 @@ type Query {
   studioVisitAvailability(days: Int, from: String): [VisitDay!]!
   suggest(q: String!): Suggestions!
   upcomingEvents(limit: Int = 3): [Event!]!
-  users(limit: Int = 20, page: Int = 1): UsersResponse!
   wishlist: [Product!]!
   wishlistIds: [Int!]!
   workshop(slug: String!): WorkshopConfig!
@@ -784,6 +805,16 @@ type Suggestions {
   workshops: [SuggestedWorkshop!]!
 }
 
+enum UploadPurpose {
+  CATEGORY
+  COLLECTION
+  CONTENT
+  EVENT
+  HERO
+  PRODUCT
+  REVIEW
+}
+
 type UploadTarget {
   key: String!
   public_url: String!
@@ -794,30 +825,6 @@ type UploadTicket {
   key: String!
   public_url: String!
   upload_url: String!
-}
-
-type User {
-  auth_id: String!
-  created_at: DateTime!
-  email: String!
-  id: Int!
-  image: String
-  name: String
-  phone: String
-  role: UserRole!
-  updated_at: DateTime!
-}
-
-enum UserRole {
-  ADMIN
-  USER
-}
-
-type UsersResponse {
-  items: [User!]!
-  limit: Int!
-  page: Int!
-  total: Int!
 }
 
 type VisitDay {
