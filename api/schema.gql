@@ -53,6 +53,13 @@ input AdminCollectionInput {
   starts_at: DateTime
 }
 
+input AdminContactFilterInput {
+  is_read: Boolean
+  limit: Int
+  page: Int
+  search: String
+}
+
 type AdminCoupon {
   code: String!
   created_at: DateTime!
@@ -313,6 +320,27 @@ input AdminSiteSettingsInput {
   youtube_url: String
 }
 
+type AdminSubscriber {
+  created_at: DateTime!
+  email: String!
+  id: Int!
+  is_active: Boolean!
+  unsubscribed_at: DateTime
+  user_id: Int
+}
+
+input AdminSubscribersFilterInput {
+  is_active: Boolean
+  limit: Int
+  page: Int
+  search: String
+}
+
+type AdminSubscribersResult {
+  items: [AdminSubscriber!]!
+  page_info: PageInfo!
+}
+
 type AdminUser {
   bookings_count: Int!
   created_at: DateTime!
@@ -512,6 +540,11 @@ input ContactMessageInput {
   subject: String
 }
 
+type ContactMessagesResult {
+  items: [ContactMessage!]!
+  page_info: PageInfo!
+}
+
 type ContentPage {
   hero_image_url: String
   is_published: Boolean!
@@ -679,6 +712,7 @@ type Mutation {
   deleteAddress(id: Int!): Boolean!
   deleteCategory(id: Int!): Boolean!
   deleteCollection(id: Int!): Boolean!
+  deleteContactMessage(id: Int!): Boolean!
   deleteContentPage(slug: String!): Boolean!
   deleteCoupon(id: Int!): Boolean!
   deleteProductOption(id: Int!): Boolean!
@@ -697,6 +731,7 @@ type Mutation {
   saveContentPage(input: ContentPageInput!, slug: String!): ContentPage!
   saveWorkshopTier(config_id: Int!, input: AdminWorkshopTierInput!): WorkshopConfig!
   sendContactMessage(input: ContactMessageInput!): Boolean!
+  setContactMessageRead(id: Int!, is_read: Boolean!): ContactMessage!
   setDefaultAddress(id: Int!): Address!
   setOrderAdminNote(id: String!, note: String): AdminOrder!
   setOrderStatus(cancel_reason: String, id: String!, status: OrderStatus!, tracking_note: String): AdminOrder!
@@ -710,6 +745,7 @@ type Mutation {
   toggleWishlist(product_id: Int!): WishlistToggleResult!
   unpublishEvent(id: Int!): Event!
   unsubscribeFromNewsletter(token: String!): Boolean!
+  unsubscribeSubscriber(email: String!): Boolean!
   updateAddress(id: Int!, input: AddressInput!): Address!
   updateAnnouncement(input: AdminAnnouncementInput!): SiteSettings!
   updateCartItem(id: Int!, quantity: Int!): Cart!
@@ -897,6 +933,7 @@ type Query {
   addresses: [Address!]!
   adminCategories: [Category!]!
   adminCollections: [Collection!]!
+  adminContactMessages(filter: AdminContactFilterInput): ContactMessagesResult!
   adminContentPage(slug: String!): ContentPage!
   adminContentPages: [ContentPageSummary!]!
   adminCoupons(filter: AdminCouponsFilterInput): AdminCouponsResult!
@@ -904,6 +941,7 @@ type Query {
   adminEvent(id: Int!): Event!
   adminEventRegistrations(filter: AdminRegistrationsFilterInput): AdminRegistrationsResult!
   adminEvents(filter: AdminEventsFilterInput): AdminEventsResult!
+  adminNewsletterSubscribers(filter: AdminSubscribersFilterInput): AdminSubscribersResult!
   adminOrder(id: String!): AdminOrder!
   adminOrders(filter: AdminOrdersFilterInput): AdminOrdersResult!
   adminProduct(id: Int!): Product!
@@ -924,6 +962,7 @@ type Query {
   event(slug: String!): Event!
   eventReviews(event_id: Int!, limit: Int, page: Int): ReviewsResult!
   events(filter: EventsFilterInput): EventsResult!
+  exportNewsletterSubscribers(filter: AdminSubscribersFilterInput): String!
   featuredProducts(limit: Int = 8): [Product!]!
   imageSpecs: [ImageSpec!]!
   myRegistrations(limit: Int, page: Int): RegistrationsResult!

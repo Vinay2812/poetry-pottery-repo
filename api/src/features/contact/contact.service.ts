@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
 import { z } from "zod";
 
-import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { env } from "@/config/env";
 import { MailService } from "@/mail/mail.service";
 import {
@@ -10,11 +9,7 @@ import {
 } from "@/mail/templates/contact";
 import { PrismaService } from "@/prisma/prisma.service";
 import { normalisePhone } from "@/features/addresses/address-validation";
-import type {
-  ContactMessage,
-  ContactMessageInput,
-  ContactMessagesResult,
-} from "./contact.type";
+import type { ContactMessageInput } from "./contact.type";
 
 const messageSchema = z.object({
   name: z
@@ -89,28 +84,5 @@ export class ContactService {
       ...contactAcknowledgementMail(message),
     });
     return true;
-  }
-
-  async list(
-    page: number | null,
-    limit: number | null,
-  ): Promise<ContactMessagesResult> {
-    const bounds = clampPage(page, limit);
-    const [items, total] = await Promise.all([
-      this.prisma.contactMessage.findMany({
-        orderBy: { created_at: "desc" },
-        skip: bounds.skip,
-        take: bounds.limit,
-      }),
-      this.prisma.contactMessage.count(),
-    ]);
-    return { items, page_info: toPageInfo(bounds, total) };
-  }
-
-  markRead(id: number): Promise<ContactMessage> {
-    return this.prisma.contactMessage.update({
-      where: { id },
-      data: { is_read: true },
-    });
   }
 }
