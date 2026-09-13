@@ -258,6 +258,12 @@
    hangs off that one attribute.
    --------------------------------------------------------------------------- */
 
+/* The sticky header sits over the band, so the band's usable height is what is
+   left under it. Mirrors SiteHeader's h-16 plus its hairline. */
+.story-wrapper {
+  --story-header-h: calc(4rem + 1px);
+}
+
 .story-step {
   display: flex;
   align-items: center;
@@ -329,7 +335,9 @@
   flex-direction: column;
   justify-content: center;
   gap: 1.5rem;
-  padding-block: 2rem;
+  /* Clears the header, so the rim never runs up under it. */
+  padding-top: calc(var(--story-header-h) + 1.5rem);
+  padding-bottom: 2rem;
 }
 
 [data-step] .story-steps {
