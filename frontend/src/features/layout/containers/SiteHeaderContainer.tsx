@@ -2,18 +2,14 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useMemo, useState } from "react";
+import { Suspense, useCallback, useMemo, useState } from "react";
 
 import { UserRole } from "@/graphql/generated/graphql";
 
 import { useCartCount } from "@/features/cart/hooks";
-import { MobileMenuSheet } from "@/features/layout/components/MobileMenuSheet";
 import { SiteHeader } from "@/features/layout/components/SiteHeader";
-import {
-  isActivePath,
-  MOBILE_MENU_LINKS,
-  NAV_LINKS,
-} from "@/features/layout/types";
+import { MobileMenuContainer } from "@/features/layout/containers/MobileMenuContainer";
+import { isActivePath, NAV_LINKS } from "@/features/layout/types";
 import { useWishlistIds } from "@/features/wishlist/hooks";
 
 export function SiteHeaderContainer() {
@@ -30,13 +26,6 @@ export function SiteHeaderContainer() {
       NAV_LINKS.find((link) => isActivePath(pathname, link.href))?.href ?? null,
     [pathname],
   );
-  const menuActiveHref = useMemo(
-    () =>
-      MOBILE_MENU_LINKS.find((link) => isActivePath(pathname, link.href))
-        ?.href ?? null,
-    [pathname],
-  );
-
   const handleSearchClick = useCallback(() => {
     router.push("/search");
   }, [router]);
@@ -72,17 +61,17 @@ export function SiteHeaderContainer() {
         onAccountClick={handleAccountClick}
         onMenuClick={() => setIsMenuOpen(true)}
       />
-      <MobileMenuSheet
-        isOpen={isMenuOpen}
-        links={MOBILE_MENU_LINKS}
-        activeHref={menuActiveHref}
-        isSignedIn={Boolean(isSignedIn)}
-        wishlistCount={wishlistCount}
-        onOpenChange={setIsMenuOpen}
-        onNavigate={handleCloseMenu}
-        onAccountClick={handleAccountClick}
-        onSignOut={handleSignOut}
-      />
+      <Suspense>
+        <MobileMenuContainer
+          isOpen={isMenuOpen}
+          isSignedIn={Boolean(isSignedIn)}
+          wishlistCount={wishlistCount}
+          onOpenChange={setIsMenuOpen}
+          onNavigate={handleCloseMenu}
+          onAccountClick={handleAccountClick}
+          onSignOut={handleSignOut}
+        />
+      </Suspense>
     </>
   );
 }

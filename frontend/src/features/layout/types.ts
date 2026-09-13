@@ -51,6 +51,18 @@ export function isActivePath(pathname: string, href: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
+// The shelf and the archive share a path, so the view decides which of the two rows is lit.
+export function isActiveLink(
+  pathname: string,
+  view: string | null,
+  href: string,
+): boolean {
+  if (!isActivePath(pathname, href)) return false;
+  const query = href.split("?")[1];
+  const linkView = new URLSearchParams(query ?? "").get("view");
+  return (linkView ?? null) === (view || null);
+}
+
 export function buildWhatsAppUrl(number: string, text: string): string {
   const digits = number.replace(/\D/g, "");
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
