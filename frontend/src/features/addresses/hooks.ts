@@ -1,6 +1,7 @@
 "use client";
 
 import type { ApolloCache } from "@apollo/client";
+import { useApolloClient } from "@apollo/client/react";
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -19,9 +20,11 @@ import {
 import type { AddressFormValues } from "@/lib/validations/address";
 
 import {
+  afterDelete,
   type SavedAddress,
   sortByDefaultFirst,
   toAddressInput,
+  toOptimisticDefault,
   withDefaultOn,
 } from "./types";
 
@@ -62,6 +65,7 @@ export function useAddresses() {
 }
 
 export function useAddressMutations() {
+  const client = useApolloClient();
   const [createMutation, { loading: isCreating }] = useCreateAddressMutation();
   const [updateMutation, { loading: isUpdating }] = useUpdateAddressMutation();
   const [removeMutation] = useDeleteAddressMutation();
@@ -128,25 +132,16 @@ export function useAddressMutations() {
     [updateMutation],
   );
 
+  // The card leaves straight away; Apollo puts it back if the delete is refused.
   const remove = useCallback(
     async (id: number): Promise<boolean> => {
       try {
         await removeMutation({
           variables: { id },
+          optimisticResponse: { deleteAddress: true },
           update: (cache, result) => {
             if (!result.data?.deleteAddress) return;
-            const current = readAddresses(cache);
-            const wasDefault =
-              current.find((address) => address.id === id)?.is_default ?? false;
-            const remaining = current.filter((address) => address.id !== id);
-            const promoted = remaining[0];
-            // The server promotes the newest remaining address; the list is already newest first.
-            writeAddresses(
-              cache,
-              wasDefault && promoted
-                ? withDefaultOn(remaining, promoted.id)
-                : remaining,
-            );
+            writeAddresses(cache, afterDelete(readAddresses(cache), id));
           },
         });
         toast.success("Address removed");
@@ -159,11 +154,22 @@ export function useAddressMutations() {
     [removeMutation],
   );
 
+  // The Default mark moves on the click, because the whole address is already cached.
   const setDefault = useCallback(
     async (id: number): Promise<boolean> => {
+      const target = readAddresses(client.cache).find(
+        (address) => address.id === id,
+      );
       try {
         await setDefaultMutation({
           variables: { id },
+          ...(target
+            ? {
+                optimisticResponse: {
+                  setDefaultAddress: toOptimisticDefault(target),
+                },
+              }
+            : {}),
           update: (cache, result) => {
             const address = result.data?.setDefaultAddress;
             if (!address) return;
@@ -180,7 +186,7 @@ export function useAddressMutations() {
         return false;
       }
     },
-    [setDefaultMutation],
+    [client, setDefaultMutation],
   );
 
   return {

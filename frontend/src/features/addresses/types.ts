@@ -89,3 +89,24 @@ export function withDefaultOn(
     })),
   );
 }
+
+// Mirrors the server: deleting the default promotes the newest address that is left.
+export function afterDelete(
+  addresses: readonly SavedAddress[],
+  id: number,
+): SavedAddress[] {
+  const wasDefault =
+    addresses.find((address) => address.id === id)?.is_default ?? false;
+  const remaining = addresses.filter((address) => address.id !== id);
+  const promoted = remaining[0];
+  return wasDefault && promoted
+    ? withDefaultOn(remaining, promoted.id)
+    : remaining;
+}
+
+// The cache only normalises an optimistic address when it carries its type name.
+export function toOptimisticDefault(
+  address: SavedAddress,
+): SavedAddress & { __typename: "Address" } {
+  return { ...address, __typename: "Address", is_default: true };
+}

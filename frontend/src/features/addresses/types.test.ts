@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  afterDelete,
   type SavedAddress,
   sortByDefaultFirst,
   toAddressInput,
   toAddressLines,
   toFormValues,
+  toOptimisticDefault,
   toPreferredAddressId,
   withDefaultOn,
 } from "./types";
@@ -109,5 +111,44 @@ describe("withDefaultOn", () => {
     );
     expect(updated.map((item) => item.id)).toEqual([2, 1]);
     expect(updated.map((item) => item.is_default)).toEqual([true, false]);
+  });
+});
+
+describe("afterDelete", () => {
+  it("drops the address and leaves the rest alone", () => {
+    const list = [address({ id: 1 }), address({ id: 2 })];
+    expect(afterDelete(list, 1).map((item) => item.id)).toEqual([2]);
+  });
+
+  it("promotes the newest address when the default goes", () => {
+    const list = [
+      address({ id: 3, is_default: true }),
+      address({ id: 2 }),
+      address({ id: 1 }),
+    ];
+    expect(afterDelete(list, 3)).toEqual([
+      address({ id: 2, is_default: true }),
+      address({ id: 1, is_default: false }),
+    ]);
+  });
+
+  it("leaves the default alone when another address goes", () => {
+    const list = [address({ id: 3, is_default: true }), address({ id: 2 })];
+    expect(afterDelete(list, 2)).toEqual([
+      address({ id: 3, is_default: true }),
+    ]);
+  });
+
+  it("returns nothing when the last address goes", () => {
+    expect(afterDelete([address({ id: 1, is_default: true })], 1)).toEqual([]);
+  });
+});
+
+describe("toOptimisticDefault", () => {
+  it("marks the address default and names its type for the cache", () => {
+    expect(toOptimisticDefault(address({ id: 4 }))).toEqual({
+      ...address({ id: 4, is_default: true }),
+      __typename: "Address",
+    });
   });
 });
