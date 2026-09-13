@@ -128,6 +128,9 @@ export class CartService {
     const key = selectionKey(selections);
 
     await this.prisma.withTransaction(async () => {
+      // The merge reads the line before rewriting it, so two tabs adding at once must queue up.
+      await this.prisma
+        .$executeRaw`SELECT pg_advisory_xact_lock(${userId}::int, ${product.id}::int)`;
       const existing = await this.prisma.cartItem.findUnique({
         where: {
           user_id_product_id_selection_key: {

@@ -15,6 +15,7 @@ const containing = (value: Record<string, unknown>): unknown =>
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  $executeRaw: vi.fn().mockResolvedValue(1),
   cartItem: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
@@ -199,6 +200,7 @@ describe("CartService", () => {
         create: containing({ quantity: 3, selection_key: "" }),
       }),
     );
+    expect(prismaMock.$executeRaw).toHaveBeenCalled();
   });
 
   it("rejects quantities outside the allowed range", async () => {
