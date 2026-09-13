@@ -118,6 +118,76 @@ type CollectionRef {
   slug: String!
 }
 
+type ContactMessage {
+  created_at: DateTime!
+  email: String!
+  id: Int!
+  is_read: Boolean!
+  message: String!
+  name: String!
+  phone: String
+  subject: String
+}
+
+input ContactMessageInput {
+  email: String!
+  message: String!
+  name: String!
+  phone: String
+  subject: String
+}
+
+type ContactMessagesResult {
+  items: [ContactMessage!]!
+  page_info: PageInfo!
+}
+
+type ContentPage {
+  hero_image_url: String
+  is_published: Boolean!
+  sections: [ContentSection!]!
+  slug: String!
+  subtitle: String
+  title: String!
+  updated_at: DateTime!
+}
+
+input ContentPageInput {
+  hero_image_url: String
+  is_published: Boolean
+  sections: [ContentSectionInput!]!
+  subtitle: String
+  title: String!
+}
+
+type ContentPageSummary {
+  is_published: Boolean!
+  slug: String!
+  title: String!
+}
+
+type ContentSection {
+  body: String!
+  heading: String!
+  items: [ContentSectionItem!]!
+}
+
+input ContentSectionInput {
+  body: String!
+  heading: String!
+  items: [ContentSectionItemInput!]
+}
+
+type ContentSectionItem {
+  body: String!
+  title: String!
+}
+
+input ContentSectionItemInput {
+  body: String!
+  title: String!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -203,14 +273,30 @@ type Mutation {
   clearCart: Cart!
   createAddress(input: AddressInput!): Address!
   deleteAddress(id: Int!): Boolean!
+  markContactMessageRead(id: Int!): ContactMessage!
   placeOrder(input: PlaceOrderInput!): Order!
   registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
   rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
+  sendContactMessage(input: ContactMessageInput!): Boolean!
   setDefaultAddress(id: Int!): Address!
+  subscribeToNewsletter(email: String!): NewsletterResult!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
+  unsubscribeFromNewsletter(token: String!): Boolean!
   updateAddress(id: Int!, input: AddressInput!): Address!
   updateCartItem(id: Int!, quantity: Int!): Cart!
+  updateContentPage(input: ContentPageInput!, slug: String!): ContentPage!
+}
+
+type NewsletterResult {
+  email: String!
+  is_active: Boolean!
+  was_already_subscribed: Boolean!
+}
+
+type NewsletterStatus {
+  email: String
+  is_subscribed: Boolean!
 }
 
 enum OptionGroupKind {
@@ -367,11 +453,15 @@ type Query {
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
   collection(slug: String!): Collection!
   collections: [Collection!]!
+  contactMessages(limit: Int, page: Int): ContactMessagesResult!
+  contentPage(slug: String!): ContentPage!
+  contentPages: [ContentPageSummary!]!
   event(slug: String!): Event!
   events(filter: EventsFilterInput): EventsResult!
   featuredProducts(limit: Int = 8): [Product!]!
   myRegistrations(limit: Int, page: Int): RegistrationsResult!
   myWorkshopBookings(limit: Int, page: Int): WorkshopBookingsResult!
+  newsletterStatus: NewsletterStatus!
   order(id: String!): Order!
   orders(limit: Int, page: Int): OrdersResult!
   product(slug: String!): Product!
