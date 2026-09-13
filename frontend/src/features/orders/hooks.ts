@@ -5,8 +5,6 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 
 import {
-  OrderDocument,
-  type OrderQuery,
   useCancelOrderMutation,
   useOrderQuery,
   useOrdersQuery,
@@ -27,6 +25,7 @@ export function useOrders(page: number) {
     orders: result?.items ?? [],
     pageInfo: result?.page_info ?? null,
     isLoading: !isLoaded || (loading && !result),
+    isPaging: loading && Boolean(result),
     hasError: Boolean(error) && !result,
     isSignedIn: Boolean(isSignedIn),
     refetch,
@@ -53,17 +52,8 @@ export function useCancelOrder() {
   const cancel = useCallback(
     async (id: string, reason: string): Promise<boolean> => {
       try {
-        await mutate({
-          variables: { id, reason: reason.trim() || null },
-          update: (cache, { data }) => {
-            if (data)
-              cache.writeQuery<OrderQuery>({
-                query: OrderDocument,
-                variables: { id },
-                data: { order: data.cancelOrder },
-              });
-          },
-        });
+        // The reply is the whole order, so Apollo's own normalisation is the new baseline.
+        await mutate({ variables: { id, reason: reason.trim() || null } });
         toast.success("Order cancelled");
         return true;
       } catch (error) {

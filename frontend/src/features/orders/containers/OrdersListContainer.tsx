@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 import { SignInWall } from "@/features/auth/components/SignInWall";
 import { EmptyOrders } from "@/features/orders/components/EmptyOrders";
@@ -18,8 +19,16 @@ import {
 
 export function OrdersListContainer() {
   const [page, setPage] = useState(1);
-  const { orders, pageInfo, isLoading, hasError, isSignedIn, refetch } =
-    useOrders(page);
+  const {
+    orders,
+    pageInfo,
+    isLoading,
+    isPaging,
+    hasError,
+    isSignedIn,
+    refetch,
+  } = useOrders(page);
+  const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
 
   return (
@@ -52,7 +61,13 @@ export function OrdersListContainer() {
         <EmptyOrders />
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div
+            aria-busy={isPaging}
+            className={cn(
+              "grid gap-4 transition-opacity duration-200 md:grid-cols-2",
+              isPaging && "opacity-60",
+            )}
+          >
             {orders.map((order) => (
               <OrderCard
                 key={order.id}
@@ -79,12 +94,11 @@ export function OrdersListContainer() {
                 Newer
               </Button>
               <span className="text-sm text-muted-foreground tnum">
-                Page {pageInfo.page} of{" "}
-                {Math.ceil(pageInfo.total / pageInfo.limit)}
+                Page {page} of {pageCount}
               </span>
               <Button
                 variant="outline"
-                disabled={!pageInfo.has_more}
+                disabled={page >= pageCount}
                 onClick={() => setPage((current) => current + 1)}
               >
                 Older

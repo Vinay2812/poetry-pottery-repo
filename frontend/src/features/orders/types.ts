@@ -1,4 +1,9 @@
-import { OrderStatus } from "@/graphql/generated/graphql";
+import {
+  type OrderFieldsFragment,
+  OrderStatus,
+} from "@/graphql/generated/graphql";
+
+export type OrderData = OrderFieldsFragment;
 
 export interface StatusStep {
   key: OrderStatus;
@@ -96,4 +101,24 @@ export function toWhatsAppOrderMessage(input: WhatsAppOrderInput): string {
     `Name: ${input.customerName}`,
     "Could you confirm it and share payment details?",
   ].join("\n");
+}
+
+export interface OrderCancellation {
+  reason: string;
+  at: string;
+}
+
+// The reducer behind the optimistic order: what the studio will say once it accepts.
+export function applyOrderCancellation(
+  order: OrderData | null,
+  cancellation: OrderCancellation,
+): OrderData | null {
+  if (!order) return order;
+  return {
+    ...order,
+    status: OrderStatus.Cancelled,
+    can_cancel: false,
+    cancelled_at: cancellation.at,
+    cancel_reason: cancellation.reason.trim() || order.cancel_reason,
+  };
 }
