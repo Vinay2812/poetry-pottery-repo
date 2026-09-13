@@ -1,4 +1,6 @@
-# Temporary stock photos (replace before launch)
+# Temporary stock photos (demo seed only)
+
+Since 2026-09-14 the default local data is the studio's own production catalogue (`pnpm import:legacy`), whose photos live on the studio CDN. The stock photos below are only used by the opt-in demo seed (`pnpm db:seed:demo`); the home hero is now a drawn illustration and needs no photo.
 
 All images below are free, hotlinkable Pexels photos (`images.pexels.com/photos/<id>/pexels-photo-<id>.jpeg`), verified to return HTTP 200 and to show the stated subject. Licence: [Pexels License](https://www.pexels.com/license/) — free for commercial use, no attribution required, but these are stand-ins for the client's own product photography and should be swapped before launch.
 
