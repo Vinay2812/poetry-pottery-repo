@@ -232,6 +232,27 @@ type AdminRegistrationsResult {
   page_info: PageInfo!
 }
 
+type AdminReview {
+  customer: AdminUserRef!
+  is_hidden: Boolean!
+  review: Review!
+  subject_kind: ReviewSubjectKind!
+}
+
+input AdminReviewsFilterInput {
+  is_hidden: Boolean
+  limit: Int
+  page: Int
+  rating: Int
+  search: String
+  subject_kind: ReviewSubjectKind
+}
+
+type AdminReviewsResult {
+  items: [AdminReview!]!
+  page_info: PageInfo!
+}
+
 type AdminUser {
   bookings_count: Int!
   created_at: DateTime!
@@ -570,6 +591,7 @@ type Mutation {
   deleteProductOption(id: Int!): Boolean!
   deleteProductOptionGroup(id: Int!): Boolean!
   deleteReview(id: Int!): Boolean!
+  deleteReviewAsAdmin(id: Int!): Boolean!
   deleteWorkshopBlackout(id: Int!): Boolean!
   deleteWorkshopTier(id: Int!): Boolean!
   markOrderPaid(id: String!): AdminOrder!
@@ -587,6 +609,7 @@ type Mutation {
   setProductActive(id: Int!, is_active: Boolean!): Product!
   setProductFeatured(id: Int!, is_featured: Boolean!): Product!
   setRegistrationStatus(id: String!, reason: String, status: RegistrationStatus!): AdminRegistration!
+  setReviewHidden(id: Int!, is_hidden: Boolean!): AdminReview!
   setUserRole(id: Int!, role: UserRole!): AdminUser!
   setWorkshopBookingStatus(id: String!, reason: String, status: RegistrationStatus!): AdminWorkshopBooking!
   subscribeToNewsletter(email: String!): NewsletterResult!
@@ -786,6 +809,7 @@ type Query {
   adminProduct(id: Int!): Product!
   adminProductOptionGroups(product_id: Int!): [ProductOptionGroup!]!
   adminProducts(filter: AdminProductsFilterInput): AdminProductsResult!
+  adminReviews(filter: AdminReviewsFilterInput): AdminReviewsResult!
   adminUser(id: Int!): AdminUser!
   adminUsers(filter: AdminUsersFilterInput): AdminUsersResult!
   adminWorkshopBlackouts(config_id: Int!): [AdminWorkshopBlackout!]!
@@ -898,6 +922,11 @@ input ReviewInput {
   body: String
   image_urls: [String!]
   rating: Int!
+}
+
+enum ReviewSubjectKind {
+  EVENT
+  PRODUCT
 }
 
 input ReviewUploadInput {
