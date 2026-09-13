@@ -775,11 +775,8 @@ type Mutation {
   createAdminUpload(content_type: String!, purpose: UploadPurpose!, size: Int!): UploadTarget!
   createCategory(input: AdminCategoryInput!): Category!
   createCollection(input: AdminCollectionInput!): Collection!
-<<<<<<< HEAD
   createCommissionRequest(input: CommissionRequestInput!): CommissionRequest!
-=======
   createCoupon(input: AdminCouponInput!): AdminCoupon!
->>>>>>> 250eeb2 (feat: add coupon admin with code and window validation)
   createCustomizationUpload(content_type: String!, size: Int!): UploadTicket!
   createEvent(input: AdminEventInput!): Event!
   createEventReview(event_id: Int!, input: ReviewInput!): Review!
@@ -802,7 +799,6 @@ type Mutation {
   deleteWorkshopBlackout(id: Int!): Boolean!
   deleteWorkshopTier(id: Int!): Boolean!
   markCommissionRequestRead(id: String!): CommissionRequest!
-  markContactMessageRead(id: Int!): ContactMessage!
   markOrderPaid(id: String!): AdminOrder!
   notifyWhenBackInStock(email: String!, product_id: Int!): BatchNotificationResult!
   placeOrder(input: PlaceOrderInput!): Order!
@@ -1072,7 +1068,6 @@ type Query {
   commissionOptions: CommissionOptions!
   commissionPieces(limit: Int = 6): [Product!]!
   commissionRequests(filter: CommissionRequestsFilterInput): CommissionRequestsResult!
-  contactMessages(limit: Int, page: Int): ContactMessagesResult!
   contentPage(slug: String!): ContentPage!
   event(slug: String!): Event!
   eventReviews(event_id: Int!, limit: Int, page: Int): ReviewsResult!

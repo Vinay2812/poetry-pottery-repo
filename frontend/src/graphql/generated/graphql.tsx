@@ -57,6 +57,423 @@ export type AddressInput = {
   state: Scalars['String']['input'];
 };
 
+export type AdminAnnouncementInput = {
+  href?: InputMaybe<Scalars['String']['input']>;
+  text?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminCategoryInput = {
+  icon?: InputMaybe<Scalars['String']['input']>;
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AdminCollectionInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  ends_at?: InputMaybe<Scalars['DateTime']['input']>;
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  starts_at?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type AdminContactFilterInput = {
+  is_read?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminCoupon = {
+  __typename?: 'AdminCoupon';
+  code: Scalars['String']['output'];
+  created_at: Scalars['DateTime']['output'];
+  expires_at?: Maybe<Scalars['DateTime']['output']>;
+  id: Scalars['Int']['output'];
+  is_active: Scalars['Boolean']['output'];
+  kind: CouponKind;
+  max_uses?: Maybe<Scalars['Int']['output']>;
+  min_order: Scalars['Int']['output'];
+  starts_at?: Maybe<Scalars['DateTime']['output']>;
+  uses_count: Scalars['Int']['output'];
+  value: Scalars['Int']['output'];
+};
+
+export type AdminCouponInput = {
+  code: Scalars['String']['input'];
+  expires_at?: InputMaybe<Scalars['DateTime']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  kind: CouponKind;
+  max_uses?: InputMaybe<Scalars['Int']['input']>;
+  min_order?: InputMaybe<Scalars['Int']['input']>;
+  starts_at?: InputMaybe<Scalars['DateTime']['input']>;
+  value: Scalars['Int']['input'];
+};
+
+export type AdminCouponsFilterInput = {
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminCouponsResult = {
+  __typename?: 'AdminCouponsResult';
+  items: Array<AdminCoupon>;
+  page_info: PageInfo;
+};
+
+export type AdminDashboard = {
+  __typename?: 'AdminDashboard';
+  low_stock: Array<AdminLowStockPiece>;
+  orders_by_status: Array<AdminOrderStatusCount>;
+  orders_last_30_days: Scalars['Int']['output'];
+  pending_bookings: Scalars['Int']['output'];
+  pending_registrations: Scalars['Int']['output'];
+  recent_bookings: Array<AdminRecentBooking>;
+  recent_orders: Array<AdminRecentOrder>;
+  revenue_last_30_days: Scalars['Int']['output'];
+  unread_messages: Scalars['Int']['output'];
+};
+
+export type AdminEventInput = {
+  address: Scalars['String']['input'];
+  description: Scalars['String']['input'];
+  ends_at: Scalars['DateTime']['input'];
+  event_type?: InputMaybe<EventType>;
+  gallery?: InputMaybe<Array<Scalars['String']['input']>>;
+  highlights?: InputMaybe<Array<Scalars['String']['input']>>;
+  image_url: Scalars['String']['input'];
+  includes?: InputMaybe<Array<Scalars['String']['input']>>;
+  instructor?: InputMaybe<Scalars['String']['input']>;
+  level?: InputMaybe<EventLevel>;
+  location: Scalars['String']['input'];
+  performers?: InputMaybe<Array<Scalars['String']['input']>>;
+  price: Scalars['Int']['input'];
+  starts_at: Scalars['DateTime']['input'];
+  title: Scalars['String']['input'];
+  total_seats: Scalars['Int']['input'];
+};
+
+export type AdminEventsFilterInput = {
+  event_type?: InputMaybe<EventType>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<EventStatus>;
+};
+
+export type AdminEventsResult = {
+  __typename?: 'AdminEventsResult';
+  items: Array<Event>;
+  page_info: PageInfo;
+};
+
+export type AdminLowStockPiece = {
+  __typename?: 'AdminLowStockPiece';
+  id: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+  stock: Scalars['Int']['output'];
+};
+
+export type AdminOptionGroupInput = {
+  is_required?: InputMaybe<Scalars['Boolean']['input']>;
+  kind?: InputMaybe<OptionGroupKind>;
+  max_length?: InputMaybe<Scalars['Int']['input']>;
+  name: Scalars['String']['input'];
+  price_modifier?: InputMaybe<Scalars['Int']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AdminOptionInput = {
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  name: Scalars['String']['input'];
+  price_modifier?: InputMaybe<Scalars['Int']['input']>;
+  sort_order?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AdminOrder = {
+  __typename?: 'AdminOrder';
+  admin_note?: Maybe<Scalars['String']['output']>;
+  customer: AdminUserRef;
+  next_statuses: Array<OrderStatus>;
+  order: Order;
+};
+
+export type AdminOrderStatusCount = {
+  __typename?: 'AdminOrderStatusCount';
+  count: Scalars['Int']['output'];
+  status: OrderStatus;
+};
+
+export type AdminOrdersFilterInput = {
+  from?: InputMaybe<Scalars['DateTime']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<OrderStatus>;
+  to?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type AdminOrdersResult = {
+  __typename?: 'AdminOrdersResult';
+  items: Array<AdminOrder>;
+  page_info: PageInfo;
+};
+
+export type AdminProductInput = {
+  care_notes?: InputMaybe<Array<Scalars['String']['input']>>;
+  category_ids?: InputMaybe<Array<Scalars['Int']['input']>>;
+  collection_id?: InputMaybe<Scalars['Int']['input']>;
+  color_code?: InputMaybe<Scalars['String']['input']>;
+  color_name?: InputMaybe<Scalars['String']['input']>;
+  compare_at_price?: InputMaybe<Scalars['Int']['input']>;
+  description: Scalars['String']['input'];
+  dimensions?: InputMaybe<Scalars['String']['input']>;
+  image_urls?: InputMaybe<Array<Scalars['String']['input']>>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  is_customizable?: InputMaybe<Scalars['Boolean']['input']>;
+  is_featured?: InputMaybe<Scalars['Boolean']['input']>;
+  material: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  price: Scalars['Int']['input'];
+  stock?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AdminProductUpdateInput = {
+  care_notes?: InputMaybe<Array<Scalars['String']['input']>>;
+  category_ids?: InputMaybe<Array<Scalars['Int']['input']>>;
+  collection_id?: InputMaybe<Scalars['Int']['input']>;
+  color_code?: InputMaybe<Scalars['String']['input']>;
+  color_name?: InputMaybe<Scalars['String']['input']>;
+  compare_at_price?: InputMaybe<Scalars['Int']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  dimensions?: InputMaybe<Scalars['String']['input']>;
+  image_urls?: InputMaybe<Array<Scalars['String']['input']>>;
+  is_customizable?: InputMaybe<Scalars['Boolean']['input']>;
+  material?: InputMaybe<Scalars['String']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  price?: InputMaybe<Scalars['Int']['input']>;
+  stock?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AdminProductsFilterInput = {
+  category_id?: InputMaybe<Scalars['Int']['input']>;
+  collection_id?: InputMaybe<Scalars['Int']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  is_featured?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  low_stock?: InputMaybe<Scalars['Boolean']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminProductsResult = {
+  __typename?: 'AdminProductsResult';
+  items: Array<Product>;
+  page_info: PageInfo;
+};
+
+export type AdminRecentBooking = {
+  __typename?: 'AdminRecentBooking';
+  created_at: Scalars['DateTime']['output'];
+  customer: AdminUserRef;
+  hours: Scalars['Int']['output'];
+  id: Scalars['String']['output'];
+  participants: Scalars['Int']['output'];
+  starts_at: Scalars['DateTime']['output'];
+  status: RegistrationStatus;
+  total: Scalars['Int']['output'];
+};
+
+export type AdminRecentOrder = {
+  __typename?: 'AdminRecentOrder';
+  created_at: Scalars['DateTime']['output'];
+  customer: AdminUserRef;
+  id: Scalars['String']['output'];
+  item_count: Scalars['Int']['output'];
+  status: OrderStatus;
+  total: Scalars['Int']['output'];
+};
+
+export type AdminRegistration = {
+  __typename?: 'AdminRegistration';
+  customer: AdminUserRef;
+  next_statuses: Array<RegistrationStatus>;
+  registration: Registration;
+};
+
+export type AdminRegistrationsFilterInput = {
+  event_id?: InputMaybe<Scalars['Int']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<RegistrationStatus>;
+};
+
+export type AdminRegistrationsResult = {
+  __typename?: 'AdminRegistrationsResult';
+  items: Array<AdminRegistration>;
+  page_info: PageInfo;
+};
+
+export type AdminReview = {
+  __typename?: 'AdminReview';
+  customer: AdminUserRef;
+  is_hidden: Scalars['Boolean']['output'];
+  review: Review;
+  subject_kind: ReviewSubjectKind;
+};
+
+export type AdminReviewsFilterInput = {
+  is_hidden?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  rating?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  subject_kind?: InputMaybe<ReviewSubjectKind>;
+};
+
+export type AdminReviewsResult = {
+  __typename?: 'AdminReviewsResult';
+  items: Array<AdminReview>;
+  page_info: PageInfo;
+};
+
+export type AdminSiteSettingsInput = {
+  address?: InputMaybe<Scalars['String']['input']>;
+  contact_email?: InputMaybe<Scalars['String']['input']>;
+  contact_phone?: InputMaybe<Scalars['String']['input']>;
+  facebook_url?: InputMaybe<Scalars['String']['input']>;
+  free_shipping_above?: InputMaybe<Scalars['Int']['input']>;
+  hero_cta_href?: InputMaybe<Scalars['String']['input']>;
+  hero_cta_text?: InputMaybe<Scalars['String']['input']>;
+  hero_heading?: InputMaybe<Scalars['String']['input']>;
+  hero_image_url?: InputMaybe<Scalars['String']['input']>;
+  hero_subheading?: InputMaybe<Scalars['String']['input']>;
+  instagram_url?: InputMaybe<Scalars['String']['input']>;
+  opening_hours?: InputMaybe<Scalars['String']['input']>;
+  shipping_flat_fee?: InputMaybe<Scalars['Int']['input']>;
+  whatsapp_number?: InputMaybe<Scalars['String']['input']>;
+  youtube_url?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminSubscriber = {
+  __typename?: 'AdminSubscriber';
+  created_at: Scalars['DateTime']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  is_active: Scalars['Boolean']['output'];
+  unsubscribed_at?: Maybe<Scalars['DateTime']['output']>;
+  user_id?: Maybe<Scalars['Int']['output']>;
+};
+
+export type AdminSubscribersFilterInput = {
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminSubscribersResult = {
+  __typename?: 'AdminSubscribersResult';
+  items: Array<AdminSubscriber>;
+  page_info: PageInfo;
+};
+
+export type AdminUser = {
+  __typename?: 'AdminUser';
+  bookings_count: Scalars['Int']['output'];
+  created_at: Scalars['DateTime']['output'];
+  orders_count: Scalars['Int']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
+  registrations_count: Scalars['Int']['output'];
+  reviews_count: Scalars['Int']['output'];
+  role: UserRole;
+  user: AdminUserRef;
+};
+
+export type AdminUserRef = {
+  __typename?: 'AdminUserRef';
+  email: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  image?: Maybe<Scalars['String']['output']>;
+  name?: Maybe<Scalars['String']['output']>;
+};
+
+export type AdminUsersFilterInput = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  role?: InputMaybe<UserRole>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminUsersResult = {
+  __typename?: 'AdminUsersResult';
+  items: Array<AdminUser>;
+  page_info: PageInfo;
+};
+
+export type AdminWorkshopBlackout = {
+  __typename?: 'AdminWorkshopBlackout';
+  config_id: Scalars['Int']['output'];
+  ends_at: Scalars['DateTime']['output'];
+  id: Scalars['Int']['output'];
+  reason?: Maybe<Scalars['String']['output']>;
+  starts_at: Scalars['DateTime']['output'];
+};
+
+export type AdminWorkshopBlackoutInput = {
+  ends_at: Scalars['DateTime']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+  starts_at: Scalars['DateTime']['input'];
+};
+
+export type AdminWorkshopBooking = {
+  __typename?: 'AdminWorkshopBooking';
+  booking: WorkshopBooking;
+  customer: AdminUserRef;
+  next_statuses: Array<RegistrationStatus>;
+};
+
+export type AdminWorkshopBookingsFilterInput = {
+  config_id?: InputMaybe<Scalars['Int']['input']>;
+  from?: InputMaybe<Scalars['DateTime']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<RegistrationStatus>;
+  to?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type AdminWorkshopBookingsResult = {
+  __typename?: 'AdminWorkshopBookingsResult';
+  items: Array<AdminWorkshopBooking>;
+  page_info: PageInfo;
+};
+
+export type AdminWorkshopConfigInput = {
+  booking_window_days?: InputMaybe<Scalars['Int']['input']>;
+  capacity_per_slot?: InputMaybe<Scalars['Int']['input']>;
+  closed_weekdays?: InputMaybe<Array<Scalars['Int']['input']>>;
+  closing_minutes?: InputMaybe<Scalars['Int']['input']>;
+  description?: InputMaybe<Scalars['String']['input']>;
+  image_url?: InputMaybe<Scalars['String']['input']>;
+  is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  opening_minutes?: InputMaybe<Scalars['Int']['input']>;
+  slot_minutes?: InputMaybe<Scalars['Int']['input']>;
+  slot_span_days?: InputMaybe<Scalars['Int']['input']>;
+  timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminWorkshopTierInput = {
+  hours: Scalars['Int']['input'];
+  pieces_per_person: Scalars['Int']['input'];
+  price_per_person: Scalars['Int']['input'];
+};
+
 export type BatchNotificationResult = {
   __typename?: 'BatchNotificationResult';
   email: Scalars['String']['output'];
@@ -211,6 +628,15 @@ export type CommissionRequestsResult = {
   page_info: PageInfo;
 };
 
+export type ConfirmedImage = {
+  __typename?: 'ConfirmedImage';
+  bytes: Scalars['Int']['output'];
+  height: Scalars['Int']['output'];
+  key: Scalars['String']['output'];
+  public_url: Scalars['String']['output'];
+  width: Scalars['Int']['output'];
+};
+
 export type ContactMessage = {
   __typename?: 'ContactMessage';
   created_at: Scalars['DateTime']['output'];
@@ -286,6 +712,11 @@ export type ContentSectionItemInput = {
   body: Scalars['String']['input'];
   title: Scalars['String']['input'];
 };
+
+export enum CouponKind {
+  Fixed = 'FIXED',
+  Percent = 'PERCENT'
+}
 
 export type Event = {
   __typename?: 'Event';
@@ -374,41 +805,102 @@ export type Glaze = {
   variation_note?: Maybe<Scalars['String']['output']>;
 };
 
+export type ImageSpec = {
+  __typename?: 'ImageSpec';
+  content_types: Array<Scalars['String']['output']>;
+  max_bytes: Scalars['Int']['output'];
+  min_height: Scalars['Int']['output'];
+  min_width: Scalars['Int']['output'];
+  purpose: UploadPurpose;
+  ratio?: Maybe<Scalars['Float']['output']>;
+  ratio_label: Scalars['String']['output'];
+  renders_at: Scalars['String']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addOrderNote: Order;
   addToCart: Cart;
+  adjustProductStock: Product;
   bookStudioVisit: StudioVisit;
   bookWorkshop: WorkshopBooking;
+  cancelEvent: Event;
   cancelOrder: Order;
+  cancelOrderAsAdmin: AdminOrder;
   cancelRegistration: Registration;
   cancelWorkshopBooking: WorkshopBooking;
   clearCart: Cart;
+  completeEvent: Event;
+  confirmUpload: ConfirmedImage;
   createAddress: Address;
+  createAdminUpload: UploadTarget;
+  createCategory: Category;
+  createCollection: Collection;
   createCommissionRequest: CommissionRequest;
+  createCoupon: AdminCoupon;
   createCustomizationUpload: UploadTicket;
+  createEvent: Event;
   createEventReview: Review;
+  createProduct: Product;
+  createProductOption: ProductOptionGroup;
+  createProductOptionGroup: ProductOptionGroup;
   createProductReview: Review;
   createReviewImageUpload: UploadTarget;
+  createWorkshopBlackout: AdminWorkshopBlackout;
   deleteAddress: Scalars['Boolean']['output'];
+  deleteCategory: Scalars['Boolean']['output'];
+  deleteCollection: Scalars['Boolean']['output'];
+  deleteContactMessage: Scalars['Boolean']['output'];
+  deleteContentPage: Scalars['Boolean']['output'];
+  deleteCoupon: Scalars['Boolean']['output'];
+  deleteProductOption: Scalars['Boolean']['output'];
+  deleteProductOptionGroup: Scalars['Boolean']['output'];
   deleteReview: Scalars['Boolean']['output'];
+  deleteReviewAsAdmin: Scalars['Boolean']['output'];
+  deleteWorkshopBlackout: Scalars['Boolean']['output'];
+  deleteWorkshopTier: Scalars['Boolean']['output'];
   markCommissionRequestRead: CommissionRequest;
-  markContactMessageRead: ContactMessage;
+  markOrderPaid: AdminOrder;
   notifyWhenBackInStock: BatchNotificationResult;
   placeOrder: Order;
+  publishEvent: Event;
   registerForEvent: Registration;
   removeCartItem: Cart;
+  reorderProductImages: Product;
   rescheduleWorkshopBooking: WorkshopBooking;
+  saveContentPage: ContentPage;
+  saveWorkshopTier: WorkshopConfig;
   sendContactMessage: Scalars['Boolean']['output'];
+  setContactMessageRead: ContactMessage;
   setDefaultAddress: Address;
+  setOrderAdminNote: AdminOrder;
+  setOrderStatus: AdminOrder;
+  setProductActive: Product;
+  setProductFeatured: Product;
+  setRegistrationStatus: AdminRegistration;
+  setReviewHidden: AdminReview;
+  setUserRole: AdminUser;
+  setWorkshopBookingStatus: AdminWorkshopBooking;
   stopBatchNotification: Scalars['Boolean']['output'];
   subscribeToNewsletter: NewsletterResult;
   toggleWishlist: WishlistToggleResult;
+  unpublishEvent: Event;
   unsubscribeFromNewsletter: Scalars['Boolean']['output'];
+  unsubscribeSubscriber: Scalars['Boolean']['output'];
   updateAddress: Address;
+  updateAnnouncement: SiteSettings;
   updateCartItem: Cart;
-  updateContentPage: ContentPage;
+  updateCategory: Category;
+  updateCollection: Collection;
+  updateCoupon: AdminCoupon;
+  updateEvent: Event;
+  updateProduct: Product;
+  updateProductOption: ProductOptionGroup;
+  updateProductOptionGroup: ProductOptionGroup;
   updateReview: Review;
+  updateSiteSettings: SiteSettings;
+  updateWorkshopBlackout: AdminWorkshopBlackout;
+  updateWorkshopConfig: WorkshopConfig;
 };
 
 
@@ -422,6 +914,13 @@ export type MutationAddToCartArgs = {
 };
 
 
+export type MutationAdjustProductStockArgs = {
+  delta: Scalars['Int']['input'];
+  id: Scalars['Int']['input'];
+  reason: Scalars['String']['input'];
+};
+
+
 export type MutationBookStudioVisitArgs = {
   input: StudioVisitInput;
 };
@@ -432,7 +931,19 @@ export type MutationBookWorkshopArgs = {
 };
 
 
+export type MutationCancelEventArgs = {
+  id: Scalars['Int']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationCancelOrderArgs = {
+  id: Scalars['String']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationCancelOrderAsAdminArgs = {
   id: Scalars['String']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
 };
@@ -450,13 +961,46 @@ export type MutationCancelWorkshopBookingArgs = {
 };
 
 
+export type MutationCompleteEventArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationConfirmUploadArgs = {
+  key: Scalars['String']['input'];
+  purpose: UploadPurpose;
+};
+
+
 export type MutationCreateAddressArgs = {
   input: AddressInput;
 };
 
 
+export type MutationCreateAdminUploadArgs = {
+  content_type: Scalars['String']['input'];
+  purpose: UploadPurpose;
+  size: Scalars['Int']['input'];
+};
+
+
+export type MutationCreateCategoryArgs = {
+  input: AdminCategoryInput;
+};
+
+
+export type MutationCreateCollectionArgs = {
+  input: AdminCollectionInput;
+};
+
+
 export type MutationCreateCommissionRequestArgs = {
   input: CommissionRequestInput;
+};
+
+
+export type MutationCreateCouponArgs = {
+  input: AdminCouponInput;
 };
 
 
@@ -466,9 +1010,31 @@ export type MutationCreateCustomizationUploadArgs = {
 };
 
 
+export type MutationCreateEventArgs = {
+  input: AdminEventInput;
+};
+
+
 export type MutationCreateEventReviewArgs = {
   event_id: Scalars['Int']['input'];
   input: ReviewInput;
+};
+
+
+export type MutationCreateProductArgs = {
+  input: AdminProductInput;
+};
+
+
+export type MutationCreateProductOptionArgs = {
+  group_id: Scalars['Int']['input'];
+  input: AdminOptionInput;
+};
+
+
+export type MutationCreateProductOptionGroupArgs = {
+  input: AdminOptionGroupInput;
+  product_id: Scalars['Int']['input'];
 };
 
 
@@ -483,7 +1049,48 @@ export type MutationCreateReviewImageUploadArgs = {
 };
 
 
+export type MutationCreateWorkshopBlackoutArgs = {
+  config_id: Scalars['Int']['input'];
+  input: AdminWorkshopBlackoutInput;
+};
+
+
 export type MutationDeleteAddressArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationDeleteCategoryArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationDeleteCollectionArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationDeleteContactMessageArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationDeleteContentPageArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type MutationDeleteCouponArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationDeleteProductOptionArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationDeleteProductOptionGroupArgs = {
   id: Scalars['Int']['input'];
 };
 
@@ -493,13 +1100,28 @@ export type MutationDeleteReviewArgs = {
 };
 
 
+export type MutationDeleteReviewAsAdminArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationDeleteWorkshopBlackoutArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationDeleteWorkshopTierArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
 export type MutationMarkCommissionRequestReadArgs = {
   id: Scalars['String']['input'];
 };
 
 
-export type MutationMarkContactMessageReadArgs = {
-  id: Scalars['Int']['input'];
+export type MutationMarkOrderPaidArgs = {
+  id: Scalars['String']['input'];
 };
 
 
@@ -514,6 +1136,11 @@ export type MutationPlaceOrderArgs = {
 };
 
 
+export type MutationPublishEventArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
 export type MutationRegisterForEventArgs = {
   input: RegisterForEventInput;
 };
@@ -524,8 +1151,26 @@ export type MutationRemoveCartItemArgs = {
 };
 
 
+export type MutationReorderProductImagesArgs = {
+  id: Scalars['Int']['input'];
+  image_urls: Array<Scalars['String']['input']>;
+};
+
+
 export type MutationRescheduleWorkshopBookingArgs = {
   input: RescheduleWorkshopInput;
+};
+
+
+export type MutationSaveContentPageArgs = {
+  input: ContentPageInput;
+  slug: Scalars['String']['input'];
+};
+
+
+export type MutationSaveWorkshopTierArgs = {
+  config_id: Scalars['Int']['input'];
+  input: AdminWorkshopTierInput;
 };
 
 
@@ -534,8 +1179,66 @@ export type MutationSendContactMessageArgs = {
 };
 
 
+export type MutationSetContactMessageReadArgs = {
+  id: Scalars['Int']['input'];
+  is_read: Scalars['Boolean']['input'];
+};
+
+
 export type MutationSetDefaultAddressArgs = {
   id: Scalars['Int']['input'];
+};
+
+
+export type MutationSetOrderAdminNoteArgs = {
+  id: Scalars['String']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationSetOrderStatusArgs = {
+  cancel_reason?: InputMaybe<Scalars['String']['input']>;
+  id: Scalars['String']['input'];
+  status: OrderStatus;
+  tracking_note?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationSetProductActiveArgs = {
+  id: Scalars['Int']['input'];
+  is_active: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetProductFeaturedArgs = {
+  id: Scalars['Int']['input'];
+  is_featured: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetRegistrationStatusArgs = {
+  id: Scalars['String']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+  status: RegistrationStatus;
+};
+
+
+export type MutationSetReviewHiddenArgs = {
+  id: Scalars['Int']['input'];
+  is_hidden: Scalars['Boolean']['input'];
+};
+
+
+export type MutationSetUserRoleArgs = {
+  id: Scalars['Int']['input'];
+  role: UserRole;
+};
+
+
+export type MutationSetWorkshopBookingStatusArgs = {
+  id: Scalars['String']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+  status: RegistrationStatus;
 };
 
 
@@ -554,8 +1257,18 @@ export type MutationToggleWishlistArgs = {
 };
 
 
+export type MutationUnpublishEventArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
 export type MutationUnsubscribeFromNewsletterArgs = {
   token: Scalars['String']['input'];
+};
+
+
+export type MutationUnsubscribeSubscriberArgs = {
+  email: Scalars['String']['input'];
 };
 
 
@@ -565,21 +1278,79 @@ export type MutationUpdateAddressArgs = {
 };
 
 
+export type MutationUpdateAnnouncementArgs = {
+  input: AdminAnnouncementInput;
+};
+
+
 export type MutationUpdateCartItemArgs = {
   id: Scalars['Int']['input'];
   quantity: Scalars['Int']['input'];
 };
 
 
-export type MutationUpdateContentPageArgs = {
-  input: ContentPageInput;
-  slug: Scalars['String']['input'];
+export type MutationUpdateCategoryArgs = {
+  id: Scalars['Int']['input'];
+  input: AdminCategoryInput;
+};
+
+
+export type MutationUpdateCollectionArgs = {
+  id: Scalars['Int']['input'];
+  input: AdminCollectionInput;
+};
+
+
+export type MutationUpdateCouponArgs = {
+  id: Scalars['Int']['input'];
+  input: AdminCouponInput;
+};
+
+
+export type MutationUpdateEventArgs = {
+  id: Scalars['Int']['input'];
+  input: AdminEventInput;
+};
+
+
+export type MutationUpdateProductArgs = {
+  id: Scalars['Int']['input'];
+  input: AdminProductUpdateInput;
+};
+
+
+export type MutationUpdateProductOptionArgs = {
+  id: Scalars['Int']['input'];
+  input: AdminOptionInput;
+};
+
+
+export type MutationUpdateProductOptionGroupArgs = {
+  id: Scalars['Int']['input'];
+  input: AdminOptionGroupInput;
 };
 
 
 export type MutationUpdateReviewArgs = {
   id: Scalars['Int']['input'];
   input: ReviewInput;
+};
+
+
+export type MutationUpdateSiteSettingsArgs = {
+  input: AdminSiteSettingsInput;
+};
+
+
+export type MutationUpdateWorkshopBlackoutArgs = {
+  id: Scalars['Int']['input'];
+  input: AdminWorkshopBlackoutInput;
+};
+
+
+export type MutationUpdateWorkshopConfigArgs = {
+  id: Scalars['Int']['input'];
+  input: AdminWorkshopConfigInput;
 };
 
 export type NewsletterResult = {
@@ -736,8 +1507,10 @@ export type ProductFacets = {
 export type ProductOption = {
   __typename?: 'ProductOption';
   id: Scalars['Int']['output'];
+  is_active: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   price_modifier: Scalars['Int']['output'];
+  sort_order: Scalars['Int']['output'];
 };
 
 export type ProductOptionGroup = {
@@ -749,6 +1522,7 @@ export type ProductOptionGroup = {
   name: Scalars['String']['output'];
   options: Array<ProductOption>;
   price_modifier: Scalars['Int']['output'];
+  sort_order: Scalars['Int']['output'];
 };
 
 export enum ProductSort {
@@ -787,6 +1561,28 @@ export type ProductsResult = {
 export type Query = {
   __typename?: 'Query';
   addresses: Array<Address>;
+  adminCategories: Array<Category>;
+  adminCollections: Array<Collection>;
+  adminContactMessages: ContactMessagesResult;
+  adminContentPage: ContentPage;
+  adminContentPages: Array<ContentPageSummary>;
+  adminCoupons: AdminCouponsResult;
+  adminDashboard: AdminDashboard;
+  adminEvent: Event;
+  adminEventRegistrations: AdminRegistrationsResult;
+  adminEvents: AdminEventsResult;
+  adminNewsletterSubscribers: AdminSubscribersResult;
+  adminOrder: AdminOrder;
+  adminOrders: AdminOrdersResult;
+  adminProduct: Product;
+  adminProductOptionGroups: Array<ProductOptionGroup>;
+  adminProducts: AdminProductsResult;
+  adminReviews: AdminReviewsResult;
+  adminUser: AdminUser;
+  adminUsers: AdminUsersResult;
+  adminWorkshopBlackouts: Array<AdminWorkshopBlackout>;
+  adminWorkshopBookings: AdminWorkshopBookingsResult;
+  adminWorkshopConfigs: Array<WorkshopConfig>;
   cart: Cart;
   cartCount: Scalars['Int']['output'];
   categories: Array<Category>;
@@ -796,15 +1592,15 @@ export type Query = {
   commissionOptions: CommissionOptions;
   commissionPieces: Array<Product>;
   commissionRequests: CommissionRequestsResult;
-  contactMessages: ContactMessagesResult;
   contentPage: ContentPage;
-  contentPages: Array<ContentPageSummary>;
   event: Event;
   eventReviews: ReviewsResult;
   events: EventsResult;
+  exportNewsletterSubscribers: Scalars['String']['output'];
   featuredProducts: Array<Product>;
   glaze: Glaze;
   glazes: Array<Glaze>;
+  imageSpecs: Array<ImageSpec>;
   myRegistrations: RegistrationsResult;
   myWorkshopBookings: WorkshopBookingsResult;
   newsletterStatus: NewsletterStatus;
@@ -820,13 +1616,97 @@ export type Query = {
   studioVisitAvailability: Array<VisitDay>;
   suggest: Suggestions;
   upcomingEvents: Array<Event>;
-  users: UsersResponse;
   wishlist: Array<Product>;
   wishlistIds: Array<Scalars['Int']['output']>;
   workshop: WorkshopConfig;
   workshopAvailability: Array<WorkshopDay>;
   workshopBooking: WorkshopBooking;
   workshops: Array<WorkshopConfig>;
+};
+
+
+export type QueryAdminContactMessagesArgs = {
+  filter?: InputMaybe<AdminContactFilterInput>;
+};
+
+
+export type QueryAdminContentPageArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryAdminCouponsArgs = {
+  filter?: InputMaybe<AdminCouponsFilterInput>;
+};
+
+
+export type QueryAdminEventArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type QueryAdminEventRegistrationsArgs = {
+  filter?: InputMaybe<AdminRegistrationsFilterInput>;
+};
+
+
+export type QueryAdminEventsArgs = {
+  filter?: InputMaybe<AdminEventsFilterInput>;
+};
+
+
+export type QueryAdminNewsletterSubscribersArgs = {
+  filter?: InputMaybe<AdminSubscribersFilterInput>;
+};
+
+
+export type QueryAdminOrderArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryAdminOrdersArgs = {
+  filter?: InputMaybe<AdminOrdersFilterInput>;
+};
+
+
+export type QueryAdminProductArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type QueryAdminProductOptionGroupsArgs = {
+  product_id: Scalars['Int']['input'];
+};
+
+
+export type QueryAdminProductsArgs = {
+  filter?: InputMaybe<AdminProductsFilterInput>;
+};
+
+
+export type QueryAdminReviewsArgs = {
+  filter?: InputMaybe<AdminReviewsFilterInput>;
+};
+
+
+export type QueryAdminUserArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type QueryAdminUsersArgs = {
+  filter?: InputMaybe<AdminUsersFilterInput>;
+};
+
+
+export type QueryAdminWorkshopBlackoutsArgs = {
+  config_id: Scalars['Int']['input'];
+};
+
+
+export type QueryAdminWorkshopBookingsArgs = {
+  filter?: InputMaybe<AdminWorkshopBookingsFilterInput>;
 };
 
 
@@ -856,12 +1736,6 @@ export type QueryCommissionRequestsArgs = {
 };
 
 
-export type QueryContactMessagesArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  page?: InputMaybe<Scalars['Int']['input']>;
-};
-
-
 export type QueryContentPageArgs = {
   slug: Scalars['String']['input'];
 };
@@ -881,6 +1755,11 @@ export type QueryEventReviewsArgs = {
 
 export type QueryEventsArgs = {
   filter?: InputMaybe<EventsFilterInput>;
+};
+
+
+export type QueryExportNewsletterSubscribersArgs = {
+  filter?: InputMaybe<AdminSubscribersFilterInput>;
 };
 
 
@@ -963,12 +1842,6 @@ export type QuerySuggestArgs = {
 
 export type QueryUpcomingEventsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
-};
-
-
-export type QueryUsersArgs = {
-  limit?: InputMaybe<Scalars['Int']['input']>;
-  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -1068,6 +1941,11 @@ export type ReviewInput = {
   image_urls?: InputMaybe<Array<Scalars['String']['input']>>;
   rating: Scalars['Int']['input'];
 };
+
+export enum ReviewSubjectKind {
+  Event = 'EVENT',
+  Product = 'PRODUCT'
+}
 
 export type ReviewUploadInput = {
   content_type: Scalars['String']['input'];
@@ -1175,6 +2053,16 @@ export type Suggestions = {
   workshops: Array<SuggestedWorkshop>;
 };
 
+export enum UploadPurpose {
+  Category = 'CATEGORY',
+  Collection = 'COLLECTION',
+  Content = 'CONTENT',
+  Event = 'EVENT',
+  Hero = 'HERO',
+  Product = 'PRODUCT',
+  Review = 'REVIEW'
+}
+
 export type UploadTarget = {
   __typename?: 'UploadTarget';
   key: Scalars['String']['output'];
@@ -1189,31 +2077,10 @@ export type UploadTicket = {
   upload_url: Scalars['String']['output'];
 };
 
-export type User = {
-  __typename?: 'User';
-  auth_id: Scalars['String']['output'];
-  created_at: Scalars['DateTime']['output'];
-  email: Scalars['String']['output'];
-  id: Scalars['Int']['output'];
-  image?: Maybe<Scalars['String']['output']>;
-  name?: Maybe<Scalars['String']['output']>;
-  phone?: Maybe<Scalars['String']['output']>;
-  role: UserRole;
-  updated_at: Scalars['DateTime']['output'];
-};
-
 export enum UserRole {
   Admin = 'ADMIN',
   User = 'USER'
 }
-
-export type UsersResponse = {
-  __typename?: 'UsersResponse';
-  items: Array<User>;
-  limit: Scalars['Int']['output'];
-  page: Scalars['Int']['output'];
-  total: Scalars['Int']['output'];
-};
 
 export type VisitDay = {
   __typename?: 'VisitDay';
@@ -1292,6 +2159,7 @@ export type WorkshopConfig = {
   description?: Maybe<Scalars['String']['output']>;
   id: Scalars['Int']['output'];
   image_url?: Maybe<Scalars['String']['output']>;
+  is_active: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   opening_minutes: Scalars['Int']['output'];
   slot_minutes: Scalars['Int']['output'];
