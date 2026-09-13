@@ -84,6 +84,7 @@ const meta = {
     gallery: [],
     isPast: false,
     reserveBox,
+    reviews: null,
   },
 } satisfies Meta<typeof EventDetail>;
 

@@ -2,6 +2,7 @@ import { formatDate, formatInr } from "@/lib/format";
 import {
   getCategories,
   getFeaturedProducts,
+  getRecentReviews,
   getUpcomingEvents,
 } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
@@ -9,6 +10,7 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 import { Reveal } from "@/components/motion/Reveal";
 
 import { AboutBlock, EventRow, HomeHero, HomeSection } from "@/features/home";
+import { ReviewColumn, toOneLine } from "@/features/reviews";
 import { toEventPath, toSeatsLabel } from "@/features/events";
 import {
   CategoryTile,
@@ -18,12 +20,14 @@ import {
 } from "@/features/products";
 
 export default async function HomePage() {
-  const [settings, categories, featured, upcomingEvents] = await Promise.all([
-    getSiteSettings(),
-    getCategories(),
-    getFeaturedProducts(8),
-    getUpcomingEvents(3),
-  ]);
+  const [settings, categories, featured, upcomingEvents, recentReviews] =
+    await Promise.all([
+      getSiteSettings(),
+      getCategories(),
+      getFeaturedProducts(8),
+      getUpcomingEvents(3),
+      getRecentReviews(3),
+    ]);
   const customPiece =
     featured.find((product) => product.is_customizable) ?? null;
 
@@ -103,6 +107,23 @@ export default async function HomePage() {
                   event.total_seats,
                 )}
                 isSoldOut={event.available_seats <= 0}
+              />
+            ))}
+          </div>
+        </HomeSection>
+      )}
+
+      {recentReviews.length > 0 && (
+        <HomeSection title="From the table">
+          <div className="grid gap-6 md:grid-cols-3 md:gap-0">
+            {recentReviews.map((review) => (
+              <ReviewColumn
+                key={review.id}
+                authorName={review.author.name}
+                rating={review.rating}
+                line={toOneLine(review.body)}
+                subjectName={review.subject_name}
+                href={review.subject_href}
               />
             ))}
           </div>

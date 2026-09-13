@@ -3,6 +3,8 @@
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 
+import { RegistrationStatus } from "@/graphql/generated/graphql";
+
 import { formatDate, formatDateTime, formatInr } from "@/lib/format";
 
 import { SignInWall } from "@/features/auth/components/SignInWall";
@@ -26,6 +28,7 @@ import {
   toWhatsAppBookingMessage,
 } from "@/features/events/types";
 import { buildWhatsAppUrl } from "@/features/layout/types";
+import { ReviewActionContainer } from "@/features/reviews";
 
 export interface RegistrationDetailContainerProps {
   registrationId: string;
@@ -126,6 +129,11 @@ export function RegistrationDetailContainer({
       )
     : null;
 
+  // Only a seat that was taken at a finished session can carry a review.
+  const canReview =
+    optimisticRegistration.status === RegistrationStatus.Confirmed &&
+    event.is_past;
+
   const facts: EventFact[] = [
     { label: "Kind", value: toEventTypeLabel(event.event_type) },
     { label: "Date", value: formatDate(event.starts_at) },
@@ -164,6 +172,16 @@ export function RegistrationDetailContainer({
         whatsappUrl={whatsappUrl}
         canCancel={optimisticRegistration.can_cancel}
         isCancelling={isCancelling}
+        reviewAction={
+          canReview ? (
+            <ReviewActionContainer
+              kind="event"
+              subjectId={event.id}
+              slug={event.slug}
+              subjectName={event.title}
+            />
+          ) : null
+        }
         onCancel={() => setIsCancelOpen(true)}
       />
       <CancelRegistrationDialog
