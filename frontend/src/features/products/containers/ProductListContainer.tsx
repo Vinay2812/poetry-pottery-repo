@@ -3,6 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
+  useDeferredValue,
   useEffect,
   useMemo,
   useOptimistic,
@@ -86,8 +87,6 @@ export function ProductListContainer({
   const pageInfo = result?.page_info;
   const facets = result?.facets;
   const isInitialLoading = loading && !result;
-  // Results stay on screen while a new page loads; only their opacity says so.
-  const isBusy = isPending || (loading && Boolean(result) && !isAppending);
 
   const toHref = useCallback(
     (next: Filters) => {
@@ -130,6 +129,14 @@ export function ProductListContainer({
     searchDraft !== null && searchDraft.trim() !== filters.search
       ? searchDraft
       : filters.search;
+  // The field paints on every keystroke; the results follow this copy at a lower priority.
+  const deferredSearchValue = useDeferredValue(searchValue);
+  const isSearchSettling = deferredSearchValue.trim() !== filters.search;
+  // Results stay on screen while a new page loads; only their opacity says so.
+  const isBusy =
+    isPending ||
+    isSearchSettling ||
+    (loading && Boolean(result) && !isAppending);
   useEffect(
     () => () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
