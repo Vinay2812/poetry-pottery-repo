@@ -89,3 +89,30 @@ export function withDefaultOn(
     })),
   );
 }
+
+// Mirrors the server: deleting the default promotes the newest address that is left.
+export function afterDelete(
+  addresses: readonly SavedAddress[],
+  id: number,
+): SavedAddress[] {
+  const wasDefault =
+    addresses.find((address) => address.id === id)?.is_default ?? false;
+  const remaining = addresses.filter((address) => address.id !== id);
+  const promoted = remaining[0];
+  return wasDefault && promoted
+    ? withDefaultOn(remaining, promoted.id)
+    : remaining;
+}
+
+export type AddressAction =
+  { kind: "delete"; id: number } | { kind: "default"; id: number };
+
+// The reducer behind the optimistic address list.
+export function applyAddressAction(
+  addresses: readonly SavedAddress[],
+  action: AddressAction,
+): SavedAddress[] {
+  return action.kind === "delete"
+    ? afterDelete(addresses, action.id)
+    : withDefaultOn(addresses, action.id);
+}
