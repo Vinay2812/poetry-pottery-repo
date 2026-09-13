@@ -19,17 +19,12 @@ export function LoadMore({
 }: LoadMoreProps) {
   if (!hasMore && loadedCount === 0) return null;
   return (
-    <div className="flex flex-col items-center gap-3 py-8">
-      <p className="text-xs text-muted-foreground">
+    <div className="flex flex-col items-center gap-4 border-t border-ash py-10">
+      <p className="text-[13px] text-muted-foreground tnum">
         Showing {loadedCount} of {total}
       </p>
       {hasMore && (
-        <Button
-          variant="outline"
-          className="rounded-full"
-          onClick={onLoadMore}
-          disabled={isLoading}
-        >
+        <Button variant="outline" onClick={onLoadMore} disabled={isLoading}>
           {isLoading ? "Loading…" : "Show more pieces"}
         </Button>
       )}

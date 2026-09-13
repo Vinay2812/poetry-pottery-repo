@@ -143,6 +143,82 @@ export type CollectionRef = {
   slug: Scalars['String']['output'];
 };
 
+export type ContactMessage = {
+  __typename?: 'ContactMessage';
+  created_at: Scalars['DateTime']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  is_read: Scalars['Boolean']['output'];
+  message: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
+  subject?: Maybe<Scalars['String']['output']>;
+};
+
+export type ContactMessageInput = {
+  email: Scalars['String']['input'];
+  message: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  phone?: InputMaybe<Scalars['String']['input']>;
+  subject?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ContactMessagesResult = {
+  __typename?: 'ContactMessagesResult';
+  items: Array<ContactMessage>;
+  page_info: PageInfo;
+};
+
+export type ContentPage = {
+  __typename?: 'ContentPage';
+  hero_image_url?: Maybe<Scalars['String']['output']>;
+  is_published: Scalars['Boolean']['output'];
+  sections: Array<ContentSection>;
+  slug: Scalars['String']['output'];
+  subtitle?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+  updated_at: Scalars['DateTime']['output'];
+};
+
+export type ContentPageInput = {
+  hero_image_url?: InputMaybe<Scalars['String']['input']>;
+  is_published?: InputMaybe<Scalars['Boolean']['input']>;
+  sections: Array<ContentSectionInput>;
+  subtitle?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+};
+
+export type ContentPageSummary = {
+  __typename?: 'ContentPageSummary';
+  is_published: Scalars['Boolean']['output'];
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type ContentSection = {
+  __typename?: 'ContentSection';
+  body: Scalars['String']['output'];
+  heading: Scalars['String']['output'];
+  items: Array<ContentSectionItem>;
+};
+
+export type ContentSectionInput = {
+  body: Scalars['String']['input'];
+  heading: Scalars['String']['input'];
+  items?: InputMaybe<Array<ContentSectionItemInput>>;
+};
+
+export type ContentSectionItem = {
+  __typename?: 'ContentSectionItem';
+  body: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type ContentSectionItemInput = {
+  body: Scalars['String']['input'];
+  title: Scalars['String']['input'];
+};
+
 export type Event = {
   __typename?: 'Event';
   address: Scalars['String']['output'];
@@ -227,14 +303,19 @@ export type Mutation = {
   clearCart: Cart;
   createAddress: Address;
   deleteAddress: Scalars['Boolean']['output'];
+  markContactMessageRead: ContactMessage;
   placeOrder: Order;
   registerForEvent: Registration;
   removeCartItem: Cart;
   rescheduleWorkshopBooking: WorkshopBooking;
+  sendContactMessage: Scalars['Boolean']['output'];
   setDefaultAddress: Address;
+  subscribeToNewsletter: NewsletterResult;
   toggleWishlist: WishlistToggleResult;
+  unsubscribeFromNewsletter: Scalars['Boolean']['output'];
   updateAddress: Address;
   updateCartItem: Cart;
+  updateContentPage: ContentPage;
 };
 
 
@@ -276,6 +357,11 @@ export type MutationDeleteAddressArgs = {
 };
 
 
+export type MutationMarkContactMessageReadArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
 export type MutationPlaceOrderArgs = {
   input: PlaceOrderInput;
 };
@@ -296,13 +382,28 @@ export type MutationRescheduleWorkshopBookingArgs = {
 };
 
 
+export type MutationSendContactMessageArgs = {
+  input: ContactMessageInput;
+};
+
+
 export type MutationSetDefaultAddressArgs = {
   id: Scalars['Int']['input'];
 };
 
 
+export type MutationSubscribeToNewsletterArgs = {
+  email: Scalars['String']['input'];
+};
+
+
 export type MutationToggleWishlistArgs = {
   product_id: Scalars['Int']['input'];
+};
+
+
+export type MutationUnsubscribeFromNewsletterArgs = {
+  token: Scalars['String']['input'];
 };
 
 
@@ -315,6 +416,25 @@ export type MutationUpdateAddressArgs = {
 export type MutationUpdateCartItemArgs = {
   id: Scalars['Int']['input'];
   quantity: Scalars['Int']['input'];
+};
+
+
+export type MutationUpdateContentPageArgs = {
+  input: ContentPageInput;
+  slug: Scalars['String']['input'];
+};
+
+export type NewsletterResult = {
+  __typename?: 'NewsletterResult';
+  email: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+  was_already_subscribed: Scalars['Boolean']['output'];
+};
+
+export type NewsletterStatus = {
+  __typename?: 'NewsletterStatus';
+  email?: Maybe<Scalars['String']['output']>;
+  is_subscribed: Scalars['Boolean']['output'];
 };
 
 export enum OptionGroupKind {
@@ -481,11 +601,15 @@ export type Query = {
   checkoutQuote: CheckoutQuote;
   collection: Collection;
   collections: Array<Collection>;
+  contactMessages: ContactMessagesResult;
+  contentPage: ContentPage;
+  contentPages: Array<ContentPageSummary>;
   event: Event;
   events: EventsResult;
   featuredProducts: Array<Product>;
   myRegistrations: RegistrationsResult;
   myWorkshopBookings: WorkshopBookingsResult;
+  newsletterStatus: NewsletterStatus;
   order: Order;
   orders: OrdersResult;
   product: Product;
@@ -510,6 +634,17 @@ export type QueryCheckoutQuoteArgs = {
 
 
 export type QueryCollectionArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryContactMessagesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryContentPageArgs = {
   slug: Scalars['String']['input'];
 };
 
@@ -863,6 +998,34 @@ export type ClearCartMutationVariables = Exact<{ [key: string]: never; }>;
 
 
 export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+
+export type ContentPageQueryVariables = Exact<{
+  slug: string;
+}>;
+
+
+export type ContentPageQuery = { contentPage: { slug: string, title: string, subtitle: string | null, hero_image_url: string | null, is_published: boolean, updated_at: string, sections: Array<{ heading: string, body: string, items: Array<{ title: string, body: string }> }> } };
+
+export type SendContactMessageMutationVariables = Exact<{
+  input: ContactMessageInput;
+}>;
+
+
+export type SendContactMessageMutation = { sendContactMessage: boolean };
+
+export type SubscribeToNewsletterMutationVariables = Exact<{
+  email: string;
+}>;
+
+
+export type SubscribeToNewsletterMutation = { subscribeToNewsletter: { email: string, is_active: boolean, was_already_subscribed: boolean } };
+
+export type UnsubscribeFromNewsletterMutationVariables = Exact<{
+  token: string;
+}>;
+
+
+export type UnsubscribeFromNewsletterMutation = { unsubscribeFromNewsletter: boolean };
 
 export type EventCardFragment = { id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean };
 
@@ -1619,6 +1782,145 @@ export function useClearCartMutation(baseOptions?: ApolloReactHooks.MutationHook
       }
 export type ClearCartMutationHookResult = ReturnType<typeof useClearCartMutation>;
 export type ClearCartMutationResult = ApolloReactCommon.MutationResult<ClearCartMutation>;
+export const ContentPageDocument = gql`
+    query ContentPage($slug: String!) {
+  contentPage(slug: $slug) {
+    slug
+    title
+    subtitle
+    hero_image_url
+    is_published
+    updated_at
+    sections {
+      heading
+      body
+      items {
+        title
+        body
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useContentPageQuery__
+ *
+ * To run a query within a React component, call `useContentPageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useContentPageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useContentPageQuery({
+ *   variables: {
+ *      slug: // value for 'slug'
+ *   },
+ * });
+ */
+export function useContentPageQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ContentPageQuery, ContentPageQueryVariables> & ({ variables: ContentPageQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ContentPageQuery, ContentPageQueryVariables>(ContentPageDocument, options);
+      }
+export function useContentPageLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ContentPageQuery, ContentPageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ContentPageQuery, ContentPageQueryVariables>(ContentPageDocument, options);
+        }
+export type ContentPageQueryHookResult = ReturnType<typeof useContentPageQuery>;
+export type ContentPageLazyQueryHookResult = ReturnType<typeof useContentPageLazyQuery>;
+export type ContentPageQueryResult = ApolloReactCommon.QueryResult<ContentPageQuery, ContentPageQueryVariables>;
+export const SendContactMessageDocument = gql`
+    mutation SendContactMessage($input: ContactMessageInput!) {
+  sendContactMessage(input: $input)
+}
+    `;
+
+/**
+ * __useSendContactMessageMutation__
+ *
+ * To run a mutation, you first call `useSendContactMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSendContactMessageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [sendContactMessageMutation, { data, loading, error }] = useSendContactMessageMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSendContactMessageMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SendContactMessageMutation, SendContactMessageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SendContactMessageMutation, SendContactMessageMutationVariables>(SendContactMessageDocument, options);
+      }
+export type SendContactMessageMutationHookResult = ReturnType<typeof useSendContactMessageMutation>;
+export type SendContactMessageMutationResult = ApolloReactCommon.MutationResult<SendContactMessageMutation>;
+export const SubscribeToNewsletterDocument = gql`
+    mutation SubscribeToNewsletter($email: String!) {
+  subscribeToNewsletter(email: $email) {
+    email
+    is_active
+    was_already_subscribed
+  }
+}
+    `;
+
+/**
+ * __useSubscribeToNewsletterMutation__
+ *
+ * To run a mutation, you first call `useSubscribeToNewsletterMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSubscribeToNewsletterMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [subscribeToNewsletterMutation, { data, loading, error }] = useSubscribeToNewsletterMutation({
+ *   variables: {
+ *      email: // value for 'email'
+ *   },
+ * });
+ */
+export function useSubscribeToNewsletterMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SubscribeToNewsletterMutation, SubscribeToNewsletterMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SubscribeToNewsletterMutation, SubscribeToNewsletterMutationVariables>(SubscribeToNewsletterDocument, options);
+      }
+export type SubscribeToNewsletterMutationHookResult = ReturnType<typeof useSubscribeToNewsletterMutation>;
+export type SubscribeToNewsletterMutationResult = ApolloReactCommon.MutationResult<SubscribeToNewsletterMutation>;
+export const UnsubscribeFromNewsletterDocument = gql`
+    mutation UnsubscribeFromNewsletter($token: String!) {
+  unsubscribeFromNewsletter(token: $token)
+}
+    `;
+
+/**
+ * __useUnsubscribeFromNewsletterMutation__
+ *
+ * To run a mutation, you first call `useUnsubscribeFromNewsletterMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnsubscribeFromNewsletterMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unsubscribeFromNewsletterMutation, { data, loading, error }] = useUnsubscribeFromNewsletterMutation({
+ *   variables: {
+ *      token: // value for 'token'
+ *   },
+ * });
+ */
+export function useUnsubscribeFromNewsletterMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UnsubscribeFromNewsletterMutation, UnsubscribeFromNewsletterMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UnsubscribeFromNewsletterMutation, UnsubscribeFromNewsletterMutationVariables>(UnsubscribeFromNewsletterDocument, options);
+      }
+export type UnsubscribeFromNewsletterMutationHookResult = ReturnType<typeof useUnsubscribeFromNewsletterMutation>;
+export type UnsubscribeFromNewsletterMutationResult = ApolloReactCommon.MutationResult<UnsubscribeFromNewsletterMutation>;
 export const EventsDocument = gql`
     query Events($filter: EventsFilterInput) {
   events(filter: $filter) {

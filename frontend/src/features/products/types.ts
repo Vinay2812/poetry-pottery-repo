@@ -11,7 +11,8 @@ export type ProductDetailData = ProductQuery["product"];
 export type ProductOptionGroupData = ProductDetailData["option_groups"][number];
 
 const PAGE_SIZE = 24;
-const LOW_STOCK_THRESHOLD = 5;
+const LOW_STOCK_THRESHOLD = 3;
+const MAX_DESCRIPTION_SENTENCES = 3;
 
 export const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: ProductSort.Featured, label: "Featured" },
@@ -141,15 +142,53 @@ export interface StockStatus {
   label: string;
 }
 
+// Plain state text, never an alarm: a batch either has pieces left or is being thrown again.
 export function toStockStatus(
   stock: number,
   isCustomizable: boolean,
 ): StockStatus {
   if (isCustomizable) return { tone: "made_to_order", label: "Made to order" };
-  if (stock <= 0) return { tone: "sold_out", label: "Sold out" };
+  if (stock <= 0)
+    return { tone: "sold_out", label: "Sold out \u00b7 next batch soon" };
   if (stock <= LOW_STOCK_THRESHOLD)
-    return { tone: "low", label: `Only ${stock} left` };
-  return { tone: "in_stock", label: "In stock" };
+    return { tone: "low", label: `Only ${stock}` };
+  return { tone: "in_stock", label: "Ready to ship" };
+}
+
+// The product page counts the batch rather than an inventory number.
+export function toBatchLabel(stock: number, isCustomizable: boolean): string {
+  if (isCustomizable) return "Made to order, thrown in about ten days";
+  if (stock <= 0) return "Sold out \u00b7 next batch soon";
+  if (stock === 1) return "One made in this batch";
+  return `${stock} made in this batch`;
+}
+
+export const STUDIO_NOTE =
+  "Each piece is thrown by hand, so expect small differences.";
+
+// Description copy is trimmed to three sentences; the rest sits behind a toggle.
+export function toShortDescription(description: string): {
+  short: string;
+  hasMore: boolean;
+} {
+  const sentences = description.match(/[^.!?]+[.!?]+(\s|$)|[^.!?]+$/g) ?? [];
+  if (sentences.length <= MAX_DESCRIPTION_SENTENCES) {
+    return { short: description.trim(), hasMore: false };
+  }
+  return {
+    short: sentences.slice(0, MAX_DESCRIPTION_SENTENCES).join("").trim(),
+    hasMore: true,
+  };
+}
+
+export function toGlazeAskUrl(
+  whatsappNumber: string,
+  productName: string,
+): string | null {
+  const digits = whatsappNumber.replace(/\D/g, "");
+  if (!digits) return null;
+  const text = `Hi, about the ${productName} \u2014 could I have it in another glaze or size?`;
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
 type SelectionValue = { optionId: number } | { text: string };

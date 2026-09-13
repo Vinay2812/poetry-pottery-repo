@@ -25,10 +25,14 @@ const WHEN_TABS: { value: EventWhen; label: string }[] = [
   { value: EventWhen.Past, label: "Past" },
 ];
 
-const TYPE_CHIPS: { value: EventType | null; label: string }[] = [
-  { value: null, label: "All" },
-  { value: EventType.PotteryWorkshop, label: "Workshops" },
-  { value: EventType.OpenMic, label: "Open mics" },
+const TYPE_LINKS: { key: string; value: EventType | null; label: string }[] = [
+  { key: "all", value: null, label: "All" },
+  {
+    key: EventType.PotteryWorkshop,
+    value: EventType.PotteryWorkshop,
+    label: "Workshops",
+  },
+  { key: EventType.OpenMic, value: EventType.OpenMic, label: "Open mics" },
 ];
 
 const LEVELS: EventLevel[] = [
@@ -50,12 +54,12 @@ export function EventFilters({
   onLevelChange,
 }: EventFiltersProps) {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-col gap-4 border-b border-ash pb-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
         <div
           role="group"
           aria-label="When"
-          className="inline-flex rounded-full bg-primary-light p-1"
+          className="inline-flex border border-ash"
         >
           {WHEN_TABS.map((tab) => (
             <button
@@ -64,10 +68,10 @@ export function EventFilters({
               aria-pressed={when === tab.value}
               onClick={() => onWhenChange(tab.value)}
               className={cn(
-                "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                "px-4 py-2 text-[13px] transition-colors",
                 when === tab.value
-                  ? "bg-primary text-primary-foreground"
-                  : "text-primary-hover hover:bg-primary/10",
+                  ? "bg-ink text-white"
+                  : "text-muted-foreground hover:text-ink",
               )}
             >
               {tab.label}
@@ -78,22 +82,22 @@ export function EventFilters({
         <div
           role="group"
           aria-label="Kind of evening"
-          className="flex flex-wrap items-center gap-2"
+          className="flex flex-wrap items-center gap-4"
         >
-          {TYPE_CHIPS.map((chip) => (
+          {TYPE_LINKS.map((link) => (
             <button
-              key={chip.label}
+              key={link.key}
               type="button"
-              aria-pressed={eventType === chip.value}
-              onClick={() => onEventTypeChange(chip.value)}
+              aria-pressed={eventType === link.value}
+              onClick={() => onEventTypeChange(link.value)}
               className={cn(
-                "rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
-                eventType === chip.value
-                  ? "bg-foreground text-background"
-                  : "bg-cream text-clay-dark hover:bg-primary-light",
+                "border-b pb-0.5 text-[13px] transition-colors",
+                eventType === link.value
+                  ? "border-ink text-ink"
+                  : "border-transparent text-muted-foreground hover:border-ink hover:text-ink",
               )}
             >
-              {chip.label}
+              {link.label}
             </button>
           ))}
         </div>
@@ -106,10 +110,7 @@ export function EventFilters({
             onLevelChange(value === ANY_LEVEL ? null : (value as EventLevel))
           }
         >
-          <SelectTrigger
-            aria-label="Level"
-            className="h-10 rounded-full bg-background"
-          >
+          <SelectTrigger aria-label="Level" className="h-10 bg-white">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

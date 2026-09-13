@@ -18,12 +18,12 @@ export function QuantityStepper({
   size = "md",
 }: QuantityStepperProps) {
   const buttonClass = cn(
-    "flex items-center justify-center rounded-full transition-colors hover:bg-primary-light disabled:opacity-40",
+    "flex items-center justify-center transition-colors hover:text-primary disabled:opacity-40",
     size === "sm" ? "size-8" : "size-11",
   );
   return (
     <div
-      className="inline-flex items-center rounded-full border border-border bg-background"
+      className="inline-flex items-center border border-ash"
       role="group"
       aria-label="Quantity"
     >
@@ -34,12 +34,9 @@ export function QuantityStepper({
         aria-label="Decrease quantity"
         className={buttonClass}
       >
-        <Minus className="size-4" />
+        <Minus className="size-4" strokeWidth={1.5} />
       </button>
-      <span
-        className="min-w-8 text-center text-sm font-semibold tabular-nums"
-        aria-live="polite"
-      >
+      <span className="min-w-6 text-center text-sm tnum" aria-live="polite">
         {value}
       </span>
       <button
@@ -49,7 +46,7 @@ export function QuantityStepper({
         aria-label="Increase quantity"
         className={buttonClass}
       >
-        <Plus className="size-4" />
+        <Plus className="size-4" strokeWidth={1.5} />
       </button>
     </div>
   );

@@ -28,21 +28,20 @@ export function StickyBuyBar({
     <div
       aria-hidden={!isVisible}
       className={cn(
-        "fixed inset-x-0 bottom-16 z-30 flex items-center gap-3 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-md transition-transform duration-300 lg:hidden",
+        "fixed inset-x-0 bottom-16 z-30 flex items-center gap-3 border-t border-ash bg-background px-4 py-3 transition-transform duration-300 lg:hidden",
         isVisible ? "translate-y-0" : "translate-y-[120%]",
       )}
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{name}</p>
-        <p className="text-sm font-semibold">{formatInr(total)}</p>
+        <p className="truncate text-sm">{name}</p>
+        <p className="text-sm text-muted-foreground tnum">{formatInr(total)}</p>
       </div>
       <Button
-        className="rounded-full"
         onClick={onAddToCart}
         disabled={isSoldOut || !canAddToCart || isAddingToCart}
         tabIndex={isVisible ? 0 : -1}
       >
-        <ShoppingBag className="size-4" />
+        <ShoppingBag className="size-4" strokeWidth={1.5} />
         {isSoldOut ? "Sold out" : "Add to cart"}
       </Button>
     </div>

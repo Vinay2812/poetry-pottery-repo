@@ -12,8 +12,8 @@ export function Toaster() {
       toastOptions={{
         classNames: {
           toast:
-            "rounded-2xl! bg-foreground! text-background! shadow-card! border-0! font-sans! text-sm!",
-          actionButton: "bg-primary! text-primary-foreground! rounded-full!",
+            "rounded-none! border-0! bg-ink! font-sans! text-sm! text-white! shadow-none!",
+          actionButton: "rounded-none! bg-white! text-ink!",
         },
       }}
     />

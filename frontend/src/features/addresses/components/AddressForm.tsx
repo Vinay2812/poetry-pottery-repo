@@ -30,16 +30,17 @@ function TextField({
 }: TextFieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id}>{label}</Label>
+      <Label htmlFor={id} className="text-[13px] text-muted-foreground">
+        {label}
+      </Label>
       <Input
         id={id}
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
-        className="h-10"
         {...registration}
       />
       {error && (
-        <p role="alert" className="text-xs text-destructive">
+        <p role="alert" className="text-[13px] text-destructive">
           {error}
         </p>
       )}
@@ -78,7 +79,7 @@ export function AddressForm({
     <form
       noValidate
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col gap-4 rounded-2xl bg-cream p-4 md:p-5"
+      className="flex flex-col gap-4 border border-ash p-4 md:p-5"
     >
       <div className="grid gap-4 md:grid-cols-2">
         <TextField
@@ -96,14 +97,14 @@ export function AddressForm({
           registration={register("phone")}
         />
       </div>
-      <TextField
-        id="address-line1"
-        label="Flat, house or building"
-        autoComplete="address-line1"
-        error={errors.line1?.message}
-        registration={register("line1")}
-      />
       <div className="grid gap-4 md:grid-cols-2">
+        <TextField
+          id="address-line1"
+          label="Flat, house or building"
+          autoComplete="address-line1"
+          error={errors.line1?.message}
+          registration={register("line1")}
+        />
         <TextField
           id="address-line2"
           label="Area or street (optional)"
@@ -111,6 +112,8 @@ export function AddressForm({
           error={errors.line2?.message}
           registration={register("line2")}
         />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
         <TextField
           id="address-landmark"
           label="Landmark (optional)"
@@ -118,8 +121,6 @@ export function AddressForm({
           error={errors.landmark?.message}
           registration={register("landmark")}
         />
-      </div>
-      <div className="grid gap-4 md:grid-cols-3">
         <TextField
           id="address-city"
           label="City"
@@ -127,6 +128,8 @@ export function AddressForm({
           error={errors.city?.message}
           registration={register("city")}
         />
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
         <TextField
           id="address-state"
           label="State"
@@ -142,7 +145,7 @@ export function AddressForm({
           registration={register("pincode")}
         />
       </div>
-      <Label htmlFor="address-default" className="gap-2.5 text-sm">
+      <Label htmlFor="address-default" className="w-fit gap-2.5 text-sm">
         <Checkbox
           id="address-default"
           checked={isDefault}
@@ -153,15 +156,10 @@ export function AddressForm({
         Deliver here by default
       </Label>
       <div className="flex flex-wrap gap-3">
-        <Button type="submit" className="rounded-full" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting}>
           {isSubmitting ? "Saving…" : submitLabel}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="rounded-full"
-          onClick={onCancel}
-        >
+        <Button type="button" variant="outline" onClick={onCancel}>
           Cancel
         </Button>
       </div>

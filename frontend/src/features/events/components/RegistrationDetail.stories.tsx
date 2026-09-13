@@ -21,11 +21,8 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     registrationId: "REG7Q2X9M1KD",
-    eventTitle: "Wheel Throwing for Beginners",
+    eventTitle: "Wheel throwing for beginners",
     eventHref: "/events/wheel-throwing-for-beginners",
-    imageUrl:
-      "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
-    typeLabel: "Pottery workshop",
     bookedOn: "Sat, 12 Sept, 2026, 3:00 pm",
     statusLabel: "Awaiting approval",
     statusTone: "pending",
@@ -34,10 +31,15 @@ const meta = {
     currentStepIndex: 0,
     isClosed: false,
     closedLabel: null,
-    dateLabel: "Sat, 19 Sept, 2026",
-    timeRange: "3:00 pm – 6:00 pm",
-    location: "Poetry & Pottery studio, Sangli",
-    address: "3rd Lane, Vishrambag, Sangli, Maharashtra 416415",
+    facts: [
+      { label: "Kind", value: "Pottery workshop" },
+      { label: "Date", value: "Sat, 19 Sept, 2026" },
+      { label: "Time", value: "3:00 pm – 6:00 pm" },
+      {
+        label: "Where",
+        value: "Poetry & Pottery studio, 3rd Lane, Vishrambag, Sangli",
+      },
+    ],
     seats: 2,
     unitPrice: 1800,
     discount: 0,
@@ -82,8 +84,7 @@ export const Confirmed: Story = {
 
 export const Cancelled: Story = {
   args: {
-    eventTitle: "Verses & Vases Evening",
-    typeLabel: "Open mic",
+    eventTitle: "Verses and vases evening",
     statusLabel: "Cancelled",
     statusTone: "off",
     isJustPlaced: false,

@@ -19,7 +19,13 @@ export type RegistrationData = RegistrationFieldsFragment;
 
 const PAGE_SIZE = 12;
 export const MAX_SEATS = 4;
-const LOW_SEATS = 3;
+export const SEAT_NOTE =
+  "Seats are confirmed by hand on WhatsApp, usually within a day";
+
+export interface EventFact {
+  label: string;
+  value: string;
+}
 
 export function toEventPath(slug: string): string {
   return `/events/${slug}`;
@@ -34,10 +40,6 @@ export function toSeatsLabel(available: number, total: number): string {
   if (available === 1) return "Last seat";
   if (available >= total) return `All ${total} seats open`;
   return `${available} seats left`;
-}
-
-export function isLowSeats(available: number): boolean {
-  return available > 0 && available <= LOW_SEATS;
 }
 
 const LEVEL_LABEL: Record<EventLevel, string> = {
@@ -60,33 +62,30 @@ export function toEventTypeLabel(eventType: EventType): string {
   return EVENT_TYPE_LABEL[eventType];
 }
 
-const BADGE_DAY = new Intl.DateTimeFormat("en-IN", {
-  day: "2-digit",
-  timeZone: "Asia/Kolkata",
-});
-const BADGE_MONTH = new Intl.DateTimeFormat("en-IN", {
+const WHEN_DATE = new Intl.DateTimeFormat("en-IN", {
+  weekday: "short",
+  day: "numeric",
   month: "short",
   timeZone: "Asia/Kolkata",
 });
-const BADGE_WEEKDAY = new Intl.DateTimeFormat("en-IN", {
-  weekday: "short",
+
+const WHEN_HOUR = new Intl.DateTimeFormat("en-IN", {
+  hour: "numeric",
+  minute: "2-digit",
   timeZone: "Asia/Kolkata",
 });
 
-export interface DateBadge {
-  day: string;
-  month: string;
-  weekday: string;
+// "Thu 17 Sep · 4 pm": one line, no zero minutes, no comma clutter.
+export function toEventWhenLabel(startsAt: string | Date): string {
+  const date = new Date(startsAt);
+  const day = WHEN_DATE.format(date).replace(/,/g, "").replace("Sept", "Sep");
+  const time = WHEN_HOUR.format(date).replace(":00", "");
+  return `${day} · ${time}`;
 }
 
-export function toDateBadge(startsAt: string | Date): DateBadge {
-  const date = new Date(startsAt);
-  return {
-    day: BADGE_DAY.format(date),
-    // en-IN abbreviates September as "Sept"; the badge keeps every month to three letters.
-    month: BADGE_MONTH.format(date).slice(0, 3),
-    weekday: BADGE_WEEKDAY.format(date),
-  };
+export function toSeatsOfTotalLabel(available: number, total: number): string {
+  if (available <= 0) return "Sold out";
+  return `${available} of ${total} seats left`;
 }
 
 export function toTimeRange(

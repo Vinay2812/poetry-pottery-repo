@@ -5,7 +5,7 @@ export interface FreeShippingNudgeProps {
   threshold: number;
 }
 
-// The single most effective upsell on a cart page: show how close free shipping is.
+// One line and one hairline: how close this cart is to free shipping.
 export function FreeShippingNudge({
   subtotal,
   threshold,
@@ -13,21 +13,14 @@ export function FreeShippingNudge({
   const remaining = Math.max(0, threshold - subtotal);
   const progress = Math.min(100, Math.round((subtotal / threshold) * 100));
   return (
-    <div className="flex flex-col gap-2 rounded-2xl bg-primary-light p-4">
-      <p className="text-sm">
-        {remaining > 0 ? (
-          <>
-            Add <span className="font-semibold">{formatInr(remaining)}</span>{" "}
-            more for free shipping
-          </>
-        ) : (
-          <span className="font-semibold text-primary-hover">
-            Free shipping unlocked
-          </span>
-        )}
+    <div className="flex flex-col gap-2">
+      <p className="text-[13px] text-muted-foreground">
+        {remaining > 0
+          ? `${formatInr(remaining)} more for free shipping.`
+          : "Shipping is free on this order."}
       </p>
       <div
-        className="h-1.5 overflow-hidden rounded-full bg-white/70"
+        className="h-px w-full bg-ash"
         role="progressbar"
         aria-valuenow={progress}
         aria-valuemin={0}
@@ -35,7 +28,7 @@ export function FreeShippingNudge({
         aria-label="Progress to free shipping"
       >
         <div
-          className="h-full rounded-full bg-primary transition-all duration-500"
+          className="h-full bg-ink transition-[width] duration-500 ease-out"
           style={{ width: `${progress}%` }}
         />
       </div>

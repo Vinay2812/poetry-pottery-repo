@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
 import { useAddToCart } from "@/features/cart/hooks";
@@ -23,7 +22,6 @@ export function ProductCardContainer({
   product,
   isPriority = false,
 }: ProductCardContainerProps) {
-  const router = useRouter();
   const { isWishlisted } = useWishlistIds();
   const { toggle } = useToggleWishlist();
   const { addToCart, isAdding } = useAddToCart();
@@ -35,27 +33,17 @@ export function ProductCardContainer({
     [product.id, product.name, toggle],
   );
 
-  // Customisable pieces need their options chosen first, so the card sends people to the page.
-  const handleAddToCart = useCallback(() => {
-    if (product.is_customizable) {
-      router.push(href);
-      return;
-    }
-    addToCart({ product_id: product.id, quantity: 1 }, product.name);
-  }, [
-    addToCart,
-    href,
-    product.id,
-    product.is_customizable,
-    product.name,
-    router,
-  ]);
+  const handleAddToCart = useCallback(
+    () => addToCart({ product_id: product.id, quantity: 1 }, product.name),
+    [addToCart, product.id, product.name],
+  );
 
   return (
     <ProductCard
       href={href}
       name={product.name}
       imageUrl={product.image_urls[0] ?? null}
+      secondImageUrl={product.image_urls[1] ?? null}
       price={product.price}
       compareAtPrice={product.compare_at_price}
       discountPercent={toDiscountPercent(
@@ -70,6 +58,7 @@ export function ProductCardContainer({
       ratingAvg={product.rating_avg}
       ratingCount={product.rating_count}
       isWishlisted={isWishlisted(product.id)}
+      isCustomizable={product.is_customizable}
       isAddingToCart={isAdding}
       isPriority={isPriority}
       onToggleWishlist={handleToggleWishlist}

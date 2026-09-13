@@ -19,13 +19,11 @@ const reserveBox = (
     maxSeats={4}
     note=""
     seatsLabel="3 seats left"
-    isSeatsLow
     isSoldOut={false}
     isPast={false}
     isReserving={false}
     bookingHref={null}
     bookingStatusLabel=""
-    bookingStatusTone="pending"
     bookingSeats={0}
     whatsappUrl="https://wa.me/919876543210?text=Hi"
     onSeatsChange={fn()}
@@ -41,13 +39,11 @@ const pastReserveBox = (
     maxSeats={4}
     note=""
     seatsLabel="Sold out"
-    isSeatsLow={false}
     isSoldOut
     isPast
     isReserving={false}
     bookingHref={null}
     bookingStatusLabel=""
-    bookingStatusTone="pending"
     bookingSeats={0}
     whatsappUrl="https://wa.me/919876543210?text=Hi"
     onSeatsChange={fn()}
@@ -61,30 +57,30 @@ const meta = {
   component: EventDetail,
   parameters: { layout: "fullscreen" },
   args: {
-    title: "Wheel Throwing for Beginners",
+    title: "Wheel throwing for beginners",
     imageUrl: IMAGE,
     typeLabel: "Pottery workshop",
-    levelLabel: "Beginner",
-    dateLabel: "Sat, 19 Sept, 2026",
-    timeRange: "3:00 pm – 6:00 pm",
-    location: "Poetry & Pottery studio, Sangli",
-    address: "3rd Lane, Vishrambag, Sangli, Maharashtra 416415",
-    ratingAvg: 4.8,
-    ratingCount: 34,
-    description:
-      "Three hours at the wheel with clay we dug and wedged ourselves. You centre, open and pull walls until two pieces feel worth keeping.\n\nWe fire and glaze them for you; pick them up about three weeks later or we courier them.",
+    facts: [
+      { label: "Date", value: "Sat, 19 Sept, 2026" },
+      { label: "Time", value: "3:00 pm – 6:00 pm" },
+      {
+        label: "Where",
+        value: "Poetry & Pottery studio, 3rd Lane, Vishrambag, Sangli",
+      },
+      { label: "Level", value: "Beginner" },
+      { label: "Instructor", value: "Ananya Kulkarni" },
+      { label: "Price", value: "₹1,800 a seat" },
+      { label: "Seats", value: "3 of 8 seats left" },
+    ],
+    paragraphs: [
+      "Three hours at the wheel with clay we dug and wedged ourselves. You centre, open and pull walls until two pieces feel worth keeping.",
+      "We fire and glaze them for you; pick them up about three weeks later or we courier them.",
+    ],
     includes: [
       "Clay, tools and an apron",
       "Two pieces fired and glazed",
       "Chai and something to eat halfway",
     ],
-    highlights: [
-      "Centre a ball of clay on your own",
-      "Pull an even wall without collapsing it",
-      "Know which glaze suits which clay body",
-    ],
-    instructor: "Ananya Kulkarni",
-    performers: [],
     gallery: [],
     isPast: false,
     reserveBox,
@@ -99,37 +95,37 @@ export const Workshop: Story = {};
 
 export const OpenMic: Story = {
   args: {
-    title: "Verses & Vases Evening",
+    title: "Verses and vases evening",
     typeLabel: "Open mic",
-    levelLabel: null,
-    timeRange: "7:00 pm – 9:30 pm",
-    description:
-      "An open mic in the studio, surrounded by half-finished pots. Read your own work or somebody else's; five minutes each, no theme.",
-    includes: ["A seat, chai and the mic for five minutes"],
-    highlights: [],
-    instructor: null,
-    performers: [
-      "Ananya Kulkarni reading from Salt Lines",
-      "Rohit Deshpande, Marathi ghazals",
-      "Open slots for eight more readers",
+    facts: [
+      { label: "Date", value: "Sun, 12 Jul, 2026" },
+      { label: "Time", value: "7:00 pm – 9:30 pm" },
+      {
+        label: "Where",
+        value: "Poetry & Pottery studio, 3rd Lane, Vishrambag, Sangli",
+      },
+      { label: "Line-up", value: "Ananya Kulkarni, Rohit Deshpande" },
+      { label: "Price", value: "₹400 a seat" },
+      { label: "Seats", value: "6 of 20 seats left" },
     ],
+    paragraphs: [
+      "An open mic in the studio, surrounded by half-finished pots. Read your own work or somebody else's; five minutes each, no theme.",
+    ],
+    includes: ["A seat, chai and the mic for five minutes"],
   },
 };
 
 export const PastWithGallery: Story = {
   args: {
-    title: "Verses & Vases Evening",
+    title: "Verses and vases evening",
     typeLabel: "Open mic",
-    levelLabel: null,
-    dateLabel: "Sun, 12 Jul, 2026",
-    timeRange: "7:00 pm – 9:30 pm",
-    instructor: null,
-    performers: ["Ananya Kulkarni", "Rohit Deshpande"],
     gallery: [IMAGE, GALLERY_SECOND, GALLERY_THIRD],
     isPast: true,
     reserveBox: pastReserveBox,
   },
 };
+
+export const NoPhoto: Story = { args: { imageUrl: null } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

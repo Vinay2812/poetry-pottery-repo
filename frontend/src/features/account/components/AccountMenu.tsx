@@ -1,11 +1,3 @@
-import {
-  CalendarDays,
-  ChevronRight,
-  Heart,
-  MapPin,
-  Package,
-  Settings,
-} from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -21,31 +13,27 @@ export interface AccountMenuProps {
 }
 
 const LINKS = [
-  {
-    href: "/orders",
-    label: "Orders",
-    hint: "Progress and past orders",
-    Icon: Package,
-  },
+  { href: "/orders", label: "Orders", hint: "Progress and past orders" },
   {
     href: "/registrations",
     label: "Bookings",
     hint: "Workshops and open mics",
-    Icon: CalendarDays,
   },
   {
-    href: "/wishlist",
-    label: "Saved pieces",
-    hint: "Everything you hearted",
-    Icon: Heart,
+    href: "/workshops/bookings",
+    label: "Wheel sessions",
+    hint: "Your studio bookings",
   },
+  { href: "/wishlist", label: "Saved pieces", hint: "Pieces you kept" },
   {
     href: "/account/addresses",
     label: "Addresses",
     hint: "Where we deliver",
-    Icon: MapPin,
   },
 ] as const;
+
+const ROW =
+  "flex items-baseline justify-between gap-4 border-b border-ash py-4 text-left transition-colors duration-200 hover:text-primary";
 
 export function AccountMenu({
   displayName,
@@ -57,9 +45,9 @@ export function AccountMenu({
   onSignOut,
 }: AccountMenuProps) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
       <div className="flex items-center gap-4">
-        <span className="flex size-16 items-center justify-center overflow-hidden rounded-full bg-primary text-2xl font-medium text-primary-foreground">
+        <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ink text-2xl text-white">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imageUrl} alt="" className="size-full object-cover" />
@@ -68,30 +56,21 @@ export function AccountMenu({
           )}
         </span>
         <div className="min-w-0">
-          <h1 className="truncate font-heading text-2xl md:text-3xl">
+          <h1 className="truncate font-heading text-2xl tracking-tight md:text-3xl">
             {displayName}
           </h1>
           <p className="truncate text-sm text-muted-foreground">{email}</p>
-          <p className="text-xs text-muted-foreground">
-            Member since {memberSince}
+          <p className="text-[13px] text-muted-foreground">
+            With us since {memberSince}
           </p>
         </div>
       </div>
-      <ul className="overflow-hidden rounded-3xl bg-card shadow-soft">
-        {LINKS.map(({ href, label, hint, Icon }) => (
+      <ul className="flex flex-col border-t border-ash">
+        {LINKS.map(({ href, label, hint }) => (
           <li key={href}>
-            <Link
-              href={href}
-              className="flex items-center gap-4 border-b border-border px-5 py-4 transition-colors last:border-0 hover:bg-primary-light/50"
-            >
-              <Icon className="size-5 text-primary" />
-              <span className="flex-1">
-                <span className="block text-sm font-medium">{label}</span>
-                <span className="block text-xs text-muted-foreground">
-                  {hint}
-                </span>
-              </span>
-              <ChevronRight className="size-4 text-muted-foreground" />
+            <Link href={href} className={ROW}>
+              <span className="text-[15px]">{label}</span>
+              <span className="text-[13px] text-muted-foreground">{hint}</span>
             </Link>
           </li>
         ))}
@@ -99,33 +78,29 @@ export function AccountMenu({
           <button
             type="button"
             onClick={onManageProfile}
-            className="flex w-full items-center gap-4 px-5 py-4 text-left transition-colors hover:bg-primary-light/50"
+            className={`w-full ${ROW}`}
           >
-            <Settings className="size-5 text-primary" />
-            <span className="flex-1">
-              <span className="block text-sm font-medium">
-                Profile and sign-in
-              </span>
-              <span className="block text-xs text-muted-foreground">
-                Name, email, password
-              </span>
+            <span className="text-[15px]">Profile and sign-in</span>
+            <span className="text-[13px] text-muted-foreground">
+              Name, email, password
             </span>
-            <ChevronRight className="size-4 text-muted-foreground" />
           </button>
         </li>
       </ul>
-      {isAdmin && (
-        <Button variant="outline" className="rounded-full" asChild>
-          <Link href="/dashboard">Open the studio admin</Link>
-        </Button>
-      )}
-      <Button
-        variant="ghost"
-        className="w-fit rounded-full text-muted-foreground"
-        onClick={onSignOut}
-      >
-        Sign out
-      </Button>
+      <div className="flex flex-wrap items-center gap-4">
+        {isAdmin && (
+          <Button variant="outline" asChild>
+            <Link href="/dashboard">Open the studio admin</Link>
+          </Button>
+        )}
+        <button
+          type="button"
+          onClick={onSignOut}
+          className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Sign out
+        </button>
+      </div>
     </div>
   );
 }

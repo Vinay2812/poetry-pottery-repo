@@ -18,18 +18,16 @@ export function PriceTag({
   return (
     <span
       className={cn(
-        "flex items-baseline gap-1.5",
+        "flex shrink-0 items-baseline gap-1.5 tnum",
         size === "lg" ? "text-2xl" : "text-sm",
       )}
     >
       {prefix && (
-        <span className="text-xs font-normal text-muted-foreground">
-          {prefix}
-        </span>
+        <span className="text-[13px] text-muted-foreground">{prefix}</span>
       )}
-      <span className="font-semibold text-foreground">{formatInr(price)}</span>
+      <span className="text-foreground">{formatInr(price)}</span>
       {hasDiscount && (
-        <s className="text-xs text-muted-foreground">
+        <s className="text-[13px] text-muted-foreground">
           {formatInr(compareAtPrice)}
         </s>
       )}

@@ -12,6 +12,7 @@ import {
   CategoryStrip,
   type CategoryStripItem,
 } from "@/features/products/components/CategoryStrip";
+import { CollectionCard } from "@/features/products/components/CollectionCard";
 import { EmptyResults } from "@/features/products/components/EmptyResults";
 import { FilterSheet } from "@/features/products/components/FilterSheet";
 import { LoadFailed } from "@/features/products/components/LoadFailed";
@@ -31,8 +32,16 @@ import {
   toSearchParams,
 } from "@/features/products/types";
 
+interface CollectionLink {
+  slug: string;
+  name: string;
+  imageUrl: string | null;
+  productCount: number;
+}
+
 export interface ProductListContainerProps {
   categories: { slug: string; name: string; imageUrl: string | null }[];
+  collections?: CollectionLink[];
   heading: string;
   description: string | null;
   isSearchPage?: boolean;
@@ -42,6 +51,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 
 export function ProductListContainer({
   categories,
+  collections = [],
   heading,
   description,
   isSearchPage = false,
@@ -258,6 +268,27 @@ export function ProductListContainer({
         allHref={`${pathname}?${toSearchParams({ ...filters, categories: [] }).toString()}`}
         isAllActive={filters.categories.length === 0}
       />
+
+      {collections.length > 0 && !filters.collection && (
+        <section className="flex flex-col gap-5 border-b border-ash pb-8">
+          <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+            Collections
+          </h2>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-4 md:gap-x-6">
+            {collections.slice(0, 4).map((collection) => (
+              <CollectionCard
+                key={collection.slug}
+                href={`/products?collection=${collection.slug}`}
+                name={collection.name}
+                description={null}
+                imageUrl={collection.imageUrl}
+                productCount={collection.productCount}
+                endsLabel={null}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
         <aside className="hidden lg:block">

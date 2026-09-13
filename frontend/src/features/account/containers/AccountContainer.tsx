@@ -7,6 +7,7 @@ import { useCallback } from "react";
 import { UserRole } from "@/graphql/generated/graphql";
 
 import { AccountMenu } from "@/features/account/components/AccountMenu";
+import { SignInWall } from "@/features/auth/components/SignInWall";
 import { toDisplayName, toMemberSince } from "@/features/account/types";
 
 export function AccountContainer() {
@@ -24,24 +25,16 @@ export function AccountContainer() {
         className="mx-auto w-full max-w-3xl px-4 py-10 md:px-8"
         aria-busy="true"
       >
-        <div className="h-16 animate-pulse rounded-full bg-primary-light" />
+        <div className="h-16 animate-pulse bg-ash" />
       </div>
     );
   }
   if (!isSignedIn || !user) {
     return (
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-4 py-16 text-center md:px-8">
-        <p className="font-script text-3xl text-clay-dark italic">
-          Sign in to see your account
-        </p>
-        <button
-          type="button"
-          onClick={() => openSignIn()}
-          className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
-        >
-          Sign in
-        </button>
-      </div>
+      <SignInWall
+        message="Sign in to see your account"
+        onSignIn={() => openSignIn()}
+      />
     );
   }
   const email = user.primaryEmailAddress?.emailAddress ?? "";

@@ -117,8 +117,8 @@ export function CheckoutContainer() {
         className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8"
         aria-busy="true"
       >
-        <div className="h-8 w-40 animate-pulse rounded-full bg-primary-light" />
-        <div className="mt-8 h-64 animate-pulse rounded-3xl bg-primary-light/70" />
+        <div className="h-8 w-40 animate-pulse bg-ash" />
+        <div className="mt-8 h-64 animate-pulse bg-ash" />
       </div>
     );
   }
@@ -138,8 +138,8 @@ export function CheckoutContainer() {
       <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
         <div className="flex flex-col gap-8">
           <section className="flex flex-col gap-4">
-            <h2 className="text-xs font-semibold tracking-[0.12em] text-clay-dark uppercase">
-              1 · Deliver to
+            <h2 className="border-b border-ash pb-3 font-heading text-xl tracking-tight">
+              Deliver to
             </h2>
             <AddressPickerContainer
               selectedId={addressId}
@@ -147,10 +147,10 @@ export function CheckoutContainer() {
             />
           </section>
           <section className="flex flex-col gap-4">
-            <h2 className="text-xs font-semibold tracking-[0.12em] text-clay-dark uppercase">
-              2 · Your pieces
+            <h2 className="border-b border-ash pb-3 font-heading text-xl tracking-tight">
+              Your pieces
             </h2>
-            <ul className="divide-y divide-border rounded-3xl bg-card px-5 shadow-soft">
+            <ul className="flex flex-col">
               {items.map((item) => (
                 <CheckoutLineItem
                   key={item.id}

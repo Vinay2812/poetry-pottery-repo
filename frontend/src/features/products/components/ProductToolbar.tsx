@@ -31,7 +31,7 @@ export function ProductToolbar({
 }: ProductToolbarProps) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <p className="text-sm text-muted-foreground" aria-live="polite">
+      <p className="text-[13px] text-muted-foreground tnum" aria-live="polite">
         {isLoading
           ? "Finding pieces…"
           : `${total} ${total === 1 ? "piece" : "pieces"}`}
@@ -41,10 +41,7 @@ export function ProductToolbar({
           value={sort}
           onValueChange={(value) => onSortChange(value as ProductSort)}
         >
-          <SelectTrigger
-            aria-label="Sort by"
-            className="h-10 rounded-full bg-background"
-          >
+          <SelectTrigger aria-label="Sort by" className="h-10 bg-transparent">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -58,13 +55,13 @@ export function ProductToolbar({
         <Button
           variant="outline"
           size="sm"
-          className="h-10 rounded-full lg:hidden"
+          className="h-10 lg:hidden"
           onClick={onOpenFilters}
         >
-          <SlidersHorizontal className="size-4" />
+          <SlidersHorizontal className="size-4" strokeWidth={1.5} />
           Filters
           {activeFilterCount > 0 && (
-            <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">
+            <span className="flex size-5 items-center justify-center bg-primary text-[11px] text-primary-foreground tnum">
               {activeFilterCount}
             </span>
           )}

@@ -1,5 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
+
+import { PotteryIcon, toPotteryIconKind } from "@/components/icons/pottery";
 
 export interface CategoryTileProps {
   href: string;
@@ -8,31 +9,22 @@ export interface CategoryTileProps {
   productCount: number;
 }
 
-export function CategoryTile({
-  href,
-  name,
-  imageUrl,
-  productCount,
-}: CategoryTileProps) {
+// Drawn icon, name, one line. No thumbnails, so the row stays quiet.
+export function CategoryTile({ href, name, productCount }: CategoryTileProps) {
   return (
     <Link
       href={href}
-      className="group flex flex-col items-center gap-2 text-center"
+      className="group flex flex-col items-center gap-3 py-2 text-center outline-none focus-visible:ring-1 focus-visible:ring-ink"
     >
-      <span className="relative aspect-square w-full overflow-hidden rounded-full bg-primary-light shadow-soft transition-all group-hover:-translate-y-1 group-hover:shadow-card">
-        {imageUrl && (
-          <Image
-            src={imageUrl}
-            alt=""
-            fill
-            sizes="(min-width: 768px) 14vw, 30vw"
-            className="object-cover transition-transform duration-700 group-hover:scale-[1.06]"
-          />
-        )}
+      <PotteryIcon
+        kind={toPotteryIconKind(name)}
+        className="size-10 text-ink transition-colors group-hover:text-primary"
+      />
+      <span className="text-sm underline-offset-4 group-hover:underline">
+        {name}
       </span>
-      <span className="text-sm font-medium">{name}</span>
-      <span className="-mt-1.5 text-xs text-muted-foreground">
-        {productCount}
+      <span className="-mt-2 text-[13px] text-muted-foreground tnum">
+        {productCount} pieces
       </span>
     </Link>
   );

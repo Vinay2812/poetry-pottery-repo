@@ -9,6 +9,9 @@ import {
   parseFilters,
   toDiscountPercent,
   toSearchParams,
+  toBatchLabel,
+  toGlazeAskUrl,
+  toShortDescription,
   toStockStatus,
   validateSelections,
   type ProductOptionGroupData,
@@ -93,20 +96,52 @@ describe("toDiscountPercent", () => {
 });
 
 describe("toStockStatus", () => {
-  it("labels stock levels", () => {
+  it("labels stock levels as batch state", () => {
     expect(toStockStatus(0, false)).toEqual({
       tone: "sold_out",
-      label: "Sold out",
+      label: "Sold out \u00b7 next batch soon",
     });
     expect(toStockStatus(3, false)).toEqual({
       tone: "low",
-      label: "Only 3 left",
+      label: "Only 3",
     });
     expect(toStockStatus(20, false)).toEqual({
       tone: "in_stock",
-      label: "In stock",
+      label: "Ready to ship",
     });
     expect(toStockStatus(0, true).tone).toBe("made_to_order");
+  });
+});
+
+describe("toBatchLabel", () => {
+  it("counts the batch", () => {
+    expect(toBatchLabel(3, false)).toBe("3 made in this batch");
+    expect(toBatchLabel(1, false)).toBe("One made in this batch");
+    expect(toBatchLabel(0, false)).toBe("Sold out \u00b7 next batch soon");
+    expect(toBatchLabel(0, true)).toBe(
+      "Made to order, thrown in about ten days",
+    );
+  });
+});
+
+describe("toShortDescription", () => {
+  it("keeps up to three sentences", () => {
+    expect(toShortDescription("One. Two. Three.")).toEqual({
+      short: "One. Two. Three.",
+      hasMore: false,
+    });
+    const long = toShortDescription("One. Two. Three. Four.");
+    expect(long.short).toBe("One. Two. Three.");
+    expect(long.hasMore).toBe(true);
+  });
+});
+
+describe("toGlazeAskUrl", () => {
+  it("prefills the product name and skips empty numbers", () => {
+    expect(toGlazeAskUrl("+91 91234 56789", "Slate morning mug")).toContain(
+      "Slate%20morning%20mug",
+    );
+    expect(toGlazeAskUrl("", "Slate morning mug")).toBeNull();
   });
 });
 

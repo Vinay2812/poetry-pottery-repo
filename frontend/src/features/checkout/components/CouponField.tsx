@@ -24,14 +24,16 @@ export function CouponField({
 }: CouponFieldProps) {
   return (
     <div className="flex flex-col gap-2">
-      <Label htmlFor="coupon">Have a code?</Label>
+      <Label htmlFor="coupon" className="text-[13px] text-muted-foreground">
+        Have a code?
+      </Label>
       <div className="flex gap-2">
         <Input
           id="coupon"
           value={value}
           onChange={(event) => onChange(event.target.value.toUpperCase())}
           placeholder="WELCOME10"
-          className="h-11 rounded-xl font-mono uppercase"
+          className="uppercase"
           disabled={isApplied}
           aria-describedby="coupon-message"
           onKeyDown={(event) => {
@@ -42,19 +44,13 @@ export function CouponField({
           }}
         />
         {isApplied ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 rounded-xl"
-            onClick={onRemove}
-          >
+          <Button type="button" variant="outline" onClick={onRemove}>
             Remove
           </Button>
         ) : (
           <Button
             type="button"
-            variant="secondary"
-            className="h-11 rounded-xl"
+            variant="outline"
             onClick={onApply}
             disabled={!value.trim() || isChecking}
           >
@@ -66,8 +62,8 @@ export function CouponField({
         <p
           id="coupon-message"
           className={cn(
-            "text-xs",
-            isApplied ? "text-primary-hover" : "text-terracotta-dark",
+            "text-[13px]",
+            isApplied ? "text-primary" : "text-muted-foreground",
           )}
           aria-live="polite"
         >

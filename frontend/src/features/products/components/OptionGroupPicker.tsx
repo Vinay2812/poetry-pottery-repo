@@ -68,7 +68,7 @@ export function OptionGroupPicker({
           aria-invalid={error !== null}
           aria-describedby={error ? errorId : undefined}
           placeholder="Type it as you want it carved"
-          className="h-11 rounded-xl"
+          className="h-11"
         />
         <div className="flex justify-between text-xs">
           {error ? (
@@ -113,10 +113,10 @@ export function OptionGroupPicker({
               aria-pressed={isSelected}
               onClick={() => onSelectOption(choice.id)}
               className={cn(
-                "flex h-10 items-center gap-1.5 rounded-full border px-4 text-sm transition-colors",
+                "flex h-10 items-center gap-1.5 border px-4 text-sm transition-colors",
                 isSelected
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-background hover:border-primary/50",
+                  ? "border-ink bg-ink text-white"
+                  : "border-ash bg-transparent hover:border-ink",
               )}
             >
               {choice.name}
@@ -124,9 +124,7 @@ export function OptionGroupPicker({
                 <span
                   className={cn(
                     "text-xs",
-                    isSelected
-                      ? "text-primary-foreground/80"
-                      : "text-muted-foreground",
+                    isSelected ? "text-white/75" : "text-muted-foreground",
                   )}
                 >
                   +{formatInr(choice.priceModifier)}
@@ -136,7 +134,7 @@ export function OptionGroupPicker({
           );
         })}
       </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
+      {error && <p className="text-[13px] text-destructive">{error}</p>}
     </fieldset>
   );
 }

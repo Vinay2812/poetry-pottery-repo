@@ -1,10 +1,10 @@
-import { CalendarDays, Clock, MapPin, MessageCircle } from "lucide-react";
-import Image from "next/image";
+import { MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { formatInr, pluralize } from "@/lib/format";
 
+import type { EventFact } from "@/features/events/types";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 import {
   OrderTimeline,
@@ -16,8 +16,6 @@ export interface RegistrationDetailProps {
   registrationId: string;
   eventTitle: string;
   eventHref: string;
-  imageUrl: string;
-  typeLabel: string;
   bookedOn: string;
   statusLabel: string;
   statusTone: StatusTone;
@@ -26,10 +24,7 @@ export interface RegistrationDetailProps {
   currentStepIndex: number;
   isClosed: boolean;
   closedLabel: string | null;
-  dateLabel: string;
-  timeRange: string;
-  location: string;
-  address: string;
+  facts: EventFact[];
   seats: number;
   unitPrice: number;
   discount: number;
@@ -45,8 +40,6 @@ export function RegistrationDetail({
   registrationId,
   eventTitle,
   eventHref,
-  imageUrl,
-  typeLabel,
   bookedOn,
   statusLabel,
   statusTone,
@@ -55,10 +48,7 @@ export function RegistrationDetail({
   currentStepIndex,
   isClosed,
   closedLabel,
-  dateLabel,
-  timeRange,
-  location,
-  address,
+  facts,
   seats,
   unitPrice,
   discount,
@@ -70,26 +60,20 @@ export function RegistrationDetail({
   onCancel,
 }: RegistrationDetailProps) {
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 md:px-6 md:py-12">
       {isJustPlaced && (
-        <section className="flex flex-col gap-3 rounded-3xl bg-primary p-6 text-primary-foreground md:p-8">
-          <p className="font-script text-2xl italic">Seat requested</p>
-          <h1 className="font-heading text-3xl md:text-4xl">
-            We are holding your spot
+        <section className="flex flex-col gap-3 border border-ash bg-white p-6 md:p-8">
+          <h1 className="font-heading text-3xl tracking-tight md:text-4xl">
+            We are holding your seat
           </h1>
-          <p className="max-w-xl text-primary-foreground/90">
-            Send us a WhatsApp now and we will confirm the seat and share
-            payment details, or wait for our message within a day.
+          <p className="max-w-xl text-[15px] text-muted-foreground">
+            Send us a message and we will confirm the seat and share payment
+            details, or wait for ours within a day.
           </p>
           {whatsappUrl && (
-            <Button
-              variant="secondary"
-              size="lg"
-              className="w-fit rounded-full"
-              asChild
-            >
+            <Button className="w-fit" asChild>
               <a href={whatsappUrl} target="_blank" rel="noreferrer">
-                <MessageCircle className="size-4" />
+                <MessageCircle className="size-4" strokeWidth={1.5} />
                 Confirm on WhatsApp
               </a>
             </Button>
@@ -98,22 +82,19 @@ export function RegistrationDetail({
       )}
 
       <header className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-xs text-muted-foreground">Booked {bookedOn}</p>
-          <h2 className="font-heading text-2xl md:text-4xl">
-            Booking{" "}
-            <span className="font-mono text-xl tracking-wide md:text-2xl">
-              {registrationId}
-            </span>
+        <div className="flex flex-col gap-1">
+          <p className="text-[13px] text-muted-foreground">Booked {bookedOn}</p>
+          <h2 className="font-heading text-2xl tracking-tight md:text-3xl">
+            Booking <span className="tnum">{registrationId}</span>
           </h2>
         </div>
         <OrderStatusBadge tone={statusTone} label={statusLabel} />
       </header>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
-        <div className="flex flex-col gap-8">
-          <section className="rounded-3xl bg-card p-5 shadow-soft md:p-6">
-            <h3 className="mb-4 text-xs font-semibold tracking-[0.12em] text-clay-dark uppercase">
+      <div className="grid gap-10 lg:grid-cols-[1fr_340px] lg:items-start">
+        <div className="flex flex-col gap-10">
+          <section className="flex flex-col gap-4">
+            <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
               Progress
             </h3>
             <OrderTimeline
@@ -124,104 +105,77 @@ export function RegistrationDetail({
             />
           </section>
 
-          <section className="flex flex-col gap-4 rounded-3xl bg-card p-5 shadow-soft md:p-6">
-            <div className="flex items-start gap-4">
-              <span className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-primary-light">
-                <Image
-                  src={imageUrl}
-                  alt=""
-                  fill
-                  sizes="80px"
-                  className="object-cover"
-                />
-              </span>
-              <div className="flex min-w-0 flex-col gap-1">
-                <span className="text-xs font-semibold tracking-wide text-clay-dark">
-                  {typeLabel}
-                </span>
-                <Link href={eventHref} className="font-heading text-xl">
-                  {eventTitle}
-                </Link>
-              </div>
-            </div>
-            <ul className="flex flex-col gap-2 text-sm">
-              <li className="flex items-center gap-2.5">
-                <CalendarDays
-                  className="size-4 shrink-0 text-primary"
-                  aria-hidden="true"
-                />
-                {dateLabel}
-              </li>
-              <li className="flex items-center gap-2.5">
-                <Clock
-                  className="size-4 shrink-0 text-primary"
-                  aria-hidden="true"
-                />
-                {timeRange}
-              </li>
-              <li className="flex items-start gap-2.5">
-                <MapPin
-                  className="mt-0.5 size-4 shrink-0 text-primary"
-                  aria-hidden="true"
-                />
-                <span>
-                  {location}
-                  <span className="block text-xs text-muted-foreground">
-                    {address}
-                  </span>
-                </span>
-              </li>
-            </ul>
+          <section className="flex flex-col gap-4">
+            <Link
+              href={eventHref}
+              className="font-heading text-2xl tracking-tight underline-offset-4 hover:underline"
+            >
+              {eventTitle}
+            </Link>
+            <dl className="border-t border-ash">
+              {facts.map((fact) => (
+                <div
+                  key={fact.label}
+                  className="grid grid-cols-[7rem_1fr] gap-4 border-b border-ash py-3 text-sm md:grid-cols-[9rem_1fr]"
+                >
+                  <dt className="text-muted-foreground">{fact.label}</dt>
+                  <dd>{fact.value}</dd>
+                </div>
+              ))}
+            </dl>
             {note && (
-              <p className="border-t border-border pt-3 text-sm text-muted-foreground">
-                <span className="font-medium text-foreground">Your note:</span>{" "}
-                {note}
+              <p className="text-sm text-muted-foreground">
+                <span className="text-foreground">Your note:</span> {note}
               </p>
             )}
           </section>
         </div>
 
-        <aside className="flex flex-col gap-4 lg:sticky lg:top-24">
-          <section className="flex flex-col gap-3 rounded-3xl bg-cream p-5 md:p-6">
-            <h3 className="font-heading text-xl">Summary</h3>
-            <dl className="flex flex-col gap-2 text-sm">
-              <div className="flex justify-between">
+        <aside className="flex flex-col gap-6 lg:sticky lg:top-24">
+          <section className="flex flex-col gap-3">
+            <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+              Summary
+            </h3>
+            <dl className="border-t border-ash text-sm">
+              <div className="flex justify-between border-b border-ash py-3">
                 <dt className="text-muted-foreground">
                   {pluralize(seats, "seat")} × {formatInr(unitPrice)}
                 </dt>
-                <dd>{formatInr(unitPrice * seats)}</dd>
+                <dd className="tnum">{formatInr(unitPrice * seats)}</dd>
               </div>
               {discount > 0 && (
-                <div className="flex justify-between text-primary">
-                  <dt>Discount</dt>
-                  <dd>−{formatInr(discount)}</dd>
+                <div className="flex justify-between border-b border-ash py-3">
+                  <dt className="text-muted-foreground">Discount</dt>
+                  <dd className="text-primary tnum">−{formatInr(discount)}</dd>
                 </div>
               )}
-              <div className="flex justify-between border-t border-border pt-2 text-base font-semibold">
+              <div className="flex justify-between border-b border-ash py-3">
                 <dt>Total</dt>
-                <dd>{formatInr(total)}</dd>
+                <dd className="tnum">{formatInr(total)}</dd>
               </div>
             </dl>
           </section>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col items-start gap-3">
             {whatsappUrl && !isJustPlaced && (
-              <Button variant="outline" className="rounded-full" asChild>
-                <a href={whatsappUrl} target="_blank" rel="noreferrer">
-                  <MessageCircle className="size-4" />
-                  Message us about this booking
-                </a>
-              </Button>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
+              >
+                Message us about this booking
+              </a>
             )}
             {canCancel && (
-              <Button
-                variant="ghost"
-                className="rounded-full text-destructive hover:text-destructive"
+              <button
+                type="button"
                 onClick={onCancel}
                 disabled={isCancelling}
+                className="w-fit border-b border-transparent pb-0.5 text-[13px] text-muted-foreground hover:border-ink hover:text-ink disabled:opacity-50"
               >
                 {isCancelling ? "Cancelling…" : "Cancel this booking"}
-              </Button>
+              </button>
             )}
           </div>
         </aside>

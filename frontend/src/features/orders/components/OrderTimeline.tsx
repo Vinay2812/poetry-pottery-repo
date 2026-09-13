@@ -1,5 +1,3 @@
-import { Check } from "lucide-react";
-
 import { cn } from "@/lib/utils";
 
 export interface OrderTimelineStep {
@@ -23,64 +21,49 @@ export function OrderTimeline({
   closedLabel,
 }: OrderTimelineProps) {
   return (
-    <ol className="flex flex-col gap-0">
+    <ol className="flex flex-col">
       {steps.map((step, index) => {
-        const isDone = !isClosed && index < currentIndex;
+        const isReached = index <= currentIndex;
         const isCurrent = !isClosed && index === currentIndex;
-        const isFrozen = isClosed && index <= currentIndex;
         return (
           <li key={step.key} className="flex gap-4">
-            <div className="flex flex-col items-center">
+            <div className="flex w-2 flex-col items-center pt-1.5">
               <span
-                className={cn(
-                  "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold",
-                  isDone && "bg-primary text-primary-foreground",
-                  isCurrent &&
-                    "bg-primary text-primary-foreground ring-4 ring-primary/20",
-                  isFrozen && "bg-neutral-300 text-neutral-700",
-                  !isDone &&
-                    !isCurrent &&
-                    !isFrozen &&
-                    "bg-primary-light text-primary-hover",
-                )}
                 aria-hidden="true"
-              >
-                {isDone ? <Check className="size-4" /> : index + 1}
-              </span>
+                className={cn(
+                  "size-2 shrink-0",
+                  isClosed && isReached && "bg-smoke",
+                  !isClosed && isReached && "bg-ink",
+                  !isReached && "bg-ash",
+                )}
+              />
               {index < steps.length - 1 && (
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "w-px flex-1",
-                    isDone ? "bg-primary" : "bg-border",
-                  )}
-                />
+                <span aria-hidden="true" className="w-px flex-1 bg-ash" />
               )}
             </div>
             <div
               className={cn(
-                "flex flex-col pb-6",
-                !isDone && !isCurrent && "text-muted-foreground",
+                "flex flex-col gap-0.5 pb-6",
+                !isReached && "text-muted-foreground",
               )}
             >
-              <span className="text-sm font-medium">
+              <span className="text-sm">
                 {step.label}
                 {isCurrent && <span className="sr-only"> (current)</span>}
               </span>
-              <span className="text-xs">{step.date ?? step.description}</span>
+              <span className="text-[13px] text-muted-foreground">
+                {step.date ?? step.description}
+              </span>
             </div>
           </li>
         );
       })}
       {isClosed && closedLabel && (
         <li className="flex gap-4">
-          <span
-            className="flex size-7 shrink-0 items-center justify-center rounded-full bg-neutral-800 text-xs text-white"
-            aria-hidden="true"
-          >
-            ×
-          </span>
-          <span className="text-sm font-medium">{closedLabel}</span>
+          <div className="flex w-2 flex-col items-center pt-1.5">
+            <span aria-hidden="true" className="size-2 shrink-0 bg-ink" />
+          </div>
+          <span className="text-sm">{closedLabel}</span>
         </li>
       )}
     </ol>

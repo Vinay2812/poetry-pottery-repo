@@ -33,3 +33,4 @@ pnpm-debug.log*
 
 # model caches
 .cache/
+.claude/

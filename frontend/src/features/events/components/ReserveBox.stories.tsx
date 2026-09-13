@@ -20,13 +20,11 @@ const meta = {
     maxSeats: 4,
     note: "",
     seatsLabel: "3 seats left",
-    isSeatsLow: true,
     isSoldOut: false,
     isPast: false,
     isReserving: false,
     bookingHref: null,
     bookingStatusLabel: "",
-    bookingStatusTone: "pending",
     bookingSeats: 0,
     whatsappUrl: "https://wa.me/919876543210?text=Hi",
     onSeatsChange: fn(),
@@ -39,34 +37,26 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Open: Story = {};
+export const Default: Story = {};
 
-export const TwoSeatsWithNote: Story = {
-  args: {
-    seats: 2,
-    note: "Coming with a friend, both first-timers.",
-    seatsLabel: "All 8 seats open",
-    isSeatsLow: false,
-  },
+export const TwoSeats: Story = {
+  args: { seats: 2, note: "Coming with a friend" },
 };
 
-export const Reserving: Story = {
-  args: { isReserving: true },
-};
+export const Reserving: Story = { args: { isReserving: true } };
 
 export const SoldOut: Story = {
-  args: { seatsLabel: "Sold out", isSoldOut: true, isSeatsLow: false },
+  args: { isSoldOut: true, seatsLabel: "Sold out" },
 };
 
 export const Past: Story = {
-  args: { isPast: true, seatsLabel: "Sold out", isSeatsLow: false },
+  args: { isPast: true, seatsLabel: "Sold out" },
 };
 
 export const AlreadyBooked: Story = {
   args: {
     bookingHref: "/registrations/REG7Q2X9M1KD",
     bookingStatusLabel: "Seat held, awaiting payment",
-    bookingStatusTone: "active",
     bookingSeats: 2,
   },
 };

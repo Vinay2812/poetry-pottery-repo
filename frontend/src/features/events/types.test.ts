@@ -9,10 +9,8 @@ import {
 
 import {
   DEFAULT_EVENT_FILTERS,
-  isLowSeats,
   isRegistrationClosed,
   parseEventFilters,
-  toDateBadge,
   toEventPath,
   toEventSearchParams,
   toEventsFilterInput,
@@ -22,7 +20,9 @@ import {
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
   toRegistrationStepIndex,
+  toEventWhenLabel,
   toSeatsLabel,
+  toSeatsOfTotalLabel,
   toTimeRange,
   toWhatsAppBookingMessage,
 } from "./types";
@@ -49,10 +49,9 @@ describe("toSeatsLabel", () => {
     expect(toSeatsLabel(8, 8)).toBe("All 8 seats open");
   });
 
-  it("marks three or fewer seats as low", () => {
-    expect(isLowSeats(4)).toBe(false);
-    expect(isLowSeats(3)).toBe(true);
-    expect(isLowSeats(0)).toBe(false);
+  it("counts seats against the room", () => {
+    expect(toSeatsOfTotalLabel(3, 8)).toBe("3 of 8 seats left");
+    expect(toSeatsOfTotalLabel(0, 8)).toBe("Sold out");
   });
 });
 
@@ -69,12 +68,8 @@ describe("labels", () => {
 });
 
 describe("dates", () => {
-  it("splits the start into a calendar badge", () => {
-    expect(toDateBadge(STARTS_AT)).toEqual({
-      day: "19",
-      month: "Sep",
-      weekday: "Sat",
-    });
+  it("writes the start as one plain line", () => {
+    expect(toEventWhenLabel(STARTS_AT)).toBe("Sat 19 Sep · 3 pm");
   });
 
   it("joins start and end into a time range", () => {

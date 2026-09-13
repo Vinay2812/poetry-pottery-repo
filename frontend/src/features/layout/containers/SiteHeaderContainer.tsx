@@ -46,6 +46,7 @@ export function SiteHeaderContainer() {
       isSignedIn={Boolean(isSignedIn)}
       isAdmin={user?.publicMetadata.role === UserRole.Admin}
       userImageUrl={user?.imageUrl ?? null}
+      isHome={pathname === "/"}
       onSearchClick={handleSearchClick}
       onAccountClick={handleAccountClick}
     />

@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { Plus } from "lucide-react";
 
 export interface AddressPickerProps {
   children: ReactNode;
@@ -17,17 +16,16 @@ export function AddressPicker({
   form,
 }: AddressPickerProps) {
   return (
-    <div className="flex flex-col gap-3">
-      {!isEmpty && <div className="flex flex-col gap-3">{children}</div>}
+    <div className="flex flex-col gap-4">
+      {!isEmpty && <div className="flex flex-col gap-4">{children}</div>}
       {isAdding ? (
         form
       ) : (
         <button
           type="button"
           onClick={onAddClick}
-          className="flex items-center gap-2 rounded-2xl border border-dashed border-clay/40 px-4 py-4 text-sm font-medium text-primary hover:bg-primary-light"
+          className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
         >
-          <Plus className="size-4" />
           Add a new address
         </button>
       )}

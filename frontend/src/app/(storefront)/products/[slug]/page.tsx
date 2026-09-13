@@ -33,6 +33,7 @@ export default async function ProductPage({
     <ProductDetailContainer
       product={product}
       freeShippingAbove={settings.free_shipping_above}
+      whatsappNumber={settings.whatsapp_number}
     />
   );
 }

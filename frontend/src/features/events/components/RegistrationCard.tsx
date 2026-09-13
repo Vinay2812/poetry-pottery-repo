@@ -1,23 +1,18 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 import { formatInr, pluralize } from "@/lib/format";
-
-import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
-import type { StatusTone } from "@/features/orders/types";
 
 export interface RegistrationCardProps {
   href: string;
   eventTitle: string;
-  imageUrl: string;
+  imageUrl: string | null;
   typeLabel: string;
   dateLabel: string;
-  timeRange: string;
-  location: string;
   seats: number;
   total: number;
   statusLabel: string;
-  statusTone: StatusTone;
 }
 
 export function RegistrationCard({
@@ -26,20 +21,17 @@ export function RegistrationCard({
   imageUrl,
   typeLabel,
   dateLabel,
-  timeRange,
-  location,
   seats,
   total,
   statusLabel,
-  statusTone,
 }: RegistrationCardProps) {
   return (
     <Link
       href={href}
-      className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-card md:p-5"
+      className="group flex items-start gap-4 border-b border-ash py-4"
     >
-      <div className="flex items-start gap-4">
-        <span className="relative size-20 shrink-0 overflow-hidden rounded-xl bg-primary-light">
+      <span className="relative size-20 shrink-0 overflow-hidden bg-white">
+        {imageUrl ? (
           <Image
             src={imageUrl}
             alt=""
@@ -47,31 +39,22 @@ export function RegistrationCard({
             sizes="80px"
             className="object-cover"
           />
+        ) : (
+          <PlaceholderImage kind="vase" />
+        )}
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col gap-1">
+        <span className="text-[13px] text-muted-foreground tnum">
+          {dateLabel}
         </span>
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="text-xs font-semibold tracking-wide text-clay-dark">
-            {typeLabel}
-          </span>
-          <span className="font-heading text-lg leading-snug">
-            {eventTitle}
-          </span>
-          <span className="text-sm text-muted-foreground">
-            {dateLabel} · {timeRange}
-          </span>
-          <span className="truncate text-sm text-muted-foreground">
-            {location}
-          </span>
-        </div>
-      </div>
-      <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
-        <OrderStatusBadge tone={statusTone} label={statusLabel} />
-        <span className="text-muted-foreground">
-          {pluralize(seats, "seat")} ·{" "}
-          <span className="font-semibold text-foreground">
-            {formatInr(total)}
-          </span>
+        <span className="text-[15px] leading-snug underline-offset-4 group-hover:underline">
+          {eventTitle}
         </span>
-      </div>
+        <span className="text-[13px] text-muted-foreground">
+          {typeLabel} · {pluralize(seats, "seat")} · {formatInr(total)}
+        </span>
+        <span className="text-[13px] text-muted-foreground">{statusLabel}</span>
+      </span>
     </Link>
   );
 }

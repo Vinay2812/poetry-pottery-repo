@@ -1,6 +1,7 @@
 import { getSiteSettings } from "@/lib/data/site-settings";
 
 import { SignInPromptContainer } from "@/features/auth";
+import { NewsletterFormContainer } from "@/features/content";
 import {
   AnnouncementBar,
   buildWhatsAppUrl,
@@ -45,6 +46,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
         facebookUrl={settings.facebook_url}
         youtubeUrl={settings.youtube_url}
         year={new Date().getFullYear()}
+        newsletter={<NewsletterFormContainer />}
       />
       <MobileNavContainer />
       <SignInPromptContainer />

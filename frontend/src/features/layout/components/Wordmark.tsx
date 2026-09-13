@@ -12,12 +12,11 @@ export function Wordmark({ className }: WordmarkProps) {
       href="/"
       aria-label="Poetry & Pottery home"
       className={cn(
-        "font-heading text-xl leading-none tracking-tight text-primary md:text-2xl",
+        "font-heading text-xl leading-none tracking-tight text-foreground md:text-2xl",
         className,
       )}
     >
-      Poetry <span className="font-script text-terracotta italic">&amp;</span>{" "}
-      Pottery
+      Poetry <span className="font-script italic">&amp;</span> Pottery
     </Link>
   );
 }

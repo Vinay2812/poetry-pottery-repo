@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
+import { KilnLabels } from "@/components/motion/KilnLabels";
 import { atViewport } from "@/lib/storybook/viewports";
 import { ProductGallery } from "./ProductGallery";
 
@@ -14,7 +15,7 @@ const meta = {
     ),
   ],
   args: {
-    name: "Slate Morning Mug",
+    name: "Slate morning mug",
     images: [
       "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
       "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
@@ -39,6 +40,24 @@ export const SinglePhoto: Story = {
 
 export const NoPhotos: Story = {
   args: { images: [] },
+};
+
+// The kiln labels only ride along when there is no photo to keep clean.
+export const NoPhotosWithKilnLabels: Story = {
+  args: {
+    images: [],
+    overlay: (
+      <KilnLabels
+        isAnimated={false}
+        className="text-ink"
+        labels={[
+          { text: "Clay body", x: 30, y: 26, anchorX: 38, anchorY: 38 },
+          { text: "Glaze", x: 68, y: 52, anchorX: 62, anchorY: 55 },
+          { text: "Size", x: 62, y: 82, anchorX: 50, anchorY: 72 },
+        ]}
+      />
+    ),
+  },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

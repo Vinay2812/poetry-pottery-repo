@@ -50,8 +50,8 @@ export function OrderDetailContainer({
         className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8"
         aria-busy="true"
       >
-        <div className="h-8 w-56 animate-pulse rounded-full bg-primary-light" />
-        <div className="mt-8 h-64 animate-pulse rounded-3xl bg-primary-light/70" />
+        <div className="h-8 w-56 animate-pulse bg-ash" />
+        <div className="mt-8 h-64 animate-pulse bg-ash" />
       </div>
     );
   }
@@ -65,14 +65,14 @@ export function OrderDetailContainer({
   }
   if (hasError || !order) {
     return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-16 text-center md:px-8">
-        <p className="font-script text-3xl text-clay-dark italic">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-4 px-4 py-16 md:px-8">
+        <h1 className="font-heading text-2xl tracking-tight">
           We could not find that order
-        </p>
+        </h1>
         <button
           type="button"
           onClick={() => void refetch()}
-          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           Try again
         </button>

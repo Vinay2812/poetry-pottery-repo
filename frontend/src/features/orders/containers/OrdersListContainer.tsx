@@ -28,10 +28,7 @@ export function OrdersListContainer() {
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-2" aria-busy="true">
           {[0, 1, 2, 3].map((index) => (
-            <div
-              key={index}
-              className="h-40 animate-pulse rounded-2xl bg-primary-light/70"
-            />
+            <div key={index} className="h-40 animate-pulse bg-ash" />
           ))}
         </div>
       ) : !isSignedIn ? (
@@ -40,15 +37,14 @@ export function OrdersListContainer() {
           onSignIn={() => openSignIn()}
         />
       ) : hasError ? (
-        <div className="flex flex-col items-center gap-3 rounded-3xl bg-cream px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">
-            We could not load your orders just now.
+        <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
+          <h2 className="font-heading text-2xl tracking-tight">
+            Your orders did not load
+          </h2>
+          <p className="max-w-sm text-[15px] text-muted-foreground">
+            Something went wrong on our side.
           </p>
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={() => void refetch()}
-          >
+          <Button variant="outline" onClick={() => void refetch()}>
             Try again
           </Button>
         </div>
@@ -74,22 +70,20 @@ export function OrdersListContainer() {
             ))}
           </div>
           {pageInfo && pageInfo.total > pageInfo.limit && (
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-4 border-t border-ash pt-6">
               <Button
                 variant="outline"
-                className="rounded-full"
                 disabled={page <= 1}
                 onClick={() => setPage((current) => current - 1)}
               >
                 Newer
               </Button>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-sm text-muted-foreground tnum">
                 Page {pageInfo.page} of{" "}
                 {Math.ceil(pageInfo.total / pageInfo.limit)}
               </span>
               <Button
                 variant="outline"
-                className="rounded-full"
                 disabled={!pageInfo.has_more}
                 onClick={() => setPage((current) => current + 1)}
               >

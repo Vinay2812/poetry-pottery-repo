@@ -1,30 +1,17 @@
-import Image from "next/image";
-import Link from "next/link";
-
-import { Button } from "@/components/ui/button";
 import { formatDate, formatInr } from "@/lib/format";
 import {
   getCategories,
-  getCollections,
   getFeaturedProducts,
   getUpcomingEvents,
 } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
 
-import {
-  EventCard,
-  EventGrid,
-  isLowSeats,
-  toDateBadge,
-  toEventPath,
-  toEventTypeLabel,
-  toLevelLabel,
-  toSeatsLabel,
-  toTimeRange,
-} from "@/features/events";
+import { Reveal } from "@/components/motion/Reveal";
+
+import { AboutBlock, EventRow, HomeHero, HomeSection } from "@/features/home";
+import { toEventPath, toSeatsLabel } from "@/features/events";
 import {
   CategoryTile,
-  CollectionCard,
   MadeToOrderBanner,
   ProductCardContainer,
   ProductCarousel,
@@ -32,64 +19,29 @@ import {
 } from "@/features/products";
 
 export default async function HomePage() {
-  const [settings, categories, featured, collections, upcomingEvents] =
-    await Promise.all([
-      getSiteSettings(),
-      getCategories(),
-      getFeaturedProducts(8),
-      getCollections(),
-      getUpcomingEvents(3),
-    ]);
+  const [settings, categories, featured, upcomingEvents] = await Promise.all([
+    getSiteSettings(),
+    getCategories(),
+    getFeaturedProducts(8),
+    getUpcomingEvents(3),
+  ]);
   const customPiece =
     featured.find((product) => product.is_customizable) ?? null;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-16 px-4 py-8 md:gap-24 md:px-8 md:py-12">
-      <section className="grid gap-8 md:grid-cols-2 md:items-center">
-        <div className="relative aspect-4/5 overflow-hidden rounded-[2rem] bg-primary-light md:order-2">
-          {settings.hero_image_url && (
-            <Image
-              src={settings.hero_image_url}
-              alt=""
-              fill
-              priority
-              sizes="(min-width: 768px) 50vw, 100vw"
-              className="object-cover"
-            />
-          )}
-        </div>
-        <div className="flex flex-col gap-5">
-          <p className="text-xs font-semibold tracking-[0.14em] text-terracotta-dark uppercase">
-            Handmade in Sangli
-          </p>
-          <h1 className="font-heading text-4xl leading-[1.05] text-balance md:text-6xl">
-            {settings.hero_heading}
-          </h1>
-          <p className="max-w-md text-base leading-relaxed text-muted-foreground md:text-lg">
-            {settings.hero_subheading}
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <Button size="lg" className="rounded-full" asChild>
-              <Link href={settings.hero_cta_href || "/products"}>
-                {settings.hero_cta_text || "Shop the collection"}
-              </Link>
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="rounded-full"
-              asChild
-            >
-              <Link href="/workshops">Book a wheel session</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+    <div className="mx-auto flex w-full max-w-7xl flex-col px-4 md:px-8">
+      <HomeHero
+        heading={settings.hero_heading}
+        subheading={settings.hero_subheading}
+        imageUrl={settings.hero_image_url || null}
+        shopHref={settings.hero_cta_href || "/products"}
+        shopLabel={settings.hero_cta_text || "Shop the shelf"}
+        sessionHref="/workshops"
+      />
 
       {categories.length > 0 && (
-        <section className="flex flex-col gap-6">
-          <h2 className="font-heading text-2xl md:text-4xl">Shop by shape</h2>
-          <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-7">
+        <HomeSection title="Shapes we throw">
+          <div className="grid grid-cols-3 gap-6 sm:grid-cols-4 md:grid-cols-7">
             {categories.map((category) => (
               <CategoryTile
                 key={category.id}
@@ -100,112 +52,71 @@ export default async function HomePage() {
               />
             ))}
           </div>
+        </HomeSection>
+      )}
+
+      {customPiece && (
+        <section className="border-t border-ash py-16 md:py-24">
+          <MadeToOrderBanner
+            href={toProductPath(customPiece.slug)}
+            imageUrl={customPiece.image_urls[0] ?? null}
+            priceLabel={formatInr(customPiece.price)}
+          />
         </section>
       )}
 
       {featured.length > 0 && (
-        <ProductCarousel
-          title="Pieces people keep coming back for"
-          eyebrow="Studio favourites"
-          viewAllHref="/products?sort=BEST_SELLING"
-        >
-          {featured.map((product, index) => (
-            <ProductCardContainer
-              key={product.id}
-              product={product}
-              isPriority={index < 2}
-            />
-          ))}
-        </ProductCarousel>
+        <div className="border-t border-ash py-16 md:py-24">
+          <Reveal>
+            <ProductCarousel
+              title="Pieces on the shelf"
+              viewAllHref="/products"
+            >
+              {featured.map((product, index) => (
+                <ProductCardContainer
+                  key={product.id}
+                  product={product}
+                  isPriority={index < 2}
+                />
+              ))}
+            </ProductCarousel>
+          </Reveal>
+        </div>
       )}
 
       {upcomingEvents.length > 0 && (
-        <section className="flex flex-col gap-6">
-          <div className="flex items-end justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold tracking-[0.14em] text-terracotta-dark uppercase">
-                At the wheel
-              </p>
-              <h2 className="font-heading text-2xl md:text-4xl">
-                Coming up at the studio
-              </h2>
-            </div>
-            <Link
-              href="/events"
-              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-            >
-              See all events
-            </Link>
-          </div>
-          <EventGrid>
-            {upcomingEvents.map((event) => {
-              const badge = toDateBadge(event.starts_at);
-              return (
-                <EventCard
-                  key={event.id}
-                  href={toEventPath(event.slug)}
-                  title={event.title}
-                  imageUrl={event.image_url}
-                  day={badge.day}
-                  month={badge.month}
-                  weekday={badge.weekday}
-                  typeLabel={toEventTypeLabel(event.event_type)}
-                  levelLabel={toLevelLabel(event.level)}
-                  timeRange={toTimeRange(event.starts_at, event.ends_at)}
-                  location={event.location}
-                  price={event.price}
-                  seatsLabel={toSeatsLabel(
-                    event.available_seats,
-                    event.total_seats,
-                  )}
-                  isSeatsLow={isLowSeats(event.available_seats)}
-                  isSoldOut={event.available_seats <= 0}
-                  isPast={event.is_past}
-                />
-              );
-            })}
-          </EventGrid>
-        </section>
-      )}
-
-      {collections.length > 0 && (
-        <section className="flex flex-col gap-6">
-          <div className="flex items-end justify-between">
-            <h2 className="font-heading text-2xl md:text-4xl">Collections</h2>
-            <Link
-              href="/products"
-              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
-            >
-              All pieces
-            </Link>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2">
-            {collections.slice(0, 4).map((collection) => (
-              <CollectionCard
-                key={collection.id}
-                href={`/products?collection=${collection.slug}`}
-                name={collection.name}
-                description={collection.description}
-                imageUrl={collection.image_url}
-                productCount={collection.product_count}
-                endsLabel={
-                  collection.ends_at
-                    ? `Until ${formatDate(collection.ends_at)}`
-                    : null
-                }
+        <HomeSection
+          title="At the studio"
+          note="Wheel sessions run every afternoon except Monday. Book an hour or three."
+          linkHref="/events"
+          linkLabel="All dates"
+        >
+          <div className="border-t border-ash">
+            {upcomingEvents.map((event) => (
+              <EventRow
+                key={event.id}
+                href={toEventPath(event.slug)}
+                dateLabel={formatDate(event.starts_at)}
+                title={event.title}
+                seatsLabel={toSeatsLabel(
+                  event.available_seats,
+                  event.total_seats,
+                )}
+                isSoldOut={event.available_seats <= 0}
               />
             ))}
           </div>
-        </section>
+        </HomeSection>
       )}
 
-      {customPiece && (
-        <MadeToOrderBanner
-          href={toProductPath(customPiece.slug)}
-          imageUrl={customPiece.image_urls[0] ?? null}
-          priceLabel={formatInr(customPiece.price)}
+      <HomeSection title="A small studio in Sangli">
+        <AboutBlock
+          imageUrl={null}
+          firstLine="We throw stoneware and terracotta on two wheels, glaze it by hand and fire it in small batches."
+          secondLine="Because every piece is thrown one at a time, glaze and shape shift a little between them."
+          href="/about"
         />
-      )}
+      </HomeSection>
     </div>
   );
 }

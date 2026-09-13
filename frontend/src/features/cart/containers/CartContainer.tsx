@@ -33,13 +33,10 @@ export function CartContainer() {
         className="mx-auto w-full max-w-5xl px-4 py-10 md:px-8"
         aria-busy="true"
       >
-        <div className="h-8 w-40 animate-pulse rounded-full bg-primary-light" />
+        <div className="h-8 w-40 animate-pulse bg-ash" />
         <div className="mt-8 flex flex-col gap-4">
           {[0, 1, 2].map((index) => (
-            <div
-              key={index}
-              className="h-28 animate-pulse rounded-2xl bg-primary-light/70"
-            />
+            <div key={index} className="h-28 animate-pulse bg-ash" />
           ))}
         </div>
       </div>
@@ -56,7 +53,7 @@ export function CartContainer() {
         <EmptyCart isSignedIn={isSignedIn} onSignIn={() => openSignIn()} />
       ) : (
         <div className="grid gap-8 lg:grid-cols-[1fr_360px] lg:items-start">
-          <ul className="divide-y divide-border">
+          <ul className="border-t border-ash">
             {items.map((item) => (
               <CartLineItem
                 key={item.id}
@@ -89,7 +86,7 @@ export function CartContainer() {
               />
             ))}
           </ul>
-          <div className="flex flex-col gap-4 lg:sticky lg:top-24">
+          <div className="flex flex-col gap-8 lg:sticky lg:top-24">
             {cart && cart.free_shipping_above !== null && (
               <FreeShippingNudge
                 subtotal={cart.subtotal}

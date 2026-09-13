@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 
 export interface MadeToOrderBannerProps {
   href: string;
@@ -15,38 +15,38 @@ export function MadeToOrderBanner({
   priceLabel,
 }: MadeToOrderBannerProps) {
   return (
-    <section className="grid overflow-hidden rounded-[2rem] bg-primary text-primary-foreground md:grid-cols-2">
-      <div className="flex flex-col gap-4 p-8 md:p-12">
-        <p className="text-xs font-semibold tracking-[0.14em] text-primary-light uppercase">
-          Made to order
-        </p>
-        <h2 className="font-heading text-3xl text-balance md:text-5xl">
-          A mug with your name carved into the clay
-        </h2>
-        <p className="max-w-md text-primary-foreground">
-          Pick a size and a glaze, tell us the words, and we throw it fresh on
-          the wheel. Ready in about ten days. From {priceLabel}.
-        </p>
-        <Button
-          variant="secondary"
-          size="lg"
-          className="w-fit rounded-full"
-          asChild
-        >
-          <Link href={href}>Design yours</Link>
-        </Button>
-      </div>
-      <div className="relative min-h-64 md:min-h-full">
-        {imageUrl && (
+    <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+      <div className="relative aspect-square bg-white">
+        {imageUrl ? (
           <Image
             src={imageUrl}
-            alt="A custom mug on the wheel"
+            alt=""
             fill
             sizes="(min-width: 768px) 50vw, 100vw"
             className="object-cover"
           />
+        ) : (
+          <PlaceholderImage kind="mug" />
         )}
       </div>
-    </section>
+      <div className="flex flex-col gap-4">
+        <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+          Made to order
+        </p>
+        <h2 className="font-heading text-3xl leading-tight tracking-tight text-balance md:text-5xl">
+          Your name, carved into a mug.
+        </h2>
+        <p className="max-w-md text-[15px] text-muted-foreground">
+          Pick a size and a glaze, tell us the words, and we throw it fresh from{" "}
+          {priceLabel}.
+        </p>
+        <Link
+          href={href}
+          className="w-fit border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
+        >
+          Start a made-to-order piece
+        </Link>
+      </div>
+    </div>
   );
 }

@@ -48,7 +48,7 @@ function CheckGroup({
   if (options.length === 0) return null;
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="mb-3 text-xs font-semibold tracking-[0.12em] text-clay-dark uppercase">
+      <legend className="mb-3 text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
         {title}
       </legend>
       {options.map((option) => {
@@ -65,7 +65,7 @@ function CheckGroup({
               className="flex flex-1 justify-between font-normal"
             >
               <span>{option.label}</span>
-              <span className="text-muted-foreground">{option.count}</span>
+              <span className="text-muted-foreground tnum">{option.count}</span>
             </Label>
           </div>
         );
@@ -100,7 +100,7 @@ export function ProductFilters({
         <button
           type="button"
           onClick={onClear}
-          className="self-start text-sm font-medium text-primary underline-offset-4 hover:underline"
+          className="self-start border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
         >
           Clear all filters
         </button>
@@ -116,7 +116,7 @@ export function ProductFilters({
 
       {hasPriceRange && (
         <div className="flex flex-col gap-4">
-          <h3 className="text-xs font-semibold tracking-[0.12em] text-clay-dark uppercase">
+          <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
             Price
           </h3>
           <Slider
@@ -138,7 +138,7 @@ export function ProductFilters({
             }
             aria-label="Price range"
           />
-          <p className="flex justify-between text-sm text-muted-foreground">
+          <p className="flex justify-between text-[13px] text-muted-foreground tnum">
             <span>{formatInr(priceRange[0])}</span>
             <span>{formatInr(priceRange[1])}</span>
           </p>

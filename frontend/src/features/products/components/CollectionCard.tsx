@@ -1,6 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { toPotteryIconKind } from "@/components/icons/pottery";
+import { PlaceholderImage } from "@/components/media/PlaceholderImage";
+
 export interface CollectionCardProps {
   href: string;
   name: string;
@@ -13,7 +16,6 @@ export interface CollectionCardProps {
 export function CollectionCard({
   href,
   name,
-  description,
   imageUrl,
   productCount,
   endsLabel,
@@ -21,37 +23,32 @@ export function CollectionCard({
   return (
     <Link
       href={href}
-      className="group relative flex aspect-4/3 flex-col justify-end overflow-hidden rounded-3xl bg-primary-light p-5 text-white shadow-soft transition-all hover:-translate-y-1 hover:shadow-card md:aspect-3/2"
+      className="group flex flex-col gap-3 outline-none focus-visible:ring-1 focus-visible:ring-ink"
     >
-      {imageUrl && (
-        <Image
-          src={imageUrl}
-          alt=""
-          fill
-          sizes="(min-width: 768px) 50vw, 100vw"
-          className="object-cover transition-transform duration-700 group-hover:scale-[1.04]"
-        />
-      )}
-      <span
-        aria-hidden="true"
-        className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent"
-      />
-      <span className="relative flex flex-col gap-1">
-        {endsLabel && (
-          <span className="text-[11px] font-semibold tracking-[0.14em] text-terracotta-light uppercase">
-            {endsLabel}
-          </span>
+      <span className="relative block aspect-square overflow-hidden bg-white">
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt=""
+            fill
+            sizes="(min-width: 768px) 30vw, 100vw"
+            className="object-cover"
+          />
+        ) : (
+          <PlaceholderImage kind={toPotteryIconKind(name)} />
         )}
-        <span className="font-heading text-2xl md:text-3xl">{name}</span>
-        {description && (
-          <span className="line-clamp-2 max-w-md text-sm text-white/85">
-            {description}
-          </span>
-        )}
-        <span className="text-xs text-white/70">
-          {productCount} {productCount === 1 ? "piece" : "pieces"}
+      </span>
+      <span className="flex items-baseline justify-between gap-3">
+        <span className="text-sm underline-offset-4 group-hover:underline">
+          {name}
+        </span>
+        <span className="text-[13px] text-muted-foreground tnum">
+          {productCount} pieces
         </span>
       </span>
+      {endsLabel && (
+        <span className="text-[13px] text-muted-foreground">{endsLabel}</span>
+      )}
     </Link>
   );
 }

@@ -29,9 +29,9 @@ export function CancelRegistrationDialog({
 }: CancelRegistrationDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading text-2xl font-normal">
+          <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Cancel this booking?
           </DialogTitle>
           <DialogDescription>

@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 
+import { PotteryIcon, toPotteryIconKind } from "@/components/icons/pottery";
 import { cn } from "@/lib/utils";
 
 export interface CategoryStripItem {
@@ -17,23 +17,26 @@ export interface CategoryStripProps {
   isAllActive: boolean;
 }
 
+const LINK_CLASS =
+  "flex shrink-0 items-center gap-2 border-b-2 pb-2 text-sm whitespace-nowrap transition-colors";
+
 export function CategoryStrip({
   items,
   allHref,
   isAllActive,
 }: CategoryStripProps) {
   return (
-    <nav aria-label="Categories" className="-mx-4 md:mx-0">
-      <ul className="hide-scrollbar flex gap-3 overflow-x-auto px-4 md:flex-wrap md:px-0">
+    <nav aria-label="Categories" className="-mx-4 border-b border-ash md:mx-0">
+      <ul className="hide-scrollbar flex gap-6 overflow-x-auto px-4 md:px-0">
         <li className="shrink-0">
           <Link
             href={allHref}
             aria-current={isAllActive ? "page" : undefined}
             className={cn(
-              "flex h-16 items-center rounded-2xl px-4 text-sm font-medium transition-colors",
+              LINK_CLASS,
               isAllActive
-                ? "bg-primary text-primary-foreground"
-                : "bg-primary-light text-primary-hover hover:bg-primary/15",
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
             All pieces
@@ -45,23 +48,16 @@ export function CategoryStrip({
               href={item.href}
               aria-current={item.isActive ? "page" : undefined}
               className={cn(
-                "flex h-16 items-center gap-3 rounded-2xl pr-4 pl-1.5 text-sm font-medium transition-colors",
+                LINK_CLASS,
                 item.isActive
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-cream text-foreground hover:bg-primary-light",
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
               )}
             >
-              <span className="relative size-13 shrink-0 overflow-hidden rounded-xl bg-primary-light">
-                {item.imageUrl && (
-                  <Image
-                    src={item.imageUrl}
-                    alt=""
-                    fill
-                    sizes="52px"
-                    className="object-cover"
-                  />
-                )}
-              </span>
+              <PotteryIcon
+                kind={toPotteryIconKind(item.slug)}
+                className="size-5"
+              />
               {item.name}
             </Link>
           </li>

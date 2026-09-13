@@ -8,27 +8,20 @@ const meta = {
   component: EventCard,
   decorators: [
     (Story) => (
-      <div className="w-80">
+      <div className="w-72">
         <Story />
       </div>
     ),
   ],
   args: {
     href: "/events/wheel-throwing-for-beginners",
-    title: "Wheel Throwing for Beginners",
+    title: "Wheel throwing for beginners",
     imageUrl:
-      "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
-    day: "19",
-    month: "Sep",
-    weekday: "Sat",
+      "https://images.pexels.com/photos/4992831/pexels-photo-4992831.jpeg",
+    dateLabel: "Thu 17 Sep · 4 pm",
     typeLabel: "Pottery workshop",
-    levelLabel: "Beginner",
-    timeRange: "3:00 pm – 6:00 pm",
-    location: "Poetry & Pottery studio, Sangli",
+    seatsLabel: "3 seats left",
     price: 1800,
-    seatsLabel: "All 8 seats open",
-    isSeatsLow: false,
-    isSoldOut: false,
     isPast: false,
   },
 } satisfies Meta<typeof EventCard>;
@@ -37,37 +30,29 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Workshop: Story = {};
+export const Default: Story = {};
 
-export const FillingUp: Story = {
-  args: { seatsLabel: "3 seats left", isSeatsLow: true },
+export const SoldOut: Story = {
+  args: { seatsLabel: "Sold out" },
 };
 
 export const OpenMic: Story = {
   args: {
-    href: "/events/verses-and-vases-evening",
-    title: "Verses & Vases Evening",
+    href: "/events/clay-and-couplets",
+    title: "Clay and couplets, open mic",
     typeLabel: "Open mic",
-    levelLabel: null,
-    timeRange: "7:00 pm – 9:30 pm",
-    price: 400,
+    dateLabel: "Sat 26 Sep · 6:30 pm",
     seatsLabel: "Last seat",
-    isSeatsLow: true,
+    price: 400,
   },
-};
-
-export const SoldOut: Story = {
-  args: { seatsLabel: "Sold out", isSoldOut: true, isSeatsLow: false },
 };
 
 export const Past: Story = {
-  args: {
-    day: "12",
-    month: "Jul",
-    weekday: "Sun",
-    seatsLabel: "Sold out",
-    isPast: true,
-  },
+  args: { isPast: true, seatsLabel: "Wrapped up" },
+};
+
+export const NoPhoto: Story = {
+  args: { imageUrl: null },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

@@ -21,7 +21,7 @@ export function MobileNav({ activeHref, cartCount }: MobileNavProps) {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/95 pb-safe backdrop-blur-md lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-ash bg-background pb-safe lg:hidden"
     >
       <ul className="flex h-16 items-stretch">
         {ITEMS.map(({ href, label, Icon }) => {
@@ -34,22 +34,26 @@ export function MobileNav({ activeHref, cartCount }: MobileNavProps) {
                 aria-label={count > 0 ? `${label} (${count})` : label}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "flex h-full flex-col items-center justify-center gap-1 text-[11px] font-medium transition-colors",
+                  "flex h-full flex-col items-center justify-center gap-1.5 text-[11px] transition-colors",
                   isActive ? "text-primary" : "text-muted-foreground",
                 )}
               >
                 <span className="relative">
-                  <Icon
-                    className="size-6"
-                    strokeWidth={isActive ? 2.25 : 1.75}
-                  />
+                  <Icon className="size-5" strokeWidth={1.5} />
                   {count > 0 && (
-                    <span className="absolute -top-1.5 -right-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-terracotta px-1 text-[10px] font-bold text-foreground">
+                    <span className="absolute -top-1 -right-2.5 text-[10px] font-medium text-primary tnum">
                       {formatBadgeCount(count)}
                     </span>
                   )}
                 </span>
-                {label}
+                <span
+                  className={cn(
+                    "border-b-2 pb-0.5",
+                    isActive ? "border-primary" : "border-transparent",
+                  )}
+                >
+                  {label}
+                </span>
               </Link>
             </li>
           );

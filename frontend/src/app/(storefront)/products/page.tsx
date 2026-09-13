@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { getCategories, getCollection } from "@/lib/data/catalog";
+import {
+  getCategories,
+  getCollection,
+  getCollections,
+} from "@/lib/data/catalog";
 
 import { ProductListContainer } from "@/features/products";
 
@@ -17,8 +21,9 @@ export default async function ProductsPage({
   const params = await searchParams;
   const collectionSlug =
     typeof params.collection === "string" ? params.collection : null;
-  const [categories, collection] = await Promise.all([
+  const [categories, collections, collection] = await Promise.all([
     getCategories(),
+    getCollections(),
     collectionSlug ? getCollection(collectionSlug) : Promise.resolve(null),
   ]);
 
@@ -30,10 +35,16 @@ export default async function ProductsPage({
           name: category.name,
           imageUrl: category.image_url,
         }))}
+        collections={collections.map((item) => ({
+          slug: item.slug,
+          name: item.name,
+          imageUrl: item.image_url,
+          productCount: item.product_count,
+        }))}
         heading={collection?.name ?? "Every piece on the shelf"}
         description={
           collection?.description ??
-          "Thrown, glazed and fired by hand. Small runs, so what you see is what is in the studio right now."
+          "Thrown, glazed and fired by hand in small batches."
         }
       />
     </Suspense>

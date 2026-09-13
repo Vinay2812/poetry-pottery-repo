@@ -6,15 +6,14 @@ export interface EmptyAddressesProps {
 
 export function EmptyAddresses({ onAddClick }: EmptyAddressesProps) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-3xl bg-cream px-6 py-16 text-center">
-      <p className="font-script text-3xl text-clay-dark italic">
+    <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
+      <h2 className="font-heading text-2xl tracking-tight">
         No addresses saved yet
+      </h2>
+      <p className="max-w-sm text-[15px] text-muted-foreground">
+        Add where your pieces should go and we will keep it for next time.
       </p>
-      <p className="max-w-sm text-sm text-clay-dark">
-        Add where your pieces should travel to, and we will keep it here for
-        next time.
-      </p>
-      <Button className="rounded-full" onClick={onAddClick}>
+      <Button variant="outline" onClick={onAddClick}>
         Add an address
       </Button>
     </div>

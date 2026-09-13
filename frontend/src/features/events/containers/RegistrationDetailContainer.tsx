@@ -12,6 +12,7 @@ import {
   useRegistration,
 } from "@/features/events/hooks";
 import {
+  type EventFact,
   isRegistrationClosed,
   REGISTRATION_STEPS,
   toEventPath,
@@ -53,21 +54,21 @@ export function RegistrationDetailContainer({
         className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8"
         aria-busy="true"
       >
-        <div className="h-8 w-56 animate-pulse rounded-full bg-primary-light" />
-        <div className="mt-8 h-64 animate-pulse rounded-3xl bg-primary-light/70" />
+        <div className="h-8 w-56 animate-pulse bg-ash" />
+        <div className="mt-8 h-64 animate-pulse bg-ash/60" />
       </div>
     );
   }
   if (hasError || !registration) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-16 text-center md:px-8">
-        <p className="font-script text-3xl text-clay-dark italic">
+        <h1 className="font-heading text-2xl tracking-tight">
           We could not find that booking
-        </p>
+        </h1>
         <button
           type="button"
           onClick={() => void refetch()}
-          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          className="border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
         >
           Try again
         </button>
@@ -104,14 +105,19 @@ export function RegistrationDetailContainer({
       )
     : null;
 
+  const facts: EventFact[] = [
+    { label: "Kind", value: toEventTypeLabel(event.event_type) },
+    { label: "Date", value: formatDate(event.starts_at) },
+    { label: "Time", value: toTimeRange(event.starts_at, event.ends_at) },
+    { label: "Where", value: `${event.location}, ${event.address}` },
+  ];
+
   return (
     <>
       <RegistrationDetail
         registrationId={registration.id}
         eventTitle={event.title}
         eventHref={toEventPath(event.slug)}
-        imageUrl={event.image_url}
-        typeLabel={toEventTypeLabel(event.event_type)}
         bookedOn={formatDateTime(registration.created_at)}
         statusLabel={toRegistrationStatusLabel(registration.status)}
         statusTone={toRegistrationStatusTone(registration.status)}
@@ -125,10 +131,7 @@ export function RegistrationDetailContainer({
         currentStepIndex={toRegistrationStepIndex(registration.status)}
         isClosed={closed}
         closedLabel={closedLabel}
-        dateLabel={formatDate(event.starts_at)}
-        timeRange={toTimeRange(event.starts_at, event.ends_at)}
-        location={event.location}
-        address={event.address}
+        facts={facts}
         seats={registration.seats}
         unitPrice={registration.unit_price}
         discount={registration.discount}

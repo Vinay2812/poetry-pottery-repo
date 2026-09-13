@@ -55,12 +55,9 @@ export function AddressPickerContainer({
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-3" aria-busy="true">
+      <div className="flex flex-col gap-4" aria-busy="true">
         {[0, 1].map((index) => (
-          <div
-            key={index}
-            className="h-28 animate-pulse rounded-2xl bg-primary-light/70"
-          />
+          <div key={index} className="h-28 animate-pulse bg-ash" />
         ))}
       </div>
     );

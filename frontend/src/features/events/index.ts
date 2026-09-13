@@ -14,12 +14,9 @@ export { EventListContainer } from "@/features/events/containers/EventListContai
 export { RegistrationDetailContainer } from "@/features/events/containers/RegistrationDetailContainer";
 export { RegistrationsListContainer } from "@/features/events/containers/RegistrationsListContainer";
 export {
-  isLowSeats,
-  toDateBadge,
   toEventPath,
   toEventTypeLabel,
-  toLevelLabel,
+  toEventWhenLabel,
   toSeatsLabel,
-  toTimeRange,
   type EventCardData,
 } from "@/features/events/types";

@@ -4,24 +4,32 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Pottery design tokens. */
+/* Pottery design tokens: clay-white walls, ink text, one sage accent. */
 @theme {
+  --color-clay-white: #f7f4ef;
+  --color-ink: #1f1d1a;
+  --color-sage: #4f6f52;
+  --color-kiln: #c4785a;
+  /* Smoke is darkened from the brief's #8a857d so 13px text clears 4.5:1 on clay-white. */
+  --color-smoke: #6f6a62;
+  --color-ash: #e5e0d8;
+
   --color-primary-hover: #3d5640;
-  --color-primary-light: #e8ece8;
+  --color-primary-light: #e5e0d8;
   --color-terracotta: #c4785a;
   --color-terracotta-hover: #b06847;
   --color-terracotta-light: #f5ebe6;
   /* Contrast-safe terracotta for small text on light surfaces (>=4.5:1). */
   --color-terracotta-dark: #9a5a3f;
-  --color-cream: #f5f0e8;
+  --color-cream: #f2efe8;
   --color-clay: #8b7355;
   /* Contrast-safe clay for small text on cream (>=4.5:1). */
   --color-clay-dark: #6f5b44;
 
-  --shadow-soft:
-    0 1px 2px rgb(26 26 26 / 0.04), 0 4px 12px rgb(26 26 26 / 0.05);
-  --shadow-card:
-    0 2px 4px rgb(26 26 26 / 0.06), 0 12px 28px rgb(26 26 26 / 0.1);
+  /* Nothing shadows at rest; sheets and dialogs opt into --shadow-ambient. */
+  --shadow-soft: none;
+  --shadow-card: none;
+  --shadow-ambient: 0 24px 60px rgb(31 29 26 / 0.14);
 }
 
 @theme inline {
@@ -61,76 +69,77 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
 }
 
 :root {
-  --background: #fafaf9;
-  --foreground: #1a1a1a;
+  --background: #f7f4ef;
+  --foreground: #1f1d1a;
   --card: #ffffff;
-  --card-foreground: #1a1a1a;
+  --card-foreground: #1f1d1a;
   --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
+  --popover-foreground: #1f1d1a;
   --primary: #4f6f52;
-  --primary-foreground: #fafaf9;
-  --secondary: #f5f0e8;
-  --secondary-foreground: #3d5640;
-  --muted: #e8ece8;
-  --muted-foreground: #666666;
-  --accent: #e8ece8;
-  --accent-foreground: #3d5640;
-  --destructive: #b91c1c;
-  --border: #e8ece8;
-  --input: #e5e5e4;
+  --primary-foreground: #ffffff;
+  --secondary: #f2efe8;
+  --secondary-foreground: #1f1d1a;
+  --muted: #f2efe8;
+  --muted-foreground: #6f6a62;
+  --accent: #f2efe8;
+  --accent-foreground: #1f1d1a;
+  --destructive: #a33a2c;
+  --border: #e5e0d8;
+  --input: #e5e0d8;
   --ring: #4f6f52;
   --chart-1: #4f6f52;
   --chart-2: #c4785a;
   --chart-3: #8b7355;
   --chart-4: #3d5640;
-  --chart-5: #737373;
-  --radius: 1rem;
-  --sidebar: #f5f0e8;
-  --sidebar-foreground: #1a1a1a;
+  --chart-5: #6f6a62;
+  /* Square everywhere. Circles are opt-in per element (avatars only). */
+  --radius: 0px;
+  --sidebar: #f2efe8;
+  --sidebar-foreground: #1f1d1a;
   --sidebar-primary: #4f6f52;
-  --sidebar-primary-foreground: #fafaf9;
-  --sidebar-accent: #e8ece8;
-  --sidebar-accent-foreground: #3d5640;
-  --sidebar-border: #e8ece8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f2efe8;
+  --sidebar-accent-foreground: #1f1d1a;
+  --sidebar-border: #e5e0d8;
   --sidebar-ring: #4f6f52;
 }
 
 .dark {
-  --background: #1a1a1a;
-  --foreground: #fafaf9;
-  --card: #232323;
-  --card-foreground: #fafaf9;
-  --popover: #232323;
-  --popover-foreground: #fafaf9;
+  --background: #1f1d1a;
+  --foreground: #f7f4ef;
+  --card: #262320;
+  --card-foreground: #f7f4ef;
+  --popover: #262320;
+  --popover-foreground: #f7f4ef;
   --primary: #8fae91;
-  --primary-foreground: #1a1a1a;
-  --secondary: #2c2c2b;
-  --secondary-foreground: #fafaf9;
-  --muted: #2c2c2b;
-  --muted-foreground: #a3a3a3;
-  --accent: #2c2c2b;
-  --accent-foreground: #fafaf9;
-  --destructive: #f87171;
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --primary-foreground: #1f1d1a;
+  --secondary: #2c2925;
+  --secondary-foreground: #f7f4ef;
+  --muted: #2c2925;
+  --muted-foreground: #a9a39a;
+  --accent: #2c2925;
+  --accent-foreground: #f7f4ef;
+  --destructive: #e07a6c;
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
   --ring: #8fae91;
-  --sidebar: #232323;
-  --sidebar-foreground: #fafaf9;
+  --sidebar: #262320;
+  --sidebar-foreground: #f7f4ef;
   --sidebar-primary: #8fae91;
-  --sidebar-primary-foreground: #1a1a1a;
-  --sidebar-accent: #2c2c2b;
-  --sidebar-accent-foreground: #fafaf9;
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-primary-foreground: #1f1d1a;
+  --sidebar-accent: #2c2925;
+  --sidebar-accent-foreground: #f7f4ef;
+  --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: #8fae91;
 }
 
@@ -154,5 +163,63 @@
   scrollbar-width: none;
   &::-webkit-scrollbar {
     display: none;
+  }
+}
+
+/* Prices and counts stay on a fixed width so columns do not jitter. */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes clip-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dash length comes from the line's own user-unit length, so one dash spans it exactly. */
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: var(--draw-length, 100);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .animate-clip-reveal {
+    animation: clip-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+
+  .animate-draw-line {
+    stroke-dasharray: var(--draw-length, 100);
+    stroke-dashoffset: var(--draw-length, 100);
+    animation: draw-line 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--draw-delay, 0ms);
+  }
+
+  .animate-label-fade {
+    animation: fade-up 300ms ease-out both;
+    animation-delay: var(--label-delay, 0ms);
   }
 }
