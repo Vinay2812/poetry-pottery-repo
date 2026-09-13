@@ -14,7 +14,7 @@ import { useToggleWishlist, useWishlistIds } from "@/features/wishlist/hooks";
 
 export function CartContainer() {
   const { cart, isLoading, isSignedIn } = useCart();
-  const { setQuantity, remove } = useCartMutations(cart);
+  const { setQuantity, remove } = useCartMutations();
   const { toggle } = useToggleWishlist();
   const { isWishlisted } = useWishlistIds();
   const { openSignIn } = useClerk();
