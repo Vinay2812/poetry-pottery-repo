@@ -43,3 +43,14 @@ prisma/
 - Anything slow or external (email, embeddings) is a queue job in `src/queue/jobs.ts`; consumers validate payloads with zod.
 - New resolvers must be exported from `src/resolvers.ts` and modules from `src/modules.ts`, or `schema:emit` and the app will silently skip them.
 - Commands: `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm schema:emit`, `pnpm prettier:format`.
+
+## Concurrency tests
+
+`pnpm test:integration` runs `test/integration/` against a real Postgres: it creates a throwaway
+database, applies the migrations with `prisma migrate deploy`, runs the suite and drops the database
+again, so the dev data is never touched. It needs the compose stack up and is deliberately outside
+`pnpm test`.
+
+Each test fires twenty calls at once and checks the guard held: the last piece sells once, the last
+seat and the last wheel go to one guest, a single-use coupon is redeemed once, a double cancel
+returns stock and seats exactly once, and concurrent cart adds merge into one line.

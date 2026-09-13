@@ -19,6 +19,7 @@
     "schema:emit": "ts-node -r tsconfig-paths/register --project tsconfig.json scripts/emit-schema.ts",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:integration": "ts-node -r tsconfig-paths/register --project tsconfig.json test/integration/run.ts",
     "test:cov": "vitest run --coverage",
     "prisma:generate": "prisma generate",
     "migration:create": "prisma migrate dev --create-only",
