@@ -60,6 +60,43 @@ input AdminCollectionInput {
   starts_at: DateTime
 }
 
+type AdminCoupon {
+  code: String!
+  created_at: DateTime!
+  expires_at: DateTime
+  id: Int!
+  is_active: Boolean!
+  kind: CouponKind!
+  max_uses: Int
+  min_order: Int!
+  starts_at: DateTime
+  uses_count: Int!
+  value: Int!
+}
+
+input AdminCouponInput {
+  code: String!
+  expires_at: DateTime
+  is_active: Boolean
+  kind: CouponKind!
+  max_uses: Int
+  min_order: Int
+  starts_at: DateTime
+  value: Int!
+}
+
+input AdminCouponsFilterInput {
+  is_active: Boolean
+  limit: Int
+  page: Int
+  search: String
+}
+
+type AdminCouponsResult {
+  items: [AdminCoupon!]!
+  page_info: PageInfo!
+}
+
 type AdminDashboard {
   low_stock: [AdminLowStockPiece!]!
   orders_by_status: [AdminOrderStatusCount!]!
@@ -588,6 +625,11 @@ input ContentSectionItemInput {
   title: String!
 }
 
+enum CouponKind {
+  FIXED
+  PERCENT
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -705,7 +747,11 @@ type Mutation {
   createAdminUpload(content_type: String!, purpose: UploadPurpose!, size: Int!): UploadTarget!
   createCategory(input: AdminCategoryInput!): Category!
   createCollection(input: AdminCollectionInput!): Collection!
+<<<<<<< HEAD
   createCommissionRequest(input: CommissionRequestInput!): CommissionRequest!
+=======
+  createCoupon(input: AdminCouponInput!): AdminCoupon!
+>>>>>>> 250eeb2 (feat: add coupon admin with code and window validation)
   createCustomizationUpload(content_type: String!, size: Int!): UploadTicket!
   createEvent(input: AdminEventInput!): Event!
   createEventReview(event_id: Int!, input: ReviewInput!): Review!
@@ -719,6 +765,7 @@ type Mutation {
   deleteCategory(id: Int!): Boolean!
   deleteCollection(id: Int!): Boolean!
   deleteContentPage(slug: String!): Boolean!
+  deleteCoupon(id: Int!): Boolean!
   deleteProductOption(id: Int!): Boolean!
   deleteProductOptionGroup(id: Int!): Boolean!
   deleteReview(id: Int!): Boolean!
@@ -757,7 +804,7 @@ type Mutation {
   updateCartItem(id: Int!, quantity: Int!): Cart!
   updateCategory(id: Int!, input: AdminCategoryInput!): Category!
   updateCollection(id: Int!, input: AdminCollectionInput!): Collection!
-  updateContentPage(input: ContentPageInput!, slug: String!): ContentPage!
+  updateCoupon(id: Int!, input: AdminCouponInput!): AdminCoupon!
   updateEvent(id: Int!, input: AdminEventInput!): Event!
   updateProduct(id: Int!, input: AdminProductUpdateInput!): Product!
   updateProductOption(id: Int!, input: AdminOptionInput!): ProductOptionGroup!
@@ -967,6 +1014,7 @@ type Query {
   adminCollections: [Collection!]!
   adminContentPage(slug: String!): ContentPage!
   adminContentPages: [ContentPageSummary!]!
+  adminCoupons(filter: AdminCouponsFilterInput): AdminCouponsResult!
   adminDashboard: AdminDashboard!
   adminEvent(id: Int!): Event!
   adminEventRegistrations(filter: AdminRegistrationsFilterInput): AdminRegistrationsResult!
@@ -993,7 +1041,6 @@ type Query {
   commissionRequests(filter: CommissionRequestsFilterInput): CommissionRequestsResult!
   contactMessages(limit: Int, page: Int): ContactMessagesResult!
   contentPage(slug: String!): ContentPage!
-  contentPages: [ContentPageSummary!]!
   event(slug: String!): Event!
   eventReviews(event_id: Int!, limit: Int, page: Int): ReviewsResult!
   events(filter: EventsFilterInput): EventsResult!
