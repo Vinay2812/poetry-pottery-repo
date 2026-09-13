@@ -34,6 +34,7 @@ export interface ProductCardProps {
   isCustomizable?: boolean;
   isAddingToCart?: boolean;
   isPriority?: boolean;
+  isEager?: boolean;
   onToggleWishlist?: () => void;
   onAddToCart?: () => void;
 }
@@ -55,6 +56,7 @@ export function ProductCard({
   isCustomizable = false,
   isAddingToCart = false,
   isPriority = false,
+  isEager = false,
   onToggleWishlist,
   onAddToCart,
 }: ProductCardProps) {
@@ -95,6 +97,11 @@ export function ProductCard({
                     alt={toPhotoAlt(name, index)}
                     fill
                     priority={isPriority && index === 0}
+                    loading={
+                      !isPriority && isEager && index === 0
+                        ? "eager"
+                        : undefined
+                    }
                     sizes={SIZES}
                     className={cn(
                       "photo-zoom object-cover transition-opacity duration-500 ease-out",

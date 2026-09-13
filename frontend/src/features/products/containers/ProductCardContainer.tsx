@@ -17,12 +17,14 @@ import { useToggleWishlist, useWishlistIds } from "@/features/wishlist/hooks";
 export interface ProductCardContainerProps {
   product: ProductCardData;
   isPriority?: boolean;
+  isEager?: boolean;
 }
 
 // One place that turns a product record into a card with live cart and wishlist behaviour.
 export function ProductCardContainer({
   product,
   isPriority = false,
+  isEager = false,
 }: ProductCardContainerProps) {
   const { isWishlisted } = useWishlistIds();
   const { toggle } = useToggleWishlist();
@@ -50,6 +52,7 @@ export function ProductCardContainer({
         price={product.price}
         note={toArchiveLabel(product.stock)}
         isPriority={isPriority}
+        isEager={isEager}
       />
     );
   }
@@ -76,6 +79,7 @@ export function ProductCardContainer({
       isCustomizable={product.is_customizable}
       isAddingToCart={isAdding}
       isPriority={isPriority}
+      isEager={isEager}
       onToggleWishlist={handleToggleWishlist}
       onAddToCart={handleAddToCart}
     />

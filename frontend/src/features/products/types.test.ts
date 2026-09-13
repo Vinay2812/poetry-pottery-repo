@@ -6,6 +6,7 @@ import {
   applyFilterAction,
   computeUnitPrice,
   countActiveFilters,
+  toCardPhotoLoading,
   EMPTY_FILTERS,
   parseFilters,
   toArchiveAskUrl,
@@ -292,5 +293,21 @@ describe("applyFilterAction", () => {
       { type: "clear" },
     );
     expect(cleared).toEqual({ ...EMPTY_FILTERS, isArchive: true });
+  });
+});
+
+describe("toCardPhotoLoading", () => {
+  it("preloads the phone's first row and only un-lazies the rest of the desktop row", () => {
+    expect(toCardPhotoLoading(0)).toEqual({ isPriority: true, isEager: true });
+    expect(toCardPhotoLoading(1)).toEqual({ isPriority: true, isEager: true });
+    expect(toCardPhotoLoading(2)).toEqual({ isPriority: false, isEager: true });
+    expect(toCardPhotoLoading(3)).toEqual({ isPriority: false, isEager: true });
+  });
+
+  it("leaves everything below the first row lazy", () => {
+    expect(toCardPhotoLoading(4)).toEqual({
+      isPriority: false,
+      isEager: false,
+    });
   });
 });

@@ -355,3 +355,15 @@ export function toPhotoLabel(index: number, total: number): string {
 export function toPhotoAlt(name: string, index: number): string {
   return index === 0 ? name : `${name}, view ${index + 1}`;
 }
+
+export interface CardPhotoLoading {
+  isPriority: boolean;
+  isEager: boolean;
+}
+
+// The grid's first row is two cards on a phone and four on a desktop. The first two are
+// preloaded; the next two only skip lazy loading, so a phone never pays to preload a row
+// it cannot see yet.
+export function toCardPhotoLoading(index: number): CardPhotoLoading {
+  return { isPriority: index < 2, isEager: index < 4 };
+}

@@ -11,6 +11,7 @@ export {
   ARCHIVE_VIEW,
   STUDIO_NOTE,
   toBatchLabel,
+  toCardPhotoLoading,
   toDiscountPercent,
   toProductPath,
   toStockStatus,

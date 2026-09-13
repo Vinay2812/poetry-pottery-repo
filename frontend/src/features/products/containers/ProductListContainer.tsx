@@ -36,6 +36,7 @@ import {
   type FilterAction,
   parseFilters,
   type ProductFilters as Filters,
+  toCardPhotoLoading,
   toFilterInput,
   toSearchParams,
 } from "@/features/products/types";
@@ -332,7 +333,8 @@ export function ProductListContainer({
                   <ProductCardContainer
                     key={product.id}
                     product={product}
-                    isPriority={index < 4}
+                    isPriority={toCardPhotoLoading(index).isPriority}
+                    isEager={toCardPhotoLoading(index).isEager}
                   />
                 ))}
               </ProductGrid>

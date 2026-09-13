@@ -9,6 +9,7 @@ import {
   ProductCardContainer,
   ProductGrid,
   StudioAskLine,
+  toCardPhotoLoading,
 } from "@/features/products";
 
 export const metadata: Metadata = {
@@ -46,7 +47,8 @@ export default async function CustomPage() {
             <ProductCardContainer
               key={product.id}
               product={product}
-              isPriority={index < 4}
+              isPriority={toCardPhotoLoading(index).isPriority}
+              isEager={toCardPhotoLoading(index).isEager}
             />
           ))}
         </ProductGrid>

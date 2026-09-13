@@ -13,6 +13,7 @@ export interface ArchiveCardProps {
   price: number;
   note: string;
   isPriority?: boolean;
+  isEager?: boolean;
 }
 
 const SIZES = "(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 50vw";
@@ -25,6 +26,7 @@ export function ArchiveCard({
   price,
   note,
   isPriority = false,
+  isEager = false,
 }: ArchiveCardProps) {
   return (
     <article className="group flex flex-col gap-2.5">
@@ -38,6 +40,7 @@ export function ArchiveCard({
             alt={name}
             fill
             priority={isPriority}
+            loading={!isPriority && isEager ? "eager" : undefined}
             sizes={SIZES}
             className="photo-zoom object-cover opacity-80 transition-opacity duration-500 ease-out group-hover:opacity-100"
           />
