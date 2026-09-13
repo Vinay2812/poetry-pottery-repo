@@ -116,6 +116,7 @@ type CollectionRef {
   id: Int!
   name: String!
   slug: String!
+  starts_at: DateTime
 }
 
 type ContactMessage {
@@ -381,6 +382,7 @@ type Product {
   image_urls: [String!]!
   in_wishlist: Boolean!
   is_active: Boolean!
+  is_archived: Boolean!
   is_customizable: Boolean!
   is_featured: Boolean!
   material: String!
@@ -395,6 +397,8 @@ type Product {
 }
 
 type ProductFacets {
+  active_count: Int!
+  archive_count: Int!
   categories: [FacetCount!]!
   materials: [FacetCount!]!
   price_max: Int!
@@ -427,6 +431,7 @@ enum ProductSort {
 }
 
 input ProductsFilterInput {
+  archive: Boolean = false
   category_slugs: [String!]
   collection_slug: String
   customizable_only: Boolean
@@ -452,7 +457,7 @@ type Query {
   categories: [Category!]!
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
   collection(slug: String!): Collection!
-  collections: [Collection!]!
+  collections(archive: Boolean = false): [Collection!]!
   contactMessages(limit: Int, page: Int): ContactMessagesResult!
   contentPage(slug: String!): ContentPage!
   contentPages: [ContentPageSummary!]!

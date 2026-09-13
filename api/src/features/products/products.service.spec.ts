@@ -1,10 +1,15 @@
 import { Test } from "@nestjs/testing";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { RedisService } from "@/redis/redis.service";
 import { SearchService } from "@/features/search/search.service";
-import { ProductsService } from "./products.service";
+import {
+  archivedProductWhere,
+  availableProductWhere,
+  isProductArchived,
+  ProductsService,
+} from "./products.service";
 import { ProductSort } from "./products.type";
 
 const prismaMock = {
@@ -39,11 +44,26 @@ function row(id: number) {
   return { id, slug: `p-${id}`, categories: [], collection: null };
 }
 
+const NOW = new Date("2026-09-14T00:00:00.000Z");
+const CLOSED = {
+  starts_at: new Date("2025-03-01T00:00:00.000Z"),
+  ends_at: new Date("2025-05-31T00:00:00.000Z"),
+};
+const OPEN = { starts_at: null, ends_at: null };
+const SHELF = {
+  is_active: true,
+  stock: 2,
+  is_customizable: false,
+  collection: null,
+};
+
 describe("ProductsService", () => {
   let service: ProductsService;
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
     prismaMock.product.count.mockResolvedValue(0);
     prismaMock.category.findMany.mockResolvedValue([]);
     prismaMock.product.groupBy.mockResolvedValue([]);
@@ -60,6 +80,10 @@ describe("ProductsService", () => {
       ],
     }).compile();
     service = moduleRef.get(ProductsService);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("lists sellable products with the requested sort and page", async () => {
@@ -86,11 +110,13 @@ describe("ProductsService", () => {
         skip: 12,
         take: 12,
         orderBy: [{ price: "asc" }, { id: "asc" }],
-        where: containing({
-          is_active: true,
-          stock: { gt: 0 },
-          categories: { some: { slug: { in: ["mugs"] } } },
-        }),
+        where: {
+          AND: [
+            availableProductWhere(),
+            { categories: { some: { slug: { in: ["mugs"] } } } },
+            { stock: { gt: 0 } },
+          ],
+        },
       }),
     );
     expect(searchMock.rankProducts).not.toHaveBeenCalled();
@@ -107,7 +133,7 @@ describe("ProductsService", () => {
     expect(result.page_info.has_more).toBe(true);
     expect(prismaMock.product.findMany).toHaveBeenCalledWith(
       containing({
-        where: containing({ id: { in: [3, 1, 2] } }),
+        where: { AND: [availableProductWhere(), { id: { in: [3, 1, 2] } }] },
       }),
     );
   });
@@ -142,6 +168,8 @@ describe("ProductsService", () => {
       materials: [{ value: "Stoneware", label: "Stoneware", count: 4 }],
       price_min: 480,
       price_max: 3800,
+      active_count: 0,
+      archive_count: 0,
     });
     // The material filter must not narrow the facet pool.
     expect(prismaMock.product.groupBy).toHaveBeenCalledWith(
@@ -151,12 +179,50 @@ describe("ProductsService", () => {
     );
   });
 
-  it("throws a not-found error for inactive or unknown slugs", async () => {
+  it("throws a not-found error for unknown slugs", async () => {
     prismaMock.product.findFirst.mockResolvedValue(null);
 
     await expect(service.bySlug("missing")).rejects.toThrow(
       "Product not found",
     );
+  });
+
+  it("looks archived pieces up by slug alone", async () => {
+    prismaMock.product.findFirst.mockResolvedValue(row(7));
+
+    await service.bySlug("p-7");
+
+    expect(prismaMock.product.findFirst).toHaveBeenCalledWith(
+      containing({ where: { slug: "p-7" } }),
+    );
+  });
+
+  it("lists the archive when the filter asks for it", async () => {
+    prismaMock.product.findMany.mockResolvedValue([row(1)]);
+    prismaMock.product.count.mockResolvedValueOnce(9).mockResolvedValueOnce(15);
+
+    const result = await service.list({ archive: true });
+
+    expect(prismaMock.product.findMany).toHaveBeenCalledWith(
+      containing({ where: { AND: [archivedProductWhere()] } }),
+    );
+    expect(result.page_info.total).toBe(15);
+    expect(result.facets.active_count).toBe(9);
+    expect(result.facets.archive_count).toBe(15);
+  });
+
+  it("counts both tabs under the same category filter", async () => {
+    prismaMock.product.findMany.mockResolvedValue([]);
+
+    await service.list({ category_slugs: ["mugs"] });
+
+    const narrowing = { categories: { some: { slug: { in: ["mugs"] } } } };
+    expect(prismaMock.product.count).toHaveBeenCalledWith({
+      where: { AND: [availableProductWhere(), narrowing] },
+    });
+    expect(prismaMock.product.count).toHaveBeenCalledWith({
+      where: { AND: [archivedProductWhere(), narrowing] },
+    });
   });
 
   it("caches categories with live product counts", async () => {
@@ -174,5 +240,45 @@ describe("ProductsService", () => {
       120,
       expect.any(Function),
     );
+  });
+});
+
+describe("archive predicate", () => {
+  it("is the exact negation of the availability rule", () => {
+    expect(archivedProductWhere(NOW)).toEqual({
+      NOT: availableProductWhere(NOW),
+    });
+  });
+
+  it("keeps a stocked, active piece in a live collection on the shelf", () => {
+    expect(isProductArchived(SHELF, NOW)).toBe(false);
+    expect(isProductArchived({ ...SHELF, collection: OPEN }, NOW)).toBe(false);
+  });
+
+  it("archives retired pieces", () => {
+    expect(isProductArchived({ ...SHELF, is_active: false }, NOW)).toBe(true);
+  });
+
+  it("archives sold-out pieces that are not made to order", () => {
+    expect(isProductArchived({ ...SHELF, stock: 0 }, NOW)).toBe(true);
+    expect(
+      isProductArchived({ ...SHELF, stock: 0, is_customizable: true }, NOW),
+    ).toBe(false);
+  });
+
+  it("archives pieces whose collection window has closed or not opened", () => {
+    expect(isProductArchived({ ...SHELF, collection: CLOSED }, NOW)).toBe(true);
+    expect(
+      isProductArchived(
+        {
+          ...SHELF,
+          collection: {
+            starts_at: new Date("2027-01-01T00:00:00.000Z"),
+            ends_at: null,
+          },
+        },
+        NOW,
+      ),
+    ).toBe(true);
   });
 });
