@@ -33,6 +33,57 @@ input AddressInput {
   state: String!
 }
 
+type AdminDashboard {
+  low_stock: [AdminLowStockPiece!]!
+  orders_by_status: [AdminOrderStatusCount!]!
+  orders_last_30_days: Int!
+  pending_bookings: Int!
+  pending_registrations: Int!
+  recent_bookings: [AdminRecentBooking!]!
+  recent_orders: [AdminRecentOrder!]!
+  revenue_last_30_days: Int!
+  unread_messages: Int!
+}
+
+type AdminLowStockPiece {
+  id: Int!
+  name: String!
+  slug: String!
+  stock: Int!
+}
+
+type AdminOrderStatusCount {
+  count: Int!
+  status: OrderStatus!
+}
+
+type AdminRecentBooking {
+  created_at: DateTime!
+  customer: AdminUserRef!
+  hours: Int!
+  id: String!
+  participants: Int!
+  starts_at: DateTime!
+  status: RegistrationStatus!
+  total: Int!
+}
+
+type AdminRecentOrder {
+  created_at: DateTime!
+  customer: AdminUserRef!
+  id: String!
+  item_count: Int!
+  status: OrderStatus!
+  total: Int!
+}
+
+type AdminUserRef {
+  email: String!
+  id: Int!
+  image: String
+  name: String
+}
+
 input BookWorkshopInput {
   config_slug: String!
   hours: Int!
@@ -453,6 +504,7 @@ type ProductsResult {
 
 type Query {
   addresses: [Address!]!
+  adminDashboard: AdminDashboard!
   cart: Cart!
   categories: [Category!]!
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!

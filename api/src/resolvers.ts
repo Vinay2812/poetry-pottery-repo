@@ -16,3 +16,4 @@ export {
 } from "@/features/reviews/reviews.resolver";
 
 export { AdminUploadsResolver } from "@/features/admin/uploads/uploads.resolver";
+export { AdminDashboardResolver } from "@/features/admin/dashboard/dashboard.resolver";
