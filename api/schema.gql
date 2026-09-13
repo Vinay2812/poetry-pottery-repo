@@ -90,9 +90,30 @@ input AdminOptionInput {
   sort_order: Int
 }
 
+type AdminOrder {
+  admin_note: String
+  customer: AdminUserRef!
+  next_statuses: [OrderStatus!]!
+  order: Order!
+}
+
 type AdminOrderStatusCount {
   count: Int!
   status: OrderStatus!
+}
+
+input AdminOrdersFilterInput {
+  from: DateTime
+  limit: Int
+  page: Int
+  search: String
+  status: OrderStatus
+  to: DateTime
+}
+
+type AdminOrdersResult {
+  items: [AdminOrder!]!
+  page_info: PageInfo!
 }
 
 input AdminProductInput {
@@ -499,6 +520,7 @@ type Mutation {
   bookStudioVisit(input: StudioVisitInput!): StudioVisit!
   bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
   cancelOrder(id: String!, reason: String): Order!
+  cancelOrderAsAdmin(id: String!, reason: String): AdminOrder!
   cancelRegistration(id: String!, reason: String): Registration!
   cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
@@ -523,6 +545,7 @@ type Mutation {
   deleteReview(id: Int!): Boolean!
   markCommissionRequestRead(id: String!): CommissionRequest!
   markContactMessageRead(id: Int!): ContactMessage!
+  markOrderPaid(id: String!): AdminOrder!
   notifyWhenBackInStock(email: String!, product_id: Int!): BatchNotificationResult!
   placeOrder(input: PlaceOrderInput!): Order!
   registerForEvent(input: RegisterForEventInput!): Registration!
@@ -531,6 +554,8 @@ type Mutation {
   rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
   sendContactMessage(input: ContactMessageInput!): Boolean!
   setDefaultAddress(id: Int!): Address!
+  setOrderAdminNote(id: String!, note: String): AdminOrder!
+  setOrderStatus(cancel_reason: String, id: String!, status: OrderStatus!, tracking_note: String): AdminOrder!
   setProductActive(id: Int!, is_active: Boolean!): Product!
   setProductFeatured(id: Int!, is_featured: Boolean!): Product!
   stopBatchNotification(token: String!): Boolean!
@@ -746,6 +771,8 @@ type Query {
   adminCategories: [Category!]!
   adminCollections: [Collection!]!
   adminDashboard: AdminDashboard!
+  adminOrder(id: String!): AdminOrder!
+  adminOrders(filter: AdminOrdersFilterInput): AdminOrdersResult!
   adminProduct(id: Int!): Product!
   adminProductOptionGroups(product_id: Int!): [ProductOptionGroup!]!
   adminProducts(filter: AdminProductsFilterInput): AdminProductsResult!
