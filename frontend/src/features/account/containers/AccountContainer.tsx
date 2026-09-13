@@ -2,7 +2,7 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useTransition } from "react";
 
 import { UserRole } from "@/graphql/generated/graphql";
 
@@ -15,8 +15,11 @@ export function AccountContainer() {
   const { openUserProfile, signOut, openSignIn } = useClerk();
   const router = useRouter();
 
+  const [, startTransition] = useTransition();
+
+  // The push is a transition so the page it lands on can stream in rather than blocking.
   const handleSignOut = useCallback(() => {
-    void signOut(() => router.push("/"));
+    void signOut(() => startTransition(() => router.push("/")));
   }, [router, signOut]);
 
   if (!isLoaded) {
