@@ -50,6 +50,9 @@ export class WorkshopConfig {
   @Field(() => Int)
   booking_window_days!: number;
 
+  @Field(() => Int)
+  slot_span_days!: number;
+
   @Field(() => [Int])
   closed_weekdays!: number[];
 
@@ -94,6 +97,15 @@ export class WorkshopDay {
 }
 
 @ObjectType()
+export class WorkshopBookingSlot {
+  @Field()
+  starts_at!: Date;
+
+  @Field()
+  ends_at!: Date;
+}
+
+@ObjectType()
 export class WorkshopBooking {
   @Field()
   id!: string;
@@ -106,6 +118,9 @@ export class WorkshopBooking {
 
   @Field()
   ends_at!: Date;
+
+  @Field(() => [WorkshopBookingSlot])
+  slots!: WorkshopBookingSlot[];
 
   @Field(() => Int)
   hours!: number;
@@ -185,8 +200,8 @@ export class BookWorkshopInput {
   @Field()
   config_slug!: string;
 
-  @Field()
-  starts_at!: Date;
+  @Field(() => [Date])
+  slot_starts!: Date[];
 
   @Field(() => Int)
   hours!: number;
@@ -203,6 +218,6 @@ export class RescheduleWorkshopInput {
   @Field()
   booking_id!: string;
 
-  @Field()
-  starts_at!: Date;
+  @Field(() => [Date])
+  slot_starts!: Date[];
 }

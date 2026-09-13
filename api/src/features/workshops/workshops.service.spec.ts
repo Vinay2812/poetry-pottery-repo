@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
-import { fromWallClock } from "./schedule";
+import { addDays, fromWallClock } from "./schedule";
 import { WorkshopsService } from "./workshops.service";
 
 const containing = (value: Record<string, unknown>): unknown =>
@@ -16,6 +16,7 @@ const prismaMock = {
   $executeRaw: vi.fn(),
   workshopConfig: { findMany: vi.fn(), findFirst: vi.fn() },
   workshopBlackout: { findMany: vi.fn() },
+  workshopBookingSlot: { findMany: vi.fn(), deleteMany: vi.fn() },
   workshopBooking: {
     findMany: vi.fn(),
     findFirst: vi.fn(),
@@ -42,6 +43,7 @@ const config = {
   slot_minutes: 60,
   capacity_per_slot: 6,
   booking_window_days: 60,
+  slot_span_days: 7,
   closed_weekdays: [1],
   created_at: new Date(),
   updated_at: new Date(),
@@ -71,12 +73,17 @@ function nextSunday(): string {
 
 function bookingRow(overrides: Record<string, unknown> = {}) {
   const starts_at = fromWallClock(nextSunday(), 14 * 60, config.timezone);
+  const second = fromWallClock(nextSunday(), 17 * 60, config.timezone);
   return {
     id: "WS-1",
     config_id: 1,
     user_id: 1,
     starts_at,
-    ends_at: new Date(starts_at.getTime() + 2 * 3_600_000),
+    ends_at: new Date(second.getTime() + 3_600_000),
+    slots: [
+      { starts_at, ends_at: new Date(starts_at.getTime() + 3_600_000) },
+      { starts_at: second, ends_at: new Date(second.getTime() + 3_600_000) },
+    ],
     hours: 2,
     participants: 2,
     price_per_person: 1700,
@@ -107,6 +114,8 @@ describe("WorkshopsService", () => {
     prismaMock.workshopConfig.findFirst.mockResolvedValue(config);
     prismaMock.workshopBlackout.findMany.mockResolvedValue([]);
     prismaMock.workshopBooking.findMany.mockResolvedValue([]);
+    prismaMock.workshopBookingSlot.findMany.mockResolvedValue([]);
+    prismaMock.workshopBookingSlot.deleteMany.mockResolvedValue({ count: 2 });
     prismaMock.workshopBooking.create.mockResolvedValue(bookingRow());
     prismaMock.workshopBooking.update.mockResolvedValue(bookingRow());
     prismaMock.workshopBooking.updateMany.mockResolvedValue({ count: 1 });
@@ -124,12 +133,14 @@ describe("WorkshopsService", () => {
     service = moduleRef.get(WorkshopsService);
   });
 
-  it("books a tiered session under an advisory lock and emails both sides", async () => {
-    const starts_at = fromWallClock(nextSunday(), 14 * 60, config.timezone);
+  it("books the chosen hours under an advisory lock and emails both sides", async () => {
+    const day = nextSunday();
+    const first = fromWallClock(day, 14 * 60, config.timezone);
+    const second = fromWallClock(addDays(day, 2), 17 * 60, config.timezone);
 
     const booking = await service.book(1, {
       config_slug: "open-studio",
-      starts_at,
+      slot_starts: [second, first],
       hours: 2,
       participants: 2,
     });
@@ -144,35 +155,72 @@ describe("WorkshopsService", () => {
           price_per_person: 1700,
           subtotal: 3400,
           total: 3400,
+          starts_at: first,
+          ends_at: new Date(second.getTime() + 3_600_000),
+          slots: {
+            create: [
+              {
+                starts_at: first,
+                ends_at: new Date(first.getTime() + 3_600_000),
+              },
+              {
+                starts_at: second,
+                ends_at: new Date(second.getTime() + 3_600_000),
+              },
+            ],
+          },
         }),
       }),
     );
     expect(mailMock.enqueue).toHaveBeenCalledTimes(2);
+    expect(booking.slots).toHaveLength(2);
     expect(booking.can_cancel).toBe(true);
   });
 
-  it("rejects durations without a tier and over-full sessions", async () => {
-    const starts_at = fromWallClock(nextSunday(), 14 * 60, config.timezone);
+  it("rejects durations without a tier, wrong hour counts, wide spans and full hours", async () => {
+    const day = nextSunday();
+    const first = fromWallClock(day, 14 * 60, config.timezone);
     await expect(
       service.book(1, {
         config_slug: "open-studio",
-        starts_at,
+        slot_starts: [first],
         hours: 3,
         participants: 1,
       }),
     ).rejects.toThrow("Choose 1, 2 hour sessions");
 
-    prismaMock.workshopBooking.findMany.mockResolvedValue([
+    await expect(
+      service.book(1, {
+        config_slug: "open-studio",
+        slot_starts: [first],
+        hours: 2,
+        participants: 1,
+      }),
+    ).rejects.toThrow("Pick 2 hours");
+
+    await expect(
+      service.book(1, {
+        config_slug: "open-studio",
+        slot_starts: [
+          first,
+          fromWallClock(addDays(day, 10), 14 * 60, config.timezone),
+        ],
+        hours: 2,
+        participants: 1,
+      }),
+    ).rejects.toThrow("within 7 days");
+
+    prismaMock.workshopBookingSlot.findMany.mockResolvedValue([
       {
-        starts_at,
-        ends_at: new Date(starts_at.getTime() + 3_600_000),
-        participants: 5,
+        starts_at: first,
+        ends_at: new Date(first.getTime() + 3_600_000),
+        booking: { participants: 5 },
       },
     ]);
     await expect(
       service.book(1, {
         config_slug: "open-studio",
-        starts_at,
+        slot_starts: [first],
         hours: 1,
         participants: 2,
       }),
@@ -197,21 +245,45 @@ describe("WorkshopsService", () => {
     expect(days[0]?.slots.length).toBe(6);
   });
 
-  it("moves a booking to a free slot and keeps its own seats out of the count", async () => {
+  it("replaces the whole slot set on a move and keeps its own seats out of the count", async () => {
     prismaMock.workshopBooking.findFirst.mockResolvedValue(bookingRow());
-    const starts_at = fromWallClock(nextSunday(), 16 * 60, config.timezone);
+    const day = nextSunday();
+    const first = fromWallClock(day, 16 * 60, config.timezone);
+    const second = fromWallClock(addDays(day, 2), 13 * 60, config.timezone);
 
-    await service.reschedule(1, { booking_id: "WS-1", starts_at });
+    await service.reschedule(1, {
+      booking_id: "WS-1",
+      slot_starts: [first, second],
+    });
 
-    expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledWith(
-      containing({ where: containing({ id: { not: "WS-1" } }) }),
+    expect(prismaMock.workshopBookingSlot.findMany).toHaveBeenCalledWith(
+      containing({
+        where: containing({
+          booking: containing({ id: { not: "WS-1" } }),
+        }),
+      }),
     );
+    expect(prismaMock.workshopBookingSlot.deleteMany).toHaveBeenCalledWith({
+      where: { booking_id: "WS-1" },
+    });
     expect(prismaMock.workshopBooking.update).toHaveBeenCalledWith(
       containing({
-        data: {
-          starts_at,
-          ends_at: new Date(starts_at.getTime() + 2 * 3_600_000),
-        },
+        data: containing({
+          starts_at: first,
+          ends_at: new Date(second.getTime() + 3_600_000),
+          slots: {
+            create: [
+              {
+                starts_at: first,
+                ends_at: new Date(first.getTime() + 3_600_000),
+              },
+              {
+                starts_at: second,
+                ends_at: new Date(second.getTime() + 3_600_000),
+              },
+            ],
+          },
+        }),
       }),
     );
   });

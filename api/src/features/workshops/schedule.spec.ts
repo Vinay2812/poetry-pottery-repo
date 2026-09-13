@@ -3,10 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   addDays,
   buildAvailability,
-  checkSession,
+  checkSlots,
   fromWallClock,
   occupancy,
   type ScheduleConfig,
+  slotBounds,
+  spanDays,
   toWallClock,
 } from "./schedule";
 
@@ -17,6 +19,7 @@ const config: ScheduleConfig = {
   slot_minutes: 60,
   capacity_per_slot: 6,
   booking_window_days: 60,
+  slot_span_days: 7,
   closed_weekdays: [1],
 };
 
@@ -114,58 +117,146 @@ describe("buildAvailability", () => {
   });
 });
 
-describe("checkSession", () => {
-  const session = (
-    date: string,
-    startHour: number,
-    hours: number,
+describe("spanDays and slotBounds", () => {
+  const at = (date: string, hour: number) =>
+    fromWallClock(date, hour * 60, config.timezone);
+
+  it("counts both ends of the span", () => {
+    expect(spanDays([at("2026-09-13", 14)], config.timezone)).toBe(1);
+    expect(
+      spanDays([at("2026-09-13", 14), at("2026-09-15", 14)], config.timezone),
+    ).toBe(3);
+  });
+
+  it("derives the first start and last end", () => {
+    const bounds = slotBounds([at("2026-09-15", 14), at("2026-09-13", 18)], 60);
+    expect(bounds.starts_at).toEqual(at("2026-09-13", 18));
+    expect(bounds.ends_at).toEqual(at("2026-09-15", 15));
+  });
+});
+
+describe("checkSlots", () => {
+  const at = (date: string, hour: number) =>
+    fromWallClock(date, hour * 60, config.timezone);
+  const request = (
+    slot_starts: Date[],
+    hours = slot_starts.length,
     participants = 2,
   ) => ({
-    starts_at: fromWallClock(date, startHour * 60, config.timezone),
-    ends_at: fromWallClock(date, (startHour + hours) * 60, config.timezone),
+    slot_starts,
+    hours,
     participants,
   });
 
-  it("accepts a valid session and counts occupancy per slot", () => {
+  it("accepts hours spread over separate days", () => {
     expect(
-      checkSession(session("2026-09-13", 14, 2), config, now, [], []),
-    ).toEqual({ ok: true });
-    const busy = [{ ...session("2026-09-13", 15, 1, 5), participants: 5 }];
-    expect(
-      checkSession(session("2026-09-13", 14, 2, 2), config, now, [], busy),
-    ).toMatchObject({
-      ok: false,
-      reason: "Not enough wheels free for that session",
-    });
-    expect(occupancy(session("2026-09-13", 15, 1), busy)).toBe(5);
-  });
-
-  it("rejects off-grid, out-of-hours, closed and oversized requests", () => {
-    expect(
-      checkSession(
-        {
-          ...session("2026-09-13", 14, 1),
-          starts_at: new Date(
-            session("2026-09-13", 14, 1).starts_at.getTime() + 15 * 60_000,
-          ),
-        },
+      checkSlots(
+        request([at("2026-09-13", 14), at("2026-09-15", 17)]),
         config,
         now,
         [],
         [],
       ),
-    ).toMatchObject({ reason: "Choose a session from the calendar" });
+    ).toEqual({ ok: true });
+  });
+
+  it("counts occupancy for each chosen hour on its own", () => {
+    const busy = [
+      {
+        starts_at: at("2026-09-15", 17),
+        ends_at: at("2026-09-15", 18),
+        participants: 5,
+      },
+    ];
+    expect(occupancy(busy[0]!, busy)).toBe(5);
     expect(
-      checkSession(session("2026-09-13", 18, 2), config, now, [], []),
+      checkSlots(
+        request([at("2026-09-13", 14), at("2026-09-15", 17)]),
+        config,
+        now,
+        [],
+        busy,
+      ),
+    ).toMatchObject({
+      ok: false,
+      reason: "Not enough wheels free for one of those hours",
+    });
+  });
+
+  it("needs exactly as many hours as the tier", () => {
+    expect(
+      checkSlots(request([at("2026-09-13", 14)], 2), config, now, [], []),
+    ).toMatchObject({ reason: "Pick 2 hours for a 2 hour session" });
+    expect(
+      checkSlots(
+        request([at("2026-09-13", 14), at("2026-09-13", 14)]),
+        config,
+        now,
+        [],
+        [],
+      ),
+    ).toMatchObject({ reason: "You picked the same hour twice" });
+  });
+
+  it("keeps the whole set inside the allowed span", () => {
+    expect(
+      checkSlots(
+        request([at("2026-09-13", 14), at("2026-09-22", 14)]),
+        config,
+        now,
+        [],
+        [],
+      ),
+    ).toMatchObject({
+      reason: "Keep every hour within 7 days of the first",
+    });
+    expect(
+      checkSlots(
+        request([at("2026-09-13", 14), at("2026-09-15", 14)]),
+        { ...config, slot_span_days: 1 },
+        now,
+        [],
+        [],
+      ),
+    ).toMatchObject({ reason: "Keep every hour on the same day" });
+  });
+
+  it("rejects off-grid, out-of-hours, closed, blacked out and oversized requests", () => {
+    expect(
+      checkSlots(
+        request([new Date(at("2026-09-13", 14).getTime() + 15 * 60_000)]),
+        config,
+        now,
+        [],
+        [],
+      ),
+    ).toMatchObject({ reason: "Choose an hour from the calendar" });
+    expect(
+      checkSlots(request([at("2026-09-13", 19)]), config, now, [], []),
     ).toMatchObject({ reason: "That time is outside studio hours" });
     expect(
-      checkSession(session("2026-09-14", 14, 1), config, now, [], []),
+      checkSlots(request([at("2026-09-14", 14)]), config, now, [], []),
     ).toMatchObject({ reason: "The studio is closed that day" });
     expect(
-      checkSession(session("2026-09-13", 14, 1, 7), config, now, [], []),
+      checkSlots(request([at("2026-09-13", 14)], 1, 7), config, now, [], []),
     ).toMatchObject({ reason: "Sessions take 1 to 6 people" });
     expect(
-      checkSession(session("2026-12-01", 14, 1), config, now, [], []),
+      checkSlots(request([at("2026-12-01", 14)]), config, now, [], []),
     ).toMatchObject({ reason: "Bookings open 60 days ahead" });
+    expect(
+      checkSlots(
+        request([at("2026-09-13", 15)]),
+        config,
+        now,
+        [
+          {
+            starts_at: at("2026-09-13", 15),
+            ends_at: at("2026-09-13", 17),
+            reason: "Kiln firing",
+          },
+        ],
+        [],
+      ),
+    ).toMatchObject({ reason: "Kiln firing" });
   });
 });

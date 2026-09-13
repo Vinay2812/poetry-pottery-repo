@@ -450,6 +450,7 @@ model WorkshopConfig {
   slot_minutes        Int     @default(60)
   capacity_per_slot   Int     @default(6)
   booking_window_days Int     @default(60)
+  slot_span_days      Int     @default(1)
   closed_weekdays     Int[]   @default([])
 
   created_at DateTime @default(now())
@@ -522,13 +523,28 @@ model WorkshopBooking {
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
 
-  config WorkshopConfig @relation(fields: [config_id], references: [id], onDelete: Cascade)
-  user   User           @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  config WorkshopConfig       @relation(fields: [config_id], references: [id], onDelete: Cascade)
+  user   User                  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  slots  WorkshopBookingSlot[]
 
   @@index([config_id, starts_at, ends_at])
   @@index([user_id])
   @@index([status])
   @@map("workshop_bookings")
+}
+
+// One chosen hour. A three-hour booking holds three of these, not always on the same day.
+model WorkshopBookingSlot {
+  id         Int      @id @default(autoincrement())
+  booking_id String
+  starts_at  DateTime
+  ends_at    DateTime
+
+  booking WorkshopBooking @relation(fields: [booking_id], references: [id], onDelete: Cascade)
+
+  @@unique([booking_id, starts_at])
+  @@index([starts_at])
+  @@map("workshop_booking_slots")
 }
 
 // ---------- Marketing & content ----------

@@ -38,7 +38,7 @@ input BookWorkshopInput {
   hours: Int!
   note: String
   participants: Int!
-  starts_at: DateTime!
+  slot_starts: [DateTime!]!
 }
 
 type Cart {
@@ -523,7 +523,7 @@ type RegistrationsResult {
 
 input RescheduleWorkshopInput {
   booking_id: String!
-  starts_at: DateTime!
+  slot_starts: [DateTime!]!
 }
 
 input SelectionInputType {
@@ -618,10 +618,16 @@ type WorkshopBooking {
   pieces_per_person: Int!
   price_per_person: Int!
   rejected_at: DateTime
+  slots: [WorkshopBookingSlot!]!
   starts_at: DateTime!
   status: RegistrationStatus!
   subtotal: Int!
   total: Int!
+}
+
+type WorkshopBookingSlot {
+  ends_at: DateTime!
+  starts_at: DateTime!
 }
 
 type WorkshopBookingsResult {
@@ -640,6 +646,7 @@ type WorkshopConfig {
   name: String!
   opening_minutes: Int!
   slot_minutes: Int!
+  slot_span_days: Int!
   slug: String!
   tiers: [WorkshopTier!]!
   timezone: String!

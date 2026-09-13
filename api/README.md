@@ -38,6 +38,7 @@ prisma/
 
 - Identity comes from the Clerk context (`@CurrentUser()`), never from inputs. Guard with `@AuthRequired()` / `@AdminRequired()`.
 - Money is integer rupees. Stock and seats change only inside transactions with conditional updates.
+- Open-studio bookings hold one `WorkshopBookingSlot` per chosen hour. The hours need not touch and may fall on different days, as long as the earliest and latest sit within `WorkshopConfig.slot_span_days` calendar days in the studio timezone. `starts_at`/`ends_at` on the booking are the derived first start and last end. Every hour is validated and its capacity checked inside one transaction under a per-studio advisory lock.
 - Anything slow or external (email, embeddings) is a queue job in `src/queue/jobs.ts`; consumers validate payloads with zod.
 - New resolvers must be exported from `src/resolvers.ts` and modules from `src/modules.ts`, or `schema:emit` and the app will silently skip them.
 - Commands: `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm schema:emit`, `pnpm prettier:format`.
