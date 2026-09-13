@@ -1,20 +1,18 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { ReviewDialog } from "@/features/reviews/components/ReviewDialog";
 import { ReviewForm } from "@/features/reviews/components/ReviewForm";
 import { ReviewItem } from "@/features/reviews/components/ReviewItem";
 import { ReviewPhotoDialog } from "@/features/reviews/components/ReviewPhotoDialog";
 import { ReviewsSection } from "@/features/reviews/components/ReviewsSection";
+import { useReviewComposer, useReviewList } from "@/features/reviews/hooks";
 import {
-  type ReviewSubjectKind,
-  useReviewComposer,
-  useReviewList,
-} from "@/features/reviews/hooks";
-import {
+  applyReviewAction,
   EVENT_REVIEW_NOTE,
   PRODUCT_REVIEW_NOTE,
+  type ReviewSubjectKind,
   toFormValues,
   toReviewDate,
 } from "@/features/reviews/types";
@@ -36,8 +34,11 @@ export function ReviewsPanelContainer({
     () => ({ kind, id: subjectId, slug }),
     [kind, slug, subjectId],
   );
-  const { items, summary, hasMore, isLoading, isLoadingMore, loadMore } =
-    useReviewList(subject);
+  const { result, isLoading, isLoadingMore, loadMore } = useReviewList(subject);
+  const [optimisticResult, applyAction] = useOptimistic(
+    result,
+    applyReviewAction,
+  );
   const {
     canReview,
     isOpen,
@@ -49,7 +50,7 @@ export function ReviewsPanelContainer({
     setIsOpen,
     submit,
     upload,
-  } = useReviewComposer(subject);
+  } = useReviewComposer(subject, subjectName, applyAction);
   const [openPhoto, setOpenPhoto] = useState<string | null>(null);
 
   const handleClose = useCallback(() => setIsOpen(false), [setIsOpen]);
@@ -64,6 +65,7 @@ export function ReviewsPanelContainer({
         : EVENT_REVIEW_NOTE
       : null;
   const defaults = toFormValues(myReview);
+  const summary = optimisticResult?.summary ?? null;
 
   return (
     <>
@@ -75,12 +77,13 @@ export function ReviewsPanelContainer({
         quietLine={quietLine}
         ctaLabel={ctaLabel}
         isLoading={isLoading}
-        hasMore={hasMore}
+        isPending={isSaving}
+        hasMore={optimisticResult?.page_info.has_more ?? false}
         isLoadingMore={isLoadingMore}
         onWriteReview={open}
         onLoadMore={loadMore}
       >
-        {items.map((review) => (
+        {(optimisticResult?.items ?? []).map((review) => (
           <ReviewItem
             key={review.id}
             authorName={review.author.name}
@@ -90,7 +93,7 @@ export function ReviewsPanelContainer({
             photoUrls={review.image_urls}
             isMine={review.is_mine}
             onEdit={review.is_mine ? open : undefined}
-            onDelete={review.is_mine ? () => void removeMine() : undefined}
+            onDelete={review.is_mine ? removeMine : undefined}
             onOpenPhoto={setOpenPhoto}
           />
         ))}
@@ -109,7 +112,7 @@ export function ReviewsPanelContainer({
           isSubmitting={isSaving}
           isUploading={isUploading}
           submitLabel={hasMine ? "Save changes" : "Post review"}
-          onSubmit={(values) => void submit(values)}
+          onSubmit={submit}
           onUploadPhoto={upload}
           onCancel={handleClose}
         />

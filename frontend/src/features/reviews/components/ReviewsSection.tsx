@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 import { ReviewSummary } from "@/features/reviews/components/ReviewSummary";
 
 export interface ReviewsSectionProps {
@@ -8,6 +10,7 @@ export interface ReviewsSectionProps {
   quietLine: string | null;
   ctaLabel: string | null;
   isLoading: boolean;
+  isPending: boolean;
   hasMore: boolean;
   isLoadingMore: boolean;
   onWriteReview?: () => void;
@@ -23,6 +26,7 @@ export function ReviewsSection({
   quietLine,
   ctaLabel,
   isLoading,
+  isPending,
   hasMore,
   isLoadingMore,
   onWriteReview,
@@ -48,15 +52,23 @@ export function ReviewsSection({
         <div aria-busy="true" className="h-24 animate-pulse bg-ash" />
       ) : (
         <>
-          <ReviewSummary
-            average={average}
-            count={count}
-            distribution={distribution}
-          />
-          {quietLine && (
-            <p className="text-[13px] text-muted-foreground">{quietLine}</p>
-          )}
-          <ul className="flex flex-col">{children}</ul>
+          <div
+            aria-busy={isPending}
+            className={cn(
+              "flex flex-col gap-6 transition-opacity duration-200",
+              isPending && "opacity-60",
+            )}
+          >
+            <ReviewSummary
+              average={average}
+              count={count}
+              distribution={distribution}
+            />
+            {quietLine && (
+              <p className="text-[13px] text-muted-foreground">{quietLine}</p>
+            )}
+            <ul className="flex flex-col">{children}</ul>
+          </div>
           {hasMore && onLoadMore && (
             <button
               type="button"

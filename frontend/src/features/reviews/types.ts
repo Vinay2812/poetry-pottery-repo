@@ -14,6 +14,14 @@ export type ReviewSummaryData = ReviewSummaryFieldsFragment;
 export type ReviewEligibilityData = ReviewEligibilityFieldsFragment;
 export type ReviewsResultData = ProductReviewsQuery["productReviews"];
 
+export type ReviewSubjectKind = "product" | "event";
+
+export interface ReviewSubject {
+  kind: ReviewSubjectKind;
+  id: number;
+  slug: string;
+}
+
 export const REVIEWS_PAGE_SIZE = 5;
 export const REVIEW_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_REVIEW_IMAGE_BYTES = 8 * 1024 * 1024;
@@ -104,7 +112,7 @@ export function toFormValues(review: ReviewData | null): ReviewFormValues {
   };
 }
 
-// The summary is recomputed from its own distribution so the cache never refetches to stay honest.
+// The summary is recomputed from its own distribution so the pending list stays honest.
 export function applyRatingChange(
   summary: ReviewSummaryData,
   added: number | null,
@@ -129,6 +137,40 @@ export function applyRatingChange(
     distribution,
     count,
     average: count === 0 ? 0 : Math.round((total / count) * 10) / 10,
+  };
+}
+
+export function toSubjectHref(subject: ReviewSubject): string {
+  return subject.kind === "product"
+    ? `/products/${subject.slug}`
+    : `/events/${subject.slug}`;
+}
+
+export const DRAFT_REVIEW_ID = -1;
+
+export interface ReviewDraftContext {
+  author: ReviewData["author"];
+  subjectName: string;
+  subjectHref: string;
+  createdAt: string;
+}
+
+// A pending review stands in for the real one until the refetched list answers.
+export function toDraftReview(
+  values: ReviewFormValues,
+  previous: ReviewData | null,
+  context: ReviewDraftContext,
+): ReviewData {
+  return {
+    id: previous?.id ?? DRAFT_REVIEW_ID,
+    rating: values.rating,
+    body: values.body.trim() || null,
+    image_urls: values.image_urls,
+    created_at: previous?.created_at ?? context.createdAt,
+    is_mine: true,
+    subject_name: previous?.subject_name ?? context.subjectName,
+    subject_href: previous?.subject_href ?? context.subjectHref,
+    author: previous?.author ?? context.author,
   };
 }
 
@@ -175,4 +217,25 @@ export function withReviewRemoved(
       ? applyRatingChange(result.summary, null, removed.rating)
       : result.summary,
   };
+}
+
+export type ReviewAction =
+  | { kind: "post"; review: ReviewData }
+  | { kind: "edit"; review: ReviewData }
+  | { kind: "remove"; id: number };
+
+// A pending post, edit or delete lands on a copy of the list while the mutation runs.
+export function applyReviewAction(
+  result: ReviewsResultData | null,
+  action: ReviewAction,
+): ReviewsResultData | null {
+  if (!result) return result;
+  switch (action.kind) {
+    case "post":
+      return withReviewAdded(result, action.review);
+    case "edit":
+      return withReviewUpdated(result, action.review);
+    case "remove":
+      return withReviewRemoved(result, action.id);
+  }
 }

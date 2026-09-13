@@ -5,11 +5,8 @@ import { useCallback, useMemo } from "react";
 import { ReviewDialog } from "@/features/reviews/components/ReviewDialog";
 import { ReviewForm } from "@/features/reviews/components/ReviewForm";
 import { ReviewLink } from "@/features/reviews/components/ReviewLink";
-import {
-  type ReviewSubjectKind,
-  useReviewComposer,
-} from "@/features/reviews/hooks";
-import { toFormValues } from "@/features/reviews/types";
+import { useReviewComposer } from "@/features/reviews/hooks";
+import { type ReviewSubjectKind, toFormValues } from "@/features/reviews/types";
 
 export interface ReviewActionContainerProps {
   kind: ReviewSubjectKind;
@@ -39,7 +36,7 @@ export function ReviewActionContainer({
     setIsOpen,
     submit,
     upload,
-  } = useReviewComposer(subject);
+  } = useReviewComposer(subject, subjectName);
   const handleClose = useCallback(() => setIsOpen(false), [setIsOpen]);
 
   if (!canReview) return null;
@@ -66,7 +63,7 @@ export function ReviewActionContainer({
           isSubmitting={isSaving}
           isUploading={isUploading}
           submitLabel={hasMine ? "Save changes" : "Post review"}
-          onSubmit={(values) => void submit(values)}
+          onSubmit={submit}
           onUploadPhoto={upload}
           onCancel={handleClose}
         />
