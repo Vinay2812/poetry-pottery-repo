@@ -8,7 +8,13 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 
 import { Reveal } from "@/components/motion/Reveal";
 
-import { AboutBlock, EventRow, HomeHero, HomeSection } from "@/features/home";
+import {
+  AboutBlock,
+  EventRow,
+  HomeHero,
+  HomeSection,
+  MakingStoryContainer,
+} from "@/features/home";
 import { toEventPath, toSeatsLabel } from "@/features/events";
 import {
   CategoryTile,
@@ -35,6 +41,11 @@ export default async function HomePage() {
         shopHref={settings.hero_cta_href || "/products"}
         shopLabel={settings.hero_cta_text || "Shop the shelf"}
         sessionHref="/workshops"
+      />
+
+      <MakingStoryContainer
+        shopHref={settings.hero_cta_href || "/products"}
+        shopLabel="Shop the shelf"
       />
 
       {categories.length > 0 && (

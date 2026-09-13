@@ -10,6 +10,7 @@ import { ProcessStep } from "@/features/content/components/ProcessStep";
 import { StoryColumns } from "@/features/content/components/StoryColumns";
 import { ValueColumn } from "@/features/content/components/ValueColumn";
 import { sectionAt, splitParagraphs } from "@/features/content/types";
+import { HowItsMade } from "@/features/home";
 
 // The about page has a shape of its own: story, then beliefs, then the making.
 export async function AboutPageContainer() {
@@ -54,6 +55,7 @@ export async function AboutPageContainer() {
       {process && process.items.length > 0 && (
         <Reveal>
           <AboutSection heading={process.heading}>
+            <HowItsMade />
             <ol className="grid gap-6 sm:grid-cols-2 md:grid-cols-4 md:gap-10">
               {process.items.map((item, index) => (
                 <ProcessStep

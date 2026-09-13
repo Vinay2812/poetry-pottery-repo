@@ -3,8 +3,6 @@ import Link from "next/link";
 
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 
-import { HowItsMade } from "@/features/home/components/HowItsMade";
-
 export interface AboutBlockProps {
   imageUrl: string | null;
   firstLine: string;
@@ -33,9 +31,9 @@ export function AboutBlock({
           <PlaceholderImage kind="bowl" />
         )}
       </div>
-      <div className="grid gap-10 md:grid-cols-2 md:gap-16">
+      <div className="grid gap-6 md:grid-cols-2 md:gap-16">
+        <p className="max-w-md text-[15px] leading-relaxed">{firstLine}</p>
         <div className="flex flex-col gap-4">
-          <p className="max-w-md text-[15px] leading-relaxed">{firstLine}</p>
           <p className="max-w-md text-[15px] leading-relaxed text-muted-foreground">
             {secondLine}
           </p>
@@ -46,7 +44,6 @@ export function AboutBlock({
             Our story
           </Link>
         </div>
-        <HowItsMade />
       </div>
     </div>
   );
