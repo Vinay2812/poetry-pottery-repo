@@ -1,9 +1,6 @@
 "use client";
 
 import { useCartContext } from "@/features/cart/containers/CartProvider";
-import type { CartData } from "@/features/cart/types";
-
-export type { CartData };
 
 export function useCart() {
   const { cart, isLoading, hasError, isSignedIn } = useCartContext();
