@@ -1,21 +1,23 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 
 import {
   type ProductSort,
   useProductsQuery,
 } from "@/graphql/generated/graphql";
 
-import {
-  CategoryStrip,
-  type CategoryStripItem,
-} from "@/features/products/components/CategoryStrip";
-import {
-  CollectionStrip,
-  type CollectionStripItem,
-} from "@/features/products/components/CollectionStrip";
+import { cn } from "@/lib/utils";
+
 import { EmptyResults } from "@/features/products/components/EmptyResults";
 import { FilterSheet } from "@/features/products/components/FilterSheet";
 import { LoadFailed } from "@/features/products/components/LoadFailed";
@@ -28,22 +30,16 @@ import { SearchField } from "@/features/products/components/SearchField";
 import { ShelfTabs } from "@/features/products/components/ShelfTabs";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
+  applyFilterAction,
   countActiveFilters,
-  EMPTY_FILTERS,
+  type FilterAction,
   parseFilters,
   type ProductFilters as Filters,
   toFilterInput,
   toSearchParams,
 } from "@/features/products/types";
 
-interface CollectionLink {
-  slug: string;
-  name: string;
-}
-
 export interface ProductListContainerProps {
-  categories: { slug: string; name: string; imageUrl: string | null }[];
-  collections?: CollectionLink[];
   heading: string;
   description: string | null;
   isSearchPage?: boolean;
@@ -52,8 +48,6 @@ export interface ProductListContainerProps {
 const SEARCH_DEBOUNCE_MS = 300;
 
 export function ProductListContainer({
-  categories,
-  collections = [],
   heading,
   description,
   isSearchPage = false,
@@ -61,11 +55,23 @@ export function ProductListContainer({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const filters = useMemo(
+  // The URL stays the source of truth; the optimistic layer only covers the navigation.
+  const urlFilters = useMemo(
     () => parseFilters(new URLSearchParams(searchParams.toString())),
     [searchParams],
   );
+  const [filters, addOptimisticFilter] = useOptimistic(
+    urlFilters,
+    applyFilterAction,
+  );
+  const [isPending, startTransition] = useTransition();
+  // Rapid clicks stack on each other; the URL takes over again once the navigations settle.
+  const pendingRef = useRef(urlFilters);
+  useEffect(() => {
+    if (!isPending) pendingRef.current = urlFilters;
+  }, [isPending, urlFilters]);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isAppending, setIsAppending] = useState(false);
   const [priceDraft, setPriceDraft] = useState<[number, number] | null>(null);
   const [searchDraft, setSearchDraft] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -80,16 +86,27 @@ export function ProductListContainer({
   const pageInfo = result?.page_info;
   const facets = result?.facets;
   const isInitialLoading = loading && !result;
-  const isFetchingMore = loading && Boolean(result);
+  // Results stay on screen while a new page loads; only their opacity says so.
+  const isBusy = isPending || (loading && Boolean(result) && !isAppending);
 
-  const applyFilters = useCallback(
+  const toHref = useCallback(
     (next: Filters) => {
       const query = toSearchParams(next).toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, {
-        scroll: false,
+      return query ? `${pathname}?${query}` : pathname;
+    },
+    [pathname],
+  );
+
+  const dispatch = useCallback(
+    (action: FilterAction) => {
+      const next = applyFilterAction(pendingRef.current, action);
+      pendingRef.current = next;
+      startTransition(() => {
+        addOptimisticFilter(action);
+        router.replace(toHref(next), { scroll: false });
       });
     },
-    [pathname, router],
+    [addOptimisticFilter, router, toHref],
   );
 
   // Typing updates the field at once and the URL after a short pause.
@@ -98,16 +115,16 @@ export function ProductListContainer({
       setSearchDraft(value);
       if (searchTimer.current) clearTimeout(searchTimer.current);
       searchTimer.current = setTimeout(() => {
-        applyFilters({ ...filters, search: value.trim() });
+        dispatch({ type: "search", value });
       }, SEARCH_DEBOUNCE_MS);
     },
-    [applyFilters, filters],
+    [dispatch],
   );
   const handleSearchClear = useCallback(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
     setSearchDraft("");
-    applyFilters({ ...filters, search: "" });
-  }, [applyFilters, filters]);
+    dispatch({ type: "search", value: "" });
+  }, [dispatch]);
   // The draft stays on screen until the URL has caught up, so the field never snaps back mid-navigation.
   const searchValue =
     searchDraft !== null && searchDraft.trim() !== filters.search
@@ -121,28 +138,24 @@ export function ProductListContainer({
   );
 
   const handleSortChange = useCallback(
-    (sort: ProductSort) => applyFilters({ ...filters, sort }),
-    [applyFilters, filters],
+    (sort: ProductSort) => dispatch({ type: "sort", sort }),
+    [dispatch],
   );
   const handleToggleCategory = useCallback(
-    (slug: string) =>
-      applyFilters({
-        ...filters,
-        categories: filters.categories.includes(slug)
-          ? filters.categories.filter((value) => value !== slug)
-          : [...filters.categories, slug],
-      }),
-    [applyFilters, filters],
+    (slug: string) => dispatch({ type: "category", slug }),
+    [dispatch],
+  );
+  const handleToggleCollection = useCallback(
+    (slug: string) => dispatch({ type: "collection", slug }),
+    [dispatch],
   );
   const handleToggleMaterial = useCallback(
-    (material: string) =>
-      applyFilters({
-        ...filters,
-        materials: filters.materials.includes(material)
-          ? filters.materials.filter((value) => value !== material)
-          : [...filters.materials, material],
-      }),
-    [applyFilters, filters],
+    (material: string) => dispatch({ type: "material", material }),
+    [dispatch],
+  );
+  const handleSelectView = useCallback(
+    (isArchive: boolean) => dispatch({ type: "view", isArchive }),
+    [dispatch],
   );
   const handlePriceCommit = useCallback(
     (range: [number, number]) => {
@@ -150,34 +163,30 @@ export function ProductListContainer({
       const isFullRange = facets
         ? range[0] <= facets.price_min && range[1] >= facets.price_max
         : false;
-      applyFilters({
-        ...filters,
-        minPrice: isFullRange ? null : range[0],
-        maxPrice: isFullRange ? null : range[1],
+      dispatch({
+        type: "price",
+        min: isFullRange ? null : range[0],
+        max: isFullRange ? null : range[1],
       });
     },
-    [applyFilters, facets, filters],
+    [dispatch, facets],
   );
   const handleInStockChange = useCallback(
-    (value: boolean) => applyFilters({ ...filters, inStockOnly: value }),
-    [applyFilters, filters],
+    (value: boolean) => dispatch({ type: "inStock", value }),
+    [dispatch],
   );
   const handleCustomizableChange = useCallback(
-    (value: boolean) => applyFilters({ ...filters, customizableOnly: value }),
-    [applyFilters, filters],
+    (value: boolean) => dispatch({ type: "customizable", value }),
+    [dispatch],
   );
   const handleClear = useCallback(
-    () =>
-      applyFilters({
-        ...EMPTY_FILTERS,
-        collection: filters.collection,
-        isArchive: filters.isArchive,
-      }),
-    [applyFilters, filters.collection, filters.isArchive],
+    () => dispatch({ type: "clear" }),
+    [dispatch],
   );
 
   const handleLoadMore = useCallback(() => {
     if (!pageInfo?.has_more || loading) return;
+    setIsAppending(true);
     void fetchMore({
       variables: { filter: toFilterInput(filters, pageInfo.page + 1) },
       updateQuery: (previous, { fetchMoreResult }) => ({
@@ -189,7 +198,7 @@ export function ProductListContainer({
           ],
         },
       }),
-    });
+    }).finally(() => setIsAppending(false));
   }, [fetchMore, filters, loading, pageInfo]);
 
   // Load the next page when the sentinel scrolls into view.
@@ -217,30 +226,13 @@ export function ProductListContainer({
     filters.maxPrice ?? priceCeiling,
   ];
   const activeFilterCount = countActiveFilters(filters);
-  const toHref = (next: Filters) =>
-    `${pathname}?${toSearchParams(next).toString()}`;
-  const collectionItems: CollectionStripItem[] = collections.map(
-    (collection) => ({
-      slug: collection.slug,
-      name: collection.name,
-      href: toHref({ ...filters, collection: collection.slug }),
-      isActive: filters.collection === collection.slug,
-    }),
-  );
-  const categoryItems: CategoryStripItem[] = categories.map((category) => ({
-    slug: category.slug,
-    name: category.name,
-    imageUrl: category.imageUrl,
-    href: `${pathname}?${toSearchParams({ ...filters, categories: [category.slug] }).toString()}`,
-    isActive:
-      filters.categories.length === 1 &&
-      filters.categories[0] === category.slug,
-  }));
 
   const filterPanel = facets && (
     <ProductFilters
       categoryOptions={facets.categories}
       selectedCategories={filters.categories}
+      collectionOptions={facets.collections}
+      selectedCollection={filters.collection}
       materialOptions={facets.materials}
       selectedMaterials={filters.materials}
       priceFloor={priceFloor}
@@ -250,6 +242,7 @@ export function ProductListContainer({
       customizableOnly={filters.customizableOnly}
       hasActiveFilters={activeFilterCount > 0}
       onToggleCategory={handleToggleCategory}
+      onToggleCollection={handleToggleCollection}
       onToggleMaterial={handleToggleMaterial}
       onPriceRangeChange={setPriceDraft}
       onPriceRangeCommit={handlePriceCommit}
@@ -287,20 +280,9 @@ export function ProductListContainer({
           shelfCount={facets?.active_count ?? 0}
           archiveCount={facets?.archive_count ?? 0}
           isArchive={filters.isArchive}
+          onSelect={handleSelectView}
         />
       )}
-
-      <CategoryStrip
-        items={categoryItems}
-        allHref={`${pathname}?${toSearchParams({ ...filters, categories: [] }).toString()}`}
-        isAllActive={filters.categories.length === 0}
-      />
-
-      <CollectionStrip
-        items={collectionItems}
-        allHref={toHref({ ...filters, collection: null })}
-        isAllActive={filters.collection === null}
-      />
 
       <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
         <aside className="hidden lg:block">
@@ -332,7 +314,13 @@ export function ProductListContainer({
               onClear={handleClear}
             />
           ) : (
-            <>
+            <div
+              aria-busy={isBusy}
+              className={cn(
+                "flex flex-col gap-5 transition-opacity duration-200",
+                isBusy && "opacity-60",
+              )}
+            >
               <ProductGrid>
                 {items.map((product, index) => (
                   <ProductCardContainer
@@ -345,14 +333,14 @@ export function ProductListContainer({
               {pageInfo && (
                 <LoadMore
                   hasMore={pageInfo.has_more}
-                  isLoading={isFetchingMore}
+                  isLoading={isAppending}
                   loadedCount={items.length}
                   total={pageInfo.total}
                   onLoadMore={handleLoadMore}
                   sentinelRef={sentinelRef}
                 />
               )}
-            </>
+            </div>
           )}
         </div>
       </div>

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { OptionGroupKind, ProductSort } from "@/graphql/generated/graphql";
 
 import {
+  applyFilterAction,
   computeUnitPrice,
   countActiveFilters,
   EMPTY_FILTERS,
@@ -230,5 +231,66 @@ describe("archive view", () => {
   it("names the first photo after the piece and the rest as views", () => {
     expect(toPhotoAlt("Drip sip mug", 0)).toBe("Drip sip mug");
     expect(toPhotoAlt("Drip sip mug", 2)).toBe("Drip sip mug, view 3");
+  });
+});
+
+describe("applyFilterAction", () => {
+  const base = { ...EMPTY_FILTERS, categories: ["mugs"] };
+
+  it("toggles list filters on and off", () => {
+    expect(
+      applyFilterAction(base, { type: "category", slug: "bowls" }).categories,
+    ).toEqual(["mugs", "bowls"]);
+    expect(
+      applyFilterAction(base, { type: "category", slug: "mugs" }).categories,
+    ).toEqual([]);
+    expect(
+      applyFilterAction(base, { type: "material", material: "Stoneware" })
+        .materials,
+    ).toEqual(["Stoneware"]);
+  });
+
+  it("keeps one collection at a time and clears it when re-picked", () => {
+    const picked = applyFilterAction(base, {
+      type: "collection",
+      slug: "spring-2025",
+    });
+    expect(picked.collection).toBe("spring-2025");
+    expect(
+      applyFilterAction(picked, { type: "collection", slug: "spring-2025" })
+        .collection,
+    ).toBeNull();
+    expect(
+      applyFilterAction(picked, { type: "collection", slug: "rustic-charm" })
+        .collection,
+    ).toBe("rustic-charm");
+  });
+
+  it("merges patches in order so rapid clicks add up", () => {
+    const merged = [
+      { type: "category", slug: "bowls" },
+      { type: "inStock", value: true },
+      { type: "view", isArchive: true },
+      { type: "sort", sort: ProductSort.Newest },
+    ].reduce<typeof base>(
+      (filters, action) =>
+        applyFilterAction(
+          filters,
+          action as Parameters<typeof applyFilterAction>[1],
+        ),
+      base,
+    );
+    expect(merged.categories).toEqual(["mugs", "bowls"]);
+    expect(merged.inStockOnly).toBe(true);
+    expect(merged.isArchive).toBe(true);
+    expect(merged.sort).toBe(ProductSort.Newest);
+  });
+
+  it("clears everything but keeps the view", () => {
+    const cleared = applyFilterAction(
+      { ...base, isArchive: true, minPrice: 100, collection: "x" },
+      { type: "clear" },
+    );
+    expect(cleared).toEqual({ ...EMPTY_FILTERS, isArchive: true });
   });
 });

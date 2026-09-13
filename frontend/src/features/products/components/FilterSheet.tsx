@@ -23,14 +23,17 @@ export function FilterSheet({
 }: FilterSheetProps) {
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="max-h-[85dvh]">
+      <SheetContent
+        side="right"
+        className="flex h-dvh w-full flex-col sm:max-w-sm"
+      >
         <SheetHeader>
           <SheetTitle className="font-heading text-xl tracking-tight">
             Filters
           </SheetTitle>
           <SheetDescription>Narrow the shelf down.</SheetDescription>
         </SheetHeader>
-        <div className="overflow-y-auto px-4 pb-2">{children}</div>
+        <div className="flex-1 overflow-y-auto px-4 pb-2">{children}</div>
         <SheetFooter>
           <Button size="lg" onClick={() => onOpenChange(false)}>
             Show {resultCount} {resultCount === 1 ? "piece" : "pieces"}

@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { formatInr } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 interface FilterOption {
   value: string;
@@ -13,6 +14,8 @@ interface FilterOption {
 export interface ProductFiltersProps {
   categoryOptions: FilterOption[];
   selectedCategories: string[];
+  collectionOptions: FilterOption[];
+  selectedCollection: string | null;
   materialOptions: FilterOption[];
   selectedMaterials: string[];
   priceFloor: number;
@@ -22,6 +25,7 @@ export interface ProductFiltersProps {
   customizableOnly: boolean;
   hasActiveFilters: boolean;
   onToggleCategory: (slug: string) => void;
+  onToggleCollection: (slug: string) => void;
   onToggleMaterial: (material: string) => void;
   onPriceRangeChange: (range: [number, number]) => void;
   onPriceRangeCommit: (range: [number, number]) => void;
@@ -77,6 +81,8 @@ function CheckGroup({
 export function ProductFilters({
   categoryOptions,
   selectedCategories,
+  collectionOptions,
+  selectedCollection,
   materialOptions,
   selectedMaterials,
   priceFloor,
@@ -86,6 +92,7 @@ export function ProductFilters({
   customizableOnly,
   hasActiveFilters,
   onToggleCategory,
+  onToggleCollection,
   onToggleMaterial,
   onPriceRangeChange,
   onPriceRangeCommit,
@@ -96,15 +103,18 @@ export function ProductFilters({
   const hasPriceRange = priceCeiling > priceFloor;
   return (
     <div className="flex flex-col gap-8">
-      {hasActiveFilters && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="self-start border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
-        >
-          Clear all filters
-        </button>
-      )}
+      {/* Always in the layout so the first tick never pushes the groups down. */}
+      <button
+        type="button"
+        onClick={onClear}
+        inert={!hasActiveFilters}
+        className={cn(
+          "self-start text-sm underline-offset-4 hover:text-primary hover:underline",
+          !hasActiveFilters && "invisible",
+        )}
+      >
+        Clear all
+      </button>
 
       <CheckGroup
         title="Category"
@@ -112,6 +122,14 @@ export function ProductFilters({
         options={categoryOptions}
         selected={selectedCategories}
         onToggle={onToggleCategory}
+      />
+
+      <CheckGroup
+        title="Collection"
+        idPrefix="collection"
+        options={collectionOptions}
+        selected={selectedCollection ? [selectedCollection] : []}
+        onToggle={onToggleCollection}
       />
 
       {hasPriceRange && (

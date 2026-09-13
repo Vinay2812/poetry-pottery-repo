@@ -41,6 +41,11 @@ query Products($filter: ProductsFilterInput) {
         label
         count
       }
+      collections {
+        value
+        label
+        count
+      }
       materials {
         value
         label

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ActiveMarker } from "@/components/nav/ActiveMarker";
 import { cn } from "@/lib/utils";
 
 export interface ShelfTabsProps {
@@ -8,33 +9,54 @@ export interface ShelfTabsProps {
   shelfCount: number;
   archiveCount: number;
   isArchive: boolean;
+  onSelect?: (isArchive: boolean) => void;
+}
+
+// Plain left clicks are handled in the app so the switch is instant; modified clicks stay real links.
+function isPlainClick(event: React.MouseEvent): boolean {
+  return (
+    event.button === 0 &&
+    !event.metaKey &&
+    !event.ctrlKey &&
+    !event.shiftKey &&
+    !event.altKey
+  );
 }
 
 const TAB_CLASS =
-  "-mb-px border-b pb-3 text-sm whitespace-nowrap transition-colors";
+  "flex items-center gap-2 pb-3 text-sm whitespace-nowrap transition-colors";
 
-// Two hairline tabs: what is on the shelf today, and everything the studio has made before.
+// Two tabs under one hairline: what is on the shelf today, and everything the studio made before.
 export function ShelfTabs({
   shelfHref,
   archiveHref,
   shelfCount,
   archiveCount,
   isArchive,
+  onSelect,
 }: ShelfTabsProps) {
+  const handleClick = (event: React.MouseEvent, value: boolean) => {
+    if (!onSelect || !isPlainClick(event)) return;
+    event.preventDefault();
+    onSelect(value);
+  };
+
   return (
     <nav aria-label="Shelf and archive" className="border-b border-ash">
       <ul className="flex gap-8">
         <li>
           <Link
             href={shelfHref}
+            onClick={(event) => handleClick(event, false)}
             aria-current={isArchive ? undefined : "page"}
             className={cn(
               TAB_CLASS,
               isArchive
-                ? "border-transparent text-muted-foreground hover:text-foreground"
-                : "border-ink text-foreground",
+                ? "text-muted-foreground hover:text-foreground"
+                : "text-foreground",
             )}
           >
+            <ActiveMarker isActive={!isArchive} />
             On the shelf{" "}
             <span className="text-muted-foreground tnum">({shelfCount})</span>
           </Link>
@@ -42,14 +64,16 @@ export function ShelfTabs({
         <li>
           <Link
             href={archiveHref}
+            onClick={(event) => handleClick(event, true)}
             aria-current={isArchive ? "page" : undefined}
             className={cn(
               TAB_CLASS,
               isArchive
-                ? "border-ink text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground",
+                ? "text-foreground"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
+            <ActiveMarker isActive={isArchive} />
             Archive{" "}
             <span className="text-muted-foreground tnum">({archiveCount})</span>
           </Link>

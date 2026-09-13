@@ -544,6 +544,7 @@ export type ProductFacets = {
   active_count: Scalars['Int']['output'];
   archive_count: Scalars['Int']['output'];
   categories: Array<FacetCount>;
+  collections: Array<FacetCount>;
   materials: Array<FacetCount>;
   price_max: Scalars['Int']['output'];
   price_min: Scalars['Int']['output'];
@@ -1146,7 +1147,7 @@ export type ProductsQueryVariables = Exact<{
 }>;
 
 
-export type ProductsQuery = { products: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }>, page_info: { total: number, page: number, limit: number, has_more: boolean }, facets: { price_min: number, price_max: number, active_count: number, archive_count: number, categories: Array<{ value: string, label: string, count: number }>, materials: Array<{ value: string, label: string, count: number }> } } };
+export type ProductsQuery = { products: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }>, page_info: { total: number, page: number, limit: number, has_more: boolean }, facets: { price_min: number, price_max: number, active_count: number, archive_count: number, categories: Array<{ value: string, label: string, count: number }>, collections: Array<{ value: string, label: string, count: number }>, materials: Array<{ value: string, label: string, count: number }> } } };
 
 export type ProductQueryVariables = Exact<{
   slug: string;
@@ -2416,6 +2417,11 @@ export const ProductsDocument = gql`
     }
     facets {
       categories {
+        value
+        label
+        count
+      }
+      collections {
         value
         label
         count

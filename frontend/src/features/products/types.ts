@@ -89,6 +89,62 @@ export function parseFilters(params: URLSearchParams): ProductFilters {
   };
 }
 
+export type FilterAction =
+  | { type: "search"; value: string }
+  | { type: "category"; slug: string }
+  | { type: "collection"; slug: string }
+  | { type: "material"; material: string }
+  | { type: "price"; min: number | null; max: number | null }
+  | { type: "inStock"; value: boolean }
+  | { type: "customizable"; value: boolean }
+  | { type: "sort"; sort: ProductSort }
+  | { type: "view"; isArchive: boolean }
+  | { type: "clear" };
+
+function toggle(values: string[], value: string): string[] {
+  return values.includes(value)
+    ? values.filter((item) => item !== value)
+    : [...values, value];
+}
+
+// One reducer for the URL and for the optimistic layer, so a click and its navigation agree.
+export function applyFilterAction(
+  current: ProductFilters,
+  action: FilterAction,
+): ProductFilters {
+  switch (action.type) {
+    case "search":
+      return { ...current, search: action.value.trim() };
+    case "category":
+      return {
+        ...current,
+        categories: toggle(current.categories, action.slug),
+      };
+    case "collection":
+      return {
+        ...current,
+        collection: current.collection === action.slug ? null : action.slug,
+      };
+    case "material":
+      return {
+        ...current,
+        materials: toggle(current.materials, action.material),
+      };
+    case "price":
+      return { ...current, minPrice: action.min, maxPrice: action.max };
+    case "inStock":
+      return { ...current, inStockOnly: action.value };
+    case "customizable":
+      return { ...current, customizableOnly: action.value };
+    case "sort":
+      return { ...current, sort: action.sort };
+    case "view":
+      return { ...current, isArchive: action.isArchive };
+    case "clear":
+      return { ...EMPTY_FILTERS, isArchive: current.isArchive };
+  }
+}
+
 export function toSearchParams(filters: ProductFilters): URLSearchParams {
   const params = new URLSearchParams();
   if (filters.search) params.set("q", filters.search);

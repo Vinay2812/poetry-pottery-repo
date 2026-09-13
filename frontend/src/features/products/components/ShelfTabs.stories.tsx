@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 
 import { atViewport } from "@/lib/storybook/viewports";
 import { ShelfTabs } from "./ShelfTabs";
@@ -20,6 +21,7 @@ const meta = {
     shelfCount: 9,
     archiveCount: 15,
     isArchive: false,
+    onSelect: fn(),
   },
 } satisfies Meta<typeof ShelfTabs>;
 

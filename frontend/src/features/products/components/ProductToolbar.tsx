@@ -1,6 +1,3 @@
-import { SlidersHorizontal } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -9,6 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ProductSort } from "@/graphql/generated/graphql";
+import { cn } from "@/lib/utils";
 
 import { SORT_OPTIONS } from "@/features/products/types";
 
@@ -52,20 +50,16 @@ export function ProductToolbar({
             ))}
           </SelectContent>
         </Select>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-10 lg:hidden"
+        <button
+          type="button"
           onClick={onOpenFilters}
+          className="text-sm underline-offset-4 hover:text-primary hover:underline lg:hidden"
         >
-          <SlidersHorizontal className="size-4" strokeWidth={1.5} />
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="flex size-5 items-center justify-center bg-primary text-[11px] text-primary-foreground tnum">
-              {activeFilterCount}
-            </span>
-          )}
-        </Button>
+          Filters{" "}
+          <span className={cn("tnum", activeFilterCount === 0 && "invisible")}>
+            ({activeFilterCount})
+          </span>
+        </button>
       </div>
     </div>
   );

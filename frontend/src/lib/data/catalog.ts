@@ -5,9 +5,6 @@ import {
   CollectionDocument,
   type CollectionQuery,
   type CollectionQueryVariables,
-  CollectionsDocument,
-  type CollectionsQuery,
-  type CollectionsQueryVariables,
   ContentPageDocument,
   type ContentPageQuery,
   type ContentPageQueryVariables,
@@ -43,17 +40,6 @@ export async function getCategories(): Promise<CategoriesQuery["categories"]> {
     CategoriesQueryVariables
   >({ query: CategoriesDocument });
   return data?.categories ?? [];
-}
-
-// The archive asks for closed windows too, so the visitor can keep switching collections there.
-export async function getCollections(
-  archive = false,
-): Promise<CollectionsQuery["collections"]> {
-  const { data } = await getClient().query<
-    CollectionsQuery,
-    CollectionsQueryVariables
-  >({ query: CollectionsDocument, variables: { archive } });
-  return data?.collections ?? [];
 }
 
 function isNotFoundError(error: unknown): boolean {

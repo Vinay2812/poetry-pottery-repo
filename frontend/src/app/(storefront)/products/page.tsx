@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import {
-  getCategories,
-  getCollection,
-  getCollections,
-} from "@/lib/data/catalog";
+import { getCollection } from "@/lib/data/catalog";
 
 import { ARCHIVE_VIEW, ProductListContainer } from "@/features/products";
 
@@ -26,24 +22,13 @@ export default async function ProductsPage({
   const collectionSlug =
     typeof params.collection === "string" ? params.collection : null;
   const isArchive = params.view === ARCHIVE_VIEW;
-  const [categories, collections, collection] = await Promise.all([
-    getCategories(),
-    getCollections(isArchive),
-    collectionSlug ? getCollection(collectionSlug) : Promise.resolve(null),
-  ]);
+  const collection = collectionSlug
+    ? await getCollection(collectionSlug)
+    : null;
 
   return (
     <Suspense>
       <ProductListContainer
-        categories={categories.map((category) => ({
-          slug: category.slug,
-          name: category.name,
-          imageUrl: category.image_url,
-        }))}
-        collections={collections.map((item) => ({
-          slug: item.slug,
-          name: item.name,
-        }))}
         heading={
           collection?.name ??
           (isArchive ? "The archive" : "Every piece on the shelf")

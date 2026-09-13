@@ -22,6 +22,12 @@ const meta = {
       { value: "vases", label: "Vases", count: 4 },
     ],
     selectedCategories: [],
+    collectionOptions: [
+      { value: "artisan-classics", label: "Artisan classics", count: 8 },
+      { value: "rustic-charm", label: "Rustic charm", count: 5 },
+      { value: "spring-2025", label: "Spring 2025", count: 4 },
+    ],
+    selectedCollection: null,
     materialOptions: [
       { value: "stoneware", label: "Stoneware", count: 22 },
       { value: "terracotta", label: "Terracotta", count: 11 },
@@ -34,6 +40,7 @@ const meta = {
     customizableOnly: false,
     hasActiveFilters: false,
     onToggleCategory: fn(),
+    onToggleCollection: fn(),
     onToggleMaterial: fn(),
     onPriceRangeChange: fn(),
     onPriceRangeCommit: fn(),
@@ -52,6 +59,7 @@ export const Default: Story = {};
 export const WithActiveFilters: Story = {
   args: {
     selectedCategories: ["mugs", "bowls"],
+    selectedCollection: "rustic-charm",
     selectedMaterials: ["stoneware"],
     priceRange: [850, 2100],
     inStockOnly: true,
