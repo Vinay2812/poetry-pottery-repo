@@ -1,4 +1,4 @@
-// The moon jar's geometry, in one 400x400 space. The hero draws the finished
+// The moon jar's outline, in one 400x400 space. The hero draws the finished
 // piece; the making story draws the same profile as it is built, so the piece
 // on the shelf is recognisably the piece that was made.
 
@@ -13,37 +13,23 @@ export const JAR_FOOT = "M156.0 310.0C170 315.5 230 315.5 244.0 310.0";
 export const JAR_MOUTH =
   "M162 92C162 86.6 179 82.4 200 82.4C221 82.4 238 86.6 238 92C238 97.4 221 101.6 200 101.6C179 101.6 162 97.4 162 92Z";
 
-// Throwing rings, as ellipse arcs that follow the curve of the wall.
-export const JAR_RINGS = [
-  "M140.0 140.0C140.0 150.3 258.8 150.3 258.8 140.0",
-  "M126.7 176.0C126.7 188.6 272.1 188.6 272.1 176.0",
-  "M125.0 214.0C125.0 227.0 275.1 227.0 275.1 214.0",
-  "M130.0 250.0C130.0 262.1 270.0 262.1 270.0 250.0",
-];
+/** The opening inside the rim band, seen from slightly above. */
+export const JAR_MOUTH_INNER =
+  "M167 93.2C167 87.9 181.8 84.6 200 84.6C218.2 84.6 233 87.9 233 93.2C233 98.5 218.2 101.8 200 101.8C181.8 101.8 167 98.5 167 93.2Z";
 
-export const JAR_GLAZE_BAND =
-  "M120.0 150.0C120.0 164.3 278.7 164.3 278.7 150.0";
+/** The far inner wall seen over the rim: what gives the mouth its depth. */
+export const JAR_MOUTH_CRESCENT =
+  "M167 93.2C167 87.9 181.8 84.6 200 84.6C218.2 84.6 233 87.9 233 93.2C229.6 93.2 229.6 93.2 229.6 93.2C229.6 89.6 216.3 87.4 200 87.4C183.7 87.4 170.4 89.6 170.4 93.2Z";
 
-export const JAR_GLAZE_DRIP = "M240 157C241 163 240 168 239 171";
-
-export const JAR_THUMB_DENT = "M272 141C282 148 285 158 281 169";
-
-export const JAR_FLOOR = "M108 320C160 317 244 323 296 319";
-
-export const JAR_KILN_MARK =
-  "M270 318C266 313 270 308 272 305M279 318C275 311 280 307 281 302M288 318C285 313 288 309 289 306";
-
-export const JAR_VERSE_ARC = "M138 344C174 355 226 355 262 344";
-
-export const JAR_SHADOW = { cx: 200, cy: 314, rx: 62, ry: 6 };
-
-// The trimmed foot: a second hairline cut inside the standing ring.
-export const JAR_FOOT_RING = "M168 309C180 313.5 220 313.5 232 309";
+/** Where the trimmed foot presses into the floor: an arc of the ring at y 306. */
+export const JAR_FOOT_CONTACT =
+  "M241 308.2C230.9 313.7 188.7 315.1 166.9 310.7";
 
 // A wedge of clay on the bench, before any of the above exists.
 export const CLAY_WEDGE =
   "M146 318C139 302 147 282 164 270C181 257 201 250 219 252C239 254 255 265 261 281C267 297 262 311 253 318C231 322 168 322 146 318Z";
 
+// The folds left by wedging, which also read as the contours of the lump.
 export const CLAY_RIDGES = [
   "M158 302C171 293 190 288 207 292",
   "M165 313C180 304 201 300 219 305",

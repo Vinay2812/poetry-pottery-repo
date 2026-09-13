@@ -2,13 +2,15 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { atViewport } from "@/lib/storybook/viewports";
 import { MakingPiece } from "./MakingPiece";
+import { MakingPieceDefs } from "./MakingPieceDefs";
 
 const meta = {
   title: "Features/Home/MakingPiece",
   component: MakingPiece,
   decorators: [
     (Story) => (
-      <div className="aspect-square w-full max-w-md bg-clay-white">
+      <div className="[aspect-ratio:220/296] w-full max-w-sm bg-clay-white">
+        <MakingPieceDefs />
         <Story />
       </div>
     ),

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Reveal } from "@/components/motion/Reveal";
 
 import { MakingPiece } from "@/features/home/components/MakingPiece";
+import { MakingPieceDefs } from "@/features/home/components/MakingPieceDefs";
 import {
   MAKING_STEP_COUNT,
   MAKING_STEPS,
@@ -43,6 +44,8 @@ export function MakingStory({
       <h2 id="making-story-heading" className="sr-only">
         How a piece is made
       </h2>
+
+      <MakingPieceDefs />
 
       <div className="story-band">
         <div className="story-steps">
