@@ -379,6 +379,7 @@ model Review {
   rating     Int
   body       String?
   image_urls String[] @default([])
+  is_hidden  Boolean  @default(false)
 
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
