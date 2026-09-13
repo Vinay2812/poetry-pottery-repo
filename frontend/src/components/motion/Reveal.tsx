@@ -4,9 +4,19 @@ import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
+// Where a browser can drive the fade off scroll position it does, and the
+// observer below never starts. Opt in only where the block scrolls normally:
+// a pinned panel holds still, so its view progress would too.
+function hasViewTimeline() {
+  return (
+    typeof CSS !== "undefined" && CSS.supports("animation-timeline", "view()")
+  );
+}
+
 export interface RevealProps {
   delay?: number;
   isGroup?: boolean;
+  isScrollLinked?: boolean;
   className?: string;
   children: React.ReactNode;
 }
@@ -17,6 +27,7 @@ export interface RevealProps {
 export function Reveal({
   delay = 0,
   isGroup = false,
+  isScrollLinked = false,
   className,
   children,
 }: RevealProps) {
@@ -27,6 +38,7 @@ export function Reveal({
   useEffect(() => {
     const node = ref.current;
     if (!node || typeof IntersectionObserver === "undefined") return;
+    if (isScrollLinked && hasViewTimeline()) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) {
@@ -38,14 +50,18 @@ export function Reveal({
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, []);
+  }, [isScrollLinked]);
 
   return (
     <div
       ref={ref}
       data-revealed={isVisible ? "" : undefined}
       style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
-      className={cn(isVisible && !isGroup && "animate-fade-up", className)}
+      className={cn(
+        isScrollLinked && "reveal-section",
+        isVisible && !isGroup && "animate-fade-up",
+        className,
+      )}
     >
       {children}
     </div>

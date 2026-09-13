@@ -20,7 +20,7 @@ export function HomeSection({
 }: HomeSectionProps) {
   return (
     <section className="border-t border-ash py-16 md:py-24">
-      <Reveal className="flex flex-col gap-8">
+      <Reveal isScrollLinked className="flex flex-col gap-8">
         <div className="flex items-baseline justify-between gap-6">
           <div className="flex flex-col gap-2">
             <h2 className="font-heading text-2xl leading-tight tracking-tight md:text-4xl">

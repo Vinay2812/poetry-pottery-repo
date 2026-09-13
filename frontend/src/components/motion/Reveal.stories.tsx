@@ -25,6 +25,8 @@ export const Default: Story = {};
 
 export const Delayed: Story = { args: { delay: 240 } };
 
+export const ScrollLinked: Story = { args: { isScrollLinked: true } };
+
 export const Group: Story = {
   args: {
     isGroup: true,

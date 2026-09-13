@@ -221,6 +221,16 @@
     animation-delay: var(--reveal-delay, 0ms);
   }
 
+  /* Where the browser can drive a section fade from scroll position it does so on
+     its own, and Reveal leaves its observer switched off. */
+  @supports (animation-timeline: view()) {
+    .reveal-section {
+      animation: fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 60%;
+    }
+  }
+
   /* One observer per grid: the wrapper flips data-revealed, cards carry the delay. */
   [data-revealed] .reveal-item {
     animation: fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
