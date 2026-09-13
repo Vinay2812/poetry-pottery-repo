@@ -12,12 +12,13 @@ import {
   SiteFooter,
   SiteHeaderContainer,
 } from "@/features/layout";
+import { WishlistProvider } from "@/features/wishlist";
 
 export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
   const settings = await getSiteSettings();
 
   return (
-    <>
+    <WishlistProvider>
       {settings.announcement_text && (
         <AnnouncementBar
           text={settings.announcement_text}
@@ -50,6 +51,6 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
       />
       <MobileNavContainer />
       <SignInPromptContainer />
-    </>
+    </WishlistProvider>
   );
 }
