@@ -214,6 +214,7 @@ type Event {
   price: Int!
   rating_avg: Float!
   rating_count: Int!
+  review_eligibility: ReviewEligibility!
   slug: String!
   starts_at: DateTime!
   status: EventStatus!
@@ -273,7 +274,11 @@ type Mutation {
   cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
   createAddress(input: AddressInput!): Address!
+  createEventReview(event_id: Int!, input: ReviewInput!): Review!
+  createProductReview(input: ReviewInput!, product_id: Int!): Review!
+  createReviewImageUpload(input: ReviewUploadInput!): UploadTarget!
   deleteAddress(id: Int!): Boolean!
+  deleteReview(id: Int!): Boolean!
   markContactMessageRead(id: Int!): ContactMessage!
   placeOrder(input: PlaceOrderInput!): Order!
   registerForEvent(input: RegisterForEventInput!): Registration!
@@ -287,6 +292,7 @@ type Mutation {
   updateAddress(id: Int!, input: AddressInput!): Address!
   updateCartItem(id: Int!, quantity: Int!): Cart!
   updateContentPage(input: ContentPageInput!, slug: String!): ContentPage!
+  updateReview(id: Int!, input: ReviewInput!): Review!
 }
 
 type NewsletterResult {
@@ -391,6 +397,7 @@ type Product {
   price: Int!
   rating_avg: Float!
   rating_count: Int!
+  review_eligibility: ReviewEligibility!
   sales_count: Int!
   slug: String!
   stock: Int!
@@ -463,6 +470,7 @@ type Query {
   contentPage(slug: String!): ContentPage!
   contentPages: [ContentPageSummary!]!
   event(slug: String!): Event!
+  eventReviews(event_id: Int!, limit: Int, page: Int): ReviewsResult!
   events(filter: EventsFilterInput): EventsResult!
   featuredProducts(limit: Int = 8): [Product!]!
   myRegistrations(limit: Int, page: Int): RegistrationsResult!
@@ -471,7 +479,9 @@ type Query {
   order(id: String!): Order!
   orders(limit: Int, page: Int): OrdersResult!
   product(slug: String!): Product!
+  productReviews(limit: Int, page: Int, product_id: Int!): ReviewsResult!
   products(filter: ProductsFilterInput): ProductsResult!
+  recentReviews(limit: Int = 6): [Review!]!
   registration(id: String!): Registration!
   relatedProducts(limit: Int = 8, slug: String!): [Product!]!
   siteSettings: SiteSettings!
@@ -483,6 +493,12 @@ type Query {
   workshopAvailability(input: WorkshopAvailabilityInput!): [WorkshopDay!]!
   workshopBooking(id: String!): WorkshopBooking!
   workshops: [WorkshopConfig!]!
+}
+
+type RatingSummary {
+  average: Float!
+  count: Int!
+  distribution: [Int!]!
 }
 
 input RegisterForEventInput {
@@ -527,6 +543,47 @@ input RescheduleWorkshopInput {
   slot_starts: [DateTime!]!
 }
 
+type Review {
+  author: ReviewAuthor!
+  body: String
+  created_at: DateTime!
+  id: Int!
+  image_urls: [String!]!
+  is_mine: Boolean!
+  rating: Int!
+  subject_href: String
+  subject_name: String
+}
+
+type ReviewAuthor {
+  image: String
+  name: String!
+}
+
+type ReviewEligibility {
+  can_review: Boolean!
+  my_review: Review
+  reason: String
+}
+
+input ReviewInput {
+  body: String
+  image_urls: [String!]
+  rating: Int!
+}
+
+input ReviewUploadInput {
+  content_type: String!
+  filename: String!
+  size: Int!
+}
+
+type ReviewsResult {
+  items: [Review!]!
+  page_info: PageInfo!
+  summary: RatingSummary!
+}
+
 input SelectionInputType {
   group_id: Int!
   option_id: Int
@@ -563,6 +620,12 @@ type SiteSettings {
   updated_at: DateTime!
   whatsapp_number: String!
   youtube_url: String!
+}
+
+type UploadTarget {
+  key: String!
+  public_url: String!
+  upload_url: String!
 }
 
 type User {

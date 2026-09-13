@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -22,8 +23,10 @@ import type {
   ReviewsResult,
 } from "./reviews.type";
 
-const MAX_BODY = 1500;
+const MAX_BODY = 1000;
 const MAX_IMAGES = 3;
+const ALREADY_REVIEWED =
+  "You have already reviewed this. Edit your review instead.";
 
 export const reviewInclude = {
   user: { select: { name: true, email: true, image: true } },
@@ -34,6 +37,20 @@ export const reviewInclude = {
 type ReviewRow = Prisma.ReviewGetPayload<{ include: typeof reviewInclude }>;
 
 export type ReviewSubject = { product_id: number } | { event_id: number };
+
+// A row always carries exactly one of the two foreign keys; the schema allows both to be null.
+export function subjectOf(row: {
+  product_id: number | null;
+  event_id: number | null;
+}): ReviewSubject {
+  if (row.product_id !== null) {
+    return { product_id: row.product_id };
+  }
+  if (row.event_id !== null) {
+    return { event_id: row.event_id };
+  }
+  throw new NotFoundException("Review is not attached to a piece or an event");
+}
 
 // Reviewers show as a first name so the shelf stays personal without exposing full identities.
 export function displayName(name: string | null, email: string): string {
@@ -64,20 +81,24 @@ export function toReview(row: ReviewRow, viewerId: number | null): Review {
   };
 }
 
-export function summarise(ratings: number[]): RatingSummary {
+export function summariseCounts(
+  buckets: { rating: number; count: number }[],
+): RatingSummary {
   const distribution = [0, 0, 0, 0, 0];
-  for (const rating of ratings) {
-    const index = Math.min(5, Math.max(1, rating)) - 1;
-    distribution[index] = (distribution[index] ?? 0) + 1;
+  let count = 0;
+  let total = 0;
+  for (const bucket of buckets) {
+    const index = Math.min(5, Math.max(1, bucket.rating)) - 1;
+    distribution[index] = (distribution[index] ?? 0) + bucket.count;
+    count += bucket.count;
+    total += bucket.rating * bucket.count;
   }
-  const count = ratings.length;
-  const average =
-    count === 0
-      ? 0
-      : Math.round(
-          (ratings.reduce((sum, rating) => sum + rating, 0) / count) * 10,
-        ) / 10;
+  const average = count === 0 ? 0 : Math.round((total / count) * 10) / 10;
   return { average, count, distribution };
+}
+
+export function summarise(ratings: number[]): RatingSummary {
+  return summariseCounts(ratings.map((rating) => ({ rating, count: 1 })));
 }
 
 @Injectable()
@@ -95,7 +116,8 @@ export class ReviewsService {
   ): Promise<ReviewsResult> {
     const bounds = clampPage(page, limit, 20);
     const where: Prisma.ReviewWhereInput = subject;
-    const [rows, ratings] = await Promise.all([
+    // One grouped count instead of reading every rating row for the summary.
+    const [rows, buckets] = await Promise.all([
       this.prisma.review.findMany({
         where,
         include: reviewInclude,
@@ -103,9 +125,18 @@ export class ReviewsService {
         skip: bounds.skip,
         take: bounds.limit,
       }),
-      this.prisma.review.findMany({ where, select: { rating: true } }),
+      this.prisma.review.groupBy({
+        by: ["rating"],
+        where,
+        _count: { _all: true },
+      }),
     ]);
-    const summary = summarise(ratings.map((row) => row.rating));
+    const summary = summariseCounts(
+      buckets.map((bucket) => ({
+        rating: bucket.rating,
+        count: bucket._count._all,
+      })),
+    );
     return {
       items: rows.map((row) => toReview(row, viewerId)),
       page_info: toPageInfo(bounds, summary.count),
@@ -113,9 +144,21 @@ export class ReviewsService {
     };
   }
 
-  async featured(limit: number): Promise<Review[]> {
+  // The home row only carries reviews whose piece or event is still on the site.
+  async recent(limit: number): Promise<Review[]> {
     const rows = await this.prisma.review.findMany({
-      where: { rating: { gte: 4 }, body: { not: null } },
+      where: {
+        rating: { gte: 4 },
+        body: { not: null },
+        OR: [
+          { product: { is_active: true } },
+          {
+            event: {
+              status: { in: [EventStatus.PUBLISHED, EventStatus.COMPLETED] },
+            },
+          },
+        ],
+      },
       include: reviewInclude,
       orderBy: { created_at: "desc" },
       take: Math.min(12, Math.max(1, limit)),
@@ -155,26 +198,35 @@ export class ReviewsService {
     input: ReviewInput,
   ): Promise<Review> {
     const data = this.validate(input);
-    const reason = await this.ineligibleReason(subject, userId);
-    if (reason) {
-      throw new ForbiddenException(reason);
-    }
-    const existing = await this.prisma.review.findFirst({
-      where: { ...subject, user_id: userId },
-    });
-    if (existing) {
-      throw new BadRequestException(
-        "You have already reviewed this. Edit your review instead.",
-      );
-    }
-    const row = await this.prisma.withTransaction(async () => {
-      const created = await this.prisma.review.create({
-        data: { ...subject, user_id: userId, ...data },
-        include: reviewInclude,
+    const row = await this.prisma
+      .withTransaction(async () => {
+        const reason = await this.ineligibleReason(subject, userId);
+        if (reason) {
+          throw new ForbiddenException(reason);
+        }
+        const existing = await this.prisma.review.findFirst({
+          where: { ...subject, user_id: userId },
+        });
+        if (existing) {
+          throw new ConflictException(ALREADY_REVIEWED);
+        }
+        const created = await this.prisma.review.create({
+          data: { ...subject, user_id: userId, ...data },
+          include: reviewInclude,
+        });
+        await this.refreshRating(subject);
+        return created;
+      })
+      .catch((error: unknown) => {
+        // Two submissions in flight land on the unique index rather than the read above.
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          throw new ConflictException(ALREADY_REVIEWED);
+        }
+        throw error;
       });
-      await this.refreshRating(subject);
-      return created;
-    });
     return toReview(row, userId);
   }
 
@@ -196,11 +248,7 @@ export class ReviewsService {
         data,
         include: reviewInclude,
       });
-      await this.refreshRating(
-        current.product_id !== null
-          ? { product_id: current.product_id }
-          : { event_id: current.event_id ?? 0 },
-      );
+      await this.refreshRating(subjectOf(current));
       return updated;
     });
     return toReview(row, userId);
@@ -214,12 +262,9 @@ export class ReviewsService {
       if (!current) {
         throw new NotFoundException("Review not found");
       }
+      const subject = subjectOf(current);
       await this.prisma.review.delete({ where: { id } });
-      await this.refreshRating(
-        current.product_id !== null
-          ? { product_id: current.product_id }
-          : { event_id: current.event_id ?? 0 },
-      );
+      await this.refreshRating(subject);
     });
     return true;
   }
@@ -273,11 +318,24 @@ export class ReviewsService {
     if (rating < 1 || rating > 5) {
       throw new BadRequestException("Rating must be between 1 and 5 stars");
     }
-    const body = input.body?.trim().slice(0, MAX_BODY) || null;
-    const image_urls = (input.image_urls ?? [])
-      .map((url) => url.trim())
-      .filter((url) => url.length > 0)
-      .slice(0, MAX_IMAGES);
+    const body = input.body?.trim() || null;
+    if (body && body.length > MAX_BODY) {
+      throw new BadRequestException(
+        `Reviews are limited to ${MAX_BODY} characters`,
+      );
+    }
+    const image_urls = [
+      ...new Set(
+        (input.image_urls ?? [])
+          .map((url) => url.trim())
+          .filter((url) => url.length > 0),
+      ),
+    ];
+    if (image_urls.length > MAX_IMAGES) {
+      throw new BadRequestException(
+        `A review can carry up to ${MAX_IMAGES} photos`,
+      );
+    }
     for (const url of image_urls) {
       if (!this.storage.isOwnUrl(url)) {
         throw new BadRequestException(

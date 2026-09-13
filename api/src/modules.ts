@@ -104,3 +104,4 @@ export { WorkshopsModule } from "@/features/workshops/workshops.module";
 export { ContentModule } from "@/features/content/content.module";
 export { NewsletterModule } from "@/features/newsletter/newsletter.module";
 export { ContactModule } from "@/features/contact/contact.module";
+export { ReviewsModule } from "@/features/reviews/reviews.module";
