@@ -83,9 +83,30 @@ input AdminOptionInput {
   sort_order: Int
 }
 
+type AdminOrder {
+  admin_note: String
+  customer: AdminUserRef!
+  next_statuses: [OrderStatus!]!
+  order: Order!
+}
+
 type AdminOrderStatusCount {
   count: Int!
   status: OrderStatus!
+}
+
+input AdminOrdersFilterInput {
+  from: DateTime
+  limit: Int
+  page: Int
+  search: String
+  status: OrderStatus
+  to: DateTime
+}
+
+type AdminOrdersResult {
+  items: [AdminOrder!]!
+  page_info: PageInfo!
 }
 
 input AdminProductInput {
@@ -394,6 +415,7 @@ type Mutation {
   adjustProductStock(delta: Int!, id: Int!, reason: String!): Product!
   bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
   cancelOrder(id: String!, reason: String): Order!
+  cancelOrderAsAdmin(id: String!, reason: String): AdminOrder!
   cancelRegistration(id: String!, reason: String): Registration!
   cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
@@ -414,6 +436,7 @@ type Mutation {
   deleteProductOption(id: Int!): Boolean!
   deleteProductOptionGroup(id: Int!): Boolean!
   deleteReview(id: Int!): Boolean!
+  markOrderPaid(id: String!): AdminOrder!
   placeOrder(input: PlaceOrderInput!): Order!
   registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
@@ -421,6 +444,8 @@ type Mutation {
   rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
   sendContactMessage(input: ContactMessageInput!): Boolean!
   setDefaultAddress(id: Int!): Address!
+  setOrderAdminNote(id: String!, note: String): AdminOrder!
+  setOrderStatus(cancel_reason: String, id: String!, status: OrderStatus!, tracking_note: String): AdminOrder!
   setProductActive(id: Int!, is_active: Boolean!): Product!
   setProductFeatured(id: Int!, is_featured: Boolean!): Product!
   subscribeToNewsletter(email: String!): NewsletterResult!
@@ -608,6 +633,8 @@ type Query {
   adminCategories: [Category!]!
   adminCollections: [Collection!]!
   adminDashboard: AdminDashboard!
+  adminOrder(id: String!): AdminOrder!
+  adminOrders(filter: AdminOrdersFilterInput): AdminOrdersResult!
   adminProduct(id: Int!): Product!
   adminProductOptionGroups(product_id: Int!): [ProductOptionGroup!]!
   adminProducts(filter: AdminProductsFilterInput): AdminProductsResult!
