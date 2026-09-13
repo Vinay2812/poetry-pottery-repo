@@ -3,6 +3,8 @@
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 
+import { OrderStatus } from "@/graphql/generated/graphql";
+
 import { formatDateTime, formatInr } from "@/lib/format";
 
 import { PageShell } from "@/components/layout/PageShell";
@@ -26,6 +28,7 @@ import {
   toWhatsAppOrderMessage,
 } from "@/features/orders/types";
 import { toProductPath } from "@/features/products/types";
+import { ReviewActionContainer } from "@/features/reviews";
 
 export interface OrderDetailContainerProps {
   orderId: string;
@@ -118,6 +121,7 @@ export function OrderDetailContainer({
       : null,
   };
   const closed = isClosed(optimisticOrder.status);
+  const isDelivered = optimisticOrder.status === OrderStatus.Delivered;
   const closedLabel = closed
     ? `${toStatusLabel(optimisticOrder.status)}${optimisticOrder.cancelled_at ? ` on ${formatDateTime(optimisticOrder.cancelled_at)}` : ""}${optimisticOrder.cancel_reason ? ` · ${optimisticOrder.cancel_reason}` : ""}`
     : null;
@@ -172,6 +176,15 @@ export function OrderDetailContainer({
           lineTotal: item.line_total,
           selectionSummary: toSelectionSummary(item.selections),
           referenceImageUrls: item.reference_image_urls,
+          action:
+            isDelivered && item.product ? (
+              <ReviewActionContainer
+                kind="product"
+                subjectId={item.product.id}
+                slug={item.product.slug}
+                subjectName={item.product_name}
+              />
+            ) : null,
         }))}
         studioNotes={optimisticOrder.studio_notes.map((note) => ({
           id: note.id,

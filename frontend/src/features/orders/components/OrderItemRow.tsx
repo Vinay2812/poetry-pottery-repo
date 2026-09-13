@@ -15,6 +15,7 @@ export interface OrderItemRowProps {
   lineTotal: number;
   selectionSummary: string | null;
   referenceImageUrls: string[];
+  action?: React.ReactNode;
 }
 
 export function OrderItemRow({
@@ -26,6 +27,7 @@ export function OrderItemRow({
   lineTotal,
   selectionSummary,
   referenceImageUrls,
+  action,
 }: OrderItemRowProps) {
   const title = href ? (
     <Link href={href} className="text-sm underline-offset-4 hover:underline">
@@ -63,6 +65,7 @@ export function OrderItemRow({
           urls={referenceImageUrls}
           label={`Reference photo for ${name}`}
         />
+        {action}
       </div>
       <span className="text-sm tnum">{formatInr(lineTotal)}</span>
     </li>

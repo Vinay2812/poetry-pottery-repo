@@ -147,6 +147,7 @@ export function OrderDetail({
                   lineTotal={item.lineTotal}
                   selectionSummary={item.selectionSummary}
                   referenceImageUrls={item.referenceImageUrls}
+                  action={item.action}
                 />
               ))}
             </ul>

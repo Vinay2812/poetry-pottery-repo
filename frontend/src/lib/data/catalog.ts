@@ -30,6 +30,9 @@ import {
   ProductsDocument,
   type ProductsQuery,
   type ProductsQueryVariables,
+  RecentReviewsDocument,
+  type RecentReviewsQuery,
+  type RecentReviewsQueryVariables,
   UpcomingEventsDocument,
   type UpcomingEventsQuery,
   type UpcomingEventsQueryVariables,
@@ -199,6 +202,16 @@ export async function getUpcomingEvents(
     UpcomingEventsQueryVariables
   >({ query: UpcomingEventsDocument, variables: { limit } });
   return data?.upcomingEvents ?? [];
+}
+
+export async function getRecentReviews(
+  limit = 3,
+): Promise<RecentReviewsQuery["recentReviews"]> {
+  const { data } = await getClient().query<
+    RecentReviewsQuery,
+    RecentReviewsQueryVariables
+  >({ query: RecentReviewsDocument, variables: { limit } });
+  return data?.recentReviews ?? [];
 }
 
 export async function getEvent(

@@ -51,6 +51,7 @@ import {
   toStockStatus,
   validateSelections,
 } from "@/features/products/types";
+import { ReviewsPanelContainer } from "@/features/reviews";
 import { useToggleWishlist, useWishlistIds } from "@/features/wishlist/hooks";
 
 export interface ProductDetailContainerProps {
@@ -454,6 +455,13 @@ export function ProductDetailContainer({
           )}
         </div>
       </div>
+
+      <ReviewsPanelContainer
+        kind="product"
+        subjectId={product.id}
+        slug={product.slug}
+        subjectName={product.name}
+      />
 
       {related.length > 0 && (
         <Reveal isGroup>

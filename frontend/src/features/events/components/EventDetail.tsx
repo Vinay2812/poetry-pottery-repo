@@ -15,6 +15,7 @@ export interface EventDetailProps {
   gallery: string[];
   isPast: boolean;
   reserveBox: React.ReactNode;
+  reviews: React.ReactNode;
 }
 
 export function EventDetail({
@@ -27,6 +28,7 @@ export function EventDetail({
   gallery,
   isPast,
   reserveBox,
+  reviews,
 }: EventDetailProps) {
   return (
     <PageShell className="flex flex-col gap-10 py-8 md:py-12">
@@ -122,6 +124,8 @@ export function EventDetail({
               </div>
             </section>
           )}
+
+          {reviews}
         </div>
 
         <aside className="order-first lg:sticky lg:top-24 lg:order-none">

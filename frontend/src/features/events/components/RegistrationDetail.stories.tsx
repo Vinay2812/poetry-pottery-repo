@@ -21,6 +21,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     registrationId: "REG7Q2X9M1KD",
+    reviewAction: null,
     eventTitle: "Wheel throwing for beginners",
     eventHref: "/events/wheel-throwing-for-beginners",
     bookedOn: "Sat, 12 Sept, 2026, 3:00 pm",
