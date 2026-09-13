@@ -68,11 +68,11 @@ export class ReviewsResolver {
   }
 
   @Query(() => [Review])
-  featuredReviews(
+  recentReviews(
     @Args("limit", { type: () => Int, nullable: true, defaultValue: 6 })
     limit: number,
   ): Promise<Review[]> {
-    return this.reviewsService.featured(limit);
+    return this.reviewsService.recent(limit);
   }
 
   @AuthRequired()
@@ -106,6 +106,7 @@ export class ReviewsResolver {
   }
 
   @AuthRequired()
+  @StrictThrottle()
   @Mutation(() => Review)
   updateReview(
     @CurrentUser() user: AuthUser,
