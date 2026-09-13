@@ -9,6 +9,8 @@ fragment ProductCard on Product {
   color_code
   image_urls
   stock
+  is_active
+  is_archived
   is_featured
   is_customizable
   rating_avg
@@ -17,6 +19,7 @@ fragment ProductCard on Product {
     id
     slug
     name
+    starts_at
     ends_at
   }
 }
@@ -45,6 +48,8 @@ query Products($filter: ProductsFilterInput) {
       }
       price_min
       price_max
+      active_count
+      archive_count
     }
   }
 }
@@ -100,8 +105,8 @@ query Categories {
   }
 }
 
-query Collections {
-  collections {
+query Collections($archive: Boolean) {
+  collections(archive: $archive) {
     id
     slug
     name

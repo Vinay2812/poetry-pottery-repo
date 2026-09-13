@@ -6,9 +6,13 @@ import {
   type ProductsFilterInput,
 } from "@/graphql/generated/graphql";
 
+import { buildWhatsAppUrl } from "@/features/layout/types";
+
 export type ProductCardData = ProductCardFragment;
 export type ProductDetailData = ProductQuery["product"];
 export type ProductOptionGroupData = ProductDetailData["option_groups"][number];
+
+export const ARCHIVE_VIEW = "archive";
 
 const PAGE_SIZE = 24;
 const LOW_STOCK_THRESHOLD = 3;
@@ -32,6 +36,7 @@ export interface ProductFilters {
   maxPrice: number | null;
   inStockOnly: boolean;
   customizableOnly: boolean;
+  isArchive: boolean;
   sort: ProductSort;
 }
 
@@ -44,6 +49,7 @@ export const EMPTY_FILTERS: ProductFilters = {
   maxPrice: null,
   inStockOnly: false,
   customizableOnly: false,
+  isArchive: false,
   sort: ProductSort.Featured,
 };
 
@@ -75,6 +81,7 @@ export function parseFilters(params: URLSearchParams): ProductFilters {
     maxPrice: readInt(params, "max"),
     inStockOnly: params.get("in_stock") === "1",
     customizableOnly: params.get("customizable") === "true",
+    isArchive: params.get("view") === ARCHIVE_VIEW,
     sort:
       sort && SORT_VALUES.has(sort)
         ? (sort as ProductSort)
@@ -94,6 +101,7 @@ export function toSearchParams(filters: ProductFilters): URLSearchParams {
   if (filters.maxPrice !== null) params.set("max", String(filters.maxPrice));
   if (filters.inStockOnly) params.set("in_stock", "1");
   if (filters.customizableOnly) params.set("customizable", "true");
+  if (filters.isArchive) params.set("view", ARCHIVE_VIEW);
   if (filters.sort !== ProductSort.Featured) params.set("sort", filters.sort);
   return params;
 }
@@ -111,6 +119,7 @@ export function toFilterInput(
     max_price: filters.maxPrice,
     in_stock_only: filters.inStockOnly || null,
     customizable_only: filters.customizableOnly || null,
+    archive: filters.isArchive,
     sort: filters.sort,
     page,
     limit: PAGE_SIZE,
@@ -179,6 +188,31 @@ export function toShortDescription(description: string): {
     short: sentences.slice(0, MAX_DESCRIPTION_SENTENCES).join("").trim(),
     hasMore: true,
   };
+}
+
+// Archive cards say where the piece went, never a stock number.
+export function toArchiveLabel(stock: number): string {
+  return stock <= 0 ? "Found a home" : "Retired from the shelf";
+}
+
+export function toArchiveNote(stock: number): string {
+  return stock <= 0
+    ? "This piece has found a home."
+    : "This piece is no longer on the shelf.";
+}
+
+// "Ask for one like it" carries the piece name and its page so the studio knows what is meant.
+export function toArchiveAskUrl(
+  whatsappNumber: string,
+  productName: string,
+  productUrl: string,
+): string | null {
+  const digits = whatsappNumber.replace(/\D/g, "");
+  if (!digits) return null;
+  return buildWhatsAppUrl(
+    whatsappNumber,
+    `Hi, I saw the ${productName} in your archive (${productUrl}). Could you make one like it?`,
+  );
 }
 
 export function toGlazeAskUrl(

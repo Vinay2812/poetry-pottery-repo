@@ -6,9 +6,12 @@ import {
   useRelatedProductsQuery,
 } from "@/graphql/generated/graphql";
 
+import { formatInr } from "@/lib/format";
+
 import { KilnLabels, type KilnLabel } from "@/components/motion/KilnLabels";
 
 import { useAddToCart } from "@/features/cart/hooks";
+import { ArchiveNotice } from "@/features/products/components/ArchiveNotice";
 import { KilnCard } from "@/features/products/components/KilnCard";
 import { OptionGroupPicker } from "@/features/products/components/OptionGroupPicker";
 import { ProductBuyBox } from "@/features/products/components/ProductBuyBox";
@@ -19,6 +22,8 @@ import { ProductCardContainer } from "@/features/products/containers/ProductCard
 import {
   computeUnitPrice,
   type ProductDetailData,
+  toArchiveAskUrl,
+  toArchiveNote,
   type Selections,
   toBatchLabel,
   toGlazeAskUrl,
@@ -32,6 +37,7 @@ export interface ProductDetailContainerProps {
   product: ProductDetailData;
   freeShippingAbove: number | null;
   whatsappNumber: string;
+  pageUrl: string;
 }
 
 const MAX_QUANTITY = 10;
@@ -47,6 +53,7 @@ export function ProductDetailContainer({
   product,
   freeShippingAbove,
   whatsappNumber,
+  pageUrl,
 }: ProductDetailContainerProps) {
   const { addToCart, isAdding } = useAddToCart();
   const { isWishlisted } = useWishlistIds();
@@ -82,6 +89,8 @@ export function ProductDetailContainer({
     [product.description],
   );
   const askUrl = toGlazeAskUrl(whatsappNumber, product.name);
+  const isArchived = product.is_archived;
+  const archiveAskUrl = toArchiveAskUrl(whatsappNumber, product.name, pageUrl);
 
   // The device only reads over the drawn placeholder; a real photo keeps the frame clean
   // and the fact list carries clay body, glaze and size instead.
@@ -184,84 +193,96 @@ export function ProductDetailContainer({
           }
         />
         <div ref={buyBoxRef} className="lg:sticky lg:top-24 lg:self-start">
-          <ProductBuyBox
-            name={product.name}
-            collectionName={product.collection?.name ?? null}
-            collectionHref={
-              product.collection
-                ? `/products?collection=${product.collection.slug}`
-                : null
-            }
-            unitPrice={unitPrice}
-            compareAtPrice={product.compare_at_price}
-            material={product.material}
-            colorName={product.color_name}
-            colorCode={product.color_code}
-            sizeLine={product.dimensions}
-            stockTone={stock.tone}
-            stockLabel={batchLabel}
-            ratingAvg={product.rating_avg}
-            ratingCount={product.rating_count}
-            quantity={quantity}
-            maxQuantity={Math.max(1, maxQuantity)}
-            isWishlisted={isWishlisted(product.id)}
-            isAddingToCart={isAdding}
-            canAddToCart={product.stock > 0 || product.is_customizable}
-            freeShippingAbove={freeShippingAbove}
-            askUrl={askUrl}
-            onQuantityChange={setQuantity}
-            onAddToCart={handleAddToCart}
-            onToggleWishlist={handleToggleWishlist}
-            options={
-              groups.length > 0 ? (
-                <div className="flex flex-col gap-5 border-y border-ash py-6">
-                  {groups.map((group) => {
-                    const selection = selections[group.id];
-                    const issue = showErrors
-                      ? (issues.find(
-                          (candidate) => candidate.groupId === group.id,
-                        )?.message ?? null)
-                      : null;
-                    return (
-                      <OptionGroupPicker
-                        key={group.id}
-                        groupId={group.id}
-                        name={group.name}
-                        kind={
-                          group.kind === OptionGroupKind.Text
-                            ? "TEXT"
-                            : "CHOICE"
-                        }
-                        isRequired={group.is_required}
-                        priceModifier={group.price_modifier}
-                        maxLength={group.max_length}
-                        choices={group.options.map((option) => ({
-                          id: option.id,
-                          name: option.name,
-                          priceModifier: option.price_modifier,
-                        }))}
-                        selectedOptionId={
-                          selection && "optionId" in selection
-                            ? selection.optionId
-                            : null
-                        }
-                        text={
-                          selection && "text" in selection ? selection.text : ""
-                        }
-                        error={issue}
-                        onSelectOption={(optionId) =>
-                          handleSelectOption(group.id, optionId)
-                        }
-                        onTextChange={(text) =>
-                          handleTextChange(group.id, text)
-                        }
-                      />
-                    );
-                  })}
-                </div>
-              ) : undefined
-            }
-          />
+          {isArchived ? (
+            <ArchiveNotice
+              name={product.name}
+              priceLabel={formatInr(product.price)}
+              collectionName={product.collection?.name ?? null}
+              note={toArchiveNote(product.stock)}
+              askUrl={archiveAskUrl}
+            />
+          ) : (
+            <ProductBuyBox
+              name={product.name}
+              collectionName={product.collection?.name ?? null}
+              collectionHref={
+                product.collection
+                  ? `/products?collection=${product.collection.slug}`
+                  : null
+              }
+              unitPrice={unitPrice}
+              compareAtPrice={product.compare_at_price}
+              material={product.material}
+              colorName={product.color_name}
+              colorCode={product.color_code}
+              sizeLine={product.dimensions}
+              stockTone={stock.tone}
+              stockLabel={batchLabel}
+              ratingAvg={product.rating_avg}
+              ratingCount={product.rating_count}
+              quantity={quantity}
+              maxQuantity={Math.max(1, maxQuantity)}
+              isWishlisted={isWishlisted(product.id)}
+              isAddingToCart={isAdding}
+              canAddToCart={product.stock > 0 || product.is_customizable}
+              freeShippingAbove={freeShippingAbove}
+              askUrl={askUrl}
+              onQuantityChange={setQuantity}
+              onAddToCart={handleAddToCart}
+              onToggleWishlist={handleToggleWishlist}
+              options={
+                groups.length > 0 ? (
+                  <div className="flex flex-col gap-5 border-y border-ash py-6">
+                    {groups.map((group) => {
+                      const selection = selections[group.id];
+                      const issue = showErrors
+                        ? (issues.find(
+                            (candidate) => candidate.groupId === group.id,
+                          )?.message ?? null)
+                        : null;
+                      return (
+                        <OptionGroupPicker
+                          key={group.id}
+                          groupId={group.id}
+                          name={group.name}
+                          kind={
+                            group.kind === OptionGroupKind.Text
+                              ? "TEXT"
+                              : "CHOICE"
+                          }
+                          isRequired={group.is_required}
+                          priceModifier={group.price_modifier}
+                          maxLength={group.max_length}
+                          choices={group.options.map((option) => ({
+                            id: option.id,
+                            name: option.name,
+                            priceModifier: option.price_modifier,
+                          }))}
+                          selectedOptionId={
+                            selection && "optionId" in selection
+                              ? selection.optionId
+                              : null
+                          }
+                          text={
+                            selection && "text" in selection
+                              ? selection.text
+                              : ""
+                          }
+                          error={issue}
+                          onSelectOption={(optionId) =>
+                            handleSelectOption(group.id, optionId)
+                          }
+                          onTextChange={(text) =>
+                            handleTextChange(group.id, text)
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                ) : undefined
+              }
+            />
+          )}
         </div>
       </div>
 
@@ -308,7 +329,7 @@ export function ProductDetailContainer({
       )}
 
       <StickyBuyBar
-        isVisible={!isBuyBoxVisible}
+        isVisible={!isArchived && !isBuyBoxVisible}
         name={product.name}
         total={unitPrice * quantity}
         isSoldOut={stock.tone === "sold_out"}

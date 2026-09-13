@@ -12,7 +12,10 @@ import {
   CategoryStrip,
   type CategoryStripItem,
 } from "@/features/products/components/CategoryStrip";
-import { CollectionCard } from "@/features/products/components/CollectionCard";
+import {
+  CollectionStrip,
+  type CollectionStripItem,
+} from "@/features/products/components/CollectionStrip";
 import { EmptyResults } from "@/features/products/components/EmptyResults";
 import { FilterSheet } from "@/features/products/components/FilterSheet";
 import { LoadFailed } from "@/features/products/components/LoadFailed";
@@ -22,6 +25,7 @@ import { ProductFilters } from "@/features/products/components/ProductFilters";
 import { ProductGrid } from "@/features/products/components/ProductGrid";
 import { ProductToolbar } from "@/features/products/components/ProductToolbar";
 import { SearchField } from "@/features/products/components/SearchField";
+import { ShelfTabs } from "@/features/products/components/ShelfTabs";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
   countActiveFilters,
@@ -35,8 +39,6 @@ import {
 interface CollectionLink {
   slug: string;
   name: string;
-  imageUrl: string | null;
-  productCount: number;
 }
 
 export interface ProductListContainerProps {
@@ -165,8 +167,13 @@ export function ProductListContainer({
     [applyFilters, filters],
   );
   const handleClear = useCallback(
-    () => applyFilters({ ...EMPTY_FILTERS, collection: filters.collection }),
-    [applyFilters, filters.collection],
+    () =>
+      applyFilters({
+        ...EMPTY_FILTERS,
+        collection: filters.collection,
+        isArchive: filters.isArchive,
+      }),
+    [applyFilters, filters.collection, filters.isArchive],
   );
 
   const handleLoadMore = useCallback(() => {
@@ -210,6 +217,16 @@ export function ProductListContainer({
     filters.maxPrice ?? priceCeiling,
   ];
   const activeFilterCount = countActiveFilters(filters);
+  const toHref = (next: Filters) =>
+    `${pathname}?${toSearchParams(next).toString()}`;
+  const collectionItems: CollectionStripItem[] = collections.map(
+    (collection) => ({
+      slug: collection.slug,
+      name: collection.name,
+      href: toHref({ ...filters, collection: collection.slug }),
+      isActive: filters.collection === collection.slug,
+    }),
+  );
   const categoryItems: CategoryStripItem[] = categories.map((category) => ({
     slug: category.slug,
     name: category.name,
@@ -263,32 +280,27 @@ export function ProductListContainer({
         </div>
       )}
 
+      {!isSearchPage && (
+        <ShelfTabs
+          shelfHref={toHref({ ...filters, isArchive: false })}
+          archiveHref={toHref({ ...filters, isArchive: true })}
+          shelfCount={facets?.active_count ?? 0}
+          archiveCount={facets?.archive_count ?? 0}
+          isArchive={filters.isArchive}
+        />
+      )}
+
       <CategoryStrip
         items={categoryItems}
         allHref={`${pathname}?${toSearchParams({ ...filters, categories: [] }).toString()}`}
         isAllActive={filters.categories.length === 0}
       />
 
-      {collections.length > 0 && !filters.collection && (
-        <section className="flex flex-col gap-5 border-b border-ash pb-8">
-          <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-            Collections
-          </h2>
-          <div className="grid grid-cols-2 gap-x-3 gap-y-6 md:grid-cols-4 md:gap-x-6">
-            {collections.slice(0, 4).map((collection) => (
-              <CollectionCard
-                key={collection.slug}
-                href={`/products?collection=${collection.slug}`}
-                name={collection.name}
-                description={null}
-                imageUrl={collection.imageUrl}
-                productCount={collection.productCount}
-                endsLabel={null}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      <CollectionStrip
+        items={collectionItems}
+        allHref={toHref({ ...filters, collection: null })}
+        isAllActive={filters.collection === null}
+      />
 
       <div className="grid gap-8 lg:grid-cols-[240px_1fr]">
         <aside className="hidden lg:block">

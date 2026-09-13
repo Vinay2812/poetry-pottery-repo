@@ -7,7 +7,11 @@ import {
   countActiveFilters,
   EMPTY_FILTERS,
   parseFilters,
+  toArchiveAskUrl,
+  toArchiveLabel,
+  toArchiveNote,
   toDiscountPercent,
+  toFilterInput,
   toSearchParams,
   toBatchLabel,
   toGlazeAskUrl,
@@ -172,5 +176,46 @@ describe("customisation pricing", () => {
     expect(
       validateSelections(groups, { 1: { optionId: 10 }, 2: { text: "Maya" } }),
     ).toEqual([]);
+  });
+});
+
+describe("archive view", () => {
+  it("round-trips the archive view through the URL", () => {
+    const filters = parseFilters(
+      new URLSearchParams("view=archive&category=mugs"),
+    );
+    expect(filters.isArchive).toBe(true);
+    expect(toSearchParams(filters).toString()).toBe(
+      "category=mugs&view=archive",
+    );
+    expect(toFilterInput(filters, 1).archive).toBe(true);
+  });
+
+  it("stays on the shelf without the view parameter", () => {
+    const filters = parseFilters(new URLSearchParams(""));
+    expect(filters.isArchive).toBe(false);
+    expect(toSearchParams(filters).has("view")).toBe(false);
+    expect(toFilterInput(filters, 1).archive).toBe(false);
+  });
+
+  it("says where a piece went instead of counting stock", () => {
+    expect(toArchiveLabel(0)).toBe("Found a home");
+    expect(toArchiveLabel(2)).toBe("Retired from the shelf");
+    expect(toArchiveNote(0)).toBe("This piece has found a home.");
+    expect(toArchiveNote(2)).toBe("This piece is no longer on the shelf.");
+  });
+
+  it("prefills the ask with the piece name and its page", () => {
+    const url = toArchiveAskUrl(
+      "+91 98765 43210",
+      "Drip sip mug",
+      "https://studio.test/products/drip-sip-mug",
+    );
+    expect(url).toContain("https://wa.me/919876543210?text=");
+    expect(decodeURIComponent(url ?? "")).toContain("Drip sip mug");
+    expect(decodeURIComponent(url ?? "")).toContain(
+      "https://studio.test/products/drip-sip-mug",
+    );
+    expect(toArchiveAskUrl("", "Drip sip mug", "/x")).toBeNull();
   });
 });

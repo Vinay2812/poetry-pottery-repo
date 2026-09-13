@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 
 import { getProduct } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { toAbsoluteUrl } from "@/lib/site-url";
 
-import { ProductDetailContainer } from "@/features/products";
+import { ProductDetailContainer, toProductPath } from "@/features/products";
 
 export async function generateMetadata({
   params,
@@ -34,6 +35,7 @@ export default async function ProductPage({
       product={product}
       freeShippingAbove={settings.free_shipping_above}
       whatsappNumber={settings.whatsapp_number}
+      pageUrl={await toAbsoluteUrl(toProductPath(slug))}
     />
   );
 }

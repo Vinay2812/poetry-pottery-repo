@@ -20,6 +20,9 @@ import {
   ProductDocument,
   type ProductQuery,
   type ProductQueryVariables,
+  ProductsDocument,
+  type ProductsQuery,
+  type ProductsQueryVariables,
   UpcomingEventsDocument,
   type UpcomingEventsQuery,
   type UpcomingEventsQueryVariables,
@@ -42,13 +45,14 @@ export async function getCategories(): Promise<CategoriesQuery["categories"]> {
   return data?.categories ?? [];
 }
 
-export async function getCollections(): Promise<
-  CollectionsQuery["collections"]
-> {
+// The archive asks for closed windows too, so the visitor can keep switching collections there.
+export async function getCollections(
+  archive = false,
+): Promise<CollectionsQuery["collections"]> {
   const { data } = await getClient().query<
     CollectionsQuery,
     CollectionsQueryVariables
-  >({ query: CollectionsDocument });
+  >({ query: CollectionsDocument, variables: { archive } });
   return data?.collections ?? [];
 }
 
@@ -99,6 +103,19 @@ export async function getFeaturedProducts(
     variables: { limit },
   });
   return data?.featuredProducts ?? [];
+}
+
+export async function getCustomProducts(): Promise<
+  ProductsQuery["products"]["items"]
+> {
+  const { data } = await getClient().query<
+    ProductsQuery,
+    ProductsQueryVariables
+  >({
+    query: ProductsDocument,
+    variables: { filter: { customizable_only: true, limit: 12 } },
+  });
+  return data?.products.items ?? [];
 }
 
 // Only a real not-found becomes a 404; any other failure surfaces as an error page.

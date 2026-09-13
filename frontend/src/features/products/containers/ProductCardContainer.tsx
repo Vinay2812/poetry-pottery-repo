@@ -3,9 +3,11 @@
 import { useCallback } from "react";
 
 import { useAddToCart } from "@/features/cart/hooks";
+import { ArchiveCard } from "@/features/products/components/ArchiveCard";
 import { ProductCard } from "@/features/products/components/ProductCard";
 import {
   type ProductCardData,
+  toArchiveLabel,
   toDiscountPercent,
   toProductPath,
   toStockStatus,
@@ -37,6 +39,20 @@ export function ProductCardContainer({
     () => addToCart({ product_id: product.id, quantity: 1 }, product.name),
     [addToCart, product.id, product.name],
   );
+
+  // Archived pieces are past work: no cart, no wishlist, just where they went.
+  if (product.is_archived) {
+    return (
+      <ArchiveCard
+        href={href}
+        name={product.name}
+        imageUrl={product.image_urls[0] ?? null}
+        price={product.price}
+        note={toArchiveLabel(product.stock)}
+        isPriority={isPriority}
+      />
+    );
+  }
 
   return (
     <ProductCard

@@ -141,6 +141,7 @@ export type CollectionRef = {
   id: Scalars['Int']['output'];
   name: Scalars['String']['output'];
   slug: Scalars['String']['output'];
+  starts_at?: Maybe<Scalars['DateTime']['output']>;
 };
 
 export type ContactMessage = {
@@ -524,6 +525,7 @@ export type Product = {
   image_urls: Array<Scalars['String']['output']>;
   in_wishlist: Scalars['Boolean']['output'];
   is_active: Scalars['Boolean']['output'];
+  is_archived: Scalars['Boolean']['output'];
   is_customizable: Scalars['Boolean']['output'];
   is_featured: Scalars['Boolean']['output'];
   material: Scalars['String']['output'];
@@ -539,6 +541,8 @@ export type Product = {
 
 export type ProductFacets = {
   __typename?: 'ProductFacets';
+  active_count: Scalars['Int']['output'];
+  archive_count: Scalars['Int']['output'];
   categories: Array<FacetCount>;
   materials: Array<FacetCount>;
   price_max: Scalars['Int']['output'];
@@ -573,6 +577,7 @@ export enum ProductSort {
 }
 
 export type ProductsFilterInput = {
+  archive?: InputMaybe<Scalars['Boolean']['input']>;
   category_slugs?: InputMaybe<Array<Scalars['String']['input']>>;
   collection_slug?: InputMaybe<Scalars['String']['input']>;
   customizable_only?: InputMaybe<Scalars['Boolean']['input']>;
@@ -635,6 +640,11 @@ export type QueryCheckoutQuoteArgs = {
 
 export type QueryCollectionArgs = {
   slug: Scalars['String']['input'];
+};
+
+
+export type QueryCollectionsArgs = {
+  archive?: InputMaybe<Scalars['Boolean']['input']>;
 };
 
 
@@ -965,19 +975,19 @@ export type SetDefaultAddressMutationVariables = Exact<{
 
 export type SetDefaultAddressMutation = { setDefaultAddress: { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean } };
 
-export type CartFieldsFragment = { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> };
+export type CartFieldsFragment = { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> };
 
 export type CartQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CartQuery = { cart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+export type CartQuery = { cart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type AddToCartMutationVariables = Exact<{
   input: AddToCartInput;
 }>;
 
 
-export type AddToCartMutation = { addToCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+export type AddToCartMutation = { addToCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type UpdateCartItemMutationVariables = Exact<{
   id: number;
@@ -985,19 +995,19 @@ export type UpdateCartItemMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCartItemMutation = { updateCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+export type UpdateCartItemMutation = { updateCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type RemoveCartItemMutationVariables = Exact<{
   id: number;
 }>;
 
 
-export type RemoveCartItemMutation = { removeCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+export type RemoveCartItemMutation = { removeCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type ClearCartMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type ContentPageQueryVariables = Exact<{
   slug: string;
@@ -1121,21 +1131,21 @@ export type CancelOrderMutationVariables = Exact<{
 
 export type CancelOrderMutation = { cancelOrder: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } };
 
-export type ProductCardFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null };
+export type ProductCardFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null };
 
 export type ProductsQueryVariables = Exact<{
   filter?: ProductsFilterInput | null | undefined;
 }>;
 
 
-export type ProductsQuery = { products: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null }>, page_info: { total: number, page: number, limit: number, has_more: boolean }, facets: { price_min: number, price_max: number, categories: Array<{ value: string, label: string, count: number }>, materials: Array<{ value: string, label: string, count: number }> } } };
+export type ProductsQuery = { products: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }>, page_info: { total: number, page: number, limit: number, has_more: boolean }, facets: { price_min: number, price_max: number, active_count: number, archive_count: number, categories: Array<{ value: string, label: string, count: number }>, materials: Array<{ value: string, label: string, count: number }> } } };
 
 export type ProductQueryVariables = Exact<{
   slug: string;
 }>;
 
 
-export type ProductQuery = { product: { description: string, dimensions: string | null, care_notes: Array<string>, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, categories: Array<{ id: number, slug: string, name: string }>, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, price_modifier: number, max_length: number | null, options: Array<{ id: number, name: string, price_modifier: number }> }>, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } };
+export type ProductQuery = { product: { description: string, dimensions: string | null, care_notes: Array<string>, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, categories: Array<{ id: number, slug: string, name: string }>, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, price_modifier: number, max_length: number | null, options: Array<{ id: number, name: string, price_modifier: number }> }>, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } };
 
 export type RelatedProductsQueryVariables = Exact<{
   slug: string;
@@ -1143,21 +1153,23 @@ export type RelatedProductsQueryVariables = Exact<{
 }>;
 
 
-export type RelatedProductsQuery = { relatedProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null }> };
+export type RelatedProductsQuery = { relatedProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
 
 export type FeaturedProductsQueryVariables = Exact<{
   limit?: number | null | undefined;
 }>;
 
 
-export type FeaturedProductsQuery = { featuredProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null }> };
+export type FeaturedProductsQuery = { featuredProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
 
 export type CategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type CategoriesQuery = { categories: Array<{ id: number, slug: string, name: string, icon: string | null, image_url: string | null, product_count: number }> };
 
-export type CollectionsQueryVariables = Exact<{ [key: string]: never; }>;
+export type CollectionsQueryVariables = Exact<{
+  archive?: boolean | null | undefined;
+}>;
 
 
 export type CollectionsQuery = { collections: Array<{ id: number, slug: string, name: string, description: string | null, image_url: string | null, ends_at: string | null, product_count: number }> };
@@ -1177,7 +1189,7 @@ export type SiteSettingsQuery = { siteSettings: { contact_phone: string, whatsap
 export type WishlistQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type WishlistQuery = { wishlist: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null }> };
+export type WishlistQuery = { wishlist: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
 
 export type WishlistIdsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1277,6 +1289,8 @@ export const ProductCardFragmentDoc = gql`
   color_code
   image_urls
   stock
+  is_active
+  is_archived
   is_featured
   is_customizable
   rating_avg
@@ -1285,6 +1299,7 @@ export const ProductCardFragmentDoc = gql`
     id
     slug
     name
+    starts_at
     ends_at
   }
 }
@@ -2399,6 +2414,8 @@ export const ProductsDocument = gql`
       }
       price_min
       price_max
+      active_count
+      archive_count
     }
   }
 }
@@ -2599,8 +2616,8 @@ export type CategoriesQueryHookResult = ReturnType<typeof useCategoriesQuery>;
 export type CategoriesLazyQueryHookResult = ReturnType<typeof useCategoriesLazyQuery>;
 export type CategoriesQueryResult = ApolloReactCommon.QueryResult<CategoriesQuery, CategoriesQueryVariables>;
 export const CollectionsDocument = gql`
-    query Collections {
-  collections {
+    query Collections($archive: Boolean) {
+  collections(archive: $archive) {
     id
     slug
     name
@@ -2624,6 +2641,7 @@ export const CollectionsDocument = gql`
  * @example
  * const { data, loading, error } = useCollectionsQuery({
  *   variables: {
+ *      archive: // value for 'archive'
  *   },
  * });
  */

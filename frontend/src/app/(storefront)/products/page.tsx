@@ -7,7 +7,7 @@ import {
   getCollections,
 } from "@/lib/data/catalog";
 
-import { ProductListContainer } from "@/features/products";
+import { ARCHIVE_VIEW, ProductListContainer } from "@/features/products";
 
 export const metadata: Metadata = {
   title: "Shop handmade pottery",
@@ -15,15 +15,20 @@ export const metadata: Metadata = {
     "Wheel-thrown mugs, bowls, plates, vases and planters, glazed and fired in our Sangli studio.",
 };
 
+const SHELF_DESCRIPTION = "Thrown, glazed and fired by hand in small batches.";
+const ARCHIVE_DESCRIPTION =
+  "Pieces that have sold, retired or closed with their collection. Ask us for one like it.";
+
 export default async function ProductsPage({
   searchParams,
 }: PageProps<"/products">) {
   const params = await searchParams;
   const collectionSlug =
     typeof params.collection === "string" ? params.collection : null;
+  const isArchive = params.view === ARCHIVE_VIEW;
   const [categories, collections, collection] = await Promise.all([
     getCategories(),
-    getCollections(),
+    getCollections(isArchive),
     collectionSlug ? getCollection(collectionSlug) : Promise.resolve(null),
   ]);
 
@@ -38,13 +43,14 @@ export default async function ProductsPage({
         collections={collections.map((item) => ({
           slug: item.slug,
           name: item.name,
-          imageUrl: item.image_url,
-          productCount: item.product_count,
         }))}
-        heading={collection?.name ?? "Every piece on the shelf"}
+        heading={
+          collection?.name ??
+          (isArchive ? "The archive" : "Every piece on the shelf")
+        }
         description={
           collection?.description ??
-          "Thrown, glazed and fired by hand in small batches."
+          (isArchive ? ARCHIVE_DESCRIPTION : SHELF_DESCRIPTION)
         }
       />
     </Suspense>
