@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 
 import { atViewport } from "@/lib/storybook/viewports";
 import { KilnLabels } from "./KilnLabels";
@@ -30,6 +31,10 @@ type Story = StoryObj<typeof meta>;
 export const Animated: Story = {};
 
 export const Static: Story = { args: { isAnimated: false } };
+
+export const Highlighted: Story = {
+  args: { isAnimated: false, activeText: "Stoneware", onActivate: fn() },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

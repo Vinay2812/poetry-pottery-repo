@@ -64,6 +64,7 @@ export function ProductDetailContainer({
   const [showErrors, setShowErrors] = useState(false);
   const [isBuyBoxVisible, setIsBuyBoxVisible] = useState(true);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
+  const [activeFact, setActiveFact] = useState<string | null>(null);
   const buyBoxRef = useRef<HTMLDivElement>(null);
 
   const { data: relatedData } = useRelatedProductsQuery({
@@ -162,6 +163,11 @@ export function ProductDetailContainer({
     setIsDescriptionOpen((current) => !current);
   }, []);
 
+  // Only the facts the drawing also names can light up with it.
+  const hasKilnDiagram = !hasPhoto && kilnLabels.length > 0;
+  const linkedLabels = hasKilnDiagram
+    ? kilnLabels.map((label) => label.text)
+    : [];
   const kilnRows = [
     { label: "Clay body", value: product.material },
     ...(product.color_name
@@ -175,7 +181,7 @@ export function ProductDetailContainer({
       label: "Ships in",
       value: product.is_customizable ? "About ten days" : "Three working days",
     },
-  ];
+  ].map((row) => ({ ...row, isLinked: linkedLabels.includes(row.label) }));
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-16 px-4 py-8 md:px-8 md:py-12">
@@ -184,10 +190,12 @@ export function ProductDetailContainer({
           images={product.image_urls}
           name={product.name}
           overlay={
-            !hasPhoto && kilnLabels.length > 0 ? (
+            hasKilnDiagram ? (
               <KilnLabels
                 labels={kilnLabels}
                 isAnimated
+                activeText={activeFact}
+                onActivate={setActiveFact}
                 className="hidden text-ink lg:block"
               />
             ) : undefined
@@ -318,7 +326,12 @@ export function ProductDetailContainer({
             </div>
           )}
         </div>
-        <KilnCard rows={kilnRows} colorCode={product.color_code} />
+        <KilnCard
+          rows={kilnRows}
+          colorCode={product.color_code}
+          activeLabel={activeFact}
+          onActivate={hasKilnDiagram ? setActiveFact : undefined}
+        />
       </div>
 
       {related.length > 0 && (

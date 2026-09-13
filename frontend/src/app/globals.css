@@ -267,6 +267,65 @@
   }
 }
 
+/* Kiln labels: the drawing and the fact list light each other, colour only. */
+.kiln-leader {
+  stroke: currentColor;
+  transition: stroke 200ms ease-out;
+}
+
+.kiln-leader[data-on] {
+  stroke: var(--color-sage);
+}
+
+.kiln-dot {
+  fill: currentColor;
+  transition: fill 200ms ease-out;
+}
+
+.kiln-dot[data-on] {
+  fill: var(--color-sage);
+}
+
+.kiln-label {
+  transition: color 200ms ease-out;
+}
+
+.kiln-label[data-on] {
+  color: var(--color-sage);
+}
+
+/* The overlay stays click-through; only the dots take a pointer. */
+.kiln-hit {
+  fill: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+  outline: none;
+}
+
+.kiln-hit:focus-visible {
+  stroke: var(--color-sage);
+  stroke-width: 0.5;
+  stroke-dasharray: 1.5 1;
+}
+
+.fact-row {
+  transition: background-color 160ms ease-out;
+}
+
+.fact-row[data-on] {
+  background-color: color-mix(in srgb, var(--color-sage) 8%, transparent);
+}
+
+/* Smoke on the tint drops under 4.5:1, so the lit row's label goes to ink. */
+.fact-row[data-on] dt {
+  color: var(--color-ink);
+}
+
+.fact-row:focus-visible {
+  outline: 2px solid var(--color-sage);
+  outline-offset: -2px;
+}
+
 /* ---------------------------------------------------------------------------
    Home making story. Stacked and fully drawn by default, which is what no JS,
    narrow screens and reduced motion all get. The container adds data-step to
