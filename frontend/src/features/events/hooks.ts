@@ -1,13 +1,11 @@
 "use client";
 
+import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { toast } from "sonner";
 
 import {
-  EventDocument,
-  type EventQuery,
-  type EventQueryVariables,
   RegistrationDocument,
   type RegistrationQuery,
   useCancelRegistrationMutation,
@@ -16,42 +14,16 @@ import {
   useRegisterForEventMutation,
   useRegistrationQuery,
 } from "@/graphql/generated/graphql";
-import type { ApolloCache } from "@apollo/client";
 
 import { useRequireAuth } from "@/features/auth";
 import {
   type EventFilters,
-  type RegistrationData,
   toEventsFilterInput,
   toRegistrationPath,
 } from "@/features/events/types";
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong";
-}
-
-// Keeps the event page in step with a booking made or cancelled elsewhere in the session.
-function writeEventRegistration(
-  cache: ApolloCache,
-  registration: RegistrationData,
-  seatChange: number,
-): void {
-  cache.updateQuery<EventQuery, EventQueryVariables>(
-    { query: EventDocument, variables: { slug: registration.event.slug } },
-    (existing) =>
-      existing
-        ? {
-            event: {
-              ...existing.event,
-              available_seats: Math.max(
-                0,
-                existing.event.available_seats + seatChange,
-              ),
-              my_registration: registration,
-            },
-          }
-        : undefined,
-  );
 }
 
 export function useEvents(filters: EventFilters) {
@@ -99,16 +71,15 @@ export function useRegisterForEvent() {
           variables: {
             input: { event_id: eventId, seats, note: note.trim() || null },
           },
-          update: (cache, { data }) => {
-            if (data)
-              writeEventRegistration(cache, data.registerForEvent, -seats);
-          },
         })
           .then(({ data }) => {
-            if (data)
+            if (data) {
+              // The event page is a server component; its seat count is stale until refreshed.
+              router.refresh();
               router.push(
                 `${toRegistrationPath(data.registerForEvent.id)}?placed=1`,
               );
+            }
           })
           .catch((error: unknown) => toast.error(toErrorMessage(error)));
       });
@@ -119,35 +90,50 @@ export function useRegisterForEvent() {
   return { reserve, isReserving: loading };
 }
 
+// Signed-out visitors get a sign-in prompt instead of an auth error from the API.
 export function useMyRegistrations(page: number) {
+  const { isSignedIn, isLoaded } = useAuth();
   const { data, previousData, loading, error, refetch } =
     useMyRegistrationsQuery({
       variables: { page, limit: 12 },
+      skip: !isSignedIn,
+      // A seat reserved or cancelled elsewhere must not leave a stale list behind.
+      fetchPolicy: "cache-and-network",
+      nextFetchPolicy: "cache-first",
       notifyOnNetworkStatusChange: true,
     });
-  const result = data?.myRegistrations ?? previousData?.myRegistrations;
+  const result = isSignedIn
+    ? (data?.myRegistrations ?? previousData?.myRegistrations)
+    : undefined;
   return {
     registrations: result?.items ?? [],
     pageInfo: result?.page_info ?? null,
-    isLoading: loading && !result,
+    isLoading: !isLoaded || (loading && !result),
     hasError: Boolean(error) && !result,
+    isSignedIn: Boolean(isSignedIn),
     refetch,
   };
 }
 
 export function useRegistration(id: string) {
+  const { isSignedIn, isLoaded } = useAuth();
   const { data, loading, error, refetch } = useRegistrationQuery({
     variables: { id },
+    skip: !isSignedIn,
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
   });
   return {
-    registration: data?.registration ?? null,
-    isLoading: loading && !data,
+    registration: isSignedIn ? (data?.registration ?? null) : null,
+    isLoading: !isLoaded || (loading && !data),
     hasError: Boolean(error) && !data,
+    isSignedIn: Boolean(isSignedIn),
     refetch,
   };
 }
 
 export function useCancelRegistration() {
+  const router = useRouter();
   const [mutate, { loading }] = useCancelRegistrationMutation();
 
   const cancel = useCallback(
@@ -163,9 +149,10 @@ export function useCancelRegistration() {
               variables: { id },
               data: { registration: cancelled },
             });
-            writeEventRegistration(cache, cancelled, cancelled.seats);
           },
         });
+        // The event page is a server component; its seat count is stale until refreshed.
+        router.refresh();
         toast.success("Booking cancelled");
         return true;
       } catch (error) {
@@ -173,7 +160,7 @@ export function useCancelRegistration() {
         return false;
       }
     },
-    [mutate],
+    [mutate, router],
   );
 
   return { cancel, isCancelling: loading };

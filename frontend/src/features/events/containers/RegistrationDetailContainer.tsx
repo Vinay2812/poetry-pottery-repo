@@ -1,10 +1,11 @@
 "use client";
 
-import { useUser } from "@clerk/nextjs";
+import { useClerk, useUser } from "@clerk/nextjs";
 import { useCallback, useState } from "react";
 
 import { formatDate, formatDateTime, formatInr } from "@/lib/format";
 
+import { SignInWall } from "@/features/auth/components/SignInWall";
 import { CancelRegistrationDialog } from "@/features/events/components/CancelRegistrationDialog";
 import { RegistrationDetail } from "@/features/events/components/RegistrationDetail";
 import {
@@ -36,8 +37,9 @@ export function RegistrationDetailContainer({
   isJustPlaced,
   whatsappNumber,
 }: RegistrationDetailContainerProps) {
-  const { registration, isLoading, hasError, refetch } =
+  const { registration, isLoading, hasError, isSignedIn, refetch } =
     useRegistration(registrationId);
+  const { openSignIn } = useClerk();
   const { cancel, isCancelling } = useCancelRegistration();
   const { user } = useUser();
   const [isCancelOpen, setIsCancelOpen] = useState(false);
@@ -57,6 +59,14 @@ export function RegistrationDetailContainer({
         <div className="h-8 w-56 animate-pulse bg-ash" />
         <div className="mt-8 h-64 animate-pulse bg-ash/60" />
       </div>
+    );
+  }
+  if (!isSignedIn) {
+    return (
+      <SignInWall
+        message="Sign in to see this booking"
+        onSignIn={() => openSignIn()}
+      />
     );
   }
   if (hasError || !registration) {
@@ -128,7 +138,7 @@ export function RegistrationDetailContainer({
           description: step.description,
           date: dates[step.key] ?? null,
         }))}
-        currentStepIndex={toRegistrationStepIndex(registration.status)}
+        currentStepIndex={toRegistrationStepIndex(registration.status, dates)}
         isClosed={closed}
         closedLabel={closedLabel}
         facts={facts}

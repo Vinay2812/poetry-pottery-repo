@@ -95,6 +95,14 @@ describe("registration status helpers", () => {
     expect(isRegistrationClosed(RegistrationStatus.Cancelled)).toBe(true);
     expect(isRegistrationClosed(RegistrationStatus.Approved)).toBe(false);
   });
+
+  it("freezes a cancelled booking at the last step it actually reached", () => {
+    const dates = { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null };
+    expect(toRegistrationStepIndex(RegistrationStatus.Cancelled, dates)).toBe(
+      1,
+    );
+    expect(toRegistrationStepIndex(RegistrationStatus.Rejected, dates)).toBe(1);
+  });
 });
 
 describe("toWhatsAppBookingMessage", () => {

@@ -1,10 +1,12 @@
 "use client";
 
+import { useClerk } from "@clerk/nextjs";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { toEventWhenLabel } from "@/features/events/types";
 
+import { SignInWall } from "@/features/auth/components/SignInWall";
 import { EmptyRegistrations } from "@/features/events/components/EmptyRegistrations";
 import { RegistrationCard } from "@/features/events/components/RegistrationCard";
 import { useMyRegistrations } from "@/features/events/hooks";
@@ -16,8 +18,9 @@ import {
 
 export function RegistrationsListContainer() {
   const [page, setPage] = useState(1);
-  const { registrations, pageInfo, isLoading, hasError, refetch } =
+  const { registrations, pageInfo, isLoading, hasError, isSignedIn, refetch } =
     useMyRegistrations(page);
+  const { openSignIn } = useClerk();
 
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 md:px-6 md:py-12">
@@ -33,6 +36,11 @@ export function RegistrationsListContainer() {
             />
           ))}
         </div>
+      ) : !isSignedIn ? (
+        <SignInWall
+          message="Sign in to see your bookings"
+          onSignIn={() => openSignIn()}
+        />
       ) : hasError ? (
         <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
           <h2 className="font-heading text-2xl tracking-tight">

@@ -10,6 +10,7 @@ import { useRegisterForEvent } from "@/features/events/hooks";
 import {
   type EventDetailData,
   type EventFact,
+  isRegistrationClosed,
   MAX_SEATS,
   toEventTypeLabel,
   toLevelLabel,
@@ -70,7 +71,11 @@ export function EventDetailContainer({
     return rows;
   }, [event]);
 
-  const registration = event.my_registration;
+  // A cancelled or rejected row still comes back, but the studio lets you book again.
+  const registration =
+    event.my_registration && !isRegistrationClosed(event.my_registration.status)
+      ? event.my_registration
+      : null;
   const whatsappUrl = whatsappNumber
     ? buildWhatsAppUrl(
         whatsappNumber,

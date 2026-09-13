@@ -5,7 +5,6 @@ import {
   type EventsFilterInput,
   EventType,
   EventWhen,
-  type RegistrationFieldsFragment,
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
@@ -15,7 +14,6 @@ import type { StatusTone } from "@/features/orders/types";
 
 export type EventCardData = EventCardFragment;
 export type EventDetailData = EventQuery["event"];
-export type RegistrationData = RegistrationFieldsFragment;
 
 const PAGE_SIZE = 12;
 export const MAX_SEATS = 4;
@@ -144,10 +142,18 @@ export function toRegistrationStatusTone(
   return "active";
 }
 
-// Index of the current step; closed registrations freeze where they stopped.
-export function toRegistrationStepIndex(status: RegistrationStatus): number {
+// Index of the current step. Cancelled and rejected bookings are not steps of their own,
+// so they freeze at the last step that actually carries a date.
+export function toRegistrationStepIndex(
+  status: RegistrationStatus,
+  stepDates: Record<string, string | null> = {},
+): number {
   const index = REGISTRATION_STEPS.findIndex((step) => step.key === status);
-  return index === -1 ? 0 : index;
+  if (index !== -1) return index;
+  return REGISTRATION_STEPS.reduce(
+    (reached, step, at) => (stepDates[step.key] ? at : reached),
+    0,
+  );
 }
 
 export function isRegistrationClosed(status: RegistrationStatus): boolean {
