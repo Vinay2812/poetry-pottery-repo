@@ -5,7 +5,6 @@ import { OrderStatus } from "@/graphql/generated/graphql";
 import {
   applyAdminOrderPatch,
   buildOrderTimeline,
-  canMarkPaid,
   describeItems,
   type AdminOrderDetailData,
   type OrderTimelineSource,
@@ -205,13 +204,6 @@ describe("toStatusActions", () => {
 
   it("offers nothing once an order is closed", () => {
     expect(toStatusActions([])).toEqual([]);
-  });
-});
-
-describe("canMarkPaid", () => {
-  it("follows the allowed moves", () => {
-    expect(canMarkPaid([OrderStatus.Paid, OrderStatus.Cancelled])).toBe(true);
-    expect(canMarkPaid([OrderStatus.Delivered])).toBe(false);
   });
 });
 

@@ -1,13 +1,11 @@
 import {
   type AdminOrderDetailFragment,
-  type AdminOrderRowFragment,
   OrderStatus,
 } from "@/graphql/generated/graphql";
 
 import { formatInr, pluralize } from "@/lib/format";
 
 export type AdminOrderDetailData = AdminOrderDetailFragment;
-export type AdminOrderRowData = AdminOrderRowFragment;
 
 export const ORDERS_PAGE_SIZE = 20;
 
@@ -136,7 +134,7 @@ export interface OrderStatusAction {
   needsNote: boolean;
 }
 
-export function toStatusActionLabel(status: OrderStatus): string {
+function toStatusActionLabel(status: OrderStatus): string {
   return STATUS_ACTION_LABEL[status];
 }
 
@@ -155,10 +153,6 @@ export function toStatusActions(
     .sort(
       (left, right) => Number(left.isDestructive) - Number(right.isDestructive),
     );
-}
-
-export function canMarkPaid(nextStatuses: OrderStatus[]): boolean {
-  return nextStatuses.includes(OrderStatus.Paid);
 }
 
 export interface AdminOrderPatch {
