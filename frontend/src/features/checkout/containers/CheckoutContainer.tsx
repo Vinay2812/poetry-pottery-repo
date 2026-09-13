@@ -6,8 +6,6 @@ import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
 import {
-  CartDocument,
-  type CartQuery,
   useCheckoutQuoteQuery,
   usePlaceOrderMutation,
 } from "@/graphql/generated/graphql";
@@ -46,29 +44,10 @@ export function CheckoutContainer() {
     appliedCoupon && quote?.coupon_code === appliedCoupon,
   );
 
+  // Placing an order empties the cart and adds a row to the orders list; both are fetched again.
   const [placeOrder, { loading: isPlacing }] = usePlaceOrderMutation({
-    update: (cache, { data }) => {
-      if (!data) return;
-      // The cached orders list predates this order; drop it so the next visit refetches.
-      cache.evict({ id: "ROOT_QUERY", fieldName: "orders" });
-      cache.gc();
-      const current = cache.readQuery<CartQuery>({ query: CartDocument });
-      if (current) {
-        cache.writeQuery<CartQuery>({
-          query: CartDocument,
-          data: {
-            cart: {
-              ...current.cart,
-              items: [],
-              item_count: 0,
-              subtotal: 0,
-              shipping_fee: 0,
-              total: 0,
-            },
-          },
-        });
-      }
-    },
+    refetchQueries: ["Cart", "Orders"],
+    awaitRefetchQueries: true,
   });
 
   const handleApplyCoupon = useCallback(() => {
