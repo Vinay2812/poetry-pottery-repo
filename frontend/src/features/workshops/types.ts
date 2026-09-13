@@ -391,3 +391,40 @@ export function formatHours(hours: number): string {
 export function formatWheels(remaining: number): string {
   return `${remaining} ${remaining === 1 ? "wheel" : "wheels"} free`;
 }
+
+export type BookingAction =
+  | { kind: "cancel"; reason: string; at: string }
+  | { kind: "reschedule"; slots: readonly SlotInterval[] };
+
+// The reducer behind the optimistic booking: what the studio will say once it agrees.
+export function applyBookingAction(
+  booking: BookingData | null,
+  action: BookingAction,
+): BookingData | null {
+  if (!booking) return booking;
+  if (action.kind === "cancel") {
+    return {
+      ...booking,
+      status: RegistrationStatus.Cancelled,
+      can_cancel: false,
+      can_reschedule: false,
+      cancelled_at: action.at,
+      cancel_reason: action.reason.trim() || booking.cancel_reason,
+    };
+  }
+  const slots = [...action.slots].sort((a, b) =>
+    a.starts_at.localeCompare(b.starts_at),
+  );
+  const first = slots[0];
+  const last = slots[slots.length - 1];
+  if (!first || !last) return booking;
+  return {
+    ...booking,
+    slots: slots.map((slot) => ({
+      starts_at: slot.starts_at,
+      ends_at: slot.ends_at,
+    })),
+    starts_at: first.starts_at,
+    ends_at: last.ends_at,
+  };
+}

@@ -12,18 +12,11 @@ import {
   useRescheduleWorkshopBookingMutation,
   useWorkshopAvailabilityQuery,
   useWorkshopBookingQuery,
-  WorkshopBookingDocument,
-  type WorkshopBookingQuery,
   useWorkshopQuery,
 } from "@/graphql/generated/graphql";
-import type { ApolloCache } from "@apollo/client";
 
 import { useRequireAuth } from "@/features/auth";
-import {
-  type BookingData,
-  daysInMonth,
-  toBookingPath,
-} from "@/features/workshops/types";
+import { daysInMonth, toBookingPath } from "@/features/workshops/types";
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong";
@@ -119,6 +112,7 @@ export function useMyWorkshopBookings(page: number) {
     bookings: isSignedIn ? (result?.items ?? []) : [],
     pageInfo: result?.page_info ?? null,
     isLoading: !isLoaded || (loading && !result),
+    isPaging: loading && Boolean(result),
     hasError: Boolean(error) && !result,
     isSignedIn: Boolean(isSignedIn),
     refetch,
@@ -146,11 +140,8 @@ export function useCancelWorkshopBooking() {
   const cancel = useCallback(
     async (id: string, reason: string): Promise<boolean> => {
       try {
-        await mutate({
-          variables: { id, reason: reason.trim() || null },
-          update: (cache, { data }) =>
-            writeBooking(cache, id, data?.cancelWorkshopBooking),
-        });
+        // The reply is the whole booking, so Apollo's own normalisation is the new baseline.
+        await mutate({ variables: { id, reason: reason.trim() || null } });
         toast.success("Session cancelled");
         return true;
       } catch (error) {
@@ -172,8 +163,6 @@ export function useRescheduleWorkshopBooking() {
       try {
         await mutate({
           variables: { input: { booking_id: id, slot_starts: slotStarts } },
-          update: (cache, { data }) =>
-            writeBooking(cache, id, data?.rescheduleWorkshopBooking),
         });
         toast.success("Session moved");
         return true;
@@ -186,18 +175,4 @@ export function useRescheduleWorkshopBooking() {
   );
 
   return { reschedule, isRescheduling: loading };
-}
-
-// Keeps the booking page in step with a cancellation or a move.
-function writeBooking(
-  cache: ApolloCache,
-  id: string,
-  booking: BookingData | undefined,
-): void {
-  if (!booking) return;
-  cache.writeQuery<WorkshopBookingQuery>({
-    query: WorkshopBookingDocument,
-    variables: { id },
-    data: { workshopBooking: booking },
-  });
 }

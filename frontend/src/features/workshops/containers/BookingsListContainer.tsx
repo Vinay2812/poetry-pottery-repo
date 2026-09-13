@@ -4,6 +4,7 @@ import { useClerk } from "@clerk/nextjs";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 import { SignInWall } from "@/features/auth";
 import { BookingCard } from "@/features/workshops/components/BookingCard";
@@ -19,8 +20,16 @@ import {
 
 export function BookingsListContainer() {
   const [page, setPage] = useState(1);
-  const { bookings, pageInfo, isLoading, hasError, isSignedIn, refetch } =
-    useMyWorkshopBookings(page);
+  const {
+    bookings,
+    pageInfo,
+    isLoading,
+    isPaging,
+    hasError,
+    isSignedIn,
+    refetch,
+  } = useMyWorkshopBookings(page);
+  const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
 
   if (!isLoading && !isSignedIn) {
@@ -57,7 +66,13 @@ export function BookingsListContainer() {
         <EmptyBookings />
       ) : (
         <>
-          <div className="flex flex-col border-t border-ash">
+          <div
+            aria-busy={isPaging}
+            className={cn(
+              "flex flex-col border-t border-ash transition-opacity duration-200",
+              isPaging && "opacity-60",
+            )}
+          >
             {bookings.map((booking) => (
               <BookingCard
                 key={booking.id}
@@ -87,12 +102,11 @@ export function BookingsListContainer() {
                 Newer
               </Button>
               <span className="text-[13px] text-muted-foreground tnum">
-                Page {pageInfo.page} of{" "}
-                {Math.ceil(pageInfo.total / pageInfo.limit)}
+                Page {page} of {pageCount}
               </span>
               <Button
                 variant="outline"
-                disabled={!pageInfo.has_more}
+                disabled={page >= pageCount}
                 onClick={() => setPage((current) => current + 1)}
               >
                 Older

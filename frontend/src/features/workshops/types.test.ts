@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { RegistrationStatus } from "@/graphql/generated/graphql";
+
 import {
+  applyBookingAction,
+  type BookingData,
   daysInMonth,
   formatDayRange,
   formatDateKey,
@@ -172,5 +176,119 @@ describe("session helpers", () => {
     });
     expect(message).toContain("Booking: WS-ABC");
     expect(message).toContain("2 hours for 1 person");
+  });
+});
+
+function booking(overrides: Partial<BookingData> = {}): BookingData {
+  return {
+    id: "bk_1",
+    starts_at: "2026-09-20T09:00:00.000Z",
+    ends_at: "2026-09-20T11:00:00.000Z",
+    slots: [
+      {
+        starts_at: "2026-09-20T09:00:00.000Z",
+        ends_at: "2026-09-20T10:00:00.000Z",
+      },
+      {
+        starts_at: "2026-09-20T10:00:00.000Z",
+        ends_at: "2026-09-20T11:00:00.000Z",
+      },
+    ],
+    hours: 2,
+    participants: 1,
+    price_per_person: 2400,
+    pieces_per_person: 2,
+    subtotal: 2400,
+    discount: 0,
+    total: 2400,
+    status: RegistrationStatus.Approved,
+    note: null,
+    cancel_reason: null,
+    can_cancel: true,
+    can_reschedule: true,
+    created_at: "2026-09-10T09:00:00.000Z",
+    approved_at: "2026-09-11T09:00:00.000Z",
+    confirmed_at: null,
+    rejected_at: null,
+    cancelled_at: null,
+    config: {
+      id: 1,
+      slug: "wheel-throwing",
+      name: "Wheel throwing",
+      description: null,
+      image_url: null,
+      timezone: "Asia/Kolkata",
+      opening_minutes: 600,
+      closing_minutes: 1200,
+      slot_minutes: 60,
+      capacity_per_slot: 4,
+      booking_window_days: 30,
+      slot_span_days: 1,
+      closed_weekdays: [],
+      tiers: [],
+    },
+    ...overrides,
+  };
+}
+
+describe("applyBookingAction", () => {
+  it("closes the booking the moment a cancellation is asked for", () => {
+    const cancelled = applyBookingAction(booking(), {
+      kind: "cancel",
+      reason: "  Cannot make it  ",
+      at: "2026-09-12T09:00:00.000Z",
+    });
+    expect(cancelled?.status).toBe(RegistrationStatus.Cancelled);
+    expect(cancelled?.can_cancel).toBe(false);
+    expect(cancelled?.can_reschedule).toBe(false);
+    expect(cancelled?.cancelled_at).toBe("2026-09-12T09:00:00.000Z");
+    expect(cancelled?.cancel_reason).toBe("Cannot make it");
+  });
+
+  it("keeps the reason already on record when none is typed", () => {
+    const cancelled = applyBookingAction(
+      booking({ cancel_reason: "Studio closed" }),
+      { kind: "cancel", reason: "   ", at: "2026-09-12T09:00:00.000Z" },
+    );
+    expect(cancelled?.cancel_reason).toBe("Studio closed");
+  });
+
+  it("moves the hours and restates when the session runs", () => {
+    const moved = applyBookingAction(booking(), {
+      kind: "reschedule",
+      slots: [
+        {
+          starts_at: "2026-09-25T12:00:00.000Z",
+          ends_at: "2026-09-25T13:00:00.000Z",
+        },
+        {
+          starts_at: "2026-09-25T11:00:00.000Z",
+          ends_at: "2026-09-25T12:00:00.000Z",
+        },
+      ],
+    });
+    expect(moved?.starts_at).toBe("2026-09-25T11:00:00.000Z");
+    expect(moved?.ends_at).toBe("2026-09-25T13:00:00.000Z");
+    expect(moved?.slots.map((slot) => slot.starts_at)).toEqual([
+      "2026-09-25T11:00:00.000Z",
+      "2026-09-25T12:00:00.000Z",
+    ]);
+  });
+
+  it("leaves the booking alone when a move picks no hours", () => {
+    const current = booking();
+    expect(applyBookingAction(current, { kind: "reschedule", slots: [] })).toBe(
+      current,
+    );
+  });
+
+  it("has nothing to do before the booking loads", () => {
+    expect(
+      applyBookingAction(null, {
+        kind: "cancel",
+        reason: "",
+        at: "2026-09-12T09:00:00.000Z",
+      }),
+    ).toBeNull();
   });
 });

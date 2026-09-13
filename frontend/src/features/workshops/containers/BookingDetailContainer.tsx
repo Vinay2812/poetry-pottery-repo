@@ -1,7 +1,13 @@
 "use client";
 
 import { useClerk, useUser } from "@clerk/nextjs";
-import { useCallback, useMemo, useState } from "react";
+import {
+  useCallback,
+  useMemo,
+  useOptimistic,
+  useState,
+  useTransition,
+} from "react";
 
 import { formatDateTime, formatInr } from "@/lib/format";
 
@@ -20,6 +26,7 @@ import {
   useWorkshopBooking,
 } from "@/features/workshops/hooks";
 import {
+  applyBookingAction,
   BOOKING_STEPS,
   formatDateKey,
   formatHourRange,
@@ -59,6 +66,11 @@ export function BookingDetailContainer({
 }: BookingDetailContainerProps) {
   const { booking, isLoading, hasError, isSignedIn, refetch } =
     useWorkshopBooking(bookingId);
+  const [optimisticBooking, applyBookingChange] = useOptimistic(
+    booking,
+    applyBookingAction,
+  );
+  const [, startTransition] = useTransition();
   const { openSignIn } = useClerk();
   const { user } = useUser();
   const { cancel, isCancelling } = useCancelWorkshopBooking();
@@ -73,12 +85,12 @@ export function BookingDetailContainer({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [picked, setPicked] = useState<SlotInterval[]>([]);
 
-  const configSlug = booking?.config.slug ?? "";
-  const timezone = booking?.config.timezone ?? "Asia/Kolkata";
-  const slotMinutes = booking?.config.slot_minutes ?? 60;
-  const spanAllowance = booking?.config.slot_span_days ?? 1;
-  const hours = booking?.hours ?? 1;
-  const participants = booking?.participants ?? 1;
+  const configSlug = optimisticBooking?.config.slug ?? "";
+  const timezone = optimisticBooking?.config.timezone ?? "Asia/Kolkata";
+  const slotMinutes = optimisticBooking?.config.slot_minutes ?? 60;
+  const spanAllowance = optimisticBooking?.config.slot_span_days ?? 1;
+  const hours = optimisticBooking?.hours ?? 1;
+  const participants = optimisticBooking?.participants ?? 1;
   const needed = slotsNeeded(hours, slotMinutes);
 
   const { days } = useAvailability(configSlug, month, !isMoveOpen);
@@ -165,37 +177,48 @@ export function BookingDetailContainer({
     );
   }, []);
 
-  const handleConfirmCancel = useCallback(async () => {
-    const done = await cancel(bookingId, reason);
-    if (done) setIsCancelOpen(false);
-  }, [bookingId, cancel, reason]);
+  // The dialog closes and the badge turns at once; a refusal rolls both back with a toast.
+  const handleConfirmCancel = useCallback(() => {
+    setIsCancelOpen(false);
+    startTransition(async () => {
+      applyBookingChange({
+        kind: "cancel",
+        reason,
+        at: new Date().toISOString(),
+      });
+      await cancel(bookingId, reason);
+    });
+  }, [applyBookingChange, bookingId, cancel, reason]);
 
-  const handleConfirmMove = useCallback(async () => {
-    if (pickedSlots.length !== needed) return;
-    const done = await reschedule(
-      bookingId,
-      pickedSlots.map((slot) => slot.startsAt),
-    );
-    if (done) {
-      setIsMoveOpen(false);
-      setPicked([]);
-      setSelectedDate(null);
-    }
-  }, [bookingId, needed, pickedSlots, reschedule]);
+  const handleConfirmMove = useCallback(() => {
+    if (picked.length !== needed) return;
+    const moved = [...picked];
+    setIsMoveOpen(false);
+    setPicked([]);
+    setSelectedDate(null);
+    startTransition(async () => {
+      applyBookingChange({ kind: "reschedule", slots: moved });
+      await reschedule(
+        bookingId,
+        moved.map((slot) => slot.starts_at),
+      );
+    });
+  }, [applyBookingChange, bookingId, needed, picked, reschedule]);
 
   // The picker opens on the hours the guest already has, so a move can keep most of them.
   const handleOpenMove = useCallback(() => {
-    if (!booking) return;
-    setMonth(toMonthKey(toDateKey(booking.starts_at, booking.config.timezone)));
-    setSelectedDate(toDateKey(booking.starts_at, booking.config.timezone));
+    if (!optimisticBooking) return;
+    const dateKey = toDateKey(optimisticBooking.starts_at, timezone);
+    setMonth(toMonthKey(dateKey));
+    setSelectedDate(dateKey);
     setPicked(
-      booking.slots.map((slot) => ({
-        starts_at: slot.starts_at as string,
-        ends_at: slot.ends_at as string,
+      optimisticBooking.slots.map((slot) => ({
+        starts_at: slot.starts_at,
+        ends_at: slot.ends_at,
       })),
     );
     setIsMoveOpen(true);
-  }, [booking]);
+  }, [optimisticBooking, timezone]);
 
   const handleSelectDate = useCallback((dateKey: string) => {
     setSelectedDate(dateKey);
@@ -220,7 +243,7 @@ export function BookingDetailContainer({
       />
     );
   }
-  if (hasError || !booking) {
+  if (hasError || !optimisticBooking) {
     return (
       <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-3 px-4 py-16 md:px-6">
         <h1 className="font-heading text-2xl tracking-tight">
@@ -238,42 +261,45 @@ export function BookingDetailContainer({
   }
 
   const dates: Record<string, string | null> = {
-    PENDING: formatDateTime(booking.created_at),
-    APPROVED: booking.approved_at ? formatDateTime(booking.approved_at) : null,
-    CONFIRMED: booking.confirmed_at
-      ? formatDateTime(booking.confirmed_at)
+    PENDING: formatDateTime(optimisticBooking.created_at),
+    APPROVED: optimisticBooking.approved_at
+      ? formatDateTime(optimisticBooking.approved_at)
+      : null,
+    CONFIRMED: optimisticBooking.confirmed_at
+      ? formatDateTime(optimisticBooking.confirmed_at)
       : null,
   };
-  const closed = isBookingClosed(booking.status);
-  const closedOn = booking.cancelled_at ?? booking.rejected_at;
+  const closed = isBookingClosed(optimisticBooking.status);
+  const closedOn =
+    optimisticBooking.cancelled_at ?? optimisticBooking.rejected_at;
   const closedLabel = closed
-    ? `${toBookingStatusLabel(booking.status)}${closedOn ? ` on ${formatDateTime(closedOn)}` : ""}${booking.cancel_reason ? ` · ${booking.cancel_reason}` : ""}`
+    ? `${toBookingStatusLabel(optimisticBooking.status)}${closedOn ? ` on ${formatDateTime(closedOn)}` : ""}${optimisticBooking.cancel_reason ? ` · ${optimisticBooking.cancel_reason}` : ""}`
     : null;
-  const dayGroups = groupSlotsByDay(booking.slots, timezone);
+  const dayGroups = groupSlotsByDay(optimisticBooking.slots, timezone);
   const when = dayGroups
     .map((group) => `${group.dayLabel} ${group.timesLabel}`)
     .join("; ");
   const facts: SessionFact[] = [
-    { label: "Session", value: booking.config.name },
+    { label: "Session", value: optimisticBooking.config.name },
     ...dayGroups.map((group) => ({
       label: group.dayLabel,
       value: group.timesLabel,
     })),
-    { label: "Duration", value: formatHours(booking.hours) },
+    { label: "Duration", value: formatHours(optimisticBooking.hours) },
     {
       label: "You take home",
-      value: `${booking.pieces_per_person * booking.participants} pieces, fired and glazed`,
+      value: `${optimisticBooking.pieces_per_person * optimisticBooking.participants} pieces, fired and glazed`,
     },
   ];
   const whatsappUrl = whatsappNumber
     ? buildWhatsAppUrl(
         whatsappNumber,
         toWhatsAppSessionMessage({
-          bookingId: booking.id,
+          bookingId: optimisticBooking.id,
           when,
-          hours: booking.hours,
-          participants: booking.participants,
-          total: formatInr(booking.total),
+          hours: optimisticBooking.hours,
+          participants: optimisticBooking.participants,
+          total: formatInr(optimisticBooking.total),
           guestName: user?.fullName ?? "",
         }),
       )
@@ -282,10 +308,10 @@ export function BookingDetailContainer({
   return (
     <>
       <BookingDetail
-        bookingId={booking.id}
-        bookedOn={formatDateTime(booking.created_at)}
-        statusLabel={toBookingStatusLabel(booking.status)}
-        statusTone={toBookingStatusTone(booking.status)}
+        bookingId={optimisticBooking.id}
+        bookedOn={formatDateTime(optimisticBooking.created_at)}
+        statusLabel={toBookingStatusLabel(optimisticBooking.status)}
+        statusTone={toBookingStatusTone(optimisticBooking.status)}
         isJustPlaced={isJustPlaced && !closed}
         steps={BOOKING_STEPS.map((step) => ({
           key: step.key,
@@ -293,18 +319,18 @@ export function BookingDetailContainer({
           description: step.description,
           date: dates[step.key] ?? null,
         }))}
-        currentStepIndex={toBookingStepIndex(booking.status)}
+        currentStepIndex={toBookingStepIndex(optimisticBooking.status)}
         isClosed={closed}
         closedLabel={closedLabel}
         facts={facts}
-        participants={booking.participants}
-        pricePerPerson={booking.price_per_person}
-        discount={booking.discount}
-        total={booking.total}
-        note={booking.note}
+        participants={optimisticBooking.participants}
+        pricePerPerson={optimisticBooking.price_per_person}
+        discount={optimisticBooking.discount}
+        total={optimisticBooking.total}
+        note={optimisticBooking.note}
         whatsappUrl={whatsappUrl}
-        canCancel={booking.can_cancel}
-        canReschedule={booking.can_reschedule}
+        canCancel={optimisticBooking.can_cancel}
+        canReschedule={optimisticBooking.can_reschedule}
         isCancelling={isCancelling}
         onCancel={() => setIsCancelOpen(true)}
         onReschedule={handleOpenMove}
