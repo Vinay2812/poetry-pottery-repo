@@ -1,7 +1,10 @@
 import {
   JAR_FOOT,
+  JAR_FOOT_CONTACT,
   JAR_LEFT_WALL,
   JAR_MOUTH,
+  JAR_MOUTH_CRESCENT,
+  JAR_MOUTH_INNER,
   JAR_RIGHT_WALL,
 } from "@/features/home/components/jar";
 import {
@@ -13,7 +16,6 @@ import {
   GLAZE_TOP_PATH,
   GROUND_Y,
   hatchStrokes,
-  ringArc,
   throwingRings,
   type Point,
 } from "@/features/home/components/jar-surface";
@@ -36,13 +38,6 @@ interface HeroLabel {
   rise: 1 | -1;
   length: number;
 }
-
-const MOUTH_INNER =
-  "M167 93.2C167 87.9 181.8 84.6 200 84.6C218.2 84.6 233 87.9 233 93.2C233 98.5 218.2 101.8 200 101.8C181.8 101.8 167 98.5 167 93.2Z";
-
-// The far inner wall, seen over the rim: what gives the mouth its depth.
-const MOUTH_CRESCENT =
-  "M167 93.2C167 87.9 181.8 84.6 200 84.6C218.2 84.6 233 87.9 233 93.2C229.6 93.2 229.6 93.2 229.6 93.2C229.6 89.6 216.3 87.4 200 87.4C183.7 87.4 170.4 89.6 170.4 93.2Z";
 
 const LEADER_ANGLE = (25 * Math.PI) / 180;
 
@@ -339,7 +334,7 @@ export function HeroIllustration({
 
         {/* Where the foot meets the floor, and the thumb press on the shoulder. */}
         <path
-          d={ringArc(306, 0.3, 2.45, 1)}
+          d={JAR_FOOT_CONTACT}
           stroke="currentColor"
           strokeOpacity={0.22}
           strokeWidth={2.6}
@@ -360,9 +355,9 @@ export function HeroIllustration({
         {hasClay && (
           <path d={JAR_MOUTH} fill={`url(#${clayId})`} stroke="none" />
         )}
-        <path d={MOUTH_INNER} fill={`url(#${mouthId})`} stroke="none" />
+        <path d={JAR_MOUTH_INNER} fill={`url(#${mouthId})`} stroke="none" />
         <path
-          d={MOUTH_CRESCENT}
+          d={JAR_MOUTH_CRESCENT}
           fill="#4F4840"
           fillOpacity={0.26}
           stroke="none"
@@ -401,7 +396,7 @@ export function HeroIllustration({
           strokeOpacity={0.55}
           style={drawStyle(OUTLINE_MS + 400)}
           className={draw}
-          d={MOUTH_INNER}
+          d={JAR_MOUTH_INNER}
         />
       </g>
 

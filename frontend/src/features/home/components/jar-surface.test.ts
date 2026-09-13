@@ -6,7 +6,6 @@ import {
   GLAZE_BAND_PATH,
   halfWidthAt,
   hatchStrokes,
-  ringArc,
   throwingRings,
 } from "./jar-surface";
 
@@ -36,19 +35,26 @@ describe("jar surface", () => {
     expect(halfWidthAt(310)).toBeCloseTo(44, 0);
   });
 
-  it("runs a ring from the right edge across the front to the left", () => {
-    const d = ringArc(200, 0, Math.PI);
-    expect(firstPoint(d).x).toBeCloseTo(AXIS_X + 96, 0);
-    expect(lastPoint(d).x).toBeCloseTo(AXIS_X - 96, 0);
-    expect(firstPoint(d).y).toBeCloseTo(200, 0);
+  it("runs its rings from the shaded edge across the front", () => {
+    const [right, left] = throwingRings();
+    expect(firstPoint(right.d).x).toBeGreaterThan(AXIS_X + 60);
+    expect(lastPoint(left.d).x).toBeLessThan(AXIS_X - 55);
+    expect(right.opacity).toBeGreaterThan(left.opacity);
   });
 
   it("hatches the shaded side and leaves the lit side bare", () => {
     const strokes = hatchStrokes();
     expect(strokes.length).toBeGreaterThan(60);
     expect(strokes.every((s) => s.opacity > 0 && s.opacity <= 0.6)).toBe(true);
-    const lit = strokes.filter((s) => s.band === 0).length;
-    expect(lit / strokes.length).toBeLessThan(0.1);
+    // Nothing is drawn on the lit half, and the darkest strokes hug the edge.
+    expect(strokes.every((s) => firstPoint(s.d).x > AXIS_X)).toBe(true);
+    const darkest = strokes.reduce((a, b) => (a.opacity > b.opacity ? a : b));
+    expect(firstPoint(darkest.d).x).toBeGreaterThan(AXIS_X + 30);
+  });
+
+  it("reveals the hatching from the lit side towards the shadow", () => {
+    const bands = new Set(hatchStrokes().map((s) => s.band));
+    expect([...bands].sort()).toEqual([0, 1, 2, 3]);
   });
 
   it("stays identical between renders so server and client agree", () => {
