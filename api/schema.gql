@@ -60,6 +60,38 @@ type AdminDashboard {
   unread_messages: Int!
 }
 
+input AdminEventInput {
+  address: String!
+  description: String!
+  ends_at: DateTime!
+  event_type: EventType
+  gallery: [String!]
+  highlights: [String!]
+  image_url: String!
+  includes: [String!]
+  instructor: String
+  level: EventLevel
+  location: String!
+  performers: [String!]
+  price: Int!
+  starts_at: DateTime!
+  title: String!
+  total_seats: Int!
+}
+
+input AdminEventsFilterInput {
+  event_type: EventType
+  limit: Int
+  page: Int
+  search: String
+  status: EventStatus
+}
+
+type AdminEventsResult {
+  items: [Event!]!
+  page_info: PageInfo!
+}
+
 type AdminLowStockPiece {
   id: Int!
   name: String!
@@ -179,6 +211,25 @@ type AdminRecentOrder {
   item_count: Int!
   status: OrderStatus!
   total: Int!
+}
+
+type AdminRegistration {
+  customer: AdminUserRef!
+  next_statuses: [RegistrationStatus!]!
+  registration: Registration!
+}
+
+input AdminRegistrationsFilterInput {
+  event_id: Int
+  limit: Int
+  page: Int
+  search: String
+  status: RegistrationStatus
+}
+
+type AdminRegistrationsResult {
+  items: [AdminRegistration!]!
+  page_info: PageInfo!
 }
 
 type AdminUser {
@@ -437,16 +488,19 @@ type Mutation {
   addToCart(input: AddToCartInput!): Cart!
   adjustProductStock(delta: Int!, id: Int!, reason: String!): Product!
   bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
+  cancelEvent(id: Int!, reason: String): Event!
   cancelOrder(id: String!, reason: String): Order!
   cancelOrderAsAdmin(id: String!, reason: String): AdminOrder!
   cancelRegistration(id: String!, reason: String): Registration!
   cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
+  completeEvent(id: Int!): Event!
   confirmUpload(key: String!, purpose: UploadPurpose!): ConfirmedImage!
   createAddress(input: AddressInput!): Address!
   createAdminUpload(content_type: String!, purpose: UploadPurpose!, size: Int!): UploadTarget!
   createCategory(input: AdminCategoryInput!): Category!
   createCollection(input: AdminCollectionInput!): Collection!
+  createEvent(input: AdminEventInput!): Event!
   createEventReview(event_id: Int!, input: ReviewInput!): Review!
   createProduct(input: AdminProductInput!): Product!
   createProductOption(group_id: Int!, input: AdminOptionInput!): ProductOptionGroup!
@@ -461,6 +515,7 @@ type Mutation {
   deleteReview(id: Int!): Boolean!
   markOrderPaid(id: String!): AdminOrder!
   placeOrder(input: PlaceOrderInput!): Order!
+  publishEvent(id: Int!): Event!
   registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
   reorderProductImages(id: Int!, image_urls: [String!]!): Product!
@@ -471,14 +526,17 @@ type Mutation {
   setOrderStatus(cancel_reason: String, id: String!, status: OrderStatus!, tracking_note: String): AdminOrder!
   setProductActive(id: Int!, is_active: Boolean!): Product!
   setProductFeatured(id: Int!, is_featured: Boolean!): Product!
+  setRegistrationStatus(id: String!, reason: String, status: RegistrationStatus!): AdminRegistration!
   setUserRole(id: Int!, role: UserRole!): AdminUser!
   subscribeToNewsletter(email: String!): NewsletterResult!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
+  unpublishEvent(id: Int!): Event!
   unsubscribeFromNewsletter(token: String!): Boolean!
   updateAddress(id: Int!, input: AddressInput!): Address!
   updateCartItem(id: Int!, quantity: Int!): Cart!
   updateCategory(id: Int!, input: AdminCategoryInput!): Category!
   updateCollection(id: Int!, input: AdminCollectionInput!): Collection!
+  updateEvent(id: Int!, input: AdminEventInput!): Event!
   updateProduct(id: Int!, input: AdminProductUpdateInput!): Product!
   updateProductOption(id: Int!, input: AdminOptionInput!): ProductOptionGroup!
   updateProductOptionGroup(id: Int!, input: AdminOptionGroupInput!): ProductOptionGroup!
@@ -657,6 +715,9 @@ type Query {
   adminCategories: [Category!]!
   adminCollections: [Collection!]!
   adminDashboard: AdminDashboard!
+  adminEvent(id: Int!): Event!
+  adminEventRegistrations(filter: AdminRegistrationsFilterInput): AdminRegistrationsResult!
+  adminEvents(filter: AdminEventsFilterInput): AdminEventsResult!
   adminOrder(id: String!): AdminOrder!
   adminOrders(filter: AdminOrdersFilterInput): AdminOrdersResult!
   adminProduct(id: Int!): Product!
