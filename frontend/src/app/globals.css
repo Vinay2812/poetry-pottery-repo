@@ -171,6 +171,25 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Icon buttons take a square of tint on hover, never a pill and never a fill.
+   Buttons sitting on their own backdrop set --ghost-base so it survives. */
+@utility ghost-hover {
+  --ghost-base: transparent;
+  transition:
+    background-color 160ms ease-out,
+    border-color 160ms ease-out,
+    color 160ms ease-out,
+    opacity 200ms ease-out;
+
+  &:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--color-ink) 3.5%,
+      var(--ghost-base)
+    );
+  }
+}
+
 @keyframes clip-reveal {
   from {
     clip-path: inset(0 100% 0 0);

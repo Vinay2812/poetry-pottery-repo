@@ -32,7 +32,7 @@ function IconLink({ href, label, count = 0, children }: IconLinkProps) {
     <Link
       href={href}
       aria-label={count > 0 ? `${label} (${count})` : label}
-      className="relative flex size-10 items-center justify-center text-foreground transition-colors hover:text-primary"
+      className="relative flex size-10 items-center justify-center ghost-hover text-foreground hover:text-primary"
     >
       {children}
       {count > 0 && (
@@ -95,7 +95,7 @@ export function SiteHeader({
             type="button"
             onClick={onSearchClick}
             aria-label="Search"
-            className="flex size-10 items-center justify-center transition-colors hover:text-primary"
+            className="flex size-10 items-center justify-center ghost-hover hover:text-primary"
           >
             <Search className="size-5" strokeWidth={1.5} />
           </button>
@@ -119,7 +119,7 @@ export function SiteHeader({
             type="button"
             onClick={onMenuClick}
             aria-label="Menu"
-            className="ml-1 flex size-10 items-center justify-center border border-ash transition-colors hover:border-ink lg:hidden"
+            className="ml-1 flex size-10 items-center justify-center border border-ash ghost-hover hover:border-ink lg:hidden"
           >
             <Menu className="size-5" strokeWidth={1.5} />
           </button>
@@ -127,7 +127,7 @@ export function SiteHeader({
             type="button"
             onClick={onAccountClick}
             aria-label={isSignedIn ? "Your account" : "Sign in"}
-            className="ml-1 hidden size-10 items-center justify-center transition-colors hover:text-primary lg:flex"
+            className="ml-1 hidden size-10 items-center justify-center ghost-hover hover:text-primary lg:flex"
           >
             {isSignedIn && userImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
