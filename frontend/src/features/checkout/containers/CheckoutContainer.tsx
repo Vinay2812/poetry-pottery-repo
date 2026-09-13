@@ -102,6 +102,10 @@ export function CheckoutContainer() {
   }, [addressId, appliedCoupon, isCouponApplied, note, placeOrder, router]);
 
   const items = cart?.items.filter((item) => item.is_available) ?? [];
+  const availableItemCount = items.reduce(
+    (sum, item) => sum + item.quantity,
+    0,
+  );
   const blockedReason =
     addressId === null
       ? "Choose a delivery address to continue."
@@ -167,7 +171,7 @@ export function CheckoutContainer() {
         </div>
         <div className="lg:sticky lg:top-24">
           <CheckoutSummary
-            itemCount={quote?.item_count ?? cart?.item_count ?? 0}
+            itemCount={quote?.item_count ?? availableItemCount}
             subtotal={quote?.subtotal ?? cart?.subtotal ?? 0}
             discount={quote?.discount ?? 0}
             couponCode={isCouponApplied ? appliedCoupon : null}

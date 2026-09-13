@@ -11,7 +11,10 @@ export function FreeShippingNudge({
   threshold,
 }: FreeShippingNudgeProps) {
   const remaining = Math.max(0, threshold - subtotal);
-  const progress = Math.min(100, Math.round((subtotal / threshold) * 100));
+  const progress =
+    threshold > 0
+      ? Math.min(100, Math.round((subtotal / threshold) * 100))
+      : 100;
   return (
     <div className="flex flex-col gap-2">
       <p className="text-[13px] text-muted-foreground">

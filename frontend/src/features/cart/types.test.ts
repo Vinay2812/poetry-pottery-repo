@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toMaxQuantity, toSelectionSummary } from "./types";
+import { canPredictShipping, toMaxQuantity, toSelectionSummary } from "./types";
 
 describe("toSelectionSummary", () => {
   it("joins option and text choices", () => {
@@ -34,5 +34,15 @@ describe("toMaxQuantity", () => {
     expect(toMaxQuantity(40, false)).toBe(10);
     expect(toMaxQuantity(0, true)).toBe(10);
     expect(toMaxQuantity(0, false)).toBe(1);
+  });
+});
+
+describe("canPredictShipping", () => {
+  it("only refuses to guess when a free-shipping cart drops back under the threshold", () => {
+    expect(canPredictShipping(3000, 2600, 2500)).toBe(true);
+    expect(canPredictShipping(3000, 0, 2500)).toBe(true);
+    expect(canPredictShipping(2000, 1500, 2500)).toBe(true);
+    expect(canPredictShipping(3000, 1200, null)).toBe(true);
+    expect(canPredictShipping(3000, 1200, 2500)).toBe(false);
   });
 });

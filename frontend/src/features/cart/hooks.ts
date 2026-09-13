@@ -18,6 +18,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { useRequireAuth } from "@/features/auth";
+import { canPredictShipping } from "@/features/cart/types";
 
 export type CartData = CartFieldsFragment;
 
@@ -79,6 +80,18 @@ export function useAddToCart() {
   return { addToCart, isAdding: loading };
 }
 
+// Only patch the cache when the shipping fee can be worked out from what the cart already reports.
+function canGuess(cart: CartData, items: CartData["items"]): boolean {
+  const nextSubtotal = items
+    .filter((item) => item.is_available)
+    .reduce((sum, item) => sum + item.line_total, 0);
+  return canPredictShipping(
+    cart.subtotal,
+    nextSubtotal,
+    cart.free_shipping_above,
+  );
+}
+
 export function useCartMutations(cart: CartData | null) {
   const [updateItem] = useUpdateCartItemMutation();
   const [removeItem] = useRemoveCartItemMutation();
@@ -123,7 +136,9 @@ export function useCartMutations(cart: CartData | null) {
         .filter((item) => item.quantity > 0);
       void updateItem({
         variables: { id, quantity },
-        optimisticResponse: { updateCartItem: optimistic(items) },
+        ...(canGuess(cart, items)
+          ? { optimisticResponse: { updateCartItem: optimistic(items) } }
+          : {}),
         update: (cache, { data }) => {
           if (data)
             cache.writeQuery<CartQuery>({
@@ -142,7 +157,9 @@ export function useCartMutations(cart: CartData | null) {
       const items = cart.items.filter((item) => item.id !== id);
       void removeItem({
         variables: { id },
-        optimisticResponse: { removeCartItem: optimistic(items) },
+        ...(canGuess(cart, items)
+          ? { optimisticResponse: { removeCartItem: optimistic(items) } }
+          : {}),
         update: (cache, { data }) => {
           if (data)
             cache.writeQuery<CartQuery>({
