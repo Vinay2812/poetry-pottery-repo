@@ -1,0 +1,122 @@
+fragment AdminEventRow on Event {
+  id
+  slug
+  title
+  event_type
+  status
+  level
+  starts_at
+  ends_at
+  location
+  price
+  total_seats
+  available_seats
+  image_url
+  is_past
+}
+
+fragment AdminEventDetail on Event {
+  ...AdminEventRow
+  address
+  description
+  instructor
+  gallery
+  highlights
+  includes
+  performers
+}
+
+fragment AdminRegistrationRow on AdminRegistration {
+  next_statuses
+  customer {
+    ...AdminUserRefFields
+  }
+  registration {
+    id
+    seats
+    unit_price
+    total
+    status
+    note
+    created_at
+    event {
+      id
+      title
+      starts_at
+    }
+  }
+}
+
+query AdminEvents($filter: AdminEventsFilterInput) {
+  adminEvents(filter: $filter) {
+    items {
+      ...AdminEventRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+query AdminEvent($id: Int!) {
+  adminEvent(id: $id) {
+    ...AdminEventDetail
+  }
+}
+
+query AdminEventRegistrations($filter: AdminRegistrationsFilterInput) {
+  adminEventRegistrations(filter: $filter) {
+    items {
+      ...AdminRegistrationRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+mutation CreateEvent($input: AdminEventInput!) {
+  createEvent(input: $input) {
+    ...AdminEventDetail
+  }
+}
+
+mutation UpdateEvent($id: Int!, $input: AdminEventInput!) {
+  updateEvent(id: $id, input: $input) {
+    ...AdminEventDetail
+  }
+}
+
+mutation PublishEvent($id: Int!) {
+  publishEvent(id: $id) {
+    ...AdminEventRow
+  }
+}
+
+mutation UnpublishEvent($id: Int!) {
+  unpublishEvent(id: $id) {
+    ...AdminEventRow
+  }
+}
+
+mutation CompleteEvent($id: Int!) {
+  completeEvent(id: $id) {
+    ...AdminEventRow
+  }
+}
+
+mutation CancelEvent($id: Int!, $reason: String) {
+  cancelEvent(id: $id, reason: $reason) {
+    ...AdminEventRow
+  }
+}
+
+mutation SetRegistrationStatus(
+  $id: String!
+  $status: RegistrationStatus!
+  $reason: String
+) {
+  setRegistrationStatus(id: $id, status: $status, reason: $reason) {
+    ...AdminRegistrationRow
+  }
+}

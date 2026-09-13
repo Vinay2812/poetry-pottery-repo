@@ -1519,6 +1519,7 @@ type WorkshopSlot {
 
 type WorkshopTier {
   hours: Int!
+  id: Int!
   pieces_per_person: Int!
   price_per_person: Int!
 }

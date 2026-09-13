@@ -1,0 +1,13 @@
+fragment AdminPageInfoFields on PageInfo {
+  page
+  limit
+  total
+  has_more
+}
+
+fragment AdminUserRefFields on AdminUserRef {
+  id
+  name
+  email
+  image
+}
