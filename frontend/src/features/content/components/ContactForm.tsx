@@ -118,11 +118,10 @@ export function ContactForm({
           </p>
         )}
       </div>
-      {errorMessage && (
-        <p role="alert" className="text-[13px] text-destructive">
-          {errorMessage}
-        </p>
-      )}
+      {/* The line keeps its height either way, so nothing below it jumps. */}
+      <p role="alert" className="min-h-4 text-[13px] text-destructive">
+        {errorMessage}
+      </p>
       <Button type="submit" className="w-fit" disabled={isSubmitting}>
         {isSubmitting ? "Sending…" : "Send message"}
       </Button>

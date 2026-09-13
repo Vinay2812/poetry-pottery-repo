@@ -20,6 +20,24 @@ export function toServerMessage(error: unknown, fallback: string): string {
 
 export type NewsletterState = "idle" | "submitting" | "subscribed" | "error";
 
+export interface NewsletterResult {
+  state: NewsletterState;
+  message: string | null;
+}
+
+export const IDLE_NEWSLETTER: NewsletterResult = {
+  state: "idle",
+  message: null,
+};
+
+// The optimistic reducer is a straight swap: the pending answer replaces the current one.
+export function applyNewsletterResult(
+  _current: NewsletterResult,
+  next: NewsletterResult,
+): NewsletterResult {
+  return next;
+}
+
 /** CMS bodies are plain text; a blank line starts a new paragraph. */
 export function splitParagraphs(body: string): string[] {
   return body

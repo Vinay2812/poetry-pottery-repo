@@ -54,11 +54,10 @@ export function NewsletterForm({
           {state === "submitting" ? "Adding…" : "Subscribe"}
         </Button>
       </div>
-      {state === "error" && message && (
-        <p role="alert" className="text-[13px] text-destructive">
-          {message}
-        </p>
-      )}
+      {/* The line keeps its height either way, so nothing below it jumps. */}
+      <p role="alert" className="min-h-4 text-[13px] text-destructive">
+        {state === "error" ? message : null}
+      </p>
     </form>
   );
 }
