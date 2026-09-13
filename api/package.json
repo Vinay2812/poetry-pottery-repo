@@ -25,11 +25,13 @@
     "migration:apply": "prisma migrate deploy",
     "db:studio": "prisma studio",
     "db:seed": "ts-node -r tsconfig-paths/register --project tsconfig.json prisma/seed/index.ts",
-    "db:reset": "prisma migrate reset --force --skip-seed && pnpm db:seed && pnpm search:reindex",
+    "db:reset": "prisma migrate reset --force && pnpm db:seed",
     "make-admin": "ts-node -r tsconfig-paths/register --project tsconfig.json scripts/make-admin.ts",
     "search:reindex": "QUEUE_CONSUMERS_ENABLED=false ts-node -r tsconfig-paths/register --project tsconfig.json scripts/reindex-search.ts",
     "tsc": "tsc --noEmit",
-    "import:legacy": "ts-node -r tsconfig-paths/register --project tsconfig.json scripts/import-legacy.ts"
+    "import:legacy": "ts-node -r tsconfig-paths/register --project tsconfig.json scripts/import-legacy.ts",
+    "db:seed:demo": "ts-node -r tsconfig-paths/register --project tsconfig.json prisma/seed/demo.ts",
+    "db:reset:legacy": "pnpm db:reset && pnpm import:legacy && pnpm search:reindex"
   },
   "dependencies": {
     "@apollo/server": "^5.5.1",

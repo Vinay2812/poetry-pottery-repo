@@ -24,7 +24,8 @@ const img = (id: number): string =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg`;
 
 const STUDIO = "Poetry & Pottery Studio";
-const STUDIO_ADDRESS = "12 Kala Nagar, Sangli, Maharashtra 416416";
+const STUDIO_ADDRESS =
+  "Plot no. 48, Above Shanti Kamal Bungalow, Ekta Colony, Sangli";
 
 export const events: SeedEvent[] = [
   {
@@ -201,7 +202,7 @@ export const workshopConfig = {
   name: "Open Studio Sessions",
   description:
     "Book an hour or more at the wheel any afternoon. A potter is on hand to help, and everything you make is fired and ready to collect in two weeks.",
-  image_url: img(6611262),
+  image_url: "",
   timezone: "Asia/Kolkata",
   opening_minutes: 13 * 60,
   closing_minutes: 19 * 60,
@@ -210,20 +211,20 @@ export const workshopConfig = {
   booking_window_days: 60,
   closed_weekdays: [1],
   tiers: [
-    { hours: 1, price_per_person: 950, pieces_per_person: 1 },
-    { hours: 2, price_per_person: 1700, pieces_per_person: 2 },
-    { hours: 3, price_per_person: 2400, pieces_per_person: 3 },
+    { hours: 1, price_per_person: 1100, pieces_per_person: 1 },
+    { hours: 2, price_per_person: 2000, pieces_per_person: 2 },
+    { hours: 3, price_per_person: 2700, pieces_per_person: 4 },
   ],
 };
 
 export const siteSettings = {
-  contact_phone: "+91 91234 56789",
-  whatsapp_number: "919123456789",
-  contact_email: "hello@poetryandpottery.in",
+  contact_phone: "+91 8329026762",
+  whatsapp_number: "918329026762",
+  contact_email: "poetryandpottery.aj@gmail.com",
   address: STUDIO_ADDRESS,
-  opening_hours: "Tuesday to Sunday, 1 pm to 7 pm",
-  instagram_url: "https://instagram.com/poetryandpottery",
-  facebook_url: "https://facebook.com/poetryandpottery",
+  opening_hours: "Mon-Fri, 12 pm - 7 pm. Sat- Sun, 12 pm - 8 pm",
+  instagram_url: "",
+  facebook_url: "",
   youtube_url: "",
   shipping_flat_fee: 150,
   free_shipping_above: 2500,
@@ -232,7 +233,7 @@ export const siteSettings = {
   hero_heading: "Pottery made slowly, in Sangli",
   hero_subheading:
     "Wheel-thrown mugs, bowls and planters glazed in earthy greens and greys. Each piece is made by hand, so no two are quite the same.",
-  hero_image_url: img(7663201),
+  hero_image_url: "",
   hero_cta_text: "Shop the shelf",
   hero_cta_href: "/products",
 };
@@ -254,7 +255,7 @@ export const contentPages: SeedContentPage[] = [
     slug: "about",
     title: "Where clay meets soul",
     subtitle: "A weekend hobby that turned into a studio.",
-    hero_image_url: img(37222842),
+    hero_image_url: "",
     sections: [
       {
         heading: "How it started",
@@ -307,7 +308,7 @@ export const contentPages: SeedContentPage[] = [
     slug: "faq",
     title: "Questions, answered",
     subtitle: "Everything you might want to know before you order or book.",
-    hero_image_url: img(31047256),
+    hero_image_url: "",
     sections: [
       {
         heading: "Orders",
@@ -351,7 +352,7 @@ export const contentPages: SeedContentPage[] = [
     slug: "shipping",
     title: "Shipping and returns",
     subtitle: "Packed by hand, shipped across India.",
-    hero_image_url: img(31047256),
+    hero_image_url: "",
     sections: [
       {
         heading: "Shipping",
@@ -370,7 +371,7 @@ export const contentPages: SeedContentPage[] = [
     title: "Caring for your pottery",
     subtitle:
       "Stoneware is tough, but a few habits keep it looking good for years.",
-    hero_image_url: img(31047256),
+    hero_image_url: "",
     sections: [
       {
         heading: "Everyday use",
@@ -415,7 +416,7 @@ export const contentPages: SeedContentPage[] = [
       },
       {
         heading: "Contact",
-        body: "Write to hello@poetryandpottery.in to see or delete what we hold about you.",
+        body: "Write to poetryandpottery.aj@gmail.com to see or delete what we hold about you.",
         items: [],
       },
     ],
@@ -438,7 +439,7 @@ export const contentPages: SeedContentPage[] = [
       },
       {
         heading: "Contact",
-        body: "Questions about these terms can be sent to hello@poetryandpottery.in.",
+        body: "Questions about these terms can be sent to poetryandpottery.aj@gmail.com.",
         items: [],
       },
     ],

@@ -180,6 +180,7 @@ async function readLegacy(): Promise<{
   bookings: LegacyBooking[];
   cart: LegacyCartItem[];
   about: LegacyAbout | null;
+  aboutHero: string | null;
   contact: LegacyContactInfo;
 }> {
   const client = new Client({ connectionString: LEGACY_URL });
@@ -226,6 +227,9 @@ async function readLegacy(): Promise<{
     const settings = await rows<{ key: string; value: LegacyContactInfo }>(
       "select key, value from site_settings where key = 'contact_info'",
     );
+    const heroes = await rows<{ value: Record<string, string> }>(
+      "select value from site_settings where key = 'hero_images'",
+    );
     return {
       users,
       addresses,
@@ -236,6 +240,7 @@ async function readLegacy(): Promise<{
       bookings,
       cart,
       about: pages[0]?.content ?? null,
+      aboutHero: heroes[0]?.value.about ?? null,
       contact: settings[0]?.value ?? {},
     };
   } finally {
@@ -562,21 +567,20 @@ function toAboutSections(about: LegacyAbout): PrismaJson.ContentSections {
 
 async function importContent(
   about: LegacyAbout | null,
+  aboutHero: string | null,
   contact: LegacyContactInfo,
 ): Promise<void> {
   if (about) {
-    const existing = await prisma.contentPage.findUnique({
-      where: { slug: "about" },
-    });
     const data = {
       title: about.storyTitle ?? "About the studio",
       subtitle: about.storySubtitle ?? null,
+      hero_image_url: aboutHero,
       sections: toAboutSections(about),
     };
     await prisma.contentPage.upsert({
       where: { slug: "about" },
       create: { slug: "about", ...data },
-      update: { ...data, hero_image_url: existing?.hero_image_url },
+      update: data,
     });
   }
   const settings = {
@@ -616,7 +620,7 @@ async function main(): Promise<void> {
     userIds,
   );
   const cart = await importCart(legacy.cart, userIds, productIds);
-  await importContent(legacy.about, legacy.contact);
+  await importContent(legacy.about, legacy.aboutHero, legacy.contact);
   process.stdout.write(
     `Imported ${userIds.size} users, ${productIds.size} products, ${custom} custom pieces, ${bookings} bookings, ${cart} cart lines\n`,
   );
