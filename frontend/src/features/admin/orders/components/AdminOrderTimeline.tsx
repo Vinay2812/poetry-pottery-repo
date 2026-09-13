@@ -1,4 +1,4 @@
-export interface AdminOrderTimelineStep {
+interface AdminOrderTimelineStep {
   key: string;
   label: string;
   atLabel: string;
