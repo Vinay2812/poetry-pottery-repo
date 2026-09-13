@@ -32,7 +32,6 @@ export default async function HomePage() {
       <HomeHero
         heading={settings.hero_heading}
         subheading={settings.hero_subheading}
-        imageUrl={settings.hero_image_url || null}
         shopHref={settings.hero_cta_href || "/products"}
         shopLabel={settings.hero_cta_text || "Shop the shelf"}
         sessionHref="/workshops"

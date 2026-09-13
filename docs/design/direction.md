@@ -32,7 +32,11 @@ A small wheel studio in Sangli making stoneware and terracotta, plus wheel sessi
 
 ## Signature: the kiln label
 
-The hero shows one piece on a plain backdrop. Three thin lines radiate from it to short labels: "Handmade", "Stoneware", "Sangli". On load the lines draw themselves (SVG stroke-dashoffset, 600ms, 120ms stagger) and the labels fade in after each line. The product page reuses the device on desktop: lines from the main photo to "Clay body", "Glaze", "Size". Nowhere else.
+The hero is a drawing, not a photo: an original ink-line SVG of one moon jar, drawn with a mathematically smooth profile and a whisper of hand wobble so it never reads as CAD. Four faint throwing rings follow the curve of the wall, a sage glaze band with one drip sits on the shoulder, a thumb dent breaks the symmetry on the right, and the piece stands on a hairline floor over a soft shadow. A small sage kiln mark burns at the foot. The studio's line, "where clay meets verses", is set in sage italic on an arc under the floor, quiet enough not to compete with the piece.
+
+Four thin lines radiate from the drawing to short labels, each landing on the thing it names with a small dot: "Handmade / no two alike" on the thumb dent, "Stoneware / one clay body" on the wall between two rings, "Sangli / made in India" on the ground line under the foot, "1225°C / one kiln" on the kiln mark. Labels are real text inside the SVG coordinate space, so they hold their positions at every width.
+
+On load the drawing draws itself with stroke-dashoffset over about 1.8s: the walls first, then the foot and mouth, the rings, the glaze band and its drip, the dent, the floor and shadow, the kiln mark, then the four pointer lines (80ms stagger) with their dots, then the labels and the verse fade in. `prefers-reduced-motion: reduce` shows the finished drawing at once. The product page reuses the label device on desktop: lines from the main photo to "Clay body", "Glaze", "Size". Nowhere else.
 
 ## Product presentation
 

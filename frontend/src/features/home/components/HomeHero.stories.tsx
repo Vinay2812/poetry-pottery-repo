@@ -11,8 +11,6 @@ const meta = {
     heading: "Pottery made slowly, in Sangli",
     subheading:
       "Wheel-thrown mugs, bowls and planters glazed in earthy greens and greys.",
-    imageUrl:
-      "https://images.pexels.com/photos/2162938/pexels-photo-2162938.jpeg",
     shopHref: "/products",
     shopLabel: "Shop the shelf",
     sessionHref: "/workshops",
@@ -24,8 +22,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-export const WithoutPhoto: Story = { args: { imageUrl: null } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 
