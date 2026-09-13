@@ -17,6 +17,7 @@ export interface ProductToolbarProps {
   activeFilterCount: number;
   onSortChange: (sort: ProductSort) => void;
   onOpenFilters: () => void;
+  onClear: () => void;
 }
 
 export function ProductToolbar({
@@ -26,6 +27,7 @@ export function ProductToolbar({
   activeFilterCount,
   onSortChange,
   onOpenFilters,
+  onClear,
 }: ProductToolbarProps) {
   return (
     <div className="flex items-center justify-between gap-3">
@@ -34,7 +36,19 @@ export function ProductToolbar({
           ? "Finding pieces…"
           : `${total} ${total === 1 ? "piece" : "pieces"}`}
       </p>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
+        {/* Kept in the layout so clearing never moves the sort control. */}
+        <button
+          type="button"
+          onClick={onClear}
+          inert={activeFilterCount === 0}
+          className={cn(
+            "hidden text-sm underline-offset-4 hover:text-primary hover:underline lg:block",
+            activeFilterCount === 0 && "invisible",
+          )}
+        >
+          Clear all
+        </button>
         <Select
           value={sort}
           onValueChange={(value) => onSortChange(value as ProductSort)}

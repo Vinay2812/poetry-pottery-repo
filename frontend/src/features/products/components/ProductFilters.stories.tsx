@@ -38,7 +38,6 @@ const meta = {
     priceRange: [400, 4500],
     inStockOnly: false,
     customizableOnly: false,
-    hasActiveFilters: false,
     onToggleCategory: fn(),
     onToggleCollection: fn(),
     onToggleMaterial: fn(),
@@ -46,7 +45,6 @@ const meta = {
     onPriceRangeCommit: fn(),
     onInStockOnlyChange: fn(),
     onCustomizableOnlyChange: fn(),
-    onClear: fn(),
   },
 } satisfies Meta<typeof ProductFilters>;
 
@@ -63,12 +61,11 @@ export const WithActiveFilters: Story = {
     selectedMaterials: ["stoneware"],
     priceRange: [850, 2100],
     inStockOnly: true,
-    hasActiveFilters: true,
   },
 };
 
 export const CustomizableOnly: Story = {
-  args: { customizableOnly: true, hasActiveFilters: true },
+  args: { customizableOnly: true },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

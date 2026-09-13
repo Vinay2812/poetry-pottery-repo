@@ -12,7 +12,9 @@ const meta = {
   args: {
     isOpen: true,
     resultCount: 48,
+    activeFilterCount: 1,
     onOpenChange: fn(),
+    onClear: fn(),
     children: (
       <ProductFilters
         categoryOptions={[
@@ -36,7 +38,6 @@ const meta = {
         priceRange={[400, 4500]}
         inStockOnly={false}
         customizableOnly={false}
-        hasActiveFilters={true}
         onToggleCategory={fn()}
         onToggleCollection={fn()}
         onToggleMaterial={fn()}
@@ -44,7 +45,6 @@ const meta = {
         onPriceRangeCommit={fn()}
         onInStockOnlyChange={fn()}
         onCustomizableOnlyChange={fn()}
-        onClear={fn()}
       />
     ),
   },

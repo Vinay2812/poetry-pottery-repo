@@ -3,7 +3,6 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { formatInr } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
 interface FilterOption {
   value: string;
@@ -23,7 +22,6 @@ export interface ProductFiltersProps {
   priceRange: [number, number];
   inStockOnly: boolean;
   customizableOnly: boolean;
-  hasActiveFilters: boolean;
   onToggleCategory: (slug: string) => void;
   onToggleCollection: (slug: string) => void;
   onToggleMaterial: (material: string) => void;
@@ -31,7 +29,6 @@ export interface ProductFiltersProps {
   onPriceRangeCommit: (range: [number, number]) => void;
   onInStockOnlyChange: (value: boolean) => void;
   onCustomizableOnlyChange: (value: boolean) => void;
-  onClear: () => void;
 }
 
 interface CheckGroupProps {
@@ -90,7 +87,6 @@ export function ProductFilters({
   priceRange,
   inStockOnly,
   customizableOnly,
-  hasActiveFilters,
   onToggleCategory,
   onToggleCollection,
   onToggleMaterial,
@@ -98,24 +94,10 @@ export function ProductFilters({
   onPriceRangeCommit,
   onInStockOnlyChange,
   onCustomizableOnlyChange,
-  onClear,
 }: ProductFiltersProps) {
   const hasPriceRange = priceCeiling > priceFloor;
   return (
     <div className="flex flex-col gap-8">
-      {/* Always in the layout so the first tick never pushes the groups down. */}
-      <button
-        type="button"
-        onClick={onClear}
-        inert={!hasActiveFilters}
-        className={cn(
-          "self-start text-sm underline-offset-4 hover:text-primary hover:underline",
-          !hasActiveFilters && "invisible",
-        )}
-      >
-        Clear all
-      </button>
-
       <CheckGroup
         title="Category"
         idPrefix="category"

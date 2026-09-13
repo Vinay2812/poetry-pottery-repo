@@ -180,10 +180,9 @@ describe("ProductsService", () => {
         where: { AND: [availableProductWhere()] },
       }),
     );
-    // Options come from the whole pool; only their counts follow the filters.
+    // Options come from the whole catalogue; only their counts follow the filters.
     expect(prismaMock.category.findMany).toHaveBeenCalledWith(
       containing({
-        where: { products: { some: { AND: [] } } },
         select: containing({
           _count: {
             select: {
@@ -202,17 +201,15 @@ describe("ProductsService", () => {
     );
   });
 
-  it("offers the same facet options whatever is ticked", async () => {
+  it("lists every category and collection, even empty ones", async () => {
     prismaMock.product.findMany.mockResolvedValue([]);
 
-    await service.list({ archive: true });
+    await service.list({ archive: true, category_slugs: ["mugs"] });
 
-    expect(prismaMock.collection.findMany).toHaveBeenCalledWith(
-      containing({ where: { products: { some: { AND: [] } } } }),
-    );
-    expect(prismaMock.category.findMany).toHaveBeenCalledWith(
-      containing({ where: { products: { some: { AND: [] } } } }),
-    );
+    const [[categoryArgs]] = prismaMock.category.findMany.mock.calls;
+    const [[collectionArgs]] = prismaMock.collection.findMany.mock.calls;
+    expect(categoryArgs).not.toHaveProperty("where");
+    expect(collectionArgs).not.toHaveProperty("where");
   });
 
   it("throws a not-found error for unknown slugs", async () => {

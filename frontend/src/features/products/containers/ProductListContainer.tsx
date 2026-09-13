@@ -240,7 +240,6 @@ export function ProductListContainer({
       priceRange={priceRange}
       inStockOnly={filters.inStockOnly}
       customizableOnly={filters.customizableOnly}
-      hasActiveFilters={activeFilterCount > 0}
       onToggleCategory={handleToggleCategory}
       onToggleCollection={handleToggleCollection}
       onToggleMaterial={handleToggleMaterial}
@@ -248,7 +247,6 @@ export function ProductListContainer({
       onPriceRangeCommit={handlePriceCommit}
       onInStockOnlyChange={handleInStockChange}
       onCustomizableOnlyChange={handleCustomizableChange}
-      onClear={handleClear}
     />
   );
 
@@ -297,6 +295,7 @@ export function ProductListContainer({
             activeFilterCount={activeFilterCount}
             onSortChange={handleSortChange}
             onOpenFilters={() => setIsSheetOpen(true)}
+            onClear={handleClear}
           />
 
           {isInitialLoading ? (
@@ -348,7 +347,9 @@ export function ProductListContainer({
       <FilterSheet
         isOpen={isSheetOpen}
         resultCount={pageInfo?.total ?? 0}
+        activeFilterCount={activeFilterCount}
         onOpenChange={setIsSheetOpen}
+        onClear={handleClear}
       >
         {filterPanel}
       </FilterSheet>

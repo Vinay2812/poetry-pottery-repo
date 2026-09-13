@@ -124,12 +124,6 @@ const NARROW_KEYS = [
 
 type NarrowKey = (typeof NARROW_KEYS)[number];
 
-// Which rows to offer, and which of them to count in the current view.
-interface FacetWhere {
-  list: Prisma.ProductWhereInput;
-  count: Prisma.ProductWhereInput;
-}
-
 export function toProduct(row: ProductRow): Product {
   return row;
 }
@@ -197,8 +191,6 @@ export class ProductsService {
     const scoped = (...skip: NarrowKey[]): Prisma.ProductWhereInput => ({
       AND: [scope, ...pool, ...others(skip)],
     });
-    // Every option stays on the list whatever is ticked; only its count moves, so the sidebar never reflows.
-    const optionPool: Prisma.ProductWhereInput = { AND: pool };
     const where = scoped();
     const tabWhere = [...pool, ...NARROW_KEYS.flatMap((key) => narrowing[key])];
 
@@ -213,10 +205,9 @@ export class ProductsService {
             take: bounds.limit,
           }),
       this.facets({
-        categories: { list: optionPool, count: scoped("category") },
-        collections: { list: optionPool, count: scoped("collection") },
-        materials: { list: optionPool, count: scoped("material") },
-        prices: optionPool,
+        categories: scoped("category"),
+        collections: scoped("collection"),
+        materials: scoped("material"),
       }),
       this.prisma.product.count({
         where: { AND: [availableProductWhere(now), ...tabWhere] },
@@ -370,48 +361,41 @@ export class ProductsService {
     );
   }
 
-  // Options come from both views so the sidebar never reflows on a tab switch; counts follow the current view.
-  private async facets(where: {
-    categories: FacetWhere;
-    collections: FacetWhere;
-    materials: FacetWhere;
-    prices: Prisma.ProductWhereInput;
+  // The whole catalogue is always listed, zero counts included, so the sidebar never reflows.
+  private async facets(count: {
+    categories: Prisma.ProductWhereInput;
+    collections: Prisma.ProductWhereInput;
+    materials: Prisma.ProductWhereInput;
   }): Promise<Omit<ProductFacets, "active_count" | "archive_count">> {
     const [categories, collections, materialNames, materialCounts, prices] =
       await Promise.all([
         this.prisma.category.findMany({
-          where: { products: { some: where.categories.list } },
           orderBy: [{ sort_order: "asc" }, { name: "asc" }],
           select: {
             slug: true,
             name: true,
-            _count: { select: { products: { where: where.categories.count } } },
+            _count: { select: { products: { where: count.categories } } },
           },
         }),
         this.prisma.collection.findMany({
-          where: { products: { some: where.collections.list } },
           orderBy: [{ created_at: "desc" }],
           select: {
             slug: true,
             name: true,
-            _count: {
-              select: { products: { where: where.collections.count } },
-            },
+            _count: { select: { products: { where: count.collections } } },
           },
         }),
         this.prisma.product.groupBy({
           by: ["material"],
-          where: where.materials.list,
           orderBy: { material: "asc" },
         }),
         this.prisma.product.groupBy({
           by: ["material"],
-          where: where.materials.count,
+          where: count.materials,
           _count: { _all: true },
           orderBy: { material: "asc" },
         }),
         this.prisma.product.aggregate({
-          where: where.prices,
           _min: { price: true },
           _max: { price: true },
         }),
