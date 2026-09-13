@@ -36,7 +36,7 @@ function LinkColumn({ title, links }: { title: string; links: NavLink[] }) {
           <li key={link.href}>
             <Link
               href={link.href}
-              className="text-[13px] text-foreground underline-offset-4 hover:underline"
+              className="link-underline text-[13px] text-foreground"
             >
               {link.label}
             </Link>
@@ -80,16 +80,10 @@ export function SiteFooter({
               {openingHours}
             </address>
             <div className="flex flex-col gap-1 text-[13px]">
-              <a
-                href={`mailto:${contactEmail}`}
-                className="underline-offset-4 hover:underline"
-              >
+              <a href={`mailto:${contactEmail}`} className="link-underline">
                 {contactEmail}
               </a>
-              <a
-                href={`tel:${contactPhone}`}
-                className="underline-offset-4 hover:underline"
-              >
+              <a href={`tel:${contactPhone}`} className="link-underline">
                 {contactPhone}
               </a>
               {whatsappUrl && (
@@ -97,7 +91,7 @@ export function SiteFooter({
                   href={whatsappUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-primary underline-offset-4 hover:underline"
+                  className="link-underline text-primary"
                 >
                   Message us on WhatsApp
                 </a>

@@ -87,7 +87,7 @@ export function ProductCarousel({
           {viewAllHref && (
             <Link
               href={viewAllHref}
-              className="border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
+              className="link-underline pb-0.5 text-sm hover:text-primary"
             >
               See everything
             </Link>

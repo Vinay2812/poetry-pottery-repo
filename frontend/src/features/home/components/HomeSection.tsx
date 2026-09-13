@@ -35,7 +35,7 @@ export function HomeSection({
           {linkHref && linkLabel && (
             <Link
               href={linkHref}
-              className="shrink-0 border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
+              className="shrink-0 link-underline pb-0.5 text-sm hover:text-primary"
             >
               {linkLabel}
             </Link>

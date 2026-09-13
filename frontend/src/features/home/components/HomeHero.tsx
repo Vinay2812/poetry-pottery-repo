@@ -33,13 +33,13 @@ export function HomeHero({
         <div className="flex flex-wrap gap-x-8 gap-y-3 text-sm">
           <Link
             href={shopHref}
-            className="border-b border-ink pb-0.5 hover:border-primary hover:text-primary"
+            className="link-underline pb-0.5 hover:text-primary"
           >
             {shopLabel}
           </Link>
           <Link
             href={sessionHref}
-            className="border-b border-ink pb-0.5 hover:border-primary hover:text-primary"
+            className="link-underline pb-0.5 hover:text-primary"
           >
             Book a wheel session
           </Link>
