@@ -33,6 +33,21 @@ input AddressInput {
   state: String!
 }
 
+input AdminCategoryInput {
+  icon: String
+  image_url: String
+  name: String!
+  sort_order: Int
+}
+
+input AdminCollectionInput {
+  description: String
+  ends_at: DateTime
+  image_url: String
+  name: String!
+  starts_at: DateTime
+}
+
 type AdminDashboard {
   low_stock: [AdminLowStockPiece!]!
   orders_by_status: [AdminOrderStatusCount!]!
@@ -385,6 +400,8 @@ type Mutation {
   confirmUpload(key: String!, purpose: UploadPurpose!): ConfirmedImage!
   createAddress(input: AddressInput!): Address!
   createAdminUpload(content_type: String!, purpose: UploadPurpose!, size: Int!): UploadTarget!
+  createCategory(input: AdminCategoryInput!): Category!
+  createCollection(input: AdminCollectionInput!): Collection!
   createEventReview(event_id: Int!, input: ReviewInput!): Review!
   createProduct(input: AdminProductInput!): Product!
   createProductOption(group_id: Int!, input: AdminOptionInput!): ProductOptionGroup!
@@ -392,6 +409,8 @@ type Mutation {
   createProductReview(input: ReviewInput!, product_id: Int!): Review!
   createReviewImageUpload(input: ReviewUploadInput!): UploadTarget!
   deleteAddress(id: Int!): Boolean!
+  deleteCategory(id: Int!): Boolean!
+  deleteCollection(id: Int!): Boolean!
   deleteProductOption(id: Int!): Boolean!
   deleteProductOptionGroup(id: Int!): Boolean!
   deleteReview(id: Int!): Boolean!
@@ -409,6 +428,8 @@ type Mutation {
   unsubscribeFromNewsletter(token: String!): Boolean!
   updateAddress(id: Int!, input: AddressInput!): Address!
   updateCartItem(id: Int!, quantity: Int!): Cart!
+  updateCategory(id: Int!, input: AdminCategoryInput!): Category!
+  updateCollection(id: Int!, input: AdminCollectionInput!): Collection!
   updateProduct(id: Int!, input: AdminProductUpdateInput!): Product!
   updateProductOption(id: Int!, input: AdminOptionInput!): ProductOptionGroup!
   updateProductOptionGroup(id: Int!, input: AdminOptionGroupInput!): ProductOptionGroup!
@@ -584,6 +605,8 @@ type ProductsResult {
 
 type Query {
   addresses: [Address!]!
+  adminCategories: [Category!]!
+  adminCollections: [Collection!]!
   adminDashboard: AdminDashboard!
   adminProduct(id: Int!): Product!
   adminProductOptionGroups(product_id: Int!): [ProductOptionGroup!]!
