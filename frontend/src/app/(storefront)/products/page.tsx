@@ -23,7 +23,7 @@ export default async function ProductsPage({
     typeof params.collection === "string" ? params.collection : null;
   const isArchive = params.view === ARCHIVE_VIEW;
   const collection = collectionSlug
-    ? await getCollection(collectionSlug)
+    ? await getCollection(collectionSlug, isArchive)
     : null;
 
   return (

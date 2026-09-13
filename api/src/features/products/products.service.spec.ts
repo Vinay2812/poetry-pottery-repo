@@ -280,6 +280,48 @@ describe("ProductsService", () => {
     expect(result.facets.archive_count).toBe(1);
   });
 
+  it("counts a collection with the predicate of the list being viewed", async () => {
+    prismaMock.collection.findFirst.mockResolvedValue({
+      id: 1,
+      slug: "spring-2025",
+      _count: { products: 4 },
+    });
+
+    await service.collectionBySlug("spring-2025");
+    await service.collectionBySlug("spring-2025", true);
+
+    const [[shelfArgs], [archiveArgs]] =
+      prismaMock.collection.findFirst.mock.calls;
+    expect(shelfArgs).toEqual(
+      containing({
+        include: {
+          _count: { select: { products: { where: availableProductWhere() } } },
+        },
+      }),
+    );
+    expect(archiveArgs).toEqual(
+      containing({
+        include: {
+          _count: { select: { products: { where: archivedProductWhere() } } },
+        },
+      }),
+    );
+  });
+
+  it("drops empty collections from the strip in both views", async () => {
+    prismaMock.collection.findMany.mockResolvedValue([
+      { id: 1, slug: "spring-2025", name: "Spring", _count: { products: 2 } },
+      { id: 2, slug: "empty", name: "Empty", _count: { products: 0 } },
+    ]);
+
+    await expect(service.collections()).resolves.toEqual([
+      { id: 1, slug: "spring-2025", name: "Spring", product_count: 2 },
+    ]);
+    await expect(service.collections(true)).resolves.toEqual([
+      { id: 1, slug: "spring-2025", name: "Spring", product_count: 2 },
+    ]);
+  });
+
   it("caches categories with live product counts", async () => {
     prismaMock.category.findMany.mockResolvedValue([
       { id: 1, slug: "mugs", name: "Mugs", _count: { products: 6 } },

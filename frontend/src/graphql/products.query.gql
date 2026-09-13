@@ -122,8 +122,8 @@ query Collections($archive: Boolean) {
   }
 }
 
-query Collection($slug: String!) {
-  collection(slug: $slug) {
+query Collection($slug: String!, $archive: Boolean) {
+  collection(slug: $slug, archive: $archive) {
     id
     slug
     name

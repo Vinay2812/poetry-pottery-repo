@@ -328,8 +328,9 @@ export class ProductsService {
             _count: { select: { products: { where: productWhere } } },
           },
         });
+        // An empty collection is nothing to browse, so it never reaches a strip.
         return rows
-          .filter((row) => !archive || row._count.products > 0)
+          .filter((row) => row._count.products > 0)
           .map(({ _count, ...collection }) => ({
             ...collection,
             product_count: _count.products,
@@ -338,12 +339,17 @@ export class ProductsService {
     );
   }
 
-  // A collection keeps its name after its window closes; availability is decided per piece.
-  async collectionBySlug(slug: string): Promise<Collection> {
+  // A collection keeps its name after its window closes; availability is decided per piece,
+  // and the count uses the same predicate as the list the visitor is looking at.
+  async collectionBySlug(slug: string, archive = false): Promise<Collection> {
+    const now = new Date();
+    const productWhere = archive
+      ? archivedProductWhere(now)
+      : availableProductWhere(now);
     const row = await this.prisma.collection.findFirst({
       where: { slug },
       include: {
-        _count: { select: { products: { where: { is_active: true } } } },
+        _count: { select: { products: { where: productWhere } } },
       },
     });
     if (!row) {

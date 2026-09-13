@@ -640,6 +640,7 @@ export type QueryCheckoutQuoteArgs = {
 
 
 export type QueryCollectionArgs = {
+  archive?: InputMaybe<Scalars['Boolean']['input']>;
   slug: Scalars['String']['input'];
 };
 
@@ -1185,6 +1186,7 @@ export type CollectionsQuery = { collections: Array<{ id: number, slug: string, 
 
 export type CollectionQueryVariables = Exact<{
   slug: string;
+  archive?: boolean | null | undefined;
 }>;
 
 
@@ -2676,8 +2678,8 @@ export type CollectionsQueryHookResult = ReturnType<typeof useCollectionsQuery>;
 export type CollectionsLazyQueryHookResult = ReturnType<typeof useCollectionsLazyQuery>;
 export type CollectionsQueryResult = ApolloReactCommon.QueryResult<CollectionsQuery, CollectionsQueryVariables>;
 export const CollectionDocument = gql`
-    query Collection($slug: String!) {
-  collection(slug: $slug) {
+    query Collection($slug: String!, $archive: Boolean) {
+  collection(slug: $slug, archive: $archive) {
     id
     slug
     name
@@ -2702,6 +2704,7 @@ export const CollectionDocument = gql`
  * const { data, loading, error } = useCollectionQuery({
  *   variables: {
  *      slug: // value for 'slug'
+ *      archive: // value for 'archive'
  *   },
  * });
  */

@@ -105,7 +105,15 @@ export class ProductsResolver {
   }
 
   @Query(() => Collection)
-  collection(@Args("slug") slug: string): Promise<Collection> {
-    return this.productsService.collectionBySlug(slug);
+  collection(
+    @Args("slug") slug: string,
+    @Args("archive", {
+      type: () => Boolean,
+      nullable: true,
+      defaultValue: false,
+    })
+    archive: boolean,
+  ): Promise<Collection> {
+    return this.productsService.collectionBySlug(slug, archive);
   }
 }

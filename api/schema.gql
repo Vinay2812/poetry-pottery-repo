@@ -457,7 +457,7 @@ type Query {
   cart: Cart!
   categories: [Category!]!
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
-  collection(slug: String!): Collection!
+  collection(archive: Boolean = false, slug: String!): Collection!
   collections(archive: Boolean = false): [Collection!]!
   contactMessages(limit: Int, page: Int): ContactMessagesResult!
   contentPage(slug: String!): ContentPage!

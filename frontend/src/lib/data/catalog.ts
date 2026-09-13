@@ -53,11 +53,16 @@ function isNotFoundError(error: unknown): boolean {
 
 export async function getCollection(
   slug: string,
+  archive = false,
 ): Promise<CollectionQuery["collection"] | null> {
   const { data, error } = await getClient().query<
     CollectionQuery,
     CollectionQueryVariables
-  >({ query: CollectionDocument, variables: { slug }, errorPolicy: "all" });
+  >({
+    query: CollectionDocument,
+    variables: { slug, archive },
+    errorPolicy: "all",
+  });
   if (data?.collection) return data.collection;
   if (isNotFoundError(error)) return null;
   throw error ?? new Error("Collection query failed");
