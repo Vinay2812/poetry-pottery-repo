@@ -24,3 +24,4 @@ export { AdminUsersResolver } from "@/features/admin/users/users.resolver";
 export { AdminEventsResolver } from "@/features/admin/events/events.resolver";
 export { AdminWorkshopsResolver } from "@/features/admin/workshops/workshops.resolver";
 export { AdminReviewsResolver } from "@/features/admin/reviews/reviews.resolver";
+export { AdminContentResolver } from "@/features/admin/content/content.resolver";

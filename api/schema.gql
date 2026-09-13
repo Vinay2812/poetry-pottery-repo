@@ -33,6 +33,11 @@ input AddressInput {
   state: String!
 }
 
+input AdminAnnouncementInput {
+  href: String
+  text: String
+}
+
 input AdminCategoryInput {
   icon: String
   image_url: String
@@ -253,6 +258,24 @@ type AdminReviewsResult {
   page_info: PageInfo!
 }
 
+input AdminSiteSettingsInput {
+  address: String
+  contact_email: String
+  contact_phone: String
+  facebook_url: String
+  free_shipping_above: Int
+  hero_cta_href: String
+  hero_cta_text: String
+  hero_heading: String
+  hero_image_url: String
+  hero_subheading: String
+  instagram_url: String
+  opening_hours: String
+  shipping_flat_fee: Int
+  whatsapp_number: String
+  youtube_url: String
+}
+
 type AdminUser {
   bookings_count: Int!
   created_at: DateTime!
@@ -462,13 +485,38 @@ type ContentPage {
   updated_at: DateTime!
 }
 
+input ContentPageInput {
+  hero_image_url: String
+  is_published: Boolean
+  sections: [ContentSectionInput!]!
+  subtitle: String
+  title: String!
+}
+
+type ContentPageSummary {
+  is_published: Boolean!
+  slug: String!
+  title: String!
+}
+
 type ContentSection {
   body: String!
   heading: String!
   items: [ContentSectionItem!]!
 }
 
+input ContentSectionInput {
+  body: String!
+  heading: String!
+  items: [ContentSectionItemInput!]
+}
+
 type ContentSectionItem {
+  body: String!
+  title: String!
+}
+
+input ContentSectionItemInput {
   body: String!
   title: String!
 }
@@ -588,6 +636,7 @@ type Mutation {
   deleteAddress(id: Int!): Boolean!
   deleteCategory(id: Int!): Boolean!
   deleteCollection(id: Int!): Boolean!
+  deleteContentPage(slug: String!): Boolean!
   deleteProductOption(id: Int!): Boolean!
   deleteProductOptionGroup(id: Int!): Boolean!
   deleteReview(id: Int!): Boolean!
@@ -601,6 +650,7 @@ type Mutation {
   removeCartItem(id: Int!): Cart!
   reorderProductImages(id: Int!, image_urls: [String!]!): Product!
   rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
+  saveContentPage(input: ContentPageInput!, slug: String!): ContentPage!
   saveWorkshopTier(config_id: Int!, input: AdminWorkshopTierInput!): WorkshopConfig!
   sendContactMessage(input: ContactMessageInput!): Boolean!
   setDefaultAddress(id: Int!): Address!
@@ -617,6 +667,7 @@ type Mutation {
   unpublishEvent(id: Int!): Event!
   unsubscribeFromNewsletter(token: String!): Boolean!
   updateAddress(id: Int!, input: AddressInput!): Address!
+  updateAnnouncement(input: AdminAnnouncementInput!): SiteSettings!
   updateCartItem(id: Int!, quantity: Int!): Cart!
   updateCategory(id: Int!, input: AdminCategoryInput!): Category!
   updateCollection(id: Int!, input: AdminCollectionInput!): Collection!
@@ -625,6 +676,7 @@ type Mutation {
   updateProductOption(id: Int!, input: AdminOptionInput!): ProductOptionGroup!
   updateProductOptionGroup(id: Int!, input: AdminOptionGroupInput!): ProductOptionGroup!
   updateReview(id: Int!, input: ReviewInput!): Review!
+  updateSiteSettings(input: AdminSiteSettingsInput!): SiteSettings!
   updateWorkshopBlackout(id: Int!, input: AdminWorkshopBlackoutInput!): AdminWorkshopBlackout!
   updateWorkshopConfig(id: Int!, input: AdminWorkshopConfigInput!): WorkshopConfig!
 }
@@ -800,6 +852,8 @@ type Query {
   addresses: [Address!]!
   adminCategories: [Category!]!
   adminCollections: [Collection!]!
+  adminContentPage(slug: String!): ContentPage!
+  adminContentPages: [ContentPageSummary!]!
   adminDashboard: AdminDashboard!
   adminEvent(id: Int!): Event!
   adminEventRegistrations(filter: AdminRegistrationsFilterInput): AdminRegistrationsResult!
