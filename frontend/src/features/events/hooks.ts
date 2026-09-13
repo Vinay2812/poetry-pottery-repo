@@ -109,6 +109,7 @@ export function useMyRegistrations(page: number) {
     registrations: result?.items ?? [],
     pageInfo: result?.page_info ?? null,
     isLoading: !isLoaded || (loading && !result),
+    isPaging: loading && Boolean(result),
     hasError: Boolean(error) && !result,
     isSignedIn: Boolean(isSignedIn),
     refetch,

@@ -1,9 +1,10 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useOptimistic, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   type EventLevel,
   EventType,
@@ -39,10 +40,13 @@ export function EventListContainer({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const filters = useMemo(
+  const urlFilters = useMemo(
     () => parseEventFilters(new URLSearchParams(searchParams.toString())),
     [searchParams],
   );
+  // The chips answer on the click; the URL and the grid catch up inside the transition.
+  const [filters, setOptimisticFilters] = useOptimistic(urlFilters);
+  const [isFiltering, startTransition] = useTransition();
   const {
     events,
     pageInfo,
@@ -56,11 +60,14 @@ export function EventListContainer({
   const applyFilters = useCallback(
     (next: Filters) => {
       const query = toEventSearchParams(next).toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, {
-        scroll: false,
+      startTransition(() => {
+        setOptimisticFilters(next);
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
       });
     },
-    [pathname, router],
+    [pathname, router, setOptimisticFilters],
   );
 
   const handleWhenChange = useCallback(
@@ -134,7 +141,13 @@ export function EventListContainer({
           onClearFilters={handleClearFilters}
         />
       ) : (
-        <>
+        <div
+          aria-busy={isFiltering}
+          className={cn(
+            "flex flex-col gap-8 transition-opacity duration-200",
+            isFiltering && "opacity-60",
+          )}
+        >
           <EventGrid>
             {events.map((event, index) => (
               <EventCard
@@ -171,7 +184,7 @@ export function EventListContainer({
               )}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

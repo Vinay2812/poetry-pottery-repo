@@ -4,6 +4,7 @@ import {
   type EventQuery,
   type EventsFilterInput,
   EventType,
+  type RegistrationFieldsFragment,
   EventWhen,
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
@@ -232,5 +233,27 @@ export function toEventsFilterInput(
     level: filters.level,
     page,
     limit: PAGE_SIZE,
+  };
+}
+
+export type RegistrationData = RegistrationFieldsFragment;
+
+export interface RegistrationCancellation {
+  reason: string;
+  at: string;
+}
+
+// The reducer behind the optimistic booking: what the studio will say once it accepts.
+export function applyRegistrationCancellation(
+  registration: RegistrationData | null,
+  cancellation: RegistrationCancellation,
+): RegistrationData | null {
+  if (!registration) return registration;
+  return {
+    ...registration,
+    status: RegistrationStatus.Cancelled,
+    can_cancel: false,
+    cancelled_at: cancellation.at,
+    cancel_reason: cancellation.reason.trim() || registration.cancel_reason,
   };
 }

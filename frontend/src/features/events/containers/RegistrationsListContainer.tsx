@@ -4,6 +4,7 @@ import { useClerk } from "@clerk/nextjs";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { toEventWhenLabel } from "@/features/events/types";
 
 import { SignInWall } from "@/features/auth/components/SignInWall";
@@ -18,8 +19,16 @@ import {
 
 export function RegistrationsListContainer() {
   const [page, setPage] = useState(1);
-  const { registrations, pageInfo, isLoading, hasError, isSignedIn, refetch } =
-    useMyRegistrations(page);
+  const {
+    registrations,
+    pageInfo,
+    isLoading,
+    isPaging,
+    hasError,
+    isSignedIn,
+    refetch,
+  } = useMyRegistrations(page);
+  const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
 
   return (
@@ -54,7 +63,13 @@ export function RegistrationsListContainer() {
         <EmptyRegistrations />
       ) : (
         <>
-          <div className="flex flex-col border-t border-ash">
+          <div
+            aria-busy={isPaging}
+            className={cn(
+              "flex flex-col border-t border-ash transition-opacity duration-200",
+              isPaging && "opacity-60",
+            )}
+          >
             {registrations.map((registration) => (
               <RegistrationCard
                 key={registration.id}
@@ -79,12 +94,11 @@ export function RegistrationsListContainer() {
                 Newer
               </Button>
               <span className="text-sm text-muted-foreground">
-                Page {pageInfo.page} of{" "}
-                {Math.ceil(pageInfo.total / pageInfo.limit)}
+                Page {page} of {pageCount}
               </span>
               <Button
                 variant="outline"
-                disabled={!pageInfo.has_more}
+                disabled={page >= pageCount}
                 onClick={() => setPage((current) => current + 1)}
               >
                 Older
