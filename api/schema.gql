@@ -400,6 +400,7 @@ type ProductFacets {
   active_count: Int!
   archive_count: Int!
   categories: [FacetCount!]!
+  collections: [FacetCount!]!
   materials: [FacetCount!]!
   price_max: Int!
   price_min: Int!

@@ -228,6 +228,9 @@ export class ProductFacets {
   categories!: FacetCount[];
 
   @Field(() => [FacetCount])
+  collections!: FacetCount[];
+
+  @Field(() => [FacetCount])
   materials!: FacetCount[];
 
   @Field(() => Int)

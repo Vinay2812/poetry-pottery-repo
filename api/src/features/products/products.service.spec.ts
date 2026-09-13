@@ -37,8 +37,6 @@ const searchMock = { rankProducts: vi.fn() };
 // Vitest matchers are typed `any`; narrowing keeps the lint rule honest.
 const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
-const notContaining = (value: Record<string, unknown>): unknown =>
-  expect.not.objectContaining(value);
 
 function row(id: number) {
   return { id, slug: `p-${id}`, categories: [], collection: null };
@@ -66,6 +64,7 @@ describe("ProductsService", () => {
     vi.setSystemTime(NOW);
     prismaMock.product.count.mockResolvedValue(0);
     prismaMock.category.findMany.mockResolvedValue([]);
+    prismaMock.collection.findMany.mockResolvedValue([]);
     prismaMock.product.groupBy.mockResolvedValue([]);
     prismaMock.product.aggregate.mockResolvedValue({
       _min: { price: null },
@@ -148,10 +147,13 @@ describe("ProductsService", () => {
     expect(prismaMock.product.findMany).not.toHaveBeenCalled();
   });
 
-  it("builds facets from the base pool", async () => {
+  it("counts a facet against the other filters but not itself", async () => {
     prismaMock.product.findMany.mockResolvedValue([]);
     prismaMock.category.findMany.mockResolvedValue([
       { slug: "mugs", name: "Mugs", _count: { products: 4 } },
+    ]);
+    prismaMock.collection.findMany.mockResolvedValue([
+      { slug: "spring-2025", name: "Spring 2025", _count: { products: 2 } },
     ]);
     prismaMock.product.groupBy.mockResolvedValue([
       { material: "Stoneware", _count: { _all: 4 } },
@@ -165,17 +167,51 @@ describe("ProductsService", () => {
 
     expect(result.facets).toEqual({
       categories: [{ value: "mugs", label: "Mugs", count: 4 }],
+      collections: [{ value: "spring-2025", label: "Spring 2025", count: 2 }],
       materials: [{ value: "Stoneware", label: "Stoneware", count: 4 }],
       price_min: 480,
       price_max: 3800,
       active_count: 0,
       archive_count: 0,
     });
-    // The material filter must not narrow the facet pool.
+    // The material filter must not narrow its own facet.
     expect(prismaMock.product.groupBy).toHaveBeenCalledWith(
       containing({
-        where: notContaining({ material: expect.anything() }),
+        where: { AND: [availableProductWhere()] },
       }),
+    );
+    // Options come from the whole pool; only their counts follow the filters.
+    expect(prismaMock.category.findMany).toHaveBeenCalledWith(
+      containing({
+        where: { products: { some: { AND: [] } } },
+        select: containing({
+          _count: {
+            select: {
+              products: {
+                where: {
+                  AND: [
+                    availableProductWhere(),
+                    { material: { in: ["Stoneware"] } },
+                  ],
+                },
+              },
+            },
+          },
+        }),
+      }),
+    );
+  });
+
+  it("offers the same facet options whatever is ticked", async () => {
+    prismaMock.product.findMany.mockResolvedValue([]);
+
+    await service.list({ archive: true });
+
+    expect(prismaMock.collection.findMany).toHaveBeenCalledWith(
+      containing({ where: { products: { some: { AND: [] } } } }),
+    );
+    expect(prismaMock.category.findMany).toHaveBeenCalledWith(
+      containing({ where: { products: { some: { AND: [] } } } }),
     );
   });
 
