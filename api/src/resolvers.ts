@@ -22,3 +22,4 @@ export { AdminCatalogResolver } from "@/features/admin/catalog/catalog.resolver"
 export { AdminOrdersResolver } from "@/features/admin/orders/orders.resolver";
 export { AdminUsersResolver } from "@/features/admin/users/users.resolver";
 export { AdminEventsResolver } from "@/features/admin/events/events.resolver";
+export { AdminWorkshopsResolver } from "@/features/admin/workshops/workshops.resolver";

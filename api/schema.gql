@@ -262,6 +262,62 @@ type AdminUsersResult {
   page_info: PageInfo!
 }
 
+type AdminWorkshopBlackout {
+  config_id: Int!
+  ends_at: DateTime!
+  id: Int!
+  reason: String
+  starts_at: DateTime!
+}
+
+input AdminWorkshopBlackoutInput {
+  ends_at: DateTime!
+  reason: String
+  starts_at: DateTime!
+}
+
+type AdminWorkshopBooking {
+  booking: WorkshopBooking!
+  customer: AdminUserRef!
+  next_statuses: [RegistrationStatus!]!
+}
+
+input AdminWorkshopBookingsFilterInput {
+  config_id: Int
+  from: DateTime
+  limit: Int
+  page: Int
+  search: String
+  status: RegistrationStatus
+  to: DateTime
+}
+
+type AdminWorkshopBookingsResult {
+  items: [AdminWorkshopBooking!]!
+  page_info: PageInfo!
+}
+
+input AdminWorkshopConfigInput {
+  booking_window_days: Int
+  capacity_per_slot: Int
+  closed_weekdays: [Int!]
+  closing_minutes: Int
+  description: String
+  image_url: String
+  is_active: Boolean
+  name: String
+  opening_minutes: Int
+  slot_minutes: Int
+  slot_span_days: Int
+  timezone: String
+}
+
+input AdminWorkshopTierInput {
+  hours: Int!
+  pieces_per_person: Int!
+  price_per_person: Int!
+}
+
 input BookWorkshopInput {
   config_slug: String!
   hours: Int!
@@ -507,12 +563,15 @@ type Mutation {
   createProductOptionGroup(input: AdminOptionGroupInput!, product_id: Int!): ProductOptionGroup!
   createProductReview(input: ReviewInput!, product_id: Int!): Review!
   createReviewImageUpload(input: ReviewUploadInput!): UploadTarget!
+  createWorkshopBlackout(config_id: Int!, input: AdminWorkshopBlackoutInput!): AdminWorkshopBlackout!
   deleteAddress(id: Int!): Boolean!
   deleteCategory(id: Int!): Boolean!
   deleteCollection(id: Int!): Boolean!
   deleteProductOption(id: Int!): Boolean!
   deleteProductOptionGroup(id: Int!): Boolean!
   deleteReview(id: Int!): Boolean!
+  deleteWorkshopBlackout(id: Int!): Boolean!
+  deleteWorkshopTier(id: Int!): Boolean!
   markOrderPaid(id: String!): AdminOrder!
   placeOrder(input: PlaceOrderInput!): Order!
   publishEvent(id: Int!): Event!
@@ -520,6 +579,7 @@ type Mutation {
   removeCartItem(id: Int!): Cart!
   reorderProductImages(id: Int!, image_urls: [String!]!): Product!
   rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
+  saveWorkshopTier(config_id: Int!, input: AdminWorkshopTierInput!): WorkshopConfig!
   sendContactMessage(input: ContactMessageInput!): Boolean!
   setDefaultAddress(id: Int!): Address!
   setOrderAdminNote(id: String!, note: String): AdminOrder!
@@ -528,6 +588,7 @@ type Mutation {
   setProductFeatured(id: Int!, is_featured: Boolean!): Product!
   setRegistrationStatus(id: String!, reason: String, status: RegistrationStatus!): AdminRegistration!
   setUserRole(id: Int!, role: UserRole!): AdminUser!
+  setWorkshopBookingStatus(id: String!, reason: String, status: RegistrationStatus!): AdminWorkshopBooking!
   subscribeToNewsletter(email: String!): NewsletterResult!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
   unpublishEvent(id: Int!): Event!
@@ -541,6 +602,8 @@ type Mutation {
   updateProductOption(id: Int!, input: AdminOptionInput!): ProductOptionGroup!
   updateProductOptionGroup(id: Int!, input: AdminOptionGroupInput!): ProductOptionGroup!
   updateReview(id: Int!, input: ReviewInput!): Review!
+  updateWorkshopBlackout(id: Int!, input: AdminWorkshopBlackoutInput!): AdminWorkshopBlackout!
+  updateWorkshopConfig(id: Int!, input: AdminWorkshopConfigInput!): WorkshopConfig!
 }
 
 type NewsletterResult {
@@ -725,6 +788,9 @@ type Query {
   adminProducts(filter: AdminProductsFilterInput): AdminProductsResult!
   adminUser(id: Int!): AdminUser!
   adminUsers(filter: AdminUsersFilterInput): AdminUsersResult!
+  adminWorkshopBlackouts(config_id: Int!): [AdminWorkshopBlackout!]!
+  adminWorkshopBookings(filter: AdminWorkshopBookingsFilterInput): AdminWorkshopBookingsResult!
+  adminWorkshopConfigs: [WorkshopConfig!]!
   cart: Cart!
   categories: [Category!]!
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!

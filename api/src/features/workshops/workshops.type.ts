@@ -33,6 +33,9 @@ export class WorkshopConfig {
   image_url!: string | null;
 
   @Field()
+  is_active!: boolean;
+
+  @Field()
   timezone!: string;
 
   @Field(() => Int)
