@@ -258,6 +258,28 @@ describe("ProductsService", () => {
     });
   });
 
+  it("searches the archive and counts both tabs over the whole match", async () => {
+    searchMock.rankProducts.mockResolvedValue([3, 1]);
+    prismaMock.product.findMany.mockResolvedValue([row(1)]);
+    prismaMock.product.count.mockResolvedValueOnce(1).mockResolvedValueOnce(1);
+
+    const result = await service.list({ search: "vase", archive: true });
+
+    const matched = { id: { in: [3, 1] } };
+    expect(prismaMock.product.findMany).toHaveBeenCalledWith(
+      containing({ where: { AND: [archivedProductWhere(), matched] } }),
+    );
+    expect(prismaMock.product.count).toHaveBeenCalledWith({
+      where: { AND: [availableProductWhere(), matched] },
+    });
+    expect(prismaMock.product.count).toHaveBeenCalledWith({
+      where: { AND: [archivedProductWhere(), matched] },
+    });
+    expect(result.items.map((item) => item.id)).toEqual([1]);
+    expect(result.facets.active_count).toBe(1);
+    expect(result.facets.archive_count).toBe(1);
+  });
+
   it("caches categories with live product counts", async () => {
     prismaMock.category.findMany.mockResolvedValue([
       { id: 1, slug: "mugs", name: "Mugs", _count: { products: 6 } },
