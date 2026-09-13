@@ -181,11 +181,34 @@ type AdminRecentOrder {
   total: Int!
 }
 
+type AdminUser {
+  bookings_count: Int!
+  created_at: DateTime!
+  orders_count: Int!
+  phone: String
+  registrations_count: Int!
+  reviews_count: Int!
+  role: UserRole!
+  user: AdminUserRef!
+}
+
 type AdminUserRef {
   email: String!
   id: Int!
   image: String
   name: String
+}
+
+input AdminUsersFilterInput {
+  limit: Int
+  page: Int
+  role: UserRole
+  search: String
+}
+
+type AdminUsersResult {
+  items: [AdminUser!]!
+  page_info: PageInfo!
 }
 
 input BookWorkshopInput {
@@ -448,6 +471,7 @@ type Mutation {
   setOrderStatus(cancel_reason: String, id: String!, status: OrderStatus!, tracking_note: String): AdminOrder!
   setProductActive(id: Int!, is_active: Boolean!): Product!
   setProductFeatured(id: Int!, is_featured: Boolean!): Product!
+  setUserRole(id: Int!, role: UserRole!): AdminUser!
   subscribeToNewsletter(email: String!): NewsletterResult!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
   unsubscribeFromNewsletter(token: String!): Boolean!
@@ -638,6 +662,8 @@ type Query {
   adminProduct(id: Int!): Product!
   adminProductOptionGroups(product_id: Int!): [ProductOptionGroup!]!
   adminProducts(filter: AdminProductsFilterInput): AdminProductsResult!
+  adminUser(id: Int!): AdminUser!
+  adminUsers(filter: AdminUsersFilterInput): AdminUsersResult!
   cart: Cart!
   categories: [Category!]!
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
@@ -811,6 +837,11 @@ type UploadTarget {
   key: String!
   public_url: String!
   upload_url: String!
+}
+
+enum UserRole {
+  ADMIN
+  USER
 }
 
 type WishlistToggleResult {

@@ -75,8 +75,11 @@ describe("API (e2e)", () => {
     expect(response.headers[REQUEST_ID_HEADER]).toBeTypeOf("string");
   });
 
-  it("rejects the users query when unauthenticated", async () => {
-    const response = await postGraphql(app, "{ users { total } }");
+  it("rejects the admin users query when unauthenticated", async () => {
+    const response = await postGraphql(
+      app,
+      "{ adminUsers { page_info { total } } }",
+    );
 
     const { errors } = graphqlErrorSchema.parse(response.body);
     expect(errors[0]?.message).toBe("Authentication required");
