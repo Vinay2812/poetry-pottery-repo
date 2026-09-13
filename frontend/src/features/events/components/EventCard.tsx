@@ -44,7 +44,8 @@ export function EventCard({
             src={imageUrl}
             alt=""
             fill
-            priority={isPriority}
+            loading={isPriority ? "eager" : undefined}
+            fetchPriority={isPriority ? "high" : undefined}
             sizes={SIZES}
             className={cn(
               "object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.02]",

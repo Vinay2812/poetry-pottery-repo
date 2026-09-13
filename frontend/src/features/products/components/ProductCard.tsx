@@ -96,11 +96,9 @@ export function ProductCard({
                     src={url}
                     alt={toPhotoAlt(name, index)}
                     fill
-                    priority={isPriority && index === 0}
-                    loading={
-                      !isPriority && isEager && index === 0
-                        ? "eager"
-                        : undefined
+                    loading={isEager && index === 0 ? "eager" : undefined}
+                    fetchPriority={
+                      isPriority && index === 0 ? "high" : undefined
                     }
                     sizes={SIZES}
                     className={cn(

@@ -297,7 +297,7 @@ describe("applyFilterAction", () => {
 });
 
 describe("toCardPhotoLoading", () => {
-  it("preloads the phone's first row and only un-lazies the rest of the desktop row", () => {
+  it("prioritises the phone's first row and only un-lazies the rest of the desktop row", () => {
     expect(toCardPhotoLoading(0)).toEqual({ isPriority: true, isEager: true });
     expect(toCardPhotoLoading(1)).toEqual({ isPriority: true, isEager: true });
     expect(toCardPhotoLoading(2)).toEqual({ isPriority: false, isEager: true });

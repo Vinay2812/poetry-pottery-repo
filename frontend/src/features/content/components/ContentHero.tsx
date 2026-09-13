@@ -27,7 +27,8 @@ export function ContentHero({ title, subtitle, imageUrl }: ContentHeroProps) {
             src={imageUrl}
             alt=""
             fill
-            priority
+            loading="eager"
+            fetchPriority="high"
             sizes="100vw"
             className="object-cover"
           />

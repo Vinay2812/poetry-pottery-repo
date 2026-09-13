@@ -361,9 +361,9 @@ export interface CardPhotoLoading {
   isEager: boolean;
 }
 
-// The grid's first row is two cards on a phone and four on a desktop. The first two are
-// preloaded; the next two only skip lazy loading, so a phone never pays to preload a row
-// it cannot see yet.
+// The grid's first row is two cards on a phone and four on a desktop. All four load eagerly;
+// only the first two ask for high fetch priority, so a phone never competes with a row it
+// cannot see yet. Next 16 deprecated `priority`, so eagerness is set through `loading`.
 export function toCardPhotoLoading(index: number): CardPhotoLoading {
   return { isPriority: index < 2, isEager: index < 4 };
 }

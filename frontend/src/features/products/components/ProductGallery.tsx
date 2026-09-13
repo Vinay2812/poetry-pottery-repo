@@ -87,7 +87,8 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
                   src={url}
                   alt={toPhotoAlt(name, index)}
                   fill
-                  priority={index === 0}
+                  loading={index === 0 ? "eager" : undefined}
+                  fetchPriority={index === 0 ? "high" : undefined}
                   sizes="(min-width: 1024px) 50vw, 100vw"
                   className={cn(
                     "object-cover",
@@ -168,6 +169,9 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
                   src={url}
                   alt=""
                   fill
+                  // Same file as the opening photo, so it costs nothing and keeps
+                  // the LCP candidate from being recorded as lazy.
+                  loading={index === 0 ? "eager" : undefined}
                   sizes="64px"
                   className="object-cover"
                 />

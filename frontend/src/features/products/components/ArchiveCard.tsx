@@ -39,8 +39,8 @@ export function ArchiveCard({
             src={imageUrl}
             alt={name}
             fill
-            priority={isPriority}
-            loading={!isPriority && isEager ? "eager" : undefined}
+            loading={isEager ? "eager" : undefined}
+            fetchPriority={isPriority ? "high" : undefined}
             sizes={SIZES}
             className="photo-zoom object-cover opacity-80 transition-opacity duration-500 ease-out group-hover:opacity-100"
           />

@@ -29,7 +29,8 @@ export function WorkshopIntro({
             src={imageUrl}
             alt=""
             fill
-            priority
+            loading="eager"
+            fetchPriority="high"
             sizes="(min-width: 1280px) 1280px, 100vw"
             className="object-cover"
           />
