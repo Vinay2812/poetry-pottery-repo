@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { PotteryIcon, toPotteryIconKind } from "@/components/icons/pottery";
+import { pluralize } from "@/lib/format";
 
 export interface CategoryTileProps {
   href: string;
@@ -24,7 +25,7 @@ export function CategoryTile({ href, name, productCount }: CategoryTileProps) {
         {name}
       </span>
       <span className="-mt-2 text-[13px] text-muted-foreground tnum">
-        {productCount} pieces
+        {pluralize(productCount, "piece")}
       </span>
     </Link>
   );
