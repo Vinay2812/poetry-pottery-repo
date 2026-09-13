@@ -5,7 +5,6 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
-import { MAX_PAGE_SIZE } from "@/common/pagination/pagination";
 import { EMAIL_TAKEN_MESSAGE, UsersService } from "./users.service";
 
 function makeUser(overrides: Partial<User> = {}): User {
@@ -24,13 +23,7 @@ function makeUser(overrides: Partial<User> = {}): User {
 }
 
 const prismaMock = {
-  user: {
-    findMany: vi.fn(),
-    count: vi.fn(),
-    findUnique: vi.fn(),
-    create: vi.fn(),
-    update: vi.fn(),
-  },
+  user: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   $executeRaw: vi.fn(),
   withTransaction: vi.fn(),
 };
@@ -58,46 +51,6 @@ describe("UsersService", () => {
   beforeEach(async () => {
     vi.resetAllMocks();
     service = await createService();
-  });
-
-  describe("findPaginated", () => {
-    it("returns items with pagination metadata", async () => {
-      const user = makeUser();
-      prismaMock.user.findMany.mockResolvedValue([user]);
-      prismaMock.user.count.mockResolvedValue(1);
-
-      const result = await service.findPaginated(1, 20);
-
-      expect(result).toEqual({ items: [user], total: 1, page: 1, limit: 20 });
-      expect(prismaMock.user.findMany).toHaveBeenCalledWith({
-        skip: 0,
-        take: 20,
-        orderBy: { created_at: "desc" },
-      });
-    });
-
-    it("computes the skip offset from the page", async () => {
-      prismaMock.user.findMany.mockResolvedValue([]);
-      prismaMock.user.count.mockResolvedValue(0);
-
-      await service.findPaginated(3, 10);
-
-      expect(prismaMock.user.findMany).toHaveBeenCalledWith({
-        skip: 20,
-        take: 10,
-        orderBy: { created_at: "desc" },
-      });
-    });
-
-    it("clamps out-of-range pagination input", async () => {
-      prismaMock.user.findMany.mockResolvedValue([]);
-      prismaMock.user.count.mockResolvedValue(0);
-
-      const result = await service.findPaginated(-5, 5000);
-
-      expect(result.page).toBe(1);
-      expect(result.limit).toBe(MAX_PAGE_SIZE);
-    });
   });
 
   describe("findByAuth", () => {

@@ -28,3 +28,4 @@ export { AdminDashboardResolver } from "@/features/admin/dashboard/dashboard.res
 export { AdminProductsResolver } from "@/features/admin/products/products.resolver";
 export { AdminCatalogResolver } from "@/features/admin/catalog/catalog.resolver";
 export { AdminOrdersResolver } from "@/features/admin/orders/orders.resolver";
+export { AdminUsersResolver } from "@/features/admin/users/users.resolver";

@@ -3,9 +3,7 @@ import { type User } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import type { Logger } from "winston";
 
-import { clampPage } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
-import type { UsersResponse } from "./users.type";
 
 export interface ProvisionUserInput {
   auth_id: string;
@@ -25,21 +23,6 @@ export class UsersService {
     private readonly prisma: PrismaService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
-
-  async findPaginated(page: number, limit: number): Promise<UsersResponse> {
-    const bounds = clampPage(page, limit);
-
-    const [items, total] = await Promise.all([
-      this.prisma.user.findMany({
-        skip: bounds.skip,
-        take: bounds.limit,
-        orderBy: { created_at: "desc" },
-      }),
-      this.prisma.user.count(),
-    ]);
-
-    return { items, total, page: bounds.page, limit: bounds.limit };
-  }
 
   findByAuth(authId: string): Promise<User | null> {
     return this.prisma.user.findUnique({
