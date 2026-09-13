@@ -6,8 +6,6 @@ import { useCallback } from "react";
 import { toast } from "sonner";
 
 import {
-  RegistrationDocument,
-  type RegistrationQuery,
   useCancelRegistrationMutation,
   useEventsQuery,
   useMyRegistrationsQuery,
@@ -140,18 +138,8 @@ export function useCancelRegistration() {
   const cancel = useCallback(
     async (id: string, reason: string): Promise<boolean> => {
       try {
-        await mutate({
-          variables: { id, reason: reason.trim() || null },
-          update: (cache, { data }) => {
-            const cancelled = data?.cancelRegistration;
-            if (!cancelled) return;
-            cache.writeQuery<RegistrationQuery>({
-              query: RegistrationDocument,
-              variables: { id },
-              data: { registration: cancelled },
-            });
-          },
-        });
+        // The reply is the whole booking, so Apollo's own normalisation is the new baseline.
+        await mutate({ variables: { id, reason: reason.trim() || null } });
         // The event page is a server component; its seat count is stale until refreshed.
         router.refresh();
         toast.success("Booking cancelled");
