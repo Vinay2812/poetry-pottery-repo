@@ -40,7 +40,7 @@ export interface ProductCardProps {
 
 const SIZES = "(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 50vw";
 const OVERLAY_BUTTON =
-  "ghost-hover z-20 flex size-9 items-center justify-center border border-ink bg-white text-ink [--ghost-base:#fff] lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100";
+  "z-20 flex size-9 items-center justify-center border border-ink bg-white text-ink transition-[color,background-color,opacity] duration-200 ease-out hover:bg-ink hover:text-white lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100";
 
 // Image first, then one line of name and price. Made-to-order pieces link to their options instead of adding blind.
 export function ProductCard({

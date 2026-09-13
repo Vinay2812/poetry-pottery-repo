@@ -14,7 +14,7 @@ export interface ProductCarouselProps {
 }
 
 const ARROW_CLASS =
-  "ghost-hover hidden size-8 items-center justify-center border border-ash text-sm leading-none hover:border-ink disabled:opacity-30 disabled:hover:border-ash md:flex";
+  "hidden size-8 items-center justify-center border border-ash text-sm leading-none transition-colors duration-200 ease-out hover:border-ink hover:bg-ink hover:text-white disabled:opacity-30 disabled:hover:border-ash disabled:hover:bg-transparent disabled:hover:text-inherit md:flex";
 
 export function ProductCarousel({
   title,
