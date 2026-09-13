@@ -11,6 +11,8 @@ export interface CheckoutSummaryProps {
   shippingFee: number;
   total: number;
   problems: string[];
+  isDiscountPending: boolean;
+  isQuotePending: boolean;
   canPlaceOrder: boolean;
   isPlacing: boolean;
   blockedReason: string | null;
@@ -26,6 +28,8 @@ export function CheckoutSummary({
   shippingFee,
   total,
   problems,
+  isDiscountPending,
+  isQuotePending,
   canPlaceOrder,
   isPlacing,
   blockedReason,
@@ -45,13 +49,17 @@ export function CheckoutSummary({
         </ul>
       )}
       {coupon}
-      <OrderTotals
-        subtotal={subtotal}
-        discount={discount}
-        couponCode={couponCode}
-        shippingFee={shippingFee}
-        total={total}
-      />
+      {/* The server quote is the baseline, so the totals say they are settling rather than guessing. */}
+      <div aria-busy={isQuotePending}>
+        <OrderTotals
+          subtotal={subtotal}
+          discount={discount}
+          couponCode={couponCode}
+          shippingFee={shippingFee}
+          total={total}
+          isDiscountPending={isDiscountPending}
+        />
+      </div>
       <Button
         size="lg"
         onClick={onPlaceOrder}

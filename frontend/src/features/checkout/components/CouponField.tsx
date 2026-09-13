@@ -58,18 +58,17 @@ export function CouponField({
           </Button>
         )}
       </div>
-      {message && (
-        <p
-          id="coupon-message"
-          className={cn(
-            "text-[13px]",
-            isApplied ? "text-primary" : "text-muted-foreground",
-          )}
-          aria-live="polite"
-        >
-          {message}
-        </p>
-      )}
+      {/* Always rendered so applying or clearing a code never nudges the totals. */}
+      <p
+        id="coupon-message"
+        className={cn(
+          "min-h-5 text-[13px]",
+          isApplied ? "text-primary" : "text-muted-foreground",
+        )}
+        aria-live="polite"
+      >
+        {message}
+      </p>
     </div>
   );
 }

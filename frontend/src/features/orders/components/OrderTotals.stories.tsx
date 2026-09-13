@@ -32,6 +32,10 @@ export const WithDiscount: Story = {
   args: { discount: 230, couponCode: "WELCOME10", total: 2220 },
 };
 
+export const DiscountPending: Story = {
+  args: { couponCode: "WELCOME10", isDiscountPending: true },
+};
+
 export const FreeShipping: Story = {
   args: { shippingFee: 0, total: 2300 },
 };

@@ -2,7 +2,7 @@
 
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useCallback, useState } from "react";
+import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import {
@@ -18,6 +18,7 @@ import { CheckoutLineItem } from "@/features/checkout/components/CheckoutLineIte
 import { CheckoutSummary } from "@/features/checkout/components/CheckoutSummary";
 import { CouponField } from "@/features/checkout/components/CouponField";
 import { OrderNoteField } from "@/features/checkout/components/OrderNoteField";
+import { toCouponView } from "@/features/checkout/types";
 import { toOrderPath } from "@/features/orders/types";
 
 export function CheckoutContainer() {
@@ -27,12 +28,17 @@ export function CheckoutContainer() {
   const [addressId, setAddressId] = useState<number | null>(null);
   const [couponDraft, setCouponDraft] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  // The code shows on the summary straight away; the quote that comes back decides whether it stays.
+  const [optimisticCoupon, applyOptimisticCoupon] =
+    useOptimistic(appliedCoupon);
+  const [isCouponPending, startCouponTransition] = useTransition();
   const [note, setNote] = useState("");
 
   const {
     data: quoteData,
     previousData: previousQuote,
     loading: isQuoting,
+    refetch: refetchQuote,
   } = useCheckoutQuoteQuery({
     variables: { input: { coupon_code: appliedCoupon } },
     skip: !isSignedIn,
@@ -40,9 +46,11 @@ export function CheckoutContainer() {
   });
   const quote =
     quoteData?.checkoutQuote ?? previousQuote?.checkoutQuote ?? null;
-  const isCouponApplied = Boolean(
-    appliedCoupon && quote?.coupon_code === appliedCoupon,
-  );
+  const coupon = toCouponView({
+    code: optimisticCoupon,
+    quoteCode: quote?.coupon_code ?? null,
+    quoteDiscount: quote?.discount ?? 0,
+  });
 
   // Placing an order empties the cart and adds a row to the orders list; both are fetched again.
   const [placeOrder, { loading: isPlacing }] = usePlaceOrderMutation({
@@ -52,12 +60,28 @@ export function CheckoutContainer() {
 
   const handleApplyCoupon = useCallback(() => {
     const code = couponDraft.trim().toUpperCase();
-    if (code) setAppliedCoupon(code);
-  }, [couponDraft]);
+    if (!code || code === appliedCoupon) return;
+    startCouponTransition(async () => {
+      applyOptimisticCoupon(code);
+      const { data } = await refetchQuote({ input: { coupon_code: code } });
+      const checked = data?.checkoutQuote;
+      if (checked?.coupon_code === code) {
+        setAppliedCoupon(code);
+        return;
+      }
+      toast.error(checked?.coupon_message ?? `${code} did not work`);
+      await refetchQuote({ input: { coupon_code: appliedCoupon } });
+    });
+  }, [appliedCoupon, applyOptimisticCoupon, couponDraft, refetchQuote]);
+
   const handleRemoveCoupon = useCallback(() => {
-    setAppliedCoupon(null);
-    setCouponDraft("");
-  }, []);
+    startCouponTransition(async () => {
+      applyOptimisticCoupon(null);
+      setCouponDraft("");
+      await refetchQuote({ input: { coupon_code: null } });
+      setAppliedCoupon(null);
+    });
+  }, [applyOptimisticCoupon, refetchQuote]);
 
   const handlePlaceOrder = useCallback(() => {
     if (addressId === null) return;
@@ -65,7 +89,7 @@ export function CheckoutContainer() {
       variables: {
         input: {
           address_id: addressId,
-          coupon_code: isCouponApplied ? appliedCoupon : null,
+          coupon_code: quote?.coupon_code ?? null,
           customer_note: note.trim() || null,
         },
       },
@@ -78,7 +102,7 @@ export function CheckoutContainer() {
           error instanceof Error ? error.message : "Could not place the order",
         ),
       );
-  }, [addressId, appliedCoupon, isCouponApplied, note, placeOrder, router]);
+  }, [addressId, note, placeOrder, quote, router]);
 
   const items = cart?.items.filter((item) => item.is_available) ?? [];
   const availableItemCount = items.reduce(
@@ -152,21 +176,29 @@ export function CheckoutContainer() {
           <CheckoutSummary
             itemCount={quote?.item_count ?? availableItemCount}
             subtotal={quote?.subtotal ?? cart?.subtotal ?? 0}
-            discount={quote?.discount ?? 0}
-            couponCode={isCouponApplied ? appliedCoupon : null}
+            discount={coupon.discount}
+            couponCode={coupon.code}
             shippingFee={quote?.shipping_fee ?? cart?.shipping_fee ?? 0}
             total={quote?.total ?? cart?.total ?? 0}
             problems={quote?.problems ?? []}
-            canPlaceOrder={blockedReason === null && !isQuoting}
+            isDiscountPending={coupon.isPending}
+            isQuotePending={isCouponPending}
+            canPlaceOrder={
+              blockedReason === null && !isQuoting && !isCouponPending
+            }
             isPlacing={isPlacing}
             blockedReason={blockedReason}
             onPlaceOrder={handlePlaceOrder}
             coupon={
               <CouponField
                 value={couponDraft}
-                message={appliedCoupon ? (quote?.coupon_message ?? null) : null}
-                isApplied={isCouponApplied}
-                isChecking={isQuoting && Boolean(appliedCoupon)}
+                message={
+                  coupon.isApplied && !coupon.isPending
+                    ? (quote?.coupon_message ?? null)
+                    : null
+                }
+                isApplied={coupon.isApplied}
+                isChecking={isCouponPending}
                 onChange={setCouponDraft}
                 onApply={handleApplyCoupon}
                 onRemove={handleRemoveCoupon}

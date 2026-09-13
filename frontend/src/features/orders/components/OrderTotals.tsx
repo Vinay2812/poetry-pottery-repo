@@ -1,4 +1,5 @@
 import { formatInr } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export interface OrderTotalsProps {
   subtotal: number;
@@ -6,6 +7,7 @@ export interface OrderTotalsProps {
   couponCode: string | null;
   shippingFee: number;
   total: number;
+  isDiscountPending?: boolean;
 }
 
 const ROW = "flex justify-between border-b border-ash py-3 text-sm";
@@ -16,6 +18,7 @@ export function OrderTotals({
   couponCode,
   shippingFee,
   total,
+  isDiscountPending = false,
 }: OrderTotalsProps) {
   return (
     <dl className="flex flex-col">
@@ -23,12 +26,19 @@ export function OrderTotals({
         <dt className="text-muted-foreground">Subtotal</dt>
         <dd className="tnum">{formatInr(subtotal)}</dd>
       </div>
-      {discount > 0 && (
+      {(discount > 0 || isDiscountPending) && (
         <div className={ROW}>
           <dt className="text-muted-foreground">
             Discount{couponCode ? ` (${couponCode})` : ""}
           </dt>
-          <dd className="text-primary tnum">−{formatInr(discount)}</dd>
+          <dd
+            className={cn(
+              "tnum",
+              isDiscountPending ? "text-muted-foreground" : "text-primary",
+            )}
+          >
+            {isDiscountPending ? "Checking…" : `−${formatInr(discount)}`}
+          </dd>
         </div>
       )}
       <div className={ROW}>
