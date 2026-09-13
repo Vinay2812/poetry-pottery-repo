@@ -5,6 +5,7 @@ export interface NavLink {
 
 export const NAV_LINKS: NavLink[] = [
   { href: "/products", label: "Shop" },
+  { href: "/custom", label: "Custom" },
   { href: "/workshops", label: "Workshops" },
   { href: "/events", label: "Events" },
   { href: "/about", label: "Our story" },
@@ -14,7 +15,8 @@ export const FOOTER_SHOP_LINKS: NavLink[] = [
   { href: "/products", label: "All pieces" },
   { href: "/products?sort=NEWEST", label: "New arrivals" },
   { href: "/products?sort=BEST_SELLING", label: "Best sellers" },
-  { href: "/products?customizable=true", label: "Made to order" },
+  { href: "/custom", label: "Made to order" },
+  { href: "/products?view=archive", label: "Archive" },
 ];
 
 export const FOOTER_STUDIO_LINKS: NavLink[] = [

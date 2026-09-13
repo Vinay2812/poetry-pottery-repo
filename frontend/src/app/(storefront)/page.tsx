@@ -15,7 +15,6 @@ import {
   MadeToOrderBanner,
   ProductCardContainer,
   ProductCarousel,
-  toProductPath,
 } from "@/features/products";
 
 export default async function HomePage() {
@@ -58,7 +57,7 @@ export default async function HomePage() {
       {customPiece && (
         <section className="border-t border-ash py-16 md:py-24">
           <MadeToOrderBanner
-            href={toProductPath(customPiece.slug)}
+            href="/custom"
             imageUrl={customPiece.image_urls[0] ?? null}
             priceLabel={formatInr(customPiece.price)}
           />

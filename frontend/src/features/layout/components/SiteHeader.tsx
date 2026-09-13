@@ -132,6 +132,30 @@ export function SiteHeader({
           </button>
         </div>
       </div>
+
+      <nav
+        aria-label="Sections"
+        className="hide-scrollbar flex gap-5 overflow-x-auto px-4 pb-3 lg:hidden"
+      >
+        {navLinks.map((link) => {
+          const isActive = link.href === activeHref;
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "shrink-0 text-[13px] whitespace-nowrap transition-colors",
+                isActive
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
+      </nav>
     </header>
   );
 }
