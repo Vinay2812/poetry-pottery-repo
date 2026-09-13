@@ -6,6 +6,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EventLevel, EventType, EventWhen } from "@/graphql/generated/graphql";
+
+import { ActiveMarker } from "@/components/nav/ActiveMarker";
 import { cn } from "@/lib/utils";
 
 import { toLevelLabel } from "@/features/events/types";
@@ -44,6 +46,9 @@ const LEVELS: EventLevel[] = [
 
 const ANY_LEVEL = "ANY";
 
+// Colour and a square marker only: picking a filter never changes a button's box.
+const CHOICE_CLASS = "flex items-center gap-2 text-[13px] transition-colors";
+
 export function EventFilters({
   when,
   eventType,
@@ -56,11 +61,7 @@ export function EventFilters({
   return (
     <div className="flex flex-col gap-4 border-b border-ash pb-4 md:flex-row md:items-center md:justify-between">
       <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
-        <div
-          role="group"
-          aria-label="When"
-          className="inline-flex border border-ash"
-        >
+        <div role="group" aria-label="When" className="flex items-center gap-5">
           {WHEN_TABS.map((tab) => (
             <button
               key={tab.value}
@@ -68,12 +69,13 @@ export function EventFilters({
               aria-pressed={when === tab.value}
               onClick={() => onWhenChange(tab.value)}
               className={cn(
-                "px-4 py-2 text-[13px] transition-colors",
+                CHOICE_CLASS,
                 when === tab.value
-                  ? "bg-ink text-white"
+                  ? "text-ink"
                   : "text-muted-foreground hover:text-ink",
               )}
             >
+              <ActiveMarker isActive={when === tab.value} />
               {tab.label}
             </button>
           ))}
@@ -82,7 +84,7 @@ export function EventFilters({
         <div
           role="group"
           aria-label="Kind of evening"
-          className="flex flex-wrap items-center gap-4"
+          className="flex flex-wrap items-center gap-5"
         >
           {TYPE_LINKS.map((link) => (
             <button
@@ -91,19 +93,24 @@ export function EventFilters({
               aria-pressed={eventType === link.value}
               onClick={() => onEventTypeChange(link.value)}
               className={cn(
-                "border-b pb-0.5 text-[13px] transition-colors",
+                CHOICE_CLASS,
                 eventType === link.value
-                  ? "border-ink text-ink"
-                  : "border-transparent text-muted-foreground hover:border-ink hover:text-ink",
+                  ? "text-ink"
+                  : "text-muted-foreground hover:text-ink",
               )}
             >
+              <ActiveMarker isActive={eventType === link.value} />
               {link.label}
             </button>
           ))}
         </div>
       </div>
 
-      {isLevelShown && (
+      <div
+        aria-hidden={!isLevelShown}
+        inert={!isLevelShown}
+        className={cn("md:w-44", !isLevelShown && "invisible")}
+      >
         <Select
           value={level ?? ANY_LEVEL}
           onValueChange={(value) =>
@@ -122,7 +129,7 @@ export function EventFilters({
             ))}
           </SelectContent>
         </Select>
-      )}
+      </div>
     </div>
   );
 }
