@@ -80,6 +80,11 @@ export class StorageService {
     return this.client !== null;
   }
 
+  // User-supplied image URLs are only accepted when they point at our own bucket.
+  isOwnUrl(url: string): boolean {
+    return this.config !== null && url.startsWith(`${this.config.publicUrl}/`);
+  }
+
   async createImageUpload(input: {
     folder: UploadFolder;
     filename: string;

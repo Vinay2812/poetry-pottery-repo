@@ -100,3 +100,4 @@ export { WishlistModule } from "@/features/wishlist/wishlist.module";
 export { AddressesModule } from "@/features/addresses/addresses.module";
 export { OrdersModule } from "@/features/orders/orders.module";
 export { EventsModule } from "@/features/events/events.module";
+export { WorkshopsModule } from "@/features/workshops/workshops.module";

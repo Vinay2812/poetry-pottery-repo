@@ -33,6 +33,14 @@ input AddressInput {
   state: String!
 }
 
+input BookWorkshopInput {
+  config_slug: String!
+  hours: Int!
+  note: String
+  participants: Int!
+  starts_at: DateTime!
+}
+
 type Cart {
   free_shipping_above: Int
   item_count: Int!
@@ -188,14 +196,17 @@ type FacetCount {
 
 type Mutation {
   addToCart(input: AddToCartInput!): Cart!
+  bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
   cancelOrder(id: String!, reason: String): Order!
   cancelRegistration(id: String!, reason: String): Registration!
+  cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
   createAddress(input: AddressInput!): Address!
   deleteAddress(id: Int!): Boolean!
   placeOrder(input: PlaceOrderInput!): Order!
   registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
+  rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
   setDefaultAddress(id: Int!): Address!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
   updateAddress(id: Int!, input: AddressInput!): Address!
@@ -360,6 +371,7 @@ type Query {
   events(filter: EventsFilterInput): EventsResult!
   featuredProducts(limit: Int = 8): [Product!]!
   myRegistrations(limit: Int, page: Int): RegistrationsResult!
+  myWorkshopBookings(limit: Int, page: Int): WorkshopBookingsResult!
   order(id: String!): Order!
   orders(limit: Int, page: Int): OrdersResult!
   product(slug: String!): Product!
@@ -371,6 +383,10 @@ type Query {
   users(limit: Int = 20, page: Int = 1): UsersResponse!
   wishlist: [Product!]!
   wishlistIds: [Int!]!
+  workshop(slug: String!): WorkshopConfig!
+  workshopAvailability(input: WorkshopAvailabilityInput!): [WorkshopDay!]!
+  workshopBooking(id: String!): WorkshopBooking!
+  workshops: [WorkshopConfig!]!
 }
 
 input RegisterForEventInput {
@@ -408,6 +424,11 @@ enum RegistrationStatus {
 type RegistrationsResult {
   items: [Registration!]!
   page_info: PageInfo!
+}
+
+input RescheduleWorkshopInput {
+  booking_id: String!
+  starts_at: DateTime!
 }
 
 input SelectionInputType {
@@ -476,4 +497,77 @@ type WishlistToggleResult {
   is_wishlisted: Boolean!
   product_id: Int!
   wishlist_count: Int!
+}
+
+input WorkshopAvailabilityInput {
+  config_slug: String!
+  days: Int = 14
+  from: String!
+}
+
+type WorkshopBooking {
+  approved_at: DateTime
+  can_cancel: Boolean!
+  can_reschedule: Boolean!
+  cancel_reason: String
+  cancelled_at: DateTime
+  config: WorkshopConfig!
+  confirmed_at: DateTime
+  created_at: DateTime!
+  discount: Int!
+  ends_at: DateTime!
+  hours: Int!
+  id: String!
+  note: String
+  participants: Int!
+  pieces_per_person: Int!
+  price_per_person: Int!
+  rejected_at: DateTime
+  starts_at: DateTime!
+  status: RegistrationStatus!
+  subtotal: Int!
+  total: Int!
+}
+
+type WorkshopBookingsResult {
+  items: [WorkshopBooking!]!
+  page_info: PageInfo!
+}
+
+type WorkshopConfig {
+  booking_window_days: Int!
+  capacity_per_slot: Int!
+  closed_weekdays: [Int!]!
+  closing_minutes: Int!
+  description: String
+  id: Int!
+  image_url: String
+  name: String!
+  opening_minutes: Int!
+  slot_minutes: Int!
+  slug: String!
+  tiers: [WorkshopTier!]!
+  timezone: String!
+}
+
+type WorkshopDay {
+  date: String!
+  is_closed: Boolean!
+  reason: String
+  slots: [WorkshopSlot!]!
+  weekday: Int!
+}
+
+type WorkshopSlot {
+  ends_at: DateTime!
+  is_available: Boolean!
+  reason: String
+  remaining: Int!
+  starts_at: DateTime!
+}
+
+type WorkshopTier {
+  hours: Int!
+  pieces_per_person: Int!
+  price_per_person: Int!
 }

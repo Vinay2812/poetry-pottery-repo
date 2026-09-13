@@ -1,0 +1,111 @@
+fragment WorkshopConfigFields on WorkshopConfig {
+  id
+  slug
+  name
+  description
+  image_url
+  timezone
+  opening_minutes
+  closing_minutes
+  slot_minutes
+  capacity_per_slot
+  booking_window_days
+  closed_weekdays
+  tiers {
+    hours
+    price_per_person
+    pieces_per_person
+  }
+}
+
+fragment WorkshopBookingFields on WorkshopBooking {
+  id
+  starts_at
+  ends_at
+  hours
+  participants
+  price_per_person
+  pieces_per_person
+  subtotal
+  discount
+  total
+  status
+  note
+  cancel_reason
+  can_cancel
+  can_reschedule
+  created_at
+  approved_at
+  confirmed_at
+  rejected_at
+  cancelled_at
+  config {
+    ...WorkshopConfigFields
+  }
+}
+
+query Workshops {
+  workshops {
+    ...WorkshopConfigFields
+  }
+}
+
+query Workshop($slug: String!) {
+  workshop(slug: $slug) {
+    ...WorkshopConfigFields
+  }
+}
+
+query WorkshopAvailability($input: WorkshopAvailabilityInput!) {
+  workshopAvailability(input: $input) {
+    date
+    weekday
+    is_closed
+    reason
+    slots {
+      starts_at
+      ends_at
+      remaining
+      is_available
+      reason
+    }
+  }
+}
+
+mutation BookWorkshop($input: BookWorkshopInput!) {
+  bookWorkshop(input: $input) {
+    ...WorkshopBookingFields
+  }
+}
+
+mutation RescheduleWorkshopBooking($input: RescheduleWorkshopInput!) {
+  rescheduleWorkshopBooking(input: $input) {
+    ...WorkshopBookingFields
+  }
+}
+
+query MyWorkshopBookings($page: Int, $limit: Int) {
+  myWorkshopBookings(page: $page, limit: $limit) {
+    items {
+      ...WorkshopBookingFields
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+  }
+}
+
+query WorkshopBooking($id: String!) {
+  workshopBooking(id: $id) {
+    ...WorkshopBookingFields
+  }
+}
+
+mutation CancelWorkshopBooking($id: String!, $reason: String) {
+  cancelWorkshopBooking(id: $id, reason: $reason) {
+    ...WorkshopBookingFields
+  }
+}
