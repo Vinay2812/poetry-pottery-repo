@@ -26,3 +26,4 @@ export {
 export { AdminUploadsResolver } from "@/features/admin/uploads/uploads.resolver";
 export { AdminDashboardResolver } from "@/features/admin/dashboard/dashboard.resolver";
 export { AdminProductsResolver } from "@/features/admin/products/products.resolver";
+export { AdminCatalogResolver } from "@/features/admin/catalog/catalog.resolver";
