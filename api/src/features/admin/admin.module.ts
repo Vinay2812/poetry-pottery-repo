@@ -5,6 +5,7 @@ import { AdminContentModule } from "./content/content.module";
 import { AdminCouponsModule } from "./coupons/coupons.module";
 import { AdminDashboardModule } from "./dashboard/dashboard.module";
 import { AdminEventsModule } from "./events/events.module";
+import { AdminInboxModule } from "./inbox/inbox.module";
 import { AdminOrdersModule } from "./orders/orders.module";
 import { AdminProductsModule } from "./products/products.module";
 import { AdminReviewsModule } from "./reviews/reviews.module";
@@ -25,6 +26,7 @@ import { AdminWorkshopsModule } from "./workshops/workshops.module";
     AdminReviewsModule,
     AdminContentModule,
     AdminCouponsModule,
+    AdminInboxModule,
   ],
 })
 export class AdminModule {}

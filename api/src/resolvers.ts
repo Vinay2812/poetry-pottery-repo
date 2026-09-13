@@ -34,3 +34,4 @@ export { AdminWorkshopsResolver } from "@/features/admin/workshops/workshops.res
 export { AdminReviewsResolver } from "@/features/admin/reviews/reviews.resolver";
 export { AdminContentResolver } from "@/features/admin/content/content.resolver";
 export { AdminCouponsResolver } from "@/features/admin/coupons/coupons.resolver";
+export { AdminInboxResolver } from "@/features/admin/inbox/inbox.resolver";
