@@ -618,3 +618,15 @@ model ContentPage {
 
   @@map("content_pages")
 }
+
+// Images an admin uploaded and the API verified against the spec table; entity writes only accept these keys.
+model ConfirmedUpload {
+  key        String   @id
+  purpose    String
+  width      Int
+  height     Int
+  bytes      Int
+  created_at DateTime @default(now())
+
+  @@map("confirmed_uploads")
+}

@@ -1,6 +1,11 @@
 import { randomBytes } from "node:crypto";
 
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { BadRequestException, Injectable } from "@nestjs/common";
 
@@ -12,6 +17,7 @@ export const UPLOAD_FOLDERS = [
   "collections",
   "categories",
   "content",
+  "hero",
   "reviews",
 ] as const;
 export type UploadFolder = (typeof UPLOAD_FOLDERS)[number];
@@ -83,6 +89,39 @@ export class StorageService {
   // User-supplied image URLs are only accepted when they point at our own bucket.
   isOwnUrl(url: string): boolean {
     return this.config !== null && url.startsWith(`${this.config.publicUrl}/`);
+  }
+
+  publicUrlFor(key: string): string {
+    if (!this.config) {
+      throw new BadRequestException("Image uploads are not configured");
+    }
+    return `${this.config.publicUrl}/${key}`;
+  }
+
+  keyFromUrl(url: string): string | null {
+    if (!this.config || !this.isOwnUrl(url)) return null;
+    return url.slice(this.config.publicUrl.length + 1) || null;
+  }
+
+  // Reads the stored object back so the API can verify what actually landed in the bucket.
+  async readObject(key: string): Promise<Buffer> {
+    if (!this.client || !this.config) {
+      throw new BadRequestException("Image uploads are not configured");
+    }
+    const result = await this.client.send(
+      new GetObjectCommand({ Bucket: this.config.bucket, Key: key }),
+    );
+    if (!result.Body) {
+      throw new BadRequestException("That upload is no longer in the bucket");
+    }
+    return Buffer.from(await result.Body.transformToByteArray());
+  }
+
+  async deleteObject(key: string): Promise<void> {
+    if (!this.client || !this.config) return;
+    await this.client.send(
+      new DeleteObjectCommand({ Bucket: this.config.bucket, Key: key }),
+    );
   }
 
   async createImageUpload(input: {

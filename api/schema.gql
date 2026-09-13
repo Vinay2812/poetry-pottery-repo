@@ -119,6 +119,14 @@ type CollectionRef {
   starts_at: DateTime
 }
 
+type ConfirmedImage {
+  bytes: Int!
+  height: Int!
+  key: String!
+  public_url: String!
+  width: Int!
+}
+
 type ContactMessage {
   created_at: DateTime!
   email: String!
@@ -138,11 +146,6 @@ input ContactMessageInput {
   subject: String
 }
 
-type ContactMessagesResult {
-  items: [ContactMessage!]!
-  page_info: PageInfo!
-}
-
 type ContentPage {
   hero_image_url: String
   is_published: Boolean!
@@ -153,38 +156,13 @@ type ContentPage {
   updated_at: DateTime!
 }
 
-input ContentPageInput {
-  hero_image_url: String
-  is_published: Boolean
-  sections: [ContentSectionInput!]!
-  subtitle: String
-  title: String!
-}
-
-type ContentPageSummary {
-  is_published: Boolean!
-  slug: String!
-  title: String!
-}
-
 type ContentSection {
   body: String!
   heading: String!
   items: [ContentSectionItem!]!
 }
 
-input ContentSectionInput {
-  body: String!
-  heading: String!
-  items: [ContentSectionItemInput!]
-}
-
 type ContentSectionItem {
-  body: String!
-  title: String!
-}
-
-input ContentSectionItemInput {
   body: String!
   title: String!
 }
@@ -266,6 +244,17 @@ type FacetCount {
   value: String!
 }
 
+type ImageSpec {
+  content_types: [String!]!
+  max_bytes: Int!
+  min_height: Int!
+  min_width: Int!
+  purpose: UploadPurpose!
+  ratio: Float
+  ratio_label: String!
+  renders_at: String!
+}
+
 type Mutation {
   addToCart(input: AddToCartInput!): Cart!
   bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
@@ -273,13 +262,14 @@ type Mutation {
   cancelRegistration(id: String!, reason: String): Registration!
   cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
+  confirmUpload(key: String!, purpose: UploadPurpose!): ConfirmedImage!
   createAddress(input: AddressInput!): Address!
+  createAdminUpload(content_type: String!, purpose: UploadPurpose!, size: Int!): UploadTarget!
   createEventReview(event_id: Int!, input: ReviewInput!): Review!
   createProductReview(input: ReviewInput!, product_id: Int!): Review!
   createReviewImageUpload(input: ReviewUploadInput!): UploadTarget!
   deleteAddress(id: Int!): Boolean!
   deleteReview(id: Int!): Boolean!
-  markContactMessageRead(id: Int!): ContactMessage!
   placeOrder(input: PlaceOrderInput!): Order!
   registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
@@ -291,7 +281,6 @@ type Mutation {
   unsubscribeFromNewsletter(token: String!): Boolean!
   updateAddress(id: Int!, input: AddressInput!): Address!
   updateCartItem(id: Int!, quantity: Int!): Cart!
-  updateContentPage(input: ContentPageInput!, slug: String!): ContentPage!
   updateReview(id: Int!, input: ReviewInput!): Review!
 }
 
@@ -415,8 +404,10 @@ type ProductFacets {
 
 type ProductOption {
   id: Int!
+  is_active: Boolean!
   name: String!
   price_modifier: Int!
+  sort_order: Int!
 }
 
 type ProductOptionGroup {
@@ -427,6 +418,7 @@ type ProductOptionGroup {
   name: String!
   options: [ProductOption!]!
   price_modifier: Int!
+  sort_order: Int!
 }
 
 enum ProductSort {
@@ -466,13 +458,12 @@ type Query {
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
   collection(archive: Boolean = false, slug: String!): Collection!
   collections(archive: Boolean = false): [Collection!]!
-  contactMessages(limit: Int, page: Int): ContactMessagesResult!
   contentPage(slug: String!): ContentPage!
-  contentPages: [ContentPageSummary!]!
   event(slug: String!): Event!
   eventReviews(event_id: Int!, limit: Int, page: Int): ReviewsResult!
   events(filter: EventsFilterInput): EventsResult!
   featuredProducts(limit: Int = 8): [Product!]!
+  imageSpecs: [ImageSpec!]!
   myRegistrations(limit: Int, page: Int): RegistrationsResult!
   myWorkshopBookings(limit: Int, page: Int): WorkshopBookingsResult!
   newsletterStatus: NewsletterStatus!
@@ -486,7 +477,6 @@ type Query {
   relatedProducts(limit: Int = 8, slug: String!): [Product!]!
   siteSettings: SiteSettings!
   upcomingEvents(limit: Int = 3): [Event!]!
-  users(limit: Int = 20, page: Int = 1): UsersResponse!
   wishlist: [Product!]!
   wishlistIds: [Int!]!
   workshop(slug: String!): WorkshopConfig!
@@ -622,34 +612,20 @@ type SiteSettings {
   youtube_url: String!
 }
 
+enum UploadPurpose {
+  CATEGORY
+  COLLECTION
+  CONTENT
+  EVENT
+  HERO
+  PRODUCT
+  REVIEW
+}
+
 type UploadTarget {
   key: String!
   public_url: String!
   upload_url: String!
-}
-
-type User {
-  auth_id: String!
-  created_at: DateTime!
-  email: String!
-  id: Int!
-  image: String
-  name: String
-  phone: String
-  role: UserRole!
-  updated_at: DateTime!
-}
-
-enum UserRole {
-  ADMIN
-  USER
-}
-
-type UsersResponse {
-  items: [User!]!
-  limit: Int!
-  page: Int!
-  total: Int!
 }
 
 type WishlistToggleResult {
@@ -707,6 +683,7 @@ type WorkshopConfig {
   description: String
   id: Int!
   image_url: String
+  is_active: Boolean!
   name: String!
   opening_minutes: Int!
   slot_minutes: Int!
