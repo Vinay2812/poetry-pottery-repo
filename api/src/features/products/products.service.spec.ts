@@ -206,8 +206,10 @@ describe("ProductsService", () => {
 
     await service.list({ archive: true, category_slugs: ["mugs"] });
 
-    const [[categoryArgs]] = prismaMock.category.findMany.mock.calls;
-    const [[collectionArgs]] = prismaMock.collection.findMany.mock.calls;
+    const categoryArgs: unknown =
+      prismaMock.category.findMany.mock.calls[0]?.[0];
+    const collectionArgs: unknown =
+      prismaMock.collection.findMany.mock.calls[0]?.[0];
     expect(categoryArgs).not.toHaveProperty("where");
     expect(collectionArgs).not.toHaveProperty("where");
   });
@@ -290,8 +292,9 @@ describe("ProductsService", () => {
     await service.collectionBySlug("spring-2025");
     await service.collectionBySlug("spring-2025", true);
 
-    const [[shelfArgs], [archiveArgs]] =
-      prismaMock.collection.findFirst.mock.calls;
+    const calls = prismaMock.collection.findFirst.mock.calls;
+    const shelfArgs: unknown = calls[0]?.[0];
+    const archiveArgs: unknown = calls[1]?.[0];
     expect(shelfArgs).toEqual(
       containing({
         include: {
