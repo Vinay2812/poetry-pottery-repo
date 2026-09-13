@@ -11,49 +11,49 @@ export const categories: SeedCategory[] = [
     name: "Mugs",
     icon: "coffee",
     image_url:
-      "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
+      "https://images.pexels.com/photos/6611421/pexels-photo-6611421.jpeg",
   },
   {
     slug: "bowls",
     name: "Bowls",
     icon: "bowl",
     image_url:
-      "https://images.pexels.com/photos/15028227/pexels-photo-15028227.jpeg",
+      "https://images.pexels.com/photos/11691548/pexels-photo-11691548.jpeg",
   },
   {
     slug: "plates",
     name: "Plates",
     icon: "plate",
     image_url:
-      "https://images.pexels.com/photos/8696759/pexels-photo-8696759.jpeg",
+      "https://images.pexels.com/photos/11889247/pexels-photo-11889247.jpeg",
   },
   {
     slug: "vases",
     name: "Vases",
     icon: "flower",
     image_url:
-      "https://images.pexels.com/photos/18635393/pexels-photo-18635393.jpeg",
+      "https://images.pexels.com/photos/7119222/pexels-photo-7119222.jpeg",
   },
   {
     slug: "planters",
     name: "Planters",
     icon: "plant",
     image_url:
-      "https://images.pexels.com/photos/2325307/pexels-photo-2325307.jpeg",
+      "https://images.pexels.com/photos/9396434/pexels-photo-9396434.jpeg",
   },
   {
     slug: "serveware",
     name: "Serveware",
     icon: "serving",
     image_url:
-      "https://images.pexels.com/photos/19400090/pexels-photo-19400090.jpeg",
+      "https://images.pexels.com/photos/6310185/pexels-photo-6310185.jpeg",
   },
   {
     slug: "accessories",
     name: "Accessories",
     icon: "sparkles",
     image_url:
-      "https://images.pexels.com/photos/6030460/pexels-photo-6030460.jpeg",
+      "https://images.pexels.com/photos/6739701/pexels-photo-6739701.jpeg",
   },
 ];
 
@@ -72,14 +72,14 @@ export const collections: SeedCollection[] = [
     description:
       "Mugs, bowls and plates glazed in soft greys and sage, made for slow breakfasts.",
     image_url:
-      "https://images.pexels.com/photos/2162938/pexels-photo-2162938.jpeg",
+      "https://images.pexels.com/photos/6963820/pexels-photo-6963820.jpeg",
   },
   {
     slug: "monsoon-greens",
     name: "Monsoon Greens",
     description: "A limited run of forest and olive glazes fired this season.",
     image_url:
-      "https://images.pexels.com/photos/3094218/pexels-photo-3094218.jpeg",
+      "https://images.pexels.com/photos/38517802/pexels-photo-38517802.jpeg",
     ends_at: "2026-12-31T23:59:59.000Z",
   },
   {
@@ -88,7 +88,7 @@ export const collections: SeedCollection[] = [
     description:
       "The pieces we throw every week, and the ones people come back for.",
     image_url:
-      "https://images.pexels.com/photos/2424235/pexels-photo-2424235.jpeg",
+      "https://images.pexels.com/photos/8063881/pexels-photo-8063881.jpeg",
   },
   {
     slug: "quiet-forms",
@@ -96,7 +96,7 @@ export const collections: SeedCollection[] = [
     description:
       "Unglazed and matte finishes for people who like their shelves calm.",
     image_url:
-      "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+      "https://images.pexels.com/photos/33878971/pexels-photo-33878971.jpeg",
   },
 ];
 
@@ -145,7 +145,7 @@ export const products: SeedProduct[] = [
     stock: 24,
     categories: ["mugs"],
     collection: "morning-table",
-    images: [img(18426654), img(18273390), img(13190545)],
+    images: [img(31452624), img(30712594), img(27682102)],
     is_featured: true,
     sales_count: 48,
   },
@@ -162,7 +162,7 @@ export const products: SeedProduct[] = [
     stock: 30,
     categories: ["mugs"],
     collection: "monsoon-greens",
-    images: [img(15028227), img(18635395), img(8696529)],
+    images: [img(38517802), img(15362183), img(27682102)],
     sales_count: 31,
   },
   {
@@ -177,7 +177,7 @@ export const products: SeedProduct[] = [
     dimensions: "7.5 cm tall, 10 cm wide",
     stock: 18,
     categories: ["mugs"],
-    images: [img(5591657), img(18426652), img(18376920)],
+    images: [img(30712594), img(8063803), img(31452624)],
     sales_count: 22,
   },
   {
@@ -193,7 +193,7 @@ export const products: SeedProduct[] = [
     stock: 40,
     categories: ["mugs"],
     collection: "quiet-forms",
-    images: [img(3776950), img(18376920), img(8696759)],
+    images: [img(129209), img(31452624), img(6310185)],
     sales_count: 19,
   },
   {
@@ -209,7 +209,7 @@ export const products: SeedProduct[] = [
     stock: 36,
     categories: ["mugs"],
     collection: "morning-table",
-    images: [img(34144284), img(12480291), img(2130137)],
+    images: [img(39024946), img(6963820), img(8063803)],
     sales_count: 27,
   },
   {
@@ -224,7 +224,7 @@ export const products: SeedProduct[] = [
     dimensions: "9 to 11 cm tall depending on size",
     stock: 50,
     categories: ["mugs"],
-    images: [img(18273390), img(993626), img(18273388)],
+    images: [img(27682085), img(30712594), img(6611262)],
     is_customizable: true,
     is_featured: true,
     sales_count: 64,
@@ -243,7 +243,7 @@ export const products: SeedProduct[] = [
     stock: 16,
     categories: ["bowls"],
     collection: "studio-classics",
-    images: [img(8951881), img(16509996), img(18646111)],
+    images: [img(29312155), img(8063881), img(6611421)],
     is_featured: true,
     sales_count: 39,
   },
@@ -260,7 +260,7 @@ export const products: SeedProduct[] = [
     stock: 28,
     categories: ["bowls"],
     collection: "morning-table",
-    images: [img(15028227), img(3750665), img(6858632)],
+    images: [img(11691548), img(29312155), img(6963820)],
     sales_count: 25,
   },
   {
@@ -277,7 +277,7 @@ export const products: SeedProduct[] = [
     stock: 9,
     categories: ["bowls", "serveware"],
     collection: "monsoon-greens",
-    images: [img(18635395), img(15028227), img(8696529)],
+    images: [img(38517802), img(29282184), img(15362183)],
     sales_count: 14,
   },
   {
@@ -292,7 +292,7 @@ export const products: SeedProduct[] = [
     dimensions: "5 cm tall, 11 cm wide each",
     stock: 12,
     categories: ["bowls"],
-    images: [img(3187013), img(9440473)],
+    images: [img(29282184), img(6310185)],
     sales_count: 17,
   },
   {
@@ -308,7 +308,7 @@ export const products: SeedProduct[] = [
     stock: 7,
     categories: ["bowls"],
     collection: "quiet-forms",
-    images: [img(19884207, "png"), img(9884561)],
+    images: [img(33878971), img(29282184)],
     sales_count: 8,
   },
   {
@@ -324,7 +324,7 @@ export const products: SeedProduct[] = [
     stock: 20,
     categories: ["bowls"],
     collection: "monsoon-greens",
-    images: [img(12480291), img(18635393), img(8696759)],
+    images: [img(38517802), img(29282184), img(11889247)],
     sales_count: 21,
   },
 
@@ -341,7 +341,7 @@ export const products: SeedProduct[] = [
     stock: 22,
     categories: ["plates"],
     collection: "morning-table",
-    images: [img(8696759), img(3750870), img(33868054)],
+    images: [img(11889247), img(11691548), img(39024946)],
     is_featured: true,
     sales_count: 33,
   },
@@ -357,7 +357,7 @@ export const products: SeedProduct[] = [
     dimensions: "19 cm wide",
     stock: 34,
     categories: ["plates"],
-    images: [img(7559497), img(251336), img(3750709)],
+    images: [img(10410291), img(11889247), img(38517802)],
     sales_count: 29,
   },
   {
@@ -373,7 +373,7 @@ export const products: SeedProduct[] = [
     stock: 6,
     categories: ["plates", "serveware"],
     collection: "monsoon-greens",
-    images: [img(993626), img(2227817), img(18646117)],
+    images: [img(38517802), img(11889247), img(15362183)],
     sales_count: 11,
   },
   {
@@ -389,7 +389,7 @@ export const products: SeedProduct[] = [
     stock: 40,
     categories: ["plates"],
     collection: "quiet-forms",
-    images: [img(19375004), img(18376920)],
+    images: [img(33878971), img(11889247)],
     sales_count: 18,
   },
   {
@@ -405,7 +405,7 @@ export const products: SeedProduct[] = [
     dimensions: "26 cm wide each",
     stock: 10,
     categories: ["plates"],
-    images: [img(18646117), img(2130137), img(18646120)],
+    images: [img(10410291), img(6310185), img(32442408)],
     sales_count: 15,
   },
 
@@ -422,7 +422,7 @@ export const products: SeedProduct[] = [
     stock: 26,
     categories: ["vases"],
     collection: "monsoon-greens",
-    images: [img(18635393), img(16509996), img(18426654)],
+    images: [img(7663201), img(38517802), img(7119222)],
     is_featured: true,
     sales_count: 36,
   },
@@ -439,7 +439,7 @@ export const products: SeedProduct[] = [
     stock: 14,
     categories: ["vases"],
     collection: "quiet-forms",
-    images: [img(8951881), img(16509996), img(18646111)],
+    images: [img(33126633), img(7119222), img(7663201)],
     sales_count: 20,
   },
   {
@@ -454,7 +454,7 @@ export const products: SeedProduct[] = [
     dimensions: "32 cm tall",
     stock: 8,
     categories: ["vases"],
-    images: [img(18376920), img(608127)],
+    images: [img(19193216), img(7119222)],
     sales_count: 9,
   },
   {
@@ -469,7 +469,7 @@ export const products: SeedProduct[] = [
     dimensions: "16 cm tall, 18 cm wide",
     stock: 11,
     categories: ["vases"],
-    images: [img(3187013), img(9440473)],
+    images: [img(7663201), img(7119222)],
     sales_count: 13,
   },
   {
@@ -484,7 +484,7 @@ export const products: SeedProduct[] = [
     dimensions: "20 cm tall",
     stock: 13,
     categories: ["vases", "serveware"],
-    images: [img(2130137), img(19859578)],
+    images: [img(7119222), img(33126633)],
     sales_count: 12,
   },
 
@@ -500,7 +500,7 @@ export const products: SeedProduct[] = [
     dimensions: "11 cm tall, 12 cm wide",
     stock: 30,
     categories: ["planters"],
-    images: [img(11424070, "png"), img(18646120), img(2568459)],
+    images: [img(9805843), img(13336360), img(29520386)],
     is_featured: true,
     sales_count: 41,
   },
@@ -516,7 +516,7 @@ export const products: SeedProduct[] = [
     dimensions: "13 cm tall, 16 cm wide",
     stock: 15,
     categories: ["planters"],
-    images: [img(2325307), img(14775031), img(993626)],
+    images: [img(29520386), img(9396434), img(18449690)],
     sales_count: 23,
   },
   {
@@ -532,7 +532,7 @@ export const products: SeedProduct[] = [
     stock: 5,
     categories: ["planters"],
     collection: "quiet-forms",
-    images: [img(12496758), img(12566547), img(2227817)],
+    images: [img(18449690), img(33878971), img(9396434)],
     sales_count: 7,
   },
   {
@@ -548,7 +548,7 @@ export const products: SeedProduct[] = [
     stock: 18,
     categories: ["planters"],
     collection: "morning-table",
-    images: [img(3776950), img(34299319), img(2480399)],
+    images: [img(9707237), img(29520386), img(9396434)],
     sales_count: 26,
   },
   {
@@ -563,7 +563,7 @@ export const products: SeedProduct[] = [
     dimensions: "14 cm tall, 13 cm wide",
     stock: 12,
     categories: ["planters"],
-    images: [img(2568459), img(34144284), img(6030460)],
+    images: [img(33878971), img(18449690), img(6739701)],
     sales_count: 10,
   },
 
@@ -579,7 +579,7 @@ export const products: SeedProduct[] = [
     dimensions: "30 cm by 18 cm",
     stock: 9,
     categories: ["serveware"],
-    images: [img(2568459), img(3750665), img(18646120)],
+    images: [img(6310185), img(20561177), img(32442408)],
     sales_count: 16,
   },
   {
@@ -595,7 +595,7 @@ export const products: SeedProduct[] = [
     stock: 24,
     categories: ["serveware", "bowls"],
     collection: "monsoon-greens",
-    images: [img(18376920), img(18635389), img(8696759)],
+    images: [img(38517802), img(6310185), img(11889247)],
     sales_count: 30,
   },
   {
@@ -610,7 +610,7 @@ export const products: SeedProduct[] = [
     dimensions: "8 cm tall, 15 cm wide",
     stock: 14,
     categories: ["serveware"],
-    images: [img(19400090), img(19375004), img(14122680)],
+    images: [img(38517802), img(15362183), img(6310185)],
     sales_count: 19,
   },
   {
@@ -626,7 +626,7 @@ export const products: SeedProduct[] = [
     stock: 16,
     categories: ["serveware", "accessories"],
     collection: "studio-classics",
-    images: [img(14207081), img(16509996), img(34579318)],
+    images: [img(33126633), img(31452624), img(8063881)],
     sales_count: 24,
   },
   {
@@ -641,7 +641,7 @@ export const products: SeedProduct[] = [
     dimensions: "7 cm tall, 8 cm wide",
     stock: 20,
     categories: ["serveware", "accessories"],
-    images: [img(1724184), img(11424070, "png")],
+    images: [img(33878971), img(7674531)],
     sales_count: 15,
   },
 
@@ -657,7 +657,7 @@ export const products: SeedProduct[] = [
     dimensions: "12 cm long",
     stock: 45,
     categories: ["accessories"],
-    images: [img(6030460), img(28835746)],
+    images: [img(6739701), img(6739229)],
     is_featured: true,
     sales_count: 52,
   },
@@ -673,7 +673,7 @@ export const products: SeedProduct[] = [
     dimensions: "9 cm wide",
     stock: 50,
     categories: ["accessories"],
-    images: [img(9884561), img(14122680), img(6030460)],
+    images: [img(32442408), img(6739701), img(129209)],
     sales_count: 44,
   },
   {
@@ -689,7 +689,7 @@ export const products: SeedProduct[] = [
     stock: 28,
     categories: ["accessories"],
     collection: "quiet-forms",
-    images: [img(34144284), img(18635389), img(34579318)],
+    images: [img(9396434), img(7674531)],
     sales_count: 18,
   },
   {
@@ -704,7 +704,7 @@ export const products: SeedProduct[] = [
     dimensions: "12 cm by 8 cm",
     stock: 22,
     categories: ["accessories"],
-    images: [img(5591657), img(18426652), img(18376920)],
+    images: [img(11691548), img(31452624)],
     sales_count: 21,
   },
   {
@@ -719,7 +719,7 @@ export const products: SeedProduct[] = [
     dimensions: "14 cm long",
     stock: 0,
     categories: ["accessories"],
-    images: [img(2168346, "png"), img(34579318)],
+    images: [img(31926091), img(10410291)],
     sales_count: 12,
   },
 ];

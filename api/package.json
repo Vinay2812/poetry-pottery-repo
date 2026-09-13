@@ -28,7 +28,8 @@
     "db:reset": "prisma migrate reset --force --skip-seed && pnpm db:seed && pnpm search:reindex",
     "make-admin": "ts-node -r tsconfig-paths/register --project tsconfig.json scripts/make-admin.ts",
     "search:reindex": "QUEUE_CONSUMERS_ENABLED=false ts-node -r tsconfig-paths/register --project tsconfig.json scripts/reindex-search.ts",
-    "tsc": "tsc --noEmit"
+    "tsc": "tsc --noEmit",
+    "import:legacy": "ts-node -r tsconfig-paths/register --project tsconfig.json scripts/import-legacy.ts"
   },
   "dependencies": {
     "@apollo/server": "^5.5.1",
@@ -56,6 +57,7 @@
     "nanoid": "^5.1.16",
     "nest-winston": "^1.10.2",
     "nodemailer": "^10.0.3",
+    "pg": "^8.23.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "winston": "^3.19.0",
@@ -71,6 +73,7 @@
     "@types/express": "^5.0.0",
     "@types/node": "^24.0.0",
     "@types/nodemailer": "^8.0.1",
+    "@types/pg": "^8.23.1",
     "@types/supertest": "^7.0.0",
     "@vitest/coverage-v8": "^4.1.10",
     "eslint": "^9.18.0",
