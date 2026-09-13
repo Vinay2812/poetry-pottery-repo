@@ -6,6 +6,7 @@ export { CancelBookingDialog } from "@/features/workshops/components/CancelBooki
 export { DurationPicker } from "@/features/workshops/components/DurationPicker";
 export { EmptyBookings } from "@/features/workshops/components/EmptyBookings";
 export { ParticipantsStepper } from "@/features/workshops/components/ParticipantsStepper";
+export { PickedSlots } from "@/features/workshops/components/PickedSlots";
 export { RescheduleDialog } from "@/features/workshops/components/RescheduleDialog";
 export { SlotList } from "@/features/workshops/components/SlotList";
 export { WorkshopIntro } from "@/features/workshops/components/WorkshopIntro";

@@ -10,6 +10,7 @@ import {
 import { BookingSummary } from "@/features/workshops/components/BookingSummary";
 import { DurationPicker } from "@/features/workshops/components/DurationPicker";
 import { ParticipantsStepper } from "@/features/workshops/components/ParticipantsStepper";
+import type { PickedSlot } from "@/features/workshops/components/PickedSlots";
 import {
   SlotList,
   type SlotOption,
@@ -18,17 +19,23 @@ import { WorkshopIntro } from "@/features/workshops/components/WorkshopIntro";
 import { useAvailability, useBookWorkshop } from "@/features/workshops/hooks";
 import {
   addDays,
-  bookableStarts,
   formatDateKey,
+  formatHourRange,
   formatMonth,
-  formatSlotRange,
+  isDayWithinSpan,
+  isSlotPickable,
+  pickableSlots,
   pickTier,
   quoteSession,
-  sessionCapacity,
   shiftMonth,
+  slotsNeeded,
+  spanNotice,
   toDateKey,
   toMonthGrid,
+  type SlotInterval,
   toMonthKey,
+  togglePicked,
+  toPickedSlots,
   type WorkshopData,
 } from "@/features/workshops/types";
 
@@ -45,15 +52,29 @@ export function WorkshopBookingContainer({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [hours, setHours] = useState(workshop.tiers[0]?.hours ?? 1);
   const [participants, setParticipants] = useState(1);
-  const [start, setStart] = useState<string | null>(null);
+  const [picked, setPicked] = useState<SlotInterval[]>([]);
   const [note, setNote] = useState("");
 
   const { days, isLoading, refetch } = useAvailability(workshop.slug, month);
   const { book, isBooking } = useBookWorkshop(() => void refetch());
 
+  const needed = slotsNeeded(hours, workshop.slot_minutes);
+
   const dayByKey = useMemo(
     () => new Map(days.map((day) => [day.date, day])),
     [days],
+  );
+  const slotByStart = useMemo(
+    () =>
+      new Map(
+        days.flatMap((day) => day.slots).map((slot) => [slot.starts_at, slot]),
+      ),
+    [days],
+  );
+
+  const pickedDateKeys = useMemo(
+    () => picked.map((slot) => toDateKey(slot.starts_at, workshop.timezone)),
+    [picked, workshop.timezone],
   );
 
   const weeks = useMemo<(CalendarDay | null)[][]>(
@@ -62,69 +83,62 @@ export function WorkshopBookingContainer({
         week.map((dateKey) => {
           if (!dateKey) return null;
           const day = dayByKey.get(dateKey);
-          const starts = bookableStarts(
-            day,
-            hours,
-            participants,
-            workshop.slot_minutes,
-          );
-          const wheelsFree = starts.reduce(
-            (most, slot) =>
-              Math.max(
-                most,
-                sessionCapacity(
-                  day?.slots ?? [],
-                  slot.starts_at,
-                  hours,
-                  workshop.slot_minutes,
-                ),
-              ),
+          const free = pickableSlots(day, participants);
+          const wheelsFree = free.reduce(
+            (most, slot) => Math.max(most, slot.remaining),
             0,
+          );
+          const isWithinSpan = isDayWithinSpan(
+            dateKey,
+            pickedDateKeys,
+            workshop.slot_span_days,
           );
           return {
             dateKey,
             dayNumber: Number(dateKey.slice(8)),
             dayLabel: formatDateKey(dateKey),
             wheelsFree,
+            pickedCount: pickedDateKeys.filter((key) => key === dateKey).length,
             isClosed: day?.is_closed ?? true,
             isPast: dateKey < todayKey,
+            mutedReason: isWithinSpan
+              ? null
+              : spanNotice(workshop.slot_span_days),
           };
         }),
       ),
-    [dayByKey, hours, month, participants, todayKey, workshop.slot_minutes],
+    [
+      dayByKey,
+      month,
+      participants,
+      pickedDateKeys,
+      todayKey,
+      workshop.slot_span_days,
+    ],
   );
 
   const selectedDay = selectedDate ? dayByKey.get(selectedDate) : undefined;
   const slots = useMemo<SlotOption[]>(
     () =>
-      bookableStarts(
-        selectedDay,
-        hours,
-        participants,
-        workshop.slot_minutes,
-      ).map((slot) => ({
+      (selectedDay?.slots ?? []).map((slot) => ({
         startsAt: slot.starts_at,
-        label: formatSlotRange(
-          slot.starts_at,
-          new Date(
-            new Date(slot.starts_at).getTime() + hours * 3_600_000,
-          ).toISOString(),
-          workshop.timezone,
-        ),
-        wheelsFree: sessionCapacity(
-          selectedDay?.slots ?? [],
-          slot.starts_at,
-          hours,
-          workshop.slot_minutes,
-        ),
+        label: formatHourRange(slot.starts_at, slot.ends_at, workshop.timezone),
+        wheelsFree: slot.remaining,
+        isDisabled: !isSlotPickable(slot, participants),
+        reason: slot.is_available
+          ? "Not enough wheels"
+          : (slot.reason ?? "Not free"),
       })),
-    [
-      hours,
-      participants,
-      selectedDay,
-      workshop.slot_minutes,
-      workshop.timezone,
-    ],
+    [participants, selectedDay, workshop.timezone],
+  );
+
+  const pickedSlots = useMemo<PickedSlot[]>(
+    () => toPickedSlots(picked, workshop.timezone),
+    [picked, workshop.timezone],
+  );
+  const pickedStarts = useMemo(
+    () => picked.map((slot) => slot.starts_at),
+    [picked],
   );
 
   const tier = pickTier(workshop.tiers, hours);
@@ -132,31 +146,62 @@ export function WorkshopBookingContainer({
 
   const handleSelectDate = useCallback((dateKey: string) => {
     setSelectedDate(dateKey);
-    setStart(null);
   }, []);
 
   const handleHoursChange = useCallback((value: number) => {
     setHours(value);
-    setStart(null);
+    setPicked([]);
   }, []);
 
-  const handleParticipantsChange = useCallback((value: number) => {
-    setParticipants(value);
-    setStart(null);
+  // A bigger group can outgrow an hour that was already picked, so those drop out.
+  const handleParticipantsChange = useCallback(
+    (value: number) => {
+      setParticipants(value);
+      setPicked((previous) =>
+        previous.filter((picked) => {
+          const slot = slotByStart.get(picked.starts_at);
+          return !slot || isSlotPickable(slot, value);
+        }),
+      );
+    },
+    [slotByStart],
+  );
+
+  const handleToggleSlot = useCallback(
+    (startsAt: string) => {
+      const slot = slotByStart.get(startsAt);
+      if (!slot) return;
+      setPicked((previous) => togglePicked(previous, slot, needed));
+    },
+    [needed, slotByStart],
+  );
+
+  const handleRemoveSlot = useCallback((startsAt: string) => {
+    setPicked((previous) =>
+      previous.filter((slot) => slot.starts_at !== startsAt),
+    );
   }, []);
 
   const handleBook = useCallback(() => {
-    if (!start) return;
+    if (picked.length !== needed) return;
     book({
       configSlug: workshop.slug,
-      startsAt: start,
+      slotStarts: pickedSlots.map((slot) => slot.startsAt),
       hours,
       participants,
       note,
     });
-  }, [book, hours, note, participants, start, workshop.slug]);
+  }, [
+    book,
+    hours,
+    needed,
+    note,
+    participants,
+    picked.length,
+    pickedSlots,
+    workshop.slug,
+  ]);
 
-  const selectedSlot = slots.find((slot) => slot.startsAt === start) ?? null;
   const lastMonth = toMonthKey(addDays(todayKey, workshop.booking_window_days));
 
   return (
@@ -210,35 +255,41 @@ export function WorkshopBookingContainer({
 
           <div className="flex flex-col gap-3">
             <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-              Start time
+              Your hours
             </h2>
+            <p className="text-[13px] text-muted-foreground">
+              Pick {needed} {needed === 1 ? "hour" : "hours"}. They can sit on
+              different days,{" "}
+              {spanNotice(workshop.slot_span_days).toLowerCase()}.
+            </p>
             <SlotList
               slots={slots}
-              selectedStart={start}
+              selectedStarts={pickedStarts}
               emptyMessage={
                 selectedDate
-                  ? "Nothing long enough is free that day."
-                  : "Pick a day to see start times."
+                  ? "Nothing is free that day."
+                  : "Pick a day to see its hours."
               }
-              onSelectSlot={setStart}
+              onToggleSlot={handleToggleSlot}
             />
           </div>
         </div>
 
         <aside className="lg:sticky lg:top-24">
           <BookingSummary
-            dateLabel={selectedDate ? formatDateKey(selectedDate) : null}
-            timeLabel={selectedSlot?.label ?? null}
+            pickedSlots={pickedSlots}
+            slotsNeeded={needed}
             hours={hours}
             participants={participants}
             pricePerPerson={tier?.price_per_person ?? 0}
             total={quote.subtotal}
             pieces={quote.pieces}
             note={note}
-            canBook={start !== null}
+            canBook={picked.length === needed}
             isBooking={isBooking}
             onNoteChange={setNote}
             onBook={handleBook}
+            onRemoveSlot={handleRemoveSlot}
           />
         </aside>
       </div>

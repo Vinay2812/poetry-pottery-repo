@@ -7,7 +7,7 @@ import { formatHours } from "@/features/workshops/types";
 export interface BookingCardProps {
   href: string;
   dateLabel: string;
-  timeLabel: string;
+  whenLines: string[];
   hours: number;
   participants: number;
   total: number;
@@ -17,7 +17,7 @@ export interface BookingCardProps {
 export function BookingCard({
   href,
   dateLabel,
-  timeLabel,
+  whenLines,
   hours,
   participants,
   total,
@@ -32,8 +32,12 @@ export function BookingCard({
         {dateLabel}
       </span>
       <span className="text-[13px] tnum">{formatInr(total)}</span>
-      <span className="text-[15px] leading-snug underline-offset-4 group-hover:underline">
-        {timeLabel}
+      <span className="col-span-2 flex flex-col text-[15px] leading-snug">
+        {whenLines.map((line) => (
+          <span key={line} className="underline-offset-4 group-hover:underline">
+            {line}
+          </span>
+        ))}
       </span>
       <span className="col-span-2 text-[13px] text-muted-foreground">
         {formatHours(hours)} · {pluralize(participants, "person", "people")} ·{" "}

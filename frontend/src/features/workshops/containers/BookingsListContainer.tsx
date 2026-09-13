@@ -11,8 +11,8 @@ import { BookingCardSkeleton } from "@/features/workshops/components/BookingCard
 import { EmptyBookings } from "@/features/workshops/components/EmptyBookings";
 import { useMyWorkshopBookings } from "@/features/workshops/hooks";
 import {
-  formatSessionDate,
-  formatSlotRange,
+  formatDayRange,
+  toBookingWhenLines,
   toBookingPath,
   toBookingStatusLabel,
 } from "@/features/workshops/types";
@@ -62,13 +62,12 @@ export function BookingsListContainer() {
               <BookingCard
                 key={booking.id}
                 href={toBookingPath(booking.id)}
-                dateLabel={formatSessionDate(
-                  booking.starts_at,
+                dateLabel={formatDayRange(
+                  booking.slots,
                   booking.config.timezone,
                 )}
-                timeLabel={formatSlotRange(
-                  booking.starts_at,
-                  booking.ends_at,
+                whenLines={toBookingWhenLines(
+                  booking.slots,
                   booking.config.timezone,
                 )}
                 hours={booking.hours}

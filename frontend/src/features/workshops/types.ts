@@ -107,28 +107,94 @@ function formatSlotTime(instant: string | Date, timezone: string): string {
     hour: "numeric",
     minute: "2-digit",
     timeZone: timezone,
-  }).format(new Date(instant));
+  })
+    .format(new Date(instant))
+    .replace(":00", "");
 }
 
-export function formatSlotRange(
+// "3–4 pm" when both ends share a meridiem, "11 am–12 pm" when they do not.
+export function formatHourRange(
   startsAt: string | Date,
   endsAt: string | Date,
   timezone: string,
 ): string {
-  return `${formatSlotTime(startsAt, timezone)} – ${formatSlotTime(endsAt, timezone)}`;
+  const from = formatSlotTime(startsAt, timezone);
+  const to = formatSlotTime(endsAt, timezone);
+  const [fromTime, fromMeridiem] = from.split(" ");
+  const [toTime, toMeridiem] = to.split(" ");
+  if (fromMeridiem && fromMeridiem === toMeridiem) {
+    return `${fromTime}–${toTime} ${toMeridiem}`;
+  }
+  return `${from}–${to}`;
 }
 
-export function formatSessionDate(
-  instant: string | Date,
-  timezone: string,
-): string {
+function formatDayLabel(instant: string | Date, timezone: string): string {
   return new Intl.DateTimeFormat("en-IN", {
     weekday: "short",
     day: "numeric",
     month: "short",
-    year: "numeric",
     timeZone: timezone,
   }).format(new Date(instant));
+}
+
+export interface SlotInterval {
+  starts_at: string;
+  ends_at: string;
+}
+
+// "Sat 20 Sep · 3–4 pm", the one line a picked hour gets everywhere it is listed.
+export function formatSlotLine(slot: SlotInterval, timezone: string): string {
+  return `${formatDayLabel(slot.starts_at, timezone)} · ${formatHourRange(slot.starts_at, slot.ends_at, timezone)}`;
+}
+
+export interface SlotDayGroup {
+  dateKey: string;
+  dayLabel: string;
+  timesLabel: string;
+}
+
+// Booked hours read as one line per day: "Sat 20 Sep · 3–4 pm, 4–5 pm".
+export function groupSlotsByDay(
+  slots: SlotInterval[],
+  timezone: string,
+): SlotDayGroup[] {
+  const groups = new Map<string, string[]>();
+  for (const slot of [...slots].sort((a, b) =>
+    a.starts_at.localeCompare(b.starts_at),
+  )) {
+    const dateKey = toDateKey(slot.starts_at, timezone);
+    const times = groups.get(dateKey) ?? [];
+    times.push(formatHourRange(slot.starts_at, slot.ends_at, timezone));
+    groups.set(dateKey, times);
+  }
+  return [...groups.entries()].map(([dateKey, times]) => ({
+    dateKey,
+    dayLabel: formatDayLabel(`${dateKey}T12:00:00.000Z`, "UTC"),
+    timesLabel: times.join(", "),
+  }));
+}
+
+// The card already names the days above, so a single-day booking lists only its times.
+export function toBookingWhenLines(
+  slots: SlotInterval[],
+  timezone: string,
+): string[] {
+  const groups = groupSlotsByDay(slots, timezone);
+  if (groups.length === 1) return [groups[0]?.timesLabel ?? ""];
+  return groups.map((group) => `${group.dayLabel} · ${group.timesLabel}`);
+}
+
+export function formatDayRange(
+  slots: SlotInterval[],
+  timezone: string,
+): string {
+  const groups = groupSlotsByDay(slots, timezone);
+  const first = groups[0];
+  const last = groups[groups.length - 1];
+  if (!first || !last) return "";
+  return first.dateKey === last.dateKey
+    ? first.dayLabel
+    : `${first.dayLabel} – ${last.dayLabel}`;
 }
 
 export function pickTier(
@@ -149,67 +215,92 @@ export function quoteSession(
   };
 }
 
-function slotsPerSession(hours: number, slotMinutes: number): number {
+// Hours are picked one slot at a time, so a booking needs this many of them.
+export function slotsNeeded(hours: number, slotMinutes: number): number {
   return Math.max(1, Math.round((hours * 60) / slotMinutes));
 }
 
-// A session of N slots fits at a start when every consecutive slot exists, is open and has room.
-export function isSessionBookable(
-  slots: WorkshopSlotData[],
-  startsAt: string,
-  hours: number,
+export function isSlotPickable(
+  slot: WorkshopSlotData,
   participants: number,
-  slotMinutes: number,
 ): boolean {
-  const needed = slotsPerSession(hours, slotMinutes);
-  const startIndex = slots.findIndex((slot) => slot.starts_at === startsAt);
-  if (startIndex === -1) return false;
-  for (let offset = 0; offset < needed; offset += 1) {
-    const slot = slots[startIndex + offset];
-    if (!slot || !slot.is_available || slot.remaining < participants)
-      return false;
-    const previous = slots[startIndex + offset - 1];
-    if (offset > 0 && previous && previous.ends_at !== slot.starts_at)
-      return false;
-  }
-  return true;
+  return slot.is_available && slot.remaining >= participants;
 }
 
-// How many people could still book a session starting at this slot.
-export function sessionCapacity(
-  slots: WorkshopSlotData[],
-  startsAt: string,
-  hours: number,
-  slotMinutes: number,
-): number {
-  const needed = slotsPerSession(hours, slotMinutes);
-  const startIndex = slots.findIndex((slot) => slot.starts_at === startsAt);
-  if (startIndex === -1) return 0;
-  let capacity = Number.POSITIVE_INFINITY;
-  for (let offset = 0; offset < needed; offset += 1) {
-    const slot = slots[startIndex + offset];
-    if (!slot || !slot.is_available) return 0;
-    capacity = Math.min(capacity, slot.remaining);
-  }
-  return Number.isFinite(capacity) ? capacity : 0;
-}
-
-export function bookableStarts(
+export function pickableSlots(
   day: WorkshopDayData | undefined,
-  hours: number,
   participants: number,
-  slotMinutes: number,
 ): WorkshopSlotData[] {
   if (!day || day.is_closed) return [];
-  return day.slots.filter((slot) =>
-    isSessionBookable(
-      day.slots,
-      slot.starts_at,
-      hours,
-      participants,
-      slotMinutes,
-    ),
+  return day.slots.filter((slot) => isSlotPickable(slot, participants));
+}
+
+function dayDelta(later: string, earlier: string): number {
+  const [ly, lm, ld] = later.split("-").map(Number);
+  const [ey, em, ed] = earlier.split("-").map(Number);
+  return Math.round(
+    (Date.UTC(ly ?? 0, (lm ?? 1) - 1, ld ?? 1) -
+      Date.UTC(ey ?? 0, (em ?? 1) - 1, ed ?? 1)) /
+      86_400_000,
   );
+}
+
+// Calendar days covered by a set of day keys, counting both ends.
+export function spanDays(dateKeys: string[]): number {
+  if (dateKeys.length === 0) return 0;
+  const sorted = [...dateKeys].sort();
+  return dayDelta(sorted[sorted.length - 1] ?? "", sorted[0] ?? "") + 1;
+}
+
+// A day stays open while adding it keeps the whole set inside the allowed span.
+export function isDayWithinSpan(
+  dateKey: string,
+  pickedDateKeys: string[],
+  allowedSpanDays: number,
+): boolean {
+  if (pickedDateKeys.length === 0) return true;
+  return spanDays([...pickedDateKeys, dateKey]) <= allowedSpanDays;
+}
+
+export function spanNotice(allowedSpanDays: number): string {
+  return allowedSpanDays === 1
+    ? "Pick every hour on the same day"
+    : `Pick within ${allowedSpanDays} days of your first slot`;
+}
+
+export interface PickedSlotLabel {
+  startsAt: string;
+  label: string;
+}
+
+// Picked hours are always shown and sent in the order they happen.
+export function toPickedSlots(
+  picked: SlotInterval[],
+  timezone: string,
+): PickedSlotLabel[] {
+  return [...picked]
+    .sort((a, b) => a.starts_at.localeCompare(b.starts_at))
+    .map((slot) => ({
+      startsAt: slot.starts_at,
+      label: formatSlotLine(slot, timezone),
+    }));
+}
+
+// Tapping an hour adds or drops it; once the tier is filled, further hours are ignored.
+export function togglePicked(
+  picked: SlotInterval[],
+  slot: SlotInterval,
+  needed: number,
+): SlotInterval[] {
+  if (picked.some((candidate) => candidate.starts_at === slot.starts_at)) {
+    return picked.filter((candidate) => candidate.starts_at !== slot.starts_at);
+  }
+  if (picked.length >= needed) return picked;
+  return [...picked, { starts_at: slot.starts_at, ends_at: slot.ends_at }];
+}
+
+export function formatPickedProgress(picked: number, needed: number): string {
+  return `${picked} of ${needed} ${needed === 1 ? "hour" : "hours"} picked`;
 }
 
 export interface WhatsAppSessionInput {

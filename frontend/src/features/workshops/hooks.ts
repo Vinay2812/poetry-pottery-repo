@@ -67,7 +67,7 @@ export function useAvailability(
 
 export interface BookSessionInput {
   configSlug: string;
-  startsAt: string;
+  slotStarts: string[];
   hours: number;
   participants: number;
   note: string;
@@ -85,7 +85,7 @@ export function useBookWorkshop(onBooked?: () => void) {
           variables: {
             input: {
               config_slug: input.configSlug,
-              starts_at: input.startsAt,
+              slot_starts: input.slotStarts,
               hours: input.hours,
               participants: input.participants,
               note: input.note.trim() || null,
@@ -168,10 +168,10 @@ export function useRescheduleWorkshopBooking() {
   const [mutate, { loading }] = useRescheduleWorkshopBookingMutation();
 
   const reschedule = useCallback(
-    async (id: string, startsAt: string): Promise<boolean> => {
+    async (id: string, slotStarts: string[]): Promise<boolean> => {
       try {
         await mutate({
-          variables: { input: { booking_id: id, starts_at: startsAt } },
+          variables: { input: { booking_id: id, slot_starts: slotStarts } },
           update: (cache, { data }) =>
             writeBooking(cache, id, data?.rescheduleWorkshopBooking),
         });

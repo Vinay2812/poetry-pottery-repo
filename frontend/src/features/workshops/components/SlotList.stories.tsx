@@ -5,11 +5,41 @@ import { atViewport } from "@/lib/storybook/viewports";
 import { SlotList } from "./SlotList";
 
 const SLOTS = [
-  { startsAt: "2026-09-19T07:30:00.000Z", label: "1 pm – 3 pm", wheelsFree: 4 },
-  { startsAt: "2026-09-19T08:30:00.000Z", label: "2 pm – 4 pm", wheelsFree: 3 },
-  { startsAt: "2026-09-19T09:30:00.000Z", label: "3 pm – 5 pm", wheelsFree: 1 },
-  { startsAt: "2026-09-19T10:30:00.000Z", label: "4 pm – 6 pm", wheelsFree: 2 },
-  { startsAt: "2026-09-19T11:30:00.000Z", label: "5 pm – 7 pm", wheelsFree: 4 },
+  {
+    startsAt: "2026-09-19T07:30:00.000Z",
+    label: "1–2 pm",
+    wheelsFree: 4,
+    isDisabled: false,
+    reason: null,
+  },
+  {
+    startsAt: "2026-09-19T08:30:00.000Z",
+    label: "2–3 pm",
+    wheelsFree: 3,
+    isDisabled: false,
+    reason: null,
+  },
+  {
+    startsAt: "2026-09-19T09:30:00.000Z",
+    label: "3–4 pm",
+    wheelsFree: 1,
+    isDisabled: true,
+    reason: "Not enough wheels",
+  },
+  {
+    startsAt: "2026-09-19T10:30:00.000Z",
+    label: "4–5 pm",
+    wheelsFree: 0,
+    isDisabled: true,
+    reason: "Fully booked",
+  },
+  {
+    startsAt: "2026-09-19T11:30:00.000Z",
+    label: "5–6 pm",
+    wheelsFree: 4,
+    isDisabled: false,
+    reason: null,
+  },
 ];
 
 const meta = {
@@ -18,9 +48,9 @@ const meta = {
   parameters: { layout: "padded" },
   args: {
     slots: SLOTS,
-    selectedStart: "2026-09-19T08:30:00.000Z",
-    emptyMessage: "Pick a day to see start times.",
-    onSelectSlot: fn(),
+    selectedStarts: ["2026-09-19T07:30:00.000Z", "2026-09-19T08:30:00.000Z"],
+    emptyMessage: "Pick a day to see its hours.",
+    onToggleSlot: fn(),
   },
 } satisfies Meta<typeof SlotList>;
 
@@ -30,12 +60,12 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const NothingPicked: Story = { args: { selectedStart: null } };
+export const NothingPicked: Story = { args: { selectedStarts: [] } };
 
 export const NoRoom: Story = {
   args: {
     slots: [],
-    emptyMessage: "Nothing long enough is free that day.",
+    emptyMessage: "Nothing is free that day.",
   },
 };
 

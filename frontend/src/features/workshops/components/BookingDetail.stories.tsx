@@ -31,8 +31,8 @@ const meta = {
     closedLabel: null,
     facts: [
       { label: "Session", value: "Open studio, a wheel of your own" },
-      { label: "Date", value: "Sat, 19 Sept, 2026" },
-      { label: "Time", value: "2 pm – 4 pm" },
+      { label: "Sat, 19 Sept", value: "2–3 pm" },
+      { label: "Tue, 22 Sept", value: "3–4 pm" },
       { label: "Duration", value: "2 hours" },
       { label: "You take home", value: "4 pieces, fired and glazed" },
     ],

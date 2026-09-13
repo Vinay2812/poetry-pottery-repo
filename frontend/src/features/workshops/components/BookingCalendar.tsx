@@ -7,8 +7,10 @@ export interface CalendarDay {
   dayNumber: number;
   dayLabel: string;
   wheelsFree: number;
+  pickedCount: number;
   isClosed: boolean;
   isPast: boolean;
+  mutedReason: string | null;
 }
 
 export interface BookingCalendarProps {
@@ -81,18 +83,24 @@ export function BookingCalendar({
               />
             );
           const isSelected = day.dateKey === selectedDate;
-          const isDisabled = day.isClosed || day.isPast || day.wheelsFree <= 0;
+          const isDisabled =
+            day.isClosed ||
+            day.isPast ||
+            day.wheelsFree <= 0 ||
+            day.mutedReason !== null;
+          const description =
+            day.mutedReason ??
+            (isDisabled
+              ? "studio closed"
+              : `${formatWheels(day.wheelsFree)}${day.pickedCount > 0 ? `, ${day.pickedCount} picked` : ""}`);
           return (
             <button
               key={day.dateKey}
               type="button"
-              disabled={isDisabled}
+              disabled={isDisabled && day.pickedCount === 0}
               aria-pressed={isSelected}
-              aria-label={
-                isDisabled
-                  ? `${day.dayLabel}, studio closed`
-                  : `${day.dayLabel}, ${formatWheels(day.wheelsFree)}`
-              }
+              aria-label={`${day.dayLabel}, ${description}`}
+              title={day.mutedReason ?? undefined}
               onClick={() => onSelectDate(day.dateKey)}
               className={cn(
                 "flex aspect-square flex-col items-center justify-center gap-0.5 bg-background transition-colors",
@@ -102,15 +110,29 @@ export function BookingCalendar({
               )}
             >
               <span className="text-sm tnum">{day.dayNumber}</span>
-              {!isDisabled && (
+              {day.pickedCount > 0 ? (
                 <span
+                  aria-hidden="true"
                   className={cn(
-                    "text-[10px] tnum",
-                    isSelected ? "text-white/70" : "text-muted-foreground",
+                    "flex gap-0.5",
+                    isSelected ? "text-white" : "text-primary",
                   )}
                 >
-                  {day.wheelsFree} wheels
+                  {Array.from({ length: day.pickedCount }, (_, mark) => (
+                    <span key={mark} className="size-1 bg-current" />
+                  ))}
                 </span>
+              ) : (
+                !isDisabled && (
+                  <span
+                    className={cn(
+                      "text-[10px] tnum",
+                      isSelected ? "text-white/70" : "text-muted-foreground",
+                    )}
+                  >
+                    {day.wheelsFree} wheels
+                  </span>
+                )
               )}
             </button>
           );

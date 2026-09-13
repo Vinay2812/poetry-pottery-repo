@@ -13,6 +13,10 @@ import {
   type CalendarDay,
 } from "@/features/workshops/components/BookingCalendar";
 import {
+  PickedSlots,
+  type PickedSlot,
+} from "@/features/workshops/components/PickedSlots";
+import {
   SlotList,
   type SlotOption,
 } from "@/features/workshops/components/SlotList";
@@ -25,13 +29,15 @@ export interface RescheduleDialogProps {
   canGoBack: boolean;
   canGoForward: boolean;
   slots: SlotOption[];
-  selectedStart: string | null;
+  pickedSlots: PickedSlot[];
+  slotsNeeded: number;
   isSubmitting: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onSelectDate: (dateKey: string) => void;
-  onSelectSlot: (startsAt: string) => void;
+  onToggleSlot: (startsAt: string) => void;
+  onRemoveSlot: (startsAt: string) => void;
   onConfirm: () => void;
 }
 
@@ -43,13 +49,15 @@ export function RescheduleDialog({
   canGoBack,
   canGoForward,
   slots,
-  selectedStart,
+  pickedSlots,
+  slotsNeeded,
   isSubmitting,
   onOpenChange,
   onPreviousMonth,
   onNextMonth,
   onSelectDate,
-  onSelectSlot,
+  onToggleSlot,
+  onRemoveSlot,
   onConfirm,
 }: RescheduleDialogProps) {
   return (
@@ -60,8 +68,8 @@ export function RescheduleDialog({
             Move this session
           </DialogTitle>
           <DialogDescription>
-            Pick another day and start time. The session keeps its length and
-            the same number of people.
+            Pick the hours again. The session keeps its length and the same
+            number of people.
           </DialogDescription>
         </DialogHeader>
 
@@ -78,13 +86,20 @@ export function RescheduleDialog({
 
         <SlotList
           slots={slots}
-          selectedStart={selectedStart}
+          selectedStarts={pickedSlots.map((slot) => slot.startsAt)}
           emptyMessage={
             selectedDate
-              ? "Nothing long enough is free that day."
-              : "Pick a day to see start times."
+              ? "Nothing is free that day."
+              : "Pick a day to see its hours."
           }
-          onSelectSlot={onSelectSlot}
+          onToggleSlot={onToggleSlot}
+        />
+
+        <PickedSlots
+          slots={pickedSlots}
+          needed={slotsNeeded}
+          emptyMessage="Pick your hours from the calendar."
+          onRemoveSlot={onRemoveSlot}
         />
 
         <DialogFooter className="gap-2 sm:gap-2">
@@ -97,7 +112,7 @@ export function RescheduleDialog({
           </Button>
           <Button
             onClick={onConfirm}
-            disabled={isSubmitting || selectedStart === null}
+            disabled={isSubmitting || pickedSlots.length !== slotsNeeded}
           >
             {isSubmitting ? "Moving…" : "Move session"}
           </Button>

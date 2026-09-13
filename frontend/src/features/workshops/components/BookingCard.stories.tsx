@@ -15,8 +15,8 @@ const meta = {
   ],
   args: {
     href: "/workshops/bookings/WSB7Q2X9M1KD",
-    dateLabel: "Sat, 19 Sept, 2026",
-    timeLabel: "2 pm – 4 pm",
+    dateLabel: "Sat, 19 Sept – Tue, 22 Sept",
+    whenLines: ["Sat, 19 Sept · 2–3 pm", "Tue, 22 Sept · 3–4 pm"],
     hours: 2,
     participants: 2,
     total: 3400,
@@ -31,7 +31,14 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const OnePerson: Story = {
-  args: { hours: 1, participants: 1, total: 950, statusLabel: "Confirmed" },
+  args: {
+    dateLabel: "Sat, 19 Sept",
+    whenLines: ["Sat, 19 Sept · 2–3 pm"],
+    hours: 1,
+    participants: 1,
+    total: 950,
+    statusLabel: "Confirmed",
+  },
 };
 
 export const Cancelled: Story = { args: { statusLabel: "Cancelled" } };

@@ -11,6 +11,7 @@ import { BookingDetail } from "@/features/workshops/components/BookingDetail";
 import type { CalendarDay } from "@/features/workshops/components/BookingCalendar";
 import { CancelBookingDialog } from "@/features/workshops/components/CancelBookingDialog";
 import { RescheduleDialog } from "@/features/workshops/components/RescheduleDialog";
+import type { PickedSlot } from "@/features/workshops/components/PickedSlots";
 import type { SlotOption } from "@/features/workshops/components/SlotList";
 import {
   useAvailability,
@@ -20,16 +21,22 @@ import {
 } from "@/features/workshops/hooks";
 import {
   BOOKING_STEPS,
-  bookableStarts,
   formatDateKey,
+  formatHourRange,
   formatHours,
   formatMonth,
-  formatSessionDate,
-  formatSlotRange,
+  groupSlotsByDay,
   isBookingClosed,
+  isDayWithinSpan,
+  isSlotPickable,
+  pickableSlots,
   type SessionFact,
-  sessionCapacity,
   shiftMonth,
+  type SlotInterval,
+  slotsNeeded,
+  spanNotice,
+  togglePicked,
+  toPickedSlots,
   toBookingStatusLabel,
   toBookingStatusTone,
   toBookingStepIndex,
@@ -64,13 +71,15 @@ export function BookingDetailContainer({
     new Date().toISOString().slice(0, 7),
   );
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [start, setStart] = useState<string | null>(null);
+  const [picked, setPicked] = useState<SlotInterval[]>([]);
 
   const configSlug = booking?.config.slug ?? "";
   const timezone = booking?.config.timezone ?? "Asia/Kolkata";
   const slotMinutes = booking?.config.slot_minutes ?? 60;
+  const spanAllowance = booking?.config.slot_span_days ?? 1;
   const hours = booking?.hours ?? 1;
   const participants = booking?.participants ?? 1;
+  const needed = slotsNeeded(hours, slotMinutes);
 
   const { days } = useAvailability(configSlug, month, !isMoveOpen);
   const dayByKey = useMemo(
@@ -79,62 +88,82 @@ export function BookingDetailContainer({
   );
   const todayKey = toDateKey(new Date(), timezone);
 
+  const slotByStart = useMemo(
+    () =>
+      new Map(
+        days.flatMap((day) => day.slots).map((slot) => [slot.starts_at, slot]),
+      ),
+    [days],
+  );
+  const pickedDateKeys = useMemo(
+    () => picked.map((slot) => toDateKey(slot.starts_at, timezone)),
+    [picked, timezone],
+  );
+
   const weeks = useMemo<(CalendarDay | null)[][]>(
     () =>
       toMonthGrid(month).map((week) =>
         week.map((dateKey) => {
           if (!dateKey) return null;
           const day = dayByKey.get(dateKey);
-          const starts = bookableStarts(day, hours, participants, slotMinutes);
-          const wheelsFree = starts.reduce(
-            (most, slot) =>
-              Math.max(
-                most,
-                sessionCapacity(
-                  day?.slots ?? [],
-                  slot.starts_at,
-                  hours,
-                  slotMinutes,
-                ),
-              ),
+          const wheelsFree = pickableSlots(day, participants).reduce(
+            (most, slot) => Math.max(most, slot.remaining),
             0,
+          );
+          const isWithinSpan = isDayWithinSpan(
+            dateKey,
+            pickedDateKeys,
+            spanAllowance,
           );
           return {
             dateKey,
             dayNumber: Number(dateKey.slice(8)),
             dayLabel: formatDateKey(dateKey),
             wheelsFree,
+            pickedCount: pickedDateKeys.filter((key) => key === dateKey).length,
             isClosed: day?.is_closed ?? true,
             isPast: dateKey < todayKey,
+            mutedReason: isWithinSpan ? null : spanNotice(spanAllowance),
           };
         }),
       ),
-    [dayByKey, hours, month, participants, slotMinutes, todayKey],
+    [dayByKey, month, participants, pickedDateKeys, spanAllowance, todayKey],
   );
 
   const selectedDay = selectedDate ? dayByKey.get(selectedDate) : undefined;
   const slots = useMemo<SlotOption[]>(
     () =>
-      bookableStarts(selectedDay, hours, participants, slotMinutes).map(
-        (slot) => ({
-          startsAt: slot.starts_at,
-          label: formatSlotRange(
-            slot.starts_at,
-            new Date(
-              new Date(slot.starts_at).getTime() + hours * 3_600_000,
-            ).toISOString(),
-            timezone,
-          ),
-          wheelsFree: sessionCapacity(
-            selectedDay?.slots ?? [],
-            slot.starts_at,
-            hours,
-            slotMinutes,
-          ),
-        }),
-      ),
-    [hours, participants, selectedDay, slotMinutes, timezone],
+      (selectedDay?.slots ?? []).map((slot) => ({
+        startsAt: slot.starts_at,
+        label: formatHourRange(slot.starts_at, slot.ends_at, timezone),
+        wheelsFree: slot.remaining,
+        isDisabled: !isSlotPickable(slot, participants),
+        reason: slot.is_available
+          ? "Not enough wheels"
+          : (slot.reason ?? "Not free"),
+      })),
+    [participants, selectedDay, timezone],
   );
+
+  const pickedSlots = useMemo<PickedSlot[]>(
+    () => toPickedSlots(picked, timezone),
+    [picked, timezone],
+  );
+
+  const handleToggleSlot = useCallback(
+    (startsAt: string) => {
+      const slot = slotByStart.get(startsAt);
+      if (!slot) return;
+      setPicked((previous) => togglePicked(previous, slot, needed));
+    },
+    [needed, slotByStart],
+  );
+
+  const handleRemoveSlot = useCallback((startsAt: string) => {
+    setPicked((previous) =>
+      previous.filter((slot) => slot.starts_at !== startsAt),
+    );
+  }, []);
 
   const handleConfirmCancel = useCallback(async () => {
     const done = await cancel(bookingId, reason);
@@ -142,28 +171,34 @@ export function BookingDetailContainer({
   }, [bookingId, cancel, reason]);
 
   const handleConfirmMove = useCallback(async () => {
-    if (!start) return;
-    const done = await reschedule(bookingId, start);
+    if (pickedSlots.length !== needed) return;
+    const done = await reschedule(
+      bookingId,
+      pickedSlots.map((slot) => slot.startsAt),
+    );
     if (done) {
       setIsMoveOpen(false);
-      setStart(null);
+      setPicked([]);
       setSelectedDate(null);
     }
-  }, [bookingId, reschedule, start]);
+  }, [bookingId, needed, pickedSlots, reschedule]);
 
+  // The picker opens on the hours the guest already has, so a move can keep most of them.
   const handleOpenMove = useCallback(() => {
-    if (booking)
-      setMonth(
-        toMonthKey(toDateKey(booking.starts_at, booking.config.timezone)),
-      );
-    setSelectedDate(null);
-    setStart(null);
+    if (!booking) return;
+    setMonth(toMonthKey(toDateKey(booking.starts_at, booking.config.timezone)));
+    setSelectedDate(toDateKey(booking.starts_at, booking.config.timezone));
+    setPicked(
+      booking.slots.map((slot) => ({
+        starts_at: slot.starts_at as string,
+        ends_at: slot.ends_at as string,
+      })),
+    );
     setIsMoveOpen(true);
   }, [booking]);
 
   const handleSelectDate = useCallback((dateKey: string) => {
     setSelectedDate(dateKey);
-    setStart(null);
   }, []);
 
   if (isLoading) {
@@ -214,14 +249,16 @@ export function BookingDetailContainer({
   const closedLabel = closed
     ? `${toBookingStatusLabel(booking.status)}${closedOn ? ` on ${formatDateTime(closedOn)}` : ""}${booking.cancel_reason ? ` · ${booking.cancel_reason}` : ""}`
     : null;
-  const when = `${formatSessionDate(booking.starts_at, timezone)}, ${formatSlotRange(booking.starts_at, booking.ends_at, timezone)}`;
+  const dayGroups = groupSlotsByDay(booking.slots, timezone);
+  const when = dayGroups
+    .map((group) => `${group.dayLabel} ${group.timesLabel}`)
+    .join("; ");
   const facts: SessionFact[] = [
     { label: "Session", value: booking.config.name },
-    { label: "Date", value: formatSessionDate(booking.starts_at, timezone) },
-    {
-      label: "Time",
-      value: formatSlotRange(booking.starts_at, booking.ends_at, timezone),
-    },
+    ...dayGroups.map((group) => ({
+      label: group.dayLabel,
+      value: group.timesLabel,
+    })),
     { label: "Duration", value: formatHours(booking.hours) },
     {
       label: "You take home",
@@ -288,13 +325,15 @@ export function BookingDetailContainer({
         canGoBack={month > toMonthKey(todayKey)}
         canGoForward
         slots={slots}
-        selectedStart={start}
+        pickedSlots={pickedSlots}
+        slotsNeeded={needed}
         isSubmitting={isRescheduling}
         onOpenChange={setIsMoveOpen}
         onPreviousMonth={() => setMonth(shiftMonth(month, -1))}
         onNextMonth={() => setMonth(shiftMonth(month, 1))}
         onSelectDate={handleSelectDate}
-        onSelectSlot={setStart}
+        onToggleSlot={handleToggleSlot}
+        onRemoveSlot={handleRemoveSlot}
         onConfirm={() => void handleConfirmMove()}
       />
     </>

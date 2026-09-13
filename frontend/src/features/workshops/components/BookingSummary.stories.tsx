@@ -15,8 +15,11 @@ const meta = {
     ),
   ],
   args: {
-    dateLabel: "Sat, 19 Sept",
-    timeLabel: "2 pm – 4 pm",
+    pickedSlots: [
+      { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat, 19 Sept · 2–3 pm" },
+      { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue, 22 Sept · 3–4 pm" },
+    ],
+    slotsNeeded: 2,
     hours: 2,
     participants: 2,
     pricePerPerson: 1700,
@@ -27,6 +30,7 @@ const meta = {
     isBooking: false,
     onNoteChange: fn(),
     onBook: fn(),
+    onRemoveSlot: fn(),
   },
 } satisfies Meta<typeof BookingSummary>;
 
@@ -38,13 +42,24 @@ export const Default: Story = {};
 
 export const NothingPicked: Story = {
   args: {
-    dateLabel: null,
-    timeLabel: null,
+    pickedSlots: [],
+    slotsNeeded: 1,
     hours: 1,
     participants: 1,
     pricePerPerson: 950,
     total: 950,
     pieces: 1,
+    canBook: false,
+  },
+};
+
+export const HalfPicked: Story = {
+  args: {
+    pickedSlots: [
+      { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat, 19 Sept · 2–3 pm" },
+    ],
+    slotsNeeded: 3,
+    hours: 3,
     canBook: false,
   },
 };

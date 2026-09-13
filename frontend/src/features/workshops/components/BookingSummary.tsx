@@ -3,11 +3,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatInr, pluralize } from "@/lib/format";
 
+import {
+  PickedSlots,
+  type PickedSlot,
+} from "@/features/workshops/components/PickedSlots";
 import { formatHours, SESSION_NOTE } from "@/features/workshops/types";
 
 export interface BookingSummaryProps {
-  dateLabel: string | null;
-  timeLabel: string | null;
+  pickedSlots: PickedSlot[];
+  slotsNeeded: number;
   hours: number;
   participants: number;
   pricePerPerson: number;
@@ -18,11 +22,12 @@ export interface BookingSummaryProps {
   isBooking: boolean;
   onNoteChange: (note: string) => void;
   onBook: () => void;
+  onRemoveSlot: (startsAt: string) => void;
 }
 
 export function BookingSummary({
-  dateLabel,
-  timeLabel,
+  pickedSlots,
+  slotsNeeded,
   hours,
   participants,
   pricePerPerson,
@@ -33,10 +38,9 @@ export function BookingSummary({
   isBooking,
   onNoteChange,
   onBook,
+  onRemoveSlot,
 }: BookingSummaryProps) {
   const rows = [
-    { label: "Date", value: dateLabel ?? "Pick a day" },
-    { label: "Time", value: timeLabel ?? "Pick a start time" },
     { label: "Duration", value: formatHours(hours) },
     { label: "People", value: pluralize(participants, "person", "people") },
     { label: "Per person", value: formatInr(pricePerPerson) },
@@ -46,6 +50,13 @@ export function BookingSummary({
 
   return (
     <div className="flex flex-col gap-5 border border-ash bg-white p-5 md:p-6">
+      <PickedSlots
+        slots={pickedSlots}
+        needed={slotsNeeded}
+        emptyMessage="Pick your hours from the calendar."
+        onRemoveSlot={onRemoveSlot}
+      />
+
       <dl className="border-t border-ash text-sm">
         {rows.map((row) => (
           <div
