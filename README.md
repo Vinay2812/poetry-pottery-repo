@@ -27,7 +27,8 @@ cd api
 cp .env.example .env            # fill in Clerk keys (SMTP and R2 are optional)
 pnpm install
 pnpm migration:apply
-pnpm db:seed                    # catalogue, events, workshop config, content, coupons
+pnpm db:seed                    # site settings, public pages, studio config
+pnpm import:legacy              # real catalogue from the old production DB (LEGACY_DATABASE_URL in .env)
 pnpm search:reindex             # embeddings for search (downloads the model on first run)
 pnpm dev                        # http://localhost:6060/graphql
 
@@ -44,26 +45,28 @@ pnpm install
 
 ## Daily commands
 
-| Where       | Command                                                         | What                                                       |
-| ----------- | --------------------------------------------------------------- | ---------------------------------------------------------- |
-| `api/`      | `pnpm dev`                                                      | API with watch mode                                        |
-| `api/`      | `pnpm schema:emit`                                              | Regenerate `schema.gql` (no DB needed)                     |
-| `api/`      | `pnpm migration:create`                                         | Create a migration from schema changes                     |
-| `api/`      | `pnpm db:seed` / `pnpm db:reset`                                | Seed demo data / drop, migrate, reseed and reindex         |
-| `api/`      | `pnpm search:reindex`                                           | Recompute product and event embeddings                     |
-| `api/`      | `pnpm make-admin you@example.com`                               | Promote a signed-in user to admin                          |
-| `api/`      | `pnpm db:studio`                                                | Prisma Studio                                              |
-| `api/`      | `pnpm test` / `pnpm build`                                      | Vitest / production build                                  |
-| `frontend/` | `pnpm dev`                                                      | Next dev server on 3030                                    |
-| `frontend/` | `pnpm codegen`                                                  | Regenerate typed hooks (running API or schema file)        |
-| `frontend/` | `pnpm storybook`                                                | Storybook on 6006                                          |
-| `frontend/` | `pnpm test` / `pnpm tsc`                                        | Vitest / typecheck                                         |
-| `frontend/` | `pnpm analyze`                                                  | Bundle-size treemap report                                 |
-| `frontend/` | `pnpm lighthouse`                                               | Lighthouse CI audit → `.lighthouse/`                       |
-| `frontend/` | `pnpm knip`                                                     | Find unused files/exports/deps                             |
-| `infra/`    | `docker compose -f docker/docker-compose.db.yml up -d`          | Postgres + Redis only                                      |
-| `infra/`    | `docker compose -f docker/docker-compose.api.yml up -d --build` | Full backend stack (API container included)                |
-| root        | commits                                                         | husky runs lint-staged + commitlint (conventional commits) |
+| Where       | Command                                                         | What                                                            |
+| ----------- | --------------------------------------------------------------- | --------------------------------------------------------------- |
+| `api/`      | `pnpm dev`                                                      | API with watch mode                                             |
+| `api/`      | `pnpm schema:emit`                                              | Regenerate `schema.gql` (no DB needed)                          |
+| `api/`      | `pnpm migration:create`                                         | Create a migration from schema changes                          |
+| `api/`      | `pnpm db:seed` / `pnpm db:reset`                                | Seed site scaffolding / drop, migrate and reseed                |
+| `api/`      | `pnpm import:legacy` / `pnpm db:reset:legacy`                   | Import the old production data (see docs/data/legacy-import.md) |
+| `api/`      | `pnpm db:seed:demo`                                             | Optional demo catalogue for local play                          |
+| `api/`      | `pnpm search:reindex`                                           | Recompute product and event embeddings                          |
+| `api/`      | `pnpm make-admin you@example.com`                               | Promote a signed-in user to admin                               |
+| `api/`      | `pnpm db:studio`                                                | Prisma Studio                                                   |
+| `api/`      | `pnpm test` / `pnpm build`                                      | Vitest / production build                                       |
+| `frontend/` | `pnpm dev`                                                      | Next dev server on 3030                                         |
+| `frontend/` | `pnpm codegen`                                                  | Regenerate typed hooks (running API or schema file)             |
+| `frontend/` | `pnpm storybook`                                                | Storybook on 6006                                               |
+| `frontend/` | `pnpm test` / `pnpm tsc`                                        | Vitest / typecheck                                              |
+| `frontend/` | `pnpm analyze`                                                  | Bundle-size treemap report                                      |
+| `frontend/` | `pnpm lighthouse`                                               | Lighthouse CI audit → `.lighthouse/`                            |
+| `frontend/` | `pnpm knip`                                                     | Find unused files/exports/deps                                  |
+| `infra/`    | `docker compose -f docker/docker-compose.db.yml up -d`          | Postgres + Redis only                                           |
+| `infra/`    | `docker compose -f docker/docker-compose.api.yml up -d --build` | Full backend stack (API container included)                     |
+| root        | commits                                                         | husky runs lint-staged + commitlint (conventional commits)      |
 
 ## Schema workflow
 

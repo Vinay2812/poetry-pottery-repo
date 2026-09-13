@@ -8,7 +8,8 @@ NestJS 11 + Apollo (code-first GraphQL) + Prisma 7 on Postgres 17 with pgvector.
 cp .env.example .env      # Clerk keys required; SMTP and R2 optional
 pnpm install
 pnpm migration:apply
-pnpm db:seed
+pnpm db:seed              # settings, pages, studio config
+pnpm import:legacy        # real catalogue (needs LEGACY_DATABASE_URL); or pnpm db:seed:demo
 pnpm dev                  # http://localhost:6060/graphql
 ```
 
