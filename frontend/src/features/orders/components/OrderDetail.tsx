@@ -148,8 +148,8 @@ export function OrderDetail({
           <section className="flex flex-col gap-4">
             <h3 className={SECTION_HEADING}>Delivering to</h3>
             <address className="text-sm leading-relaxed not-italic">
-              {addressLines.map((line) => (
-                <span key={line} className="block">
+              {addressLines.map((line, index) => (
+                <span key={index} className="block">
                   {line}
                 </span>
               ))}

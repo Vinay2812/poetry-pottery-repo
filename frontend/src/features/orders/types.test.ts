@@ -24,6 +24,19 @@ describe("order status helpers", () => {
     expect(isClosed(OrderStatus.Cancelled)).toBe(true);
     expect(isClosed(OrderStatus.Paid)).toBe(false);
   });
+
+  it("freezes a cancelled order at the last step it actually reached", () => {
+    const dates = {
+      PENDING: "12 Sept",
+      CONFIRMED: "13 Sept",
+      PAID: "14 Sept",
+      SHIPPED: null,
+      DELIVERED: null,
+    };
+    expect(toStepIndex(OrderStatus.Cancelled, dates)).toBe(2);
+    expect(toStepIndex(OrderStatus.Refunded, dates)).toBe(2);
+    expect(toStepIndex(OrderStatus.Shipped, dates)).toBe(3);
+  });
 });
 
 describe("toWhatsAppOrderMessage", () => {

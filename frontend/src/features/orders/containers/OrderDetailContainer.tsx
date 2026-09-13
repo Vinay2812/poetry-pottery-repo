@@ -121,7 +121,7 @@ export function OrderDetailContainer({
           description: step.description,
           date: dates[step.key] ?? null,
         }))}
-        currentStepIndex={toStepIndex(order.status)}
+        currentStepIndex={toStepIndex(order.status, dates)}
         isClosed={closed}
         closedLabel={closedLabel}
         items={order.items.map((item) => ({
