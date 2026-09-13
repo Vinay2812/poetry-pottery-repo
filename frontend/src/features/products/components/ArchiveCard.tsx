@@ -27,7 +27,7 @@ export function ArchiveCard({
   isPriority = false,
 }: ArchiveCardProps) {
   return (
-    <article className="flex flex-col gap-2.5">
+    <article className="group flex flex-col gap-2.5">
       <Link
         href={href}
         className="relative aspect-square overflow-hidden bg-white outline-none focus-visible:ring-1 focus-visible:ring-ink"
@@ -39,7 +39,7 @@ export function ArchiveCard({
             fill
             priority={isPriority}
             sizes={SIZES}
-            className="object-cover opacity-80 transition-opacity duration-500 ease-out hover:opacity-100"
+            className="photo-zoom object-cover opacity-80 transition-opacity duration-500 ease-out group-hover:opacity-100"
           />
         ) : (
           <PlaceholderImage kind={toPotteryIconKind(name)} />

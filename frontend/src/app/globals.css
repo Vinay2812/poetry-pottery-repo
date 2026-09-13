@@ -256,6 +256,20 @@
     animation-delay: var(--reveal-delay, 0ms);
   }
 
+  /* Slower than anything else on the page: the camera breathing, not a control.
+     Scales the photo inside the slide, so a card carousel keeps its own transform. */
+  .photo-zoom {
+    transition:
+      opacity 500ms ease-out,
+      transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .group:hover .photo-zoom,
+  .group:focus-within .photo-zoom {
+    transform: scale(1.02);
+    will-change: transform;
+  }
+
   .animate-draw-line {
     stroke-dasharray: var(--draw-length, 100);
     stroke-dashoffset: var(--draw-length, 100);

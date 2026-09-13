@@ -97,7 +97,7 @@ export function ProductCard({
                     priority={isPriority && index === 0}
                     sizes={SIZES}
                     className={cn(
-                      "object-cover transition-opacity duration-500 ease-out",
+                      "photo-zoom object-cover transition-opacity duration-500 ease-out",
                       index === 0 &&
                         isHoverFade &&
                         "group-focus-within:opacity-0 group-hover:opacity-0",
@@ -110,7 +110,7 @@ export function ProductCard({
                       fill
                       sizes={SIZES}
                       className={cn(
-                        "object-cover opacity-0 transition-opacity duration-500 ease-out",
+                        "photo-zoom object-cover opacity-0 transition-opacity duration-500 ease-out",
                         isHoverFade &&
                           "group-focus-within:opacity-100 group-hover:opacity-100",
                       )}
