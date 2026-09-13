@@ -13,6 +13,7 @@ const containing = (value: Record<string, unknown>): unknown =>
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  $executeRaw: vi.fn().mockResolvedValue(1),
   address: { findFirst: vi.fn() },
   coupon: { findUnique: vi.fn(), updateMany: vi.fn() },
   product: { update: vi.fn(), updateMany: vi.fn() },
@@ -270,7 +271,7 @@ describe("OrdersService", () => {
       });
 
       await expect(service.place(1, { address_id: 5 })).rejects.toThrow(
-        "Your cart is empty",
+        "no longer available",
       );
     });
   });

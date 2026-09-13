@@ -38,6 +38,7 @@ prisma/
 
 - Identity comes from the Clerk context (`@CurrentUser()`), never from inputs. Guard with `@AuthRequired()` / `@AdminRequired()`.
 - Money is integer rupees. Stock and seats change only inside transactions with conditional updates.
+- Placing an order pins every piece in the cart with `SELECT … FOR UPDATE` before quoting it, so the prices, options and availability written onto the order are the ones the stock take agrees with.
 - Adding to the cart reads the existing line before rewriting it, so it runs under a per-guest, per-piece advisory lock.
 - Open-studio bookings hold one `WorkshopBookingSlot` per chosen hour. The hours need not touch and may fall on different days, as long as the earliest and latest sit within `WorkshopConfig.slot_span_days` calendar days in the studio timezone. `starts_at`/`ends_at` on the booking are the derived first start and last end. Every hour is validated and its capacity checked inside one transaction under a per-studio advisory lock.
 - Anything slow or external (email, embeddings) is a queue job in `src/queue/jobs.ts`; consumers validate payloads with zod.

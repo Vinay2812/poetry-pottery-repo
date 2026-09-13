@@ -7,10 +7,14 @@ import {
   type Harness,
   makeProduct,
   makeUsers,
+  openWriter,
   race,
   resetData,
   type TestUser,
 } from "./harness";
+
+const settle = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms));
 
 const RACERS = 20;
 
@@ -64,8 +68,9 @@ describe("order placement under concurrency", () => {
 
     expect(outcome.wins).toHaveLength(1);
     expect(outcome.errors).toHaveLength(RACERS - 1);
+    // The losers are told which piece went, not that their cart is empty.
     expect(
-      outcome.errors.every((message) => message.includes("sold out")),
+      outcome.errors.every((message) => message.includes("Sold out")),
     ).toBe(true);
     const after = await harness.prisma.product.findUniqueOrThrow({
       where: { id: product.id },
@@ -178,5 +183,76 @@ describe("order placement under concurrency", () => {
     expect(after.sales_count).toBe(
       row.status === OrderStatus.CANCELLED ? 0 : 1,
     );
+  });
+
+  it("prices an order from the shelf as it stands when the take commits", async () => {
+    const product = await makeProduct(harness.prisma, {
+      stock: 5,
+      price: 1000,
+    });
+    const [user] = await makeUsers(harness.prisma, 1);
+    if (!user) throw new Error("no user");
+    await fillCarts([user], product.id, 1);
+
+    // The writer holds the row while checkout runs, so the quote cannot read a price
+    // that is already on its way out.
+    const writer = await openWriter();
+    await writer.query("BEGIN");
+    await writer.query("UPDATE products SET price = $1 WHERE id = $2", [
+      4000,
+      product.id,
+    ]);
+    const placing = harness.orders.place(user.id, {
+      address_id: user.address_id,
+    });
+    void placing.catch(() => undefined);
+    await settle(300);
+    await writer.query("COMMIT");
+    await writer.end();
+
+    const order = await placing;
+    expect(order.items[0]?.unit_price).toBe(4000);
+    expect(order.items[0]?.line_total).toBe(4000);
+    expect(order.subtotal).toBe(4000);
+    expect(order.total).toBe(
+      order.subtotal - order.discount + order.shipping_fee,
+    );
+    const line = await harness.prisma.orderItem.findFirstOrThrow({
+      where: { order_id: order.id },
+    });
+    expect(line.unit_price).toBe(4000);
+  });
+
+  it("refuses an order when a piece is retired while checkout is in flight", async () => {
+    const staying = await makeProduct(harness.prisma, { stock: 5 });
+    const retiring = await makeProduct(harness.prisma, { stock: 5 });
+    const [user] = await makeUsers(harness.prisma, 1);
+    if (!user) throw new Error("no user");
+    await harness.prisma.cartItem.createMany({
+      data: [
+        { user_id: user.id, product_id: staying.id, quantity: 1 },
+        { user_id: user.id, product_id: retiring.id, quantity: 1 },
+      ],
+    });
+
+    const writer = await openWriter();
+    await writer.query("BEGIN");
+    await writer.query("UPDATE products SET is_active = false WHERE id = $1", [
+      retiring.id,
+    ]);
+    const placing = harness.orders.place(user.id, {
+      address_id: user.address_id,
+    });
+    void placing.catch(() => undefined);
+    await settle(300);
+    await writer.query("COMMIT");
+    await writer.end();
+
+    await expect(placing).rejects.toThrow("no longer available");
+    expect(await harness.prisma.order.count()).toBe(0);
+    const after = await harness.prisma.product.findUniqueOrThrow({
+      where: { id: staying.id },
+    });
+    expect(after.stock).toBe(5);
   });
 });

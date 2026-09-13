@@ -1,5 +1,6 @@
 import { Test, type TestingModule } from "@nestjs/testing";
 import { EventStatus, type Prisma } from "@prisma/client";
+import { Client } from "pg";
 
 import { CartService } from "@/features/cart/cart.service";
 import { EventsService } from "@/features/events/events.service";
@@ -256,6 +257,13 @@ export function studioHour(
     config.opening_minutes + hourIndex * config.slot_minutes,
     config.timezone,
   );
+}
+
+// A second connection, so a test can hold a row lock while a service call runs.
+export async function openWriter(): Promise<Client> {
+  const client = new Client({ connectionString: process.env.DATABASE_URL });
+  await client.connect();
+  return client;
 }
 
 export interface RaceOutcome<T> {

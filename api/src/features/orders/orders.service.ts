@@ -152,36 +152,48 @@ export class OrdersService {
     };
   }
 
+  // Pins every piece in the cart for the rest of the transaction, so a price, an option or the
+  // active flag cannot move between the quote and the decrement. Ordered by id so two carts
+  // holding the same pieces can never deadlock against each other.
+  private async lockCartProducts(userId: number): Promise<void> {
+    await this.prisma.$executeRaw`
+      SELECT id FROM products
+      WHERE id IN (SELECT product_id FROM cart_items WHERE user_id = ${userId})
+      ORDER BY id
+      FOR UPDATE`;
+  }
+
   async place(userId: number, input: PlaceOrderInput): Promise<Order> {
-    const [address, cart] = await Promise.all([
-      this.prisma.address.findFirst({
-        where: { id: input.address_id, user_id: userId },
-      }),
-      this.cart.get(userId),
-    ]);
-    // One cart snapshot feeds both the totals and the order lines.
-    const quote = await this.quote(userId, input.coupon_code, cart);
-    if (!address) {
-      throw new NotFoundException("Choose a delivery address");
-    }
-    const available = cart.items.filter((item) => item.is_available);
-    if (available.length === 0) {
-      throw new BadRequestException("Your cart is empty");
-    }
-    if (quote.problems.length > 0) {
-      throw new BadRequestException(
-        `Some pieces are no longer available: ${quote.problems.join(", ")}`,
-      );
-    }
-    const code = normaliseCouponCode(input.coupon_code);
-    if (code && quote.coupon_code === null) {
-      throw new BadRequestException(
-        quote.coupon_message ?? "That code is not valid",
-      );
-    }
     const note = input.customer_note?.trim().slice(0, 500) || null;
 
     const order = await this.prisma.withTransaction(async () => {
+      await this.lockCartProducts(userId);
+      const address = await this.prisma.address.findFirst({
+        where: { id: input.address_id, user_id: userId },
+      });
+      const cart = await this.cart.get(userId);
+      // One cart snapshot feeds both the totals and the order lines.
+      const quote = await this.quote(userId, input.coupon_code, cart);
+      if (!address) {
+        throw new NotFoundException("Choose a delivery address");
+      }
+      const available = cart.items.filter((item) => item.is_available);
+      // Named pieces first: a cart whose only line just sold out is not an empty cart.
+      if (quote.problems.length > 0) {
+        throw new BadRequestException(
+          `Some pieces are no longer available: ${quote.problems.join(", ")}`,
+        );
+      }
+      if (available.length === 0) {
+        throw new BadRequestException("Your cart is empty");
+      }
+      const code = normaliseCouponCode(input.coupon_code);
+      if (code && quote.coupon_code === null) {
+        throw new BadRequestException(
+          quote.coupon_message ?? "That code is not valid",
+        );
+      }
+
       for (const item of available) {
         if (item.product.is_customizable) {
           await this.prisma.product.update({
