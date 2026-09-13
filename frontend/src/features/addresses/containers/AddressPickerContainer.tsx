@@ -12,7 +12,7 @@ import type { AddressFormValues } from "@/lib/validations/address";
 
 export interface AddressPickerContainerProps {
   selectedId: number | null;
-  onSelect: (id: number) => void;
+  onSelect: (id: number | null) => void;
 }
 
 export function AddressPickerContainer({
@@ -37,9 +37,10 @@ export function AddressPickerContainer({
   const preferredId = toPreferredAddressId(addresses);
   const hasSelection = addresses.some((address) => address.id === selectedId);
 
-  // The default (or the only address) is picked for you, and a deleted one falls back the same way.
+  // The default (or the only address) is picked for you; deleting the selected one clears it
+  // rather than leaving checkout pointing at a row that no longer exists.
   useEffect(() => {
-    if (!hasSelection && preferredId !== null) {
+    if (!hasSelection) {
       onSelect(preferredId);
     }
   }, [hasSelection, onSelect, preferredId]);

@@ -81,7 +81,8 @@ export function toRegistration(
   };
 }
 
-// Upcoming means published and not yet started; past means finished or marked complete.
+// Past means finished or marked complete; upcoming is the exact complement, so an evening
+// that is running right now still shows on the upcoming tab rather than falling out of both.
 export function eventWhenWhere(
   when: EventWhen,
   now: Date,
@@ -92,7 +93,7 @@ export function eventWhenWhere(
       OR: [{ status: EventStatus.COMPLETED }, { ends_at: { lt: now } }],
     };
   }
-  return { status: EventStatus.PUBLISHED, starts_at: { gte: now } };
+  return { status: EventStatus.PUBLISHED, ends_at: { gte: now } };
 }
 
 @Injectable()

@@ -187,8 +187,33 @@ describe("OrdersService", () => {
 
       expect(quote.problems).toEqual(["Vase: Sold out"]);
       expect(quote.discount).toBe(0);
+      expect(quote.coupon_code).toBeNull();
       expect(quote.coupon_message).toBe("That code is not valid");
       expect(quote.subtotal).toBe(1700);
+    });
+
+    it("keeps a valid code that rounds down to nothing applied", async () => {
+      cartMock.get.mockResolvedValue({
+        items: [cartItem({ line_total: 90, quantity: 1 })],
+      });
+      prismaMock.coupon.findUnique.mockResolvedValue({
+        id: 3,
+        code: "TINY",
+        kind: "PERCENT",
+        value: 1,
+        min_order: 0,
+        max_uses: null,
+        uses_count: 0,
+        starts_at: null,
+        expires_at: null,
+        is_active: true,
+      });
+
+      const quote = await service.quote(1, "tiny");
+
+      expect(quote.discount).toBe(0);
+      expect(quote.coupon_code).toBe("TINY");
+      expect(quote.coupon_message).toBe("TINY applied");
     });
   });
 

@@ -41,6 +41,12 @@ function availability(
   const { product } = row;
   if (!product.is_active)
     return { is_available: false, reason: "No longer available" };
+  if (product.collection?.starts_at && product.collection.starts_at > now) {
+    return {
+      is_available: false,
+      reason: "This collection has not opened yet",
+    };
+  }
   if (product.collection?.ends_at && product.collection.ends_at < now) {
     return { is_available: false, reason: "This collection has ended" };
   }

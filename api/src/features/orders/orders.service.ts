@@ -121,12 +121,14 @@ export class OrdersService {
 
     const code = normaliseCouponCode(couponCode);
     let discount = 0;
+    let applied_code: string | null = null;
     let coupon_message: string | null = null;
     if (code) {
       const coupon = await this.prisma.coupon.findUnique({ where: { code } });
       const check = checkCoupon(coupon, subtotal);
       if (check.ok) {
         discount = check.discount;
+        applied_code = code;
         coupon_message = `${code} applied`;
       } else {
         coupon_message = check.message;
@@ -143,7 +145,8 @@ export class OrdersService {
       shipping_fee,
       total: subtotal - discount + shipping_fee,
       item_count: available.reduce((sum, item) => sum + item.quantity, 0),
-      coupon_code: discount > 0 ? code : null,
+      // A valid code that happens to be worth nothing is still applied, not rejected.
+      coupon_code: applied_code,
       coupon_message,
       problems,
     };
@@ -171,7 +174,7 @@ export class OrdersService {
       );
     }
     const code = normaliseCouponCode(input.coupon_code);
-    if (code && quote.discount === 0) {
+    if (code && quote.coupon_code === null) {
       throw new BadRequestException(
         quote.coupon_message ?? "That code is not valid",
       );
