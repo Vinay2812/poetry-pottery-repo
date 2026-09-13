@@ -4,6 +4,8 @@ import useEmblaCarousel from "embla-carousel-react";
 import Link from "next/link";
 import { Children, useCallback, useEffect, useRef, useState } from "react";
 
+import { toRevealDelay } from "@/components/motion/stagger";
+
 export interface ProductCarouselProps {
   title: string;
   eyebrow?: string;
@@ -70,7 +72,7 @@ export function ProductCarousel({
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex items-baseline justify-between gap-4">
+      <div className="reveal-item flex items-baseline justify-between gap-4">
         <div className="flex flex-col gap-2">
           {eyebrow && (
             <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
@@ -119,8 +121,11 @@ export function ProductCarousel({
           className="-mx-4 overflow-hidden px-4 md:mx-0 md:px-0"
         >
           <div className="flex gap-2">
-            {Children.map(children, (child) => (
-              <div className="min-w-0 flex-[0_0_calc(45.45%-0.28rem)] sm:flex-[0_0_calc(33.333%-0.34rem)] lg:flex-[0_0_calc(25%-0.375rem)]">
+            {Children.map(children, (child, index) => (
+              <div
+                style={toRevealDelay(index + 1)}
+                className="reveal-item min-w-0 flex-[0_0_calc(45.45%-0.28rem)] sm:flex-[0_0_calc(33.333%-0.34rem)] lg:flex-[0_0_calc(25%-0.375rem)]"
+              >
                 {child}
               </div>
             ))}

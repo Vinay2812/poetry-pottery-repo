@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { atViewport } from "@/lib/storybook/viewports";
 import { Reveal } from "./Reveal";
+import { toRevealDelay } from "./stagger";
 
 const meta = {
   title: "Motion/Reveal",
@@ -23,6 +24,18 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Delayed: Story = { args: { delay: 240 } };
+
+export const Group: Story = {
+  args: {
+    isGroup: true,
+    className: "grid grid-cols-4 gap-3",
+    children: Array.from({ length: 8 }, (_, index) => (
+      <div key={index} className="reveal-item" style={toRevealDelay(index)}>
+        <div className="aspect-square bg-ash" />
+      </div>
+    )),
+  },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

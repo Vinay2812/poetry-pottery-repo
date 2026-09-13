@@ -9,6 +9,7 @@ import {
 import { formatInr } from "@/lib/format";
 
 import { KilnLabels, type KilnLabel } from "@/components/motion/KilnLabels";
+import { Reveal } from "@/components/motion/Reveal";
 
 import { useAddToCart } from "@/features/cart/hooks";
 import { ArchiveNotice } from "@/features/products/components/ArchiveNotice";
@@ -321,11 +322,13 @@ export function ProductDetailContainer({
       </div>
 
       {related.length > 0 && (
-        <ProductCarousel title="From the same shelf" viewAllHref="/products">
-          {related.map((item) => (
-            <ProductCardContainer key={item.id} product={item} />
-          ))}
-        </ProductCarousel>
+        <Reveal isGroup>
+          <ProductCarousel title="From the same shelf" viewAllHref="/products">
+            {related.map((item) => (
+              <ProductCardContainer key={item.id} product={item} />
+            ))}
+          </ProductCarousel>
+        </Reveal>
       )}
 
       <StickyBuyBar

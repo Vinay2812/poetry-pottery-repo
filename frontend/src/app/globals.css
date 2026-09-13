@@ -221,6 +221,12 @@
     animation-delay: var(--reveal-delay, 0ms);
   }
 
+  /* One observer per grid: the wrapper flips data-revealed, cards carry the delay. */
+  [data-revealed] .reveal-item {
+    animation: fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+
   .animate-draw-line {
     stroke-dasharray: var(--draw-length, 100);
     stroke-dashoffset: var(--draw-length, 100);

@@ -76,7 +76,7 @@ export default async function HomePage() {
 
       {featured.length > 0 && (
         <div className="border-t border-ash py-16 md:py-24">
-          <Reveal>
+          <Reveal isGroup>
             <ProductCarousel
               title="Pieces on the shelf"
               viewAllHref="/products"
