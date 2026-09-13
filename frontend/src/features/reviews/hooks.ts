@@ -1,23 +1,10 @@
 "use client";
 
-import type { ApolloCache } from "@apollo/client";
-import { useAuth } from "@clerk/nextjs";
-import { useCallback, useState } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
+import { useCallback, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import {
-  EventReviewEligibilityDocument,
-  type EventReviewEligibilityQuery,
-  type EventReviewEligibilityQueryVariables,
-  EventReviewsDocument,
-  type EventReviewsQuery,
-  type EventReviewsQueryVariables,
-  ProductReviewEligibilityDocument,
-  type ProductReviewEligibilityQuery,
-  type ProductReviewEligibilityQueryVariables,
-  ProductReviewsDocument,
-  type ProductReviewsQuery,
-  type ProductReviewsQueryVariables,
   useCreateEventReviewMutation,
   useCreateProductReviewMutation,
   useCreateReviewImageUploadMutation,
@@ -34,23 +21,14 @@ import type { ReviewFormValues } from "@/lib/validations/review";
 import {
   checkReviewDimensions,
   checkReviewFile,
-  type ReviewData,
+  type ReviewAction,
   type ReviewEligibilityData,
-  type ReviewsResultData,
+  type ReviewSubject,
   REVIEWS_PAGE_SIZE,
+  toDraftReview,
   toReviewInput,
-  withReviewAdded,
-  withReviewRemoved,
-  withReviewUpdated,
+  toSubjectHref,
 } from "./types";
-
-export type ReviewSubjectKind = "product" | "event";
-
-export interface ReviewSubject {
-  kind: ReviewSubjectKind;
-  id: number;
-  slug: string;
-}
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong";
@@ -120,97 +98,7 @@ function useReviewPhotoUpload() {
   return { upload, isUploading };
 }
 
-function listVariables(subject: ReviewSubject) {
-  return subject.kind === "product"
-    ? { product_id: subject.id, page: 1, limit: REVIEWS_PAGE_SIZE }
-    : { event_id: subject.id, page: 1, limit: REVIEWS_PAGE_SIZE };
-}
-
-function updateList(
-  cache: ApolloCache,
-  subject: ReviewSubject,
-  change: (result: ReviewsResultData) => ReviewsResultData,
-): void {
-  if (subject.kind === "product") {
-    cache.updateQuery<ProductReviewsQuery, ProductReviewsQueryVariables>(
-      {
-        query: ProductReviewsDocument,
-        variables: listVariables(subject) as ProductReviewsQueryVariables,
-      },
-      (previous) =>
-        previous
-          ? { productReviews: change(previous.productReviews) }
-          : previous,
-    );
-    return;
-  }
-  cache.updateQuery<EventReviewsQuery, EventReviewsQueryVariables>(
-    {
-      query: EventReviewsDocument,
-      variables: listVariables(subject) as EventReviewsQueryVariables,
-    },
-    (previous) =>
-      previous ? { eventReviews: change(previous.eventReviews) } : previous,
-  );
-}
-
-function updateEligibility(
-  cache: ApolloCache,
-  subject: ReviewSubject,
-  review: ReviewData | null,
-): void {
-  if (subject.kind === "product") {
-    cache.updateQuery<
-      ProductReviewEligibilityQuery,
-      ProductReviewEligibilityQueryVariables
-    >(
-      {
-        query: ProductReviewEligibilityDocument,
-        variables: { slug: subject.slug },
-      },
-      (previous) =>
-        previous
-          ? {
-              product: {
-                ...previous.product,
-                review_eligibility: {
-                  ...previous.product.review_eligibility,
-                  can_review: true,
-                  reason: null,
-                  my_review: review,
-                },
-              },
-            }
-          : previous,
-    );
-    return;
-  }
-  cache.updateQuery<
-    EventReviewEligibilityQuery,
-    EventReviewEligibilityQueryVariables
-  >(
-    {
-      query: EventReviewEligibilityDocument,
-      variables: { slug: subject.slug },
-    },
-    (previous) =>
-      previous
-        ? {
-            event: {
-              ...previous.event,
-              review_eligibility: {
-                ...previous.event.review_eligibility,
-                can_review: true,
-                reason: null,
-                my_review: review,
-              },
-            },
-          }
-        : previous,
-  );
-}
-
-// One page of reviews at a time, with the rest appended onto the same cache entry.
+// One page of reviews at a time, with the rest appended onto the same query.
 export function useReviewList(subject: ReviewSubject) {
   const isProduct = subject.kind === "product";
   const productQuery = useProductReviewsQuery({
@@ -263,10 +151,7 @@ export function useReviewList(subject: ReviewSubject) {
   }, [eventQuery, isProduct, loading, pageInfo, productQuery]);
 
   return {
-    items: result?.items ?? [],
-    summary: result?.summary ?? null,
-    hasMore: pageInfo?.has_more ?? false,
-    total: pageInfo?.total ?? 0,
+    result: result ?? null,
     isLoading: loading && !result,
     isLoadingMore: loading && Boolean(result),
     loadMore,
@@ -301,129 +186,125 @@ function useReviewEligibility(subject: ReviewSubject) {
   };
 }
 
-function useReviewMutations(subject: ReviewSubject) {
-  const [createProduct, { loading: isCreatingProduct }] =
-    useCreateProductReviewMutation();
-  const [createEvent, { loading: isCreatingEvent }] =
-    useCreateEventReviewMutation();
-  const [updateMutation, { loading: isUpdating }] = useUpdateReviewMutation();
-  const [removeMutation, { loading: isRemoving }] = useDeleteReviewMutation();
+// A reply only carries the review itself, never the counts, so the refetched
+// answers are the new baseline. Only the panel has the list mounted.
+function toRefetchNames(subject: ReviewSubject, hasList: boolean): string[] {
+  const isProduct = subject.kind === "product";
+  const eligibility = isProduct
+    ? "ProductReviewEligibility"
+    : "EventReviewEligibility";
+  if (!hasList) return [eligibility];
+  return [isProduct ? "ProductReviews" : "EventReviews", eligibility];
+}
 
-  const create = useCallback(
-    async (values: ReviewFormValues): Promise<ReviewData | null> => {
+function useReviewMutations(subject: ReviewSubject, hasList: boolean) {
+  const [createProduct] = useCreateProductReviewMutation();
+  const [createEvent] = useCreateEventReviewMutation();
+  const [updateMutation] = useUpdateReviewMutation();
+  const [removeMutation] = useDeleteReviewMutation();
+
+  const save = useCallback(
+    async (values: ReviewFormValues, id: number | null): Promise<void> => {
       const input = toReviewInput(values);
-      const onWrite = (cache: ApolloCache, review: ReviewData | null) => {
-        if (!review) return;
-        updateList(cache, subject, (result) => withReviewAdded(result, review));
-        updateEligibility(cache, subject, review);
+      const settle = {
+        refetchQueries: toRefetchNames(subject, hasList),
+        awaitRefetchQueries: true,
       };
-      try {
-        if (subject.kind === "product") {
-          const { data } = await createProduct({
-            variables: { product_id: subject.id, input },
-            update: (cache, result) =>
-              onWrite(cache, result.data?.createProductReview ?? null),
-          });
-          toast.success("Review posted");
-          return data?.createProductReview ?? null;
-        }
-        const { data } = await createEvent({
-          variables: { event_id: subject.id, input },
-          update: (cache, result) =>
-            onWrite(cache, result.data?.createEventReview ?? null),
-        });
-        toast.success("Review posted");
-        return data?.createEventReview ?? null;
-      } catch (error) {
-        toast.error(toErrorMessage(error));
-        return null;
+      if (id !== null) {
+        await updateMutation({ variables: { id, input }, ...settle });
+        return;
       }
-    },
-    [createEvent, createProduct, subject],
-  );
-
-  const update = useCallback(
-    async (
-      id: number,
-      values: ReviewFormValues,
-    ): Promise<ReviewData | null> => {
-      try {
-        const { data } = await updateMutation({
-          variables: { id, input: toReviewInput(values) },
-          update: (cache, result) => {
-            const review = result.data?.updateReview;
-            if (!review) return;
-            updateList(cache, subject, (current) =>
-              withReviewUpdated(current, review),
-            );
-            updateEligibility(cache, subject, review);
-          },
+      if (subject.kind === "product") {
+        await createProduct({
+          variables: { product_id: subject.id, input },
+          ...settle,
         });
-        toast.success("Review updated");
-        return data?.updateReview ?? null;
-      } catch (error) {
-        toast.error(toErrorMessage(error));
-        return null;
+        return;
       }
+      await createEvent({
+        variables: { event_id: subject.id, input },
+        ...settle,
+      });
     },
-    [subject, updateMutation],
+    [createEvent, createProduct, hasList, subject, updateMutation],
   );
 
   const remove = useCallback(
-    async (id: number): Promise<boolean> => {
-      try {
-        await removeMutation({
-          variables: { id },
-          update: (cache, result) => {
-            if (!result.data?.deleteReview) return;
-            updateList(cache, subject, (current) =>
-              withReviewRemoved(current, id),
-            );
-            updateEligibility(cache, subject, null);
-          },
-        });
-        toast.success("Review removed");
-        return true;
-      } catch (error) {
-        toast.error(toErrorMessage(error));
-        return false;
-      }
+    async (id: number): Promise<void> => {
+      await removeMutation({
+        variables: { id },
+        refetchQueries: toRefetchNames(subject, hasList),
+        awaitRefetchQueries: true,
+      });
     },
-    [removeMutation, subject],
+    [hasList, removeMutation, subject],
   );
 
-  return {
-    create,
-    update,
-    remove,
-    isSaving: isCreatingProduct || isCreatingEvent || isUpdating || isRemoving,
-  };
+  return { save, remove };
 }
 
-// Everything the write-a-review dialog needs, wherever it is opened from.
-export function useReviewComposer(subject: ReviewSubject) {
+// Everything the write-a-review dialog needs, wherever it is opened from. The panel
+// hands in its optimistic dispatcher; an order line has no list on screen to patch.
+export function useReviewComposer(
+  subject: ReviewSubject,
+  subjectName: string,
+  onOptimistic?: (action: ReviewAction) => void,
+) {
+  const hasList = onOptimistic !== undefined;
   const { canReview, myReview, isSignedIn } = useReviewEligibility(subject);
-  const { create, update, remove, isSaving } = useReviewMutations(subject);
+  const { save, remove } = useReviewMutations(subject, hasList);
   const { upload, isUploading } = useReviewPhotoUpload();
+  const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
+  const [isSaving, startTransition] = useTransition();
 
   const open = useCallback(() => setIsOpen(true), []);
 
+  // The dialog closes and the review shows at once; a refusal rolls both back with a toast.
   const submit = useCallback(
-    async (values: ReviewFormValues): Promise<void> => {
-      const saved = myReview
-        ? await update(myReview.id, values)
-        : await create(values);
-      if (saved) setIsOpen(false);
+    (values: ReviewFormValues) => {
+      const previous = myReview;
+      setIsOpen(false);
+      startTransition(async () => {
+        const draft = toDraftReview(values, previous, {
+          author: {
+            name: user?.fullName ?? "You",
+            image: user?.imageUrl ?? null,
+          },
+          subjectName,
+          subjectHref: toSubjectHref(subject),
+          createdAt: new Date().toISOString(),
+        });
+        onOptimistic?.(
+          previous
+            ? { kind: "edit", review: draft }
+            : { kind: "post", review: draft },
+        );
+        try {
+          await save(values, previous?.id ?? null);
+          toast.success(previous ? "Review updated" : "Review posted");
+        } catch (error) {
+          toast.error(toErrorMessage(error));
+        }
+      });
     },
-    [create, myReview, update],
+    [myReview, onOptimistic, save, subject, subjectName, user],
   );
 
-  const removeMine = useCallback(async (): Promise<void> => {
-    if (!myReview) return;
-    const done = await remove(myReview.id);
-    if (done) setIsOpen(false);
-  }, [myReview, remove]);
+  const removeMine = useCallback(() => {
+    const previous = myReview;
+    if (!previous) return;
+    setIsOpen(false);
+    startTransition(async () => {
+      onOptimistic?.({ kind: "remove", id: previous.id });
+      try {
+        await remove(previous.id);
+        toast.success("Review removed");
+      } catch (error) {
+        toast.error(toErrorMessage(error));
+      }
+    });
+  }, [myReview, onOptimistic, remove]);
 
   return {
     canReview,

@@ -2,14 +2,18 @@ import { describe, expect, it } from "vitest";
 
 import {
   applyRatingChange,
+  applyReviewAction,
   checkReviewDimensions,
   checkReviewFile,
+  DRAFT_REVIEW_ID,
   type ReviewData,
   type ReviewsResultData,
   toDistributionRows,
+  toDraftReview,
   toOneLine,
   toRatingLabel,
   toReviewInput,
+  toSubjectHref,
   toSummaryLine,
   withReviewAdded,
   withReviewRemoved,
@@ -109,7 +113,7 @@ describe("review input", () => {
   });
 });
 
-describe("cache updates", () => {
+describe("optimistic list reducers", () => {
   it("recomputes the summary when a rating arrives or leaves", () => {
     const summary = {
       average: 4,
@@ -153,5 +157,81 @@ describe("cache updates", () => {
     expect(next.items).toHaveLength(0);
     expect(next.page_info.total).toBe(0);
     expect(next.summary).toMatchObject({ count: 0, average: 0 });
+  });
+});
+
+describe("applyReviewAction", () => {
+  it("leaves an empty list alone until the first page arrives", () => {
+    expect(applyReviewAction(null, { kind: "remove", id: 2 })).toBeNull();
+  });
+
+  it("routes a post, an edit and a delete to the right reducer", () => {
+    const posted = applyReviewAction(result(), {
+      kind: "post",
+      review: review({ id: 9, rating: 5 }),
+    });
+    expect(posted?.items[0]?.id).toBe(9);
+    expect(posted?.page_info.total).toBe(2);
+
+    const edited = applyReviewAction(result(), {
+      kind: "edit",
+      review: review({ id: 2, rating: 2, is_mine: false }),
+    });
+    expect(edited?.summary).toMatchObject({ count: 1, average: 2 });
+
+    const removed = applyReviewAction(result(), { kind: "remove", id: 2 });
+    expect(removed?.items).toHaveLength(0);
+  });
+});
+
+describe("review drafts", () => {
+  const context = {
+    author: { name: "Maya", image: null },
+    subjectName: "Slate morning mug",
+    subjectHref: "/products/slate-morning-mug",
+    createdAt: "2026-09-14T09:00:00.000Z",
+  };
+
+  it("links a draft back to what it is about", () => {
+    expect(toSubjectHref({ kind: "product", id: 1, slug: "slate-mug" })).toBe(
+      "/products/slate-mug",
+    );
+    expect(toSubjectHref({ kind: "event", id: 1, slug: "wheel-hour" })).toBe(
+      "/events/wheel-hour",
+    );
+  });
+
+  it("stands a new review up from the form values", () => {
+    const draft = toDraftReview(
+      { rating: 5, body: "  Lovely glaze  ", image_urls: ["a"] },
+      null,
+      context,
+    );
+    expect(draft).toMatchObject({
+      id: DRAFT_REVIEW_ID,
+      rating: 5,
+      body: "Lovely glaze",
+      image_urls: ["a"],
+      created_at: context.createdAt,
+      is_mine: true,
+      subject_href: context.subjectHref,
+      author: context.author,
+    });
+  });
+
+  it("keeps the identity of a review being edited", () => {
+    const previous = review({ id: 7, created_at: "2026-08-01T00:00:00.000Z" });
+    const draft = toDraftReview(
+      { rating: 3, body: "", image_urls: [] },
+      previous,
+      context,
+    );
+    expect(draft).toMatchObject({
+      id: 7,
+      rating: 3,
+      body: null,
+      created_at: previous.created_at,
+      author: previous.author,
+    });
   });
 });

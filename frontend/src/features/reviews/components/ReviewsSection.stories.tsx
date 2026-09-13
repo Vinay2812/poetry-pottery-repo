@@ -23,6 +23,7 @@ const meta = {
     quietLine: "Reviews come from people who bought this piece",
     ctaLabel: "Write a review",
     isLoading: false,
+    isPending: false,
     hasMore: true,
     isLoadingMore: false,
     onWriteReview: fn(),
