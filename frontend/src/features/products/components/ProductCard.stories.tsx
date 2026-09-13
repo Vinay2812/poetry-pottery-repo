@@ -4,6 +4,13 @@ import { fn } from "storybook/test";
 import { atViewport } from "@/lib/storybook/viewports";
 import { ProductCard } from "./ProductCard";
 
+const PHOTOS = [
+  "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
+  "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
+  "https://images.pexels.com/photos/15028227/pexels-photo-15028227.jpeg",
+  "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+];
+
 const meta = {
   title: "Features/Products/ProductCard",
   component: ProductCard,
@@ -17,16 +24,13 @@ const meta = {
   args: {
     href: "/products/slate-morning-mug",
     name: "Slate morning mug",
-    imageUrl:
-      "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
+    imageUrls: PHOTOS.slice(0, 2),
     price: 850,
     compareAtPrice: null,
     discountPercent: null,
     material: "Stoneware",
     colorName: "Slate Grey",
     colorCode: "#6B7280",
-    secondImageUrl:
-      "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
     stockTone: "in_stock",
     stockLabel: "Ready to ship",
     ratingAvg: 4.6,
@@ -43,11 +47,22 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const OnePhoto: Story = {
+  args: { imageUrls: PHOTOS.slice(0, 1) },
+};
+
+export const TwoPhotos: Story = {
+  args: { imageUrls: PHOTOS.slice(0, 2) },
+};
+
+export const FourPhotos: Story = {
+  args: { imageUrls: PHOTOS },
+};
+
 export const OnSale: Story = {
   args: {
     name: "Sand ramen bowl",
-    imageUrl:
-      "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
+    imageUrls: [PHOTOS[1]!, PHOTOS[0]!],
     price: 1450,
     compareAtPrice: 1650,
     discountPercent: 12,
@@ -64,8 +79,7 @@ export const SoldOut: Story = {
   args: {
     stockTone: "sold_out",
     stockLabel: "Sold out · next batch soon",
-    imageUrl:
-      "https://images.pexels.com/photos/15028227/pexels-photo-15028227.jpeg",
+    imageUrls: [PHOTOS[2]!],
   },
 };
 
@@ -86,13 +100,35 @@ export const Wishlisted: Story = {
 };
 
 export const NoPhoto: Story = {
-  args: { imageUrl: null, secondImageUrl: null },
+  args: { imageUrls: [] },
 };
 
-export const Mobile: Story = { ...atViewport("mobile") };
+export const Mobile: Story = {
+  ...atViewport("mobile"),
+  args: { imageUrls: PHOTOS },
+};
 
-export const Tablet: Story = { ...atViewport("tablet") };
+export const Tablet: Story = {
+  ...atViewport("tablet"),
+  args: { imageUrls: PHOTOS },
+};
 
-export const Laptop: Story = { ...atViewport("laptop") };
+export const Laptop: Story = {
+  ...atViewport("laptop"),
+  args: { imageUrls: PHOTOS },
+};
 
-export const Desktop: Story = { ...atViewport("desktop") };
+export const Desktop: Story = {
+  ...atViewport("desktop"),
+  args: { imageUrls: PHOTOS },
+};
+
+export const MobileOnePhoto: Story = {
+  ...atViewport("mobile"),
+  args: { imageUrls: PHOTOS.slice(0, 1) },
+};
+
+export const TabletTwoPhotos: Story = {
+  ...atViewport("tablet"),
+  args: { imageUrls: PHOTOS.slice(0, 2) },
+};

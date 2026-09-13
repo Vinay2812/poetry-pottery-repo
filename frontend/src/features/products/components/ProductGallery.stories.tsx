@@ -4,6 +4,13 @@ import { KilnLabels } from "@/components/motion/KilnLabels";
 import { atViewport } from "@/lib/storybook/viewports";
 import { ProductGallery } from "./ProductGallery";
 
+const PHOTOS = [
+  "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
+  "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
+  "https://images.pexels.com/photos/15028227/pexels-photo-15028227.jpeg",
+  "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+];
+
 const meta = {
   title: "Features/Products/ProductGallery",
   component: ProductGallery,
@@ -16,11 +23,7 @@ const meta = {
   ],
   args: {
     name: "Slate morning mug",
-    images: [
-      "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
-      "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
-      "https://images.pexels.com/photos/15028227/pexels-photo-15028227.jpeg",
-    ],
+    images: PHOTOS.slice(0, 3),
   },
 } satisfies Meta<typeof ProductGallery>;
 
@@ -31,11 +34,15 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const SinglePhoto: Story = {
-  args: {
-    images: [
-      "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
-    ],
-  },
+  args: { images: PHOTOS.slice(0, 1) },
+};
+
+export const TwoPhotos: Story = {
+  args: { images: PHOTOS.slice(0, 2) },
+};
+
+export const FourPhotos: Story = {
+  args: { images: PHOTOS },
 };
 
 export const NoPhotos: Story = {
@@ -60,10 +67,32 @@ export const NoPhotosWithKilnLabels: Story = {
   },
 };
 
-export const Mobile: Story = { ...atViewport("mobile") };
+export const Mobile: Story = {
+  ...atViewport("mobile"),
+  args: { images: PHOTOS },
+};
 
-export const Tablet: Story = { ...atViewport("tablet") };
+export const Tablet: Story = {
+  ...atViewport("tablet"),
+  args: { images: PHOTOS },
+};
 
-export const Laptop: Story = { ...atViewport("laptop") };
+export const Laptop: Story = {
+  ...atViewport("laptop"),
+  args: { images: PHOTOS },
+};
 
-export const Desktop: Story = { ...atViewport("desktop") };
+export const Desktop: Story = {
+  ...atViewport("desktop"),
+  args: { images: PHOTOS },
+};
+
+export const MobileOnePhoto: Story = {
+  ...atViewport("mobile"),
+  args: { images: PHOTOS.slice(0, 1) },
+};
+
+export const DesktopTwoPhotos: Story = {
+  ...atViewport("desktop"),
+  args: { images: PHOTOS.slice(0, 2) },
+};

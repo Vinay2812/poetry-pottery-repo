@@ -129,6 +129,7 @@ export function toFilterInput(
 export function countActiveFilters(filters: ProductFilters): number {
   return (
     filters.categories.length +
+    (filters.collection ? 1 : 0) +
     filters.materials.length +
     (filters.minPrice !== null || filters.maxPrice !== null ? 1 : 0) +
     (filters.inStockOnly ? 1 : 0) +
@@ -289,4 +290,12 @@ export function validateSelections(
 
 export function toProductPath(slug: string): string {
   return `/products/${slug}`;
+}
+
+export function toPhotoLabel(index: number, total: number): string {
+  return `Photo ${index + 1} of ${total}`;
+}
+
+export function toPhotoAlt(name: string, index: number): string {
+  return index === 0 ? name : `${name}, view ${index + 1}`;
 }

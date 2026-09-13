@@ -58,8 +58,7 @@ export function ProductCardContainer({
     <ProductCard
       href={href}
       name={product.name}
-      imageUrl={product.image_urls[0] ?? null}
-      secondImageUrl={product.image_urls[1] ?? null}
+      imageUrls={product.image_urls}
       price={product.price}
       compareAtPrice={product.compare_at_price}
       discountPercent={toDiscountPercent(

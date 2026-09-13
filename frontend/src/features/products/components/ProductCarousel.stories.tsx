@@ -74,7 +74,7 @@ function renderCards(items: CatalogItem[]) {
       key={item.slug}
       href={`/products/${item.slug}`}
       name={item.name}
-      imageUrl={item.imageUrl}
+      imageUrls={[item.imageUrl]}
       price={item.price}
       compareAtPrice={null}
       discountPercent={null}

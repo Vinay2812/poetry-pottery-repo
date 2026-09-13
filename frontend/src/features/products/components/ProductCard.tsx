@@ -1,19 +1,25 @@
+"use client";
+
 import { ArrowUpRight, Heart, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 import { toPotteryIconKind } from "@/components/icons/pottery";
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
+import { useImageCarousel } from "@/components/media/useImageCarousel";
 import { cn } from "@/lib/utils";
 
 import { PriceTag } from "@/features/products/components/PriceTag";
-import type { StockTone } from "@/features/products/types";
+import {
+  type StockTone,
+  toPhotoAlt,
+  toPhotoLabel,
+} from "@/features/products/types";
 
 export interface ProductCardProps {
   href: string;
   name: string;
-  imageUrl: string | null;
-  secondImageUrl?: string | null;
+  imageUrls: string[];
   price: number;
   compareAtPrice: number | null;
   discountPercent: number | null;
@@ -34,14 +40,13 @@ export interface ProductCardProps {
 
 const SIZES = "(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 50vw";
 const OVERLAY_BUTTON =
-  "flex size-9 items-center justify-center border border-ink bg-white text-ink transition-opacity duration-200 hover:bg-ink hover:text-white lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100";
+  "z-20 flex size-9 items-center justify-center border border-ink bg-white text-ink transition-opacity duration-200 hover:bg-ink hover:text-white lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100";
 
 // Image first, then one line of name and price. Made-to-order pieces link to their options instead of adding blind.
 export function ProductCard({
   href,
   name,
-  imageUrl,
-  secondImageUrl = null,
+  imageUrls,
   price,
   compareAtPrice,
   stockTone,
@@ -53,43 +58,91 @@ export function ProductCard({
   onToggleWishlist,
   onAddToCart,
 }: ProductCardProps) {
+  const { carouselRef, selectedIndex, scrollTo } = useImageCarousel();
   const isSoldOut = stockTone === "sold_out";
+  const hasMany = imageUrls.length > 1;
+  // The old hover crossfade still reads on desktop, but only from the first photo.
+  const hoverImageUrl = selectedIndex === 0 ? (imageUrls[1] ?? null) : null;
 
   return (
     <article className="group flex flex-col gap-2.5">
       <div className="relative aspect-square bg-white">
-        <Link
-          href={href}
-          className="absolute inset-0 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-ink"
-        >
-          {imageUrl ? (
-            <>
-              <Image
-                src={imageUrl}
-                alt={name}
-                fill
-                priority={isPriority}
-                sizes={SIZES}
-                className={cn(
-                  "object-cover transition-opacity duration-500 ease-out",
-                  secondImageUrl &&
-                    "group-focus-within:opacity-0 group-hover:opacity-0",
-                )}
-              />
-              {secondImageUrl && (
-                <Image
-                  src={secondImageUrl}
-                  alt=""
-                  fill
-                  sizes={SIZES}
-                  className="object-cover opacity-0 transition-opacity duration-500 ease-out group-focus-within:opacity-100 group-hover:opacity-100"
-                />
-              )}
-            </>
-          ) : (
+        {imageUrls.length === 0 ? (
+          <Link
+            href={href}
+            className="absolute inset-0 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-ink"
+          >
             <PlaceholderImage kind={toPotteryIconKind(name)} />
-          )}
-        </Link>
+          </Link>
+        ) : (
+          <div
+            ref={hasMany ? carouselRef : undefined}
+            className="absolute inset-0 overflow-hidden"
+            role={hasMany ? "group" : undefined}
+            aria-roledescription={hasMany ? "carousel" : undefined}
+            aria-label={hasMany ? `${name} photos` : undefined}
+          >
+            <div className="flex h-full">
+              {imageUrls.map((url, index) => (
+                <div
+                  key={`${url}-${index}`}
+                  className="relative h-full min-w-0 flex-[0_0_100%]"
+                >
+                  <Image
+                    src={url}
+                    alt={toPhotoAlt(name, index)}
+                    fill
+                    priority={isPriority && index === 0}
+                    sizes={SIZES}
+                    className={cn(
+                      "object-cover transition-opacity duration-500 ease-out",
+                      index === 0 &&
+                        hoverImageUrl &&
+                        "group-focus-within:opacity-0 group-hover:opacity-0",
+                    )}
+                  />
+                  {index === 0 && hoverImageUrl && (
+                    <Image
+                      src={hoverImageUrl}
+                      alt=""
+                      fill
+                      sizes={SIZES}
+                      className="object-cover opacity-0 transition-opacity duration-500 ease-out group-focus-within:opacity-100 group-hover:opacity-100"
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
+            {/* Sits inside the carousel so embla can swallow the click that ends a drag. */}
+            <Link
+              href={href}
+              aria-label={name}
+              className="absolute inset-0 z-10 outline-none focus-visible:ring-1 focus-visible:ring-ink"
+            />
+          </div>
+        )}
+
+        {hasMany && (
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center">
+            {imageUrls.map((url, index) => (
+              <button
+                key={`${url}-${index}`}
+                type="button"
+                onClick={() => scrollTo(index)}
+                aria-label={toPhotoLabel(index, imageUrls.length)}
+                aria-current={index === selectedIndex}
+                className="pointer-events-auto p-1.5"
+              >
+                <span
+                  className={cn(
+                    "block size-[3px]",
+                    index === selectedIndex ? "bg-ink" : "bg-ash",
+                  )}
+                />
+              </button>
+            ))}
+          </div>
+        )}
 
         {onToggleWishlist && (
           <button

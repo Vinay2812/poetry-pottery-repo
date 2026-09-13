@@ -15,6 +15,8 @@ import {
   toSearchParams,
   toBatchLabel,
   toGlazeAskUrl,
+  toPhotoAlt,
+  toPhotoLabel,
   toShortDescription,
   toStockStatus,
   validateSelections,
@@ -82,12 +84,13 @@ describe("filters round-trip", () => {
       countActiveFilters({
         ...EMPTY_FILTERS,
         categories: ["mugs"],
+        collection: "spring-2025",
         minPrice: 100,
         inStockOnly: true,
         sort: ProductSort.Newest,
         search: "x",
       }),
-    ).toBe(3);
+    ).toBe(4);
   });
 });
 
@@ -217,5 +220,15 @@ describe("archive view", () => {
       "https://studio.test/products/drip-sip-mug",
     );
     expect(toArchiveAskUrl("", "Drip sip mug", "/x")).toBeNull();
+  });
+
+  it("counts photos from one for screen readers", () => {
+    expect(toPhotoLabel(0, 4)).toBe("Photo 1 of 4");
+    expect(toPhotoLabel(3, 4)).toBe("Photo 4 of 4");
+  });
+
+  it("names the first photo after the piece and the rest as views", () => {
+    expect(toPhotoAlt("Drip sip mug", 0)).toBe("Drip sip mug");
+    expect(toPhotoAlt("Drip sip mug", 2)).toBe("Drip sip mug, view 3");
   });
 });
