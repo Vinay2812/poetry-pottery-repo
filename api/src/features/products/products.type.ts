@@ -135,6 +135,13 @@ export class ProductOption {
 
   @Field(() => Int)
   price_modifier!: number;
+
+  @Field(() => Int)
+  sort_order!: number;
+
+  // The storefront only ever receives active options; the console lists both.
+  @Field()
+  is_active!: boolean;
 }
 
 @ObjectType()
@@ -156,6 +163,9 @@ export class ProductOptionGroup {
 
   @Field(() => Int, { nullable: true })
   max_length!: number | null;
+
+  @Field(() => Int)
+  sort_order!: number;
 
   @Field(() => [ProductOption])
   options!: ProductOption[];

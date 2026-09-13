@@ -59,9 +59,77 @@ type AdminLowStockPiece {
   stock: Int!
 }
 
+input AdminOptionGroupInput {
+  is_required: Boolean
+  kind: OptionGroupKind
+  max_length: Int
+  name: String!
+  price_modifier: Int
+  sort_order: Int
+}
+
+input AdminOptionInput {
+  is_active: Boolean
+  name: String!
+  price_modifier: Int
+  sort_order: Int
+}
+
 type AdminOrderStatusCount {
   count: Int!
   status: OrderStatus!
+}
+
+input AdminProductInput {
+  care_notes: [String!]
+  category_ids: [Int!]
+  collection_id: Int
+  color_code: String
+  color_name: String
+  compare_at_price: Int
+  description: String!
+  dimensions: String
+  image_urls: [String!]
+  is_active: Boolean
+  is_customizable: Boolean
+  is_featured: Boolean
+  material: String!
+  name: String!
+  price: Int!
+  stock: Int
+}
+
+input AdminProductUpdateInput {
+  care_notes: [String!]
+  category_ids: [Int!]
+  collection_id: Int
+  color_code: String
+  color_name: String
+  compare_at_price: Int
+  description: String
+  dimensions: String
+  image_urls: [String!]
+  is_customizable: Boolean
+  material: String
+  name: String
+  price: Int
+  stock: Int
+}
+
+input AdminProductsFilterInput {
+  category_id: Int
+  collection_id: Int
+  is_active: Boolean
+  is_featured: Boolean
+  limit: Int
+  low_stock: Boolean
+  page: Int
+  search: String
+}
+
+type AdminProductsResult {
+  items: [Product!]!
+  page_info: PageInfo!
 }
 
 type AdminRecentBooking {
@@ -412,6 +480,7 @@ type ImageSpec {
 type Mutation {
   addOrderNote(input: AddOrderNoteInput!): Order!
   addToCart(input: AddToCartInput!): Cart!
+  adjustProductStock(delta: Int!, id: Int!, reason: String!): Product!
   bookStudioVisit(input: StudioVisitInput!): StudioVisit!
   bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
   cancelOrder(id: String!, reason: String): Order!
@@ -424,9 +493,14 @@ type Mutation {
   createCommissionRequest(input: CommissionRequestInput!): CommissionRequest!
   createCustomizationUpload(content_type: String!, size: Int!): UploadTicket!
   createEventReview(event_id: Int!, input: ReviewInput!): Review!
+  createProduct(input: AdminProductInput!): Product!
+  createProductOption(group_id: Int!, input: AdminOptionInput!): ProductOptionGroup!
+  createProductOptionGroup(input: AdminOptionGroupInput!, product_id: Int!): ProductOptionGroup!
   createProductReview(input: ReviewInput!, product_id: Int!): Review!
   createReviewImageUpload(input: ReviewUploadInput!): UploadTarget!
   deleteAddress(id: Int!): Boolean!
+  deleteProductOption(id: Int!): Boolean!
+  deleteProductOptionGroup(id: Int!): Boolean!
   deleteReview(id: Int!): Boolean!
   markCommissionRequestRead(id: String!): CommissionRequest!
   markContactMessageRead(id: Int!): ContactMessage!
@@ -434,9 +508,12 @@ type Mutation {
   placeOrder(input: PlaceOrderInput!): Order!
   registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
+  reorderProductImages(id: Int!, image_urls: [String!]!): Product!
   rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
   sendContactMessage(input: ContactMessageInput!): Boolean!
   setDefaultAddress(id: Int!): Address!
+  setProductActive(id: Int!, is_active: Boolean!): Product!
+  setProductFeatured(id: Int!, is_featured: Boolean!): Product!
   stopBatchNotification(token: String!): Boolean!
   subscribeToNewsletter(email: String!): NewsletterResult!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
@@ -444,6 +521,9 @@ type Mutation {
   updateAddress(id: Int!, input: AddressInput!): Address!
   updateCartItem(id: Int!, quantity: Int!): Cart!
   updateContentPage(input: ContentPageInput!, slug: String!): ContentPage!
+  updateProduct(id: Int!, input: AdminProductUpdateInput!): Product!
+  updateProductOption(id: Int!, input: AdminOptionInput!): ProductOptionGroup!
+  updateProductOptionGroup(id: Int!, input: AdminOptionGroupInput!): ProductOptionGroup!
   updateReview(id: Int!, input: ReviewInput!): Review!
 }
 
@@ -591,8 +671,10 @@ type ProductFacets {
 
 type ProductOption {
   id: Int!
+  is_active: Boolean!
   name: String!
   price_modifier: Int!
+  sort_order: Int!
 }
 
 type ProductOptionGroup {
@@ -603,6 +685,7 @@ type ProductOptionGroup {
   name: String!
   options: [ProductOption!]!
   price_modifier: Int!
+  sort_order: Int!
 }
 
 enum ProductSort {
@@ -640,6 +723,9 @@ type ProductsResult {
 type Query {
   addresses: [Address!]!
   adminDashboard: AdminDashboard!
+  adminProduct(id: Int!): Product!
+  adminProductOptionGroups(product_id: Int!): [ProductOptionGroup!]!
+  adminProducts(filter: AdminProductsFilterInput): AdminProductsResult!
   cart: Cart!
   cartCount: Int!
   categories: [Category!]!
