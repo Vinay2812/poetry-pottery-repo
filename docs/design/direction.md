@@ -8,15 +8,15 @@ A small wheel studio in Sangli making stoneware and terracotta, plus wheel sessi
 
 ## Tokens
 
-| Token | Value | Use |
-| --- | --- | --- |
-| clay-white | `#F7F4EF` | page background |
-| ink | `#1F1D1A` | text, rules on hover, primary button |
-| sage | `#4F6F52` | the only accent: links, focus rings, active states, "Add" |
-| kiln | `#C4785A` | one hairline under the header and low-stock text, nothing else |
-| smoke | `#8A857D` | secondary text (passes 4.5:1 on clay-white) |
-| ash | `#E5E0D8` | hairline rules, dividers, skeletons |
-| white | `#FFFFFF` | product image backdrops, sheets |
+| Token      | Value     | Use                                                            |
+| ---------- | --------- | -------------------------------------------------------------- |
+| clay-white | `#F7F4EF` | page background                                                |
+| ink        | `#1F1D1A` | text, rules on hover, primary button                           |
+| sage       | `#4F6F52` | the only accent: links, focus rings, active states, "Add"      |
+| kiln       | `#C4785A` | one hairline under the header and low-stock text, nothing else |
+| smoke      | `#8A857D` | secondary text (passes 4.5:1 on clay-white)                    |
+| ash        | `#E5E0D8` | hairline rules, dividers, skeletons                            |
+| white      | `#FFFFFF` | product image backdrops, sheets                                |
 
 - Radius: **0 everywhere.** No rounded corners on cards, images, buttons, inputs, chips, sheets, dialogs, toasts, avatars (avatars may stay circular, that is a person not a component).
 - Shadows: none at rest. A sheet or dialog may use one soft ambient shadow. Cards never shadow; hover is a hairline `ink` border or an image crossfade.
@@ -32,11 +32,13 @@ A small wheel studio in Sangli making stoneware and terracotta, plus wheel sessi
 
 ## Signature: the kiln label
 
-The hero is a drawing, not a photo: an original ink-line SVG of one moon jar, drawn with a mathematically smooth profile and a whisper of hand wobble so it never reads as CAD. Four faint throwing rings follow the curve of the wall, a sage glaze band with one drip sits on the shoulder, a thumb dent breaks the symmetry on the right, and the piece stands on a hairline floor over a soft shadow. A small sage kiln mark burns at the foot. The studio's line, "where clay meets verses", is set in sage italic on an arc under the floor, quiet enough not to compete with the piece.
+The hero is a drawing, not a photo: one moon jar, rendered rather than outlined. The profile is generated from a spline through a handful of control points and carries a whisper of hand wobble, so it is smooth without looking machined; the same profile function generates everything painted on it. Light comes from the upper left. The body is a warm clay wash (`#F1EBE3` to `#D3C3B0`) with a soft highlight band on the lit third, a gradient terminator on the right, and cross-contour hatching: short arcs of the jar's own horizontal rings, evenly spaced and offset row to row, long and dark at the shaded edge and shortening to nothing as the wall turns into the light. The throwing rings are part of that shading, darker on the shadow side and fading into the highlight. A fine grain sits over the clay at low opacity so the surface reads as stoneware rather than paper.
 
-Four thin lines radiate from the drawing to short labels, each landing on the thing it names with a small dot: "Handmade / no two alike" on the thumb dent, "Stoneware / one clay body" on the wall between two rings, "Sangli / made in India" on the ground line under the foot, "1225°C / one kiln" on the kiln mark. Labels are real text inside the SVG coordinate space, so they hold their positions at every width.
+The one accent is the glaze: a translucent sage band across the shoulder, its lower edge crawled unevenly as it dried, a pale highlight line along its top and one drip that thickens where it pooled. The mouth has depth (rim band, dark interior, the far inner wall seen over the near edge), the foot has its own contact shadow, and the piece stands on a hairline floor over three stacked ellipses that read as one soft shadow. A thumb dent on the right shoulder is the only asymmetry, and it is deliberate.
 
-On load the drawing draws itself with stroke-dashoffset over about 1.8s: the walls first, then the foot and mouth, the rings, the glaze band and its drip, the dent, the floor and shadow, the kiln mark, then the four pointer lines (80ms stagger) with their dots, then the labels and the verse fade in. `prefers-reduced-motion: reduce` shows the finished drawing at once. The product page reuses the label device on desktop: lines from the main photo to "Clay body", "Glaze", "Size". Nowhere else.
+Four leader lines leave the drawing at the same 25 degree angle, each ending in a small dot exactly on the thing it names: "Glaze / fired at 1225°C" on the band, "Handmade / no two alike" on the thumb dent, "Stoneware / one clay body" on the bare wall, "Sangli / made in India" on the floor under the foot. Labels are real text inside the SVG coordinate space, so they hold their positions at every width. The studio's line, "where clay meets verses", sits under the piece in italic serif on a shallow arc, quiet enough not to compete with it.
+
+On load the drawing builds itself over about 2.4s: the outline draws with stroke-dashoffset, the clay fills, the hatching fades in band by band from left to right, the glaze wash wipes on, the floor and shadow arrive, then the leaders draw and the labels and verse fade in. `prefers-reduced-motion: reduce` shows the finished piece at once. The product page reuses the label device on desktop: lines from the main photo to "Clay body", "Glaze", "Size". Nowhere else.
 
 ## Product presentation
 
@@ -80,13 +82,13 @@ Every surface should say "one pair of hands made this". Concretely:
 
 ## Image specs (enforced by admin uploads)
 
-| Purpose | Ratio | Minimum | Where it renders |
-| --- | --- | --- | --- |
-| product | 1:1 | 1000 × 1000 | cards, gallery, cart lines |
-| category | 1:1 | 600 × 600 | category tiles |
-| collection | 3:2 | 1200 × 800 | collection rows |
-| event | 4:3 | 1200 × 900 | event cards and detail |
-| hero, about, workshop | 16:9 | 1600 × 900 | home hero, about landscape, workshop intro |
-| review | any | 400 px shortest side | review photos |
+| Purpose               | Ratio | Minimum              | Where it renders                           |
+| --------------------- | ----- | -------------------- | ------------------------------------------ |
+| product               | 1:1   | 1000 × 1000          | cards, gallery, cart lines                 |
+| category              | 1:1   | 600 × 600            | category tiles                             |
+| collection            | 3:2   | 1200 × 800           | collection rows                            |
+| event                 | 4:3   | 1200 × 900           | event cards and detail                     |
+| hero, about, workshop | 16:9  | 1600 × 900           | home hero, about landscape, workshop intro |
+| review                | any   | 400 px shortest side | review photos                              |
 
 All uploads: JPEG, PNG, WebP or AVIF, at most 8 MB. The admin uploader checks these before the upload (and offers a fixed-ratio crop); the API confirms them again after the upload by reading the stored file, and only confirmed files can be saved.

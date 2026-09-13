@@ -1,82 +1,108 @@
+import {
+  JAR_FOOT,
+  JAR_LEFT_WALL,
+  JAR_MOUTH,
+  JAR_RIGHT_WALL,
+} from "@/features/home/components/jar";
+import {
+  ANCHORS,
+  BODY_PATH,
+  DENT_PATH,
+  GLAZE_BAND_PATH,
+  GLAZE_DRIP_PATH,
+  GLAZE_TOP_PATH,
+  GROUND_Y,
+  hatchStrokes,
+  ringArc,
+  throwingRings,
+  type Point,
+} from "@/features/home/components/jar-surface";
 import { cn } from "@/lib/utils";
+
+/** How much of the piece is rendered: line only, clay, or clay with a grain. */
+type HeroFinish = "hatching" | "clay" | "grain";
 
 export interface HeroIllustrationProps {
   isAnimated: boolean;
+  finish: HeroFinish;
   className?: string;
 }
 
 interface HeroLabel {
   text: string;
   note: string;
-  x: number;
-  y: number;
-  anchorX: number;
-  anchorY: number;
-  align: "start" | "end";
+  anchor: Point;
+  direction: 1 | -1;
+  rise: 1 | -1;
+  length: number;
 }
 
-// Every line lands on the part of the piece that carries the claim.
+const MOUTH_INNER =
+  "M167 93.2C167 87.9 181.8 84.6 200 84.6C218.2 84.6 233 87.9 233 93.2C233 98.5 218.2 101.8 200 101.8C181.8 101.8 167 98.5 167 93.2Z";
+
+// The far inner wall, seen over the rim: what gives the mouth its depth.
+const MOUTH_CRESCENT =
+  "M167 93.2C167 87.9 181.8 84.6 200 84.6C218.2 84.6 233 87.9 233 93.2C229.6 93.2 229.6 93.2 229.6 93.2C229.6 89.6 216.3 87.4 200 87.4C183.7 87.4 170.4 89.6 170.4 93.2Z";
+
+const LEADER_ANGLE = (25 * Math.PI) / 180;
+
+// One angle for every leader, so the four lines read as a set.
 const LABELS: HeroLabel[] = [
+  {
+    text: "Glaze",
+    note: "fired at 1225°C",
+    anchor: ANCHORS.glaze,
+    direction: 1,
+    rise: -1,
+    length: 26,
+  },
   {
     text: "Handmade",
     note: "no two alike",
-    x: 310,
-    y: 118,
-    anchorX: 281,
-    anchorY: 156,
-    align: "start",
+    anchor: ANCHORS.dent,
+    direction: 1,
+    rise: -1,
+    length: 14,
   },
   {
     text: "Stoneware",
     note: "one clay body",
-    x: 96,
-    y: 152,
-    anchorX: 105,
-    anchorY: 196,
-    align: "end",
+    anchor: ANCHORS.wall,
+    direction: -1,
+    rise: -1,
+    length: 30,
   },
   {
     text: "Sangli",
     note: "made in India",
-    x: 102,
-    y: 296,
-    anchorX: 166,
-    anchorY: 320,
-    align: "end",
-  },
-  {
-    text: "1225°C",
-    note: "one kiln",
-    x: 302,
-    y: 302,
-    anchorX: 281,
-    anchorY: 305,
-    align: "start",
+    anchor: ANCHORS.ground,
+    direction: -1,
+    rise: 1,
+    length: 43,
   },
 ];
 
-// Throwing rings, as ellipse arcs that follow the curve of the wall.
-const RINGS = [
-  "M140.0 140.0C140.0 150.3 258.8 150.3 258.8 140.0",
-  "M126.7 176.0C126.7 188.6 272.1 188.6 272.1 176.0",
-  "M125.0 214.0C125.0 227.0 275.1 227.0 275.1 214.0",
-  "M130.0 250.0C130.0 262.1 270.0 262.1 270.0 250.0",
-];
+const HATCH = hatchStrokes();
+const RINGS = throwingRings();
+const BANDS = [0, 1, 2, 3];
 
-const DRAW_MS = 600;
-const PIECE_MS = 0;
-const RINGS_MS = 420;
-const GLAZE_MS = 680;
-const GROUND_MS = 860;
-const LINE_MS = 1000;
+const OUTLINE_MS = 0;
+const FILL_MS = 480;
+const HATCH_MS = 620;
+const BAND_STAGGER_MS = 150;
+const GLAZE_MS = 1160;
+const GROUND_MS = 1340;
+const LINE_MS = 1480;
 const LINE_STAGGER_MS = 80;
-const LABEL_MS = LINE_MS + 3 * LINE_STAGGER_MS + DRAW_MS;
+const LINE_DURATION_MS = 420;
+const LABEL_MS = LINE_MS + LINE_DURATION_MS;
 
 // pathLength normalises each stroke, so one dash spans a path whatever its real length.
-function drawStyle(delayMs: number): React.CSSProperties {
+function drawStyle(delayMs: number, durationMs?: number): React.CSSProperties {
   return {
     "--draw-length": 1,
     "--draw-delay": `${delayMs}ms`,
+    ...(durationMs ? { animationDuration: `${durationMs}ms` } : {}),
   } as React.CSSProperties;
 }
 
@@ -84,198 +110,376 @@ function fadeStyle(delayMs: number): React.CSSProperties {
   return { "--label-delay": `${delayMs}ms` } as React.CSSProperties;
 }
 
+function leaderEnd({ anchor, direction, rise, length }: HeroLabel): Point {
+  return [
+    anchor[0] + direction * length * Math.cos(LEADER_ANGLE),
+    anchor[1] + rise * length * Math.sin(LEADER_ANGLE),
+  ];
+}
+
 /**
- * One piece, drawn: a moon jar with the rings of the throwing still on it, a
- * sage glaze band on the shoulder, a thumb dent that breaks its symmetry, and
- * the studio's line carved under the ground it stands on.
+ * The piece itself: a moon jar with light from the upper left, cross-contour
+ * hatching on the shaded wall, a sage glaze band on the shoulder, and the
+ * thumb dent that kept it from being symmetrical.
  */
 export function HeroIllustration({
   isAnimated,
+  finish,
   className,
 }: HeroIllustrationProps) {
   const draw = isAnimated ? "animate-draw-line" : undefined;
   const fade = isAnimated ? "animate-label-fade" : undefined;
+  const wipe = isAnimated ? "animate-clip-reveal" : undefined;
+  const hasClay = finish !== "hatching";
+  const clayId = `hero-clay-${finish}`;
+  const mouthId = `hero-mouth-${finish}`;
+  const highlightId = `hero-highlight-${finish}`;
+  const terminatorId = `hero-terminator-${finish}`;
+  const bodyClipId = `hero-body-${finish}`;
+  const grainId = `hero-grain-${finish}`;
 
   return (
     <svg
       viewBox="0 0 400 400"
       role="img"
-      aria-labelledby="hero-illustration-title hero-illustration-desc"
+      aria-labelledby={`${bodyClipId}-title ${bodyClipId}-desc`}
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
       strokeLinejoin="round"
       className={cn("size-full text-ink", className)}
     >
-      <title id="hero-illustration-title">
-        A hand-thrown stoneware moon jar
-      </title>
-      <desc id="hero-illustration-desc">
-        Line drawing of a moon jar standing on a hairline floor, with throwing
-        rings across the body, a sage glaze band on the shoulder, a thumb dent
-        on one side and a small kiln mark at the foot. Labelled handmade,
-        stoneware, Sangli and 1225 degrees.
+      <title id={`${bodyClipId}-title`}>A hand-thrown stoneware moon jar</title>
+      <desc id={`${bodyClipId}-desc`}>
+        Drawing of a moon jar lit from the upper left, shaded with curved
+        hatching that follows the body, a sage glaze band across the shoulder
+        with one drip, a thumb dent on the right and a soft shadow on the floor.
+        Labelled glaze fired at 1225 degrees, handmade, stoneware and Sangli.
       </desc>
 
-      {/* The piece: two walls, the foot it stands on, the mouth. */}
-      <g strokeWidth={1}>
-        <path
-          pathLength={1}
-          style={drawStyle(PIECE_MS)}
-          className={draw}
-          d="M162.0 92.0C162.3 94.4 164.4 96.1 163.5 99.0C162.6 101.7 159.1 106.4 156.0 110.0C152.4 113.6 147.7 118.0 143.0 122.0C138.9 126.0 134.6 129.1 130.0 134.0C125.6 138.9 119.7 144.2 116.0 150.0C112.5 155.7 110.2 161.7 108.0 170.0C105.9 178.0 104.3 190.0 104.0 200.0C104.2 210.3 106.1 222.0 108.0 230.0C109.9 238.5 112.6 244.0 116.0 250.0C119.6 256.1 123.4 262.5 128.0 268.0C132.7 273.3 138.1 277.9 142.0 282.0C146.0 285.9 149.6 289.1 152.0 292.0C154.3 295.3 155.0 297.3 155.5 300.0C156.4 303.3 156.0 306.4 156.0 310.0"
+      <defs>
+        <linearGradient id={clayId} x1="0" y1="0" x2="1" y2="0.55">
+          <stop offset="0" stopColor="#F1EBE3" />
+          <stop offset="0.22" stopColor="#EDE5DA" />
+          <stop offset="0.62" stopColor="#E3D7C8" />
+          <stop offset="0.86" stopColor="#DCCFBF" />
+          <stop offset="1" stopColor="#D3C3B0" />
+        </linearGradient>
+        <linearGradient id={mouthId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#4F4840" stopOpacity="0.5" />
+          <stop offset="0.55" stopColor="#9C8F7E" stopOpacity="0.24" />
+          <stop offset="1" stopColor="#D6C8B6" stopOpacity="0.12" />
+        </linearGradient>
+        <linearGradient id={terminatorId} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0.5" stopColor="#1F1D1A" stopOpacity="0" />
+          <stop offset="1" stopColor="#1F1D1A" stopOpacity="0.1" />
+        </linearGradient>
+        <linearGradient id={highlightId} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0.04" stopColor="#FFFFFF" stopOpacity="0" />
+          <stop offset="0.2" stopColor="#FFFFFF" stopOpacity="0.5" />
+          <stop offset="0.46" stopColor="#FFFFFF" stopOpacity="0" />
+        </linearGradient>
+        <clipPath id={bodyClipId}>
+          <path d={BODY_PATH} />
+        </clipPath>
+        {finish === "grain" && (
+          <filter id={grainId} x="0" y="0" width="100%" height="100%">
+            <feTurbulence
+              type="fractalNoise"
+              baseFrequency="0.75"
+              numOctaves={2}
+              stitchTiles="stitch"
+            />
+            <feColorMatrix type="saturate" values="0" />
+            <feComponentTransfer>
+              <feFuncA type="linear" slope="0.55" intercept="-0.12" />
+            </feComponentTransfer>
+          </filter>
+        )}
+      </defs>
+
+      {/* The floor, and the shadow the piece drops on it. */}
+      <g className={fade} style={fadeStyle(GROUND_MS)}>
+        <ellipse
+          cx={208}
+          cy={317}
+          rx={76}
+          ry={7.5}
+          fill="currentColor"
+          fillOpacity={0.045}
+          stroke="none"
         />
-        <path
-          pathLength={1}
-          style={drawStyle(PIECE_MS)}
-          className={draw}
-          d="M238.0 92.0C237.8 94.7 235.8 96.0 236.5 99.0C237.6 101.8 241.0 106.2 244.0 110.0C247.1 113.5 252.2 118.3 256.1 122.0C260.0 126.2 264.5 129.1 268.9 134.0C273.2 138.9 279.4 143.7 282.7 150.0C286.4 155.7 288.6 161.5 290.6 170.0C293.1 178.7 295.8 190.3 296.0 200.0C296.1 209.7 294.1 221.3 292.0 230.0C289.8 238.3 287.4 243.4 284.0 250.0C280.3 256.6 276.2 263.0 272.0 268.0C267.9 273.2 262.0 278.0 258.0 282.0C254.1 286.1 250.3 289.1 248.0 292.0C246.1 295.0 245.1 297.2 244.5 300.0C243.6 302.9 244.5 306.7 244.0 310.0"
+        <ellipse
+          cx={206}
+          cy={317}
+          rx={56}
+          ry={6}
+          fill="currentColor"
+          fillOpacity={0.05}
+          stroke="none"
         />
-        <path
-          pathLength={1}
-          style={drawStyle(PIECE_MS + 260)}
-          className={draw}
-          d="M156.0 310.0C170 315.5 230 315.5 244.0 310.0"
-        />
-        <path
-          pathLength={1}
-          style={drawStyle(PIECE_MS + 320)}
-          className={draw}
-          d="M162 92C162 86.6 179 82.4 200 82.4C221 82.4 238 86.6 238 92C238 97.4 221 101.6 200 101.6C179 101.6 162 97.4 162 92Z"
+        <ellipse
+          cx={204}
+          cy={316.5}
+          rx={38}
+          ry={4.6}
+          fill="currentColor"
+          fillOpacity={0.06}
+          stroke="none"
         />
       </g>
-
-      {/* The rings the fingers left as the wall rose. */}
-      <g strokeWidth={0.8} className="text-smoke">
-        {RINGS.map((d, index) => (
-          <path
-            key={d}
-            d={d}
-            pathLength={1}
-            style={drawStyle(RINGS_MS + index * 60)}
-            className={draw}
-          />
-        ))}
-      </g>
-
-      {/* The glaze band on the shoulder, and the one drip it left. */}
-      <g className="text-sage">
-        <path
-          pathLength={1}
-          strokeWidth={1.6}
-          style={drawStyle(GLAZE_MS)}
-          className={draw}
-          d="M120.0 150.0C120.0 164.3 278.7 164.3 278.7 150.0"
-        />
-        <path
-          pathLength={1}
-          strokeWidth={1.3}
-          style={drawStyle(GLAZE_MS + 160)}
-          className={draw}
-          d="M240 157C241 163 240 168 239 171"
-        />
-      </g>
-
-      {/* The thumb dent: where the maker held it, and why it is not symmetrical. */}
-      <path
-        pathLength={1}
-        strokeWidth={0.8}
-        style={drawStyle(GLAZE_MS + 240)}
-        className={draw}
-        d="M272 141C282 148 285 158 281 169"
-      />
-
-      {/* The floor it stands on, and the shadow it casts. */}
-      <ellipse
-        cx={200}
-        cy={314}
-        rx={62}
-        ry={6}
-        fill="currentColor"
-        fillOpacity={0.07}
-        stroke="none"
-        className={fade}
-        style={fadeStyle(GROUND_MS)}
-      />
       <path
         pathLength={1}
         strokeWidth={0.75}
+        strokeOpacity={0.65}
         style={drawStyle(GROUND_MS)}
         className={draw}
-        d="M108 320C160 317 244 323 296 319"
+        d={`M104 ${GROUND_Y}C160 ${GROUND_Y - 2.5} 244 ${GROUND_Y + 2.5} 300 ${GROUND_Y - 0.5}`}
       />
 
-      {/* The kiln mark at the foot: three flames, no taller than the foot. */}
-      <g className="text-sage" strokeWidth={0.9}>
+      {/* The clay body, and everything painted on its surface. */}
+      {hasClay && (
         <path
-          pathLength={1}
-          style={drawStyle(GROUND_MS + 120)}
-          className={draw}
-          d="M270 318C266 313 270 308 272 305M279 318C275 311 280 307 281 302M288 318C285 313 288 309 289 306"
+          d={BODY_PATH}
+          fill={`url(#${clayId})`}
+          stroke="none"
+          className={fade}
+          style={fadeStyle(FILL_MS)}
+        />
+      )}
+
+      <g clipPath={`url(#${bodyClipId})`}>
+        {finish === "grain" && (
+          <rect
+            x="80"
+            y="70"
+            width="240"
+            height="260"
+            filter={`url(#${grainId})`}
+            opacity={0.16}
+            className={fade}
+            style={{ mixBlendMode: "multiply", ...fadeStyle(FILL_MS) }}
+          />
+        )}
+
+        {hasClay && (
+          <rect
+            x="100"
+            y="80"
+            width="200"
+            height="240"
+            fill={`url(#${highlightId})`}
+            stroke="none"
+            className={fade}
+            style={fadeStyle(FILL_MS)}
+          />
+        )}
+
+        {hasClay && (
+          <rect
+            x="100"
+            y="80"
+            width="200"
+            height="240"
+            fill={`url(#${terminatorId})`}
+            stroke="none"
+            className={fade}
+            style={fadeStyle(FILL_MS)}
+          />
+        )}
+
+        <g
+          className={cn("text-smoke", fade)}
+          style={fadeStyle(HATCH_MS + BAND_STAGGER_MS)}
+          strokeWidth={0.85}
+        >
+          {RINGS.map((ring) => (
+            <path key={ring.d} d={ring.d} strokeOpacity={ring.opacity} />
+          ))}
+        </g>
+
+        {BANDS.map((band) => (
+          <g
+            key={band}
+            className={cn("text-smoke", fade)}
+            style={fadeStyle(HATCH_MS + band * BAND_STAGGER_MS)}
+            strokeWidth={0.6}
+          >
+            {HATCH.filter((stroke) => stroke.band === band).map((stroke) => (
+              <path
+                key={stroke.d}
+                d={stroke.d}
+                strokeOpacity={stroke.opacity}
+              />
+            ))}
+          </g>
+        ))}
+
+        {/* The glaze: a translucent wash that crawled as it dried. */}
+        <g className={wipe} style={{ animationDelay: `${GLAZE_MS}ms` }}>
+          <path
+            d={GLAZE_BAND_PATH}
+            fill="#4F6F52"
+            fillOpacity={0.68}
+            stroke="none"
+          />
+          <path
+            d={GLAZE_DRIP_PATH}
+            fill="#4F6F52"
+            fillOpacity={0.75}
+            stroke="none"
+          />
+          <path
+            d={GLAZE_TOP_PATH}
+            stroke="#F7F4EF"
+            strokeOpacity={0.55}
+            strokeWidth={0.9}
+          />
+        </g>
+
+        {/* Where the foot meets the floor, and the thumb press on the shoulder. */}
+        <path
+          d={ringArc(306, 0.3, 2.45, 1)}
+          stroke="currentColor"
+          strokeOpacity={0.22}
+          strokeWidth={2.6}
+          className={fade}
+          style={fadeStyle(GROUND_MS)}
+        />
+        <path
+          d={DENT_PATH}
+          strokeWidth={0.8}
+          strokeOpacity={0.6}
+          className={fade}
+          style={fadeStyle(HATCH_MS + 3 * BAND_STAGGER_MS)}
         />
       </g>
 
-      {/* The studio's line, carved under the piece. */}
+      {/* The mouth: the rim band, the dark inside, and the far inner wall. */}
+      <g className={fade} style={fadeStyle(FILL_MS)}>
+        {hasClay && (
+          <path d={JAR_MOUTH} fill={`url(#${clayId})`} stroke="none" />
+        )}
+        <path d={MOUTH_INNER} fill={`url(#${mouthId})`} stroke="none" />
+        <path
+          d={MOUTH_CRESCENT}
+          fill="#4F4840"
+          fillOpacity={0.26}
+          stroke="none"
+        />
+      </g>
+
+      {/* The outline, drawn first: two walls, the foot, the rim, its inner edge. */}
+      <g strokeWidth={1}>
+        <path
+          pathLength={1}
+          style={drawStyle(OUTLINE_MS)}
+          className={draw}
+          d={JAR_LEFT_WALL}
+        />
+        <path
+          pathLength={1}
+          style={drawStyle(OUTLINE_MS)}
+          className={draw}
+          d={JAR_RIGHT_WALL}
+        />
+        <path
+          pathLength={1}
+          style={drawStyle(OUTLINE_MS + 260)}
+          className={draw}
+          d={JAR_FOOT}
+        />
+        <path
+          pathLength={1}
+          style={drawStyle(OUTLINE_MS + 320)}
+          className={draw}
+          d={JAR_MOUTH}
+        />
+        <path
+          pathLength={1}
+          strokeWidth={0.7}
+          strokeOpacity={0.55}
+          style={drawStyle(OUTLINE_MS + 400)}
+          className={draw}
+          d={MOUTH_INNER}
+        />
+      </g>
+
+      {/* The studio's line, under the piece. */}
       <path
-        id="hero-verse-arc"
+        id={`${bodyClipId}-verse`}
         stroke="none"
-        d="M138 344C174 355 226 355 262 344"
+        d="M134 376C172 382 228 382 266 376"
       />
       <text
-        className={cn("fill-sage font-script italic", fade)}
-        style={fadeStyle(LABEL_MS)}
-        fontSize={12}
+        stroke="none"
+        className={cn("fill-smoke font-script italic", fade)}
+        style={fadeStyle(LABEL_MS + 520)}
+        fontSize={15}
       >
-        <textPath href="#hero-verse-arc" startOffset="50%" textAnchor="middle">
+        <textPath
+          href={`#${bodyClipId}-verse`}
+          startOffset="50%"
+          textAnchor="middle"
+        >
           where clay meets verses
         </textPath>
       </text>
 
-      {/* Kiln labels: the line draws, the dot lands, the claim fades in. */}
+      {/* Kiln labels: one angle, a dot on the surface, then the claim. */}
       <g>
-        {LABELS.map((label, index) => (
-          <g key={label.text}>
-            <path
-              d={`M${label.x} ${label.y}L${label.anchorX} ${label.anchorY}`}
-              pathLength={1}
-              strokeWidth={0.75}
-              style={drawStyle(LINE_MS + index * LINE_STAGGER_MS)}
-              className={draw}
-            />
-            <circle
-              cx={label.anchorX}
-              cy={label.anchorY}
-              r={2.6}
-              fill="currentColor"
-              stroke="none"
-              className={fade}
-              style={fadeStyle(LINE_MS + index * LINE_STAGGER_MS + DRAW_MS)}
-            />
-            <text
-              x={label.x + (label.align === "end" ? -8 : 8)}
-              y={label.y - 6}
-              textAnchor={label.align}
-              fontSize={11.5}
-              letterSpacing={1.5}
-              stroke="none"
-              className={cn("fill-ink font-sans uppercase", fade)}
-              style={fadeStyle(LABEL_MS + index * LINE_STAGGER_MS)}
-            >
-              {label.text}
-            </text>
-            <text
-              x={label.x + (label.align === "end" ? -8 : 8)}
-              y={label.y + 12}
-              textAnchor={label.align}
-              fontSize={12.5}
-              stroke="none"
-              className={cn("fill-smoke font-script italic", fade)}
-              style={fadeStyle(LABEL_MS + index * LINE_STAGGER_MS + 80)}
-            >
-              {label.note}
-            </text>
-          </g>
-        ))}
+        {LABELS.map((label, index) => {
+          const end = leaderEnd(label);
+          const isRight = label.direction === 1;
+          return (
+            <g key={label.text}>
+              <path
+                d={`M${end[0].toFixed(1)} ${end[1].toFixed(1)}L${label.anchor[0].toFixed(1)} ${label.anchor[1].toFixed(1)}`}
+                pathLength={1}
+                strokeWidth={0.75}
+                style={drawStyle(
+                  LINE_MS + index * LINE_STAGGER_MS,
+                  LINE_DURATION_MS,
+                )}
+                className={draw}
+              />
+              <circle
+                cx={label.anchor[0]}
+                cy={label.anchor[1]}
+                r={1.9}
+                fill="currentColor"
+                stroke="none"
+                className={fade}
+                style={fadeStyle(
+                  LINE_MS + index * LINE_STAGGER_MS + LINE_DURATION_MS,
+                )}
+              />
+              <text
+                x={end[0] + (isRight ? 7 : -7)}
+                y={end[1] - 4}
+                textAnchor={isRight ? "start" : "end"}
+                fontSize={11.5}
+                letterSpacing={1.5}
+                stroke="none"
+                className={cn("fill-ink font-sans uppercase", fade)}
+                style={fadeStyle(LABEL_MS + index * LINE_STAGGER_MS)}
+              >
+                {label.text}
+              </text>
+              <text
+                x={end[0] + (isRight ? 7 : -7)}
+                y={end[1] + 12}
+                textAnchor={isRight ? "start" : "end"}
+                fontSize={12.5}
+                stroke="none"
+                className={cn("fill-smoke font-script italic", fade)}
+                style={fadeStyle(LABEL_MS + index * LINE_STAGGER_MS + 80)}
+              >
+                {label.note}
+              </text>
+            </g>
+          );
+        })}
       </g>
     </svg>
   );

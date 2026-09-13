@@ -20,7 +20,7 @@ export function HomeHero({
   return (
     <section className="grid items-center gap-10 py-12 md:grid-cols-2 md:gap-16 md:py-20">
       <div className="relative aspect-square bg-clay-white md:order-2">
-        <HeroIllustration isAnimated />
+        <HeroIllustration isAnimated finish="grain" />
       </div>
 
       <div className="animate-fade-up flex flex-col gap-6">
