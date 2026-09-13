@@ -31,7 +31,21 @@ export function CheckoutContainer() {
   // The code shows on the summary straight away; the quote that comes back decides whether it stays.
   const [optimisticCoupon, applyOptimisticCoupon] =
     useOptimistic(appliedCoupon);
-  const [isCouponPending, startCouponTransition] = useTransition();
+  const [isCouponPending, startCouponUpdate] = useTransition();
+  // A failed quote refetch must end in a toast, not in the route's error boundary.
+  const startCouponTransition = useCallback((action: () => Promise<void>) => {
+    startCouponUpdate(async () => {
+      try {
+        await action();
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Could not update the coupon",
+        );
+      }
+    });
+  }, []);
   const [note, setNote] = useState("");
 
   const {
@@ -72,7 +86,13 @@ export function CheckoutContainer() {
       toast.error(checked?.coupon_message ?? `${code} did not work`);
       await refetchQuote({ input: { coupon_code: appliedCoupon } });
     });
-  }, [appliedCoupon, applyOptimisticCoupon, couponDraft, refetchQuote]);
+  }, [
+    appliedCoupon,
+    applyOptimisticCoupon,
+    couponDraft,
+    refetchQuote,
+    startCouponTransition,
+  ]);
 
   const handleRemoveCoupon = useCallback(() => {
     startCouponTransition(async () => {
@@ -81,7 +101,7 @@ export function CheckoutContainer() {
       await refetchQuote({ input: { coupon_code: null } });
       setAppliedCoupon(null);
     });
-  }, [applyOptimisticCoupon, refetchQuote]);
+  }, [applyOptimisticCoupon, refetchQuote, startCouponTransition]);
 
   const handlePlaceOrder = useCallback(() => {
     if (addressId === null) return;

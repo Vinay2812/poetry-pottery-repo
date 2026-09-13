@@ -310,6 +310,8 @@ function checkSlot(
     return { ok: false, reason: "The studio is closed that day" };
   }
   if (
+    starts_at.getUTCSeconds() !== 0 ||
+    starts_at.getUTCMilliseconds() !== 0 ||
     (start.date !== end.date && end.minutes !== 0) ||
     (start.minutes - config.opening_minutes) % config.slot_minutes !== 0
   ) {

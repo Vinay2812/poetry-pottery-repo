@@ -187,10 +187,12 @@ export function ProductListContainer({
     (value: boolean) => dispatch({ type: "customizable", value }),
     [dispatch],
   );
-  const handleClear = useCallback(
-    () => dispatch({ type: "clear" }),
-    [dispatch],
-  );
+  const handleClear = useCallback(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    setSearchDraft(null);
+    setPriceDraft(null);
+    dispatch({ type: "clear" });
+  }, [dispatch]);
 
   const handleLoadMore = useCallback(() => {
     if (!pageInfo?.has_more || loading) return;

@@ -393,6 +393,11 @@ async function importCustomPieces(
     const category = cleanText(entry.category);
     const singular = category.endsWith("s") ? category.slice(0, -1) : category;
     const slug = `custom-${slugify(singular)}`;
+    await prisma.category.upsert({
+      where: { slug: slugify(category) },
+      create: { slug: slugify(category), name: category },
+      update: {},
+    });
     const data = {
       name: `Custom ${singular.toLowerCase()}`,
       description: `A ${singular.toLowerCase()} thrown to your brief. Pick a size, tell us the glaze and any words you want carved, and we will send a sketch before it goes on the wheel.`,
@@ -478,9 +483,10 @@ async function importWorkshop(
   for (const booking of bookings) {
     const user_id = userIds.get(booking.user_id);
     // Legacy kept one row per booked hour; those rows become the booking's slots.
+    // json_agg emits naive UTC text that bypasses the timestamp parser above.
     const slots = booking.slots.map((slot) => ({
-      starts_at: new Date(slot.starts_at),
-      ends_at: new Date(slot.ends_at),
+      starts_at: new Date(`${slot.starts_at}Z`),
+      ends_at: new Date(`${slot.ends_at}Z`),
     }));
     if (!user_id || slots.length === 0) continue;
     const row = {

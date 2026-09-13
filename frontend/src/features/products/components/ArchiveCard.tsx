@@ -14,17 +14,19 @@ export interface ArchiveCardProps {
   note: string;
   isPriority?: boolean;
   isEager?: boolean;
+  onRemoveFromWishlist?: () => void;
 }
 
 const SIZES = "(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 50vw";
 
-// A past piece: photo, name, price and where it went. Nothing to add or save.
+// A past piece: photo, name, price and where it went. Nothing to add; saved ones can still be let go.
 export function ArchiveCard({
   href,
   name,
   imageUrl,
   price,
   note,
+  onRemoveFromWishlist,
   isPriority = false,
   isEager = false,
 }: ArchiveCardProps) {
@@ -60,6 +62,15 @@ export function ArchiveCard({
           <PriceTag price={price} compareAtPrice={null} />
         </div>
         <p className="text-[13px] text-muted-foreground">{note}</p>
+        {onRemoveFromWishlist && (
+          <button
+            type="button"
+            onClick={onRemoveFromWishlist}
+            className="self-start link-underline text-[13px] text-muted-foreground"
+          >
+            Remove from saved pieces
+          </button>
+        )}
       </div>
     </article>
   );

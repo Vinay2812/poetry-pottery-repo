@@ -42,7 +42,7 @@ export function ProductCardContainer({
     [addToCart, product.id, product.name],
   );
 
-  // Archived pieces are past work: no cart, no wishlist, just where they went.
+  // Archived pieces are past work: no cart, no new saves, just where they went.
   if (product.is_archived) {
     return (
       <ArchiveCard
@@ -53,6 +53,9 @@ export function ProductCardContainer({
         note={toArchiveLabel(product.stock)}
         isPriority={isPriority}
         isEager={isEager}
+        onRemoveFromWishlist={
+          isWishlisted(product.id) ? handleToggleWishlist : undefined
+        }
       />
     );
   }
