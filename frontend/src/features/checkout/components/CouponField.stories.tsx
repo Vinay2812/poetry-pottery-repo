@@ -39,6 +39,22 @@ export const Applied: Story = {
   },
 };
 
+export const Checking: Story = {
+  args: {
+    value: "WELCOME10",
+    isChecking: true,
+  },
+};
+
+export const RemovePending: Story = {
+  args: {
+    value: "WELCOME10",
+    message: "WELCOME10 applied",
+    isApplied: true,
+    isChecking: true,
+  },
+};
+
 export const Rejected: Story = {
   args: {
     value: "SUMMER22",

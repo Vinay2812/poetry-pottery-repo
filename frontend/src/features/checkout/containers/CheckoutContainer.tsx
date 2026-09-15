@@ -2,7 +2,13 @@
 
 import { useClerk } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useCallback, useOptimistic, useState, useTransition } from "react";
+import {
+  useCallback,
+  useOptimistic,
+  useRef,
+  useState,
+  useTransition,
+} from "react";
 import { toast } from "sonner";
 
 import {
@@ -32,6 +38,8 @@ export function CheckoutContainer() {
   const [optimisticCoupon, applyOptimisticCoupon] =
     useOptimistic(appliedCoupon);
   const [isCouponPending, startCouponUpdate] = useTransition();
+  // Only the newest coupon check may commit; a late reply from an earlier one is dropped.
+  const couponRequestId = useRef(0);
   // A failed quote refetch must end in a toast, not in the route's error boundary.
   const startCouponTransition = useCallback((action: () => Promise<void>) => {
     startCouponUpdate(async () => {
@@ -57,6 +65,10 @@ export function CheckoutContainer() {
     variables: { input: { coupon_code: appliedCoupon } },
     skip: !isSignedIn,
     fetchPolicy: "network-only",
+    // The refetch that checked the code already wrote its quote, so committing the
+    // code reads that back instead of asking for the same answer a second time.
+    nextFetchPolicy: (currentPolicy, { reason }) =>
+      reason === "variables-changed" ? "cache-first" : currentPolicy,
   });
   const quote =
     quoteData?.checkoutQuote ?? previousQuote?.checkoutQuote ?? null;
@@ -67,17 +79,27 @@ export function CheckoutContainer() {
   });
 
   // Placing an order empties the cart and adds a row to the orders list; both are fetched again.
+  // A refetch that fails must not swallow an order the server already saved.
   const [placeOrder, { loading: isPlacing }] = usePlaceOrderMutation({
     refetchQueries: ["Cart", "Orders"],
     awaitRefetchQueries: true,
+    onQueryUpdated: (query) =>
+      query
+        .refetch()
+        .retain()
+        .catch(() => {
+          toast.warning("Order saved, but your account could not refresh.");
+        }),
   });
 
   const handleApplyCoupon = useCallback(() => {
     const code = couponDraft.trim().toUpperCase();
     if (!code || code === appliedCoupon) return;
+    const requestId = ++couponRequestId.current;
     startCouponTransition(async () => {
       applyOptimisticCoupon(code);
       const { data } = await refetchQuote({ input: { coupon_code: code } });
+      if (couponRequestId.current !== requestId) return;
       const checked = data?.checkoutQuote;
       if (checked?.coupon_code === code) {
         setAppliedCoupon(code);
@@ -95,10 +117,12 @@ export function CheckoutContainer() {
   ]);
 
   const handleRemoveCoupon = useCallback(() => {
+    const requestId = ++couponRequestId.current;
     startCouponTransition(async () => {
       applyOptimisticCoupon(null);
       setCouponDraft("");
       await refetchQuote({ input: { coupon_code: null } });
+      if (couponRequestId.current !== requestId) return;
       setAppliedCoupon(null);
     });
   }, [applyOptimisticCoupon, refetchQuote, startCouponTransition]);

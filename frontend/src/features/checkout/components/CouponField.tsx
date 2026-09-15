@@ -27,7 +27,8 @@ export function CouponField({
       <Label htmlFor="coupon" className="text-[13px] text-muted-foreground">
         Have a code?
       </Label>
-      <div className="flex gap-2">
+      {/* Disabled as a set so Apply and Remove can never be in flight together. */}
+      <fieldset disabled={isChecking} className="flex min-w-0 gap-2">
         <Input
           id="coupon"
           value={value}
@@ -57,7 +58,7 @@ export function CouponField({
             {isChecking ? "Checking…" : "Apply"}
           </Button>
         )}
-      </div>
+      </fieldset>
       {/* Always rendered so applying or clearing a code never nudges the totals. */}
       <p
         id="coupon-message"
