@@ -25,17 +25,6 @@ export const JAR_MOUTH_CRESCENT =
 export const JAR_FOOT_CONTACT =
   "M241 308.2C230.9 313.7 188.7 315.1 166.9 310.7";
 
-// A wedge of clay on the bench, before any of the above exists.
-export const CLAY_WEDGE =
-  "M146 318C139 302 147 282 164 270C181 257 201 250 219 252C239 254 255 265 261 281C267 297 262 311 253 318C231 322 168 322 146 318Z";
-
-// The folds left by wedging, which also read as the contours of the lump.
-export const CLAY_RIDGES = [
-  "M158 302C171 293 190 288 207 292",
-  "M165 313C180 304 201 300 219 305",
-  "M211 266C224 269 235 277 240 289",
-];
-
 // Trimmings curling off the tool onto the bench.
 export const TRIM_CURLS = [
   "M138 319C129 319 126 309 134 306C141 304 144 312 138 314C134 315 133 311 136 310",
