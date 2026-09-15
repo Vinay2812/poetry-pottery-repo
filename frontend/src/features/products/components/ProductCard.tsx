@@ -3,6 +3,7 @@
 import { ArrowUpRight, Heart, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useCallback, useState } from "react";
 
 import { toPotteryIconKind } from "@/components/icons/pottery";
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
@@ -61,12 +62,22 @@ export function ProductCard({
   onAddToCart,
 }: ProductCardProps) {
   const { carouselRef, selectedIndex, scrollTo } = useImageCarousel();
+  const [hasPickedPhoto, setHasPickedPhoto] = useState(false);
+  const handlePickPhoto = useCallback(
+    (index: number) => {
+      setHasPickedPhoto(true);
+      scrollTo(index);
+    },
+    [scrollTo],
+  );
   const isSoldOut = stockTone === "sold_out";
   const hasMany = imageUrls.length > 1;
   const hoverImageUrl = imageUrls[1] ?? null;
-  // The old hover crossfade still reads on desktop, but only from the first photo.
+  // The old hover crossfade still reads on desktop, but only from the first photo and
+  // only until someone picks a photo by hand — after that the choice wins over the hover.
   // Both images stay mounted so turning it off fades them across instead of flashing white.
-  const isHoverFade = selectedIndex === 0 && hoverImageUrl !== null;
+  const isHoverFade =
+    !hasPickedPhoto && selectedIndex === 0 && hoverImageUrl !== null;
 
   return (
     <article className="group flex flex-col gap-2.5">
@@ -139,7 +150,7 @@ export function ProductCard({
               <button
                 key={`${url}-${index}`}
                 type="button"
-                onClick={() => scrollTo(index)}
+                onClick={() => handlePickPhoto(index)}
                 aria-label={toPhotoLabel(index, imageUrls.length)}
                 aria-current={index === selectedIndex}
                 className="pointer-events-auto p-1.5"

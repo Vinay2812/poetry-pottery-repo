@@ -31,8 +31,13 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
     scrollTo,
   } = useImageCarousel();
   const thumbRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const shownIndex = useRef(selectedIndex);
 
   useEffect(() => {
+    // scrollIntoView moves every scrolling ancestor, so on mount it would drag the
+    // page back up to the gallery over a restored scroll position.
+    if (shownIndex.current === selectedIndex) return;
+    shownIndex.current = selectedIndex;
     thumbRefs.current[selectedIndex]?.scrollIntoView({
       block: "nearest",
       inline: "nearest",

@@ -25,6 +25,13 @@ export function ProductCarousel({
   const [emblaRef, embla] = useEmblaCarousel({
     align: "start",
     containScroll: "trimSnaps",
+    // Both shelves listen on their own root, so a swipe started on a card's photos
+    // would otherwise drag the shelf underneath it as well.
+    watchDrag: (_api, event) =>
+      !(
+        event.target instanceof Element &&
+        event.target.closest('[aria-roledescription="carousel"]')
+      ),
   });
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);

@@ -39,9 +39,19 @@ export function Reveal({
     const node = ref.current;
     if (!node || typeof IntersectionObserver === "undefined") return;
     if (isScrollLinked && hasViewTimeline()) return;
+    let isFirstReport = true;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
+        const isInView = entries.some((entry) => entry.isIntersecting);
+        // Already painted at hydration: replaying the fade would blink it out first.
+        if (isFirstReport) {
+          isFirstReport = false;
+          if (isInView) {
+            observer.disconnect();
+            return;
+          }
+        }
+        if (isInView) {
           setIsVisible(true);
           observer.disconnect();
         }
