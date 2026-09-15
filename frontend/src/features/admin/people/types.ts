@@ -30,6 +30,13 @@ export function roleTone(role: UserRole): AdminStatusTone {
   return role === UserRole.Admin ? "live" : "quiet";
 }
 
+/** "Admin" needs "an", so the whole sentence is built here rather than glued in the view. */
+export function describeCurrentRole(role: UserRole): string {
+  return role === UserRole.Admin
+    ? "They are an admin today."
+    : "They are a customer today.";
+}
+
 /** The one sentence the confirm dialog needs: what this change actually does. */
 export function describeRoleChange(role: UserRole): string {
   return role === UserRole.Admin

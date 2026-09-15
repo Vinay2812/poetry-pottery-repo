@@ -9,7 +9,7 @@ const meta = {
   title: "Features/Admin/People/AdminPersonRole",
   component: AdminPersonRole,
   args: {
-    currentRoleLabel: "User",
+    currentRoleSentence: "They are a customer today.",
     explanation: "They will be able to open the studio admin.",
     actionLabel: "Make an admin",
     isBusy: false,
@@ -25,7 +25,7 @@ export const Customer: Story = {};
 
 export const Admin: Story = {
   args: {
-    currentRoleLabel: "Admin",
+    currentRoleSentence: "They are an admin today.",
     explanation: "They will lose access to the studio admin.",
     actionLabel: "Make a customer",
   },

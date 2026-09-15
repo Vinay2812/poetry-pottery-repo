@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 
 export interface AdminPersonRoleProps {
-  currentRoleLabel: string;
+  currentRoleSentence: string;
   explanation: string;
   actionLabel: string;
   isBusy: boolean;
@@ -11,7 +11,7 @@ export interface AdminPersonRoleProps {
 }
 
 export function AdminPersonRole({
-  currentRoleLabel,
+  currentRoleSentence,
   explanation,
   actionLabel,
   isBusy,
@@ -23,7 +23,7 @@ export function AdminPersonRole({
         Access
       </span>
       <p className="text-[13px]">
-        They are a {currentRoleLabel.toLowerCase()} today. {explanation}
+        {currentRoleSentence} {explanation}
       </p>
       <div>
         <Button

@@ -5,6 +5,7 @@ import { UserRole } from "@/graphql/generated/graphql";
 import {
   type AdminPersonData,
   applyPersonRolePatch,
+  describeCurrentRole,
   describeRoleChange,
   roleTone,
   toInitials,
@@ -62,6 +63,17 @@ describe("roleTone", () => {
   it("lights up admins only", () => {
     expect(roleTone(UserRole.Admin)).toBe("live");
     expect(roleTone(UserRole.User)).toBe("quiet");
+  });
+});
+
+describe("describeCurrentRole", () => {
+  it("keeps the article right for both roles", () => {
+    expect(describeCurrentRole(UserRole.Admin)).toBe(
+      "They are an admin today.",
+    );
+    expect(describeCurrentRole(UserRole.User)).toBe(
+      "They are a customer today.",
+    );
   });
 });
 
