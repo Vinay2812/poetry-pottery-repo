@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 import type { PotteryIconKind } from "@/components/icons/pottery";
 import { VESSEL_BOX, toDrawnVessel } from "@/components/media/vessels";
 import { cn } from "@/lib/utils";
@@ -20,11 +22,14 @@ export function PlaceholderImage({
   className,
 }: PlaceholderImageProps) {
   const vessel = toDrawnVessel(kind);
-  const clayId = `vessel-clay-${kind}`;
-  const highlightId = `vessel-highlight-${kind}`;
-  const shadeId = `vessel-shade-${kind}`;
-  const mouthId = `vessel-mouth-${kind}`;
-  const clipId = `vessel-body-${kind}`;
+  // A grid can hold several unphotographed pieces of one kind, and every url(#…)
+  // in the document would otherwise resolve to whichever one rendered first.
+  const id = useId();
+  const clayId = `${id}-clay`;
+  const highlightId = `${id}-highlight`;
+  const shadeId = `${id}-shade`;
+  const mouthId = `${id}-mouth`;
+  const clipId = `${id}-body`;
   // Cards leave a little air around the piece; the product page fills its square.
   const scale = size === "hero" ? 1 : 0.88;
 

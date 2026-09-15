@@ -97,10 +97,21 @@ export function CartLineItem({
               size="sm"
             />
           )}
-          <button type="button" onClick={onRemove} className={TEXT_LINK}>
+          {/* Named per piece: a cart of three otherwise reads "Remove" three times. */}
+          <button
+            type="button"
+            onClick={onRemove}
+            aria-label={`Remove ${name}`}
+            className={TEXT_LINK}
+          >
             Remove
           </button>
-          <button type="button" onClick={onSaveForLater} className={TEXT_LINK}>
+          <button
+            type="button"
+            onClick={onSaveForLater}
+            aria-label={`Save ${name} for later`}
+            className={TEXT_LINK}
+          >
             Save for later
           </button>
         </div>

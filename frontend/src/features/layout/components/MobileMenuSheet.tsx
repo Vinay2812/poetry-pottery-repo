@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRef } from "react";
 
 import { ActiveMarker } from "@/components/nav/ActiveMarker";
 import {
@@ -37,9 +40,25 @@ export function MobileMenuSheet({
   onAccountClick,
   onSignOut,
 }: MobileMenuSheetProps) {
+  // The sheet is opened from the header, not a Radix trigger, so it has to remember
+  // the button itself or closing drops focus on the body.
+  const openerRef = useRef<HTMLElement | null>(null);
+
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex h-dvh w-full flex-col">
+      <SheetContent
+        side="right"
+        className="flex h-dvh w-full flex-col"
+        onOpenAutoFocus={() => {
+          const opener = document.activeElement;
+          openerRef.current = opener instanceof HTMLElement ? opener : null;
+        }}
+        onCloseAutoFocus={(event) => {
+          if (!openerRef.current?.isConnected) return;
+          event.preventDefault();
+          openerRef.current.focus();
+        }}
+      >
         <SheetHeader>
           <SheetTitle className="font-heading text-xl tracking-tight">
             Menu

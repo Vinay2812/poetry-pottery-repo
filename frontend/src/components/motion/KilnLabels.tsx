@@ -36,7 +36,6 @@ export function KilnLabels({
   className,
 }: KilnLabelsProps) {
   const [drawnIndexes, setDrawnIndexes] = useState<number[]>([]);
-  const isInteractive = Boolean(onActivate);
 
   // Once a line has finished drawing its dash pattern comes off, so it stays continuous.
   const handleDrawn = useCallback((index: number) => {
@@ -45,9 +44,10 @@ export function KilnLabels({
     );
   }, []);
 
+  // Decoration throughout: every word here is also a row of the kiln card beside it.
   return (
     <div
-      aria-hidden={isInteractive ? undefined : true}
+      aria-hidden="true"
       className={cn("pointer-events-none absolute inset-0", className)}
     >
       <svg viewBox="0 0 100 100" className="absolute inset-0 size-full">
@@ -84,19 +84,17 @@ export function KilnLabels({
                 data-on={isOn ? "" : undefined}
                 className="kiln-dot"
               />
+              {/* Pointer sugar only: the same highlight is on the focusable kiln card rows,
+                  and a focusable circle would announce a button that Enter cannot work. */}
               {onActivate && (
                 <circle
                   cx={label.anchorX}
                   cy={label.anchorY}
                   r={HIT_RADIUS}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`Show ${label.text} on the kiln card`}
+                  aria-hidden="true"
                   className="kiln-hit"
                   onPointerEnter={() => onActivate(label.text)}
                   onPointerLeave={() => onActivate(null)}
-                  onFocus={() => onActivate(label.text)}
-                  onBlur={() => onActivate(null)}
                 />
               )}
             </g>
@@ -106,7 +104,6 @@ export function KilnLabels({
       {labels.map((label, index) => (
         <span
           key={label.text}
-          aria-hidden={isInteractive ? true : undefined}
           data-on={label.text === activeText ? "" : undefined}
           style={
             {
