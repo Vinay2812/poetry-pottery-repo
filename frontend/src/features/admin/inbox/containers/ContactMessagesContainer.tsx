@@ -15,8 +15,11 @@ import {
   useSetContactMessageReadMutation,
 } from "@/graphql/generated/graphql";
 
-import { toErrorMessage, useAdminQueryState } from "@/features/admin/shell";
-import { useSearchDraft } from "@/features/admin/shell/hooks";
+import {
+  toErrorMessage,
+  useAdminQueryState,
+  useSearchDraft,
+} from "@/features/admin/shell";
 import { AdminConfirmDialog, AdminPagination } from "@/features/admin/ui";
 
 import { ContactMessagesTable } from "@/features/admin/inbox/components/ContactMessagesTable";
