@@ -24,6 +24,32 @@ export type AddToCartInput = {
   selections?: InputMaybe<Array<SelectionInputType>>;
 };
 
+export type Address = {
+  __typename?: 'Address';
+  city: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  is_default: Scalars['Boolean']['output'];
+  landmark?: Maybe<Scalars['String']['output']>;
+  line1: Scalars['String']['output'];
+  line2?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  pincode: Scalars['String']['output'];
+  state: Scalars['String']['output'];
+};
+
+export type AddressInput = {
+  city: Scalars['String']['input'];
+  is_default?: InputMaybe<Scalars['Boolean']['input']>;
+  landmark?: InputMaybe<Scalars['String']['input']>;
+  line1: Scalars['String']['input'];
+  line2?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  phone: Scalars['String']['input'];
+  pincode: Scalars['String']['input'];
+  state: Scalars['String']['input'];
+};
+
 export type Cart = {
   __typename?: 'Cart';
   free_shipping_above?: Maybe<Scalars['Int']['output']>;
@@ -73,6 +99,22 @@ export type CategoryRef = {
   slug: Scalars['String']['output'];
 };
 
+export type CheckoutQuote = {
+  __typename?: 'CheckoutQuote';
+  coupon_code?: Maybe<Scalars['String']['output']>;
+  coupon_message?: Maybe<Scalars['String']['output']>;
+  discount: Scalars['Int']['output'];
+  item_count: Scalars['Int']['output'];
+  problems: Array<Scalars['String']['output']>;
+  shipping_fee: Scalars['Int']['output'];
+  subtotal: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type CheckoutQuoteInput = {
+  coupon_code?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type Collection = {
   __typename?: 'Collection';
   description?: Maybe<Scalars['String']['output']>;
@@ -103,9 +145,15 @@ export type FacetCount = {
 export type Mutation = {
   __typename?: 'Mutation';
   addToCart: Cart;
+  cancelOrder: Order;
   clearCart: Cart;
+  createAddress: Address;
+  deleteAddress: Scalars['Boolean']['output'];
+  placeOrder: Order;
   removeCartItem: Cart;
+  setDefaultAddress: Address;
   toggleWishlist: WishlistToggleResult;
+  updateAddress: Address;
   updateCartItem: Cart;
 };
 
@@ -115,13 +163,45 @@ export type MutationAddToCartArgs = {
 };
 
 
+export type MutationCancelOrderArgs = {
+  id: Scalars['String']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationCreateAddressArgs = {
+  input: AddressInput;
+};
+
+
+export type MutationDeleteAddressArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationPlaceOrderArgs = {
+  input: PlaceOrderInput;
+};
+
+
 export type MutationRemoveCartItemArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationSetDefaultAddressArgs = {
   id: Scalars['Int']['input'];
 };
 
 
 export type MutationToggleWishlistArgs = {
   product_id: Scalars['Int']['input'];
+};
+
+
+export type MutationUpdateAddressArgs = {
+  id: Scalars['Int']['input'];
+  input: AddressInput;
 };
 
 
@@ -135,12 +215,71 @@ export enum OptionGroupKind {
   Text = 'TEXT'
 }
 
+export type Order = {
+  __typename?: 'Order';
+  can_cancel: Scalars['Boolean']['output'];
+  cancel_reason?: Maybe<Scalars['String']['output']>;
+  cancelled_at?: Maybe<Scalars['DateTime']['output']>;
+  confirmed_at?: Maybe<Scalars['DateTime']['output']>;
+  coupon_code?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['DateTime']['output'];
+  customer_note?: Maybe<Scalars['String']['output']>;
+  delivered_at?: Maybe<Scalars['DateTime']['output']>;
+  discount: Scalars['Int']['output'];
+  id: Scalars['String']['output'];
+  item_count: Scalars['Int']['output'];
+  items: Array<OrderItem>;
+  paid_at?: Maybe<Scalars['DateTime']['output']>;
+  refunded_at?: Maybe<Scalars['DateTime']['output']>;
+  shipped_at?: Maybe<Scalars['DateTime']['output']>;
+  shipping_address: ShippingAddress;
+  shipping_fee: Scalars['Int']['output'];
+  status: OrderStatus;
+  subtotal: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+  tracking_note?: Maybe<Scalars['String']['output']>;
+};
+
+export type OrderItem = {
+  __typename?: 'OrderItem';
+  id: Scalars['Int']['output'];
+  line_total: Scalars['Int']['output'];
+  product?: Maybe<Product>;
+  product_image?: Maybe<Scalars['String']['output']>;
+  product_name: Scalars['String']['output'];
+  quantity: Scalars['Int']['output'];
+  selections: Array<CartSelection>;
+  unit_price: Scalars['Int']['output'];
+};
+
+export enum OrderStatus {
+  Cancelled = 'CANCELLED',
+  Confirmed = 'CONFIRMED',
+  Delivered = 'DELIVERED',
+  Paid = 'PAID',
+  Pending = 'PENDING',
+  Refunded = 'REFUNDED',
+  Shipped = 'SHIPPED'
+}
+
+export type OrdersResult = {
+  __typename?: 'OrdersResult';
+  items: Array<Order>;
+  page_info: PageInfo;
+};
+
 export type PageInfo = {
   __typename?: 'PageInfo';
   has_more: Scalars['Boolean']['output'];
   limit: Scalars['Int']['output'];
   page: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
+};
+
+export type PlaceOrderInput = {
+  address_id: Scalars['Int']['input'];
+  coupon_code?: InputMaybe<Scalars['String']['input']>;
+  customer_note?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type Product = {
@@ -229,11 +368,15 @@ export type ProductsResult = {
 
 export type Query = {
   __typename?: 'Query';
+  addresses: Array<Address>;
   cart: Cart;
   categories: Array<Category>;
+  checkoutQuote: CheckoutQuote;
   collection: Collection;
   collections: Array<Collection>;
   featuredProducts: Array<Product>;
+  order: Order;
+  orders: OrdersResult;
   product: Product;
   products: ProductsResult;
   relatedProducts: Array<Product>;
@@ -244,6 +387,11 @@ export type Query = {
 };
 
 
+export type QueryCheckoutQuoteArgs = {
+  input?: InputMaybe<CheckoutQuoteInput>;
+};
+
+
 export type QueryCollectionArgs = {
   slug: Scalars['String']['input'];
 };
@@ -251,6 +399,17 @@ export type QueryCollectionArgs = {
 
 export type QueryFeaturedProductsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryOrderArgs = {
+  id: Scalars['String']['input'];
+};
+
+
+export type QueryOrdersArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -279,6 +438,18 @@ export type SelectionInputType = {
   group_id: Scalars['Int']['input'];
   option_id?: InputMaybe<Scalars['Int']['input']>;
   text?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ShippingAddress = {
+  __typename?: 'ShippingAddress';
+  city: Scalars['String']['output'];
+  landmark?: Maybe<Scalars['String']['output']>;
+  line1: Scalars['String']['output'];
+  line2?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  phone: Scalars['String']['output'];
+  pincode: Scalars['String']['output'];
+  state: Scalars['String']['output'];
 };
 
 export type SiteSettings = {
@@ -336,6 +507,42 @@ export type WishlistToggleResult = {
   wishlist_count: Scalars['Int']['output'];
 };
 
+export type AddressFieldsFragment = { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean };
+
+export type AddressesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type AddressesQuery = { addresses: Array<{ id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean }> };
+
+export type CreateAddressMutationVariables = Exact<{
+  input: AddressInput;
+}>;
+
+
+export type CreateAddressMutation = { createAddress: { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean } };
+
+export type UpdateAddressMutationVariables = Exact<{
+  id: number;
+  input: AddressInput;
+}>;
+
+
+export type UpdateAddressMutation = { updateAddress: { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean } };
+
+export type DeleteAddressMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteAddressMutation = { deleteAddress: boolean };
+
+export type SetDefaultAddressMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type SetDefaultAddressMutation = { setDefaultAddress: { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean } };
+
 export type CartFieldsFragment = { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> };
 
 export type CartQueryVariables = Exact<{ [key: string]: never; }>;
@@ -369,6 +576,45 @@ export type ClearCartMutationVariables = Exact<{ [key: string]: never; }>;
 
 
 export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+
+export type OrderFieldsFragment = { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> };
+
+export type CheckoutQuoteQueryVariables = Exact<{
+  input?: CheckoutQuoteInput | null | undefined;
+}>;
+
+
+export type CheckoutQuoteQuery = { checkoutQuote: { subtotal: number, discount: number, shipping_fee: number, total: number, item_count: number, coupon_code: string | null, coupon_message: string | null, problems: Array<string> } };
+
+export type PlaceOrderMutationVariables = Exact<{
+  input: PlaceOrderInput;
+}>;
+
+
+export type PlaceOrderMutation = { placeOrder: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } };
+
+export type OrdersQueryVariables = Exact<{
+  page?: number | null | undefined;
+  limit?: number | null | undefined;
+}>;
+
+
+export type OrdersQuery = { orders: { items: Array<{ id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> }>, page_info: { total: number, page: number, limit: number, has_more: boolean } } };
+
+export type OrderQueryVariables = Exact<{
+  id: string;
+}>;
+
+
+export type OrderQuery = { order: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } };
+
+export type CancelOrderMutationVariables = Exact<{
+  id: string;
+  reason?: string | null | undefined;
+}>;
+
+
+export type CancelOrderMutation = { cancelOrder: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } };
 
 export type ProductCardFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null };
 
@@ -440,6 +686,20 @@ export type ToggleWishlistMutationVariables = Exact<{
 
 export type ToggleWishlistMutation = { toggleWishlist: { product_id: number, is_wishlisted: boolean, wishlist_count: number } };
 
+export const AddressFieldsFragmentDoc = gql`
+    fragment AddressFields on Address {
+  id
+  name
+  phone
+  line1
+  line2
+  landmark
+  city
+  state
+  pincode
+  is_default
+}
+    `;
 export const ProductCardFragmentDoc = gql`
     fragment ProductCard on Product {
   id
@@ -492,6 +752,217 @@ export const CartFieldsFragmentDoc = gql`
   }
 }
     `;
+export const OrderFieldsFragmentDoc = gql`
+    fragment OrderFields on Order {
+  id
+  status
+  subtotal
+  discount
+  shipping_fee
+  total
+  coupon_code
+  customer_note
+  tracking_note
+  cancel_reason
+  can_cancel
+  item_count
+  created_at
+  confirmed_at
+  paid_at
+  shipped_at
+  delivered_at
+  cancelled_at
+  refunded_at
+  shipping_address {
+    name
+    phone
+    line1
+    line2
+    landmark
+    city
+    state
+    pincode
+  }
+  items {
+    id
+    product_name
+    product_image
+    unit_price
+    quantity
+    line_total
+    selections {
+      group_id
+      group_name
+      option_id
+      option_name
+      text
+      price_modifier
+    }
+    product {
+      id
+      slug
+      is_customizable
+    }
+  }
+}
+    `;
+export const AddressesDocument = gql`
+    query Addresses {
+  addresses {
+    ...AddressFields
+  }
+}
+    ${AddressFieldsFragmentDoc}`;
+
+/**
+ * __useAddressesQuery__
+ *
+ * To run a query within a React component, call `useAddressesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAddressesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAddressesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useAddressesQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AddressesQuery, AddressesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AddressesQuery, AddressesQueryVariables>(AddressesDocument, options);
+      }
+export function useAddressesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AddressesQuery, AddressesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AddressesQuery, AddressesQueryVariables>(AddressesDocument, options);
+        }
+export type AddressesQueryHookResult = ReturnType<typeof useAddressesQuery>;
+export type AddressesLazyQueryHookResult = ReturnType<typeof useAddressesLazyQuery>;
+export type AddressesQueryResult = ApolloReactCommon.QueryResult<AddressesQuery, AddressesQueryVariables>;
+export const CreateAddressDocument = gql`
+    mutation CreateAddress($input: AddressInput!) {
+  createAddress(input: $input) {
+    ...AddressFields
+  }
+}
+    ${AddressFieldsFragmentDoc}`;
+
+/**
+ * __useCreateAddressMutation__
+ *
+ * To run a mutation, you first call `useCreateAddressMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateAddressMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createAddressMutation, { data, loading, error }] = useCreateAddressMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateAddressMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateAddressMutation, CreateAddressMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateAddressMutation, CreateAddressMutationVariables>(CreateAddressDocument, options);
+      }
+export type CreateAddressMutationHookResult = ReturnType<typeof useCreateAddressMutation>;
+export type CreateAddressMutationResult = ApolloReactCommon.MutationResult<CreateAddressMutation>;
+export const UpdateAddressDocument = gql`
+    mutation UpdateAddress($id: Int!, $input: AddressInput!) {
+  updateAddress(id: $id, input: $input) {
+    ...AddressFields
+  }
+}
+    ${AddressFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateAddressMutation__
+ *
+ * To run a mutation, you first call `useUpdateAddressMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateAddressMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateAddressMutation, { data, loading, error }] = useUpdateAddressMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateAddressMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateAddressMutation, UpdateAddressMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateAddressMutation, UpdateAddressMutationVariables>(UpdateAddressDocument, options);
+      }
+export type UpdateAddressMutationHookResult = ReturnType<typeof useUpdateAddressMutation>;
+export type UpdateAddressMutationResult = ApolloReactCommon.MutationResult<UpdateAddressMutation>;
+export const DeleteAddressDocument = gql`
+    mutation DeleteAddress($id: Int!) {
+  deleteAddress(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteAddressMutation__
+ *
+ * To run a mutation, you first call `useDeleteAddressMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteAddressMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteAddressMutation, { data, loading, error }] = useDeleteAddressMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteAddressMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteAddressMutation, DeleteAddressMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteAddressMutation, DeleteAddressMutationVariables>(DeleteAddressDocument, options);
+      }
+export type DeleteAddressMutationHookResult = ReturnType<typeof useDeleteAddressMutation>;
+export type DeleteAddressMutationResult = ApolloReactCommon.MutationResult<DeleteAddressMutation>;
+export const SetDefaultAddressDocument = gql`
+    mutation SetDefaultAddress($id: Int!) {
+  setDefaultAddress(id: $id) {
+    ...AddressFields
+  }
+}
+    ${AddressFieldsFragmentDoc}`;
+
+/**
+ * __useSetDefaultAddressMutation__
+ *
+ * To run a mutation, you first call `useSetDefaultAddressMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetDefaultAddressMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setDefaultAddressMutation, { data, loading, error }] = useSetDefaultAddressMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useSetDefaultAddressMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetDefaultAddressMutation, SetDefaultAddressMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetDefaultAddressMutation, SetDefaultAddressMutationVariables>(SetDefaultAddressDocument, options);
+      }
+export type SetDefaultAddressMutationHookResult = ReturnType<typeof useSetDefaultAddressMutation>;
+export type SetDefaultAddressMutationResult = ApolloReactCommon.MutationResult<SetDefaultAddressMutation>;
 export const CartDocument = gql`
     query Cart {
   cart {
@@ -655,6 +1126,190 @@ export function useClearCartMutation(baseOptions?: ApolloReactHooks.MutationHook
       }
 export type ClearCartMutationHookResult = ReturnType<typeof useClearCartMutation>;
 export type ClearCartMutationResult = ApolloReactCommon.MutationResult<ClearCartMutation>;
+export const CheckoutQuoteDocument = gql`
+    query CheckoutQuote($input: CheckoutQuoteInput) {
+  checkoutQuote(input: $input) {
+    subtotal
+    discount
+    shipping_fee
+    total
+    item_count
+    coupon_code
+    coupon_message
+    problems
+  }
+}
+    `;
+
+/**
+ * __useCheckoutQuoteQuery__
+ *
+ * To run a query within a React component, call `useCheckoutQuoteQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCheckoutQuoteQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCheckoutQuoteQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCheckoutQuoteQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<CheckoutQuoteQuery, CheckoutQuoteQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<CheckoutQuoteQuery, CheckoutQuoteQueryVariables>(CheckoutQuoteDocument, options);
+      }
+export function useCheckoutQuoteLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<CheckoutQuoteQuery, CheckoutQuoteQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<CheckoutQuoteQuery, CheckoutQuoteQueryVariables>(CheckoutQuoteDocument, options);
+        }
+export type CheckoutQuoteQueryHookResult = ReturnType<typeof useCheckoutQuoteQuery>;
+export type CheckoutQuoteLazyQueryHookResult = ReturnType<typeof useCheckoutQuoteLazyQuery>;
+export type CheckoutQuoteQueryResult = ApolloReactCommon.QueryResult<CheckoutQuoteQuery, CheckoutQuoteQueryVariables>;
+export const PlaceOrderDocument = gql`
+    mutation PlaceOrder($input: PlaceOrderInput!) {
+  placeOrder(input: $input) {
+    ...OrderFields
+  }
+}
+    ${OrderFieldsFragmentDoc}`;
+
+/**
+ * __usePlaceOrderMutation__
+ *
+ * To run a mutation, you first call `usePlaceOrderMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `usePlaceOrderMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [placeOrderMutation, { data, loading, error }] = usePlaceOrderMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function usePlaceOrderMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<PlaceOrderMutation, PlaceOrderMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<PlaceOrderMutation, PlaceOrderMutationVariables>(PlaceOrderDocument, options);
+      }
+export type PlaceOrderMutationHookResult = ReturnType<typeof usePlaceOrderMutation>;
+export type PlaceOrderMutationResult = ApolloReactCommon.MutationResult<PlaceOrderMutation>;
+export const OrdersDocument = gql`
+    query Orders($page: Int, $limit: Int) {
+  orders(page: $page, limit: $limit) {
+    items {
+      ...OrderFields
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+  }
+}
+    ${OrderFieldsFragmentDoc}`;
+
+/**
+ * __useOrdersQuery__
+ *
+ * To run a query within a React component, call `useOrdersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useOrdersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOrdersQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useOrdersQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<OrdersQuery, OrdersQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<OrdersQuery, OrdersQueryVariables>(OrdersDocument, options);
+      }
+export function useOrdersLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<OrdersQuery, OrdersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<OrdersQuery, OrdersQueryVariables>(OrdersDocument, options);
+        }
+export type OrdersQueryHookResult = ReturnType<typeof useOrdersQuery>;
+export type OrdersLazyQueryHookResult = ReturnType<typeof useOrdersLazyQuery>;
+export type OrdersQueryResult = ApolloReactCommon.QueryResult<OrdersQuery, OrdersQueryVariables>;
+export const OrderDocument = gql`
+    query Order($id: String!) {
+  order(id: $id) {
+    ...OrderFields
+  }
+}
+    ${OrderFieldsFragmentDoc}`;
+
+/**
+ * __useOrderQuery__
+ *
+ * To run a query within a React component, call `useOrderQuery` and pass it any options that fit your needs.
+ * When your component renders, `useOrderQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useOrderQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useOrderQuery(baseOptions: ApolloReactHooks.QueryHookOptions<OrderQuery, OrderQueryVariables> & ({ variables: OrderQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<OrderQuery, OrderQueryVariables>(OrderDocument, options);
+      }
+export function useOrderLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<OrderQuery, OrderQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<OrderQuery, OrderQueryVariables>(OrderDocument, options);
+        }
+export type OrderQueryHookResult = ReturnType<typeof useOrderQuery>;
+export type OrderLazyQueryHookResult = ReturnType<typeof useOrderLazyQuery>;
+export type OrderQueryResult = ApolloReactCommon.QueryResult<OrderQuery, OrderQueryVariables>;
+export const CancelOrderDocument = gql`
+    mutation CancelOrder($id: String!, $reason: String) {
+  cancelOrder(id: $id, reason: $reason) {
+    ...OrderFields
+  }
+}
+    ${OrderFieldsFragmentDoc}`;
+
+/**
+ * __useCancelOrderMutation__
+ *
+ * To run a mutation, you first call `useCancelOrderMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCancelOrderMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [cancelOrderMutation, { data, loading, error }] = useCancelOrderMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      reason: // value for 'reason'
+ *   },
+ * });
+ */
+export function useCancelOrderMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CancelOrderMutation, CancelOrderMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CancelOrderMutation, CancelOrderMutationVariables>(CancelOrderDocument, options);
+      }
+export type CancelOrderMutationHookResult = ReturnType<typeof useCancelOrderMutation>;
+export type CancelOrderMutationResult = ApolloReactCommon.MutationResult<CancelOrderMutation>;
 export const ProductsDocument = gql`
     query Products($filter: ProductsFilterInput) {
   products(filter: $filter) {

@@ -1,0 +1,97 @@
+fragment OrderFields on Order {
+  id
+  status
+  subtotal
+  discount
+  shipping_fee
+  total
+  coupon_code
+  customer_note
+  tracking_note
+  cancel_reason
+  can_cancel
+  item_count
+  created_at
+  confirmed_at
+  paid_at
+  shipped_at
+  delivered_at
+  cancelled_at
+  refunded_at
+  shipping_address {
+    name
+    phone
+    line1
+    line2
+    landmark
+    city
+    state
+    pincode
+  }
+  items {
+    id
+    product_name
+    product_image
+    unit_price
+    quantity
+    line_total
+    selections {
+      group_id
+      group_name
+      option_id
+      option_name
+      text
+      price_modifier
+    }
+    product {
+      id
+      slug
+      is_customizable
+    }
+  }
+}
+
+query CheckoutQuote($input: CheckoutQuoteInput) {
+  checkoutQuote(input: $input) {
+    subtotal
+    discount
+    shipping_fee
+    total
+    item_count
+    coupon_code
+    coupon_message
+    problems
+  }
+}
+
+mutation PlaceOrder($input: PlaceOrderInput!) {
+  placeOrder(input: $input) {
+    ...OrderFields
+  }
+}
+
+query Orders($page: Int, $limit: Int) {
+  orders(page: $page, limit: $limit) {
+    items {
+      ...OrderFields
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+  }
+}
+
+query Order($id: String!) {
+  order(id: $id) {
+    ...OrderFields
+  }
+}
+
+mutation CancelOrder($id: String!, $reason: String) {
+  cancelOrder(id: $id, reason: $reason) {
+    ...OrderFields
+  }
+}
