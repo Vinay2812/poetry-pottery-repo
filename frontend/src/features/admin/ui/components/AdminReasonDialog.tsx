@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
-import { AdminField } from "@/features/admin/ui";
+import { AdminField } from "@/features/admin/ui/components/AdminField";
 
-export interface AdminOrderNoteDialogProps {
+export interface AdminReasonDialogProps {
   isOpen: boolean;
   title: string;
   description: string;
@@ -24,14 +24,15 @@ export interface AdminOrderNoteDialogProps {
   error: string | undefined;
   confirmLabel: string;
   isDestructive: boolean;
+  isRequired: boolean;
   isBusy: boolean;
   onValueChange: (value: string) => void;
   onOpenChange: (isOpen: boolean) => void;
   onConfirm: () => void;
 }
 
-/** One dialog for the two moves that need a sentence from the studio first. */
-export function AdminOrderNoteDialog({
+/** One dialog for every admin move that owes someone a sentence first. */
+export function AdminReasonDialog({
   isOpen,
   title,
   description,
@@ -42,11 +43,14 @@ export function AdminOrderNoteDialog({
   error,
   confirmLabel,
   isDestructive,
+  isRequired,
   isBusy,
   onValueChange,
   onOpenChange,
   onConfirm,
-}: AdminOrderNoteDialogProps) {
+}: AdminReasonDialogProps) {
+  const isEmpty = value.trim() === "";
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
@@ -54,6 +58,7 @@ export function AdminOrderNoteDialog({
           noValidate
           onSubmit={(event) => {
             event.preventDefault();
+            if (isRequired && isEmpty) return;
             onConfirm();
           }}
           className="flex flex-col gap-4"
@@ -63,16 +68,17 @@ export function AdminOrderNoteDialog({
             <DialogDescription>{description}</DialogDescription>
           </DialogHeader>
           <AdminField
-            id="order-note-dialog-field"
+            id="admin-reason-dialog-field"
             label={fieldLabel}
             hint={hint}
             error={error}
           >
             <Textarea
-              id="order-note-dialog-field"
+              id="admin-reason-dialog-field"
               rows={3}
               maxLength={300}
               autoFocus
+              className="text-[13px]"
               placeholder={placeholder}
               value={value}
               aria-invalid={error ? true : undefined}
@@ -92,7 +98,7 @@ export function AdminOrderNoteDialog({
               type="submit"
               size="sm"
               variant={isDestructive ? "destructive" : "default"}
-              disabled={isBusy}
+              disabled={isBusy || (isRequired && isEmpty)}
             >
               {isBusy ? "Working…" : confirmLabel}
             </Button>

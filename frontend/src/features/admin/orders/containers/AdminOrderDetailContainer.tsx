@@ -25,6 +25,7 @@ import { toProductPath } from "@/features/products/types";
 import { formatEnumLabel, toErrorMessage } from "@/features/admin/shell";
 import {
   AdminPageHeader,
+  AdminReasonDialog,
   AdminStatusPill,
   orderStatusTone,
 } from "@/features/admin/ui";
@@ -36,7 +37,6 @@ import {
   type AdminOrderItemRow,
 } from "@/features/admin/orders/components/AdminOrderItems";
 import { AdminOrderNote } from "@/features/admin/orders/components/AdminOrderNote";
-import { AdminOrderNoteDialog } from "@/features/admin/orders/components/AdminOrderNoteDialog";
 import { AdminOrderTimeline } from "@/features/admin/orders/components/AdminOrderTimeline";
 import { AdminOrderTotals } from "@/features/admin/orders/components/AdminOrderTotals";
 import {
@@ -323,7 +323,7 @@ export function AdminOrderDetailContainer({
         </aside>
       </div>
 
-      <AdminOrderNoteDialog
+      <AdminReasonDialog
         isOpen={pendingStatus !== null}
         title={
           pendingStatus === OrderStatus.Cancelled
@@ -356,6 +356,7 @@ export function AdminOrderDetailContainer({
             : "Mark shipped"
         }
         isDestructive={pendingStatus === OrderStatus.Cancelled}
+        isRequired={false}
         isBusy={busyStatus !== null}
         onValueChange={(value) => {
           setDialogNote(value);

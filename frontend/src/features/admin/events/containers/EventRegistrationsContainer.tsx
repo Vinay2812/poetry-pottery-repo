@@ -21,10 +21,11 @@ import {
   formatEnumLabel,
   toErrorMessage,
   useAdminQueryState,
+  useSearchDraft,
 } from "@/features/admin/shell";
-import { useSearchDraft } from "@/features/admin/shell/hooks";
 import {
   AdminPagination,
+  AdminReasonDialog,
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
@@ -36,7 +37,6 @@ import {
   EventRegistrationsTable,
   type RegistrationTableRow,
 } from "@/features/admin/events/components/EventRegistrationsTable";
-import { ReasonDialog } from "@/features/admin/events/components/ReasonDialog";
 import {
   personLabel,
   registrationActionLabel,
@@ -219,7 +219,7 @@ export function EventRegistrationsContainer({
         hasMore={pageInfo?.has_more ?? false}
         onPageChange={(next) => patch({ reg_page: String(next) })}
       />
-      <ReasonDialog
+      <AdminReasonDialog
         isOpen={pending !== null}
         title={
           pending?.status === RegistrationStatus.Rejected
@@ -227,12 +227,18 @@ export function EventRegistrationsContainer({
             : "Cancel this registration?"
         }
         description="The seats go back and the person is told."
+        fieldLabel="Reason"
+        hint="Optional. It goes out with the notice."
+        placeholder="The session is full"
+        value={reason}
+        error={undefined}
         confirmLabel={
           pending ? registrationActionLabel(pending.status) : "Confirm"
         }
-        reason={reason}
+        isDestructive
+        isRequired={false}
         isBusy={busyId !== null}
-        onReasonChange={setReason}
+        onValueChange={setReason}
         onConfirm={handleConfirm}
         onOpenChange={(isOpen) => {
           if (!isOpen) setPending(null);

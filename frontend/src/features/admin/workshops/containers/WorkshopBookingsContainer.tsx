@@ -21,11 +21,12 @@ import {
   formatEnumLabel,
   toErrorMessage,
   useAdminQueryState,
+  useSearchDraft,
 } from "@/features/admin/shell";
-import { useSearchDraft } from "@/features/admin/shell/hooks";
 import {
   AdminDateFilter,
   AdminPagination,
+  AdminReasonDialog,
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
@@ -33,7 +34,6 @@ import {
   registrationStatusTone,
 } from "@/features/admin/ui";
 
-import { WorkshopBookingReasonDialog } from "@/features/admin/workshops/components/WorkshopBookingReasonDialog";
 import {
   WorkshopBookingsTable,
   type WorkshopBookingRow,
@@ -101,6 +101,7 @@ export function WorkshopBookingsContainer({
   const [pendingReason, setPendingReason] = useState<PendingReason | null>(
     null,
   );
+  const [reason, setReason] = useState("");
 
   const handleSearch = useCallback(
     (value: string) => patch({ search: value || null }),
@@ -143,6 +144,7 @@ export function WorkshopBookingsContainer({
           // The payload is one row; the list needs a fresh take on what is next.
           await refetch();
           setPendingReason(null);
+          setReason("");
           toast.success(`Booking ${formatEnumLabel(next).toLowerCase()}`);
         } catch (error) {
           toast.error(toErrorMessage(error));
@@ -157,6 +159,7 @@ export function WorkshopBookingsContainer({
   const handleAction = useCallback(
     (id: string, next: RegistrationStatus) => {
       if (isReasonRequired(next)) {
+        setReason("");
         setPendingReason({ id, status: next });
         return;
       }
@@ -219,8 +222,7 @@ export function WorkshopBookingsContainer({
         hasMore={pageInfo?.has_more ?? false}
         onPageChange={(next) => patch({ page: String(next) })}
       />
-      <WorkshopBookingReasonDialog
-        key={`reason-${pendingReason?.id ?? "none"}-${pendingReason?.status ?? ""}`}
+      <AdminReasonDialog
         isOpen={pendingReason !== null}
         title={
           pendingReason?.status === RegistrationStatus.Rejected
@@ -228,13 +230,21 @@ export function WorkshopBookingsContainer({
             : "Cancel this booking?"
         }
         description="Tell them why, in a line."
+        fieldLabel="Reason"
+        hint="The guest reads this, so keep it kind"
+        placeholder="The wheel is booked that afternoon"
+        value={reason}
+        error={undefined}
         confirmLabel={
           pendingReason ? bookingActionLabel(pendingReason.status) : ""
         }
+        isDestructive
+        isRequired
         isBusy={busyId !== null}
-        onConfirm={(reason) => {
+        onValueChange={setReason}
+        onConfirm={() => {
           if (pendingReason) {
-            applyStatus(pendingReason.id, pendingReason.status, reason);
+            applyStatus(pendingReason.id, pendingReason.status, reason.trim());
           }
         }}
         onOpenChange={(isOpen) => {
