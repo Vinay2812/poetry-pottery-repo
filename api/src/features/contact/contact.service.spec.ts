@@ -12,12 +12,7 @@ const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
 
 const prismaMock = {
-  contactMessage: {
-    create: vi.fn(),
-    findMany: vi.fn(),
-    count: vi.fn(),
-    update: vi.fn(),
-  },
+  contactMessage: { create: vi.fn() },
 };
 const mailMock = { enqueue: vi.fn() };
 
@@ -109,33 +104,5 @@ describe("ContactService", () => {
     expect(prismaMock.contactMessage.create).toHaveBeenCalledWith({
       data: containing({ phone: null }),
     });
-  });
-
-  it("lists newest messages first with page info", async () => {
-    prismaMock.contactMessage.findMany.mockResolvedValue([row]);
-    prismaMock.contactMessage.count.mockResolvedValue(1);
-
-    const result = await service.list(1, 20);
-
-    expect(prismaMock.contactMessage.findMany).toHaveBeenCalledWith({
-      orderBy: { created_at: "desc" },
-      skip: 0,
-      take: 20,
-    });
-    expect(result.page_info).toEqual({
-      total: 1,
-      page: 1,
-      limit: 20,
-      has_more: false,
-    });
-  });
-
-  it("marks a message read", async () => {
-    prismaMock.contactMessage.update.mockResolvedValue({
-      ...row,
-      is_read: true,
-    });
-
-    await expect(service.markRead(1)).resolves.toMatchObject({ is_read: true });
   });
 });

@@ -322,6 +322,7 @@ model Review {
   rating     Int
   body       String?
   image_urls String[] @default([])
+  is_hidden  Boolean  @default(false)
 
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
@@ -617,4 +618,16 @@ model ContentPage {
   updated_at DateTime @default(now()) @updatedAt
 
   @@map("content_pages")
+}
+
+// Images an admin uploaded and the API verified against the spec table; entity writes only accept these keys.
+model ConfirmedUpload {
+  key        String   @id
+  purpose    String
+  width      Int
+  height     Int
+  bytes      Int
+  created_at DateTime @default(now())
+
+  @@map("confirmed_uploads")
 }

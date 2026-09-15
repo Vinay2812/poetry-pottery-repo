@@ -1,0 +1,276 @@
+import { BadRequestException, NotFoundException } from "@nestjs/common";
+import { Test } from "@nestjs/testing";
+import { EventStatus, EventType, RegistrationStatus } from "@prisma/client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { PrismaService } from "@/prisma/prisma.service";
+import { EventsService } from "@/features/events/events.service";
+import { SearchService } from "@/features/search/search.service";
+import { UploadsService } from "../uploads/uploads.service";
+import {
+  AdminEventsService,
+  assertSchedule,
+  nextRegistrationStatuses,
+} from "./events.service";
+
+const containing = (value: Record<string, unknown>): unknown =>
+  expect.objectContaining(value);
+
+const anything = (): unknown => expect.anything();
+
+const eventRow = {
+  id: 3,
+  slug: "wheel-evening",
+  title: "Wheel evening",
+  description: "Two hours at the wheel.",
+  event_type: EventType.POTTERY_WORKSHOP,
+  status: EventStatus.DRAFT,
+  level: null,
+  starts_at: new Date("2026-10-01T12:00:00.000Z"),
+  ends_at: new Date("2026-10-01T14:00:00.000Z"),
+  location: "Sangli",
+  address: "Studio",
+  price: 1500,
+  total_seats: 8,
+  available_seats: 6,
+  instructor: null,
+  image_url: "https://cdn.example.com/events/a.png",
+  gallery: [],
+  includes: [],
+  highlights: [],
+  performers: [],
+  rating_avg: 0,
+  rating_count: 0,
+};
+
+const registrationRow = {
+  id: "EV-ABC1234567",
+  event_id: 3,
+  user_id: 7,
+  seats: 2,
+  unit_price: 1500,
+  discount: 0,
+  total: 3000,
+  status: RegistrationStatus.PENDING,
+  note: null,
+  cancel_reason: null,
+  created_at: new Date(),
+  approved_at: null,
+  confirmed_at: null,
+  rejected_at: null,
+  cancelled_at: null,
+  event: eventRow,
+  user: { id: 7, name: "Maya", email: "maya@example.com", image: null },
+};
+
+const prismaMock = {
+  event: {
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    count: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
+  },
+  eventRegistration: {
+    findMany: vi.fn(),
+    findUnique: vi.fn(),
+    count: vi.fn(),
+  },
+};
+const eventsMock = { applyStatus: vi.fn(), notifyStatus: vi.fn() };
+const searchMock = { requestEventIndex: vi.fn() };
+const uploadsMock = { assertConfirmed: vi.fn() };
+
+function input(overrides: Record<string, unknown> = {}) {
+  return {
+    title: "Wheel evening",
+    description: "Two hours at the wheel.",
+    starts_at: new Date("2026-10-01T12:00:00.000Z"),
+    ends_at: new Date("2026-10-01T14:00:00.000Z"),
+    location: "Sangli",
+    address: "Studio",
+    price: 1500,
+    total_seats: 8,
+    image_url: "https://cdn.example.com/events/a.png",
+    ...overrides,
+  };
+}
+
+describe("assertSchedule", () => {
+  it("refuses an event that ends before it starts", () => {
+    expect(() =>
+      assertSchedule({
+        starts_at: new Date("2026-10-02"),
+        ends_at: new Date("2026-10-01"),
+        price: 100,
+        total_seats: 4,
+      }),
+    ).toThrow(BadRequestException);
+  });
+
+  it("refuses a negative price and a seatless room", () => {
+    const base = {
+      starts_at: new Date("2026-10-01"),
+      ends_at: new Date("2026-10-02"),
+    };
+    expect(() =>
+      assertSchedule({ ...base, price: -1, total_seats: 4 }),
+    ).toThrow(BadRequestException);
+    expect(() => assertSchedule({ ...base, price: 0, total_seats: 0 })).toThrow(
+      BadRequestException,
+    );
+  });
+});
+
+describe("nextRegistrationStatuses", () => {
+  it("mirrors the shared registration transitions", () => {
+    expect(nextRegistrationStatuses(RegistrationStatus.CONFIRMED)).toEqual([
+      RegistrationStatus.CANCELLED,
+    ]);
+  });
+});
+
+describe("AdminEventsService", () => {
+  let service: AdminEventsService;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    prismaMock.event.findMany.mockResolvedValue([]);
+    prismaMock.event.count.mockResolvedValue(0);
+    prismaMock.event.findUnique.mockResolvedValue(eventRow);
+    prismaMock.event.create.mockResolvedValue(eventRow);
+    prismaMock.event.update.mockResolvedValue(eventRow);
+    prismaMock.eventRegistration.findMany.mockResolvedValue([]);
+    prismaMock.eventRegistration.count.mockResolvedValue(0);
+    prismaMock.eventRegistration.findUnique.mockResolvedValue(registrationRow);
+    eventsMock.applyStatus.mockResolvedValue({
+      ...registrationRow,
+      status: RegistrationStatus.APPROVED,
+    });
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        AdminEventsService,
+        { provide: PrismaService, useValue: prismaMock },
+        { provide: EventsService, useValue: eventsMock },
+        { provide: SearchService, useValue: searchMock },
+        { provide: UploadsService, useValue: uploadsMock },
+      ],
+    }).compile();
+    service = moduleRef.get(AdminEventsService);
+  });
+
+  it("lists drafts alongside published evenings", async () => {
+    prismaMock.event.findMany.mockResolvedValue([eventRow]);
+    prismaMock.event.count.mockResolvedValue(1);
+
+    const result = await service.list({ status: EventStatus.DRAFT });
+
+    expect(result.items[0]?.status).toBe(EventStatus.DRAFT);
+    expect(prismaMock.event.findMany).toHaveBeenCalledWith(
+      containing({ where: { status: EventStatus.DRAFT } }),
+    );
+  });
+
+  it("opens a new event with every seat free", async () => {
+    await service.create(input());
+
+    expect(prismaMock.event.create).toHaveBeenCalledWith({
+      data: containing({
+        slug: "wheel-evening",
+        available_seats: 8,
+      }),
+    });
+    expect(searchMock.requestEventIndex).toHaveBeenCalledWith(3);
+  });
+
+  it("checks the cover and gallery against the event spec", async () => {
+    await service.create(
+      input({ gallery: ["https://cdn.example.com/events/b.png"] }),
+    );
+
+    expect(uploadsMock.assertConfirmed).toHaveBeenCalledWith(
+      [
+        "https://cdn.example.com/events/a.png",
+        "https://cdn.example.com/events/b.png",
+      ],
+      [],
+      "EVENT",
+    );
+  });
+
+  it("moves available seats by the change in room size", async () => {
+    await service.update(3, input({ total_seats: 10 }));
+
+    expect(prismaMock.event.update).toHaveBeenCalledWith(
+      containing({
+        data: containing({
+          total_seats: 10,
+          available_seats: 8,
+        }),
+      }),
+    );
+  });
+
+  it("never drives available seats below zero when shrinking the room", async () => {
+    await service.update(3, input({ total_seats: 1 }));
+
+    expect(prismaMock.event.update).toHaveBeenCalledWith(
+      containing({
+        data: containing({ available_seats: 0 }),
+      }),
+    );
+  });
+
+  it("publishes and unpublishes", async () => {
+    await service.setStatus(3, EventStatus.PUBLISHED);
+
+    expect(prismaMock.event.update).toHaveBeenCalledWith({
+      where: { id: 3 },
+      data: { status: EventStatus.PUBLISHED },
+    });
+  });
+
+  it("cancels every live seat through the shared transition before closing the event", async () => {
+    prismaMock.eventRegistration.findMany.mockResolvedValue([registrationRow]);
+
+    await service.cancel(3, "Kiln repair");
+
+    expect(eventsMock.applyStatus).toHaveBeenCalledWith(
+      registrationRow,
+      RegistrationStatus.CANCELLED,
+      "Kiln repair",
+    );
+    expect(eventsMock.notifyStatus).toHaveBeenCalledWith(7, anything());
+    expect(prismaMock.event.update).toHaveBeenCalledWith({
+      where: { id: 3 },
+      data: { status: EventStatus.CANCELLED },
+    });
+  });
+
+  it("moves one registration and mails the guest", async () => {
+    const result = await service.setRegistrationStatus(
+      registrationRow.id,
+      RegistrationStatus.APPROVED,
+      null,
+    );
+
+    expect(eventsMock.applyStatus).toHaveBeenCalledWith(
+      registrationRow,
+      RegistrationStatus.APPROVED,
+      null,
+    );
+    expect(result.customer.email).toBe("maya@example.com");
+  });
+
+  it("reports a missing registration", async () => {
+    prismaMock.eventRegistration.findUnique.mockResolvedValue(null);
+
+    await expect(
+      service.setRegistrationStatus(
+        "EV-NOPE",
+        RegistrationStatus.APPROVED,
+        null,
+      ),
+    ).rejects.toBeInstanceOf(NotFoundException);
+  });
+});

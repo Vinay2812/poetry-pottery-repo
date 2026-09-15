@@ -115,7 +115,8 @@ export class ReviewsService {
     viewerId: number | null,
   ): Promise<ReviewsResult> {
     const bounds = clampPage(page, limit, 20);
-    const where: Prisma.ReviewWhereInput = subject;
+    // Hidden reviews leave the storefront entirely, counts and summary included.
+    const where: Prisma.ReviewWhereInput = { ...subject, is_hidden: false };
     // One grouped count instead of reading every rating row for the summary.
     const [rows, buckets] = await Promise.all([
       this.prisma.review.findMany({
@@ -150,6 +151,7 @@ export class ReviewsService {
       where: {
         rating: { gte: 4 },
         body: { not: null },
+        is_hidden: false,
         OR: [
           { product: { is_active: true } },
           {
@@ -346,10 +348,10 @@ export class ReviewsService {
     return { rating, body, image_urls };
   }
 
-  // Denormalised averages keep cards and sorting cheap.
-  private async refreshRating(subject: ReviewSubject): Promise<void> {
+  // Denormalised averages keep cards and sorting cheap; moderation calls this after hiding a review.
+  async refreshRating(subject: ReviewSubject): Promise<void> {
     const aggregate = await this.prisma.review.aggregate({
-      where: subject,
+      where: { ...subject, is_hidden: false },
       _avg: { rating: true },
       _count: { rating: true },
     });

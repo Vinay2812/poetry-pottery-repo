@@ -165,7 +165,10 @@ describe("ReviewsService", () => {
       containing({ skip: 5, take: 5, orderBy: { created_at: "desc" } }),
     );
     expect(prismaMock.review.groupBy).toHaveBeenCalledWith(
-      containing({ by: ["rating"], where: { product_id: 3 } }),
+      containing({
+        by: ["rating"],
+        where: { product_id: 3, is_hidden: false },
+      }),
     );
     expect(result.summary).toEqual({
       average: 5,

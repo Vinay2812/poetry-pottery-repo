@@ -33,6 +33,400 @@ input AddressInput {
   state: String!
 }
 
+input AdminAnnouncementInput {
+  href: String
+  text: String
+}
+
+input AdminCategoryInput {
+  icon: String
+  image_url: String
+  name: String!
+  sort_order: Int
+}
+
+input AdminCollectionInput {
+  description: String
+  ends_at: DateTime
+  image_url: String
+  name: String!
+  starts_at: DateTime
+}
+
+input AdminContactFilterInput {
+  is_read: Boolean
+  limit: Int
+  page: Int
+  search: String
+}
+
+type AdminCoupon {
+  code: String!
+  created_at: DateTime!
+  expires_at: DateTime
+  id: Int!
+  is_active: Boolean!
+  kind: CouponKind!
+  max_uses: Int
+  min_order: Int!
+  starts_at: DateTime
+  uses_count: Int!
+  value: Int!
+}
+
+input AdminCouponInput {
+  code: String!
+  expires_at: DateTime
+  is_active: Boolean
+  kind: CouponKind!
+  max_uses: Int
+  min_order: Int
+  starts_at: DateTime
+  value: Int!
+}
+
+input AdminCouponsFilterInput {
+  is_active: Boolean
+  limit: Int
+  page: Int
+  search: String
+}
+
+type AdminCouponsResult {
+  items: [AdminCoupon!]!
+  page_info: PageInfo!
+}
+
+type AdminDashboard {
+  low_stock: [AdminLowStockPiece!]!
+  orders_by_status: [AdminOrderStatusCount!]!
+  orders_last_30_days: Int!
+  pending_bookings: Int!
+  pending_registrations: Int!
+  recent_bookings: [AdminRecentBooking!]!
+  recent_orders: [AdminRecentOrder!]!
+  revenue_last_30_days: Int!
+  unread_messages: Int!
+}
+
+input AdminEventInput {
+  address: String!
+  description: String!
+  ends_at: DateTime!
+  event_type: EventType
+  gallery: [String!]
+  highlights: [String!]
+  image_url: String!
+  includes: [String!]
+  instructor: String
+  level: EventLevel
+  location: String!
+  performers: [String!]
+  price: Int!
+  starts_at: DateTime!
+  title: String!
+  total_seats: Int!
+}
+
+input AdminEventsFilterInput {
+  event_type: EventType
+  limit: Int
+  page: Int
+  search: String
+  status: EventStatus
+}
+
+type AdminEventsResult {
+  items: [Event!]!
+  page_info: PageInfo!
+}
+
+type AdminLowStockPiece {
+  id: Int!
+  name: String!
+  slug: String!
+  stock: Int!
+}
+
+input AdminOptionGroupInput {
+  is_required: Boolean
+  kind: OptionGroupKind
+  max_length: Int
+  name: String!
+  price_modifier: Int
+  sort_order: Int
+}
+
+input AdminOptionInput {
+  is_active: Boolean
+  name: String!
+  price_modifier: Int
+  sort_order: Int
+}
+
+type AdminOrder {
+  admin_note: String
+  customer: AdminUserRef!
+  next_statuses: [OrderStatus!]!
+  order: Order!
+}
+
+type AdminOrderStatusCount {
+  count: Int!
+  status: OrderStatus!
+}
+
+input AdminOrdersFilterInput {
+  from: DateTime
+  limit: Int
+  page: Int
+  search: String
+  status: OrderStatus
+  to: DateTime
+}
+
+type AdminOrdersResult {
+  items: [AdminOrder!]!
+  page_info: PageInfo!
+}
+
+input AdminProductInput {
+  care_notes: [String!]
+  category_ids: [Int!]
+  collection_id: Int
+  color_code: String
+  color_name: String
+  compare_at_price: Int
+  description: String!
+  dimensions: String
+  image_urls: [String!]
+  is_active: Boolean
+  is_customizable: Boolean
+  is_featured: Boolean
+  material: String!
+  name: String!
+  price: Int!
+  stock: Int
+}
+
+input AdminProductUpdateInput {
+  care_notes: [String!]
+  category_ids: [Int!]
+  collection_id: Int
+  color_code: String
+  color_name: String
+  compare_at_price: Int
+  description: String
+  dimensions: String
+  image_urls: [String!]
+  is_customizable: Boolean
+  material: String
+  name: String
+  price: Int
+  stock: Int
+}
+
+input AdminProductsFilterInput {
+  category_id: Int
+  collection_id: Int
+  is_active: Boolean
+  is_featured: Boolean
+  limit: Int
+  low_stock: Boolean
+  page: Int
+  search: String
+}
+
+type AdminProductsResult {
+  items: [Product!]!
+  page_info: PageInfo!
+}
+
+type AdminRecentBooking {
+  created_at: DateTime!
+  customer: AdminUserRef!
+  hours: Int!
+  id: String!
+  participants: Int!
+  starts_at: DateTime!
+  status: RegistrationStatus!
+  total: Int!
+}
+
+type AdminRecentOrder {
+  created_at: DateTime!
+  customer: AdminUserRef!
+  id: String!
+  item_count: Int!
+  status: OrderStatus!
+  total: Int!
+}
+
+type AdminRegistration {
+  customer: AdminUserRef!
+  next_statuses: [RegistrationStatus!]!
+  registration: Registration!
+}
+
+input AdminRegistrationsFilterInput {
+  event_id: Int
+  limit: Int
+  page: Int
+  search: String
+  status: RegistrationStatus
+}
+
+type AdminRegistrationsResult {
+  items: [AdminRegistration!]!
+  page_info: PageInfo!
+}
+
+type AdminReview {
+  customer: AdminUserRef!
+  is_hidden: Boolean!
+  review: Review!
+  subject_kind: ReviewSubjectKind!
+}
+
+input AdminReviewsFilterInput {
+  is_hidden: Boolean
+  limit: Int
+  page: Int
+  rating: Int
+  search: String
+  subject_kind: ReviewSubjectKind
+}
+
+type AdminReviewsResult {
+  items: [AdminReview!]!
+  page_info: PageInfo!
+}
+
+input AdminSiteSettingsInput {
+  address: String
+  contact_email: String
+  contact_phone: String
+  facebook_url: String
+  free_shipping_above: Int
+  hero_cta_href: String
+  hero_cta_text: String
+  hero_heading: String
+  hero_image_url: String
+  hero_subheading: String
+  instagram_url: String
+  opening_hours: String
+  shipping_flat_fee: Int
+  whatsapp_number: String
+  youtube_url: String
+}
+
+type AdminSubscriber {
+  created_at: DateTime!
+  email: String!
+  id: Int!
+  is_active: Boolean!
+  unsubscribed_at: DateTime
+  user_id: Int
+}
+
+input AdminSubscribersFilterInput {
+  is_active: Boolean
+  limit: Int
+  page: Int
+  search: String
+}
+
+type AdminSubscribersResult {
+  items: [AdminSubscriber!]!
+  page_info: PageInfo!
+}
+
+type AdminUser {
+  bookings_count: Int!
+  created_at: DateTime!
+  orders_count: Int!
+  phone: String
+  registrations_count: Int!
+  reviews_count: Int!
+  role: UserRole!
+  user: AdminUserRef!
+}
+
+type AdminUserRef {
+  email: String!
+  id: Int!
+  image: String
+  name: String
+}
+
+input AdminUsersFilterInput {
+  limit: Int
+  page: Int
+  role: UserRole
+  search: String
+}
+
+type AdminUsersResult {
+  items: [AdminUser!]!
+  page_info: PageInfo!
+}
+
+type AdminWorkshopBlackout {
+  config_id: Int!
+  ends_at: DateTime!
+  id: Int!
+  reason: String
+  starts_at: DateTime!
+}
+
+input AdminWorkshopBlackoutInput {
+  ends_at: DateTime!
+  reason: String
+  starts_at: DateTime!
+}
+
+type AdminWorkshopBooking {
+  booking: WorkshopBooking!
+  customer: AdminUserRef!
+  next_statuses: [RegistrationStatus!]!
+}
+
+input AdminWorkshopBookingsFilterInput {
+  config_id: Int
+  from: DateTime
+  limit: Int
+  page: Int
+  search: String
+  status: RegistrationStatus
+  to: DateTime
+}
+
+type AdminWorkshopBookingsResult {
+  items: [AdminWorkshopBooking!]!
+  page_info: PageInfo!
+}
+
+input AdminWorkshopConfigInput {
+  booking_window_days: Int
+  capacity_per_slot: Int
+  closed_weekdays: [Int!]
+  closing_minutes: Int
+  description: String
+  image_url: String
+  is_active: Boolean
+  name: String
+  opening_minutes: Int
+  slot_minutes: Int
+  slot_span_days: Int
+  timezone: String
+}
+
+input AdminWorkshopTierInput {
+  hours: Int!
+  pieces_per_person: Int!
+  price_per_person: Int!
+}
+
 input BookWorkshopInput {
   config_slug: String!
   hours: Int!
@@ -119,6 +513,14 @@ type CollectionRef {
   starts_at: DateTime
 }
 
+type ConfirmedImage {
+  bytes: Int!
+  height: Int!
+  key: String!
+  public_url: String!
+  width: Int!
+}
+
 type ContactMessage {
   created_at: DateTime!
   email: String!
@@ -187,6 +589,11 @@ type ContentSectionItem {
 input ContentSectionItemInput {
   body: String!
   title: String!
+}
+
+enum CouponKind {
+  FIXED
+  PERCENT
 }
 
 """
@@ -266,33 +673,93 @@ type FacetCount {
   value: String!
 }
 
+type ImageSpec {
+  content_types: [String!]!
+  max_bytes: Int!
+  min_height: Int!
+  min_width: Int!
+  purpose: UploadPurpose!
+  ratio: Float
+  ratio_label: String!
+  renders_at: String!
+}
+
 type Mutation {
   addToCart(input: AddToCartInput!): Cart!
+  adjustProductStock(delta: Int!, id: Int!, reason: String!): Product!
   bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
+  cancelEvent(id: Int!, reason: String): Event!
   cancelOrder(id: String!, reason: String): Order!
+  cancelOrderAsAdmin(id: String!, reason: String): AdminOrder!
   cancelRegistration(id: String!, reason: String): Registration!
   cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
+  completeEvent(id: Int!): Event!
+  confirmUpload(key: String!, purpose: UploadPurpose!): ConfirmedImage!
   createAddress(input: AddressInput!): Address!
+  createAdminUpload(content_type: String!, purpose: UploadPurpose!, size: Int!): UploadTarget!
+  createCategory(input: AdminCategoryInput!): Category!
+  createCollection(input: AdminCollectionInput!): Collection!
+  createCoupon(input: AdminCouponInput!): AdminCoupon!
+  createEvent(input: AdminEventInput!): Event!
   createEventReview(event_id: Int!, input: ReviewInput!): Review!
+  createProduct(input: AdminProductInput!): Product!
+  createProductOption(group_id: Int!, input: AdminOptionInput!): ProductOptionGroup!
+  createProductOptionGroup(input: AdminOptionGroupInput!, product_id: Int!): ProductOptionGroup!
   createProductReview(input: ReviewInput!, product_id: Int!): Review!
   createReviewImageUpload(input: ReviewUploadInput!): UploadTarget!
+  createWorkshopBlackout(config_id: Int!, input: AdminWorkshopBlackoutInput!): AdminWorkshopBlackout!
   deleteAddress(id: Int!): Boolean!
+  deleteCategory(id: Int!): Boolean!
+  deleteCollection(id: Int!): Boolean!
+  deleteContactMessage(id: Int!): Boolean!
+  deleteContentPage(slug: String!): Boolean!
+  deleteCoupon(id: Int!): Boolean!
+  deleteProductOption(id: Int!): Boolean!
+  deleteProductOptionGroup(id: Int!): Boolean!
   deleteReview(id: Int!): Boolean!
-  markContactMessageRead(id: Int!): ContactMessage!
+  deleteReviewAsAdmin(id: Int!): Boolean!
+  deleteWorkshopBlackout(id: Int!): Boolean!
+  deleteWorkshopTier(id: Int!): Boolean!
+  markOrderPaid(id: String!): AdminOrder!
   placeOrder(input: PlaceOrderInput!): Order!
+  publishEvent(id: Int!): Event!
   registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
+  reorderProductImages(id: Int!, image_urls: [String!]!): Product!
   rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
+  saveContentPage(input: ContentPageInput!, slug: String!): ContentPage!
+  saveWorkshopTier(config_id: Int!, input: AdminWorkshopTierInput!): WorkshopConfig!
   sendContactMessage(input: ContactMessageInput!): Boolean!
+  setContactMessageRead(id: Int!, is_read: Boolean!): ContactMessage!
   setDefaultAddress(id: Int!): Address!
+  setOrderAdminNote(id: String!, note: String): AdminOrder!
+  setOrderStatus(cancel_reason: String, id: String!, status: OrderStatus!, tracking_note: String): AdminOrder!
+  setProductActive(id: Int!, is_active: Boolean!): Product!
+  setProductFeatured(id: Int!, is_featured: Boolean!): Product!
+  setRegistrationStatus(id: String!, reason: String, status: RegistrationStatus!): AdminRegistration!
+  setReviewHidden(id: Int!, is_hidden: Boolean!): AdminReview!
+  setUserRole(id: Int!, role: UserRole!): AdminUser!
+  setWorkshopBookingStatus(id: String!, reason: String, status: RegistrationStatus!): AdminWorkshopBooking!
   subscribeToNewsletter(email: String!): NewsletterResult!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
+  unpublishEvent(id: Int!): Event!
   unsubscribeFromNewsletter(token: String!): Boolean!
+  unsubscribeSubscriber(email: String!): Boolean!
   updateAddress(id: Int!, input: AddressInput!): Address!
+  updateAnnouncement(input: AdminAnnouncementInput!): SiteSettings!
   updateCartItem(id: Int!, quantity: Int!): Cart!
-  updateContentPage(input: ContentPageInput!, slug: String!): ContentPage!
+  updateCategory(id: Int!, input: AdminCategoryInput!): Category!
+  updateCollection(id: Int!, input: AdminCollectionInput!): Collection!
+  updateCoupon(id: Int!, input: AdminCouponInput!): AdminCoupon!
+  updateEvent(id: Int!, input: AdminEventInput!): Event!
+  updateProduct(id: Int!, input: AdminProductUpdateInput!): Product!
+  updateProductOption(id: Int!, input: AdminOptionInput!): ProductOptionGroup!
+  updateProductOptionGroup(id: Int!, input: AdminOptionGroupInput!): ProductOptionGroup!
   updateReview(id: Int!, input: ReviewInput!): Review!
+  updateSiteSettings(input: AdminSiteSettingsInput!): SiteSettings!
+  updateWorkshopBlackout(id: Int!, input: AdminWorkshopBlackoutInput!): AdminWorkshopBlackout!
+  updateWorkshopConfig(id: Int!, input: AdminWorkshopConfigInput!): WorkshopConfig!
 }
 
 type NewsletterResult {
@@ -415,8 +882,10 @@ type ProductFacets {
 
 type ProductOption {
   id: Int!
+  is_active: Boolean!
   name: String!
   price_modifier: Int!
+  sort_order: Int!
 }
 
 type ProductOptionGroup {
@@ -427,6 +896,7 @@ type ProductOptionGroup {
   name: String!
   options: [ProductOption!]!
   price_modifier: Int!
+  sort_order: Int!
 }
 
 enum ProductSort {
@@ -461,18 +931,40 @@ type ProductsResult {
 
 type Query {
   addresses: [Address!]!
+  adminCategories: [Category!]!
+  adminCollections: [Collection!]!
+  adminContactMessages(filter: AdminContactFilterInput): ContactMessagesResult!
+  adminContentPage(slug: String!): ContentPage!
+  adminContentPages: [ContentPageSummary!]!
+  adminCoupons(filter: AdminCouponsFilterInput): AdminCouponsResult!
+  adminDashboard: AdminDashboard!
+  adminEvent(id: Int!): Event!
+  adminEventRegistrations(filter: AdminRegistrationsFilterInput): AdminRegistrationsResult!
+  adminEvents(filter: AdminEventsFilterInput): AdminEventsResult!
+  adminNewsletterSubscribers(filter: AdminSubscribersFilterInput): AdminSubscribersResult!
+  adminOrder(id: String!): AdminOrder!
+  adminOrders(filter: AdminOrdersFilterInput): AdminOrdersResult!
+  adminProduct(id: Int!): Product!
+  adminProductOptionGroups(product_id: Int!): [ProductOptionGroup!]!
+  adminProducts(filter: AdminProductsFilterInput): AdminProductsResult!
+  adminReviews(filter: AdminReviewsFilterInput): AdminReviewsResult!
+  adminUser(id: Int!): AdminUser!
+  adminUsers(filter: AdminUsersFilterInput): AdminUsersResult!
+  adminWorkshopBlackouts(config_id: Int!): [AdminWorkshopBlackout!]!
+  adminWorkshopBookings(filter: AdminWorkshopBookingsFilterInput): AdminWorkshopBookingsResult!
+  adminWorkshopConfigs: [WorkshopConfig!]!
   cart: Cart!
   categories: [Category!]!
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
   collection(archive: Boolean = false, slug: String!): Collection!
   collections(archive: Boolean = false): [Collection!]!
-  contactMessages(limit: Int, page: Int): ContactMessagesResult!
   contentPage(slug: String!): ContentPage!
-  contentPages: [ContentPageSummary!]!
   event(slug: String!): Event!
   eventReviews(event_id: Int!, limit: Int, page: Int): ReviewsResult!
   events(filter: EventsFilterInput): EventsResult!
+  exportNewsletterSubscribers(filter: AdminSubscribersFilterInput): String!
   featuredProducts(limit: Int = 8): [Product!]!
+  imageSpecs: [ImageSpec!]!
   myRegistrations(limit: Int, page: Int): RegistrationsResult!
   myWorkshopBookings(limit: Int, page: Int): WorkshopBookingsResult!
   newsletterStatus: NewsletterStatus!
@@ -486,7 +978,6 @@ type Query {
   relatedProducts(limit: Int = 8, slug: String!): [Product!]!
   siteSettings: SiteSettings!
   upcomingEvents(limit: Int = 3): [Event!]!
-  users(limit: Int = 20, page: Int = 1): UsersResponse!
   wishlist: [Product!]!
   wishlistIds: [Int!]!
   workshop(slug: String!): WorkshopConfig!
@@ -572,6 +1063,11 @@ input ReviewInput {
   rating: Int!
 }
 
+enum ReviewSubjectKind {
+  EVENT
+  PRODUCT
+}
+
 input ReviewUploadInput {
   content_type: String!
   filename: String!
@@ -622,34 +1118,25 @@ type SiteSettings {
   youtube_url: String!
 }
 
+enum UploadPurpose {
+  CATEGORY
+  COLLECTION
+  CONTENT
+  EVENT
+  HERO
+  PRODUCT
+  REVIEW
+}
+
 type UploadTarget {
   key: String!
   public_url: String!
   upload_url: String!
 }
 
-type User {
-  auth_id: String!
-  created_at: DateTime!
-  email: String!
-  id: Int!
-  image: String
-  name: String
-  phone: String
-  role: UserRole!
-  updated_at: DateTime!
-}
-
 enum UserRole {
   ADMIN
   USER
-}
-
-type UsersResponse {
-  items: [User!]!
-  limit: Int!
-  page: Int!
-  total: Int!
 }
 
 type WishlistToggleResult {
@@ -707,6 +1194,7 @@ type WorkshopConfig {
   description: String
   id: Int!
   image_url: String
+  is_active: Boolean!
   name: String!
   opening_minutes: Int!
   slot_minutes: Int!

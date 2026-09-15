@@ -1,4 +1,3 @@
-export { UsersResolver } from "@/features/users/users.resolver";
 export { SettingsResolver } from "@/features/settings/settings.resolver";
 export { ProductsResolver } from "@/features/products/products.resolver";
 export { CartResolver } from "@/features/cart/cart.resolver";
@@ -15,3 +14,16 @@ export {
   ProductReviewEligibilityResolver,
   ReviewsResolver,
 } from "@/features/reviews/reviews.resolver";
+
+export { AdminUploadsResolver } from "@/features/admin/uploads/uploads.resolver";
+export { AdminDashboardResolver } from "@/features/admin/dashboard/dashboard.resolver";
+export { AdminProductsResolver } from "@/features/admin/products/products.resolver";
+export { AdminCatalogResolver } from "@/features/admin/catalog/catalog.resolver";
+export { AdminOrdersResolver } from "@/features/admin/orders/orders.resolver";
+export { AdminUsersResolver } from "@/features/admin/users/users.resolver";
+export { AdminEventsResolver } from "@/features/admin/events/events.resolver";
+export { AdminWorkshopsResolver } from "@/features/admin/workshops/workshops.resolver";
+export { AdminReviewsResolver } from "@/features/admin/reviews/reviews.resolver";
+export { AdminContentResolver } from "@/features/admin/content/content.resolver";
+export { AdminCouponsResolver } from "@/features/admin/coupons/coupons.resolver";
+export { AdminInboxResolver } from "@/features/admin/inbox/inbox.resolver";
