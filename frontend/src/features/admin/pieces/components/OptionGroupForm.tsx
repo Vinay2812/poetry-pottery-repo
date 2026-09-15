@@ -15,7 +15,7 @@ import {
   optionGroupSchema,
 } from "@/lib/validations/admin/product";
 
-import { AdminField } from "@/features/admin/ui";
+import { AdminField, toNullableNumber } from "@/features/admin/ui";
 
 export interface OptionGroupFormProps {
   title: string;
@@ -141,8 +141,7 @@ export function OptionGroupForm({
               className="tnum"
               aria-invalid={Boolean(errors.max_length)}
               {...register("max_length", {
-                setValueAs: (value: string) =>
-                  value === "" ? null : Number(value),
+                setValueAs: toNullableNumber,
               })}
             />
           </AdminField>

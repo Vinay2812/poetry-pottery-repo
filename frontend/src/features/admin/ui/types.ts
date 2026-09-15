@@ -56,3 +56,9 @@ export function enumOptions(
     label: formatEnumLabel(value),
   }));
 }
+
+// React Hook Form replays the default value itself, not a string, so an empty
+// optional number arrives as null and must not be coerced to zero.
+export function toNullableNumber(value: string | null): number | null {
+  return value === null || value === "" ? null : Number(value);
+}

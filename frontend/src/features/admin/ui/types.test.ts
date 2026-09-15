@@ -11,6 +11,7 @@ import {
   eventStatusTone,
   orderStatusTone,
   registrationStatusTone,
+  toNullableNumber,
 } from "./types";
 
 describe("status tones", () => {
@@ -40,5 +41,16 @@ describe("enumOptions", () => {
       { value: "DRAFT", label: "Draft" },
       { value: "PUBLISHED", label: "Published" },
     ]);
+  });
+});
+
+describe("toNullableNumber", () => {
+  it("keeps an empty optional number empty", () => {
+    expect(toNullableNumber("")).toBeNull();
+    expect(toNullableNumber(null)).toBeNull();
+  });
+
+  it("reads a typed number", () => {
+    expect(toNullableNumber("750")).toBe(750);
   });
 });
