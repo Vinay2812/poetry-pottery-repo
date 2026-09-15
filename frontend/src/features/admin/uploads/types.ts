@@ -12,7 +12,7 @@ export interface ImageRequirement {
 }
 
 /** The API allows the stored file to miss the ratio by this much before it deletes it. */
-export const RATIO_TOLERANCE = 0.02;
+const RATIO_TOLERANCE = 0.02;
 
 export function formatBytes(bytes: number): string {
   const mb = bytes / (1024 * 1024);

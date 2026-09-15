@@ -80,12 +80,12 @@ export const contentSlugSchema = z
   .max(60, "A slug must be 60 characters or fewer")
   .refine(isContentSlug, "Use lowercase letters, digits and dashes only");
 
-export const contentSectionItemSchema = z.object({
+const contentSectionItemSchema = z.object({
   title: requiredText("An item title", 120),
   body: requiredText("An item body", 2000),
 });
 
-export const contentSectionSchema = z.object({
+const contentSectionSchema = z.object({
   heading: requiredText("A section heading", 120),
   body: requiredText("A section body", 4000),
   items: z.array(contentSectionItemSchema),

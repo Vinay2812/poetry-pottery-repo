@@ -9,7 +9,7 @@ import { formatDate, pluralize } from "@/lib/format";
 import { formatEnumLabel, type QueryValues } from "@/features/admin/shell";
 import type { AdminFilterOption, AdminStatusTone } from "@/features/admin/ui";
 
-export const REVIEWS_PAGE_SIZE = 20;
+const REVIEWS_PAGE_SIZE = 20;
 
 export interface ReviewRow {
   id: number;

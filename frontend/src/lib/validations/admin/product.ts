@@ -2,8 +2,8 @@ import { z } from "zod";
 
 import { OptionGroupKind } from "@/graphql/generated/graphql";
 
-export const MAX_CARE_NOTES = 2000;
-export const MAX_DESCRIPTION = 4000;
+const MAX_CARE_NOTES = 2000;
+const MAX_DESCRIPTION = 4000;
 
 // Money is whole rupees everywhere, so the console never accepts a decimal.
 function rupees(label: string) {

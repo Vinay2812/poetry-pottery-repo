@@ -107,12 +107,6 @@ mutation AdjustProductStock($id: Int!, $delta: Int!, $reason: String!) {
   }
 }
 
-mutation ReorderProductImages($id: Int!, $image_urls: [String!]!) {
-  reorderProductImages(id: $id, image_urls: $image_urls) {
-    ...AdminProductRow
-  }
-}
-
 mutation CreateProductOptionGroup(
   $product_id: Int!
   $input: AdminOptionGroupInput!

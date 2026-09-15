@@ -10,8 +10,8 @@ import { formatDate, formatDateTime } from "@/lib/format";
 import type { QueryValues } from "@/features/admin/shell";
 import type { AdminFilterOption, AdminStatusTone } from "@/features/admin/ui";
 
-export const CONTACT_PAGE_SIZE = 20;
-export const SUBSCRIBERS_PAGE_SIZE = 50;
+const CONTACT_PAGE_SIZE = 20;
+const SUBSCRIBERS_PAGE_SIZE = 50;
 
 export type InboxTab = "messages" | "subscribers";
 
