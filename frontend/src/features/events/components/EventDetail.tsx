@@ -14,6 +14,7 @@ export interface EventDetailProps {
   gallery: string[];
   isPast: boolean;
   reserveBox: React.ReactNode;
+  reviews: React.ReactNode;
 }
 
 export function EventDetail({
@@ -26,6 +27,7 @@ export function EventDetail({
   gallery,
   isPast,
   reserveBox,
+  reviews,
 }: EventDetailProps) {
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-8 md:px-6 md:py-12">
@@ -121,6 +123,8 @@ export function EventDetail({
               </div>
             </section>
           )}
+
+          {reviews}
         </div>
 
         <aside className="order-first lg:sticky lg:top-24 lg:order-none">

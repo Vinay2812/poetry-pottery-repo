@@ -21,6 +21,7 @@ import {
   toTimeRange,
 } from "@/features/events/types";
 import { buildWhatsAppUrl } from "@/features/layout/types";
+import { ReviewsPanelContainer } from "@/features/reviews";
 
 export interface EventDetailContainerProps {
   event: EventDetailData;
@@ -93,6 +94,14 @@ export function EventDetailContainer({
       includes={event.includes}
       gallery={event.gallery}
       isPast={event.is_past}
+      reviews={
+        <ReviewsPanelContainer
+          kind="event"
+          subjectId={event.id}
+          slug={event.slug}
+          subjectName={event.title}
+        />
+      }
       reserveBox={
         <ReserveBox
           price={event.price}

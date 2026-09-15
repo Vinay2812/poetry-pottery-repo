@@ -1,0 +1,86 @@
+fragment ReviewFields on Review {
+  id
+  rating
+  body
+  image_urls
+  created_at
+  is_mine
+  subject_name
+  subject_href
+  author {
+    name
+    image
+  }
+}
+
+fragment ReviewSummaryFields on RatingSummary {
+  average
+  count
+  distribution
+}
+
+fragment ReviewEligibilityFields on ReviewEligibility {
+  can_review
+  reason
+  my_review {
+    ...ReviewFields
+  }
+}
+
+query ProductReviews($product_id: Int!, $page: Int, $limit: Int) {
+  productReviews(product_id: $product_id, page: $page, limit: $limit) {
+    items {
+      ...ReviewFields
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+    summary {
+      ...ReviewSummaryFields
+    }
+  }
+}
+
+query EventReviews($event_id: Int!, $page: Int, $limit: Int) {
+  eventReviews(event_id: $event_id, page: $page, limit: $limit) {
+    items {
+      ...ReviewFields
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+    summary {
+      ...ReviewSummaryFields
+    }
+  }
+}
+
+query ProductReviewEligibility($slug: String!) {
+  product(slug: $slug) {
+    id
+    review_eligibility {
+      ...ReviewEligibilityFields
+    }
+  }
+}
+
+query EventReviewEligibility($slug: String!) {
+  event(slug: $slug) {
+    id
+    review_eligibility {
+      ...ReviewEligibilityFields
+    }
+  }
+}
+
+query RecentReviews($limit: Int) {
+  recentReviews(limit: $limit) {
+    ...ReviewFields
+  }
+}

@@ -10,3 +10,8 @@ export { WorkshopsResolver } from "@/features/workshops/workshops.resolver";
 export { ContentResolver } from "@/features/content/content.resolver";
 export { NewsletterResolver } from "@/features/newsletter/newsletter.resolver";
 export { ContactResolver } from "@/features/contact/contact.resolver";
+export {
+  EventReviewEligibilityResolver,
+  ProductReviewEligibilityResolver,
+  ReviewsResolver,
+} from "@/features/reviews/reviews.resolver";

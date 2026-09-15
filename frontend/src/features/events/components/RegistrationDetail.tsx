@@ -33,6 +33,7 @@ export interface RegistrationDetailProps {
   whatsappUrl: string | null;
   canCancel: boolean;
   isCancelling: boolean;
+  reviewAction: React.ReactNode;
   onCancel: () => void;
 }
 
@@ -57,6 +58,7 @@ export function RegistrationDetail({
   whatsappUrl,
   canCancel,
   isCancelling,
+  reviewAction,
   onCancel,
 }: RegistrationDetailProps) {
   return (
@@ -128,6 +130,7 @@ export function RegistrationDetail({
                 <span className="text-foreground">Your note:</span> {note}
               </p>
             )}
+            {reviewAction}
           </section>
         </div>
 

@@ -13,6 +13,7 @@ export interface OrderItemRowProps {
   unitPrice: number;
   lineTotal: number;
   selectionSummary: string | null;
+  action?: React.ReactNode;
 }
 
 export function OrderItemRow({
@@ -23,6 +24,7 @@ export function OrderItemRow({
   unitPrice,
   lineTotal,
   selectionSummary,
+  action,
 }: OrderItemRowProps) {
   const title = href ? (
     <Link href={href} className="text-sm underline-offset-4 hover:underline">
@@ -56,6 +58,7 @@ export function OrderItemRow({
         <p className="text-[13px] text-muted-foreground tnum">
           {quantity} × {formatInr(unitPrice)}
         </p>
+        {action}
       </div>
       <span className="text-sm tnum">{formatInr(lineTotal)}</span>
     </li>
