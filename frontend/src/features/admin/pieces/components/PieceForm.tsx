@@ -15,7 +15,7 @@ import {
   productSchema,
 } from "@/lib/validations/admin/product";
 
-import { AdminField } from "@/features/admin/ui";
+import { AdminField, toNullableNumber } from "@/features/admin/ui";
 
 interface PieceTaxonomyOption {
   id: number;
@@ -210,8 +210,7 @@ export function PieceForm({
             className="tnum"
             aria-invalid={Boolean(errors.compare_at_price)}
             {...register("compare_at_price", {
-              setValueAs: (value: string) =>
-                value === "" ? null : Number(value),
+              setValueAs: toNullableNumber,
             })}
           />
         </AdminField>
