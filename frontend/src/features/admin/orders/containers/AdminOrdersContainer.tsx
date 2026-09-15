@@ -6,9 +6,11 @@ import { OrderStatus, useAdminOrdersQuery } from "@/graphql/generated/graphql";
 
 import { formatDate, formatInr } from "@/lib/format";
 
-import { formatEnumLabel, useAdminQueryState } from "@/features/admin/shell";
-// useSearchDraft is not re-exported by the shell barrel yet.
-import { useSearchDraft } from "@/features/admin/shell/hooks";
+import {
+  formatEnumLabel,
+  useAdminQueryState,
+  useSearchDraft,
+} from "@/features/admin/shell";
 import {
   AdminPageHeader,
   AdminPagination,
