@@ -105,6 +105,9 @@ export function useMyWorkshopBookings(page: number) {
     useMyWorkshopBookingsQuery({
       variables: { page, limit: 12 },
       skip: !isSignedIn,
+      // A session booked or moved while this list was unmounted must not leave a stale page behind.
+      fetchPolicy: "cache-and-network",
+      nextFetchPolicy: "cache-first",
       notifyOnNetworkStatusChange: true,
     });
   const result = data?.myWorkshopBookings ?? previousData?.myWorkshopBookings;

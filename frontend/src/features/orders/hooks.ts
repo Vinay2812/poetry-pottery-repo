@@ -16,6 +16,9 @@ export function useOrders(page: number) {
   const { data, previousData, loading, error, refetch } = useOrdersQuery({
     variables: { page, limit: 12 },
     skip: !isSignedIn,
+    // An order placed while this list was unmounted must not leave a stale page behind.
+    fetchPolicy: "cache-and-network",
+    nextFetchPolicy: "cache-first",
     notifyOnNetworkStatusChange: true,
   });
   const result = isSignedIn
