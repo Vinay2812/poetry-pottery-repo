@@ -6,11 +6,26 @@
   },
   "files.eol": "\n",
   "eslint.workingDirectories": [
-    { "directory": "api", "changeProcessCWD": true },
-    { "directory": "frontend", "changeProcessCWD": true }
+    {
+      "directory": "api",
+      "changeProcessCWD": true
+    },
+    {
+      "directory": "frontend",
+      "changeProcessCWD": true
+    }
   ],
   "eslint.validate": ["javascript", "typescript", "typescriptreact"],
   "typescript.tsdk": "frontend/node_modules/typescript/lib",
   "prisma.schemaPath": "api/prisma/schema.prisma",
-  "js/ts.tsdk.path": "frontend/node_modules/typescript/lib"
+  "js/ts.tsdk.path": "frontend/node_modules/typescript/lib",
+  "files.exclude": {
+    ".claude/worktrees": true
+  },
+  "files.watcherExclude": {
+    "**/.claude/worktrees/**": true
+  },
+  "search.exclude": {
+    ".claude/worktrees": true
+  }
 }
