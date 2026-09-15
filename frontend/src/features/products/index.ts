@@ -3,6 +3,7 @@ export { CollectionCard } from "@/features/products/components/CollectionCard";
 export { MadeToOrderBanner } from "@/features/products/components/MadeToOrderBanner";
 export { ProductCard } from "@/features/products/components/ProductCard";
 export { ProductCarousel } from "@/features/products/components/ProductCarousel";
+export { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 export { ProductDetailContainer } from "@/features/products/containers/ProductDetailContainer";
 export { ProductListContainer } from "@/features/products/containers/ProductListContainer";
 export {

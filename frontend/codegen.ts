@@ -47,6 +47,8 @@ const config: CodegenConfig = {
             // An empty namespace keeps references unprefixed and adds no import.
             importSchemaTypesFrom: "same-file",
             namespacedImportName: "",
+            // Optimistic responses spell out __typename so the cache can normalise them.
+            skipTypename: false,
           },
         },
         {
@@ -55,6 +57,9 @@ const config: CodegenConfig = {
             withHooks: true,
             withComponent: false,
             withHOC: false,
+            // Apollo Client v4 no longer exports the mutation helper types these would reference.
+            withMutationFn: false,
+            withMutationOptionsType: false,
             // Apollo Client v4 serves its React bindings from a subpath export.
             apolloReactCommonImportFrom: "@apollo/client/react",
             apolloReactHooksImportFrom: "@apollo/client/react",

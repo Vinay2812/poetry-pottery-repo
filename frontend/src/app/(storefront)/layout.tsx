@@ -23,7 +23,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
           href={settings.announcement_href}
         />
       )}
-      <SiteHeaderContainer cartCount={0} wishlistCount={0} />
+      <SiteHeaderContainer />
       <main className="flex flex-1 flex-col pb-16 lg:pb-0">{children}</main>
       <SiteFooter
         shopLinks={FOOTER_SHOP_LINKS}
@@ -46,7 +46,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
         youtubeUrl={settings.youtube_url}
         year={new Date().getFullYear()}
       />
-      <MobileNavContainer cartCount={0} />
+      <MobileNavContainer />
       <SignInPromptContainer />
     </>
   );

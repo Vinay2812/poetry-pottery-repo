@@ -1,8 +1,10 @@
-import { Module } from "@nestjs/common";
+import { Global, Module } from "@nestjs/common";
 
 import { UsersResolver } from "./users.resolver";
 import { UsersService } from "./users.service";
 
+// Global so the auth guards resolve in every feature module.
+@Global()
 @Module({
   providers: [UsersService, UsersResolver],
   exports: [UsersService],

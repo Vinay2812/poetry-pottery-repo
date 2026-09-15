@@ -1,31 +1,27 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
-
 import {
   OptionGroupKind,
   useRelatedProductsQuery,
 } from "@/graphql/generated/graphql";
-import { formatInr } from "@/lib/format";
 
-import { useRequireAuth } from "@/features/auth";
+import { useAddToCart } from "@/features/cart/hooks";
 import { KilnCard } from "@/features/products/components/KilnCard";
 import { OptionGroupPicker } from "@/features/products/components/OptionGroupPicker";
 import { ProductBuyBox } from "@/features/products/components/ProductBuyBox";
-import { ProductCard } from "@/features/products/components/ProductCard";
 import { ProductCarousel } from "@/features/products/components/ProductCarousel";
 import { ProductGallery } from "@/features/products/components/ProductGallery";
 import { StickyBuyBar } from "@/features/products/components/StickyBuyBar";
+import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
   computeUnitPrice,
   type ProductDetailData,
   type Selections,
-  toDiscountPercent,
-  toProductPath,
   toStockStatus,
   validateSelections,
 } from "@/features/products/types";
+import { useToggleWishlist, useWishlistIds } from "@/features/wishlist/hooks";
 
 export interface ProductDetailContainerProps {
   product: ProductDetailData;
@@ -38,7 +34,9 @@ export function ProductDetailContainer({
   product,
   freeShippingAbove,
 }: ProductDetailContainerProps) {
-  const requireAuth = useRequireAuth();
+  const { addToCart, isAdding } = useAddToCart();
+  const { isWishlisted } = useWishlistIds();
+  const { toggle } = useToggleWishlist();
   const [quantity, setQuantity] = useState(1);
   const [selections, setSelections] = useState<Selections>({});
   const [showErrors, setShowErrors] = useState(false);
@@ -84,22 +82,35 @@ export function ProductDetailContainer({
     setSelections((current) => ({ ...current, [groupId]: { text } }));
   }, []);
 
-  // Cart wiring lands with the cart feature; until then the button validates and confirms the intent.
   const handleAddToCart = useCallback(() => {
     if (issues.length > 0) {
       setShowErrors(true);
       return;
     }
-    requireAuth(() => {
-      toast.success(`${product.name} is ready to add`, {
-        description: `${quantity} × ${formatInr(unitPrice)}`,
-      });
-    });
-  }, [issues.length, product.name, quantity, requireAuth, unitPrice]);
+    addToCart(
+      {
+        product_id: product.id,
+        quantity,
+        selections: Object.entries(selections).map(([groupId, value]) => ({
+          group_id: Number(groupId),
+          option_id: "optionId" in value ? value.optionId : null,
+          text: "text" in value ? value.text : null,
+        })),
+      },
+      product.name,
+    );
+  }, [
+    addToCart,
+    issues.length,
+    product.id,
+    product.name,
+    quantity,
+    selections,
+  ]);
 
   const handleToggleWishlist = useCallback(() => {
-    requireAuth(() => toast("Wishlist is coming with the next update"));
-  }, [requireAuth]);
+    toggle(product.id, product.name);
+  }, [product.id, product.name, toggle]);
 
   const kilnRows = [
     { label: "Clay body", value: product.material },
@@ -140,8 +151,8 @@ export function ProductDetailContainer({
             ratingCount={product.rating_count}
             quantity={quantity}
             maxQuantity={Math.max(1, maxQuantity)}
-            isWishlisted={false}
-            isAddingToCart={false}
+            isWishlisted={isWishlisted(product.id)}
+            isAddingToCart={isAdding}
             canAddToCart={product.stock > 0 || product.is_customizable}
             freeShippingAbove={freeShippingAbove}
             onQuantityChange={setQuantity}
@@ -228,31 +239,9 @@ export function ProductDetailContainer({
           eyebrow="From the same shelf"
           viewAllHref="/products"
         >
-          {related.map((item) => {
-            const itemStock = toStockStatus(item.stock, item.is_customizable);
-            return (
-              <ProductCard
-                key={item.id}
-                href={toProductPath(item.slug)}
-                name={item.name}
-                imageUrl={item.image_urls[0] ?? null}
-                price={item.price}
-                compareAtPrice={item.compare_at_price}
-                discountPercent={toDiscountPercent(
-                  item.price,
-                  item.compare_at_price,
-                )}
-                material={item.material}
-                colorName={item.color_name}
-                colorCode={item.color_code}
-                stockTone={itemStock.tone}
-                stockLabel={itemStock.label}
-                ratingAvg={item.rating_avg}
-                ratingCount={item.rating_count}
-                isWishlisted={false}
-              />
-            );
-          })}
+          {related.map((item) => (
+            <ProductCardContainer key={item.id} product={item} />
+          ))}
         </ProductCarousel>
       )}
 
@@ -261,7 +250,7 @@ export function ProductDetailContainer({
         name={product.name}
         total={unitPrice * quantity}
         isSoldOut={stock.tone === "sold_out"}
-        isAddingToCart={false}
+        isAddingToCart={isAdding}
         canAddToCart={product.stock > 0 || product.is_customizable}
         onAddToCart={handleAddToCart}
       />

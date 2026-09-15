@@ -14,11 +14,9 @@ import {
   CategoryTile,
   CollectionCard,
   MadeToOrderBanner,
-  ProductCard,
+  ProductCardContainer,
   ProductCarousel,
-  toDiscountPercent,
   toProductPath,
-  toStockStatus,
 } from "@/features/products";
 
 export default async function HomePage() {
@@ -97,32 +95,13 @@ export default async function HomePage() {
           eyebrow="Studio favourites"
           viewAllHref="/products?sort=BEST_SELLING"
         >
-          {featured.map((product, index) => {
-            const stock = toStockStatus(product.stock, product.is_customizable);
-            return (
-              <ProductCard
-                key={product.id}
-                href={toProductPath(product.slug)}
-                name={product.name}
-                imageUrl={product.image_urls[0] ?? null}
-                price={product.price}
-                compareAtPrice={product.compare_at_price}
-                discountPercent={toDiscountPercent(
-                  product.price,
-                  product.compare_at_price,
-                )}
-                material={product.material}
-                colorName={product.color_name}
-                colorCode={product.color_code}
-                stockTone={stock.tone}
-                stockLabel={stock.label}
-                ratingAvg={product.rating_avg}
-                ratingCount={product.rating_count}
-                isWishlisted={false}
-                isPriority={index < 2}
-              />
-            );
-          })}
+          {featured.map((product, index) => (
+            <ProductCardContainer
+              key={product.id}
+              product={product}
+              isPriority={index < 2}
+            />
+          ))}
         </ProductCarousel>
       )}
 

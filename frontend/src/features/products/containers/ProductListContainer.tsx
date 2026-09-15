@@ -16,22 +16,19 @@ import { EmptyResults } from "@/features/products/components/EmptyResults";
 import { FilterSheet } from "@/features/products/components/FilterSheet";
 import { LoadFailed } from "@/features/products/components/LoadFailed";
 import { LoadMore } from "@/features/products/components/LoadMore";
-import { ProductCard } from "@/features/products/components/ProductCard";
 import { ProductCardSkeleton } from "@/features/products/components/ProductCardSkeleton";
 import { ProductFilters } from "@/features/products/components/ProductFilters";
 import { ProductGrid } from "@/features/products/components/ProductGrid";
 import { ProductToolbar } from "@/features/products/components/ProductToolbar";
 import { SearchField } from "@/features/products/components/SearchField";
+import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
   countActiveFilters,
   EMPTY_FILTERS,
   parseFilters,
   type ProductFilters as Filters,
-  toDiscountPercent,
   toFilterInput,
-  toProductPath,
   toSearchParams,
-  toStockStatus,
 } from "@/features/products/types";
 
 export interface ProductListContainerProps {
@@ -294,35 +291,13 @@ export function ProductListContainer({
           ) : (
             <>
               <ProductGrid>
-                {items.map((product, index) => {
-                  const stock = toStockStatus(
-                    product.stock,
-                    product.is_customizable,
-                  );
-                  return (
-                    <ProductCard
-                      key={product.id}
-                      href={toProductPath(product.slug)}
-                      name={product.name}
-                      imageUrl={product.image_urls[0] ?? null}
-                      price={product.price}
-                      compareAtPrice={product.compare_at_price}
-                      discountPercent={toDiscountPercent(
-                        product.price,
-                        product.compare_at_price,
-                      )}
-                      material={product.material}
-                      colorName={product.color_name}
-                      colorCode={product.color_code}
-                      stockTone={stock.tone}
-                      stockLabel={stock.label}
-                      ratingAvg={product.rating_avg}
-                      ratingCount={product.rating_count}
-                      isWishlisted={false}
-                      isPriority={index < 4}
-                    />
-                  );
-                })}
+                {items.map((product, index) => (
+                  <ProductCardContainer
+                    key={product.id}
+                    product={product}
+                    isPriority={index < 4}
+                  />
+                ))}
               </ProductGrid>
               {pageInfo && (
                 <LoadMore

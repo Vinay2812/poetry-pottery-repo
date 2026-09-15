@@ -95,3 +95,5 @@ export { UsersModule } from "@/features/users/users.module";
 export { SettingsModule } from "@/features/settings/settings.module";
 export { SearchModule } from "@/features/search/search.module";
 export { ProductsModule } from "@/features/products/products.module";
+export { CartModule } from "@/features/cart/cart.module";
+export { WishlistModule } from "@/features/wishlist/wishlist.module";
