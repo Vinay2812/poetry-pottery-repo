@@ -6,7 +6,6 @@ interface KilnCardRow {
 
 export interface KilnCardProps {
   rows: KilnCardRow[];
-  colorCode: string | null;
   activeLabel?: string | null;
   onActivate?: (label: string | null) => void;
 }

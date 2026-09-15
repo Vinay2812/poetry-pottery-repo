@@ -18,7 +18,8 @@ export function toServerMessage(error: unknown, fallback: string): string {
   return message.length > 0 ? message : fallback;
 }
 
-export type NewsletterState = "idle" | "submitting" | "subscribed" | "error";
+// The thank-you shows optimistically, so the form never sits in a submitting state.
+export type NewsletterState = "idle" | "subscribed" | "error";
 
 export interface NewsletterResult {
   state: NewsletterState;

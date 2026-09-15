@@ -23,8 +23,6 @@ export interface ProductBuyBoxProps {
   sizeLine: string | null;
   stockTone: StockTone;
   stockLabel: string;
-  ratingAvg: number;
-  ratingCount: number;
   quantity: number;
   maxQuantity: number;
   isWishlisted: boolean;

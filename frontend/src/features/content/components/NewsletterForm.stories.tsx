@@ -31,8 +31,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Submitting: Story = {
-  args: { email: "maya@example.com", state: "submitting" },
+export const Filled: Story = {
+  args: { email: "maya@example.com" },
 };
 
 export const Subscribed: Story = {

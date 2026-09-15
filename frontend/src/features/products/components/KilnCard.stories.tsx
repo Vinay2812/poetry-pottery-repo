@@ -22,7 +22,6 @@ const meta = {
       { label: "Made in", value: "Sangli, Maharashtra" },
       { label: "Ships in", value: "3 working days" },
     ],
-    colorCode: "#6B7280",
   },
 } satisfies Meta<typeof KilnCard>;
 
@@ -40,7 +39,6 @@ export const MadeToOrder: Story = {
       { label: "Made in", value: "Sangli, Maharashtra" },
       { label: "Ships in", value: "About 10 days" },
     ],
-    colorCode: "#588157",
   },
 };
 
@@ -56,10 +54,6 @@ export const Highlighted: Story = {
     activeLabel: "Glaze",
     onActivate: fn(),
   },
-};
-
-export const WithoutGlazeColor: Story = {
-  args: { colorCode: null },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

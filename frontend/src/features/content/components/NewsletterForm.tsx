@@ -50,9 +50,7 @@ export function NewsletterForm({
           aria-invalid={state === "error"}
           onChange={(event) => onEmailChange(event.target.value)}
         />
-        <Button type="submit" disabled={state === "submitting"}>
-          {state === "submitting" ? "Adding…" : "Subscribe"}
-        </Button>
+        <Button type="submit">Subscribe</Button>
       </div>
       {/* The line keeps its height either way, so nothing below it jumps. */}
       <p role="alert" className="min-h-4 text-[13px] text-destructive">

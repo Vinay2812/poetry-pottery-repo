@@ -65,8 +65,6 @@ const meta = {
     colorCode: "#6B7280",
     stockTone: "in_stock",
     stockLabel: "6 made in this batch",
-    ratingAvg: 4.6,
-    ratingCount: 128,
     quantity: 1,
     maxQuantity: 10,
     isWishlisted: false,

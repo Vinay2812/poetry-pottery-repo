@@ -227,8 +227,6 @@ export function ProductDetailContainer({
               sizeLine={product.dimensions}
               stockTone={stock.tone}
               stockLabel={batchLabel}
-              ratingAvg={product.rating_avg}
-              ratingCount={product.rating_count}
               quantity={quantity}
               maxQuantity={Math.max(1, maxQuantity)}
               isWishlisted={isWishlisted(product.id)}
@@ -328,7 +326,6 @@ export function ProductDetailContainer({
         </div>
         <KilnCard
           rows={kilnRows}
-          colorCode={product.color_code}
           activeLabel={activeFact}
           onActivate={hasKilnDiagram ? setActiveFact : undefined}
         />
