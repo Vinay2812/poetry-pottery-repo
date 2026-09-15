@@ -2359,14 +2359,6 @@ export type AdjustProductStockMutationVariables = Exact<{
 
 export type AdjustProductStockMutation = { adjustProductStock: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
 
-export type ReorderProductImagesMutationVariables = Exact<{
-  id: number;
-  image_urls: Array<string> | string;
-}>;
-
-
-export type ReorderProductImagesMutation = { reorderProductImages: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
-
 export type CreateProductOptionGroupMutationVariables = Exact<{
   product_id: number;
   input: AdminOptionGroupInput;
@@ -5425,38 +5417,6 @@ export function useAdjustProductStockMutation(baseOptions?: ApolloReactHooks.Mut
       }
 export type AdjustProductStockMutationHookResult = ReturnType<typeof useAdjustProductStockMutation>;
 export type AdjustProductStockMutationResult = ApolloReactCommon.MutationResult<AdjustProductStockMutation>;
-export const ReorderProductImagesDocument = gql`
-    mutation ReorderProductImages($id: Int!, $image_urls: [String!]!) {
-  reorderProductImages(id: $id, image_urls: $image_urls) {
-    ...AdminProductRow
-  }
-}
-    ${AdminProductRowFragmentDoc}`;
-
-/**
- * __useReorderProductImagesMutation__
- *
- * To run a mutation, you first call `useReorderProductImagesMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useReorderProductImagesMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [reorderProductImagesMutation, { data, loading, error }] = useReorderProductImagesMutation({
- *   variables: {
- *      id: // value for 'id'
- *      image_urls: // value for 'image_urls'
- *   },
- * });
- */
-export function useReorderProductImagesMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<ReorderProductImagesMutation, ReorderProductImagesMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return ApolloReactHooks.useMutation<ReorderProductImagesMutation, ReorderProductImagesMutationVariables>(ReorderProductImagesDocument, options);
-      }
-export type ReorderProductImagesMutationHookResult = ReturnType<typeof useReorderProductImagesMutation>;
-export type ReorderProductImagesMutationResult = ApolloReactCommon.MutationResult<ReorderProductImagesMutation>;
 export const CreateProductOptionGroupDocument = gql`
     mutation CreateProductOptionGroup($product_id: Int!, $input: AdminOptionGroupInput!) {
   createProductOptionGroup(product_id: $product_id, input: $input) {

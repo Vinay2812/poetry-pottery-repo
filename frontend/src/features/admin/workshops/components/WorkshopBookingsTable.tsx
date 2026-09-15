@@ -12,7 +12,7 @@ import {
   AdminTableFrame,
 } from "@/features/admin/ui";
 
-export interface WorkshopBookingAction {
+interface WorkshopBookingAction {
   status: RegistrationStatus;
   label: string;
 }

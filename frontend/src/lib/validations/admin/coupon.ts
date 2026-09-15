@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { CouponKind } from "@/graphql/generated/graphql";
 
-export const COUPON_CODE_MIN = 3;
+const COUPON_CODE_MIN = 3;
 export const COUPON_CODE_MAX = 24;
 
 function wholeNumber(label: string) {

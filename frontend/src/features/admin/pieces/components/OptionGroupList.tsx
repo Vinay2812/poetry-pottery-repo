@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 import { AdminStatusPill } from "@/features/admin/ui";
 
-export interface OptionRow {
+interface OptionRow {
   id: number;
   name: string;
   priceLabel: string;

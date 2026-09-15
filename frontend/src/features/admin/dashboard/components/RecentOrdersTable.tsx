@@ -10,7 +10,7 @@ import {
   type AdminStatusTone,
 } from "@/features/admin/ui";
 
-export interface RecentOrderRow {
+interface RecentOrderRow {
   id: string;
   customerName: string;
   statusLabel: string;

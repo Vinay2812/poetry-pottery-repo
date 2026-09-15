@@ -8,7 +8,7 @@ import {
   type AdminStatusTone,
 } from "@/features/admin/ui";
 
-export interface RecentBookingRow {
+interface RecentBookingRow {
   id: string;
   customerName: string;
   statusLabel: string;

@@ -17,7 +17,7 @@ import {
 
 import { AdminField } from "@/features/admin/ui";
 
-export interface PieceTaxonomyOption {
+interface PieceTaxonomyOption {
   id: number;
   name: string;
 }

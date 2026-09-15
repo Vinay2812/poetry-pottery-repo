@@ -2,7 +2,7 @@
 
 import { Label } from "@/components/ui/label";
 
-export interface WorkshopConfigOption {
+interface WorkshopConfigOption {
   value: string;
   label: string;
 }
