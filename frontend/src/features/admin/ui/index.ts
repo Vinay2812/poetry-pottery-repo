@@ -4,6 +4,7 @@ export { AdminEmptyRow } from "@/features/admin/ui/components/AdminEmptyRow";
 export { AdminField } from "@/features/admin/ui/components/AdminField";
 export { AdminPageHeader } from "@/features/admin/ui/components/AdminPageHeader";
 export { AdminPagination } from "@/features/admin/ui/components/AdminPagination";
+export { AdminReasonDialog } from "@/features/admin/ui/components/AdminReasonDialog";
 export { AdminSearchField } from "@/features/admin/ui/components/AdminSearchField";
 export {
   type AdminFilterOption,

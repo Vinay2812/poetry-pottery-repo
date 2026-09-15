@@ -13,10 +13,13 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatEnumLabel, toErrorMessage } from "@/features/admin/shell";
-import { AdminPageHeader, eventStatusTone } from "@/features/admin/ui";
+import {
+  AdminPageHeader,
+  AdminReasonDialog,
+  eventStatusTone,
+} from "@/features/admin/ui";
 
 import { EventStatusActions } from "@/features/admin/events/components/EventStatusActions";
-import { ReasonDialog } from "@/features/admin/events/components/ReasonDialog";
 import { EventFormContainer } from "@/features/admin/events/containers/EventFormContainer";
 import { EventRegistrationsContainer } from "@/features/admin/events/containers/EventRegistrationsContainer";
 import {
@@ -152,14 +155,20 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
         submitLabel="Save changes"
       />
       <EventRegistrationsContainer eventId={event.id} />
-      <ReasonDialog
+      <AdminReasonDialog
         isOpen={pendingAction !== null}
         title="Cancel this event?"
         description="Everyone registered is told and the seats go back."
+        fieldLabel="Reason"
+        hint="Optional. It goes out with the notice."
+        placeholder="The kiln is down for the week"
+        value={reason}
+        error={undefined}
         confirmLabel="Cancel event"
-        reason={reason}
+        isDestructive
+        isRequired={false}
         isBusy={busyAction !== null}
-        onReasonChange={setReason}
+        onValueChange={setReason}
         onConfirm={handleConfirm}
         onOpenChange={(isOpen) => {
           if (!isOpen) setPendingAction(null);

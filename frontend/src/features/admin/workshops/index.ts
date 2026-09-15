@@ -1,6 +1,5 @@
 export { WorkshopBlackoutDialog } from "@/features/admin/workshops/components/WorkshopBlackoutDialog";
 export { WorkshopBlackoutsTable } from "@/features/admin/workshops/components/WorkshopBlackoutsTable";
-export { WorkshopBookingReasonDialog } from "@/features/admin/workshops/components/WorkshopBookingReasonDialog";
 export { WorkshopBookingsTable } from "@/features/admin/workshops/components/WorkshopBookingsTable";
 export { WorkshopConfigForm } from "@/features/admin/workshops/components/WorkshopConfigForm";
 export { WorkshopConfigPicker } from "@/features/admin/workshops/components/WorkshopConfigPicker";

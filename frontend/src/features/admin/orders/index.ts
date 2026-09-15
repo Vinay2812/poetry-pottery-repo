@@ -2,7 +2,6 @@ export { AdminOrderActions } from "@/features/admin/orders/components/AdminOrder
 export { AdminOrderCustomer } from "@/features/admin/orders/components/AdminOrderCustomer";
 export { AdminOrderItems } from "@/features/admin/orders/components/AdminOrderItems";
 export { AdminOrderNote } from "@/features/admin/orders/components/AdminOrderNote";
-export { AdminOrderNoteDialog } from "@/features/admin/orders/components/AdminOrderNoteDialog";
 export { AdminOrderTimeline } from "@/features/admin/orders/components/AdminOrderTimeline";
 export { AdminOrderTotals } from "@/features/admin/orders/components/AdminOrderTotals";
 export { AdminOrdersTable } from "@/features/admin/orders/components/AdminOrdersTable";
