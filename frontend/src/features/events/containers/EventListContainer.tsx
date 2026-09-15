@@ -1,9 +1,10 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useOptimistic, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   type EventLevel,
   EventType,
@@ -19,15 +20,12 @@ import { useEvents } from "@/features/events/hooks";
 import {
   DEFAULT_EVENT_FILTERS,
   type EventFilters as Filters,
-  isLowSeats,
   parseEventFilters,
-  toDateBadge,
   toEventPath,
   toEventSearchParams,
   toEventTypeLabel,
-  toLevelLabel,
+  toEventWhenLabel,
   toSeatsLabel,
-  toTimeRange,
 } from "@/features/events/types";
 
 export interface EventListContainerProps {
@@ -42,10 +40,13 @@ export function EventListContainer({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const filters = useMemo(
+  const urlFilters = useMemo(
     () => parseEventFilters(new URLSearchParams(searchParams.toString())),
     [searchParams],
   );
+  // The chips answer on the click; the URL and the grid catch up inside the transition.
+  const [filters, setOptimisticFilters] = useOptimistic(urlFilters);
+  const [isFiltering, startTransition] = useTransition();
   const {
     events,
     pageInfo,
@@ -59,11 +60,14 @@ export function EventListContainer({
   const applyFilters = useCallback(
     (next: Filters) => {
       const query = toEventSearchParams(next).toString();
-      router.replace(query ? `${pathname}?${query}` : pathname, {
-        scroll: false,
+      startTransition(() => {
+        setOptimisticFilters(next);
+        router.replace(query ? `${pathname}?${query}` : pathname, {
+          scroll: false,
+        });
       });
     },
-    [pathname, router],
+    [pathname, router, setOptimisticFilters],
   );
 
   const handleWhenChange = useCallback(
@@ -92,10 +96,14 @@ export function EventListContainer({
     filters.when !== DEFAULT_EVENT_FILTERS.when;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
-      <header className="flex flex-col gap-2">
-        <h1 className="font-heading text-3xl md:text-5xl">{heading}</h1>
-        <p className="max-w-2xl text-muted-foreground">{description}</p>
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 md:px-6 md:py-12">
+      <header className="flex flex-col gap-3">
+        <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
+          {heading}
+        </h1>
+        <p className="max-w-xl text-[15px] text-muted-foreground">
+          {description}
+        </p>
       </header>
 
       <EventFilters
@@ -115,15 +123,14 @@ export function EventListContainer({
           ))}
         </EventGrid>
       ) : hasError ? (
-        <div className="flex flex-col items-center gap-3 rounded-3xl bg-cream px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">
-            We could not load the calendar just now.
+        <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
+          <h2 className="font-heading text-2xl tracking-tight">
+            The calendar did not load
+          </h2>
+          <p className="max-w-sm text-[15px] text-muted-foreground">
+            Something went wrong on our side.
           </p>
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={() => void refetch()}
-          >
+          <Button variant="outline" onClick={() => void refetch()}>
             Try again
           </Button>
         </div>
@@ -134,45 +141,41 @@ export function EventListContainer({
           onClearFilters={handleClearFilters}
         />
       ) : (
-        <>
+        <div
+          aria-busy={isFiltering}
+          className={cn(
+            "flex flex-col gap-8 transition-opacity duration-200",
+            isFiltering && "opacity-60",
+          )}
+        >
           <EventGrid>
-            {events.map((event, index) => {
-              const badge = toDateBadge(event.starts_at);
-              return (
-                <EventCard
-                  key={event.id}
-                  href={toEventPath(event.slug)}
-                  title={event.title}
-                  imageUrl={event.image_url}
-                  day={badge.day}
-                  month={badge.month}
-                  weekday={badge.weekday}
-                  typeLabel={toEventTypeLabel(event.event_type)}
-                  levelLabel={toLevelLabel(event.level)}
-                  timeRange={toTimeRange(event.starts_at, event.ends_at)}
-                  location={event.location}
-                  price={event.price}
-                  seatsLabel={toSeatsLabel(
-                    event.available_seats,
-                    event.total_seats,
-                  )}
-                  isSeatsLow={isLowSeats(event.available_seats)}
-                  isSoldOut={event.available_seats <= 0}
-                  isPast={event.is_past}
-                  isPriority={index < 3}
-                />
-              );
-            })}
+            {events.map((event, index) => (
+              <EventCard
+                key={event.id}
+                href={toEventPath(event.slug)}
+                title={event.title}
+                imageUrl={event.image_url}
+                dateLabel={toEventWhenLabel(event.starts_at)}
+                typeLabel={toEventTypeLabel(event.event_type)}
+                seatsLabel={
+                  event.is_past
+                    ? "Wrapped up"
+                    : toSeatsLabel(event.available_seats, event.total_seats)
+                }
+                price={event.price}
+                isPast={event.is_past}
+                isPriority={index < 3}
+              />
+            ))}
           </EventGrid>
           {pageInfo && (
-            <div className="flex flex-col items-center gap-3 py-4">
-              <p className="text-xs text-muted-foreground">
+            <div className="flex flex-col items-center gap-4 border-t border-ash py-10">
+              <p className="text-[13px] text-muted-foreground tnum">
                 Showing {events.length} of {pageInfo.total}
               </p>
               {pageInfo.has_more && (
                 <Button
                   variant="outline"
-                  className="rounded-full"
                   onClick={loadMore}
                   disabled={isFetchingMore}
                 >
@@ -181,7 +184,7 @@ export function EventListContainer({
               )}
             </div>
           )}
-        </>
+        </div>
       )}
     </div>
   );

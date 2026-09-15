@@ -5,6 +5,17 @@ export interface NavLink {
 
 export const NAV_LINKS: NavLink[] = [
   { href: "/products", label: "Shop" },
+  { href: "/custom", label: "Custom" },
+  { href: "/workshops", label: "Workshops" },
+  { href: "/events", label: "Events" },
+  { href: "/about", label: "Our story" },
+];
+
+// The mobile sheet carries the full list; the desktop bar keeps the short one.
+export const MOBILE_MENU_LINKS: NavLink[] = [
+  { href: "/products", label: "Shop" },
+  { href: "/products?view=archive", label: "Archive" },
+  { href: "/custom", label: "Custom" },
   { href: "/workshops", label: "Workshops" },
   { href: "/events", label: "Events" },
   { href: "/about", label: "Our story" },
@@ -14,7 +25,8 @@ export const FOOTER_SHOP_LINKS: NavLink[] = [
   { href: "/products", label: "All pieces" },
   { href: "/products?sort=NEWEST", label: "New arrivals" },
   { href: "/products?sort=BEST_SELLING", label: "Best sellers" },
-  { href: "/products?customizable=true", label: "Made to order" },
+  { href: "/custom", label: "Made to order" },
+  { href: "/products?view=archive", label: "Archive" },
 ];
 
 export const FOOTER_STUDIO_LINKS: NavLink[] = [
@@ -37,6 +49,18 @@ export function isActivePath(pathname: string, href: string): boolean {
   const base = href.split("?")[0] ?? href;
   if (base === "/") return pathname === "/";
   return pathname === base || pathname.startsWith(`${base}/`);
+}
+
+// The shelf and the archive share a path, so the view decides which of the two rows is lit.
+export function isActiveLink(
+  pathname: string,
+  view: string | null,
+  href: string,
+): boolean {
+  if (!isActivePath(pathname, href)) return false;
+  const query = href.split("?")[1];
+  const linkView = new URLSearchParams(query ?? "").get("view");
+  return (linkView ?? null) === (view || null);
 }
 
 export function buildWhatsAppUrl(number: string, text: string): string {

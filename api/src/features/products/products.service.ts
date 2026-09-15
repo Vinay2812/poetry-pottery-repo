@@ -22,7 +22,15 @@ const SEARCH_CANDIDATES = 200;
 
 export const productListInclude = {
   categories: { select: { id: true, slug: true, name: true } },
-  collection: { select: { id: true, slug: true, name: true, ends_at: true } },
+  collection: {
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      starts_at: true,
+      ends_at: true,
+    },
+  },
 } satisfies Prisma.ProductInclude;
 
 type ProductRow = Prisma.ProductGetPayload<{
@@ -67,14 +75,54 @@ export function sellableProductWhere(
 }
 
 // Sellable and either on the shelf or thrown to order.
-export function availableProductWhere(): Prisma.ProductWhereInput {
+export function availableProductWhere(
+  now = new Date(),
+): Prisma.ProductWhereInput {
   return {
     AND: [
-      sellableProductWhere(),
+      sellableProductWhere(now),
       { OR: [{ stock: { gt: 0 } }, { is_customizable: true }] },
     ],
   };
 }
+
+// The archive is the exact complement of the shelf, so the rule lives in one place.
+export function archivedProductWhere(
+  now = new Date(),
+): Prisma.ProductWhereInput {
+  return { NOT: availableProductWhere(now) };
+}
+
+export interface ArchiveCheck {
+  is_active: boolean;
+  stock: number;
+  is_customizable: boolean;
+  collection: { starts_at: Date | null; ends_at: Date | null } | null;
+}
+
+// Row-level twin of archivedProductWhere, kept in step by the shared spec test.
+export function isProductArchived(
+  product: ArchiveCheck,
+  now = new Date(),
+): boolean {
+  if (!product.is_active) return true;
+  const window = product.collection;
+  if (window) {
+    if (window.starts_at && window.starts_at > now) return true;
+    if (window.ends_at && window.ends_at < now) return true;
+  }
+  return product.stock <= 0 && !product.is_customizable;
+}
+
+const NARROW_KEYS = [
+  "category",
+  "collection",
+  "material",
+  "price",
+  "stock",
+] as const;
+
+type NarrowKey = (typeof NARROW_KEYS)[number];
 
 export function toProduct(row: ProductRow): Product {
   return row;
@@ -99,38 +147,54 @@ export class ProductsService {
       return {
         items: [],
         page_info: toPageInfo(bounds, 0),
-        facets: { categories: [], materials: [], price_min: 0, price_max: 0 },
+        facets: emptyFacets(),
       };
     }
 
-    const baseWhere: Prisma.ProductWhereInput = {
-      ...sellableProductWhere(),
-      ...(rankedIds ? { id: { in: rankedIds } } : {}),
-      ...(filter.collection_slug
-        ? { collection: { slug: filter.collection_slug } }
-        : {}),
-      ...(filter.customizable_only ? { is_customizable: true } : {}),
-    };
-    const where: Prisma.ProductWhereInput = {
-      ...baseWhere,
-      ...(filter.category_slugs?.length
-        ? { categories: { some: { slug: { in: filter.category_slugs } } } }
-        : {}),
-      ...(filter.materials?.length
-        ? { material: { in: filter.materials } }
-        : {}),
-      ...(filter.in_stock_only ? { stock: { gt: 0 } } : {}),
-      ...(filter.min_price != null || filter.max_price != null
-        ? {
-            price: {
-              gte: filter.min_price ?? undefined,
-              lte: filter.max_price ?? undefined,
-            },
-          }
-        : {}),
+    const now = new Date();
+    const isArchive = filter.archive ?? false;
+    const scope = isArchive
+      ? archivedProductWhere(now)
+      : availableProductWhere(now);
+    // The pool both tabs share; a search term or the made-to-order toggle never gets counted as a facet.
+    const pool: Prisma.ProductWhereInput[] = [
+      ...(rankedIds ? [{ id: { in: rankedIds } }] : []),
+      ...(filter.customizable_only ? [{ is_customizable: true }] : []),
+    ];
+    const narrowing: Record<NarrowKey, Prisma.ProductWhereInput[]> = {
+      category: filter.category_slugs?.length
+        ? [{ categories: { some: { slug: { in: filter.category_slugs } } } }]
+        : [],
+      collection: filter.collection_slug
+        ? [{ collection: { slug: filter.collection_slug } }]
+        : [],
+      material: filter.materials?.length
+        ? [{ material: { in: filter.materials } }]
+        : [],
+      price:
+        filter.min_price != null || filter.max_price != null
+          ? [
+              {
+                price: {
+                  gte: filter.min_price ?? undefined,
+                  lte: filter.max_price ?? undefined,
+                },
+              },
+            ]
+          : [],
+      stock: filter.in_stock_only ? [{ stock: { gt: 0 } }] : [],
     };
 
-    const [rows, total, facets] = await Promise.all([
+    // A facet counts against every other active filter but not against itself, so its own options never vanish.
+    const others = (skip: NarrowKey[]): Prisma.ProductWhereInput[] =>
+      NARROW_KEYS.flatMap((key) => (skip.includes(key) ? [] : narrowing[key]));
+    const scoped = (...skip: NarrowKey[]): Prisma.ProductWhereInput => ({
+      AND: [scope, ...pool, ...others(skip)],
+    });
+    const where = scoped();
+    const tabWhere = [...pool, ...NARROW_KEYS.flatMap((key) => narrowing[key])];
+
+    const [rows, facets, activeCount, archiveCount] = await Promise.all([
       rankedIds
         ? this.prisma.product.findMany({ where, include: productListInclude })
         : this.prisma.product.findMany({
@@ -140,9 +204,19 @@ export class ProductsService {
             skip: bounds.skip,
             take: bounds.limit,
           }),
-      this.prisma.product.count({ where }),
-      this.facets(baseWhere),
+      this.facets({
+        categories: scoped("category"),
+        collections: scoped("collection"),
+        materials: scoped("material"),
+      }),
+      this.prisma.product.count({
+        where: { AND: [availableProductWhere(now), ...tabWhere] },
+      }),
+      this.prisma.product.count({
+        where: { AND: [archivedProductWhere(now), ...tabWhere] },
+      }),
     ]);
+    const total = isArchive ? archiveCount : activeCount;
 
     // Search results keep the relevance order, so paginate after re-sorting by rank.
     const items = rankedIds
@@ -155,13 +229,18 @@ export class ProductsService {
     return {
       items: items.map(toProduct),
       page_info: toPageInfo(bounds, total),
-      facets,
+      facets: {
+        ...facets,
+        active_count: activeCount,
+        archive_count: archiveCount,
+      },
     };
   }
 
   async bySlug(slug: string): Promise<Product> {
+    // Archived pieces are viewable, just not purchasable, so the lookup is by slug alone.
     const row = await this.prisma.product.findFirst({
-      where: { slug, ...sellableProductWhere() },
+      where: { slug },
       include: productListInclude,
     });
     if (!row) {
@@ -232,31 +311,45 @@ export class ProductsService {
     );
   }
 
-  collections(): Promise<Collection[]> {
+  // The archive browses closed windows too, so it asks for every collection with past work in it.
+  collections(archive = false): Promise<Collection[]> {
+    const now = new Date();
+    const productWhere = archive
+      ? archivedProductWhere(now)
+      : availableProductWhere(now);
     return this.redis.getOrSet(
-      "catalog:collections",
+      archive ? "catalog:collections:archive" : "catalog:collections",
       CATALOG_CACHE_SECONDS,
       async () => {
         const rows = await this.prisma.collection.findMany({
-          where: liveCollectionWhere(new Date()),
+          where: archive ? {} : liveCollectionWhere(now),
           orderBy: [{ created_at: "desc" }],
           include: {
-            _count: { select: { products: { where: { is_active: true } } } },
+            _count: { select: { products: { where: productWhere } } },
           },
         });
-        return rows.map(({ _count, ...collection }) => ({
-          ...collection,
-          product_count: _count.products,
-        }));
+        // An empty collection is nothing to browse, so it never reaches a strip.
+        return rows
+          .filter((row) => row._count.products > 0)
+          .map(({ _count, ...collection }) => ({
+            ...collection,
+            product_count: _count.products,
+          }));
       },
     );
   }
 
-  async collectionBySlug(slug: string): Promise<Collection> {
+  // A collection keeps its name after its window closes; availability is decided per piece,
+  // and the count uses the same predicate as the list the visitor is looking at.
+  async collectionBySlug(slug: string, archive = false): Promise<Collection> {
+    const now = new Date();
+    const productWhere = archive
+      ? archivedProductWhere(now)
+      : availableProductWhere(now);
     const row = await this.prisma.collection.findFirst({
-      where: { slug, ...liveCollectionWhere(new Date()) },
+      where: { slug },
       include: {
-        _count: { select: { products: { where: { is_active: true } } } },
+        _count: { select: { products: { where: productWhere } } },
       },
     });
     if (!row) {
@@ -267,50 +360,87 @@ export class ProductsService {
   }
 
   invalidateCatalogCache(): Promise<void> {
-    return this.redis.del("catalog:categories", "catalog:collections");
+    return this.redis.del(
+      "catalog:categories",
+      "catalog:collections",
+      "catalog:collections:archive",
+    );
   }
 
-  // Facets describe the pool before category, material and price narrowing so options never vanish.
-  private async facets(
-    where: Prisma.ProductWhereInput,
-  ): Promise<ProductFacets> {
-    const [categories, materials, prices] = await Promise.all([
-      this.prisma.category.findMany({
-        where: { products: { some: where } },
-        orderBy: [{ sort_order: "asc" }, { name: "asc" }],
-        select: {
-          slug: true,
-          name: true,
-          _count: { select: { products: { where } } },
-        },
-      }),
-      this.prisma.product.groupBy({
-        by: ["material"],
-        where,
-        _count: { _all: true },
-        orderBy: { material: "asc" },
-      }),
-      this.prisma.product.aggregate({
-        where,
-        _min: { price: true },
-        _max: { price: true },
-      }),
-    ]);
+  // The whole catalogue is always listed, zero counts included, so the sidebar never reflows.
+  private async facets(count: {
+    categories: Prisma.ProductWhereInput;
+    collections: Prisma.ProductWhereInput;
+    materials: Prisma.ProductWhereInput;
+  }): Promise<Omit<ProductFacets, "active_count" | "archive_count">> {
+    const [categories, collections, materialNames, materialCounts, prices] =
+      await Promise.all([
+        this.prisma.category.findMany({
+          orderBy: [{ sort_order: "asc" }, { name: "asc" }],
+          select: {
+            slug: true,
+            name: true,
+            _count: { select: { products: { where: count.categories } } },
+          },
+        }),
+        this.prisma.collection.findMany({
+          orderBy: [{ created_at: "desc" }],
+          select: {
+            slug: true,
+            name: true,
+            _count: { select: { products: { where: count.collections } } },
+          },
+        }),
+        this.prisma.product.groupBy({
+          by: ["material"],
+          orderBy: { material: "asc" },
+        }),
+        this.prisma.product.groupBy({
+          by: ["material"],
+          where: count.materials,
+          _count: { _all: true },
+          orderBy: { material: "asc" },
+        }),
+        this.prisma.product.aggregate({
+          _min: { price: true },
+          _max: { price: true },
+        }),
+      ]);
+    const counted = new Map(
+      materialCounts.map((row) => [row.material, row._count._all]),
+    );
     return {
       categories: categories.map((c) => ({
         value: c.slug,
         label: c.name,
         count: c._count.products,
       })),
-      materials: materials.map((m) => ({
+      collections: collections.map((c) => ({
+        value: c.slug,
+        label: c.name,
+        count: c._count.products,
+      })),
+      materials: materialNames.map((m) => ({
         value: m.material,
         label: m.material,
-        count: m._count._all,
+        count: counted.get(m.material) ?? 0,
       })),
       price_min: prices._min.price ?? 0,
       price_max: prices._max.price ?? 0,
     };
   }
+}
+
+function emptyFacets(): ProductFacets {
+  return {
+    categories: [],
+    collections: [],
+    materials: [],
+    price_min: 0,
+    price_max: 0,
+    active_count: 0,
+    archive_count: 0,
+  };
 }
 
 function sortByRank<T extends { id: number }>(

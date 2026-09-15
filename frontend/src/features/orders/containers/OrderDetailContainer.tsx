@@ -1,7 +1,7 @@
 "use client";
 
 import { useClerk, useUser } from "@clerk/nextjs";
-import { useCallback, useState } from "react";
+import { useCallback, useOptimistic, useState, useTransition } from "react";
 
 import { formatDateTime, formatInr } from "@/lib/format";
 
@@ -12,6 +12,7 @@ import { OrderDetail } from "@/features/orders/components/OrderDetail";
 import { SignInWall } from "@/features/auth/components/SignInWall";
 import { useCancelOrder, useOrder } from "@/features/orders/hooks";
 import {
+  applyOrderCancellation,
   isClosed,
   ORDER_STEPS,
   toStatusLabel,
@@ -33,16 +34,25 @@ export function OrderDetailContainer({
   whatsappNumber,
 }: OrderDetailContainerProps) {
   const { order, isLoading, hasError, isSignedIn, refetch } = useOrder(orderId);
+  const [optimisticOrder, applyCancellation] = useOptimistic(
+    order,
+    applyOrderCancellation,
+  );
+  const [, startTransition] = useTransition();
   const { openSignIn } = useClerk();
   const { cancel, isCancelling } = useCancelOrder();
   const { user } = useUser();
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [reason, setReason] = useState("");
 
-  const handleConfirmCancel = useCallback(async () => {
-    const done = await cancel(orderId, reason);
-    if (done) setIsCancelOpen(false);
-  }, [cancel, orderId, reason]);
+  // The dialog closes and the badge turns at once; a refusal rolls both back with a toast.
+  const handleConfirmCancel = useCallback(() => {
+    setIsCancelOpen(false);
+    startTransition(async () => {
+      applyCancellation({ reason, at: new Date().toISOString() });
+      await cancel(orderId, reason);
+    });
+  }, [applyCancellation, cancel, orderId, reason]);
 
   if (isLoading) {
     return (
@@ -50,8 +60,8 @@ export function OrderDetailContainer({
         className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8"
         aria-busy="true"
       >
-        <div className="h-8 w-56 animate-pulse rounded-full bg-primary-light" />
-        <div className="mt-8 h-64 animate-pulse rounded-3xl bg-primary-light/70" />
+        <div className="h-8 w-56 animate-pulse bg-ash" />
+        <div className="mt-8 h-64 animate-pulse bg-ash" />
       </div>
     );
   }
@@ -63,16 +73,16 @@ export function OrderDetailContainer({
       />
     );
   }
-  if (hasError || !order) {
+  if (hasError || !optimisticOrder) {
     return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-16 text-center md:px-8">
-        <p className="font-script text-3xl text-clay-dark italic">
+      <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-4 px-4 py-16 md:px-8">
+        <h1 className="font-heading text-2xl tracking-tight">
           We could not find that order
-        </p>
+        </h1>
         <button
           type="button"
           onClick={() => void refetch()}
-          className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+          className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           Try again
         </button>
@@ -81,39 +91,47 @@ export function OrderDetailContainer({
   }
 
   const dates: Record<string, string | null> = {
-    PENDING: formatDateTime(order.created_at),
-    CONFIRMED: order.confirmed_at ? formatDateTime(order.confirmed_at) : null,
-    PAID: order.paid_at ? formatDateTime(order.paid_at) : null,
-    SHIPPED: order.shipped_at ? formatDateTime(order.shipped_at) : null,
-    DELIVERED: order.delivered_at ? formatDateTime(order.delivered_at) : null,
+    PENDING: formatDateTime(optimisticOrder.created_at),
+    CONFIRMED: optimisticOrder.confirmed_at
+      ? formatDateTime(optimisticOrder.confirmed_at)
+      : null,
+    PAID: optimisticOrder.paid_at
+      ? formatDateTime(optimisticOrder.paid_at)
+      : null,
+    SHIPPED: optimisticOrder.shipped_at
+      ? formatDateTime(optimisticOrder.shipped_at)
+      : null,
+    DELIVERED: optimisticOrder.delivered_at
+      ? formatDateTime(optimisticOrder.delivered_at)
+      : null,
   };
-  const closed = isClosed(order.status);
+  const closed = isClosed(optimisticOrder.status);
   const closedLabel = closed
-    ? `${toStatusLabel(order.status)}${order.cancelled_at ? ` on ${formatDateTime(order.cancelled_at)}` : ""}${order.cancel_reason ? ` · ${order.cancel_reason}` : ""}`
+    ? `${toStatusLabel(optimisticOrder.status)}${optimisticOrder.cancelled_at ? ` on ${formatDateTime(optimisticOrder.cancelled_at)}` : ""}${optimisticOrder.cancel_reason ? ` · ${optimisticOrder.cancel_reason}` : ""}`
     : null;
   const whatsappUrl = whatsappNumber
     ? buildWhatsAppUrl(
         whatsappNumber,
         toWhatsAppOrderMessage({
-          orderId: order.id,
-          total: formatInr(order.total),
-          items: order.items.map((item) => ({
+          orderId: optimisticOrder.id,
+          total: formatInr(optimisticOrder.total),
+          items: optimisticOrder.items.map((item) => ({
             name: item.product_name,
             quantity: item.quantity,
           })),
-          customerName: user?.fullName ?? order.shipping_address.name,
+          customerName: user?.fullName ?? optimisticOrder.shipping_address.name,
         }),
       )
     : null;
-  const address = order.shipping_address;
+  const address = optimisticOrder.shipping_address;
 
   return (
     <>
       <OrderDetail
-        orderId={order.id}
-        placedOn={formatDateTime(order.created_at)}
-        statusLabel={toStatusLabel(order.status)}
-        statusTone={toStatusTone(order.status)}
+        orderId={optimisticOrder.id}
+        placedOn={formatDateTime(optimisticOrder.created_at)}
+        statusLabel={toStatusLabel(optimisticOrder.status)}
+        statusTone={toStatusTone(optimisticOrder.status)}
         isJustPlaced={isJustPlaced && !closed}
         steps={ORDER_STEPS.map((step) => ({
           key: step.key,
@@ -121,10 +139,10 @@ export function OrderDetailContainer({
           description: step.description,
           date: dates[step.key] ?? null,
         }))}
-        currentStepIndex={toStepIndex(order.status)}
+        currentStepIndex={toStepIndex(optimisticOrder.status, dates)}
         isClosed={closed}
         closedLabel={closedLabel}
-        items={order.items.map((item) => ({
+        items={optimisticOrder.items.map((item) => ({
           id: item.id,
           href: item.product ? toProductPath(item.product.slug) : null,
           name: item.product_name,
@@ -134,11 +152,11 @@ export function OrderDetailContainer({
           lineTotal: item.line_total,
           selectionSummary: toSelectionSummary(item.selections),
         }))}
-        subtotal={order.subtotal}
-        discount={order.discount}
-        couponCode={order.coupon_code}
-        shippingFee={order.shipping_fee}
-        total={order.total}
+        subtotal={optimisticOrder.subtotal}
+        discount={optimisticOrder.discount}
+        couponCode={optimisticOrder.coupon_code}
+        shippingFee={optimisticOrder.shipping_fee}
+        total={optimisticOrder.total}
         addressLines={[
           address.name,
           address.phone,
@@ -147,10 +165,10 @@ export function OrderDetailContainer({
           address.landmark ?? "",
           `${address.city}, ${address.state} ${address.pincode}`,
         ].filter((line) => line.length > 0)}
-        customerNote={order.customer_note}
-        trackingNote={order.tracking_note}
+        customerNote={optimisticOrder.customer_note}
+        trackingNote={optimisticOrder.tracking_note}
         whatsappUrl={whatsappUrl}
-        canCancel={order.can_cancel}
+        canCancel={optimisticOrder.can_cancel}
         isCancelling={isCancelling}
         onCancel={() => setIsCancelOpen(true)}
       />
@@ -160,7 +178,7 @@ export function OrderDetailContainer({
         isSubmitting={isCancelling}
         onReasonChange={setReason}
         onOpenChange={setIsCancelOpen}
-        onConfirm={() => void handleConfirmCancel()}
+        onConfirm={handleConfirmCancel}
       />
     </>
   );

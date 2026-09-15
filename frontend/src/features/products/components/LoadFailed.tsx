@@ -6,14 +6,14 @@ export interface LoadFailedProps {
 
 export function LoadFailed({ onRetry }: LoadFailedProps) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-3xl bg-cream px-6 py-16 text-center">
-      <p className="font-script text-3xl text-clay-dark italic">
+    <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
+      <h2 className="font-heading text-2xl tracking-tight">
         The shelf did not load
+      </h2>
+      <p className="max-w-sm text-[15px] text-muted-foreground">
+        Something went wrong on our side.
       </p>
-      <p className="max-w-sm text-sm text-muted-foreground">
-        Something went wrong on our side. Give it another go.
-      </p>
-      <Button variant="outline" className="rounded-full" onClick={onRetry}>
+      <Button variant="outline" onClick={onRetry}>
         Try again
       </Button>
     </div>

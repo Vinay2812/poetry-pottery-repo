@@ -35,6 +35,8 @@ const meta = {
     shippingFee: 150,
     total: 2450,
     problems: [],
+    isDiscountPending: false,
+    isQuotePending: false,
     canPlaceOrder: true,
     isPlacing: false,
     blockedReason: null,
@@ -53,6 +55,15 @@ export const Blocked: Story = {
   args: {
     canPlaceOrder: false,
     blockedReason: "Add a delivery address to place this order.",
+  },
+};
+
+export const CouponSettling: Story = {
+  args: {
+    couponCode: "WELCOME10",
+    isDiscountPending: true,
+    isQuotePending: true,
+    canPlaceOrder: false,
   },
 };
 

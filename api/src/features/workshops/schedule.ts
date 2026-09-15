@@ -7,6 +7,7 @@ export interface ScheduleConfig {
   slot_minutes: number;
   capacity_per_slot: number;
   booking_window_days: number;
+  slot_span_days: number;
   closed_weekdays: number[];
 }
 
@@ -108,7 +109,8 @@ export function fromWallClock(
   return new Date(guess);
 }
 
-function dayDelta(actual: string, expected: string): number {
+// Whole calendar days from `expected` to `actual`, signed.
+export function dayDelta(actual: string, expected: string): number {
   const [ay, am, ad] = actual.split("-").map(Number);
   const [ey, em, ed] = expected.split("-").map(Number);
   return Math.round(
@@ -258,27 +260,41 @@ export function buildAvailability({
 
 export type SessionCheck = { ok: true } | { ok: false; reason: string };
 
-// Validates a requested session against the same rules the calendar shows.
-export function checkSession(
-  session: Interval & { participants: number },
+export interface SlotRequest {
+  slot_starts: Date[];
+  participants: number;
+  hours: number;
+}
+
+export function slotsPerBooking(
+  hours: number,
+  config: Pick<ScheduleConfig, "slot_minutes">,
+): number {
+  return Math.max(1, Math.round((hours * 60) / config.slot_minutes));
+}
+
+// Calendar days covered by a set of instants, counting both ends.
+export function spanDays(starts: Date[], timezone: string): number {
+  if (starts.length === 0) return 0;
+  const dates = starts.map((start) => toWallClock(start, timezone).date).sort();
+  return dayDelta(dates[dates.length - 1] ?? "", dates[0] ?? "") + 1;
+}
+
+// Validates one chosen hour against the same rules the calendar shows.
+function checkSlot(
+  starts_at: Date,
   config: ScheduleConfig,
   now: Date,
   blackouts: (Interval & { reason: string | null })[],
-  occupants: Occupant[],
 ): SessionCheck {
-  const start = toWallClock(session.starts_at, config.timezone);
-  const end = toWallClock(session.ends_at, config.timezone);
+  const slot = {
+    starts_at,
+    ends_at: new Date(starts_at.getTime() + config.slot_minutes * MINUTE),
+  };
+  const start = toWallClock(slot.starts_at, config.timezone);
+  const end = toWallClock(slot.ends_at, config.timezone);
   const today = toWallClock(now, config.timezone).date;
-  if (
-    session.participants < 1 ||
-    session.participants > config.capacity_per_slot
-  ) {
-    return {
-      ok: false,
-      reason: `Sessions take 1 to ${config.capacity_per_slot} people`,
-    };
-  }
-  if (session.starts_at < new Date(now.getTime() + MIN_LEAD_MINUTES * MINUTE)) {
+  if (slot.starts_at < new Date(now.getTime() + MIN_LEAD_MINUTES * MINUTE)) {
     return {
       ok: false,
       reason: `Book at least ${MIN_LEAD_MINUTES / 60} hours ahead`,
@@ -294,36 +310,96 @@ export function checkSession(
     return { ok: false, reason: "The studio is closed that day" };
   }
   if (
-    start.date !== end.date ||
+    starts_at.getUTCSeconds() !== 0 ||
+    starts_at.getUTCMilliseconds() !== 0 ||
+    (start.date !== end.date && end.minutes !== 0) ||
     (start.minutes - config.opening_minutes) % config.slot_minutes !== 0
   ) {
-    return { ok: false, reason: "Choose a session from the calendar" };
+    return { ok: false, reason: "Choose an hour from the calendar" };
   }
   if (
     start.minutes < config.opening_minutes ||
-    end.minutes > config.closing_minutes
+    start.minutes + config.slot_minutes > config.closing_minutes
   ) {
     return { ok: false, reason: "That time is outside studio hours" };
   }
-  const blackout = blackouts.find((candidate) => overlaps(session, candidate));
+  const blackout = blackouts.find((candidate) => overlaps(slot, candidate));
   if (blackout) {
     return {
       ok: false,
       reason: blackout.reason ?? "The studio is closed then",
     };
   }
-  for (const starts_at of slotStartsForDay(start.date, config)) {
+  return { ok: true };
+}
+
+// Validates a whole booking: the right number of hours, each one open, all within the allowed span.
+export function checkSlots(
+  request: SlotRequest,
+  config: ScheduleConfig,
+  now: Date,
+  blackouts: (Interval & { reason: string | null })[],
+  occupants: Occupant[],
+): SessionCheck {
+  const needed = slotsPerBooking(request.hours, config);
+  if (
+    request.participants < 1 ||
+    request.participants > config.capacity_per_slot
+  ) {
+    return {
+      ok: false,
+      reason: `Sessions take 1 to ${config.capacity_per_slot} people`,
+    };
+  }
+  if (request.slot_starts.length !== needed) {
+    return {
+      ok: false,
+      reason: `Pick ${needed} ${needed === 1 ? "hour" : "hours"} for a ${request.hours} hour session`,
+    };
+  }
+  const times = new Set(request.slot_starts.map((start) => start.getTime()));
+  if (times.size !== request.slot_starts.length) {
+    return { ok: false, reason: "You picked the same hour twice" };
+  }
+  for (const starts_at of request.slot_starts) {
+    const check = checkSlot(starts_at, config, now, blackouts);
+    if (!check.ok) return check;
+  }
+  if (spanDays(request.slot_starts, config.timezone) > config.slot_span_days) {
+    return {
+      ok: false,
+      reason:
+        config.slot_span_days === 1
+          ? "Keep every hour on the same day"
+          : `Keep every hour within ${config.slot_span_days} days of the first`,
+    };
+  }
+  for (const starts_at of request.slot_starts) {
     const slot = {
       starts_at,
       ends_at: new Date(starts_at.getTime() + config.slot_minutes * MINUTE),
     };
-    if (!overlaps(slot, session)) continue;
     if (
-      occupancy(slot, occupants) + session.participants >
+      occupancy(slot, occupants) + request.participants >
       config.capacity_per_slot
     ) {
-      return { ok: false, reason: "Not enough wheels free for that session" };
+      return {
+        ok: false,
+        reason: "Not enough wheels free for one of those hours",
+      };
     }
   }
   return { ok: true };
+}
+
+// The first start and last end of a booking, used for listing and sorting.
+export function slotBounds(starts: Date[], slotMinutes: number): Interval {
+  const sorted = [...starts].sort((a, b) => a.getTime() - b.getTime());
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  if (!first || !last) throw new Error("A booking needs at least one hour");
+  return {
+    starts_at: first,
+    ends_at: new Date(last.getTime() + slotMinutes * MINUTE),
+  };
 }

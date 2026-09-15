@@ -9,22 +9,22 @@ export interface EmptyCartProps {
 
 export function EmptyCart({ isSignedIn, onSignIn }: EmptyCartProps) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-3xl bg-cream px-6 py-16 text-center">
-      <p className="font-script text-3xl text-clay-dark italic">
+    <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
+      <h2 className="font-heading text-2xl tracking-tight">
         Your cart is empty
-      </p>
-      <p className="max-w-sm text-sm text-muted-foreground">
+      </h2>
+      <p className="max-w-sm text-[15px] text-muted-foreground">
         {isSignedIn
-          ? "Nothing in here yet. The shelf is full, though."
-          : "Sign in to see pieces you have saved, or start browsing the shelf."}
+          ? "Nothing in here yet."
+          : "Sign in to see the pieces you saved."}
       </p>
       <div className="flex gap-3">
         {!isSignedIn && (
-          <Button variant="outline" className="rounded-full" onClick={onSignIn}>
+          <Button variant="outline" onClick={onSignIn}>
             Sign in
           </Button>
         )}
-        <Button className="rounded-full" asChild>
+        <Button variant="outline" asChild>
           <Link href="/products">Browse pieces</Link>
         </Button>
       </div>

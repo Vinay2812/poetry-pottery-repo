@@ -13,6 +13,8 @@ interface FilterOption {
 export interface ProductFiltersProps {
   categoryOptions: FilterOption[];
   selectedCategories: string[];
+  collectionOptions: FilterOption[];
+  selectedCollection: string | null;
   materialOptions: FilterOption[];
   selectedMaterials: string[];
   priceFloor: number;
@@ -20,14 +22,13 @@ export interface ProductFiltersProps {
   priceRange: [number, number];
   inStockOnly: boolean;
   customizableOnly: boolean;
-  hasActiveFilters: boolean;
   onToggleCategory: (slug: string) => void;
+  onToggleCollection: (slug: string) => void;
   onToggleMaterial: (material: string) => void;
   onPriceRangeChange: (range: [number, number]) => void;
   onPriceRangeCommit: (range: [number, number]) => void;
   onInStockOnlyChange: (value: boolean) => void;
   onCustomizableOnlyChange: (value: boolean) => void;
-  onClear: () => void;
 }
 
 interface CheckGroupProps {
@@ -48,7 +49,7 @@ function CheckGroup({
   if (options.length === 0) return null;
   return (
     <fieldset className="flex flex-col gap-3">
-      <legend className="mb-3 text-xs font-semibold tracking-[0.12em] text-clay-dark uppercase">
+      <legend className="mb-3 text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
         {title}
       </legend>
       {options.map((option) => {
@@ -65,7 +66,7 @@ function CheckGroup({
               className="flex flex-1 justify-between font-normal"
             >
               <span>{option.label}</span>
-              <span className="text-muted-foreground">{option.count}</span>
+              <span className="text-muted-foreground tnum">{option.count}</span>
             </Label>
           </div>
         );
@@ -77,6 +78,8 @@ function CheckGroup({
 export function ProductFilters({
   categoryOptions,
   selectedCategories,
+  collectionOptions,
+  selectedCollection,
   materialOptions,
   selectedMaterials,
   priceFloor,
@@ -84,28 +87,17 @@ export function ProductFilters({
   priceRange,
   inStockOnly,
   customizableOnly,
-  hasActiveFilters,
   onToggleCategory,
+  onToggleCollection,
   onToggleMaterial,
   onPriceRangeChange,
   onPriceRangeCommit,
   onInStockOnlyChange,
   onCustomizableOnlyChange,
-  onClear,
 }: ProductFiltersProps) {
   const hasPriceRange = priceCeiling > priceFloor;
   return (
     <div className="flex flex-col gap-8">
-      {hasActiveFilters && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="self-start text-sm font-medium text-primary underline-offset-4 hover:underline"
-        >
-          Clear all filters
-        </button>
-      )}
-
       <CheckGroup
         title="Category"
         idPrefix="category"
@@ -114,9 +106,17 @@ export function ProductFilters({
         onToggle={onToggleCategory}
       />
 
+      <CheckGroup
+        title="Collection"
+        idPrefix="collection"
+        options={collectionOptions}
+        selected={selectedCollection ? [selectedCollection] : []}
+        onToggle={onToggleCollection}
+      />
+
       {hasPriceRange && (
         <div className="flex flex-col gap-4">
-          <h3 className="text-xs font-semibold tracking-[0.12em] text-clay-dark uppercase">
+          <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
             Price
           </h3>
           <Slider
@@ -138,7 +138,7 @@ export function ProductFilters({
             }
             aria-label="Price range"
           />
-          <p className="flex justify-between text-sm text-muted-foreground">
+          <p className="flex justify-between text-[13px] text-muted-foreground tnum">
             <span>{formatInr(priceRange[0])}</span>
             <span>{formatInr(priceRange[1])}</span>
           </p>

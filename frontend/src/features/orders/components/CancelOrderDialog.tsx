@@ -29,30 +29,34 @@ export function CancelOrderDialog({
 }: CancelOrderDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-2xl">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-heading text-2xl font-normal">
+          <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Cancel this order?
           </DialogTitle>
           <DialogDescription>
-            The pieces go back on the shelf straight away. You can order again
-            any time.
+            The pieces go back on the shelf straight away.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-2">
-          <Label htmlFor="cancel-reason">Tell us why (optional)</Label>
+          <Label
+            htmlFor="cancel-reason"
+            className="text-[13px] text-muted-foreground"
+          >
+            Tell us why (optional)
+          </Label>
           <Textarea
             id="cancel-reason"
             value={reason}
             onChange={(event) => onReasonChange(event.target.value)}
             maxLength={300}
             rows={3}
-            placeholder="Changed my mind, ordered the wrong size…"
+            placeholder="Changed my mind, ordered the wrong size"
           />
         </div>
         <DialogFooter className="gap-2 sm:gap-2">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >

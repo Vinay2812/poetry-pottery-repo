@@ -1,4 +1,9 @@
-import { OrderStatus } from "@/graphql/generated/graphql";
+import {
+  type OrderFieldsFragment,
+  OrderStatus,
+} from "@/graphql/generated/graphql";
+
+export type OrderData = OrderFieldsFragment;
 
 export interface StatusStep {
   key: OrderStatus;
@@ -58,10 +63,18 @@ export function toStatusTone(status: OrderStatus): StatusTone {
   return "active";
 }
 
-// Index of the current step on the timeline; cancelled orders freeze where they stopped.
-export function toStepIndex(status: OrderStatus): number {
+// Index of the current step on the timeline. Cancelled and refunded orders are not steps of
+// their own, so they freeze at the last step that actually carries a date.
+export function toStepIndex(
+  status: OrderStatus,
+  stepDates: Record<string, string | null> = {},
+): number {
   const index = ORDER_STEPS.findIndex((step) => step.key === status);
-  return index === -1 ? 0 : index;
+  if (index !== -1) return index;
+  return ORDER_STEPS.reduce(
+    (reached, step, at) => (stepDates[step.key] ? at : reached),
+    0,
+  );
 }
 
 export function isClosed(status: OrderStatus): boolean {
@@ -88,4 +101,24 @@ export function toWhatsAppOrderMessage(input: WhatsAppOrderInput): string {
     `Name: ${input.customerName}`,
     "Could you confirm it and share payment details?",
   ].join("\n");
+}
+
+export interface OrderCancellation {
+  reason: string;
+  at: string;
+}
+
+// The reducer behind the optimistic order: what the studio will say once it accepts.
+export function applyOrderCancellation(
+  order: OrderData | null,
+  cancellation: OrderCancellation,
+): OrderData | null {
+  if (!order) return order;
+  return {
+    ...order,
+    status: OrderStatus.Cancelled,
+    can_cancel: false,
+    cancelled_at: cancellation.at,
+    cancel_reason: cancellation.reason.trim() || order.cancel_reason,
+  };
 }

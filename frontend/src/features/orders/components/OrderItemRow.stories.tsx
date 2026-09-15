@@ -8,7 +8,7 @@ const meta = {
   component: OrderItemRow,
   decorators: [
     (Story) => (
-      <ul className="max-w-xl divide-y divide-border">
+      <ul className="max-w-xl border-t border-ash">
         <Story />
       </ul>
     ),

@@ -12,7 +12,9 @@ const meta = {
   args: {
     isOpen: true,
     resultCount: 48,
+    activeFilterCount: 1,
     onOpenChange: fn(),
+    onClear: fn(),
     children: (
       <ProductFilters
         categoryOptions={[
@@ -21,6 +23,11 @@ const meta = {
           { value: "plates", label: "Plates", count: 6 },
         ]}
         selectedCategories={["mugs"]}
+        collectionOptions={[
+          { value: "artisan-classics", label: "Artisan classics", count: 8 },
+          { value: "rustic-charm", label: "Rustic charm", count: 5 },
+        ]}
+        selectedCollection={null}
         materialOptions={[
           { value: "stoneware", label: "Stoneware", count: 22 },
           { value: "terracotta", label: "Terracotta", count: 11 },
@@ -31,14 +38,13 @@ const meta = {
         priceRange={[400, 4500]}
         inStockOnly={false}
         customizableOnly={false}
-        hasActiveFilters={true}
         onToggleCategory={fn()}
+        onToggleCollection={fn()}
         onToggleMaterial={fn()}
         onPriceRangeChange={fn()}
         onPriceRangeCommit={fn()}
         onInStockOnlyChange={fn()}
         onCustomizableOnlyChange={fn()}
-        onClear={fn()}
       />
     ),
   },

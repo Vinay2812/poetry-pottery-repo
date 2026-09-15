@@ -6,7 +6,7 @@ import { OptionGroupPicker } from "./OptionGroupPicker";
 import { ProductBuyBox } from "./ProductBuyBox";
 
 const OPTIONS_NODE = (
-  <div className="flex flex-col gap-5 rounded-2xl bg-cream/60 p-4">
+  <div className="flex flex-col gap-5 border-y border-ash py-6">
     <OptionGroupPicker
       groupId={1}
       name="Glaze"
@@ -53,16 +53,18 @@ const meta = {
     ),
   ],
   args: {
-    name: "Slate Morning Mug",
+    name: "Slate morning mug",
     collectionName: "Everyday Shelf",
     collectionHref: "/products?collection=everyday-shelf",
     unitPrice: 850,
     compareAtPrice: null,
+    sizeLine: "9 cm tall, 300 ml",
+    askUrl: "https://wa.me/919123456789",
     material: "Stoneware",
     colorName: "Slate Grey",
     colorCode: "#6B7280",
     stockTone: "in_stock",
-    stockLabel: "In stock",
+    stockLabel: "6 made in this batch",
     ratingAvg: 4.6,
     ratingCount: 128,
     quantity: 1,
@@ -94,13 +96,13 @@ export const WithOptions: Story = {
 export const SoldOut: Story = {
   args: {
     stockTone: "sold_out",
-    stockLabel: "Sold out",
+    stockLabel: "Sold out · next batch soon",
     canAddToCart: false,
   },
 };
 
 export const LowStock: Story = {
-  args: { stockTone: "low", stockLabel: "Only 3 left" },
+  args: { stockTone: "low", stockLabel: "3 made in this batch" },
 };
 
 export const MadeToOrder: Story = {
@@ -110,7 +112,7 @@ export const MadeToOrder: Story = {
     colorName: "Forest Green",
     colorCode: "#588157",
     stockTone: "made_to_order",
-    stockLabel: "Made to order",
+    stockLabel: "Made to order, thrown in about ten days",
     unitPrice: 1200,
   },
 };

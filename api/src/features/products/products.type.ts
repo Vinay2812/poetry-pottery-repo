@@ -83,6 +83,9 @@ export class CollectionRef {
   name!: string;
 
   @Field(() => Date, { nullable: true })
+  starts_at!: Date | null;
+
+  @Field(() => Date, { nullable: true })
   ends_at!: Date | null;
 }
 
@@ -225,6 +228,9 @@ export class ProductFacets {
   categories!: FacetCount[];
 
   @Field(() => [FacetCount])
+  collections!: FacetCount[];
+
+  @Field(() => [FacetCount])
   materials!: FacetCount[];
 
   @Field(() => Int)
@@ -232,6 +238,13 @@ export class ProductFacets {
 
   @Field(() => Int)
   price_max!: number;
+
+  // Tab counts for the shelf and the archive under the same filters.
+  @Field(() => Int)
+  active_count!: number;
+
+  @Field(() => Int)
+  archive_count!: number;
 }
 
 @ObjectType()
@@ -271,6 +284,10 @@ export class ProductsFilterInput {
 
   @Field(() => Boolean, { nullable: true })
   customizable_only?: boolean | null;
+
+  // False lists the shelf, true lists retired, sold and closed-collection pieces.
+  @Field(() => Boolean, { nullable: true, defaultValue: false })
+  archive?: boolean | null;
 
   @Field(() => ProductSort, { nullable: true })
   sort?: ProductSort | null;

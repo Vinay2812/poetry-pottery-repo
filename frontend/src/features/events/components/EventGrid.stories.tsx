@@ -8,87 +8,59 @@ interface Listing {
   slug: string;
   title: string;
   typeLabel: string;
-  levelLabel: string | null;
-  day: string;
-  month: string;
-  weekday: string;
-  timeRange: string;
-  price: number;
+  dateLabel: string;
   seatsLabel: string;
-  isSeatsLow: boolean;
+  price: number;
+  imageUrl: string | null;
 }
 
 const LISTINGS: Listing[] = [
   {
     slug: "wheel-throwing-for-beginners",
-    title: "Wheel Throwing for Beginners",
+    title: "Wheel throwing for beginners",
     typeLabel: "Pottery workshop",
-    levelLabel: "Beginner",
-    day: "19",
-    month: "Sep",
-    weekday: "Sat",
-    timeRange: "3:00 pm – 6:00 pm",
-    price: 1800,
+    dateLabel: "Thu 17 Sep · 4 pm",
     seatsLabel: "3 seats left",
-    isSeatsLow: true,
+    price: 1800,
+    imageUrl:
+      "https://images.pexels.com/photos/4992831/pexels-photo-4992831.jpeg",
   },
   {
-    slug: "verses-and-vases-evening",
-    title: "Verses & Vases Evening",
+    slug: "clay-and-couplets",
+    title: "Clay and couplets, open mic",
     typeLabel: "Open mic",
-    levelLabel: null,
-    day: "26",
-    month: "Sep",
-    weekday: "Sat",
-    timeRange: "7:00 pm – 9:30 pm",
+    dateLabel: "Sat 26 Sep · 6:30 pm",
+    seatsLabel: "Last seat",
     price: 400,
-    seatsLabel: "All 30 seats open",
-    isSeatsLow: false,
+    imageUrl:
+      "https://images.pexels.com/photos/7180809/pexels-photo-7180809.jpeg",
   },
   {
-    slug: "glazing-and-surface-play",
-    title: "Glazing and Surface Play",
+    slug: "glaze-afternoon",
+    title: "A whole afternoon of glazing",
     typeLabel: "Pottery workshop",
-    levelLabel: "Intermediate",
-    day: "03",
-    month: "Oct",
-    weekday: "Sat",
-    timeRange: "11:00 am – 2:00 pm",
-    price: 2200,
-    seatsLabel: "Last seat",
-    isSeatsLow: true,
+    dateLabel: "Sun 4 Oct · 2 pm",
+    seatsLabel: "Sold out",
+    price: 2400,
+    imageUrl: null,
   },
 ];
 
 const meta = {
   title: "Features/Events/EventGrid",
   component: EventGrid,
-  parameters: { layout: "fullscreen" },
-  decorators: [
-    (Story) => (
-      <div className="mx-auto w-full max-w-7xl px-4 py-6 md:px-8 md:py-10">
-        <Story />
-      </div>
-    ),
-  ],
+  parameters: { layout: "padded" },
   args: {
     children: LISTINGS.map((listing) => (
       <EventCard
         key={listing.slug}
         href={`/events/${listing.slug}`}
         title={listing.title}
-        imageUrl="https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg"
-        day={listing.day}
-        month={listing.month}
-        weekday={listing.weekday}
+        imageUrl={listing.imageUrl}
+        dateLabel={listing.dateLabel}
         typeLabel={listing.typeLabel}
-        levelLabel={listing.levelLabel}
-        timeRange={listing.timeRange}
-        location="Poetry & Pottery studio, Sangli"
-        price={listing.price}
         seatsLabel={listing.seatsLabel}
-        isSeatsLow={listing.isSeatsLow}
-        isSoldOut={false}
+        price={listing.price}
         isPast={false}
       />
     )),

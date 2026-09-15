@@ -9,7 +9,7 @@ const meta = {
   component: CartLineItem,
   decorators: [
     (Story) => (
-      <ul className="max-w-2xl divide-y divide-border">
+      <ul className="max-w-2xl border-t border-ash">
         <Story />
       </ul>
     ),

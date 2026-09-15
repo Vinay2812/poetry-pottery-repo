@@ -7,9 +7,9 @@ export interface SignInWallProps {
 
 export function SignInWall({ message, onSignIn }: SignInWallProps) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-4 px-4 py-16 text-center md:px-8">
-      <p className="font-script text-3xl text-clay-dark italic">{message}</p>
-      <Button className="rounded-full" onClick={onSignIn}>
+    <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-4 border-t border-ash px-4 py-16 md:px-8">
+      <h2 className="font-heading text-2xl tracking-tight">{message}</h2>
+      <Button variant="outline" onClick={onSignIn}>
         Sign in
       </Button>
     </div>

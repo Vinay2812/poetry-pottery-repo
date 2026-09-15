@@ -8,24 +8,21 @@ const meta = {
   component: RegistrationCard,
   decorators: [
     (Story) => (
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-xl border-t border-ash">
         <Story />
       </div>
     ),
   ],
   args: {
     href: "/registrations/REG7Q2X9M1KD",
-    eventTitle: "Wheel Throwing for Beginners",
+    eventTitle: "Wheel throwing for beginners",
     imageUrl:
-      "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+      "https://images.pexels.com/photos/4992831/pexels-photo-4992831.jpeg",
     typeLabel: "Pottery workshop",
-    dateLabel: "Sat, 19 Sept, 2026",
-    timeRange: "3:00 pm – 6:00 pm",
-    location: "Poetry & Pottery studio, Sangli",
+    dateLabel: "Thu 17 Sep · 4 pm",
     seats: 2,
     total: 3600,
-    statusLabel: "Awaiting approval",
-    statusTone: "pending",
+    statusLabel: "Seat held, awaiting payment",
   },
 } satisfies Meta<typeof RegistrationCard>;
 
@@ -33,26 +30,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Pending: Story = {};
+export const Default: Story = {};
 
-export const SeatHeld: Story = {
-  args: { statusLabel: "Seat held, awaiting payment", statusTone: "active" },
-};
-
-export const Confirmed: Story = {
-  args: {
-    eventTitle: "Verses & Vases Evening",
-    typeLabel: "Open mic",
-    seats: 1,
-    total: 400,
-    statusLabel: "Confirmed",
-    statusTone: "done",
-  },
-};
+export const Confirmed: Story = { args: { statusLabel: "Confirmed" } };
 
 export const Cancelled: Story = {
-  args: { statusLabel: "Cancelled", statusTone: "off" },
+  args: { statusLabel: "Cancelled", seats: 1, total: 1800 },
 };
+
+export const NoPhoto: Story = { args: { imageUrl: null } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

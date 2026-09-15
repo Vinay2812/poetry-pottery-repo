@@ -128,11 +128,27 @@ describe("event helpers", () => {
     const now = new Date();
     expect(eventWhenWhere(EventWhen.UPCOMING, now)).toEqual({
       status: EventStatus.PUBLISHED,
-      starts_at: { gte: now },
+      ends_at: { gte: now },
     });
     expect(eventWhenWhere(EventWhen.PAST, now).status).toEqual({
       in: [EventStatus.PUBLISHED, EventStatus.COMPLETED],
     });
+  });
+
+  it("keeps an evening that is running right now on the upcoming tab", () => {
+    const now = new Date("2026-06-01T18:00:00Z");
+    const running = {
+      status: EventStatus.PUBLISHED,
+      starts_at: new Date("2026-06-01T17:00:00Z"),
+      ends_at: new Date("2026-06-01T20:00:00Z"),
+    };
+    expect(isPastEvent(running, now)).toBe(false);
+    const upcoming = eventWhenWhere(EventWhen.UPCOMING, now);
+    expect(upcoming).toEqual({
+      status: EventStatus.PUBLISHED,
+      ends_at: { gte: now },
+    });
+    expect(running.ends_at >= now).toBe(true);
   });
 });
 

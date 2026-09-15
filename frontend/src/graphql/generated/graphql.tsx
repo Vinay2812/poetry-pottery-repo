@@ -55,7 +55,7 @@ export type BookWorkshopInput = {
   hours: Scalars['Int']['input'];
   note?: InputMaybe<Scalars['String']['input']>;
   participants: Scalars['Int']['input'];
-  starts_at: Scalars['DateTime']['input'];
+  slot_starts: Array<Scalars['DateTime']['input']>;
 };
 
 export type Cart = {
@@ -141,6 +141,83 @@ export type CollectionRef = {
   id: Scalars['Int']['output'];
   name: Scalars['String']['output'];
   slug: Scalars['String']['output'];
+  starts_at?: Maybe<Scalars['DateTime']['output']>;
+};
+
+export type ContactMessage = {
+  __typename?: 'ContactMessage';
+  created_at: Scalars['DateTime']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  is_read: Scalars['Boolean']['output'];
+  message: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  phone?: Maybe<Scalars['String']['output']>;
+  subject?: Maybe<Scalars['String']['output']>;
+};
+
+export type ContactMessageInput = {
+  email: Scalars['String']['input'];
+  message: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  phone?: InputMaybe<Scalars['String']['input']>;
+  subject?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type ContactMessagesResult = {
+  __typename?: 'ContactMessagesResult';
+  items: Array<ContactMessage>;
+  page_info: PageInfo;
+};
+
+export type ContentPage = {
+  __typename?: 'ContentPage';
+  hero_image_url?: Maybe<Scalars['String']['output']>;
+  is_published: Scalars['Boolean']['output'];
+  sections: Array<ContentSection>;
+  slug: Scalars['String']['output'];
+  subtitle?: Maybe<Scalars['String']['output']>;
+  title: Scalars['String']['output'];
+  updated_at: Scalars['DateTime']['output'];
+};
+
+export type ContentPageInput = {
+  hero_image_url?: InputMaybe<Scalars['String']['input']>;
+  is_published?: InputMaybe<Scalars['Boolean']['input']>;
+  sections: Array<ContentSectionInput>;
+  subtitle?: InputMaybe<Scalars['String']['input']>;
+  title: Scalars['String']['input'];
+};
+
+export type ContentPageSummary = {
+  __typename?: 'ContentPageSummary';
+  is_published: Scalars['Boolean']['output'];
+  slug: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type ContentSection = {
+  __typename?: 'ContentSection';
+  body: Scalars['String']['output'];
+  heading: Scalars['String']['output'];
+  items: Array<ContentSectionItem>;
+};
+
+export type ContentSectionInput = {
+  body: Scalars['String']['input'];
+  heading: Scalars['String']['input'];
+  items?: InputMaybe<Array<ContentSectionItemInput>>;
+};
+
+export type ContentSectionItem = {
+  __typename?: 'ContentSectionItem';
+  body: Scalars['String']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type ContentSectionItemInput = {
+  body: Scalars['String']['input'];
+  title: Scalars['String']['input'];
 };
 
 export type Event = {
@@ -227,14 +304,19 @@ export type Mutation = {
   clearCart: Cart;
   createAddress: Address;
   deleteAddress: Scalars['Boolean']['output'];
+  markContactMessageRead: ContactMessage;
   placeOrder: Order;
   registerForEvent: Registration;
   removeCartItem: Cart;
   rescheduleWorkshopBooking: WorkshopBooking;
+  sendContactMessage: Scalars['Boolean']['output'];
   setDefaultAddress: Address;
+  subscribeToNewsletter: NewsletterResult;
   toggleWishlist: WishlistToggleResult;
+  unsubscribeFromNewsletter: Scalars['Boolean']['output'];
   updateAddress: Address;
   updateCartItem: Cart;
+  updateContentPage: ContentPage;
 };
 
 
@@ -276,6 +358,11 @@ export type MutationDeleteAddressArgs = {
 };
 
 
+export type MutationMarkContactMessageReadArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
 export type MutationPlaceOrderArgs = {
   input: PlaceOrderInput;
 };
@@ -296,13 +383,28 @@ export type MutationRescheduleWorkshopBookingArgs = {
 };
 
 
+export type MutationSendContactMessageArgs = {
+  input: ContactMessageInput;
+};
+
+
 export type MutationSetDefaultAddressArgs = {
   id: Scalars['Int']['input'];
 };
 
 
+export type MutationSubscribeToNewsletterArgs = {
+  email: Scalars['String']['input'];
+};
+
+
 export type MutationToggleWishlistArgs = {
   product_id: Scalars['Int']['input'];
+};
+
+
+export type MutationUnsubscribeFromNewsletterArgs = {
+  token: Scalars['String']['input'];
 };
 
 
@@ -315,6 +417,25 @@ export type MutationUpdateAddressArgs = {
 export type MutationUpdateCartItemArgs = {
   id: Scalars['Int']['input'];
   quantity: Scalars['Int']['input'];
+};
+
+
+export type MutationUpdateContentPageArgs = {
+  input: ContentPageInput;
+  slug: Scalars['String']['input'];
+};
+
+export type NewsletterResult = {
+  __typename?: 'NewsletterResult';
+  email: Scalars['String']['output'];
+  is_active: Scalars['Boolean']['output'];
+  was_already_subscribed: Scalars['Boolean']['output'];
+};
+
+export type NewsletterStatus = {
+  __typename?: 'NewsletterStatus';
+  email?: Maybe<Scalars['String']['output']>;
+  is_subscribed: Scalars['Boolean']['output'];
 };
 
 export enum OptionGroupKind {
@@ -404,6 +525,7 @@ export type Product = {
   image_urls: Array<Scalars['String']['output']>;
   in_wishlist: Scalars['Boolean']['output'];
   is_active: Scalars['Boolean']['output'];
+  is_archived: Scalars['Boolean']['output'];
   is_customizable: Scalars['Boolean']['output'];
   is_featured: Scalars['Boolean']['output'];
   material: Scalars['String']['output'];
@@ -419,7 +541,10 @@ export type Product = {
 
 export type ProductFacets = {
   __typename?: 'ProductFacets';
+  active_count: Scalars['Int']['output'];
+  archive_count: Scalars['Int']['output'];
   categories: Array<FacetCount>;
+  collections: Array<FacetCount>;
   materials: Array<FacetCount>;
   price_max: Scalars['Int']['output'];
   price_min: Scalars['Int']['output'];
@@ -453,6 +578,7 @@ export enum ProductSort {
 }
 
 export type ProductsFilterInput = {
+  archive?: InputMaybe<Scalars['Boolean']['input']>;
   category_slugs?: InputMaybe<Array<Scalars['String']['input']>>;
   collection_slug?: InputMaybe<Scalars['String']['input']>;
   customizable_only?: InputMaybe<Scalars['Boolean']['input']>;
@@ -481,11 +607,15 @@ export type Query = {
   checkoutQuote: CheckoutQuote;
   collection: Collection;
   collections: Array<Collection>;
+  contactMessages: ContactMessagesResult;
+  contentPage: ContentPage;
+  contentPages: Array<ContentPageSummary>;
   event: Event;
   events: EventsResult;
   featuredProducts: Array<Product>;
   myRegistrations: RegistrationsResult;
   myWorkshopBookings: WorkshopBookingsResult;
+  newsletterStatus: NewsletterStatus;
   order: Order;
   orders: OrdersResult;
   product: Product;
@@ -510,6 +640,23 @@ export type QueryCheckoutQuoteArgs = {
 
 
 export type QueryCollectionArgs = {
+  archive?: InputMaybe<Scalars['Boolean']['input']>;
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryCollectionsArgs = {
+  archive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryContactMessagesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryContentPageArgs = {
   slug: Scalars['String']['input'];
 };
 
@@ -639,7 +786,7 @@ export type RegistrationsResult = {
 
 export type RescheduleWorkshopInput = {
   booking_id: Scalars['String']['input'];
-  starts_at: Scalars['DateTime']['input'];
+  slot_starts: Array<Scalars['DateTime']['input']>;
 };
 
 export type SelectionInputType = {
@@ -740,10 +887,17 @@ export type WorkshopBooking = {
   pieces_per_person: Scalars['Int']['output'];
   price_per_person: Scalars['Int']['output'];
   rejected_at?: Maybe<Scalars['DateTime']['output']>;
+  slots: Array<WorkshopBookingSlot>;
   starts_at: Scalars['DateTime']['output'];
   status: RegistrationStatus;
   subtotal: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
+};
+
+export type WorkshopBookingSlot = {
+  __typename?: 'WorkshopBookingSlot';
+  ends_at: Scalars['DateTime']['output'];
+  starts_at: Scalars['DateTime']['output'];
 };
 
 export type WorkshopBookingsResult = {
@@ -764,6 +918,7 @@ export type WorkshopConfig = {
   name: Scalars['String']['output'];
   opening_minutes: Scalars['Int']['output'];
   slot_minutes: Scalars['Int']['output'];
+  slot_span_days: Scalars['Int']['output'];
   slug: Scalars['String']['output'];
   tiers: Array<WorkshopTier>;
   timezone: Scalars['String']['output'];
@@ -830,19 +985,19 @@ export type SetDefaultAddressMutationVariables = Exact<{
 
 export type SetDefaultAddressMutation = { setDefaultAddress: { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean } };
 
-export type CartFieldsFragment = { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> };
+export type CartFieldsFragment = { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> };
 
 export type CartQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CartQuery = { cart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+export type CartQuery = { cart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type AddToCartMutationVariables = Exact<{
   input: AddToCartInput;
 }>;
 
 
-export type AddToCartMutation = { addToCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+export type AddToCartMutation = { addToCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type UpdateCartItemMutationVariables = Exact<{
   id: number;
@@ -850,19 +1005,47 @@ export type UpdateCartItemMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCartItemMutation = { updateCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+export type UpdateCartItemMutation = { updateCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type RemoveCartItemMutationVariables = Exact<{
   id: number;
 }>;
 
 
-export type RemoveCartItemMutation = { removeCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+export type RemoveCartItemMutation = { removeCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type ClearCartMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
+
+export type ContentPageQueryVariables = Exact<{
+  slug: string;
+}>;
+
+
+export type ContentPageQuery = { contentPage: { slug: string, title: string, subtitle: string | null, hero_image_url: string | null, is_published: boolean, updated_at: string, sections: Array<{ heading: string, body: string, items: Array<{ title: string, body: string }> }> } };
+
+export type SendContactMessageMutationVariables = Exact<{
+  input: ContactMessageInput;
+}>;
+
+
+export type SendContactMessageMutation = { sendContactMessage: boolean };
+
+export type SubscribeToNewsletterMutationVariables = Exact<{
+  email: string;
+}>;
+
+
+export type SubscribeToNewsletterMutation = { subscribeToNewsletter: { email: string, is_active: boolean, was_already_subscribed: boolean } };
+
+export type UnsubscribeFromNewsletterMutationVariables = Exact<{
+  token: string;
+}>;
+
+
+export type UnsubscribeFromNewsletterMutation = { unsubscribeFromNewsletter: boolean };
 
 export type EventCardFragment = { id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean };
 
@@ -958,21 +1141,21 @@ export type CancelOrderMutationVariables = Exact<{
 
 export type CancelOrderMutation = { cancelOrder: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } };
 
-export type ProductCardFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null };
+export type ProductCardFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null };
 
 export type ProductsQueryVariables = Exact<{
   filter?: ProductsFilterInput | null | undefined;
 }>;
 
 
-export type ProductsQuery = { products: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null }>, page_info: { total: number, page: number, limit: number, has_more: boolean }, facets: { price_min: number, price_max: number, categories: Array<{ value: string, label: string, count: number }>, materials: Array<{ value: string, label: string, count: number }> } } };
+export type ProductsQuery = { products: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }>, page_info: { total: number, page: number, limit: number, has_more: boolean }, facets: { price_min: number, price_max: number, active_count: number, archive_count: number, categories: Array<{ value: string, label: string, count: number }>, collections: Array<{ value: string, label: string, count: number }>, materials: Array<{ value: string, label: string, count: number }> } } };
 
 export type ProductQueryVariables = Exact<{
   slug: string;
 }>;
 
 
-export type ProductQuery = { product: { description: string, dimensions: string | null, care_notes: Array<string>, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, categories: Array<{ id: number, slug: string, name: string }>, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, price_modifier: number, max_length: number | null, options: Array<{ id: number, name: string, price_modifier: number }> }>, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } };
+export type ProductQuery = { product: { description: string, dimensions: string | null, care_notes: Array<string>, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, categories: Array<{ id: number, slug: string, name: string }>, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, price_modifier: number, max_length: number | null, options: Array<{ id: number, name: string, price_modifier: number }> }>, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } };
 
 export type RelatedProductsQueryVariables = Exact<{
   slug: string;
@@ -980,27 +1163,30 @@ export type RelatedProductsQueryVariables = Exact<{
 }>;
 
 
-export type RelatedProductsQuery = { relatedProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null }> };
+export type RelatedProductsQuery = { relatedProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
 
 export type FeaturedProductsQueryVariables = Exact<{
   limit?: number | null | undefined;
 }>;
 
 
-export type FeaturedProductsQuery = { featuredProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null }> };
+export type FeaturedProductsQuery = { featuredProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
 
 export type CategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type CategoriesQuery = { categories: Array<{ id: number, slug: string, name: string, icon: string | null, image_url: string | null, product_count: number }> };
 
-export type CollectionsQueryVariables = Exact<{ [key: string]: never; }>;
+export type CollectionsQueryVariables = Exact<{
+  archive?: boolean | null | undefined;
+}>;
 
 
 export type CollectionsQuery = { collections: Array<{ id: number, slug: string, name: string, description: string | null, image_url: string | null, ends_at: string | null, product_count: number }> };
 
 export type CollectionQueryVariables = Exact<{
   slug: string;
+  archive?: boolean | null | undefined;
 }>;
 
 
@@ -1014,7 +1200,7 @@ export type SiteSettingsQuery = { siteSettings: { contact_phone: string, whatsap
 export type WishlistQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type WishlistQuery = { wishlist: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null }> };
+export type WishlistQuery = { wishlist: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
 
 export type WishlistIdsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1028,21 +1214,21 @@ export type ToggleWishlistMutationVariables = Exact<{
 
 export type ToggleWishlistMutation = { toggleWishlist: { product_id: number, is_wishlisted: boolean, wishlist_count: number } };
 
-export type WorkshopConfigFieldsFragment = { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> };
+export type WorkshopConfigFieldsFragment = { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> };
 
-export type WorkshopBookingFieldsFragment = { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } };
+export type WorkshopBookingFieldsFragment = { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, slots: Array<{ starts_at: string, ends_at: string }>, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } };
 
 export type WorkshopsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type WorkshopsQuery = { workshops: Array<{ id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> }> };
+export type WorkshopsQuery = { workshops: Array<{ id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> }> };
 
 export type WorkshopQueryVariables = Exact<{
   slug: string;
 }>;
 
 
-export type WorkshopQuery = { workshop: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } };
+export type WorkshopQuery = { workshop: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } };
 
 export type WorkshopAvailabilityQueryVariables = Exact<{
   input: WorkshopAvailabilityInput;
@@ -1056,14 +1242,14 @@ export type BookWorkshopMutationVariables = Exact<{
 }>;
 
 
-export type BookWorkshopMutation = { bookWorkshop: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
+export type BookWorkshopMutation = { bookWorkshop: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, slots: Array<{ starts_at: string, ends_at: string }>, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
 
 export type RescheduleWorkshopBookingMutationVariables = Exact<{
   input: RescheduleWorkshopInput;
 }>;
 
 
-export type RescheduleWorkshopBookingMutation = { rescheduleWorkshopBooking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
+export type RescheduleWorkshopBookingMutation = { rescheduleWorkshopBooking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, slots: Array<{ starts_at: string, ends_at: string }>, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
 
 export type MyWorkshopBookingsQueryVariables = Exact<{
   page?: number | null | undefined;
@@ -1071,14 +1257,14 @@ export type MyWorkshopBookingsQueryVariables = Exact<{
 }>;
 
 
-export type MyWorkshopBookingsQuery = { myWorkshopBookings: { items: Array<{ id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } }>, page_info: { total: number, page: number, limit: number, has_more: boolean } } };
+export type MyWorkshopBookingsQuery = { myWorkshopBookings: { items: Array<{ id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, slots: Array<{ starts_at: string, ends_at: string }>, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } }>, page_info: { total: number, page: number, limit: number, has_more: boolean } } };
 
 export type WorkshopBookingQueryVariables = Exact<{
   id: string;
 }>;
 
 
-export type WorkshopBookingQuery = { workshopBooking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
+export type WorkshopBookingQuery = { workshopBooking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, slots: Array<{ starts_at: string, ends_at: string }>, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
 
 export type CancelWorkshopBookingMutationVariables = Exact<{
   id: string;
@@ -1086,7 +1272,7 @@ export type CancelWorkshopBookingMutationVariables = Exact<{
 }>;
 
 
-export type CancelWorkshopBookingMutation = { cancelWorkshopBooking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
+export type CancelWorkshopBookingMutation = { cancelWorkshopBooking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, slots: Array<{ starts_at: string, ends_at: string }>, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
 
 export const AddressFieldsFragmentDoc = gql`
     fragment AddressFields on Address {
@@ -1114,6 +1300,8 @@ export const ProductCardFragmentDoc = gql`
   color_code
   image_urls
   stock
+  is_active
+  is_archived
   is_featured
   is_customizable
   rating_avg
@@ -1122,6 +1310,7 @@ export const ProductCardFragmentDoc = gql`
     id
     slug
     name
+    starts_at
     ends_at
   }
 }
@@ -1264,6 +1453,7 @@ export const WorkshopConfigFieldsFragmentDoc = gql`
   slot_minutes
   capacity_per_slot
   booking_window_days
+  slot_span_days
   closed_weekdays
   tiers {
     hours
@@ -1277,6 +1467,10 @@ export const WorkshopBookingFieldsFragmentDoc = gql`
   id
   starts_at
   ends_at
+  slots {
+    starts_at
+    ends_at
+  }
   hours
   participants
   price_per_person
@@ -1619,6 +1813,145 @@ export function useClearCartMutation(baseOptions?: ApolloReactHooks.MutationHook
       }
 export type ClearCartMutationHookResult = ReturnType<typeof useClearCartMutation>;
 export type ClearCartMutationResult = ApolloReactCommon.MutationResult<ClearCartMutation>;
+export const ContentPageDocument = gql`
+    query ContentPage($slug: String!) {
+  contentPage(slug: $slug) {
+    slug
+    title
+    subtitle
+    hero_image_url
+    is_published
+    updated_at
+    sections {
+      heading
+      body
+      items {
+        title
+        body
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useContentPageQuery__
+ *
+ * To run a query within a React component, call `useContentPageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useContentPageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useContentPageQuery({
+ *   variables: {
+ *      slug: // value for 'slug'
+ *   },
+ * });
+ */
+export function useContentPageQuery(baseOptions: ApolloReactHooks.QueryHookOptions<ContentPageQuery, ContentPageQueryVariables> & ({ variables: ContentPageQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ContentPageQuery, ContentPageQueryVariables>(ContentPageDocument, options);
+      }
+export function useContentPageLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ContentPageQuery, ContentPageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ContentPageQuery, ContentPageQueryVariables>(ContentPageDocument, options);
+        }
+export type ContentPageQueryHookResult = ReturnType<typeof useContentPageQuery>;
+export type ContentPageLazyQueryHookResult = ReturnType<typeof useContentPageLazyQuery>;
+export type ContentPageQueryResult = ApolloReactCommon.QueryResult<ContentPageQuery, ContentPageQueryVariables>;
+export const SendContactMessageDocument = gql`
+    mutation SendContactMessage($input: ContactMessageInput!) {
+  sendContactMessage(input: $input)
+}
+    `;
+
+/**
+ * __useSendContactMessageMutation__
+ *
+ * To run a mutation, you first call `useSendContactMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSendContactMessageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [sendContactMessageMutation, { data, loading, error }] = useSendContactMessageMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSendContactMessageMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SendContactMessageMutation, SendContactMessageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SendContactMessageMutation, SendContactMessageMutationVariables>(SendContactMessageDocument, options);
+      }
+export type SendContactMessageMutationHookResult = ReturnType<typeof useSendContactMessageMutation>;
+export type SendContactMessageMutationResult = ApolloReactCommon.MutationResult<SendContactMessageMutation>;
+export const SubscribeToNewsletterDocument = gql`
+    mutation SubscribeToNewsletter($email: String!) {
+  subscribeToNewsletter(email: $email) {
+    email
+    is_active
+    was_already_subscribed
+  }
+}
+    `;
+
+/**
+ * __useSubscribeToNewsletterMutation__
+ *
+ * To run a mutation, you first call `useSubscribeToNewsletterMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSubscribeToNewsletterMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [subscribeToNewsletterMutation, { data, loading, error }] = useSubscribeToNewsletterMutation({
+ *   variables: {
+ *      email: // value for 'email'
+ *   },
+ * });
+ */
+export function useSubscribeToNewsletterMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SubscribeToNewsletterMutation, SubscribeToNewsletterMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SubscribeToNewsletterMutation, SubscribeToNewsletterMutationVariables>(SubscribeToNewsletterDocument, options);
+      }
+export type SubscribeToNewsletterMutationHookResult = ReturnType<typeof useSubscribeToNewsletterMutation>;
+export type SubscribeToNewsletterMutationResult = ApolloReactCommon.MutationResult<SubscribeToNewsletterMutation>;
+export const UnsubscribeFromNewsletterDocument = gql`
+    mutation UnsubscribeFromNewsletter($token: String!) {
+  unsubscribeFromNewsletter(token: $token)
+}
+    `;
+
+/**
+ * __useUnsubscribeFromNewsletterMutation__
+ *
+ * To run a mutation, you first call `useUnsubscribeFromNewsletterMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnsubscribeFromNewsletterMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unsubscribeFromNewsletterMutation, { data, loading, error }] = useUnsubscribeFromNewsletterMutation({
+ *   variables: {
+ *      token: // value for 'token'
+ *   },
+ * });
+ */
+export function useUnsubscribeFromNewsletterMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UnsubscribeFromNewsletterMutation, UnsubscribeFromNewsletterMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UnsubscribeFromNewsletterMutation, UnsubscribeFromNewsletterMutationVariables>(UnsubscribeFromNewsletterDocument, options);
+      }
+export type UnsubscribeFromNewsletterMutationHookResult = ReturnType<typeof useUnsubscribeFromNewsletterMutation>;
+export type UnsubscribeFromNewsletterMutationResult = ApolloReactCommon.MutationResult<UnsubscribeFromNewsletterMutation>;
 export const EventsDocument = gql`
     query Events($filter: EventsFilterInput) {
   events(filter: $filter) {
@@ -2090,6 +2423,11 @@ export const ProductsDocument = gql`
         label
         count
       }
+      collections {
+        value
+        label
+        count
+      }
       materials {
         value
         label
@@ -2097,6 +2435,8 @@ export const ProductsDocument = gql`
       }
       price_min
       price_max
+      active_count
+      archive_count
     }
   }
 }
@@ -2297,8 +2637,8 @@ export type CategoriesQueryHookResult = ReturnType<typeof useCategoriesQuery>;
 export type CategoriesLazyQueryHookResult = ReturnType<typeof useCategoriesLazyQuery>;
 export type CategoriesQueryResult = ApolloReactCommon.QueryResult<CategoriesQuery, CategoriesQueryVariables>;
 export const CollectionsDocument = gql`
-    query Collections {
-  collections {
+    query Collections($archive: Boolean) {
+  collections(archive: $archive) {
     id
     slug
     name
@@ -2322,6 +2662,7 @@ export const CollectionsDocument = gql`
  * @example
  * const { data, loading, error } = useCollectionsQuery({
  *   variables: {
+ *      archive: // value for 'archive'
  *   },
  * });
  */
@@ -2337,8 +2678,8 @@ export type CollectionsQueryHookResult = ReturnType<typeof useCollectionsQuery>;
 export type CollectionsLazyQueryHookResult = ReturnType<typeof useCollectionsLazyQuery>;
 export type CollectionsQueryResult = ApolloReactCommon.QueryResult<CollectionsQuery, CollectionsQueryVariables>;
 export const CollectionDocument = gql`
-    query Collection($slug: String!) {
-  collection(slug: $slug) {
+    query Collection($slug: String!, $archive: Boolean) {
+  collection(slug: $slug, archive: $archive) {
     id
     slug
     name
@@ -2363,6 +2704,7 @@ export const CollectionDocument = gql`
  * const { data, loading, error } = useCollectionQuery({
  *   variables: {
  *      slug: // value for 'slug'
+ *      archive: // value for 'archive'
  *   },
  * });
  */

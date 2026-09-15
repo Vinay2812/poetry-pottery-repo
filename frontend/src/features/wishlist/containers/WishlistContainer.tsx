@@ -17,9 +17,9 @@ export function WishlistContainer() {
       <div className="flex flex-col gap-1">
         <h1 className="font-heading text-3xl md:text-5xl">Saved pieces</h1>
         {items.length > 0 && (
-          <p className="text-sm text-muted-foreground">
-            {items.length} {items.length === 1 ? "piece" : "pieces"} waiting for
-            you
+          <p className="text-[15px] text-muted-foreground">
+            {items.length} {items.length === 1 ? "piece" : "pieces"} kept for
+            later.
           </p>
         )}
       </div>

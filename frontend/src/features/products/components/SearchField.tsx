@@ -17,7 +17,10 @@ export function SearchField({
 }: SearchFieldProps) {
   return (
     <div className="relative">
-      <Search className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-muted-foreground" />
+      <Search
+        className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+        strokeWidth={1.5}
+      />
       <input
         type="search"
         value={value}
@@ -26,16 +29,16 @@ export function SearchField({
         aria-label="Search pieces"
         autoFocus={autoFocus}
         enterKeyHint="search"
-        className="h-12 w-full rounded-full bg-cream pr-12 pl-12 text-base outline-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary/40 [&::-webkit-search-cancel-button]:hidden"
+        className="h-11 w-full border border-ash bg-transparent pr-10 pl-9 text-[15px] outline-none placeholder:text-muted-foreground focus-visible:border-ink [&::-webkit-search-cancel-button]:hidden"
       />
       {value && (
         <button
           type="button"
           onClick={onClear}
           aria-label="Clear search"
-          className="absolute top-1/2 right-3 flex size-8 -translate-y-1/2 items-center justify-center rounded-full hover:bg-primary-light"
+          className="absolute top-1/2 right-1 flex size-9 -translate-y-1/2 items-center justify-center hover:text-primary"
         >
-          <X className="size-4" />
+          <X className="size-4" strokeWidth={1.5} />
         </button>
       )}
     </div>

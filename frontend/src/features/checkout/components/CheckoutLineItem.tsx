@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import { toPotteryIconKind } from "@/components/icons/pottery";
+import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 import { formatInr } from "@/lib/format";
 
 export interface CheckoutLineItemProps {
@@ -18,9 +20,9 @@ export function CheckoutLineItem({
   selectionSummary,
 }: CheckoutLineItemProps) {
   return (
-    <li className="flex items-center gap-3 py-3">
-      <span className="relative size-14 shrink-0 overflow-hidden rounded-xl bg-primary-light">
-        {imageUrl && (
+    <li className="flex items-center gap-3 border-b border-ash py-4">
+      <span className="relative size-14 shrink-0 overflow-hidden bg-white">
+        {imageUrl ? (
           <Image
             src={imageUrl}
             alt=""
@@ -28,20 +30,22 @@ export function CheckoutLineItem({
             sizes="56px"
             className="object-cover"
           />
+        ) : (
+          <PlaceholderImage kind={toPotteryIconKind(name)} />
         )}
-        <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-foreground text-[10px] font-semibold text-background">
-          {quantity}
-        </span>
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium">{name}</p>
+        <p className="truncate text-sm">{name}</p>
         {selectionSummary && (
-          <p className="truncate text-xs text-muted-foreground">
+          <p className="truncate text-[13px] text-muted-foreground">
             {selectionSummary}
           </p>
         )}
+        <p className="text-[13px] text-muted-foreground tnum">
+          Quantity {quantity}
+        </p>
       </div>
-      <span className="text-sm font-semibold">{formatInr(lineTotal)}</span>
+      <span className="text-sm tnum">{formatInr(lineTotal)}</span>
     </li>
   );
 }

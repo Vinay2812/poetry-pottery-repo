@@ -1,6 +1,3 @@
-import { SlidersHorizontal } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -9,6 +6,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { ProductSort } from "@/graphql/generated/graphql";
+import { cn } from "@/lib/utils";
 
 import { SORT_OPTIONS } from "@/features/products/types";
 
@@ -19,6 +17,7 @@ export interface ProductToolbarProps {
   activeFilterCount: number;
   onSortChange: (sort: ProductSort) => void;
   onOpenFilters: () => void;
+  onClear: () => void;
 }
 
 export function ProductToolbar({
@@ -28,23 +27,33 @@ export function ProductToolbar({
   activeFilterCount,
   onSortChange,
   onOpenFilters,
+  onClear,
 }: ProductToolbarProps) {
   return (
     <div className="flex items-center justify-between gap-3">
-      <p className="text-sm text-muted-foreground" aria-live="polite">
+      <p className="text-[13px] text-muted-foreground tnum" aria-live="polite">
         {isLoading
           ? "Finding pieces…"
           : `${total} ${total === 1 ? "piece" : "pieces"}`}
       </p>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-4">
+        {/* Kept in the layout so clearing never moves the sort control. */}
+        <button
+          type="button"
+          onClick={onClear}
+          inert={activeFilterCount === 0}
+          className={cn(
+            "hidden text-sm underline-offset-4 hover:text-primary hover:underline lg:block",
+            activeFilterCount === 0 && "invisible",
+          )}
+        >
+          Clear all
+        </button>
         <Select
           value={sort}
           onValueChange={(value) => onSortChange(value as ProductSort)}
         >
-          <SelectTrigger
-            aria-label="Sort by"
-            className="h-10 rounded-full bg-background"
-          >
+          <SelectTrigger aria-label="Sort by" className="h-10 bg-transparent">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -55,20 +64,16 @@ export function ProductToolbar({
             ))}
           </SelectContent>
         </Select>
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-10 rounded-full lg:hidden"
+        <button
+          type="button"
           onClick={onOpenFilters}
+          className="text-sm underline-offset-4 hover:text-primary hover:underline lg:hidden"
         >
-          <SlidersHorizontal className="size-4" />
-          Filters
-          {activeFilterCount > 0 && (
-            <span className="flex size-5 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground">
-              {activeFilterCount}
-            </span>
-          )}
-        </Button>
+          Filters{" "}
+          <span className={cn("tnum", activeFilterCount === 0 && "invisible")}>
+            ({activeFilterCount})
+          </span>
+        </button>
       </div>
     </div>
   );

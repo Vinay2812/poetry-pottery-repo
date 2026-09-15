@@ -24,7 +24,8 @@ const img = (id: number): string =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg`;
 
 const STUDIO = "Poetry & Pottery Studio";
-const STUDIO_ADDRESS = "12 Kala Nagar, Sangli, Maharashtra 416416";
+const STUDIO_ADDRESS =
+  "Plot no. 48, Above Shanti Kamal Bungalow, Ekta Colony, Sangli";
 
 export const events: SeedEvent[] = [
   {
@@ -43,8 +44,8 @@ export const events: SeedEvent[] = [
     location: STUDIO,
     address: STUDIO_ADDRESS,
     instructor: "Sandeep Manchekar",
-    image_url: img(4207892),
-    gallery: [img(3094218), img(2162938), img(4207892)],
+    image_url: img(6611264),
+    gallery: [img(6611264), img(6611393), img(33878963)],
     includes: [
       "All clay and tools",
       "Two fired and glazed pieces",
@@ -73,8 +74,8 @@ export const events: SeedEvent[] = [
     location: STUDIO,
     address: STUDIO_ADDRESS,
     instructor: "Poetry & Pottery",
-    image_url: img(2325307),
-    gallery: [img(2325307), img(11424070)],
+    image_url: img(29520386),
+    gallery: [img(29520386), img(9396434), img(18449690)],
     includes: ["Clay and tools", "One fired planter with saucer", "Tea"],
     highlights: [
       "No wheel, no pressure",
@@ -98,8 +99,8 @@ export const events: SeedEvent[] = [
     location: STUDIO,
     address: STUDIO_ADDRESS,
     instructor: "Sandeep Manchekar",
-    image_url: img(3094218),
-    gallery: [img(3094218), img(2424235)],
+    image_url: img(33878971),
+    gallery: [img(33878971), img(8063881), img(27850849)],
     includes: [
       "Glaze materials",
       "Firing for two pieces",
@@ -122,8 +123,8 @@ export const events: SeedEvent[] = [
     booked_seats: 22,
     location: STUDIO,
     address: STUDIO_ADDRESS,
-    image_url: img(207474),
-    gallery: [img(207474), img(13627258)],
+    image_url: img(13061472),
+    gallery: [img(13061472), img(5020925)],
     includes: [
       "Stage time if you sign up",
       "Chai and bites",
@@ -146,8 +147,8 @@ export const events: SeedEvent[] = [
     booked_seats: 4,
     location: STUDIO,
     address: STUDIO_ADDRESS,
-    image_url: img(13627258),
-    gallery: [img(13627258)],
+    image_url: img(5020925),
+    gallery: [img(5020925)],
     includes: ["Stage time", "Chai"],
     highlights: ["Spoken word and prose only", "Supportive room"],
     performers: ["Open sign-ups"],
@@ -168,8 +169,8 @@ export const events: SeedEvent[] = [
     location: STUDIO,
     address: STUDIO_ADDRESS,
     instructor: "Sandeep Manchekar",
-    image_url: img(2162938),
-    gallery: [img(2162938), img(4207892), img(3094218)],
+    image_url: img(6611393),
+    gallery: [img(6611393), img(26733190), img(31875677)],
     includes: ["Clay and tools", "Two fired pieces", "Chai"],
     highlights: ["Sold out", "Rain on the tin roof"],
     performers: [],
@@ -188,8 +189,8 @@ export const events: SeedEvent[] = [
     booked_seats: 41,
     location: STUDIO,
     address: STUDIO_ADDRESS,
-    image_url: img(9106375),
-    gallery: [img(9106375), img(207474)],
+    image_url: img(3475853),
+    gallery: [img(3475853), img(13061472)],
     includes: ["Stage time", "Chai and bites"],
     highlights: ["Twelve performers", "Full house"],
     performers: ["Aarav Kulkarni", "Meera Joshi", "Rhea D'Souza", "Kabir Sen"],
@@ -201,29 +202,30 @@ export const workshopConfig = {
   name: "Open Studio Sessions",
   description:
     "Book an hour or more at the wheel any afternoon. A potter is on hand to help, and everything you make is fired and ready to collect in two weeks.",
-  image_url: img(2162938),
+  image_url: "",
   timezone: "Asia/Kolkata",
   opening_minutes: 13 * 60,
   closing_minutes: 19 * 60,
   slot_minutes: 60,
   capacity_per_slot: 6,
   booking_window_days: 60,
+  slot_span_days: 7,
   closed_weekdays: [1],
   tiers: [
-    { hours: 1, price_per_person: 950, pieces_per_person: 1 },
-    { hours: 2, price_per_person: 1700, pieces_per_person: 2 },
-    { hours: 3, price_per_person: 2400, pieces_per_person: 3 },
+    { hours: 1, price_per_person: 1100, pieces_per_person: 1 },
+    { hours: 2, price_per_person: 2000, pieces_per_person: 2 },
+    { hours: 3, price_per_person: 2700, pieces_per_person: 4 },
   ],
 };
 
 export const siteSettings = {
-  contact_phone: "+91 91234 56789",
-  whatsapp_number: "919123456789",
-  contact_email: "hello@poetryandpottery.in",
+  contact_phone: "+91 8329026762",
+  whatsapp_number: "918329026762",
+  contact_email: "poetryandpottery.aj@gmail.com",
   address: STUDIO_ADDRESS,
-  opening_hours: "Tuesday to Sunday, 1 pm to 7 pm",
-  instagram_url: "https://instagram.com/poetryandpottery",
-  facebook_url: "https://facebook.com/poetryandpottery",
+  opening_hours: "Mon-Fri, 12 pm - 7 pm. Sat- Sun, 12 pm - 8 pm",
+  instagram_url: "",
+  facebook_url: "",
   youtube_url: "",
   shipping_flat_fee: 150,
   free_shipping_above: 2500,
@@ -232,8 +234,8 @@ export const siteSettings = {
   hero_heading: "Pottery made slowly, in Sangli",
   hero_subheading:
     "Wheel-thrown mugs, bowls and planters glazed in earthy greens and greys. Each piece is made by hand, so no two are quite the same.",
-  hero_image_url: img(2162938),
-  hero_cta_text: "Shop the collection",
+  hero_image_url: "",
+  hero_cta_text: "Shop the shelf",
   hero_cta_href: "/products",
 };
 
@@ -254,7 +256,7 @@ export const contentPages: SeedContentPage[] = [
     slug: "about",
     title: "Where clay meets soul",
     subtitle: "A weekend hobby that turned into a studio.",
-    hero_image_url: img(3094208),
+    hero_image_url: "",
     sections: [
       {
         heading: "How it started",
@@ -307,7 +309,7 @@ export const contentPages: SeedContentPage[] = [
     slug: "faq",
     title: "Questions, answered",
     subtitle: "Everything you might want to know before you order or book.",
-    hero_image_url: img(1610701),
+    hero_image_url: "",
     sections: [
       {
         heading: "Orders",
@@ -351,7 +353,7 @@ export const contentPages: SeedContentPage[] = [
     slug: "shipping",
     title: "Shipping and returns",
     subtitle: "Packed by hand, shipped across India.",
-    hero_image_url: img(4498135),
+    hero_image_url: "",
     sections: [
       {
         heading: "Shipping",
@@ -370,7 +372,7 @@ export const contentPages: SeedContentPage[] = [
     title: "Caring for your pottery",
     subtitle:
       "Stoneware is tough, but a few habits keep it looking good for years.",
-    hero_image_url: img(1610701),
+    hero_image_url: "",
     sections: [
       {
         heading: "Everyday use",
@@ -415,7 +417,7 @@ export const contentPages: SeedContentPage[] = [
       },
       {
         heading: "Contact",
-        body: "Write to hello@poetryandpottery.in to see or delete what we hold about you.",
+        body: "Write to poetryandpottery.aj@gmail.com to see or delete what we hold about you.",
         items: [],
       },
     ],
@@ -438,7 +440,7 @@ export const contentPages: SeedContentPage[] = [
       },
       {
         heading: "Contact",
-        body: "Questions about these terms can be sent to hello@poetryandpottery.in.",
+        body: "Questions about these terms can be sent to poetryandpottery.aj@gmail.com.",
         items: [],
       },
     ],

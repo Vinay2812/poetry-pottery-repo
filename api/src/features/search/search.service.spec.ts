@@ -63,6 +63,26 @@ describe("SearchService", () => {
     );
   });
 
+  it("ranks products across both views so the archive can search too", async () => {
+    embeddingsMock.embed.mockResolvedValue([0.1]);
+    prismaMock.$queryRaw.mockResolvedValue([{ id: 5 }]);
+
+    await service.rankProducts("retired vase", 20);
+
+    expect(lastSql().sql).not.toContain("is_active");
+  });
+
+  it("keeps drafts out of event ranking without dropping completed events", async () => {
+    embeddingsMock.embed.mockResolvedValue([0.1]);
+    prismaMock.$queryRaw.mockResolvedValue([{ id: 8 }]);
+
+    await service.rankEvents("wheel session", 20);
+
+    const sql = lastSql().sql;
+    expect(sql).toContain("\"status\" <> 'DRAFT'");
+    expect(sql).not.toContain("'PUBLISHED'");
+  });
+
   it("writes the product embedding as a pgvector literal", async () => {
     prismaMock.product.findUnique.mockResolvedValue({
       name: "Mug",

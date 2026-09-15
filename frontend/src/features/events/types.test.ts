@@ -2,17 +2,18 @@ import { describe, expect, it } from "vitest";
 
 import {
   EventLevel,
+  EventStatus,
   EventType,
   EventWhen,
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
 import {
+  applyRegistrationCancellation,
   DEFAULT_EVENT_FILTERS,
-  isLowSeats,
+  type RegistrationData,
   isRegistrationClosed,
   parseEventFilters,
-  toDateBadge,
   toEventPath,
   toEventSearchParams,
   toEventsFilterInput,
@@ -22,7 +23,9 @@ import {
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
   toRegistrationStepIndex,
+  toEventWhenLabel,
   toSeatsLabel,
+  toSeatsOfTotalLabel,
   toTimeRange,
   toWhatsAppBookingMessage,
 } from "./types";
@@ -49,10 +52,9 @@ describe("toSeatsLabel", () => {
     expect(toSeatsLabel(8, 8)).toBe("All 8 seats open");
   });
 
-  it("marks three or fewer seats as low", () => {
-    expect(isLowSeats(4)).toBe(false);
-    expect(isLowSeats(3)).toBe(true);
-    expect(isLowSeats(0)).toBe(false);
+  it("counts seats against the room", () => {
+    expect(toSeatsOfTotalLabel(3, 8)).toBe("3 of 8 seats left");
+    expect(toSeatsOfTotalLabel(0, 8)).toBe("Sold out");
   });
 });
 
@@ -69,12 +71,8 @@ describe("labels", () => {
 });
 
 describe("dates", () => {
-  it("splits the start into a calendar badge", () => {
-    expect(toDateBadge(STARTS_AT)).toEqual({
-      day: "19",
-      month: "Sep",
-      weekday: "Sat",
-    });
+  it("writes the start as one plain line", () => {
+    expect(toEventWhenLabel(STARTS_AT)).toBe("Sat 19 Sep · 3 pm");
   });
 
   it("joins start and end into a time range", () => {
@@ -99,6 +97,14 @@ describe("registration status helpers", () => {
     expect(toRegistrationStepIndex(RegistrationStatus.Cancelled)).toBe(0);
     expect(isRegistrationClosed(RegistrationStatus.Cancelled)).toBe(true);
     expect(isRegistrationClosed(RegistrationStatus.Approved)).toBe(false);
+  });
+
+  it("freezes a cancelled booking at the last step it actually reached", () => {
+    const dates = { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null };
+    expect(toRegistrationStepIndex(RegistrationStatus.Cancelled, dates)).toBe(
+      1,
+    );
+    expect(toRegistrationStepIndex(RegistrationStatus.Rejected, dates)).toBe(1);
   });
 });
 
@@ -176,5 +182,86 @@ describe("event filters", () => {
       page: 2,
       limit: 12,
     });
+  });
+});
+
+function registration(
+  overrides: Partial<RegistrationData> = {},
+): RegistrationData {
+  return {
+    id: "reg_1",
+    seats: 2,
+    unit_price: 1800,
+    discount: 0,
+    total: 3600,
+    status: RegistrationStatus.Approved,
+    note: null,
+    cancel_reason: null,
+    can_cancel: true,
+    created_at: "2026-09-10T09:00:00.000Z",
+    approved_at: "2026-09-11T09:00:00.000Z",
+    confirmed_at: null,
+    rejected_at: null,
+    cancelled_at: null,
+    event: {
+      id: 1,
+      slug: "glaze-night",
+      title: "Glaze night",
+      event_type: EventType.PotteryWorkshop,
+      status: EventStatus.Published,
+      level: EventLevel.AllLevels,
+      starts_at: STARTS_AT,
+      ends_at: "2026-09-19T11:30:00.000Z",
+      location: "The studio",
+      price: 1800,
+      total_seats: 8,
+      available_seats: 4,
+      instructor: null,
+      image_url: "/events/glaze-night.jpg",
+      rating_avg: 0,
+      rating_count: 0,
+      is_past: false,
+      address: "12 Kiln Lane",
+    },
+    ...overrides,
+  };
+}
+
+describe("applyRegistrationCancellation", () => {
+  it("closes the booking the moment a cancellation is asked for", () => {
+    const cancelled = applyRegistrationCancellation(registration(), {
+      reason: "  Away that week  ",
+      at: "2026-09-12T09:00:00.000Z",
+    });
+    expect(cancelled?.status).toBe(RegistrationStatus.Cancelled);
+    expect(cancelled?.can_cancel).toBe(false);
+    expect(cancelled?.cancelled_at).toBe("2026-09-12T09:00:00.000Z");
+    expect(cancelled?.cancel_reason).toBe("Away that week");
+  });
+
+  it("keeps the reason already on record when none is typed", () => {
+    const cancelled = applyRegistrationCancellation(
+      registration({ cancel_reason: "Event called off" }),
+      { reason: "  ", at: "2026-09-12T09:00:00.000Z" },
+    );
+    expect(cancelled?.cancel_reason).toBe("Event called off");
+  });
+
+  it("leaves the booking it was given alone", () => {
+    const current = registration();
+    applyRegistrationCancellation(current, {
+      reason: "",
+      at: "2026-09-12T09:00:00.000Z",
+    });
+    expect(current.status).toBe(RegistrationStatus.Approved);
+  });
+
+  it("has nothing to do before the booking loads", () => {
+    expect(
+      applyRegistrationCancellation(null, {
+        reason: "",
+        at: "2026-09-12T09:00:00.000Z",
+      }),
+    ).toBeNull();
   });
 });

@@ -21,18 +21,17 @@ export function SignInPromptDialog({
 }: SignInPromptDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm rounded-2xl">
+      <DialogContent className="max-w-sm">
         <DialogHeader>
-          <DialogTitle className="font-heading text-2xl font-normal">
+          <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Sign in to continue
           </DialogTitle>
           <DialogDescription>
-            Your cart, wishlist and bookings are saved to your account so they
-            follow you between devices.
+            Your cart, saved pieces and bookings live in your account.
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
             Not now
           </Button>
           <Button onClick={onConfirm}>Sign in</Button>

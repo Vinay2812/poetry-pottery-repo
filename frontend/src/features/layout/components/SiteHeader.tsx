@@ -1,4 +1,4 @@
-import { Heart, Search, ShoppingBag, UserRound } from "lucide-react";
+import { Heart, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -14,8 +14,10 @@ export interface SiteHeaderProps {
   isSignedIn: boolean;
   isAdmin: boolean;
   userImageUrl: string | null;
+  isHome?: boolean;
   onSearchClick: () => void;
   onAccountClick: () => void;
+  onMenuClick: () => void;
 }
 
 interface IconLinkProps {
@@ -30,11 +32,11 @@ function IconLink({ href, label, count = 0, children }: IconLinkProps) {
     <Link
       href={href}
       aria-label={count > 0 ? `${label} (${count})` : label}
-      className="relative flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-primary-light"
+      className="relative flex size-10 items-center justify-center ghost-hover text-foreground hover:text-primary"
     >
       {children}
       {count > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-terracotta px-1 text-[10px] font-bold text-foreground">
+        <span className="absolute top-1 right-0 text-[11px] font-medium text-primary tnum">
           {formatBadgeCount(count)}
         </span>
       )}
@@ -50,18 +52,24 @@ export function SiteHeader({
   isSignedIn,
   isAdmin,
   userImageUrl,
+  isHome = false,
   onSearchClick,
   onAccountClick,
+  onMenuClick,
 }: SiteHeaderProps) {
   return (
-    <header className="sticky top-0 z-40 bg-background/85 backdrop-blur-md">
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-2 px-4 md:px-8">
+    <header
+      className={cn(
+        "sticky top-0 z-40 border-b bg-background",
+        isHome ? "border-kiln" : "border-ash",
+      )}
+    >
+      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-5 px-4 md:px-8">
         <Wordmark />
 
-        <nav
-          aria-label="Main"
-          className="ml-8 hidden items-center gap-1 lg:flex"
-        >
+        <span aria-hidden="true" className="hidden h-6 w-px bg-ash lg:block" />
+
+        <nav aria-label="Main" className="hidden items-center gap-6 lg:flex">
           {navLinks.map((link) => {
             const isActive = link.href === activeHref;
             return (
@@ -70,10 +78,10 @@ export function SiteHeader({
                 href={link.href}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
-                  "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                  "text-sm transition-colors",
                   isActive
-                    ? "bg-primary-light text-primary-hover"
-                    : "text-muted-foreground hover:bg-primary-light/60 hover:text-foreground",
+                    ? "text-primary"
+                    : "text-muted-foreground hover:text-foreground",
                 )}
               >
                 {link.label}
@@ -87,31 +95,39 @@ export function SiteHeader({
             type="button"
             onClick={onSearchClick}
             aria-label="Search"
-            className="flex size-10 items-center justify-center rounded-full transition-colors hover:bg-primary-light"
+            className="flex size-10 items-center justify-center ghost-hover hover:text-primary"
           >
-            <Search className="size-5" />
+            <Search className="size-5" strokeWidth={1.5} />
           </button>
           <IconLink href="/wishlist" label="Wishlist" count={wishlistCount}>
-            <Heart className="size-5" />
+            <Heart className="size-5" strokeWidth={1.5} />
           </IconLink>
           <span className="hidden lg:contents">
             <IconLink href="/cart" label="Cart" count={cartCount}>
-              <ShoppingBag className="size-5" />
+              <ShoppingBag className="size-5" strokeWidth={1.5} />
             </IconLink>
           </span>
           {isAdmin && (
             <Link
               href="/dashboard"
-              className="hidden rounded-full px-3 py-2 text-xs font-semibold tracking-wide text-primary uppercase hover:bg-primary-light lg:block"
+              className="hidden px-3 py-2 text-[11px] tracking-[0.18em] text-muted-foreground uppercase hover:text-foreground lg:block"
             >
               Admin
             </Link>
           )}
           <button
             type="button"
+            onClick={onMenuClick}
+            aria-label="Menu"
+            className="ml-1 flex size-10 items-center justify-center border border-ash ghost-hover hover:border-ink lg:hidden"
+          >
+            <Menu className="size-5" strokeWidth={1.5} />
+          </button>
+          <button
+            type="button"
             onClick={onAccountClick}
             aria-label={isSignedIn ? "Your account" : "Sign in"}
-            className="ml-1 flex size-10 items-center justify-center rounded-full transition-colors hover:bg-primary-light"
+            className="ml-1 hidden size-10 items-center justify-center ghost-hover hover:text-primary lg:flex"
           >
             {isSignedIn && userImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -121,7 +137,7 @@ export function SiteHeader({
                 className="size-8 rounded-full object-cover"
               />
             ) : (
-              <UserRound className="size-5" />
+              <UserRound className="size-5" strokeWidth={1.5} />
             )}
           </button>
         </div>

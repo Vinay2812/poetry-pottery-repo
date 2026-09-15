@@ -1,5 +1,3 @@
-import { Check, Trash2 } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { toAddressLines } from "@/features/addresses/types";
 import { cn } from "@/lib/utils";
@@ -22,6 +20,9 @@ export interface AddressCardProps {
   onMakeDefault: () => void;
 }
 
+const TEXT_LINK =
+  "text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
+
 export function AddressCard({
   name,
   phone,
@@ -42,20 +43,20 @@ export function AddressCard({
   return (
     <div
       className={cn(
-        "flex flex-col gap-3 rounded-2xl bg-cream p-4 md:p-5",
-        isSelected && "ring-2 ring-primary",
+        "flex flex-col gap-3 border p-4 transition-colors duration-200 md:p-5",
+        isSelected ? "border-ink" : "border-ash",
       )}
     >
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-medium md:text-base">{name}</p>
-          <p className="mt-1 text-sm text-clay-dark">
+          <p className="text-[15px]">{name}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
             {toAddressLines(line1, line2, landmark, city, state, pincode)}
           </p>
-          <p className="mt-1 text-sm text-clay-dark">{phone}</p>
+          <p className="mt-1 text-sm text-muted-foreground tnum">{phone}</p>
         </div>
         {isDefault && (
-          <span className="shrink-0 rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground">
+          <span className="shrink-0 text-[13px] text-muted-foreground">
             Default
           </span>
         )}
@@ -63,33 +64,17 @@ export function AddressCard({
       <div className="flex flex-wrap items-center gap-4">
         {isSelectable &&
           (isSelected ? (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-primary">
-              <Check className="size-4" />
-              Delivering here
-            </span>
+            <span className="text-[13px]">Delivering here</span>
           ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full"
-              onClick={onSelect}
-            >
+            <Button variant="outline" size="sm" onClick={onSelect}>
               Deliver here
             </Button>
           ))}
-        <button
-          type="button"
-          onClick={onEdit}
-          className="text-xs font-medium text-primary underline-offset-4 hover:underline"
-        >
+        <button type="button" onClick={onEdit} className={TEXT_LINK}>
           Edit
         </button>
         {!isDefault && (
-          <button
-            type="button"
-            onClick={onMakeDefault}
-            className="text-xs font-medium text-primary underline-offset-4 hover:underline"
-          >
+          <button type="button" onClick={onMakeDefault} className={TEXT_LINK}>
             Make default
           </button>
         )}
@@ -97,9 +82,9 @@ export function AddressCard({
           type="button"
           onClick={onDelete}
           aria-label={`Remove the address for ${name}`}
-          className="ml-auto flex size-8 items-center justify-center rounded-full text-terracotta-dark hover:bg-terracotta-light"
+          className={TEXT_LINK}
         >
-          <Trash2 className="size-4" />
+          Remove
         </button>
       </div>
     </div>

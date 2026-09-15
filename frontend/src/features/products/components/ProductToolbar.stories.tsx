@@ -23,6 +23,7 @@ const meta = {
     activeFilterCount: 0,
     onSortChange: fn(),
     onOpenFilters: fn(),
+    onClear: fn(),
   },
 } satisfies Meta<typeof ProductToolbar>;
 

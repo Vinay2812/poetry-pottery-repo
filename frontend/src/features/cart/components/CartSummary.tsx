@@ -12,6 +12,8 @@ export interface CartSummaryProps {
   checkoutHref: string;
 }
 
+const ROW = "flex justify-between border-b border-ash py-3 text-sm";
+
 export function CartSummary({
   subtotal,
   shippingFee,
@@ -21,38 +23,35 @@ export function CartSummary({
   checkoutHref,
 }: CartSummaryProps) {
   return (
-    <div className="flex flex-col gap-4 rounded-3xl bg-cream p-5 md:p-6">
-      <h2 className="font-heading text-xl">Order summary</h2>
-      <dl className="flex flex-col gap-2 text-sm">
-        <div className="flex justify-between">
+    <div className="flex flex-col gap-5 border-t border-ash pt-5">
+      <h2 className="font-heading text-xl tracking-tight">Summary</h2>
+      <dl className="flex flex-col">
+        <div className={ROW}>
           <dt className="text-muted-foreground">
-            Subtotal ({itemCount} {itemCount === 1 ? "item" : "items"})
+            Subtotal ({itemCount} {itemCount === 1 ? "piece" : "pieces"})
           </dt>
-          <dd>{formatInr(subtotal)}</dd>
+          <dd className="tnum">{formatInr(subtotal)}</dd>
         </div>
-        <div className="flex justify-between">
+        <div className={ROW}>
           <dt className="text-muted-foreground">Shipping</dt>
-          <dd>{shippingFee === 0 ? "Free" : formatInr(shippingFee)}</dd>
+          <dd className="tnum">
+            {shippingFee === 0 ? "Free" : formatInr(shippingFee)}
+          </dd>
         </div>
-        <div className="mt-2 flex justify-between border-t border-clay/20 pt-3 text-base font-semibold">
+        <div className="flex justify-between border-b border-ash py-3 text-[15px]">
           <dt>Total</dt>
-          <dd>{formatInr(total)}</dd>
+          <dd className="tnum">{formatInr(total)}</dd>
         </div>
       </dl>
-      <Button
-        size="lg"
-        className="rounded-full"
-        disabled={!canCheckout}
-        asChild={canCheckout}
-      >
+      <Button size="lg" disabled={!canCheckout} asChild={canCheckout}>
         {canCheckout ? (
           <Link href={checkoutHref}>Continue to checkout</Link>
         ) : (
           <span>Continue to checkout</span>
         )}
       </Button>
-      <p className="text-xs text-muted-foreground">
-        Prices include GST. We confirm every order on WhatsApp before you pay.
+      <p className="text-[13px] text-muted-foreground">
+        We confirm every order on WhatsApp before you pay.
       </p>
     </div>
   );

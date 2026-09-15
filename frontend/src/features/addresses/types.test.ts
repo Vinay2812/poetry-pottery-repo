@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  afterDelete,
+  applyAddressAction,
   type SavedAddress,
   sortByDefaultFirst,
   toAddressInput,
@@ -109,5 +111,60 @@ describe("withDefaultOn", () => {
     );
     expect(updated.map((item) => item.id)).toEqual([2, 1]);
     expect(updated.map((item) => item.is_default)).toEqual([true, false]);
+  });
+});
+
+describe("afterDelete", () => {
+  it("drops the address and leaves the rest alone", () => {
+    const list = [address({ id: 1 }), address({ id: 2 })];
+    expect(afterDelete(list, 1).map((item) => item.id)).toEqual([2]);
+  });
+
+  it("promotes the newest address when the default goes", () => {
+    const list = [
+      address({ id: 3, is_default: true }),
+      address({ id: 2 }),
+      address({ id: 1 }),
+    ];
+    expect(afterDelete(list, 3)).toEqual([
+      address({ id: 2, is_default: true }),
+      address({ id: 1, is_default: false }),
+    ]);
+  });
+
+  it("leaves the default alone when another address goes", () => {
+    const list = [address({ id: 3, is_default: true }), address({ id: 2 })];
+    expect(afterDelete(list, 2)).toEqual([
+      address({ id: 3, is_default: true }),
+    ]);
+  });
+
+  it("returns nothing when the last address goes", () => {
+    expect(afterDelete([address({ id: 1, is_default: true })], 1)).toEqual([]);
+  });
+});
+
+describe("applyAddressAction", () => {
+  it("removes the card a delete is aimed at", () => {
+    const list = [address({ id: 1 }), address({ id: 2 })];
+    expect(
+      applyAddressAction(list, { kind: "delete", id: 2 }).map(
+        (item) => item.id,
+      ),
+    ).toEqual([1]);
+  });
+
+  it("moves the default mark and leads with it", () => {
+    const list = [address({ id: 1, is_default: true }), address({ id: 2 })];
+    expect(applyAddressAction(list, { kind: "default", id: 2 })).toEqual([
+      address({ id: 2, is_default: true }),
+      address({ id: 1, is_default: false }),
+    ]);
+  });
+
+  it("leaves the list it was given alone", () => {
+    const list = [address({ id: 1, is_default: true }), address({ id: 2 })];
+    applyAddressAction(list, { kind: "default", id: 2 });
+    expect(list[0].is_default).toBe(true);
   });
 });

@@ -15,6 +15,7 @@ const containing = (value: Record<string, unknown>): unknown =>
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  $executeRaw: vi.fn().mockResolvedValue(1),
   cartItem: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
@@ -109,6 +110,62 @@ describe("toCartItem", () => {
       }).unavailable_reason,
     ).toBe("No longer available");
   });
+
+  it("holds back a line whose collection window has not opened or has closed", () => {
+    const now = new Date("2026-06-01T00:00:00Z");
+    const base = {
+      id: 7,
+      user_id: 1,
+      product_id: 1,
+      quantity: 1,
+      selections: null,
+      selection_key: "",
+      created_at: new Date(),
+      updated_at: new Date(),
+    };
+    expect(
+      toCartItem(
+        {
+          ...base,
+          product: productRow({
+            collection: {
+              starts_at: new Date("2026-07-01T00:00:00Z"),
+              ends_at: null,
+            },
+          }) as never,
+        },
+        now,
+      ).unavailable_reason,
+    ).toBe("This collection has not opened yet");
+    expect(
+      toCartItem(
+        {
+          ...base,
+          product: productRow({
+            collection: {
+              starts_at: new Date("2026-01-01T00:00:00Z"),
+              ends_at: new Date("2026-05-01T00:00:00Z"),
+            },
+          }) as never,
+        },
+        now,
+      ).unavailable_reason,
+    ).toBe("This collection has ended");
+    expect(
+      toCartItem(
+        {
+          ...base,
+          product: productRow({
+            collection: {
+              starts_at: new Date("2026-01-01T00:00:00Z"),
+              ends_at: new Date("2026-12-01T00:00:00Z"),
+            },
+          }) as never,
+        },
+        now,
+      ).is_available,
+    ).toBe(true);
+  });
 });
 
 describe("CartService", () => {
@@ -143,6 +200,7 @@ describe("CartService", () => {
         create: containing({ quantity: 3, selection_key: "" }),
       }),
     );
+    expect(prismaMock.$executeRaw).toHaveBeenCalled();
   });
 
   it("rejects quantities outside the allowed range", async () => {

@@ -25,8 +25,10 @@ import {
 import {
   addDays,
   buildAvailability,
-  checkSession,
+  checkSlots,
   type Occupant,
+  slotBounds,
+  type SlotRequest,
 } from "./schedule";
 import type {
   BookWorkshopInput,
@@ -50,6 +52,7 @@ type ConfigRow = Prisma.WorkshopConfigGetPayload<{
 
 export const bookingInclude = {
   config: { include: configInclude },
+  slots: { orderBy: { starts_at: "asc" } },
 } satisfies Prisma.WorkshopBookingInclude;
 type BookingRow = Prisma.WorkshopBookingGetPayload<{
   include: typeof bookingInclude;
@@ -67,6 +70,10 @@ export function toBooking(row: BookingRow, now = new Date()): WorkshopBooking {
     config: toConfig(row.config),
     starts_at: row.starts_at,
     ends_at: row.ends_at,
+    slots: row.slots.map((slot) => ({
+      starts_at: slot.starts_at,
+      ends_at: slot.ends_at,
+    })),
     hours: row.hours,
     participants: row.participants,
     price_per_person: row.price_per_person,
@@ -165,28 +172,32 @@ export class WorkshopsService {
           `Choose ${config.tiers.map((t) => t.hours).join(", ")} hour sessions`,
         );
       }
-      const session = {
-        starts_at: input.starts_at,
-        ends_at: new Date(input.starts_at.getTime() + input.hours * 3_600_000),
+      const request = {
+        slot_starts: [...input.slot_starts].sort(
+          (a, b) => a.getTime() - b.getTime(),
+        ),
+        hours: input.hours,
         participants: Math.trunc(input.participants),
       };
-      await this.assertSession(config, session, null);
-      const subtotal = tier.price_per_person * session.participants;
+      await this.assertSlots(config, request, null);
+      const bounds = slotBounds(request.slot_starts, config.slot_minutes);
+      const subtotal = tier.price_per_person * request.participants;
       return this.prisma.workshopBooking.create({
         data: {
           id: newPublicId("WS"),
           config_id: config.id,
           user_id: userId,
-          starts_at: session.starts_at,
-          ends_at: session.ends_at,
+          starts_at: bounds.starts_at,
+          ends_at: bounds.ends_at,
           hours: input.hours,
-          participants: session.participants,
+          participants: request.participants,
           price_per_person: tier.price_per_person,
           pieces_per_person: tier.pieces_per_person,
           subtotal,
           discount: 0,
           total: subtotal,
           note,
+          slots: { create: this.toSlotRows(request.slot_starts, config) },
         },
         include: bookingInclude,
       });
@@ -214,17 +225,31 @@ export class WorkshopsService {
         );
       }
       await this.lock(current.config_id);
-      const session = {
-        starts_at: input.starts_at,
-        ends_at: new Date(
-          input.starts_at.getTime() + current.hours * 3_600_000,
+      const request = {
+        slot_starts: [...input.slot_starts].sort(
+          (a, b) => a.getTime() - b.getTime(),
         ),
+        hours: current.hours,
         participants: current.participants,
       };
-      await this.assertSession(current.config, session, current.id);
+      await this.assertSlots(current.config, request, current.id);
+      const bounds = slotBounds(
+        request.slot_starts,
+        current.config.slot_minutes,
+      );
+      // The whole set is replaced, so a move can drop, add or shuffle days at once.
+      await this.prisma.workshopBookingSlot.deleteMany({
+        where: { booking_id: current.id },
+      });
       return this.prisma.workshopBooking.update({
         where: { id: current.id },
-        data: { starts_at: session.starts_at, ends_at: session.ends_at },
+        data: {
+          starts_at: bounds.starts_at,
+          ends_at: bounds.ends_at,
+          slots: {
+            create: this.toSlotRows(request.slot_starts, current.config),
+          },
+        },
         include: bookingInclude,
       });
     });
@@ -315,11 +340,11 @@ export class WorkshopsService {
         SEAT_HOLDING.includes(next)
       ) {
         await this.lock(current.config_id);
-        await this.assertSession(
+        await this.assertSlots(
           current.config,
           {
-            starts_at: current.starts_at,
-            ends_at: current.ends_at,
+            slot_starts: current.slots.map((slot) => slot.starts_at),
+            hours: current.hours,
             participants: current.participants,
           },
           current.id,
@@ -399,50 +424,72 @@ export class WorkshopsService {
     await this.prisma.$executeRaw`SELECT pg_advisory_xact_lock(${configId})`;
   }
 
-  private async assertSession(
+  private toSlotRows(
+    starts: Date[],
+    config: Pick<ConfigRow, "slot_minutes">,
+  ): { starts_at: Date; ends_at: Date }[] {
+    return starts.map((starts_at) => ({
+      starts_at,
+      ends_at: new Date(starts_at.getTime() + config.slot_minutes * 60_000),
+    }));
+  }
+
+  private async assertSlots(
     config: ConfigRow,
-    session: Occupant,
+    request: SlotRequest,
     excludeBookingId: string | null,
   ): Promise<void> {
-    const dayStart = new Date(session.starts_at.getTime() - 86_400_000);
-    const dayEnd = new Date(session.ends_at.getTime() + 86_400_000);
+    if (request.slot_starts.length === 0) {
+      throw new BadRequestException("Pick at least one hour");
+    }
+    const times = request.slot_starts.map((start) => start.getTime());
+    const rangeStart = new Date(Math.min(...times) - 86_400_000);
+    const rangeEnd = new Date(
+      Math.max(...times) + config.slot_minutes * 60_000 + 86_400_000,
+    );
     const [blackouts, occupants] = await Promise.all([
       this.prisma.workshopBlackout.findMany({
         where: {
           config_id: config.id,
-          starts_at: { lt: dayEnd },
-          ends_at: { gt: dayStart },
+          starts_at: { lt: rangeEnd },
+          ends_at: { gt: rangeStart },
         },
       }),
-      this.activeBookings(config.id, dayStart, dayEnd, excludeBookingId),
+      this.activeBookings(config.id, rangeStart, rangeEnd, excludeBookingId),
     ]);
-    const check = checkSession(
-      session,
-      config,
-      new Date(),
-      blackouts,
-      occupants,
-    );
+    const check = checkSlots(request, config, new Date(), blackouts, occupants);
     if (!check.ok) {
       throw new BadRequestException(check.reason);
     }
   }
 
-  private activeBookings(
+  // Seats are held hour by hour, so occupancy comes from the slot rows of live bookings.
+  private async activeBookings(
     configId: number,
     from: Date,
     to: Date,
     excludeBookingId: string | null = null,
   ): Promise<Occupant[]> {
-    return this.prisma.workshopBooking.findMany({
+    const rows = await this.prisma.workshopBookingSlot.findMany({
       where: {
-        config_id: configId,
-        status: { in: [...SEAT_HOLDING] },
         starts_at: { lt: to },
         ends_at: { gt: from },
-        ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
+        booking: {
+          config_id: configId,
+          status: { in: [...SEAT_HOLDING] },
+          ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
+        },
       },
-      select: { starts_at: true, ends_at: true, participants: true },
+      select: {
+        starts_at: true,
+        ends_at: true,
+        booking: { select: { participants: true } },
+      },
     });
+    return rows.map((row) => ({
+      starts_at: row.starts_at,
+      ends_at: row.ends_at,
+      participants: row.booking.participants,
+    }));
   }
 }

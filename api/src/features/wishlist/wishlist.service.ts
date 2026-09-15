@@ -3,7 +3,6 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { PrismaService } from "@/prisma/prisma.service";
 import {
   productListInclude,
-  sellableProductWhere,
   toProduct,
 } from "@/features/products/products.service";
 import type { Product } from "@/features/products/products.type";
@@ -13,9 +12,10 @@ import type { WishlistToggleResult } from "./wishlist.type";
 export class WishlistService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // A saved piece stays saved once it is archived; the card just stops offering the cart.
   async list(userId: number): Promise<Product[]> {
     const rows = await this.prisma.wishlistItem.findMany({
-      where: { user_id: userId, product: sellableProductWhere() },
+      where: { user_id: userId },
       include: { product: { include: productListInclude } },
       orderBy: { created_at: "desc" },
     });
@@ -24,7 +24,7 @@ export class WishlistService {
 
   async ids(userId: number): Promise<number[]> {
     const rows = await this.prisma.wishlistItem.findMany({
-      where: { user_id: userId, product: sellableProductWhere() },
+      where: { user_id: userId },
       select: { product_id: true },
     });
     return rows.map((row) => row.product_id);

@@ -12,17 +12,17 @@ export function EmptyResults({
   onClear,
 }: EmptyResultsProps) {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-3xl bg-cream px-6 py-16 text-center">
-      <p className="font-script text-3xl text-clay-dark italic">
+    <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
+      <h2 className="font-heading text-2xl tracking-tight">
         Nothing on this shelf yet
-      </p>
-      <p className="max-w-sm text-sm text-muted-foreground">
+      </h2>
+      <p className="max-w-sm text-[15px] text-muted-foreground">
         {search
-          ? `No pieces match “${search}”. Try a glaze colour, a material or a simpler word.`
-          : "No pieces match these filters. Loosen one or two and try again."}
+          ? `No pieces match “${search}”. Try a glaze, a clay body or a simpler word.`
+          : "No pieces match these filters. Loosen one and try again."}
       </p>
       {(hasActiveFilters || search) && (
-        <Button variant="outline" className="rounded-full" onClick={onClear}>
+        <Button variant="outline" onClick={onClear}>
           Clear filters
         </Button>
       )}

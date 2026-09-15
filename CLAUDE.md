@@ -24,6 +24,7 @@ This file OVERRIDES any parent/workspace CLAUDE.md where they conflict.
 - Slow or external work (email, search embeddings) goes through RabbitMQ jobs declared in `api/src/queue/jobs.ts`; consumers validate payloads with zod and run in the API process.
 - Money is integer rupees. Stock, seats and slot capacity change only inside transactions with conditional updates; never trust client-sent prices.
 - Redis is for throttling and short-lived caches of settings/categories only; invalidate on admin writes.
+- Frontend data: Apollo and the generated hooks are for fetching only. Never hand-edit the Apollo cache (no `optimisticResponse`, `writeQuery`, `updateQuery`, `modify`, `evict`). Optimistic UI is React 19 `useOptimistic` + `useTransition` in the container; the mutation payload (or an awaited refetch) is the new baseline; roll back with a sonner toast. `client.clearStore()` on sign-out is the only cache lifecycle call. URL-driven state (filters, sort, tabs, pagination) uses the same pattern and keeps previous results visible instead of flashing skeletons.
 - `pnpm db:seed` (api) loads the demo catalogue; `pnpm make-admin <email>` promotes a signed-in user.
 - Comments: single-line, sparse, no ticket numbers. No `any`/`@ts-ignore`.
 

@@ -11,11 +11,14 @@ const gallery = (
       <Specimen label="Default">
         <Button>Add to basket</Button>
       </Specimen>
+      <Specimen label="Primary">
+        <Button variant="primary">Reserve a seat</Button>
+      </Specimen>
       <Specimen label="Secondary">
         <Button variant="secondary">Browse glazes</Button>
       </Specimen>
       <Specimen label="Outline">
-        <Button variant="outline">Reserve a seat</Button>
+        <Button variant="outline">See the shelf</Button>
       </Specimen>
       <Specimen label="Ghost">
         <Button variant="ghost">View kiln notes</Button>

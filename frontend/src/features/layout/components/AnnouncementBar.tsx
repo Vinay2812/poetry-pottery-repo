@@ -7,13 +7,11 @@ export interface AnnouncementBarProps {
 
 export function AnnouncementBar({ text, href }: AnnouncementBarProps) {
   const content = (
-    <span className="text-xs font-medium tracking-[0.08em] uppercase">
-      {text}
-    </span>
+    <span className="text-[11px] tracking-[0.18em] uppercase">{text}</span>
   );
 
   return (
-    <div className="flex h-9 items-center justify-center bg-primary px-4 text-primary-foreground">
+    <div className="flex h-9 items-center justify-center border-b border-ash bg-background px-4 text-foreground">
       {href ? (
         <Link href={href} className="underline-offset-4 hover:underline">
           {content}

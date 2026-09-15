@@ -1,7 +1,8 @@
-import { Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
+import { toPotteryIconKind } from "@/components/icons/pottery";
+import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 import { formatInr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -24,6 +25,9 @@ export interface CartLineItemProps {
   onSaveForLater: () => void;
 }
 
+const TEXT_LINK =
+  "text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
+
 export function CartLineItem({
   href,
   name,
@@ -41,53 +45,50 @@ export function CartLineItem({
   onSaveForLater,
 }: CartLineItemProps) {
   return (
-    <li className="flex gap-4 py-5">
+    <li className="flex gap-4 border-b border-ash py-6">
       <Link
         href={href}
         aria-label={name}
-        className="relative size-24 shrink-0 overflow-hidden rounded-2xl bg-primary-light md:size-28"
+        className="relative size-24 shrink-0 overflow-hidden bg-white"
       >
-        {imageUrl && (
+        {imageUrl ? (
           <Image
             src={imageUrl}
             alt=""
             fill
-            sizes="112px"
-            className={cn(
-              "object-cover",
-              !isAvailable && "opacity-60 grayscale",
-            )}
+            sizes="96px"
+            className={cn("object-cover", !isAvailable && "opacity-50")}
           />
+        ) : (
+          <PlaceholderImage kind={toPotteryIconKind(name)} />
         )}
       </Link>
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
             <Link
               href={href}
-              className="line-clamp-2 text-sm font-medium md:text-base"
+              className="line-clamp-2 text-sm leading-snug underline-offset-4 hover:underline"
             >
               {name}
             </Link>
             {selectionSummary && (
-              <p className="mt-0.5 text-xs text-muted-foreground">
+              <p className="mt-1 truncate text-[13px] text-muted-foreground">
                 {selectionSummary}
               </p>
             )}
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <p className="mt-1 text-[13px] text-muted-foreground tnum">
               {formatInr(unitPrice)} each
             </p>
           </div>
-          <p className="shrink-0 text-sm font-semibold md:text-base">
-            {formatInr(lineTotal)}
-          </p>
+          <p className="shrink-0 text-sm tnum">{formatInr(lineTotal)}</p>
         </div>
         {!isAvailable && unavailableReason && (
-          <p className="text-xs font-medium text-terracotta-dark">
+          <p className="text-[13px] text-terracotta-dark">
             {unavailableReason}
           </p>
         )}
-        <div className="mt-auto flex flex-wrap items-center gap-3">
+        <div className="mt-auto flex flex-wrap items-center gap-4">
           {canAdjustQuantity && (
             <QuantityStepper
               value={quantity}
@@ -96,20 +97,11 @@ export function CartLineItem({
               size="sm"
             />
           )}
-          <button
-            type="button"
-            onClick={onSaveForLater}
-            className="text-xs font-medium text-primary underline-offset-4 hover:underline"
-          >
-            Save for later
+          <button type="button" onClick={onRemove} className={TEXT_LINK}>
+            Remove
           </button>
-          <button
-            type="button"
-            onClick={onRemove}
-            aria-label={`Remove ${name}`}
-            className="ml-auto flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-primary-light hover:text-foreground"
-          >
-            <Trash2 className="size-4" />
+          <button type="button" onClick={onSaveForLater} className={TEXT_LINK}>
+            Save for later
           </button>
         </div>
       </div>

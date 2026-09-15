@@ -1,4 +1,5 @@
 import { formatInr } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export interface OrderTotalsProps {
   subtotal: number;
@@ -6,7 +7,10 @@ export interface OrderTotalsProps {
   couponCode: string | null;
   shippingFee: number;
   total: number;
+  isDiscountPending?: boolean;
 }
+
+const ROW = "flex justify-between border-b border-ash py-3 text-sm";
 
 export function OrderTotals({
   subtotal,
@@ -14,26 +18,38 @@ export function OrderTotals({
   couponCode,
   shippingFee,
   total,
+  isDiscountPending = false,
 }: OrderTotalsProps) {
   return (
-    <dl className="flex flex-col gap-2 text-sm">
-      <div className="flex justify-between">
+    <dl className="flex flex-col">
+      <div className={ROW}>
         <dt className="text-muted-foreground">Subtotal</dt>
-        <dd>{formatInr(subtotal)}</dd>
+        <dd className="tnum">{formatInr(subtotal)}</dd>
       </div>
-      {discount > 0 && (
-        <div className="flex justify-between text-primary-hover">
-          <dt>Discount{couponCode ? ` (${couponCode})` : ""}</dt>
-          <dd>−{formatInr(discount)}</dd>
+      {(discount > 0 || isDiscountPending) && (
+        <div className={ROW}>
+          <dt className="text-muted-foreground">
+            Discount{couponCode ? ` (${couponCode})` : ""}
+          </dt>
+          <dd
+            className={cn(
+              "tnum",
+              isDiscountPending ? "text-muted-foreground" : "text-primary",
+            )}
+          >
+            {isDiscountPending ? "Checking…" : `−${formatInr(discount)}`}
+          </dd>
         </div>
       )}
-      <div className="flex justify-between">
+      <div className={ROW}>
         <dt className="text-muted-foreground">Shipping</dt>
-        <dd>{shippingFee === 0 ? "Free" : formatInr(shippingFee)}</dd>
+        <dd className="tnum">
+          {shippingFee === 0 ? "Free" : formatInr(shippingFee)}
+        </dd>
       </div>
-      <div className="mt-1 flex justify-between border-t border-clay/20 pt-3 text-base font-semibold">
+      <div className="flex justify-between border-b border-ash py-3 text-[15px]">
         <dt>Total</dt>
-        <dd>{formatInr(total)}</dd>
+        <dd className="tnum">{formatInr(total)}</dd>
       </div>
     </dl>
   );

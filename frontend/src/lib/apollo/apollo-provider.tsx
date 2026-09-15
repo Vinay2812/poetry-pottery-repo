@@ -19,30 +19,24 @@ function makeClient(getToken: TokenGetter): ApolloClient {
   });
 }
 
-const USER_SCOPED_FIELDS = [
-  "cart",
-  "wishlist",
-  "wishlistIds",
-  "addresses",
-  "orders",
-  "order",
-  "checkoutQuote",
-];
-
-// Sign-out and account switches must not leave the previous person's data in the cache.
-function EvictUserFieldsOnUserChange() {
-  const { userId } = useAuth();
+// Sign-out and account switches must not leave the previous person's data behind. Clearing
+// the whole store beats keeping a list of user-scoped fields in step by hand.
+function ClearStoreOnUserChange() {
+  const { isLoaded, userId } = useAuth();
   const client = useApolloClient();
-  const lastUserId = useRef(userId);
+  // Clerk reports no user until it loads; that first settle is not an account change.
+  const lastUserId = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
+    if (!isLoaded) return;
+    if (lastUserId.current === undefined) {
+      lastUserId.current = userId;
+      return;
+    }
     if (lastUserId.current === userId) return;
     lastUserId.current = userId;
-    for (const fieldName of USER_SCOPED_FIELDS) {
-      client.cache.evict({ id: "ROOT_QUERY", fieldName });
-    }
-    client.cache.gc();
-  }, [client, userId]);
+    void client.clearStore();
+  }, [client, isLoaded, userId]);
 
   return null;
 }
@@ -62,7 +56,7 @@ export function ApolloProvider({ children }: PropsWithChildren) {
 
   return (
     <ApolloNextAppProvider makeClient={createClient}>
-      <EvictUserFieldsOnUserChange />
+      <ClearStoreOnUserChange />
       {children}
     </ApolloNextAppProvider>
   );

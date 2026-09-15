@@ -55,10 +55,18 @@ export class AuthGuard implements CanActivate {
     const authId = auth.userId;
     const { dbUserId, role } = auth.sessionClaims;
 
-    if (dbUserId && role) {
+    // A claim is only a hint; the row that owns this auth id decides who the caller is.
+    const owner = await this.users.findByAuth(authId);
+    if (owner) {
+      if (dbUserId !== owner.id || role !== owner.role) {
+        await this.clerk.updatePublicMetadata(authId, {
+          dbUserId: owner.id,
+          role: owner.role,
+        });
+      }
       const authUser: AuthUser = {
-        db_user_id: dbUserId,
-        role,
+        db_user_id: owner.id,
+        role: owner.role,
         auth_id: authId,
       };
       request.authenticatedUser = authUser;

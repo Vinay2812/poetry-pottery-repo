@@ -1,6 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { toPotteryIconKind } from "@/components/icons/pottery";
+import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 import { formatInr } from "@/lib/format";
 
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
@@ -32,23 +34,18 @@ export function OrderCard({
   return (
     <Link
       href={href}
-      className="flex flex-col gap-4 rounded-2xl bg-card p-4 shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-card md:p-5"
+      className="flex flex-col gap-4 border border-ash p-4 transition-colors duration-200 hover:border-ink md:p-5"
     >
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs text-muted-foreground">{placedOn}</p>
-          <p className="font-mono text-sm font-semibold tracking-wide">
-            {orderId}
-          </p>
+        <div className="flex flex-col gap-0.5">
+          <p className="text-[13px] text-muted-foreground">{placedOn}</p>
+          <p className="text-sm tracking-wide tnum">{orderId}</p>
         </div>
         <OrderStatusBadge tone={statusTone} label={statusLabel} />
       </div>
       <div className="flex items-center gap-2">
         {shown.map((url, index) => (
-          <span
-            key={`${url}-${index}`}
-            className="relative size-14 overflow-hidden rounded-xl bg-primary-light"
-          >
+          <span key={`${url}-${index}`} className="relative size-14 bg-white">
             <Image
               src={url}
               alt=""
@@ -58,17 +55,22 @@ export function OrderCard({
             />
           </span>
         ))}
+        {shown.length === 0 && (
+          <span className="relative size-14 bg-white">
+            <PlaceholderImage kind={toPotteryIconKind(orderId)} />
+          </span>
+        )}
         {extra > 0 && (
-          <span className="flex size-14 items-center justify-center rounded-xl bg-primary-light text-xs font-medium">
+          <span className="flex size-14 items-center justify-center bg-clay-white text-[13px] tnum">
             +{extra}
           </span>
         )}
       </div>
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between border-t border-ash pt-3 text-sm">
         <span className="text-muted-foreground">
           {itemCount} {itemCount === 1 ? "piece" : "pieces"}
         </span>
-        <span className="font-semibold">{formatInr(total)}</span>
+        <span className="tnum">{formatInr(total)}</span>
       </div>
     </Link>
   );

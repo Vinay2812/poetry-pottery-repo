@@ -27,7 +27,8 @@ cd api
 cp .env.example .env            # fill in Clerk keys (SMTP and R2 are optional)
 pnpm install
 pnpm migration:apply
-pnpm db:seed                    # catalogue, events, workshop config, content, coupons
+pnpm db:seed                    # site settings, public pages, studio config
+pnpm import:legacy              # real catalogue from the old production DB (LEGACY_DATABASE_URL in .env)
 pnpm search:reindex             # embeddings for search (downloads the model on first run)
 pnpm dev                        # http://localhost:6060/graphql
 
@@ -44,26 +45,29 @@ pnpm install
 
 ## Daily commands
 
-| Where       | Command                                                         | What                                                       |
-| ----------- | --------------------------------------------------------------- | ---------------------------------------------------------- |
-| `api/`      | `pnpm dev`                                                      | API with watch mode                                        |
-| `api/`      | `pnpm schema:emit`                                              | Regenerate `schema.gql` (no DB needed)                     |
-| `api/`      | `pnpm migration:create`                                         | Create a migration from schema changes                     |
-| `api/`      | `pnpm db:seed` / `pnpm db:reset`                                | Seed demo data / drop, migrate, reseed and reindex         |
-| `api/`      | `pnpm search:reindex`                                           | Recompute product and event embeddings                     |
-| `api/`      | `pnpm make-admin you@example.com`                               | Promote a signed-in user to admin                          |
-| `api/`      | `pnpm db:studio`                                                | Prisma Studio                                              |
-| `api/`      | `pnpm test` / `pnpm build`                                      | Vitest / production build                                  |
-| `frontend/` | `pnpm dev`                                                      | Next dev server on 3030                                    |
-| `frontend/` | `pnpm codegen`                                                  | Regenerate typed hooks (running API or schema file)        |
-| `frontend/` | `pnpm storybook`                                                | Storybook on 6006                                          |
-| `frontend/` | `pnpm test` / `pnpm tsc`                                        | Vitest / typecheck                                         |
-| `frontend/` | `pnpm analyze`                                                  | Bundle-size treemap report                                 |
-| `frontend/` | `pnpm lighthouse`                                               | Lighthouse CI audit → `.lighthouse/`                       |
-| `frontend/` | `pnpm knip`                                                     | Find unused files/exports/deps                             |
-| `infra/`    | `docker compose -f docker/docker-compose.db.yml up -d`          | Postgres + Redis only                                      |
-| `infra/`    | `docker compose -f docker/docker-compose.api.yml up -d --build` | Full backend stack (API container included)                |
-| root        | commits                                                         | husky runs lint-staged + commitlint (conventional commits) |
+| Where       | Command                                                         | What                                                                    |
+| ----------- | --------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `api/`      | `pnpm dev`                                                      | API with watch mode                                                     |
+| `api/`      | `pnpm schema:emit`                                              | Regenerate `schema.gql` (no DB needed)                                  |
+| `api/`      | `pnpm migration:create`                                         | Create a migration from schema changes                                  |
+| `api/`      | `pnpm db:seed` / `pnpm db:reset`                                | Seed site scaffolding / drop, migrate and reseed                        |
+| `api/`      | `pnpm import:legacy` / `pnpm db:reset:legacy`                   | Import the old production data (see docs/data/legacy-import.md)         |
+| `api/`      | `pnpm db:seed:demo`                                             | Optional demo catalogue for local play                                  |
+| `api/`      | `pnpm search:reindex`                                           | Recompute product and event embeddings                                  |
+| `api/`      | `pnpm make-admin you@example.com`                               | Promote a signed-in user to admin                                       |
+| `api/`      | `pnpm db:studio`                                                | Prisma Studio                                                           |
+| `api/`      | `pnpm test` / `pnpm build`                                      | Vitest / production build                                               |
+| `api/`      | `pnpm test:integration`                                         | Concurrency races against a throwaway database (needs compose stack up) |
+| `frontend/` | `pnpm dev`                                                      | Next dev server on 3030                                                 |
+| `frontend/` | `pnpm codegen`                                                  | Regenerate typed hooks (running API or schema file)                     |
+| `frontend/` | `pnpm storybook`                                                | Storybook on 6006                                                       |
+| `frontend/` | `pnpm test` / `pnpm tsc`                                        | Vitest / typecheck                                                      |
+| `frontend/` | `pnpm analyze`                                                  | Bundle-size treemap report                                              |
+| `frontend/` | `pnpm lighthouse`                                               | Lighthouse CI audit → `.lighthouse/`                                    |
+| `frontend/` | `pnpm knip`                                                     | Find unused files/exports/deps                                          |
+| `infra/`    | `docker compose -f docker/docker-compose.db.yml up -d`          | Postgres + Redis only                                                   |
+| `infra/`    | `docker compose -f docker/docker-compose.api.yml up -d --build` | Full backend stack (API container included)                             |
+| root        | commits                                                         | husky runs lint-staged + commitlint (conventional commits)              |
 
 ## Schema workflow
 
@@ -113,3 +117,20 @@ Three separate mechanisms, in play at different moments:
 ## Environment
 
 Each app validates `process.env` with zod at boot and fails fast. `.env.example` in each folder lists every variable the code actually reads — they are the reference.
+
+## Branches
+
+The rewrite is built as one PR per feature, each stacked on the previous branch. The owner opens the PRs from the pushed branches (no `gh` access from here), so a branch landing here as "pushed" is ready for a PR, not already merged.
+
+| Branch                     | Adds                                                                                                                                            | Status                                                   |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `feat/platform-foundation` | Schema, queue, throttling, storefront shell                                                                                                     | Pushed                                                   |
+| `feat/catalog`             | Products, hybrid keyword + semantic search, filters, product pages                                                                              | Pushed                                                   |
+| `feat/cart-wishlist`       | Cart and wishlist, server-priced customisations, optimistic updates                                                                             | Pushed                                                   |
+| `feat/checkout`            | Checkout, orders, saved addresses, coupons, account page                                                                                        | Pushed                                                   |
+| `feat/events`              | Events with seat-guarded registrations and bookings pages                                                                                       | Pushed                                                   |
+| `feat/workshops`           | Open-studio session booking, capacity-aware availability                                                                                        | Pushed                                                   |
+| `feat/design-refresh`      | Sharp/zero-radius design direction, legacy catalogue import, archive view, made-to-order page, motion pass, concurrency hardening (this branch) | Pushed                                                   |
+| `feat/reviews`             | Product/event/order/booking reviews, optimistic in React                                                                                        | Rebased on `feat/design-refresh` locally, not yet pushed |
+| `feat/admin`               | Admin dashboard, catalogue/order/event/workshop/coupon/content/user management                                                                  | Pushed                                                   |
+| `feat/admin-ui`            | Admin console shell, tables and forms for every `feat/admin` module                                                                             | Pushed                                                   |

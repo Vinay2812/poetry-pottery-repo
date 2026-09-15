@@ -12,7 +12,7 @@ import { AuthGuard } from "@/common/guards/auth.guard";
 import type { GqlContext } from "@/common/types/express";
 import { WishlistService } from "@/features/wishlist/wishlist.service";
 
-import { ProductsService } from "./products.service";
+import { isProductArchived, ProductsService } from "./products.service";
 import {
   Category,
   Collection,
@@ -57,6 +57,12 @@ export class ProductsResolver {
     return (await req.wishlistIds).has(product.id);
   }
 
+  // Availability is decided once on the server so no client has to restate the rule.
+  @ResolveField(() => Boolean)
+  is_archived(@Parent() product: Product): boolean {
+    return isProductArchived(product);
+  }
+
   @ResolveField(() => [ProductOptionGroup])
   option_groups(@Parent() product: Product): Promise<ProductOptionGroup[]> {
     return product.option_groups
@@ -87,12 +93,27 @@ export class ProductsResolver {
   }
 
   @Query(() => [Collection])
-  collections(): Promise<Collection[]> {
-    return this.productsService.collections();
+  collections(
+    @Args("archive", {
+      type: () => Boolean,
+      nullable: true,
+      defaultValue: false,
+    })
+    archive: boolean,
+  ): Promise<Collection[]> {
+    return this.productsService.collections(archive);
   }
 
   @Query(() => Collection)
-  collection(@Args("slug") slug: string): Promise<Collection> {
-    return this.productsService.collectionBySlug(slug);
+  collection(
+    @Args("slug") slug: string,
+    @Args("archive", {
+      type: () => Boolean,
+      nullable: true,
+      defaultValue: false,
+    })
+    archive: boolean,
+  ): Promise<Collection> {
+    return this.productsService.collectionBySlug(slug, archive);
   }
 }

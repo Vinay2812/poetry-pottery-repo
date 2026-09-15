@@ -11,6 +11,8 @@ export interface CheckoutSummaryProps {
   shippingFee: number;
   total: number;
   problems: string[];
+  isDiscountPending: boolean;
+  isQuotePending: boolean;
   canPlaceOrder: boolean;
   isPlacing: boolean;
   blockedReason: string | null;
@@ -26,6 +28,8 @@ export function CheckoutSummary({
   shippingFee,
   total,
   problems,
+  isDiscountPending,
+  isQuotePending,
   canPlaceOrder,
   isPlacing,
   blockedReason,
@@ -33,28 +37,31 @@ export function CheckoutSummary({
   coupon,
 }: CheckoutSummaryProps) {
   return (
-    <div className="flex flex-col gap-5 rounded-3xl bg-cream p-5 md:p-6">
-      <h2 className="font-heading text-xl">
+    <div className="flex flex-col gap-5 border-t border-ash pt-5">
+      <h2 className="font-heading text-xl tracking-tight">
         {itemCount} {itemCount === 1 ? "piece" : "pieces"}
       </h2>
       {problems.length > 0 && (
-        <ul className="rounded-2xl bg-terracotta-light p-3 text-xs text-terracotta-dark">
+        <ul className="flex flex-col gap-1 text-[13px] text-muted-foreground">
           {problems.map((problem) => (
             <li key={problem}>{problem}</li>
           ))}
         </ul>
       )}
       {coupon}
-      <OrderTotals
-        subtotal={subtotal}
-        discount={discount}
-        couponCode={couponCode}
-        shippingFee={shippingFee}
-        total={total}
-      />
+      {/* The server quote is the baseline, so the totals say they are settling rather than guessing. */}
+      <div aria-busy={isQuotePending}>
+        <OrderTotals
+          subtotal={subtotal}
+          discount={discount}
+          couponCode={couponCode}
+          shippingFee={shippingFee}
+          total={total}
+          isDiscountPending={isDiscountPending}
+        />
+      </div>
       <Button
         size="lg"
-        className="rounded-full"
         onClick={onPlaceOrder}
         disabled={!canPlaceOrder || isPlacing}
       >
@@ -63,11 +70,11 @@ export function CheckoutSummary({
           : `Place order · ${formatInr(total)}`}
       </Button>
       {blockedReason && !canPlaceOrder && (
-        <p className="text-xs text-terracotta-dark">{blockedReason}</p>
+        <p className="text-[13px] text-muted-foreground">{blockedReason}</p>
       )}
-      <p className="text-xs text-muted-foreground">
-        No payment is taken now. We confirm on WhatsApp within a day and share
-        UPI or bank details. Cancel free of charge until then.
+      <p className="text-[13px] text-muted-foreground">
+        No payment now; we confirm on WhatsApp within a day and share UPI
+        details.
       </p>
     </div>
   );

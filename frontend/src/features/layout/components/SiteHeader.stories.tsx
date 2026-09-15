@@ -21,8 +21,10 @@ const meta = {
     isSignedIn: false,
     isAdmin: false,
     userImageUrl: null,
+    isHome: false,
     onSearchClick: fn(),
     onAccountClick: fn(),
+    onMenuClick: fn(),
   },
 } satisfies Meta<typeof SiteHeader>;
 
@@ -39,6 +41,8 @@ export const SignedIn: Story = {
 export const Admin: Story = {
   args: { isSignedIn: true, isAdmin: true, userImageUrl: AVATAR_URL },
 };
+
+export const OnHome: Story = { args: { isHome: true, activeHref: "/" } };
 
 export const WithCounts: Story = {
   args: {

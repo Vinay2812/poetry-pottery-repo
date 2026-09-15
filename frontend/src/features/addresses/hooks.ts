@@ -1,13 +1,10 @@
 "use client";
 
-import type { ApolloCache } from "@apollo/client";
 import { useAuth } from "@clerk/nextjs";
-import { useCallback, useState } from "react";
+import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import {
-  AddressesDocument,
-  type AddressesQuery,
   type AddressInput,
   useAddressesQuery,
   useCreateAddressMutation,
@@ -19,25 +16,17 @@ import {
 import type { AddressFormValues } from "@/lib/validations/address";
 
 import {
+  applyAddressAction,
   type SavedAddress,
   sortByDefaultFirst,
   toAddressInput,
-  withDefaultOn,
 } from "./types";
 
-function readAddresses(cache: ApolloCache): SavedAddress[] {
-  return (
-    cache.readQuery<AddressesQuery>({ query: AddressesDocument })?.addresses ??
-    []
-  );
-}
-
-function writeAddresses(cache: ApolloCache, addresses: SavedAddress[]): void {
-  cache.writeQuery<AddressesQuery>({
-    query: AddressesDocument,
-    data: { addresses },
-  });
-}
+// The address book is server-ordered apart from the default, which always leads.
+const REFETCH = {
+  refetchQueries: ["Addresses"],
+  awaitRefetchQueries: true,
+};
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong";
@@ -51,10 +40,9 @@ export function useAddresses() {
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
   });
+  const saved = data?.addresses ?? previousData?.addresses ?? [];
   return {
-    addresses: isSignedIn
-      ? (data?.addresses ?? previousData?.addresses ?? [])
-      : [],
+    addresses: isSignedIn ? sortByDefaultFirst(saved) : [],
     isLoading: !isLoaded || (loading && !data && !previousData),
     hasError: Boolean(error),
     isSignedIn: Boolean(isSignedIn),
@@ -72,22 +60,7 @@ export function useAddressMutations() {
       try {
         const { data } = await createMutation({
           variables: { input },
-          update: (cache, result) => {
-            const created = result.data?.createAddress;
-            if (!created) return;
-            const list = [
-              created,
-              ...readAddresses(cache).filter(
-                (address) => address.id !== created.id,
-              ),
-            ];
-            writeAddresses(
-              cache,
-              created.is_default
-                ? withDefaultOn(list, created.id)
-                : sortByDefaultFirst(list),
-            );
-          },
+          ...REFETCH,
         });
         toast.success("Address saved");
         return data?.createAddress ?? null;
@@ -104,19 +77,7 @@ export function useAddressMutations() {
       try {
         const { data } = await updateMutation({
           variables: { id, input },
-          update: (cache, result) => {
-            const updated = result.data?.updateAddress;
-            if (!updated) return;
-            const list = readAddresses(cache).map((address) =>
-              address.id === updated.id ? updated : address,
-            );
-            writeAddresses(
-              cache,
-              updated.is_default
-                ? withDefaultOn(list, updated.id)
-                : sortByDefaultFirst(list),
-            );
-          },
+          ...REFETCH,
         });
         toast.success("Address updated");
         return data?.updateAddress ?? null;
@@ -131,24 +92,7 @@ export function useAddressMutations() {
   const remove = useCallback(
     async (id: number): Promise<boolean> => {
       try {
-        await removeMutation({
-          variables: { id },
-          update: (cache, result) => {
-            if (!result.data?.deleteAddress) return;
-            const current = readAddresses(cache);
-            const wasDefault =
-              current.find((address) => address.id === id)?.is_default ?? false;
-            const remaining = current.filter((address) => address.id !== id);
-            const promoted = remaining[0];
-            // The server promotes the newest remaining address; the list is already newest first.
-            writeAddresses(
-              cache,
-              wasDefault && promoted
-                ? withDefaultOn(remaining, promoted.id)
-                : remaining,
-            );
-          },
-        });
+        await removeMutation({ variables: { id }, ...REFETCH });
         toast.success("Address removed");
         return true;
       } catch (error) {
@@ -162,17 +106,7 @@ export function useAddressMutations() {
   const setDefault = useCallback(
     async (id: number): Promise<boolean> => {
       try {
-        await setDefaultMutation({
-          variables: { id },
-          update: (cache, result) => {
-            const address = result.data?.setDefaultAddress;
-            if (!address) return;
-            writeAddresses(
-              cache,
-              withDefaultOn(readAddresses(cache), address.id),
-            );
-          },
-        });
+        await setDefaultMutation({ variables: { id }, ...REFETCH });
         toast.success("Default address updated");
         return true;
       } catch (error) {
@@ -193,12 +127,38 @@ export function useAddressMutations() {
 }
 
 // One address book's worth of state: which form is open and what saving it does.
+// Deleting a card and moving the default show at once; the refetched list settles behind them.
 export function useAddressBook() {
   const { addresses, isLoading } = useAddresses();
   const { create, update, remove, setDefault, isSaving } =
     useAddressMutations();
+  const [optimisticAddresses, applyAction] = useOptimistic(
+    addresses,
+    applyAddressAction,
+  );
+  const [, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+
+  const handleRemove = useCallback(
+    (id: number) => {
+      startTransition(async () => {
+        applyAction({ kind: "delete", id });
+        await remove(id);
+      });
+    },
+    [applyAction, remove],
+  );
+
+  const handleSetDefault = useCallback(
+    (id: number) => {
+      startTransition(async () => {
+        applyAction({ kind: "default", id });
+        await setDefault(id);
+      });
+    },
+    [applyAction, setDefault],
+  );
 
   const openNew = useCallback(() => {
     setEditingId(null);
@@ -228,10 +188,11 @@ export function useAddressBook() {
     [closeForm, create, editingId, update],
   );
 
-  const editing = addresses.find((address) => address.id === editingId) ?? null;
+  const editing =
+    optimisticAddresses.find((address) => address.id === editingId) ?? null;
 
   return {
-    addresses,
+    addresses: optimisticAddresses,
     editing,
     editingId,
     isFormOpen: isAdding || editingId !== null,
@@ -240,8 +201,8 @@ export function useAddressBook() {
     closeForm,
     openEdit,
     openNew,
-    remove,
-    setDefault,
+    remove: handleRemove,
+    setDefault: handleSetDefault,
     submit,
   };
 }

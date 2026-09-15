@@ -8,7 +8,8 @@ NestJS 11 + Apollo (code-first GraphQL) + Prisma 7 on Postgres 17 with pgvector.
 cp .env.example .env      # Clerk keys required; SMTP and R2 optional
 pnpm install
 pnpm migration:apply
-pnpm db:seed
+pnpm db:seed              # settings, pages, studio config
+pnpm import:legacy        # real catalogue (needs LEGACY_DATABASE_URL); or pnpm db:seed:demo
 pnpm dev                  # http://localhost:6060/graphql
 ```
 
@@ -33,10 +34,33 @@ prisma/
 └── seed/                # demo catalogue, events, workshop config, content
 ```
 
+`src/features/` holds one module per domain: `addresses`, `cart`, `contact`, `content`, `events`,
+`newsletter`, `orders`, `products`, `search`, `settings`, `users`, `wishlist`, `workshops`. `content`
+serves the CMS-backed pages (about, care, faq, privacy, shipping, terms) and is admin-edited;
+`newsletter` handles subscribe/unsubscribe and the admin export; `contact` queues the studio inbox
+message and lists it for admins. `search` has no resolver of its own — `ProductsService` and
+`EventsService` call `rankProducts` / `rankEvents` and narrow the ranked ids with their own
+availability scope, so search reads the shelf and the archive with the same ranking.
+
 ## Conventions
 
-- Identity comes from the Clerk context (`@CurrentUser()`), never from inputs. Guard with `@AuthRequired()` / `@AdminRequired()`.
+- Identity comes from the Clerk context (`@CurrentUser()`), never from inputs. Guard with `@AuthRequired()` / `@AdminRequired()`. `AuthGuard` treats the Clerk session claim as a hint only: it looks up the `User` row by auth id and answers with that row's id and role, writing the claim back to Clerk when it has drifted rather than trusting it.
 - Money is integer rupees. Stock and seats change only inside transactions with conditional updates.
+- Placing an order pins every piece in the cart with `SELECT … FOR UPDATE` before quoting it, so the prices, options and availability written onto the order are the ones the stock take agrees with.
+- Adding to the cart reads the existing line before rewriting it, so it runs under a per-user, per-piece advisory lock (`pg_advisory_xact_lock(userId, productId)`).
+- Open-studio bookings hold one `WorkshopBookingSlot` per chosen hour. The hours need not touch and may fall on different days, as long as the earliest and latest sit within `WorkshopConfig.slot_span_days` calendar days in the studio timezone. `starts_at`/`ends_at` on the booking are the derived first start and last end. Every hour is validated and its capacity checked inside one transaction under a per-studio advisory lock.
 - Anything slow or external (email, embeddings) is a queue job in `src/queue/jobs.ts`; consumers validate payloads with zod.
 - New resolvers must be exported from `src/resolvers.ts` and modules from `src/modules.ts`, or `schema:emit` and the app will silently skip them.
 - Commands: `pnpm build`, `pnpm test`, `pnpm lint`, `pnpm schema:emit`, `pnpm prettier:format`.
+
+## Concurrency tests
+
+`pnpm test:integration` runs the 18 tests in `test/integration/` against a real Postgres: it creates
+a throwaway database, applies the migrations with `prisma migrate deploy`, runs the suite and drops
+the database again, so the dev data is never touched. It needs the compose stack up and is
+deliberately outside `pnpm test` — run it by hand after touching cart, orders, events, workshops or
+coupon code, since those are the paths it guards.
+
+Each test fires twenty calls at once and checks the guard held: the last piece sells once, the last
+seat and the last wheel go to one guest, a single-use coupon is redeemed once, a double cancel
+returns stock and seats exactly once, and concurrent cart adds merge into one line.

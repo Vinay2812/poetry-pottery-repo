@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { getCategories, getCollection } from "@/lib/data/catalog";
+import { getCollection } from "@/lib/data/catalog";
 
-import { ProductListContainer } from "@/features/products";
+import { ARCHIVE_VIEW, ProductListContainer } from "@/features/products";
 
 export const metadata: Metadata = {
   title: "Shop handmade pottery",
@@ -11,29 +11,31 @@ export const metadata: Metadata = {
     "Wheel-thrown mugs, bowls, plates, vases and planters, glazed and fired in our Sangli studio.",
 };
 
+const SHELF_DESCRIPTION = "Thrown, glazed and fired by hand in small batches.";
+const ARCHIVE_DESCRIPTION =
+  "Pieces that have sold, retired or closed with their collection. Ask us for one like it.";
+
 export default async function ProductsPage({
   searchParams,
 }: PageProps<"/products">) {
   const params = await searchParams;
   const collectionSlug =
     typeof params.collection === "string" ? params.collection : null;
-  const [categories, collection] = await Promise.all([
-    getCategories(),
-    collectionSlug ? getCollection(collectionSlug) : Promise.resolve(null),
-  ]);
+  const isArchive = params.view === ARCHIVE_VIEW;
+  const collection = collectionSlug
+    ? await getCollection(collectionSlug, isArchive)
+    : null;
 
   return (
     <Suspense>
       <ProductListContainer
-        categories={categories.map((category) => ({
-          slug: category.slug,
-          name: category.name,
-          imageUrl: category.image_url,
-        }))}
-        heading={collection?.name ?? "Every piece on the shelf"}
+        heading={
+          collection?.name ??
+          (isArchive ? "The archive" : "Every piece on the shelf")
+        }
         description={
           collection?.description ??
-          "Thrown, glazed and fired by hand. Small runs, so what you see is what is in the studio right now."
+          (isArchive ? ARCHIVE_DESCRIPTION : SHELF_DESCRIPTION)
         }
       />
     </Suspense>

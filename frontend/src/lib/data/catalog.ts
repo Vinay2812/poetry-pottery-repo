@@ -5,9 +5,9 @@ import {
   CollectionDocument,
   type CollectionQuery,
   type CollectionQueryVariables,
-  CollectionsDocument,
-  type CollectionsQuery,
-  type CollectionsQueryVariables,
+  ContentPageDocument,
+  type ContentPageQuery,
+  type ContentPageQueryVariables,
   EventDocument,
   type EventQuery,
   type EventQueryVariables,
@@ -17,9 +17,18 @@ import {
   ProductDocument,
   type ProductQuery,
   type ProductQueryVariables,
+  ProductsDocument,
+  type ProductsQuery,
+  type ProductsQueryVariables,
   UpcomingEventsDocument,
   type UpcomingEventsQuery,
   type UpcomingEventsQueryVariables,
+  WorkshopDocument,
+  type WorkshopQuery,
+  type WorkshopQueryVariables,
+  WorkshopsDocument,
+  type WorkshopsQuery,
+  type WorkshopsQueryVariables,
 } from "@/graphql/generated/graphql";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
@@ -33,16 +42,6 @@ export async function getCategories(): Promise<CategoriesQuery["categories"]> {
   return data?.categories ?? [];
 }
 
-export async function getCollections(): Promise<
-  CollectionsQuery["collections"]
-> {
-  const { data } = await getClient().query<
-    CollectionsQuery,
-    CollectionsQueryVariables
-  >({ query: CollectionsDocument });
-  return data?.collections ?? [];
-}
-
 function isNotFoundError(error: unknown): boolean {
   if (!CombinedGraphQLErrors.is(error)) return false;
   return error.errors.some((item) => {
@@ -54,14 +53,34 @@ function isNotFoundError(error: unknown): boolean {
 
 export async function getCollection(
   slug: string,
+  archive = false,
 ): Promise<CollectionQuery["collection"] | null> {
   const { data, error } = await getClient().query<
     CollectionQuery,
     CollectionQueryVariables
-  >({ query: CollectionDocument, variables: { slug }, errorPolicy: "all" });
+  >({
+    query: CollectionDocument,
+    variables: { slug, archive },
+    errorPolicy: "all",
+  });
   if (data?.collection) return data.collection;
   if (isNotFoundError(error)) return null;
   throw error ?? new Error("Collection query failed");
+}
+
+// An unpublished page reads as missing to everyone outside the dashboard.
+export async function getContentPage(
+  slug: string,
+): Promise<ContentPageQuery["contentPage"] | null> {
+  const { data, error } = await getClient().query<
+    ContentPageQuery,
+    ContentPageQueryVariables
+  >({ query: ContentPageDocument, variables: { slug }, errorPolicy: "all" });
+  if (data?.contentPage) {
+    return data.contentPage.is_published ? data.contentPage : null;
+  }
+  if (isNotFoundError(error)) return null;
+  throw error ?? new Error("Content page query failed");
 }
 
 export async function getFeaturedProducts(
@@ -75,6 +94,19 @@ export async function getFeaturedProducts(
     variables: { limit },
   });
   return data?.featuredProducts ?? [];
+}
+
+export async function getCustomProducts(): Promise<
+  ProductsQuery["products"]["items"]
+> {
+  const { data } = await getClient().query<
+    ProductsQuery,
+    ProductsQueryVariables
+  >({
+    query: ProductsDocument,
+    variables: { filter: { customizable_only: true, limit: 12 } },
+  });
+  return data?.products.items ?? [];
 }
 
 // Only a real not-found becomes a 404; any other failure surfaces as an error page.
@@ -110,4 +142,24 @@ export async function getEvent(
   if (data?.event) return data.event;
   if (isNotFoundError(error)) return null;
   throw error ?? new Error("Event query failed");
+}
+
+export async function getWorkshops(): Promise<WorkshopsQuery["workshops"]> {
+  const { data } = await getClient().query<
+    WorkshopsQuery,
+    WorkshopsQueryVariables
+  >({ query: WorkshopsDocument });
+  return data?.workshops ?? [];
+}
+
+export async function getWorkshop(
+  slug: string,
+): Promise<WorkshopQuery["workshop"] | null> {
+  const { data, error } = await getClient().query<
+    WorkshopQuery,
+    WorkshopQueryVariables
+  >({ query: WorkshopDocument, variables: { slug }, errorPolicy: "all" });
+  if (data?.workshop) return data.workshop;
+  if (isNotFoundError(error)) return null;
+  throw error ?? new Error("Workshop query failed");
 }

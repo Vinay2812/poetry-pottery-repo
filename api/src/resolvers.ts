@@ -7,3 +7,6 @@ export { AddressesResolver } from "@/features/addresses/addresses.resolver";
 export { OrdersResolver } from "@/features/orders/orders.resolver";
 export { EventsResolver } from "@/features/events/events.resolver";
 export { WorkshopsResolver } from "@/features/workshops/workshops.resolver";
+export { ContentResolver } from "@/features/content/content.resolver";
+export { NewsletterResolver } from "@/features/newsletter/newsletter.resolver";
+export { ContactResolver } from "@/features/contact/contact.resolver";

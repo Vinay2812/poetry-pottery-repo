@@ -8,7 +8,7 @@ const meta = {
   component: CheckoutLineItem,
   decorators: [
     (Story) => (
-      <ul className="max-w-sm divide-y divide-border">
+      <ul className="max-w-sm border-t border-ash">
         <Story />
       </ul>
     ),

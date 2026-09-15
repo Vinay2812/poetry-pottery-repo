@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatInr, pluralize } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
-import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
-import type { StatusTone } from "@/features/orders/types";
+import { SEAT_NOTE } from "@/features/events/types";
 
 export interface ReserveBoxProps {
   price: number;
@@ -16,13 +14,11 @@ export interface ReserveBoxProps {
   maxSeats: number;
   note: string;
   seatsLabel: string;
-  isSeatsLow: boolean;
   isSoldOut: boolean;
   isPast: boolean;
   isReserving: boolean;
   bookingHref: string | null;
   bookingStatusLabel: string;
-  bookingStatusTone: StatusTone;
   bookingSeats: number;
   whatsappUrl: string | null;
   onSeatsChange: (seats: number) => void;
@@ -30,103 +26,96 @@ export interface ReserveBoxProps {
   onReserve: () => void;
 }
 
+const STEPPER_BUTTON =
+  "flex size-11 items-center justify-center transition-colors hover:text-primary disabled:opacity-40";
+const TEXT_LINK =
+  "w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary";
+
 export function ReserveBox({
   price,
   seats,
   maxSeats,
   note,
   seatsLabel,
-  isSeatsLow,
   isSoldOut,
   isPast,
   isReserving,
   bookingHref,
   bookingStatusLabel,
-  bookingStatusTone,
   bookingSeats,
   whatsappUrl,
   onSeatsChange,
   onNoteChange,
   onReserve,
 }: ReserveBoxProps) {
-  const stepperClass =
-    "flex size-11 items-center justify-center rounded-full transition-colors hover:bg-primary-light disabled:opacity-40";
-
   return (
-    <div className="flex flex-col gap-5 rounded-3xl bg-cream p-5 md:p-6">
-      <div className="flex items-end justify-between gap-3">
-        <p className="flex flex-col">
-          <span className="font-heading text-3xl">{formatInr(price)}</span>
-          <span className="text-xs text-muted-foreground">per seat</span>
+    <div className="flex flex-col gap-5 border border-ash bg-white p-5 md:p-6">
+      <div className="flex items-baseline justify-between gap-3">
+        <p className="flex items-baseline gap-2">
+          <span className="font-heading text-3xl tnum">{formatInr(price)}</span>
+          <span className="text-[13px] text-muted-foreground">per seat</span>
         </p>
-        <span
-          className={cn(
-            "text-sm font-medium",
-            isSeatsLow ? "text-terracotta-dark" : "text-muted-foreground",
-          )}
-        >
+        <span className="text-[13px] text-muted-foreground">
           {isPast ? "Wrapped up" : seatsLabel}
         </span>
       </div>
 
       {bookingHref ? (
-        <div className="flex flex-col gap-3 rounded-2xl bg-background p-4">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="text-sm font-medium">
-              You have {pluralize(bookingSeats, "seat")} here
-            </span>
-            <OrderStatusBadge
-              tone={bookingStatusTone}
-              label={bookingStatusLabel}
-            />
-          </div>
-          <Button className="rounded-full" asChild>
-            <Link href={bookingHref}>View your booking</Link>
-          </Button>
+        <div className="flex flex-col gap-3 border-t border-ash pt-4">
+          <p className="text-sm">
+            You have {pluralize(bookingSeats, "seat")} here.{" "}
+            <span className="text-muted-foreground">{bookingStatusLabel}</span>
+          </p>
+          <Link href={bookingHref} className={TEXT_LINK}>
+            View your booking
+          </Link>
         </div>
       ) : isPast ? (
-        <div className="flex flex-col gap-3 rounded-2xl bg-background p-4">
+        <div className="flex flex-col gap-3 border-t border-ash pt-4">
           <p className="text-sm text-muted-foreground">
-            This date is done. The gallery below is from the evening.
+            This date is done. The photographs below are from the evening.
           </p>
-          <Button variant="outline" className="rounded-full" asChild>
-            <Link href="/events">See upcoming dates</Link>
-          </Button>
+          <Link href="/events" className={TEXT_LINK}>
+            See upcoming dates
+          </Link>
         </div>
       ) : isSoldOut ? (
-        <div className="flex flex-col gap-3 rounded-2xl bg-background p-4">
+        <div className="flex flex-col gap-3 border-t border-ash pt-4">
           <p className="text-sm text-muted-foreground">
-            Every seat is taken. Message us and we will tell you the moment
-            someone drops out or we add a second batch.
+            Every seat is taken. Write to us and we will tell you if one opens
+            up.
           </p>
           {whatsappUrl && (
-            <Button variant="outline" className="rounded-full" asChild>
-              <a href={whatsappUrl} target="_blank" rel="noreferrer">
-                Ask about a waitlist seat
-              </a>
-            </Button>
+            <a
+              href={whatsappUrl}
+              target="_blank"
+              rel="noreferrer"
+              className={TEXT_LINK}
+            >
+              Ask about a waiting seat
+            </a>
           )}
         </div>
       ) : (
         <>
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-sm font-medium">Seats</span>
+          <div className="flex items-center justify-between gap-3 border-t border-ash pt-4">
+            <span className="text-sm">Seats</span>
             <div
               role="group"
               aria-label="Seats"
-              className="inline-flex items-center rounded-full border border-border bg-background"
+              className="inline-flex items-center border border-ash"
             >
               <button
                 type="button"
                 onClick={() => onSeatsChange(Math.max(1, seats - 1))}
                 disabled={seats <= 1}
                 aria-label="Fewer seats"
-                className={stepperClass}
+                className={STEPPER_BUTTON}
               >
-                <Minus className="size-4" />
+                <Minus className="size-4" strokeWidth={1.5} />
               </button>
               <span
-                className="min-w-8 text-center text-sm font-semibold tabular-nums"
+                className="min-w-6 text-center text-sm tnum"
                 aria-live="polite"
               >
                 {seats}
@@ -136,9 +125,9 @@ export function ReserveBox({
                 onClick={() => onSeatsChange(Math.min(maxSeats, seats + 1))}
                 disabled={seats >= maxSeats}
                 aria-label="More seats"
-                className={stepperClass}
+                className={STEPPER_BUTTON}
               >
-                <Plus className="size-4" />
+                <Plus className="size-4" strokeWidth={1.5} />
               </button>
             </div>
           </div>
@@ -154,35 +143,30 @@ export function ReserveBox({
               maxLength={300}
               rows={3}
               placeholder="Left-handed, coming with a friend, first time on the wheel…"
-              className="bg-background"
             />
           </div>
 
-          <div className="flex items-center justify-between border-t border-border pt-4 text-sm">
+          <div className="flex items-baseline justify-between border-t border-ash pt-4 text-sm">
             <span className="text-muted-foreground">
               {pluralize(seats, "seat")} × {formatInr(price)}
             </span>
-            <span className="font-heading text-2xl">
+            <span className="font-heading text-2xl tnum">
               {formatInr(price * seats)}
             </span>
           </div>
 
-          <Button
-            size="lg"
-            className="h-12 rounded-full"
-            onClick={onReserve}
-            disabled={isReserving}
-          >
-            {isReserving ? "Reserving…" : "Reserve a seat"}
-          </Button>
+          <div className="flex flex-col gap-3">
+            <Button size="lg" onClick={onReserve} disabled={isReserving}>
+              {isReserving ? "Reserving…" : "Reserve a seat"}
+            </Button>
+            <p className="text-[13px] text-muted-foreground">{SEAT_NOTE}</p>
+          </div>
         </>
       )}
 
-      <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
-        <li>Clay, tools and firing are part of the seat price</li>
-        <li>We confirm on WhatsApp, then you pay by UPI or bank transfer</li>
-        <li>Cancel free up to 48 hours before the session</li>
-      </ul>
+      <p className="border-t border-ash pt-4 text-[13px] text-muted-foreground">
+        Clay, tools and firing are part of the seat price.
+      </p>
     </div>
   );
 }

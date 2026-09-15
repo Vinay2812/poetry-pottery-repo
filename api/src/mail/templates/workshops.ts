@@ -3,7 +3,7 @@ import { renderMail } from "./layout";
 
 const inr = (value: number): string => `₹${value.toLocaleString("en-IN")}`;
 
-function when(booking: WorkshopBooking): string {
+function slotLines(booking: WorkshopBooking): string[] {
   const format = new Intl.DateTimeFormat("en-IN", {
     weekday: "short",
     day: "numeric",
@@ -17,13 +17,20 @@ function when(booking: WorkshopBooking): string {
     minute: "2-digit",
     timeZone: booking.config.timezone,
   });
-  return `${format.format(booking.starts_at)} to ${end.format(booking.ends_at)}`;
+  return booking.slots.map(
+    (slot) => `${format.format(slot.starts_at)} to ${end.format(slot.ends_at)}`,
+  );
+}
+
+// A booking can spread over days, so the subject names the first hour only.
+function when(booking: WorkshopBooking): string {
+  return slotLines(booking)[0] ?? "";
 }
 
 function detailLines(booking: WorkshopBooking): string[] {
   return [
     booking.config.name,
-    when(booking),
+    ...slotLines(booking),
     `${booking.participants} ${booking.participants === 1 ? "person" : "people"} · ${booking.hours} ${booking.hours === 1 ? "hour" : "hours"} · ${booking.pieces_per_person} ${booking.pieces_per_person === 1 ? "piece" : "pieces"} each`,
     `Total ${inr(booking.total)}`,
   ];
@@ -73,7 +80,7 @@ export function bookingStatusMail(
   if (kind === "rescheduled") {
     const body = renderMail({
       title: "Session moved",
-      intro: `Your wheel session is now on ${when(booking)}. Everything else stays the same.`,
+      intro: `Your wheel session has moved. The hours below are the new ones; everything else stays the same.`,
       blocks: [{ heading: "Session", lines: detailLines(booking) }],
       cta: {
         label: "View your booking",

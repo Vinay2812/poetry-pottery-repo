@@ -134,22 +134,22 @@ function rankQuery(
 ): Prisma.Sql {
   const tableSql =
     table === "products" ? Prisma.sql`"products"` : Prisma.sql`"events"`;
-  const activeSql =
-    table === "products"
-      ? Prisma.sql`"is_active" = true`
-      : Prisma.sql`"status" = 'PUBLISHED'`;
+  // The shelf and the archive share one ranking, so products carry no scope here; the caller
+  // narrows with availableProductWhere or archivedProductWhere. Draft events never surface.
+  const scopeSql =
+    table === "products" ? Prisma.sql`TRUE` : Prisma.sql`"status" <> 'DRAFT'`;
   const keyword = Prisma.sql`ts_rank("search_vector", websearch_to_tsquery('english', ${term}))`;
   if (!vector) {
     return Prisma.sql`
       SELECT "id" FROM ${tableSql}
-      WHERE ${activeSql} AND "search_vector" @@ websearch_to_tsquery('english', ${term})
+      WHERE ${scopeSql} AND "search_vector" @@ websearch_to_tsquery('english', ${term})
       ORDER BY ${keyword} DESC, "id" DESC
       LIMIT ${limit}`;
   }
   const distance = Prisma.sql`("embedding" <=> ${vector}::vector)`;
   return Prisma.sql`
     SELECT "id" FROM ${tableSql}
-    WHERE ${activeSql} AND (
+    WHERE ${scopeSql} AND (
       "search_vector" @@ websearch_to_tsquery('english', ${term})
       OR ("embedding" IS NOT NULL AND ${distance} < ${MAX_SEMANTIC_DISTANCE})
     )

@@ -60,17 +60,12 @@ describe("WishlistService", () => {
     await expect(service.toggle(1, 99)).rejects.toThrow("Product not found");
   });
 
-  it("only lists pieces that can still be bought", async () => {
+  it("keeps archived pieces on the list", async () => {
     prismaMock.wishlistItem.findMany.mockResolvedValue([{ product_id: 3 }]);
 
     await expect(service.ids(1)).resolves.toEqual([3]);
     expect(prismaMock.wishlistItem.findMany).toHaveBeenCalledWith(
-      containing({
-        where: containing({
-          user_id: 1,
-          product: containing({ is_active: true }),
-        }),
-      }),
+      containing({ where: { user_id: 1 } }),
     );
   });
 });

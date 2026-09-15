@@ -10,6 +10,7 @@ fragment WorkshopConfigFields on WorkshopConfig {
   slot_minutes
   capacity_per_slot
   booking_window_days
+  slot_span_days
   closed_weekdays
   tiers {
     hours
@@ -22,6 +23,10 @@ fragment WorkshopBookingFields on WorkshopBooking {
   id
   starts_at
   ends_at
+  slots {
+    starts_at
+    ends_at
+  }
   hours
   participants
   price_per_person

@@ -6,6 +6,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { EventLevel, EventType, EventWhen } from "@/graphql/generated/graphql";
+
+import { ActiveMarker } from "@/components/nav/ActiveMarker";
 import { cn } from "@/lib/utils";
 
 import { toLevelLabel } from "@/features/events/types";
@@ -25,10 +27,14 @@ const WHEN_TABS: { value: EventWhen; label: string }[] = [
   { value: EventWhen.Past, label: "Past" },
 ];
 
-const TYPE_CHIPS: { value: EventType | null; label: string }[] = [
-  { value: null, label: "All" },
-  { value: EventType.PotteryWorkshop, label: "Workshops" },
-  { value: EventType.OpenMic, label: "Open mics" },
+const TYPE_LINKS: { key: string; value: EventType | null; label: string }[] = [
+  { key: "all", value: null, label: "All" },
+  {
+    key: EventType.PotteryWorkshop,
+    value: EventType.PotteryWorkshop,
+    label: "Workshops",
+  },
+  { key: EventType.OpenMic, value: EventType.OpenMic, label: "Open mics" },
 ];
 
 const LEVELS: EventLevel[] = [
@@ -40,6 +46,9 @@ const LEVELS: EventLevel[] = [
 
 const ANY_LEVEL = "ANY";
 
+// Colour and a square marker only: picking a filter never changes a button's box.
+const CHOICE_CLASS = "flex items-center gap-2 text-[13px] transition-colors";
+
 export function EventFilters({
   when,
   eventType,
@@ -50,13 +59,9 @@ export function EventFilters({
   onLevelChange,
 }: EventFiltersProps) {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="flex flex-wrap items-center gap-3">
-        <div
-          role="group"
-          aria-label="When"
-          className="inline-flex rounded-full bg-primary-light p-1"
-        >
+    <div className="flex flex-col gap-4 border-b border-ash pb-4 md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <div role="group" aria-label="When" className="flex items-center gap-5">
           {WHEN_TABS.map((tab) => (
             <button
               key={tab.value}
@@ -64,12 +69,13 @@ export function EventFilters({
               aria-pressed={when === tab.value}
               onClick={() => onWhenChange(tab.value)}
               className={cn(
-                "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+                CHOICE_CLASS,
                 when === tab.value
-                  ? "bg-primary text-primary-foreground"
-                  : "text-primary-hover hover:bg-primary/10",
+                  ? "text-ink"
+                  : "text-muted-foreground hover:text-ink",
               )}
             >
+              <ActiveMarker isActive={when === tab.value} />
               {tab.label}
             </button>
           ))}
@@ -78,38 +84,40 @@ export function EventFilters({
         <div
           role="group"
           aria-label="Kind of evening"
-          className="flex flex-wrap items-center gap-2"
+          className="flex flex-wrap items-center gap-5"
         >
-          {TYPE_CHIPS.map((chip) => (
+          {TYPE_LINKS.map((link) => (
             <button
-              key={chip.label}
+              key={link.key}
               type="button"
-              aria-pressed={eventType === chip.value}
-              onClick={() => onEventTypeChange(chip.value)}
+              aria-pressed={eventType === link.value}
+              onClick={() => onEventTypeChange(link.value)}
               className={cn(
-                "rounded-full px-3.5 py-2 text-sm font-medium transition-colors",
-                eventType === chip.value
-                  ? "bg-foreground text-background"
-                  : "bg-cream text-clay-dark hover:bg-primary-light",
+                CHOICE_CLASS,
+                eventType === link.value
+                  ? "text-ink"
+                  : "text-muted-foreground hover:text-ink",
               )}
             >
-              {chip.label}
+              <ActiveMarker isActive={eventType === link.value} />
+              {link.label}
             </button>
           ))}
         </div>
       </div>
 
-      {isLevelShown && (
+      <div
+        aria-hidden={!isLevelShown}
+        inert={!isLevelShown}
+        className={cn("md:w-44", !isLevelShown && "invisible")}
+      >
         <Select
           value={level ?? ANY_LEVEL}
           onValueChange={(value) =>
             onLevelChange(value === ANY_LEVEL ? null : (value as EventLevel))
           }
         >
-          <SelectTrigger
-            aria-label="Level"
-            className="h-10 rounded-full bg-background"
-          >
+          <SelectTrigger aria-label="Level" className="h-10 bg-white">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -121,7 +129,7 @@ export function EventFilters({
             ))}
           </SelectContent>
         </Select>
-      )}
+      </div>
     </div>
   );
 }

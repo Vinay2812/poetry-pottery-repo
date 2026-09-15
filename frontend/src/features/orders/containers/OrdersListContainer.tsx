@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 import { SignInWall } from "@/features/auth/components/SignInWall";
 import { EmptyOrders } from "@/features/orders/components/EmptyOrders";
@@ -18,8 +19,16 @@ import {
 
 export function OrdersListContainer() {
   const [page, setPage] = useState(1);
-  const { orders, pageInfo, isLoading, hasError, isSignedIn, refetch } =
-    useOrders(page);
+  const {
+    orders,
+    pageInfo,
+    isLoading,
+    isPaging,
+    hasError,
+    isSignedIn,
+    refetch,
+  } = useOrders(page);
+  const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
 
   return (
@@ -28,10 +37,7 @@ export function OrdersListContainer() {
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-2" aria-busy="true">
           {[0, 1, 2, 3].map((index) => (
-            <div
-              key={index}
-              className="h-40 animate-pulse rounded-2xl bg-primary-light/70"
-            />
+            <div key={index} className="h-40 animate-pulse bg-ash" />
           ))}
         </div>
       ) : !isSignedIn ? (
@@ -40,15 +46,14 @@ export function OrdersListContainer() {
           onSignIn={() => openSignIn()}
         />
       ) : hasError ? (
-        <div className="flex flex-col items-center gap-3 rounded-3xl bg-cream px-6 py-16 text-center">
-          <p className="text-sm text-muted-foreground">
-            We could not load your orders just now.
+        <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
+          <h2 className="font-heading text-2xl tracking-tight">
+            Your orders did not load
+          </h2>
+          <p className="max-w-sm text-[15px] text-muted-foreground">
+            Something went wrong on our side.
           </p>
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={() => void refetch()}
-          >
+          <Button variant="outline" onClick={() => void refetch()}>
             Try again
           </Button>
         </div>
@@ -56,7 +61,13 @@ export function OrdersListContainer() {
         <EmptyOrders />
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div
+            aria-busy={isPaging}
+            className={cn(
+              "grid gap-4 transition-opacity duration-200 md:grid-cols-2",
+              isPaging && "opacity-60",
+            )}
+          >
             {orders.map((order) => (
               <OrderCard
                 key={order.id}
@@ -74,23 +85,20 @@ export function OrdersListContainer() {
             ))}
           </div>
           {pageInfo && pageInfo.total > pageInfo.limit && (
-            <div className="flex items-center justify-center gap-3">
+            <div className="flex items-center justify-center gap-4 border-t border-ash pt-6">
               <Button
                 variant="outline"
-                className="rounded-full"
                 disabled={page <= 1}
                 onClick={() => setPage((current) => current - 1)}
               >
                 Newer
               </Button>
-              <span className="text-sm text-muted-foreground">
-                Page {pageInfo.page} of{" "}
-                {Math.ceil(pageInfo.total / pageInfo.limit)}
+              <span className="text-sm text-muted-foreground tnum">
+                Page {page} of {pageCount}
               </span>
               <Button
                 variant="outline"
-                className="rounded-full"
-                disabled={!pageInfo.has_more}
+                disabled={page >= pageCount}
                 onClick={() => setPage((current) => current + 1)}
               >
                 Older
