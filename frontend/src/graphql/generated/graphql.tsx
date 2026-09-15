@@ -50,6 +50,14 @@ export type AddressInput = {
   state: Scalars['String']['input'];
 };
 
+export type BookWorkshopInput = {
+  config_slug: Scalars['String']['input'];
+  hours: Scalars['Int']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  participants: Scalars['Int']['input'];
+  starts_at: Scalars['DateTime']['input'];
+};
+
 export type Cart = {
   __typename?: 'Cart';
   free_shipping_above?: Maybe<Scalars['Int']['output']>;
@@ -212,14 +220,17 @@ export type FacetCount = {
 export type Mutation = {
   __typename?: 'Mutation';
   addToCart: Cart;
+  bookWorkshop: WorkshopBooking;
   cancelOrder: Order;
   cancelRegistration: Registration;
+  cancelWorkshopBooking: WorkshopBooking;
   clearCart: Cart;
   createAddress: Address;
   deleteAddress: Scalars['Boolean']['output'];
   placeOrder: Order;
   registerForEvent: Registration;
   removeCartItem: Cart;
+  rescheduleWorkshopBooking: WorkshopBooking;
   setDefaultAddress: Address;
   toggleWishlist: WishlistToggleResult;
   updateAddress: Address;
@@ -232,6 +243,11 @@ export type MutationAddToCartArgs = {
 };
 
 
+export type MutationBookWorkshopArgs = {
+  input: BookWorkshopInput;
+};
+
+
 export type MutationCancelOrderArgs = {
   id: Scalars['String']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
@@ -239,6 +255,12 @@ export type MutationCancelOrderArgs = {
 
 
 export type MutationCancelRegistrationArgs = {
+  id: Scalars['String']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationCancelWorkshopBookingArgs = {
   id: Scalars['String']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
 };
@@ -266,6 +288,11 @@ export type MutationRegisterForEventArgs = {
 
 export type MutationRemoveCartItemArgs = {
   id: Scalars['Int']['input'];
+};
+
+
+export type MutationRescheduleWorkshopBookingArgs = {
+  input: RescheduleWorkshopInput;
 };
 
 
@@ -458,6 +485,7 @@ export type Query = {
   events: EventsResult;
   featuredProducts: Array<Product>;
   myRegistrations: RegistrationsResult;
+  myWorkshopBookings: WorkshopBookingsResult;
   order: Order;
   orders: OrdersResult;
   product: Product;
@@ -469,6 +497,10 @@ export type Query = {
   users: UsersResponse;
   wishlist: Array<Product>;
   wishlistIds: Array<Scalars['Int']['output']>;
+  workshop: WorkshopConfig;
+  workshopAvailability: Array<WorkshopDay>;
+  workshopBooking: WorkshopBooking;
+  workshops: Array<WorkshopConfig>;
 };
 
 
@@ -498,6 +530,12 @@ export type QueryFeaturedProductsArgs = {
 
 
 export type QueryMyRegistrationsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMyWorkshopBookingsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -545,6 +583,21 @@ export type QueryUsersArgs = {
   page?: InputMaybe<Scalars['Int']['input']>;
 };
 
+
+export type QueryWorkshopArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryWorkshopAvailabilityArgs = {
+  input: WorkshopAvailabilityInput;
+};
+
+
+export type QueryWorkshopBookingArgs = {
+  id: Scalars['String']['input'];
+};
+
 export type RegisterForEventInput = {
   event_id: Scalars['Int']['input'];
   note?: InputMaybe<Scalars['String']['input']>;
@@ -582,6 +635,11 @@ export type RegistrationsResult = {
   __typename?: 'RegistrationsResult';
   items: Array<Registration>;
   page_info: PageInfo;
+};
+
+export type RescheduleWorkshopInput = {
+  booking_id: Scalars['String']['input'];
+  starts_at: Scalars['DateTime']['input'];
 };
 
 export type SelectionInputType = {
@@ -655,6 +713,85 @@ export type WishlistToggleResult = {
   is_wishlisted: Scalars['Boolean']['output'];
   product_id: Scalars['Int']['output'];
   wishlist_count: Scalars['Int']['output'];
+};
+
+export type WorkshopAvailabilityInput = {
+  config_slug: Scalars['String']['input'];
+  days?: InputMaybe<Scalars['Int']['input']>;
+  from: Scalars['String']['input'];
+};
+
+export type WorkshopBooking = {
+  __typename?: 'WorkshopBooking';
+  approved_at?: Maybe<Scalars['DateTime']['output']>;
+  can_cancel: Scalars['Boolean']['output'];
+  can_reschedule: Scalars['Boolean']['output'];
+  cancel_reason?: Maybe<Scalars['String']['output']>;
+  cancelled_at?: Maybe<Scalars['DateTime']['output']>;
+  config: WorkshopConfig;
+  confirmed_at?: Maybe<Scalars['DateTime']['output']>;
+  created_at: Scalars['DateTime']['output'];
+  discount: Scalars['Int']['output'];
+  ends_at: Scalars['DateTime']['output'];
+  hours: Scalars['Int']['output'];
+  id: Scalars['String']['output'];
+  note?: Maybe<Scalars['String']['output']>;
+  participants: Scalars['Int']['output'];
+  pieces_per_person: Scalars['Int']['output'];
+  price_per_person: Scalars['Int']['output'];
+  rejected_at?: Maybe<Scalars['DateTime']['output']>;
+  starts_at: Scalars['DateTime']['output'];
+  status: RegistrationStatus;
+  subtotal: Scalars['Int']['output'];
+  total: Scalars['Int']['output'];
+};
+
+export type WorkshopBookingsResult = {
+  __typename?: 'WorkshopBookingsResult';
+  items: Array<WorkshopBooking>;
+  page_info: PageInfo;
+};
+
+export type WorkshopConfig = {
+  __typename?: 'WorkshopConfig';
+  booking_window_days: Scalars['Int']['output'];
+  capacity_per_slot: Scalars['Int']['output'];
+  closed_weekdays: Array<Scalars['Int']['output']>;
+  closing_minutes: Scalars['Int']['output'];
+  description?: Maybe<Scalars['String']['output']>;
+  id: Scalars['Int']['output'];
+  image_url?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  opening_minutes: Scalars['Int']['output'];
+  slot_minutes: Scalars['Int']['output'];
+  slug: Scalars['String']['output'];
+  tiers: Array<WorkshopTier>;
+  timezone: Scalars['String']['output'];
+};
+
+export type WorkshopDay = {
+  __typename?: 'WorkshopDay';
+  date: Scalars['String']['output'];
+  is_closed: Scalars['Boolean']['output'];
+  reason?: Maybe<Scalars['String']['output']>;
+  slots: Array<WorkshopSlot>;
+  weekday: Scalars['Int']['output'];
+};
+
+export type WorkshopSlot = {
+  __typename?: 'WorkshopSlot';
+  ends_at: Scalars['DateTime']['output'];
+  is_available: Scalars['Boolean']['output'];
+  reason?: Maybe<Scalars['String']['output']>;
+  remaining: Scalars['Int']['output'];
+  starts_at: Scalars['DateTime']['output'];
+};
+
+export type WorkshopTier = {
+  __typename?: 'WorkshopTier';
+  hours: Scalars['Int']['output'];
+  pieces_per_person: Scalars['Int']['output'];
+  price_per_person: Scalars['Int']['output'];
 };
 
 export type AddressFieldsFragment = { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean };
@@ -891,6 +1028,66 @@ export type ToggleWishlistMutationVariables = Exact<{
 
 export type ToggleWishlistMutation = { toggleWishlist: { product_id: number, is_wishlisted: boolean, wishlist_count: number } };
 
+export type WorkshopConfigFieldsFragment = { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> };
+
+export type WorkshopBookingFieldsFragment = { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } };
+
+export type WorkshopsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type WorkshopsQuery = { workshops: Array<{ id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> }> };
+
+export type WorkshopQueryVariables = Exact<{
+  slug: string;
+}>;
+
+
+export type WorkshopQuery = { workshop: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } };
+
+export type WorkshopAvailabilityQueryVariables = Exact<{
+  input: WorkshopAvailabilityInput;
+}>;
+
+
+export type WorkshopAvailabilityQuery = { workshopAvailability: Array<{ date: string, weekday: number, is_closed: boolean, reason: string | null, slots: Array<{ starts_at: string, ends_at: string, remaining: number, is_available: boolean, reason: string | null }> }> };
+
+export type BookWorkshopMutationVariables = Exact<{
+  input: BookWorkshopInput;
+}>;
+
+
+export type BookWorkshopMutation = { bookWorkshop: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
+
+export type RescheduleWorkshopBookingMutationVariables = Exact<{
+  input: RescheduleWorkshopInput;
+}>;
+
+
+export type RescheduleWorkshopBookingMutation = { rescheduleWorkshopBooking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
+
+export type MyWorkshopBookingsQueryVariables = Exact<{
+  page?: number | null | undefined;
+  limit?: number | null | undefined;
+}>;
+
+
+export type MyWorkshopBookingsQuery = { myWorkshopBookings: { items: Array<{ id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } }>, page_info: { total: number, page: number, limit: number, has_more: boolean } } };
+
+export type WorkshopBookingQueryVariables = Exact<{
+  id: string;
+}>;
+
+
+export type WorkshopBookingQuery = { workshopBooking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
+
+export type CancelWorkshopBookingMutationVariables = Exact<{
+  id: string;
+  reason?: string | null | undefined;
+}>;
+
+
+export type CancelWorkshopBookingMutation = { cancelWorkshopBooking: { id: string, starts_at: string, ends_at: string, hours: number, participants: number, price_per_person: number, pieces_per_person: number, subtotal: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, can_reschedule: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, config: { id: number, slug: string, name: string, description: string | null, image_url: string | null, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, closed_weekdays: Array<number>, tiers: Array<{ hours: number, price_per_person: number, pieces_per_person: number }> } } };
+
 export const AddressFieldsFragmentDoc = gql`
     fragment AddressFields on Address {
   id
@@ -1051,6 +1248,54 @@ export const OrderFieldsFragmentDoc = gql`
       slug
       is_customizable
     }
+  }
+}
+    `;
+export const WorkshopConfigFieldsFragmentDoc = gql`
+    fragment WorkshopConfigFields on WorkshopConfig {
+  id
+  slug
+  name
+  description
+  image_url
+  timezone
+  opening_minutes
+  closing_minutes
+  slot_minutes
+  capacity_per_slot
+  booking_window_days
+  closed_weekdays
+  tiers {
+    hours
+    price_per_person
+    pieces_per_person
+  }
+}
+    `;
+export const WorkshopBookingFieldsFragmentDoc = gql`
+    fragment WorkshopBookingFields on WorkshopBooking {
+  id
+  starts_at
+  ends_at
+  hours
+  participants
+  price_per_person
+  pieces_per_person
+  subtotal
+  discount
+  total
+  status
+  note
+  cancel_reason
+  can_cancel
+  can_reschedule
+  created_at
+  approved_at
+  confirmed_at
+  rejected_at
+  cancelled_at
+  config {
+    ...WorkshopConfigFields
   }
 }
     `;
@@ -2281,3 +2526,295 @@ export function useToggleWishlistMutation(baseOptions?: ApolloReactHooks.Mutatio
       }
 export type ToggleWishlistMutationHookResult = ReturnType<typeof useToggleWishlistMutation>;
 export type ToggleWishlistMutationResult = ApolloReactCommon.MutationResult<ToggleWishlistMutation>;
+export const WorkshopsDocument = gql`
+    query Workshops {
+  workshops {
+    ...WorkshopConfigFields
+  }
+}
+    ${WorkshopConfigFieldsFragmentDoc}`;
+
+/**
+ * __useWorkshopsQuery__
+ *
+ * To run a query within a React component, call `useWorkshopsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useWorkshopsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useWorkshopsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useWorkshopsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<WorkshopsQuery, WorkshopsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<WorkshopsQuery, WorkshopsQueryVariables>(WorkshopsDocument, options);
+      }
+export function useWorkshopsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<WorkshopsQuery, WorkshopsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<WorkshopsQuery, WorkshopsQueryVariables>(WorkshopsDocument, options);
+        }
+export type WorkshopsQueryHookResult = ReturnType<typeof useWorkshopsQuery>;
+export type WorkshopsLazyQueryHookResult = ReturnType<typeof useWorkshopsLazyQuery>;
+export type WorkshopsQueryResult = ApolloReactCommon.QueryResult<WorkshopsQuery, WorkshopsQueryVariables>;
+export const WorkshopDocument = gql`
+    query Workshop($slug: String!) {
+  workshop(slug: $slug) {
+    ...WorkshopConfigFields
+  }
+}
+    ${WorkshopConfigFieldsFragmentDoc}`;
+
+/**
+ * __useWorkshopQuery__
+ *
+ * To run a query within a React component, call `useWorkshopQuery` and pass it any options that fit your needs.
+ * When your component renders, `useWorkshopQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useWorkshopQuery({
+ *   variables: {
+ *      slug: // value for 'slug'
+ *   },
+ * });
+ */
+export function useWorkshopQuery(baseOptions: ApolloReactHooks.QueryHookOptions<WorkshopQuery, WorkshopQueryVariables> & ({ variables: WorkshopQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<WorkshopQuery, WorkshopQueryVariables>(WorkshopDocument, options);
+      }
+export function useWorkshopLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<WorkshopQuery, WorkshopQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<WorkshopQuery, WorkshopQueryVariables>(WorkshopDocument, options);
+        }
+export type WorkshopQueryHookResult = ReturnType<typeof useWorkshopQuery>;
+export type WorkshopLazyQueryHookResult = ReturnType<typeof useWorkshopLazyQuery>;
+export type WorkshopQueryResult = ApolloReactCommon.QueryResult<WorkshopQuery, WorkshopQueryVariables>;
+export const WorkshopAvailabilityDocument = gql`
+    query WorkshopAvailability($input: WorkshopAvailabilityInput!) {
+  workshopAvailability(input: $input) {
+    date
+    weekday
+    is_closed
+    reason
+    slots {
+      starts_at
+      ends_at
+      remaining
+      is_available
+      reason
+    }
+  }
+}
+    `;
+
+/**
+ * __useWorkshopAvailabilityQuery__
+ *
+ * To run a query within a React component, call `useWorkshopAvailabilityQuery` and pass it any options that fit your needs.
+ * When your component renders, `useWorkshopAvailabilityQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useWorkshopAvailabilityQuery({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useWorkshopAvailabilityQuery(baseOptions: ApolloReactHooks.QueryHookOptions<WorkshopAvailabilityQuery, WorkshopAvailabilityQueryVariables> & ({ variables: WorkshopAvailabilityQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<WorkshopAvailabilityQuery, WorkshopAvailabilityQueryVariables>(WorkshopAvailabilityDocument, options);
+      }
+export function useWorkshopAvailabilityLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<WorkshopAvailabilityQuery, WorkshopAvailabilityQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<WorkshopAvailabilityQuery, WorkshopAvailabilityQueryVariables>(WorkshopAvailabilityDocument, options);
+        }
+export type WorkshopAvailabilityQueryHookResult = ReturnType<typeof useWorkshopAvailabilityQuery>;
+export type WorkshopAvailabilityLazyQueryHookResult = ReturnType<typeof useWorkshopAvailabilityLazyQuery>;
+export type WorkshopAvailabilityQueryResult = ApolloReactCommon.QueryResult<WorkshopAvailabilityQuery, WorkshopAvailabilityQueryVariables>;
+export const BookWorkshopDocument = gql`
+    mutation BookWorkshop($input: BookWorkshopInput!) {
+  bookWorkshop(input: $input) {
+    ...WorkshopBookingFields
+  }
+}
+    ${WorkshopBookingFieldsFragmentDoc}
+${WorkshopConfigFieldsFragmentDoc}`;
+
+/**
+ * __useBookWorkshopMutation__
+ *
+ * To run a mutation, you first call `useBookWorkshopMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useBookWorkshopMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [bookWorkshopMutation, { data, loading, error }] = useBookWorkshopMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useBookWorkshopMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<BookWorkshopMutation, BookWorkshopMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<BookWorkshopMutation, BookWorkshopMutationVariables>(BookWorkshopDocument, options);
+      }
+export type BookWorkshopMutationHookResult = ReturnType<typeof useBookWorkshopMutation>;
+export type BookWorkshopMutationResult = ApolloReactCommon.MutationResult<BookWorkshopMutation>;
+export const RescheduleWorkshopBookingDocument = gql`
+    mutation RescheduleWorkshopBooking($input: RescheduleWorkshopInput!) {
+  rescheduleWorkshopBooking(input: $input) {
+    ...WorkshopBookingFields
+  }
+}
+    ${WorkshopBookingFieldsFragmentDoc}
+${WorkshopConfigFieldsFragmentDoc}`;
+
+/**
+ * __useRescheduleWorkshopBookingMutation__
+ *
+ * To run a mutation, you first call `useRescheduleWorkshopBookingMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRescheduleWorkshopBookingMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [rescheduleWorkshopBookingMutation, { data, loading, error }] = useRescheduleWorkshopBookingMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRescheduleWorkshopBookingMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<RescheduleWorkshopBookingMutation, RescheduleWorkshopBookingMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<RescheduleWorkshopBookingMutation, RescheduleWorkshopBookingMutationVariables>(RescheduleWorkshopBookingDocument, options);
+      }
+export type RescheduleWorkshopBookingMutationHookResult = ReturnType<typeof useRescheduleWorkshopBookingMutation>;
+export type RescheduleWorkshopBookingMutationResult = ApolloReactCommon.MutationResult<RescheduleWorkshopBookingMutation>;
+export const MyWorkshopBookingsDocument = gql`
+    query MyWorkshopBookings($page: Int, $limit: Int) {
+  myWorkshopBookings(page: $page, limit: $limit) {
+    items {
+      ...WorkshopBookingFields
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+  }
+}
+    ${WorkshopBookingFieldsFragmentDoc}
+${WorkshopConfigFieldsFragmentDoc}`;
+
+/**
+ * __useMyWorkshopBookingsQuery__
+ *
+ * To run a query within a React component, call `useMyWorkshopBookingsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMyWorkshopBookingsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMyWorkshopBookingsQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useMyWorkshopBookingsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<MyWorkshopBookingsQuery, MyWorkshopBookingsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<MyWorkshopBookingsQuery, MyWorkshopBookingsQueryVariables>(MyWorkshopBookingsDocument, options);
+      }
+export function useMyWorkshopBookingsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<MyWorkshopBookingsQuery, MyWorkshopBookingsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<MyWorkshopBookingsQuery, MyWorkshopBookingsQueryVariables>(MyWorkshopBookingsDocument, options);
+        }
+export type MyWorkshopBookingsQueryHookResult = ReturnType<typeof useMyWorkshopBookingsQuery>;
+export type MyWorkshopBookingsLazyQueryHookResult = ReturnType<typeof useMyWorkshopBookingsLazyQuery>;
+export type MyWorkshopBookingsQueryResult = ApolloReactCommon.QueryResult<MyWorkshopBookingsQuery, MyWorkshopBookingsQueryVariables>;
+export const WorkshopBookingDocument = gql`
+    query WorkshopBooking($id: String!) {
+  workshopBooking(id: $id) {
+    ...WorkshopBookingFields
+  }
+}
+    ${WorkshopBookingFieldsFragmentDoc}
+${WorkshopConfigFieldsFragmentDoc}`;
+
+/**
+ * __useWorkshopBookingQuery__
+ *
+ * To run a query within a React component, call `useWorkshopBookingQuery` and pass it any options that fit your needs.
+ * When your component renders, `useWorkshopBookingQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useWorkshopBookingQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useWorkshopBookingQuery(baseOptions: ApolloReactHooks.QueryHookOptions<WorkshopBookingQuery, WorkshopBookingQueryVariables> & ({ variables: WorkshopBookingQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<WorkshopBookingQuery, WorkshopBookingQueryVariables>(WorkshopBookingDocument, options);
+      }
+export function useWorkshopBookingLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<WorkshopBookingQuery, WorkshopBookingQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<WorkshopBookingQuery, WorkshopBookingQueryVariables>(WorkshopBookingDocument, options);
+        }
+export type WorkshopBookingQueryHookResult = ReturnType<typeof useWorkshopBookingQuery>;
+export type WorkshopBookingLazyQueryHookResult = ReturnType<typeof useWorkshopBookingLazyQuery>;
+export type WorkshopBookingQueryResult = ApolloReactCommon.QueryResult<WorkshopBookingQuery, WorkshopBookingQueryVariables>;
+export const CancelWorkshopBookingDocument = gql`
+    mutation CancelWorkshopBooking($id: String!, $reason: String) {
+  cancelWorkshopBooking(id: $id, reason: $reason) {
+    ...WorkshopBookingFields
+  }
+}
+    ${WorkshopBookingFieldsFragmentDoc}
+${WorkshopConfigFieldsFragmentDoc}`;
+
+/**
+ * __useCancelWorkshopBookingMutation__
+ *
+ * To run a mutation, you first call `useCancelWorkshopBookingMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCancelWorkshopBookingMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [cancelWorkshopBookingMutation, { data, loading, error }] = useCancelWorkshopBookingMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      reason: // value for 'reason'
+ *   },
+ * });
+ */
+export function useCancelWorkshopBookingMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CancelWorkshopBookingMutation, CancelWorkshopBookingMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CancelWorkshopBookingMutation, CancelWorkshopBookingMutationVariables>(CancelWorkshopBookingDocument, options);
+      }
+export type CancelWorkshopBookingMutationHookResult = ReturnType<typeof useCancelWorkshopBookingMutation>;
+export type CancelWorkshopBookingMutationResult = ApolloReactCommon.MutationResult<CancelWorkshopBookingMutation>;

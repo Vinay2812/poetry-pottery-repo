@@ -123,7 +123,7 @@ export function EventCard({
             href={href}
             className="rounded-full bg-neutral-200 px-4 py-2 text-sm font-medium text-neutral-700 transition-colors hover:bg-neutral-300"
           >
-            Join waitlist
+            Ask about a seat
           </Link>
         ) : (
           <Link
