@@ -24,10 +24,3 @@ export const JAR_MOUTH_CRESCENT =
 /** Where the trimmed foot presses into the floor: an arc of the ring at y 306. */
 export const JAR_FOOT_CONTACT =
   "M241 308.2C230.9 313.7 188.7 315.1 166.9 310.7";
-
-// Trimmings curling off the tool onto the bench.
-export const TRIM_CURLS = [
-  "M138 319C129 319 126 309 134 306C141 304 144 312 138 314C134 315 133 311 136 310",
-  "M266 319C258 319 256 310 263 307C270 305 273 312 267 314C263 315 262 311 265 310",
-  "M288 320C282 320 280 313 285 311C290 309 292 314 288 316",
-];
