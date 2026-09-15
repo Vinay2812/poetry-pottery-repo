@@ -5,6 +5,10 @@ import { PageInfo } from "@/common/pagination/pagination";
 
 @ObjectType()
 export class WorkshopTier {
+  // The console needs this to delete a tier; saveWorkshopTier upserts by hours.
+  @Field(() => Int)
+  id!: number;
+
   @Field(() => Int)
   hours!: number;
 

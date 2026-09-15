@@ -1,0 +1,59 @@
+fragment AdminContactMessageFields on ContactMessage {
+  id
+  name
+  email
+  phone
+  subject
+  message
+  is_read
+  created_at
+}
+
+fragment AdminSubscriberFields on AdminSubscriber {
+  id
+  email
+  user_id
+  is_active
+  created_at
+  unsubscribed_at
+}
+
+query AdminContactMessages($filter: AdminContactFilterInput) {
+  adminContactMessages(filter: $filter) {
+    items {
+      ...AdminContactMessageFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+query AdminNewsletterSubscribers($filter: AdminSubscribersFilterInput) {
+  adminNewsletterSubscribers(filter: $filter) {
+    items {
+      ...AdminSubscriberFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+query ExportNewsletterSubscribers($filter: AdminSubscribersFilterInput) {
+  exportNewsletterSubscribers(filter: $filter)
+}
+
+mutation SetContactMessageRead($id: Int!, $is_read: Boolean!) {
+  setContactMessageRead(id: $id, is_read: $is_read) {
+    ...AdminContactMessageFields
+  }
+}
+
+mutation DeleteContactMessage($id: Int!) {
+  deleteContactMessage(id: $id)
+}
+
+mutation UnsubscribeSubscriber($email: String!) {
+  unsubscribeSubscriber(email: $email)
+}

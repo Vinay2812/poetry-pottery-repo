@@ -1,0 +1,38 @@
+query ImageSpecs {
+  imageSpecs {
+    purpose
+    ratio
+    ratio_label
+    min_width
+    min_height
+    max_bytes
+    content_types
+    renders_at
+  }
+}
+
+mutation CreateAdminUpload(
+  $purpose: UploadPurpose!
+  $content_type: String!
+  $size: Int!
+) {
+  createAdminUpload(
+    purpose: $purpose
+    content_type: $content_type
+    size: $size
+  ) {
+    key
+    upload_url
+    public_url
+  }
+}
+
+mutation ConfirmUpload($key: String!, $purpose: UploadPurpose!) {
+  confirmUpload(key: $key, purpose: $purpose) {
+    key
+    public_url
+    width
+    height
+    bytes
+  }
+}
