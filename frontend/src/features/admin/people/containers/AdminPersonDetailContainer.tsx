@@ -19,6 +19,7 @@ import { AdminPersonRole } from "@/features/admin/people/components/AdminPersonR
 import { AdminPersonStats } from "@/features/admin/people/components/AdminPersonStats";
 import {
   applyPersonRolePatch,
+  describeCurrentRole,
   describeRoleChange,
   roleTone,
   toInitials,
@@ -123,7 +124,7 @@ export function AdminPersonDetailContainer({
       />
       <section className="border-t border-ash pt-6">
         <AdminPersonRole
-          currentRoleLabel={formatEnumLabel(optimisticPerson.role)}
+          currentRoleSentence={describeCurrentRole(optimisticPerson.role)}
           explanation={describeRoleChange(nextRole)}
           actionLabel={toRoleConfirmLabel(nextRole)}
           isBusy={isSaving}
