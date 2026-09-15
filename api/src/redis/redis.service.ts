@@ -10,6 +10,15 @@ import type { Logger } from "winston";
 
 import { env } from "@/config/env";
 
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?Z$/;
+
+// JSON drops Date objects; the GraphQL DateTime scalar needs them back.
+export function reviveDates(_key: string, value: unknown): unknown {
+  return typeof value === "string" && ISO_DATE.test(value)
+    ? new Date(value)
+    : value;
+}
+
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
   readonly client: Redis;
@@ -52,7 +61,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
   ): Promise<T> {
     const cached = await this.client.get(key).catch(() => null);
     if (cached !== null) {
-      return JSON.parse(cached) as T;
+      return JSON.parse(cached, reviveDates) as T;
     }
     const value = await loader();
     await this.client

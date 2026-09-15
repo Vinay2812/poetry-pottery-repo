@@ -3,7 +3,8 @@ import { UserRole, type User } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
-import { MAX_PAGE_SIZE, UsersService } from "./users.service";
+import { MAX_PAGE_SIZE } from "@/common/pagination/pagination";
+import { UsersService } from "./users.service";
 
 function makeUser(overrides: Partial<User> = {}): User {
   return {

@@ -2,12 +2,148 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Category {
+  icon: String
+  id: Int!
+  image_url: String
+  name: String!
+  product_count: Int!
+  slug: String!
+}
+
+type CategoryRef {
+  id: Int!
+  name: String!
+  slug: String!
+}
+
+type Collection {
+  description: String
+  ends_at: DateTime
+  id: Int!
+  image_url: String
+  name: String!
+  product_count: Int!
+  slug: String!
+  starts_at: DateTime
+}
+
+type CollectionRef {
+  ends_at: DateTime
+  id: Int!
+  name: String!
+  slug: String!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
 
+type FacetCount {
+  count: Int!
+  label: String!
+  value: String!
+}
+
+enum OptionGroupKind {
+  CHOICE
+  TEXT
+}
+
+type PageInfo {
+  has_more: Boolean!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
+type Product {
+  care_notes: [String!]!
+  categories: [CategoryRef!]!
+  collection: CollectionRef
+  color_code: String
+  color_name: String
+  compare_at_price: Int
+  created_at: DateTime!
+  description: String!
+  dimensions: String
+  id: Int!
+  image_urls: [String!]!
+  is_active: Boolean!
+  is_customizable: Boolean!
+  is_featured: Boolean!
+  material: String!
+  name: String!
+  option_groups: [ProductOptionGroup!]!
+  price: Int!
+  rating_avg: Float!
+  rating_count: Int!
+  sales_count: Int!
+  slug: String!
+  stock: Int!
+}
+
+type ProductFacets {
+  categories: [FacetCount!]!
+  materials: [FacetCount!]!
+  price_max: Int!
+  price_min: Int!
+}
+
+type ProductOption {
+  id: Int!
+  name: String!
+  price_modifier: Int!
+}
+
+type ProductOptionGroup {
+  id: Int!
+  is_required: Boolean!
+  kind: OptionGroupKind!
+  max_length: Int
+  name: String!
+  options: [ProductOption!]!
+  price_modifier: Int!
+}
+
+enum ProductSort {
+  BEST_SELLING
+  FEATURED
+  NEWEST
+  PRICE_HIGH_TO_LOW
+  PRICE_LOW_TO_HIGH
+  TOP_RATED
+}
+
+input ProductsFilterInput {
+  category_slugs: [String!]
+  collection_slug: String
+  customizable_only: Boolean
+  in_stock_only: Boolean
+  limit: Int
+  materials: [String!]
+  max_price: Int
+  min_price: Int
+  page: Int
+  search: String
+  sort: ProductSort
+}
+
+type ProductsResult {
+  facets: ProductFacets!
+  items: [Product!]!
+  page_info: PageInfo!
+}
+
 type Query {
+  categories: [Category!]!
+  collection(slug: String!): Collection!
+  collections: [Collection!]!
+  featuredProducts(limit: Int = 8): [Product!]!
+  product(slug: String!): Product!
+  products(filter: ProductsFilterInput): ProductsResult!
+  relatedProducts(limit: Int = 8, slug: String!): [Product!]!
   siteSettings: SiteSettings!
   users(limit: Int = 20, page: Int = 1): UsersResponse!
 }

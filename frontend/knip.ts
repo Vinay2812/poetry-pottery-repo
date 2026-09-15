@@ -10,10 +10,6 @@ const config: KnipConfig = {
     "src/features/*/index.ts!",
     "src/lib/format.ts!",
   ],
-  ignoreDependencies: [
-    // Imported only by the vendored shadcn primitives, which knip ignores below.
-    "radix-ui",
-  ],
   ignore: [
     // Vendored shadcn primitives; kept complete for future components.
     "src/components/ui/**",
