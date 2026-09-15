@@ -25,6 +25,7 @@ async function bootstrap(): Promise<void> {
           crossOriginEmbedderPolicy: false,
         }),
   );
+  app.set("trust proxy", env.TRUSTED_PROXY_HOPS);
   app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });
   app.use(clerkAuthMiddleware());
   app.enableShutdownHooks();

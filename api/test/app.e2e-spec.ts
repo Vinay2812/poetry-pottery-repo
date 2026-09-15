@@ -1,18 +1,27 @@
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { z } from "zod";
 
 import { AppModule } from "@/app.module";
 import { clerkAuthMiddleware } from "@/common/clerk/clerk.util";
 import { REQUEST_ID_HEADER } from "@/common/middleware/request-id.middleware";
 import { PrismaService } from "@/prisma/prisma.service";
+import { QueueService } from "@/queue/queue.service";
+import { RedisService } from "@/redis/redis.service";
 import {
   getJson,
   graphqlErrorSchema,
   healthSchema,
   postGraphql,
 } from "./helpers/http";
+
+const redisMock = {
+  client: { ping: vi.fn().mockResolvedValue("PONG") },
+  getOrSet: vi.fn(),
+  del: vi.fn(),
+};
+
+const queueMock = { isConnected: true, publish: vi.fn() };
 
 const prismaMock = {
   $connect: vi.fn().mockResolvedValue(undefined),
@@ -24,14 +33,7 @@ const prismaMock = {
     findUnique: vi.fn().mockResolvedValue(null),
     upsert: vi.fn(),
   },
-  productCategory: {
-    findMany: vi.fn().mockResolvedValue([{ category: "Mugs" }]),
-  },
 };
-
-const categoriesSchema = z.object({
-  data: z.object({ categories: z.array(z.string()) }),
-});
 
 describe("API (e2e)", () => {
   let app: INestApplication;
@@ -42,6 +44,10 @@ describe("API (e2e)", () => {
     })
       .overrideProvider(PrismaService)
       .useValue(prismaMock)
+      .overrideProvider(RedisService)
+      .useValue(redisMock)
+      .overrideProvider(QueueService)
+      .useValue(queueMock)
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -67,14 +73,6 @@ describe("API (e2e)", () => {
     const response = await getJson(app, "/health");
 
     expect(response.headers[REQUEST_ID_HEADER]).toBeTypeOf("string");
-  });
-
-  it("serves the public categories query without authentication", async () => {
-    const response = await postGraphql(app, "{ categories }");
-
-    expect(response.status).toBe(200);
-    const { data } = categoriesSchema.parse(response.body);
-    expect(data.categories).toEqual(["Mugs"]);
   });
 
   it("rejects the users query when unauthenticated", async () => {

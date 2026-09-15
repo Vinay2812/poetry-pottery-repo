@@ -8,6 +8,11 @@ const config: KnipConfig = {
     "src/lib/apollo/rsc-client.ts!",
     // Feature barrels are each feature's public API.
     "src/features/*/index.ts!",
+    "src/lib/format.ts!",
+  ],
+  ignoreDependencies: [
+    // Imported only by the vendored shadcn primitives, which knip ignores below.
+    "radix-ui",
   ],
   ignore: [
     // Vendored shadcn primitives; kept complete for future components.

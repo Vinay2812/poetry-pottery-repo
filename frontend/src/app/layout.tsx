@@ -1,16 +1,27 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 
+import { Toaster } from "@/components/providers/toaster";
 import { WebVitalsReporter } from "@/components/web-vitals-reporter";
-import { ToastContainer } from "@/features/notifications";
 import { ApolloProvider } from "@/lib/apollo";
 import { fontVariables } from "@/lib/fonts";
 
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Poetry & Pottery",
-  description: "Handcrafted pottery e-commerce and pottery workshops",
+  title: {
+    default: "Poetry & Pottery",
+    template: "%s · Poetry & Pottery",
+  },
+  description:
+    "Wheel-thrown stoneware made in Sangli, plus pottery workshops and open mic evenings at the studio.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#fafaf9",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -20,7 +31,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <body className="flex min-h-full flex-col">
           <ApolloProvider>
             {children}
-            <ToastContainer />
+            <Toaster />
           </ApolloProvider>
           <WebVitalsReporter />
         </body>

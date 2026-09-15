@@ -9,6 +9,8 @@
   --color-primary-hover: #3d5640;
   --color-primary-light: #e8ece8;
   --color-terracotta: #c4785a;
+  --color-terracotta-hover: #b06847;
+  --color-terracotta-light: #f5ebe6;
   --color-cream: #f5f0e8;
   --color-clay: #8b7355;
   /* Contrast-safe clay for small text on cream (>=4.5:1). */
@@ -139,5 +141,16 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility hide-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

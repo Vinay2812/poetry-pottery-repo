@@ -27,12 +27,6 @@ export class User {
   role!: UserRole;
 
   @Field()
-  subscribed_to_newsletter!: boolean;
-
-  @Field(() => Date, { nullable: true })
-  newsletter_subscribed_at!: Date | null;
-
-  @Field()
   created_at!: Date;
 
   @Field()

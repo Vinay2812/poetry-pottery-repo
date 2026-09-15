@@ -37,8 +37,6 @@ function makeUser(overrides: Partial<User> = {}): User {
     name: "Potter",
     image: null,
     role: UserRole.USER,
-    subscribed_to_newsletter: false,
-    newsletter_subscribed_at: null,
     created_at: new Date("2026-01-01T00:00:00.000Z"),
     updated_at: new Date("2026-01-01T00:00:00.000Z"),
     ...overrides,

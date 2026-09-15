@@ -2,21 +2,35 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type CollectionsWithProductsCount {
-  image_url: String
-  name: String!
-  products_count: Int!
-}
-
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
 
 type Query {
-  categories: [String!]!
-  collectionsWithProductsCount(limit: Int!, offset: Int!): [CollectionsWithProductsCount!]!
+  siteSettings: SiteSettings!
   users(limit: Int = 20, page: Int = 1): UsersResponse!
+}
+
+type SiteSettings {
+  address: String!
+  announcement_href: String
+  announcement_text: String
+  contact_email: String!
+  contact_phone: String!
+  facebook_url: String!
+  free_shipping_above: Int
+  hero_cta_href: String!
+  hero_cta_text: String!
+  hero_heading: String!
+  hero_image_url: String!
+  hero_subheading: String!
+  instagram_url: String!
+  opening_hours: String!
+  shipping_flat_fee: Int!
+  updated_at: DateTime!
+  whatsapp_number: String!
+  youtube_url: String!
 }
 
 type User {
@@ -26,10 +40,8 @@ type User {
   id: Int!
   image: String
   name: String
-  newsletter_subscribed_at: DateTime
   phone: String
   role: UserRole!
-  subscribed_to_newsletter: Boolean!
   updated_at: DateTime!
 }
 
