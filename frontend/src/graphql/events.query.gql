@@ -1,0 +1,107 @@
+fragment EventCard on Event {
+  id
+  slug
+  title
+  event_type
+  status
+  level
+  starts_at
+  ends_at
+  location
+  price
+  total_seats
+  available_seats
+  instructor
+  image_url
+  rating_avg
+  rating_count
+  is_past
+}
+
+fragment RegistrationFields on Registration {
+  id
+  seats
+  unit_price
+  discount
+  total
+  status
+  note
+  cancel_reason
+  can_cancel
+  created_at
+  approved_at
+  confirmed_at
+  rejected_at
+  cancelled_at
+  event {
+    ...EventCard
+    address
+  }
+}
+
+query Events($filter: EventsFilterInput) {
+  events(filter: $filter) {
+    items {
+      ...EventCard
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+  }
+}
+
+query Event($slug: String!) {
+  event(slug: $slug) {
+    ...EventCard
+    description
+    address
+    gallery
+    includes
+    highlights
+    performers
+    my_registration {
+      ...RegistrationFields
+    }
+  }
+}
+
+query UpcomingEvents($limit: Int) {
+  upcomingEvents(limit: $limit) {
+    ...EventCard
+  }
+}
+
+mutation RegisterForEvent($input: RegisterForEventInput!) {
+  registerForEvent(input: $input) {
+    ...RegistrationFields
+  }
+}
+
+query MyRegistrations($page: Int, $limit: Int) {
+  myRegistrations(page: $page, limit: $limit) {
+    items {
+      ...RegistrationFields
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+  }
+}
+
+query Registration($id: String!) {
+  registration(id: $id) {
+    ...RegistrationFields
+  }
+}
+
+mutation CancelRegistration($id: String!, $reason: String) {
+  cancelRegistration(id: $id, reason: $reason) {
+    ...RegistrationFields
+  }
+}

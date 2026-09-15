@@ -135,6 +135,73 @@ export type CollectionRef = {
   slug: Scalars['String']['output'];
 };
 
+export type Event = {
+  __typename?: 'Event';
+  address: Scalars['String']['output'];
+  available_seats: Scalars['Int']['output'];
+  description: Scalars['String']['output'];
+  ends_at: Scalars['DateTime']['output'];
+  event_type: EventType;
+  gallery: Array<Scalars['String']['output']>;
+  highlights: Array<Scalars['String']['output']>;
+  id: Scalars['Int']['output'];
+  image_url: Scalars['String']['output'];
+  includes: Array<Scalars['String']['output']>;
+  instructor?: Maybe<Scalars['String']['output']>;
+  is_past: Scalars['Boolean']['output'];
+  level?: Maybe<EventLevel>;
+  location: Scalars['String']['output'];
+  my_registration?: Maybe<Registration>;
+  performers: Array<Scalars['String']['output']>;
+  price: Scalars['Int']['output'];
+  rating_avg: Scalars['Float']['output'];
+  rating_count: Scalars['Int']['output'];
+  slug: Scalars['String']['output'];
+  starts_at: Scalars['DateTime']['output'];
+  status: EventStatus;
+  title: Scalars['String']['output'];
+  total_seats: Scalars['Int']['output'];
+};
+
+export enum EventLevel {
+  Advanced = 'ADVANCED',
+  AllLevels = 'ALL_LEVELS',
+  Beginner = 'BEGINNER',
+  Intermediate = 'INTERMEDIATE'
+}
+
+export enum EventStatus {
+  Cancelled = 'CANCELLED',
+  Completed = 'COMPLETED',
+  Draft = 'DRAFT',
+  Published = 'PUBLISHED'
+}
+
+export enum EventType {
+  OpenMic = 'OPEN_MIC',
+  PotteryWorkshop = 'POTTERY_WORKSHOP'
+}
+
+export enum EventWhen {
+  Past = 'PAST',
+  Upcoming = 'UPCOMING'
+}
+
+export type EventsFilterInput = {
+  event_type?: InputMaybe<EventType>;
+  level?: InputMaybe<EventLevel>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  when?: InputMaybe<EventWhen>;
+};
+
+export type EventsResult = {
+  __typename?: 'EventsResult';
+  items: Array<Event>;
+  page_info: PageInfo;
+};
+
 export type FacetCount = {
   __typename?: 'FacetCount';
   count: Scalars['Int']['output'];
@@ -146,10 +213,12 @@ export type Mutation = {
   __typename?: 'Mutation';
   addToCart: Cart;
   cancelOrder: Order;
+  cancelRegistration: Registration;
   clearCart: Cart;
   createAddress: Address;
   deleteAddress: Scalars['Boolean']['output'];
   placeOrder: Order;
+  registerForEvent: Registration;
   removeCartItem: Cart;
   setDefaultAddress: Address;
   toggleWishlist: WishlistToggleResult;
@@ -169,6 +238,12 @@ export type MutationCancelOrderArgs = {
 };
 
 
+export type MutationCancelRegistrationArgs = {
+  id: Scalars['String']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
 export type MutationCreateAddressArgs = {
   input: AddressInput;
 };
@@ -181,6 +256,11 @@ export type MutationDeleteAddressArgs = {
 
 export type MutationPlaceOrderArgs = {
   input: PlaceOrderInput;
+};
+
+
+export type MutationRegisterForEventArgs = {
+  input: RegisterForEventInput;
 };
 
 
@@ -374,13 +454,18 @@ export type Query = {
   checkoutQuote: CheckoutQuote;
   collection: Collection;
   collections: Array<Collection>;
+  event: Event;
+  events: EventsResult;
   featuredProducts: Array<Product>;
+  myRegistrations: RegistrationsResult;
   order: Order;
   orders: OrdersResult;
   product: Product;
   products: ProductsResult;
+  registration: Registration;
   relatedProducts: Array<Product>;
   siteSettings: SiteSettings;
+  upcomingEvents: Array<Event>;
   users: UsersResponse;
   wishlist: Array<Product>;
   wishlistIds: Array<Scalars['Int']['output']>;
@@ -397,8 +482,24 @@ export type QueryCollectionArgs = {
 };
 
 
+export type QueryEventArgs = {
+  slug: Scalars['String']['input'];
+};
+
+
+export type QueryEventsArgs = {
+  filter?: InputMaybe<EventsFilterInput>;
+};
+
+
 export type QueryFeaturedProductsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryMyRegistrationsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
 };
 
 
@@ -423,15 +524,64 @@ export type QueryProductsArgs = {
 };
 
 
+export type QueryRegistrationArgs = {
+  id: Scalars['String']['input'];
+};
+
+
 export type QueryRelatedProductsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   slug: Scalars['String']['input'];
 };
 
 
+export type QueryUpcomingEventsArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryUsersArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type RegisterForEventInput = {
+  event_id: Scalars['Int']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  seats?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type Registration = {
+  __typename?: 'Registration';
+  approved_at?: Maybe<Scalars['DateTime']['output']>;
+  can_cancel: Scalars['Boolean']['output'];
+  cancel_reason?: Maybe<Scalars['String']['output']>;
+  cancelled_at?: Maybe<Scalars['DateTime']['output']>;
+  confirmed_at?: Maybe<Scalars['DateTime']['output']>;
+  created_at: Scalars['DateTime']['output'];
+  discount: Scalars['Int']['output'];
+  event: Event;
+  id: Scalars['String']['output'];
+  note?: Maybe<Scalars['String']['output']>;
+  rejected_at?: Maybe<Scalars['DateTime']['output']>;
+  seats: Scalars['Int']['output'];
+  status: RegistrationStatus;
+  total: Scalars['Int']['output'];
+  unit_price: Scalars['Int']['output'];
+};
+
+export enum RegistrationStatus {
+  Approved = 'APPROVED',
+  Cancelled = 'CANCELLED',
+  Confirmed = 'CONFIRMED',
+  Pending = 'PENDING',
+  Rejected = 'REJECTED'
+}
+
+export type RegistrationsResult = {
+  __typename?: 'RegistrationsResult';
+  items: Array<Registration>;
+  page_info: PageInfo;
 };
 
 export type SelectionInputType = {
@@ -576,6 +726,61 @@ export type ClearCartMutationVariables = Exact<{ [key: string]: never; }>;
 
 
 export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, ends_at: string | null } | null } }> } };
+
+export type EventCardFragment = { id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean };
+
+export type RegistrationFieldsFragment = { id: string, seats: number, unit_price: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, event: { address: string, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean } };
+
+export type EventsQueryVariables = Exact<{
+  filter?: EventsFilterInput | null | undefined;
+}>;
+
+
+export type EventsQuery = { events: { items: Array<{ id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean }>, page_info: { total: number, page: number, limit: number, has_more: boolean } } };
+
+export type EventQueryVariables = Exact<{
+  slug: string;
+}>;
+
+
+export type EventQuery = { event: { description: string, address: string, gallery: Array<string>, includes: Array<string>, highlights: Array<string>, performers: Array<string>, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean, my_registration: { id: string, seats: number, unit_price: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, event: { address: string, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean } } | null } };
+
+export type UpcomingEventsQueryVariables = Exact<{
+  limit?: number | null | undefined;
+}>;
+
+
+export type UpcomingEventsQuery = { upcomingEvents: Array<{ id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean }> };
+
+export type RegisterForEventMutationVariables = Exact<{
+  input: RegisterForEventInput;
+}>;
+
+
+export type RegisterForEventMutation = { registerForEvent: { id: string, seats: number, unit_price: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, event: { address: string, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean } } };
+
+export type MyRegistrationsQueryVariables = Exact<{
+  page?: number | null | undefined;
+  limit?: number | null | undefined;
+}>;
+
+
+export type MyRegistrationsQuery = { myRegistrations: { items: Array<{ id: string, seats: number, unit_price: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, event: { address: string, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean } }>, page_info: { total: number, page: number, limit: number, has_more: boolean } } };
+
+export type RegistrationQueryVariables = Exact<{
+  id: string;
+}>;
+
+
+export type RegistrationQuery = { registration: { id: string, seats: number, unit_price: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, event: { address: string, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean } } };
+
+export type CancelRegistrationMutationVariables = Exact<{
+  id: string;
+  reason?: string | null | undefined;
+}>;
+
+
+export type CancelRegistrationMutation = { cancelRegistration: { id: string, seats: number, unit_price: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, event: { address: string, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean } } };
 
 export type OrderFieldsFragment = { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> };
 
@@ -749,6 +954,49 @@ export const CartFieldsFragmentDoc = gql`
     product {
       ...ProductCard
     }
+  }
+}
+    `;
+export const EventCardFragmentDoc = gql`
+    fragment EventCard on Event {
+  id
+  slug
+  title
+  event_type
+  status
+  level
+  starts_at
+  ends_at
+  location
+  price
+  total_seats
+  available_seats
+  instructor
+  image_url
+  rating_avg
+  rating_count
+  is_past
+}
+    `;
+export const RegistrationFieldsFragmentDoc = gql`
+    fragment RegistrationFields on Registration {
+  id
+  seats
+  unit_price
+  discount
+  total
+  status
+  note
+  cancel_reason
+  can_cancel
+  created_at
+  approved_at
+  confirmed_at
+  rejected_at
+  cancelled_at
+  event {
+    ...EventCard
+    address
   }
 }
     `;
@@ -1126,6 +1374,275 @@ export function useClearCartMutation(baseOptions?: ApolloReactHooks.MutationHook
       }
 export type ClearCartMutationHookResult = ReturnType<typeof useClearCartMutation>;
 export type ClearCartMutationResult = ApolloReactCommon.MutationResult<ClearCartMutation>;
+export const EventsDocument = gql`
+    query Events($filter: EventsFilterInput) {
+  events(filter: $filter) {
+    items {
+      ...EventCard
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+  }
+}
+    ${EventCardFragmentDoc}`;
+
+/**
+ * __useEventsQuery__
+ *
+ * To run a query within a React component, call `useEventsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useEventsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useEventsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useEventsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<EventsQuery, EventsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<EventsQuery, EventsQueryVariables>(EventsDocument, options);
+      }
+export function useEventsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<EventsQuery, EventsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<EventsQuery, EventsQueryVariables>(EventsDocument, options);
+        }
+export type EventsQueryHookResult = ReturnType<typeof useEventsQuery>;
+export type EventsLazyQueryHookResult = ReturnType<typeof useEventsLazyQuery>;
+export type EventsQueryResult = ApolloReactCommon.QueryResult<EventsQuery, EventsQueryVariables>;
+export const EventDocument = gql`
+    query Event($slug: String!) {
+  event(slug: $slug) {
+    ...EventCard
+    description
+    address
+    gallery
+    includes
+    highlights
+    performers
+    my_registration {
+      ...RegistrationFields
+    }
+  }
+}
+    ${EventCardFragmentDoc}
+${RegistrationFieldsFragmentDoc}`;
+
+/**
+ * __useEventQuery__
+ *
+ * To run a query within a React component, call `useEventQuery` and pass it any options that fit your needs.
+ * When your component renders, `useEventQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useEventQuery({
+ *   variables: {
+ *      slug: // value for 'slug'
+ *   },
+ * });
+ */
+export function useEventQuery(baseOptions: ApolloReactHooks.QueryHookOptions<EventQuery, EventQueryVariables> & ({ variables: EventQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<EventQuery, EventQueryVariables>(EventDocument, options);
+      }
+export function useEventLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<EventQuery, EventQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<EventQuery, EventQueryVariables>(EventDocument, options);
+        }
+export type EventQueryHookResult = ReturnType<typeof useEventQuery>;
+export type EventLazyQueryHookResult = ReturnType<typeof useEventLazyQuery>;
+export type EventQueryResult = ApolloReactCommon.QueryResult<EventQuery, EventQueryVariables>;
+export const UpcomingEventsDocument = gql`
+    query UpcomingEvents($limit: Int) {
+  upcomingEvents(limit: $limit) {
+    ...EventCard
+  }
+}
+    ${EventCardFragmentDoc}`;
+
+/**
+ * __useUpcomingEventsQuery__
+ *
+ * To run a query within a React component, call `useUpcomingEventsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useUpcomingEventsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useUpcomingEventsQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useUpcomingEventsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<UpcomingEventsQuery, UpcomingEventsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<UpcomingEventsQuery, UpcomingEventsQueryVariables>(UpcomingEventsDocument, options);
+      }
+export function useUpcomingEventsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<UpcomingEventsQuery, UpcomingEventsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<UpcomingEventsQuery, UpcomingEventsQueryVariables>(UpcomingEventsDocument, options);
+        }
+export type UpcomingEventsQueryHookResult = ReturnType<typeof useUpcomingEventsQuery>;
+export type UpcomingEventsLazyQueryHookResult = ReturnType<typeof useUpcomingEventsLazyQuery>;
+export type UpcomingEventsQueryResult = ApolloReactCommon.QueryResult<UpcomingEventsQuery, UpcomingEventsQueryVariables>;
+export const RegisterForEventDocument = gql`
+    mutation RegisterForEvent($input: RegisterForEventInput!) {
+  registerForEvent(input: $input) {
+    ...RegistrationFields
+  }
+}
+    ${RegistrationFieldsFragmentDoc}
+${EventCardFragmentDoc}`;
+
+/**
+ * __useRegisterForEventMutation__
+ *
+ * To run a mutation, you first call `useRegisterForEventMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRegisterForEventMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [registerForEventMutation, { data, loading, error }] = useRegisterForEventMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRegisterForEventMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<RegisterForEventMutation, RegisterForEventMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<RegisterForEventMutation, RegisterForEventMutationVariables>(RegisterForEventDocument, options);
+      }
+export type RegisterForEventMutationHookResult = ReturnType<typeof useRegisterForEventMutation>;
+export type RegisterForEventMutationResult = ApolloReactCommon.MutationResult<RegisterForEventMutation>;
+export const MyRegistrationsDocument = gql`
+    query MyRegistrations($page: Int, $limit: Int) {
+  myRegistrations(page: $page, limit: $limit) {
+    items {
+      ...RegistrationFields
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+  }
+}
+    ${RegistrationFieldsFragmentDoc}
+${EventCardFragmentDoc}`;
+
+/**
+ * __useMyRegistrationsQuery__
+ *
+ * To run a query within a React component, call `useMyRegistrationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMyRegistrationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMyRegistrationsQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useMyRegistrationsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<MyRegistrationsQuery, MyRegistrationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<MyRegistrationsQuery, MyRegistrationsQueryVariables>(MyRegistrationsDocument, options);
+      }
+export function useMyRegistrationsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<MyRegistrationsQuery, MyRegistrationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<MyRegistrationsQuery, MyRegistrationsQueryVariables>(MyRegistrationsDocument, options);
+        }
+export type MyRegistrationsQueryHookResult = ReturnType<typeof useMyRegistrationsQuery>;
+export type MyRegistrationsLazyQueryHookResult = ReturnType<typeof useMyRegistrationsLazyQuery>;
+export type MyRegistrationsQueryResult = ApolloReactCommon.QueryResult<MyRegistrationsQuery, MyRegistrationsQueryVariables>;
+export const RegistrationDocument = gql`
+    query Registration($id: String!) {
+  registration(id: $id) {
+    ...RegistrationFields
+  }
+}
+    ${RegistrationFieldsFragmentDoc}
+${EventCardFragmentDoc}`;
+
+/**
+ * __useRegistrationQuery__
+ *
+ * To run a query within a React component, call `useRegistrationQuery` and pass it any options that fit your needs.
+ * When your component renders, `useRegistrationQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useRegistrationQuery({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useRegistrationQuery(baseOptions: ApolloReactHooks.QueryHookOptions<RegistrationQuery, RegistrationQueryVariables> & ({ variables: RegistrationQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<RegistrationQuery, RegistrationQueryVariables>(RegistrationDocument, options);
+      }
+export function useRegistrationLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<RegistrationQuery, RegistrationQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<RegistrationQuery, RegistrationQueryVariables>(RegistrationDocument, options);
+        }
+export type RegistrationQueryHookResult = ReturnType<typeof useRegistrationQuery>;
+export type RegistrationLazyQueryHookResult = ReturnType<typeof useRegistrationLazyQuery>;
+export type RegistrationQueryResult = ApolloReactCommon.QueryResult<RegistrationQuery, RegistrationQueryVariables>;
+export const CancelRegistrationDocument = gql`
+    mutation CancelRegistration($id: String!, $reason: String) {
+  cancelRegistration(id: $id, reason: $reason) {
+    ...RegistrationFields
+  }
+}
+    ${RegistrationFieldsFragmentDoc}
+${EventCardFragmentDoc}`;
+
+/**
+ * __useCancelRegistrationMutation__
+ *
+ * To run a mutation, you first call `useCancelRegistrationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCancelRegistrationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [cancelRegistrationMutation, { data, loading, error }] = useCancelRegistrationMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      reason: // value for 'reason'
+ *   },
+ * });
+ */
+export function useCancelRegistrationMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CancelRegistrationMutation, CancelRegistrationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CancelRegistrationMutation, CancelRegistrationMutationVariables>(CancelRegistrationDocument, options);
+      }
+export type CancelRegistrationMutationHookResult = ReturnType<typeof useCancelRegistrationMutation>;
+export type CancelRegistrationMutationResult = ApolloReactCommon.MutationResult<CancelRegistrationMutation>;
 export const CheckoutQuoteDocument = gql`
     query CheckoutQuote($input: CheckoutQuoteInput) {
   checkoutQuote(input: $input) {

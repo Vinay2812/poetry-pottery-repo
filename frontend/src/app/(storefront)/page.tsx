@@ -7,9 +7,21 @@ import {
   getCategories,
   getCollections,
   getFeaturedProducts,
+  getUpcomingEvents,
 } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
 
+import {
+  EventCard,
+  EventGrid,
+  isLowSeats,
+  toDateBadge,
+  toEventPath,
+  toEventTypeLabel,
+  toLevelLabel,
+  toSeatsLabel,
+  toTimeRange,
+} from "@/features/events";
 import {
   CategoryTile,
   CollectionCard,
@@ -20,12 +32,14 @@ import {
 } from "@/features/products";
 
 export default async function HomePage() {
-  const [settings, categories, featured, collections] = await Promise.all([
-    getSiteSettings(),
-    getCategories(),
-    getFeaturedProducts(8),
-    getCollections(),
-  ]);
+  const [settings, categories, featured, collections, upcomingEvents] =
+    await Promise.all([
+      getSiteSettings(),
+      getCategories(),
+      getFeaturedProducts(8),
+      getCollections(),
+      getUpcomingEvents(3),
+    ]);
   const customPiece =
     featured.find((product) => product.is_customizable) ?? null;
 
@@ -103,6 +117,55 @@ export default async function HomePage() {
             />
           ))}
         </ProductCarousel>
+      )}
+
+      {upcomingEvents.length > 0 && (
+        <section className="flex flex-col gap-6">
+          <div className="flex items-end justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold tracking-[0.14em] text-terracotta-dark uppercase">
+                At the wheel
+              </p>
+              <h2 className="font-heading text-2xl md:text-4xl">
+                Coming up at the studio
+              </h2>
+            </div>
+            <Link
+              href="/events"
+              className="text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              See all events
+            </Link>
+          </div>
+          <EventGrid>
+            {upcomingEvents.map((event) => {
+              const badge = toDateBadge(event.starts_at);
+              return (
+                <EventCard
+                  key={event.id}
+                  href={toEventPath(event.slug)}
+                  title={event.title}
+                  imageUrl={event.image_url}
+                  day={badge.day}
+                  month={badge.month}
+                  weekday={badge.weekday}
+                  typeLabel={toEventTypeLabel(event.event_type)}
+                  levelLabel={toLevelLabel(event.level)}
+                  timeRange={toTimeRange(event.starts_at, event.ends_at)}
+                  location={event.location}
+                  price={event.price}
+                  seatsLabel={toSeatsLabel(
+                    event.available_seats,
+                    event.total_seats,
+                  )}
+                  isSeatsLow={isLowSeats(event.available_seats)}
+                  isSoldOut={event.available_seats <= 0}
+                  isPast={event.is_past}
+                />
+              );
+            })}
+          </EventGrid>
+        </section>
       )}
 
       {collections.length > 0 && (

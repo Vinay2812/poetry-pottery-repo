@@ -115,6 +115,71 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type Event {
+  address: String!
+  available_seats: Int!
+  description: String!
+  ends_at: DateTime!
+  event_type: EventType!
+  gallery: [String!]!
+  highlights: [String!]!
+  id: Int!
+  image_url: String!
+  includes: [String!]!
+  instructor: String
+  is_past: Boolean!
+  level: EventLevel
+  location: String!
+  my_registration: Registration
+  performers: [String!]!
+  price: Int!
+  rating_avg: Float!
+  rating_count: Int!
+  slug: String!
+  starts_at: DateTime!
+  status: EventStatus!
+  title: String!
+  total_seats: Int!
+}
+
+enum EventLevel {
+  ADVANCED
+  ALL_LEVELS
+  BEGINNER
+  INTERMEDIATE
+}
+
+enum EventStatus {
+  CANCELLED
+  COMPLETED
+  DRAFT
+  PUBLISHED
+}
+
+enum EventType {
+  OPEN_MIC
+  POTTERY_WORKSHOP
+}
+
+enum EventWhen {
+  PAST
+  UPCOMING
+}
+
+input EventsFilterInput {
+  event_type: EventType
+  level: EventLevel
+  limit: Int
+  page: Int
+  search: String
+  when: EventWhen
+}
+
+type EventsResult {
+  items: [Event!]!
+  page_info: PageInfo!
+}
+
 type FacetCount {
   count: Int!
   label: String!
@@ -124,10 +189,12 @@ type FacetCount {
 type Mutation {
   addToCart(input: AddToCartInput!): Cart!
   cancelOrder(id: String!, reason: String): Order!
+  cancelRegistration(id: String!, reason: String): Registration!
   clearCart: Cart!
   createAddress(input: AddressInput!): Address!
   deleteAddress(id: Int!): Boolean!
   placeOrder(input: PlaceOrderInput!): Order!
+  registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
   setDefaultAddress(id: Int!): Address!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
@@ -289,16 +356,58 @@ type Query {
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
   collection(slug: String!): Collection!
   collections: [Collection!]!
+  event(slug: String!): Event!
+  events(filter: EventsFilterInput): EventsResult!
   featuredProducts(limit: Int = 8): [Product!]!
+  myRegistrations(limit: Int, page: Int): RegistrationsResult!
   order(id: String!): Order!
   orders(limit: Int, page: Int): OrdersResult!
   product(slug: String!): Product!
   products(filter: ProductsFilterInput): ProductsResult!
+  registration(id: String!): Registration!
   relatedProducts(limit: Int = 8, slug: String!): [Product!]!
   siteSettings: SiteSettings!
+  upcomingEvents(limit: Int = 3): [Event!]!
   users(limit: Int = 20, page: Int = 1): UsersResponse!
   wishlist: [Product!]!
   wishlistIds: [Int!]!
+}
+
+input RegisterForEventInput {
+  event_id: Int!
+  note: String
+  seats: Int = 1
+}
+
+type Registration {
+  approved_at: DateTime
+  can_cancel: Boolean!
+  cancel_reason: String
+  cancelled_at: DateTime
+  confirmed_at: DateTime
+  created_at: DateTime!
+  discount: Int!
+  event: Event!
+  id: String!
+  note: String
+  rejected_at: DateTime
+  seats: Int!
+  status: RegistrationStatus!
+  total: Int!
+  unit_price: Int!
+}
+
+enum RegistrationStatus {
+  APPROVED
+  CANCELLED
+  CONFIRMED
+  PENDING
+  REJECTED
+}
+
+type RegistrationsResult {
+  items: [Registration!]!
+  page_info: PageInfo!
 }
 
 input SelectionInputType {
