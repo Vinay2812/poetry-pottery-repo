@@ -1,3 +1,5 @@
+import { Fragment } from "react";
+
 import { cn } from "@/lib/utils";
 
 import { toDayNote, WEEKDAY_LABELS } from "@/features/workshops/types";
@@ -20,6 +22,9 @@ export interface BookingCalendarProps {
   selectedDate: string | null;
   canGoBack: boolean;
   canGoForward: boolean;
+  // Rendered straight under the week holding the selected day, so the hours sit where
+  // the eye already is instead of a screen further down.
+  slotPanel?: React.ReactNode;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onSelectDate: (dateKey: string) => void;
@@ -28,6 +33,56 @@ export interface BookingCalendarProps {
 const NAV_BUTTON =
   "border-b border-transparent pb-0.5 text-[13px] text-muted-foreground transition-colors hover:border-ink hover:text-ink disabled:opacity-40 disabled:hover:border-transparent disabled:hover:text-muted-foreground";
 
+interface DayCellProps {
+  day: CalendarDay;
+  isSelected: boolean;
+  onSelect: (dateKey: string) => void;
+}
+
+function DayCell({ day, isSelected, onSelect }: DayCellProps) {
+  const note = toDayNote(day);
+  const isDisabled = !note.isPickable;
+  return (
+    <button
+      type="button"
+      disabled={isDisabled && day.pickedCount === 0}
+      aria-pressed={isSelected}
+      aria-label={`${day.dayLabel}, ${note.description}`}
+      onClick={() => onSelect(day.dateKey)}
+      className={cn(
+        "flex aspect-square flex-col items-center justify-center gap-0.5 bg-background transition-colors",
+        isSelected && "bg-ink text-white",
+        !isSelected && !isDisabled && "hover:bg-secondary",
+        isDisabled && "text-muted-foreground/50",
+      )}
+    >
+      <span className="text-sm tnum">{day.dayNumber}</span>
+      {day.pickedCount > 0 ? (
+        <span
+          aria-hidden="true"
+          className={cn(
+            "flex gap-0.5",
+            isSelected ? "text-white" : "text-primary",
+          )}
+        >
+          {Array.from({ length: day.pickedCount }, (_, mark) => (
+            <span key={mark} className="size-1 bg-current" />
+          ))}
+        </span>
+      ) : (
+        <span
+          className={cn(
+            "px-1 text-center text-[10px] leading-tight tnum",
+            isSelected ? "text-white/70" : "text-muted-foreground",
+          )}
+        >
+          {note.caption}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export function BookingCalendar({
   monthLabel,
   notice,
@@ -35,6 +90,7 @@ export function BookingCalendar({
   selectedDate,
   canGoBack,
   canGoForward,
+  slotPanel,
   onPreviousMonth,
   onNextMonth,
   onSelectDate,
@@ -77,60 +133,32 @@ export function BookingCalendar({
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-px bg-ash">
-        {weeks.flat().map((day, index) => {
-          if (!day)
-            return (
-              <span
-                key={`empty-${index}`}
-                aria-hidden="true"
-                className="aspect-square bg-background"
-              />
-            );
-          const isSelected = day.dateKey === selectedDate;
-          const note = toDayNote(day);
-          const isDisabled = !note.isPickable;
-          return (
-            <button
-              key={day.dateKey}
-              type="button"
-              disabled={isDisabled && day.pickedCount === 0}
-              aria-pressed={isSelected}
-              aria-label={`${day.dayLabel}, ${note.description}`}
-              onClick={() => onSelectDate(day.dateKey)}
-              className={cn(
-                "flex aspect-square flex-col items-center justify-center gap-0.5 bg-background transition-colors",
-                isSelected && "bg-ink text-white",
-                !isSelected && !isDisabled && "hover:bg-secondary",
-                isDisabled && "text-muted-foreground/50",
+      <div className="flex flex-col gap-px bg-ash">
+        {weeks.map((week, weekIndex) => (
+          <Fragment key={weekIndex}>
+            <div className="grid grid-cols-7 gap-px">
+              {week.map((day, index) =>
+                day ? (
+                  <DayCell
+                    key={day.dateKey}
+                    day={day}
+                    isSelected={day.dateKey === selectedDate}
+                    onSelect={onSelectDate}
+                  />
+                ) : (
+                  <span
+                    key={`empty-${weekIndex}-${index}`}
+                    aria-hidden="true"
+                    className="aspect-square bg-background"
+                  />
+                ),
               )}
-            >
-              <span className="text-sm tnum">{day.dayNumber}</span>
-              {day.pickedCount > 0 ? (
-                <span
-                  aria-hidden="true"
-                  className={cn(
-                    "flex gap-0.5",
-                    isSelected ? "text-white" : "text-primary",
-                  )}
-                >
-                  {Array.from({ length: day.pickedCount }, (_, mark) => (
-                    <span key={mark} className="size-1 bg-current" />
-                  ))}
-                </span>
-              ) : (
-                <span
-                  className={cn(
-                    "px-1 text-center text-[10px] leading-tight tnum",
-                    isSelected ? "text-white/70" : "text-muted-foreground",
-                  )}
-                >
-                  {note.caption}
-                </span>
-              )}
-            </button>
-          );
-        })}
+            </div>
+            {slotPanel && week.some((day) => day?.dateKey === selectedDate) && (
+              <div className="bg-background p-4">{slotPanel}</div>
+            )}
+          </Fragment>
+        ))}
       </div>
     </section>
   );

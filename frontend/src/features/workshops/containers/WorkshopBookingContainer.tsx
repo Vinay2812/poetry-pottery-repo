@@ -15,7 +15,6 @@ import {
   SlotList,
   type SlotOption,
 } from "@/features/workshops/components/SlotList";
-import { WorkshopIntro } from "@/features/workshops/components/WorkshopIntro";
 import { useAvailability, useBookWorkshop } from "@/features/workshops/hooks";
 import {
   addDays,
@@ -205,37 +204,43 @@ export function WorkshopBookingContainer({
   const lastMonth = toMonthKey(addDays(todayKey, workshop.booking_window_days));
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 md:px-8 md:py-12">
-      <WorkshopIntro
-        name={workshop.name}
-        description={workshop.description}
-        imageUrl={workshop.image_url}
-        tiers={workshop.tiers}
-        href={null}
-      />
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-8 md:px-8 md:py-12">
+      {/* The calendar is the page. The title and one sentence are all that sit above it. */}
+      <header className="flex flex-col gap-3">
+        <h1 className="max-w-3xl font-heading text-3xl leading-tight tracking-tight text-balance md:text-5xl">
+          {workshop.name}
+        </h1>
+        {workshop.description && (
+          <p className="max-w-xl text-[15px] text-muted-foreground">
+            {workshop.description}
+          </p>
+        )}
+      </header>
 
-      <div className="grid gap-10 border-t border-ash pt-10 lg:grid-cols-[1fr_340px] lg:items-start">
+      <div className="grid gap-10 border-t border-ash pt-8 lg:grid-cols-[1fr_340px] lg:items-start">
         <div className="flex flex-col gap-8">
-          <div className="flex flex-col gap-3">
-            <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-              How long
-            </h2>
-            <DurationPicker
-              tiers={workshop.tiers}
-              hours={hours}
-              onChange={handleHoursChange}
-            />
-          </div>
+          <div className="flex flex-col gap-6 md:flex-row md:gap-10">
+            <div className="flex flex-col gap-3">
+              <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+                How long
+              </h2>
+              <DurationPicker
+                tiers={workshop.tiers}
+                hours={hours}
+                onChange={handleHoursChange}
+              />
+            </div>
 
-          <div className="flex flex-col gap-3">
-            <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-              How many people
-            </h2>
-            <ParticipantsStepper
-              value={participants}
-              max={workshop.capacity_per_slot}
-              onChange={handleParticipantsChange}
-            />
+            <div className="flex flex-col gap-3">
+              <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+                How many people
+              </h2>
+              <ParticipantsStepper
+                value={participants}
+                max={workshop.capacity_per_slot}
+                onChange={handleParticipantsChange}
+              />
+            </div>
           </div>
 
           {isLoading ? (
@@ -252,32 +257,30 @@ export function WorkshopBookingContainer({
               selectedDate={selectedDate}
               canGoBack={month > firstMonth}
               canGoForward={month < lastMonth}
+              slotPanel={
+                <div className="flex flex-col gap-3">
+                  <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+                    Hours on {selectedDate ? formatDateKey(selectedDate) : ""}
+                  </h3>
+                  <SlotList
+                    slots={slots}
+                    selectedStarts={pickedStarts}
+                    emptyMessage="Nothing is free that day."
+                    onToggleSlot={handleToggleSlot}
+                  />
+                </div>
+              }
               onPreviousMonth={() => setMonth(shiftMonth(month, -1))}
               onNextMonth={() => setMonth(shiftMonth(month, 1))}
               onSelectDate={handleSelectDate}
             />
           )}
 
-          <div className="flex flex-col gap-3">
-            <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-              Your hours
-            </h2>
-            <p className="text-[13px] text-muted-foreground">
-              Pick {needed} {needed === 1 ? "hour" : "hours"}. They can sit on
-              different days,{" "}
-              {spanNotice(workshop.slot_span_days).toLowerCase()}.
-            </p>
-            <SlotList
-              slots={slots}
-              selectedStarts={pickedStarts}
-              emptyMessage={
-                selectedDate
-                  ? "Nothing is free that day."
-                  : "Pick a day to see its hours."
-              }
-              onToggleSlot={handleToggleSlot}
-            />
-          </div>
+          <p className="text-[13px] text-muted-foreground">
+            Pick {needed} {needed === 1 ? "hour" : "hours"} from a day on the
+            calendar. They can sit on different days,{" "}
+            {spanNotice(workshop.slot_span_days).toLowerCase()}.
+          </p>
         </div>
 
         <aside className="lg:sticky lg:top-24">
