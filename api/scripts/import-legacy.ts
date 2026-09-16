@@ -135,6 +135,57 @@ const LEGACY_URL = process.env.LEGACY_DATABASE_URL;
 const isDryRun = process.argv.includes("--dry-run");
 const FALLBACK_DESCRIPTION =
   "Thrown and glazed by hand in the Sangli studio. Small variations in shape and colour are part of each piece.";
+const STUDIO_CDN = "https://cdn.poetryandpottery.prodapp.club/";
+
+// Legacy gallery shots where the piece is not the subject. Everything else the studio photographed is kept.
+const DROPPED_PHOTOS: { slug: string; url: string; reason: string }[] = [
+  {
+    slug: "blue-blood-mug",
+    url: `${STUDIO_CDN}products/1779350350171-ym7r7a-202522.jpg`,
+    reason: "mug dropped in tall grass, the grass is the subject",
+  },
+  {
+    slug: "blue-blood-mug",
+    url: `${STUDIO_CDN}products/1779350349942-my3x0o-202526.jpg`,
+    reason: "mug face down in grass and leaves",
+  },
+  {
+    slug: "blue-blood-mug",
+    url: `${STUDIO_CDN}products/1779350350199-27x5vd-202513.jpg`,
+    reason: "photograph of a child balancing the mug on her head",
+  },
+  {
+    slug: "drip-sip-mug",
+    url: `${STUDIO_CDN}products/1770105998643-61exuv-1000045410.jpg`,
+    reason: "portrait of a person, the mug is incidental",
+  },
+  {
+    slug: "stripe-sipper",
+    url: `${STUDIO_CDN}products/1770105652875-htbpt9-1000004765.jpg`,
+    reason: "two people toasting, the cups are barely readable",
+  },
+  {
+    slug: "stripe-sipper",
+    url: `${STUDIO_CDN}products/1770105653393-cswaph-1000004755.jpg`,
+    reason: "portrait of a person drinking",
+  },
+];
+
+// Promoted to first where the clearest shot of the piece was not the legacy lead image.
+const LEAD_PHOTOS: Record<string, string> = {
+  "stripe-sipper": `${STUDIO_CDN}products/1770105651540-aixd99-1000004761.jpg`,
+  "zebra-mug": `${STUDIO_CDN}products/1770036892017-b3921h-1000004738.jpg`,
+};
+
+// The legacy admin typed care notes by hand; this is the studio's vocabulary, keyed by what was typed.
+const CARE_NOTES: Record<string, string> = {
+  "microvave safe": "Microwave safe",
+  "microwave safe": "Microwave safe",
+  "dishwasher safe (top rack)": "Dishwasher safe (top rack)",
+  "do not use abrasive scrubbers": "Do not use abrasive scrubbers",
+  "avoid sudden temperature changes": "Avoid sudden temperature changes",
+  "handwash recommended": "Handwash recommended",
+};
 
 // Legacy timestamps are naive UTC, so they must not be read as local wall time.
 types.setTypeParser(types.builtins.TIMESTAMP, (value) => new Date(`${value}Z`));
@@ -158,6 +209,32 @@ function cleanText(value: string | null | undefined): string {
 function toDescription(value: string | null): string {
   const text = (value ?? "").trim();
   return text.length > 3 ? text : FALLBACK_DESCRIPTION;
+}
+
+function toCareNotes(notes: string[] | null): string[] {
+  const kept: string[] = [];
+  for (const note of notes ?? []) {
+    const text = cleanText(note);
+    const normalised = CARE_NOTES[text.toLowerCase()] ?? text;
+    if (normalised.length > 0 && !kept.includes(normalised))
+      kept.push(normalised);
+  }
+  return kept;
+}
+
+function toImageUrls(slug: string, urls: string[] | null): string[] {
+  const dropped = DROPPED_PHOTOS.filter((photo) => photo.slug === slug).map(
+    (photo) => photo.url,
+  );
+  const kept = (urls ?? []).filter((url) => !dropped.includes(url));
+  const lead = LEAD_PHOTOS[slug];
+  if (lead === undefined || !kept.includes(lead)) return kept;
+  return [lead, ...kept.filter((url) => url !== lead)];
+}
+
+// Legacy hero images are stock photography; only a file on the studio's own CDN is a real photo.
+function toStudioPhoto(url: string | null): string | null {
+  return url !== null && url.startsWith(STUDIO_CDN) ? url : null;
 }
 
 // The legacy form stored palette indexes in the hex field; only real colours are kept.
@@ -358,8 +435,8 @@ async function importCatalog(
       material: cleanText(product.material) || "Stoneware",
       color_name: cleanText(product.color_name) || null,
       color_code: toColorCode(product.color_code),
-      care_notes: product.instructions ?? [],
-      image_urls: product.image_urls ?? [],
+      care_notes: toCareNotes(product.instructions),
+      image_urls: toImageUrls(slug, product.image_urls),
       stock: Math.max(product.available_quantity, 0),
       is_active: product.is_active,
       created_at: product.created_at,
@@ -585,7 +662,7 @@ async function importContent(
     const data = {
       title: about.storyTitle ?? "About the studio",
       subtitle: about.storySubtitle ?? null,
-      hero_image_url: aboutHero,
+      hero_image_url: toStudioPhoto(aboutHero),
       sections: toAboutSections(about),
     };
     await prisma.contentPage.upsert({
