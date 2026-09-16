@@ -124,9 +124,8 @@ export class AdminProductUpdateInput {
   @Field(() => [String], { nullable: true })
   image_urls?: string[] | null;
 
-  @Field(() => Int, { nullable: true })
-  stock?: number | null;
-
+  // Stock is missing on purpose: counts move through adjustProductStock, which applies a
+  // guarded delta so a form opened before a sale cannot put the sold piece back on the shelf.
   @Field(() => Boolean, { nullable: true })
   is_customizable?: boolean | null;
 

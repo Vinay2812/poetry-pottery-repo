@@ -162,7 +162,6 @@ export class AdminProductsService {
   async update(id: number, input: AdminProductUpdateInput): Promise<Product> {
     assertMoney(input.price, "Price");
     assertMoney(input.compare_at_price, "Compare-at price");
-    assertStock(input.stock);
     const current = await this.prisma.product.findUnique({
       where: { id },
       select: { image_urls: true },
@@ -206,7 +205,6 @@ export class AdminProductsService {
           ? { care_notes: cleanList(input.care_notes) }
           : {}),
         ...(image_urls ? { image_urls } : {}),
-        ...(input.stock == null ? {} : { stock: input.stock }),
         ...(input.is_customizable == null
           ? {}
           : { is_customizable: input.is_customizable }),

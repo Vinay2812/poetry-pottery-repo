@@ -157,6 +157,15 @@ describe("AdminProductsService", () => {
     expect(searchMock.requestProductIndex).toHaveBeenCalledWith(1);
   });
 
+  it("never writes an absolute stock count from the edit form", async () => {
+    await service.update(1, { name: "Slate mug" });
+
+    const call = prismaMock.product.update.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(call.data).not.toHaveProperty("stock");
+  });
+
   it("replaces the category set on update", async () => {
     await service.update(1, { category_ids: [2, 3] });
 

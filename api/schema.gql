@@ -230,7 +230,6 @@ input AdminProductUpdateInput {
   material: String
   name: String
   price: Int
-  stock: Int
 }
 
 input AdminProductsFilterInput {

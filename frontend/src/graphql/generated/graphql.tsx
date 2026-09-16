@@ -255,7 +255,6 @@ export type AdminProductUpdateInput = {
   material?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<Scalars['Int']['input']>;
-  stock?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type AdminProductsFilterInput = {
