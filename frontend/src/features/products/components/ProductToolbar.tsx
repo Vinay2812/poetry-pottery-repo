@@ -29,9 +29,13 @@ export function ProductToolbar({
   onOpenFilters,
   onClear,
 }: ProductToolbarProps) {
+  // Held at the height of the sort control so the count swapping words never moves the grid.
   return (
-    <div className="flex items-center justify-between gap-3">
-      <p className="text-[13px] text-muted-foreground tnum" aria-live="polite">
+    <div className="flex min-h-10 items-center justify-between gap-3">
+      <p
+        className="min-h-5 text-[13px] text-muted-foreground tnum"
+        aria-live="polite"
+      >
         {isLoading
           ? "Finding pieces…"
           : `${total} ${total === 1 ? "piece" : "pieces"}`}

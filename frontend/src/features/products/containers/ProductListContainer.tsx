@@ -262,11 +262,11 @@ export function ProductListContainer({
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 md:px-8 md:py-10">
+      {/* The description line is always in the layout, so a collection without one
+          does not lift the tabs and the grid under it. */}
       <header className="flex flex-col gap-2">
         <h1 className="font-heading text-3xl md:text-5xl">{heading}</h1>
-        {description && (
-          <p className="max-w-2xl text-muted-foreground">{description}</p>
-        )}
+        <p className="min-h-6 max-w-2xl text-muted-foreground">{description}</p>
       </header>
 
       {(isSearchPage || filters.search) && (
@@ -297,7 +297,8 @@ export function ProductListContainer({
           <div className="sticky top-24">{filterPanel}</div>
         </aside>
 
-        <div className="flex flex-col gap-5">
+        {/* A narrow result set must not pull the footer up over the reader's scroll position. */}
+        <div className="flex min-h-[60vh] flex-col gap-5">
           <ProductToolbar
             total={pageInfo?.total ?? 0}
             isLoading={isInitialLoading}
