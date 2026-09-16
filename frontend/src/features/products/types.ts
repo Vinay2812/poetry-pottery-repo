@@ -193,14 +193,6 @@ export function countActiveFilters(filters: ProductFilters): number {
   );
 }
 
-export function toDiscountPercent(
-  price: number,
-  compareAt: number | null,
-): number | null {
-  if (compareAt === null || compareAt <= price) return null;
-  return Math.round(((compareAt - price) / compareAt) * 100);
-}
-
 export type StockTone = "in_stock" | "low" | "sold_out" | "made_to_order";
 
 export interface StockStatus {

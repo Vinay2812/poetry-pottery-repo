@@ -18,7 +18,6 @@ import {
   toArchiveAskUrl,
   toArchiveLabel,
   toArchiveNote,
-  toDiscountPercent,
   toFilterInput,
   toSearchParams,
   toBatchLabel,
@@ -99,14 +98,6 @@ describe("filters round-trip", () => {
         search: "x",
       }),
     ).toBe(4);
-  });
-});
-
-describe("toDiscountPercent", () => {
-  it("rounds the saving and ignores non-discounts", () => {
-    expect(toDiscountPercent(850, 950)).toBe(11);
-    expect(toDiscountPercent(850, 850)).toBeNull();
-    expect(toDiscountPercent(850, null)).toBeNull();
   });
 });
 

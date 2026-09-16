@@ -23,14 +23,8 @@ export interface ProductCardProps {
   imageUrls: string[];
   price: number;
   compareAtPrice: number | null;
-  discountPercent: number | null;
-  material: string;
-  colorName: string | null;
-  colorCode: string | null;
   stockTone: StockTone;
   stockLabel: string;
-  ratingAvg: number;
-  ratingCount: number;
   isWishlisted: boolean;
   isCustomizable?: boolean;
   isAddingToCart?: boolean;

@@ -27,14 +27,8 @@ const meta = {
     imageUrls: PHOTOS.slice(0, 2),
     price: 850,
     compareAtPrice: null,
-    discountPercent: null,
-    material: "Stoneware",
-    colorName: "Slate Grey",
-    colorCode: "#6B7280",
     stockTone: "in_stock",
     stockLabel: "Ready to ship",
-    ratingAvg: 4.6,
-    ratingCount: 128,
     isWishlisted: false,
     onToggleWishlist: fn(),
     onAddToCart: fn(),
@@ -65,9 +59,6 @@ export const OnSale: Story = {
     imageUrls: [PHOTOS[1]!, PHOTOS[0]!],
     price: 1450,
     compareAtPrice: 1650,
-    discountPercent: 12,
-    colorName: "Blush Clay",
-    colorCode: "#E8D5C4",
   },
 };
 
@@ -86,9 +77,6 @@ export const SoldOut: Story = {
 export const MadeToOrder: Story = {
   args: {
     name: "Forest dinner plate",
-    material: "Terracotta",
-    colorName: "Forest Green",
-    colorCode: "#588157",
     stockTone: "made_to_order",
     stockLabel: "Made to order",
     isCustomizable: true,

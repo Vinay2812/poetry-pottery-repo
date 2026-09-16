@@ -12,7 +12,6 @@ export {
   STUDIO_NOTE,
   toBatchLabel,
   toCardPhotoLoading,
-  toDiscountPercent,
   toProductPath,
   toStockStatus,
   type ProductCardData,

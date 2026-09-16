@@ -11,9 +11,6 @@ interface CatalogItem {
   name: string;
   imageUrl: string;
   price: number;
-  material: string;
-  colorName: string;
-  colorCode: string;
 }
 
 const CATALOG: CatalogItem[] = [
@@ -23,9 +20,6 @@ const CATALOG: CatalogItem[] = [
     imageUrl:
       "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
     price: 850,
-    material: "Stoneware",
-    colorName: "Slate Grey",
-    colorCode: "#6B7280",
   },
   {
     slug: "sand-ramen-bowl",
@@ -33,9 +27,6 @@ const CATALOG: CatalogItem[] = [
     imageUrl:
       "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
     price: 1450,
-    material: "Stoneware",
-    colorName: "Blush Clay",
-    colorCode: "#E8D5C4",
   },
   {
     slug: "forest-dinner-plate",
@@ -43,9 +34,6 @@ const CATALOG: CatalogItem[] = [
     imageUrl:
       "https://images.pexels.com/photos/15028227/pexels-photo-15028227.jpeg",
     price: 1200,
-    material: "Terracotta",
-    colorName: "Forest Green",
-    colorCode: "#588157",
   },
   {
     slug: "clay-pour-over-vase",
@@ -53,9 +41,6 @@ const CATALOG: CatalogItem[] = [
     imageUrl:
       "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
     price: 2100,
-    material: "Terracotta",
-    colorName: "Blush Clay",
-    colorCode: "#E8D5C4",
   },
   {
     slug: "moss-tea-set",
@@ -63,9 +48,6 @@ const CATALOG: CatalogItem[] = [
     imageUrl:
       "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
     price: 3200,
-    material: "Stoneware",
-    colorName: "Forest Green",
-    colorCode: "#588157",
   },
   {
     slug: "sangli-butter-dish",
@@ -73,9 +55,6 @@ const CATALOG: CatalogItem[] = [
     imageUrl:
       "https://images.pexels.com/photos/15028227/pexels-photo-15028227.jpeg",
     price: 950,
-    material: "Terracotta",
-    colorName: "Slate Grey",
-    colorCode: "#6B7280",
   },
 ];
 
@@ -99,14 +78,8 @@ const meta = {
         imageUrls={[item.imageUrl]}
         price={item.price}
         compareAtPrice={null}
-        discountPercent={null}
-        material={item.material}
-        colorName={item.colorName}
-        colorCode={item.colorCode}
         stockTone="in_stock"
         stockLabel="In stock"
-        ratingAvg={4.6}
-        ratingCount={42}
         isWishlisted={false}
         onToggleWishlist={fn()}
         onAddToCart={fn()}

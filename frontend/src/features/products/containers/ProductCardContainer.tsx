@@ -8,7 +8,6 @@ import { ProductCard } from "@/features/products/components/ProductCard";
 import {
   type ProductCardData,
   toArchiveLabel,
-  toDiscountPercent,
   toProductPath,
   toStockStatus,
 } from "@/features/products/types";
@@ -67,17 +66,8 @@ export function ProductCardContainer({
       imageUrls={product.image_urls}
       price={product.price}
       compareAtPrice={product.compare_at_price}
-      discountPercent={toDiscountPercent(
-        product.price,
-        product.compare_at_price,
-      )}
-      material={product.material}
-      colorName={product.color_name}
-      colorCode={product.color_code}
       stockTone={stock.tone}
       stockLabel={stock.label}
-      ratingAvg={product.rating_avg}
-      ratingCount={product.rating_count}
       isWishlisted={isWishlisted(product.id)}
       isCustomizable={product.is_customizable}
       isAddingToCart={isAdding}
