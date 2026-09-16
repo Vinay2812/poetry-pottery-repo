@@ -33,6 +33,7 @@ import {
   toArchiveNote,
   type Selections,
   toBatchLabel,
+  toDefaultSelections,
   toGlazeAskUrl,
   toShortDescription,
   toStockStatus,
@@ -74,7 +75,9 @@ export function ProductDetailContainer({
   const { isWishlisted } = useWishlistIds();
   const { toggle } = useToggleWishlist();
   const [quantity, setQuantity] = useState(1);
-  const [selections, setSelections] = useState<Selections>({});
+  const [selections, setSelections] = useState<Selections>(() =>
+    toDefaultSelections(product.option_groups),
+  );
   const [showErrors, setShowErrors] = useState(false);
   const [isBuyBoxVisible, setIsBuyBoxVisible] = useState(true);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);

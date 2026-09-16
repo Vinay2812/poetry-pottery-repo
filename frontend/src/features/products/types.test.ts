@@ -11,6 +11,7 @@ import {
   type ReferencePhoto,
   remainingReferenceSlots,
   toConfirmedPhotoUrls,
+  toDefaultSelections,
   validateReferencePhoto,
   countActiveFilters,
   toCardPhotoLoading,
@@ -490,5 +491,20 @@ describe("clampPriceRange", () => {
   it("keeps the handles in order when the bounds collapse", () => {
     expect(clampPriceRange([900, 300], 400, 15000)).toEqual([900, 900]);
     expect(clampPriceRange([200, 800], 600, 600)).toEqual([600, 600]);
+  });
+});
+
+describe("toDefaultSelections", () => {
+  it("opens every required choice on its first option", () => {
+    expect(toDefaultSelections(groups)).toEqual({ 1: { optionId: 10 } });
+  });
+
+  it("leaves optional groups and empty choices alone", () => {
+    expect(
+      toDefaultSelections([
+        { ...groups[0]!, id: 3, is_required: false },
+        { ...groups[0]!, id: 4, options: [] },
+      ]),
+    ).toEqual({});
   });
 });

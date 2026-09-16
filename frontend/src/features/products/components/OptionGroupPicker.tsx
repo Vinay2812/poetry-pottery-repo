@@ -3,6 +3,13 @@ import { Label } from "@/components/ui/label";
 import { formatInr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+const KEY_STEPS: Record<string, number | undefined> = {
+  ArrowRight: 1,
+  ArrowDown: 1,
+  ArrowLeft: -1,
+  ArrowUp: -1,
+};
+
 interface OptionChoice {
   id: number;
   name: string;
@@ -40,6 +47,7 @@ export function OptionGroupPicker({
 }: OptionGroupPickerProps) {
   const inputId = `option-${groupId}`;
   const errorId = `${inputId}-error`;
+  const labelId = `${inputId}-label`;
 
   if (kind === "TEXT") {
     return (
@@ -90,9 +98,29 @@ export function OptionGroupPicker({
     );
   }
 
+  const selectedIndex = choices.findIndex(
+    (choice) => choice.id === selectedOptionId,
+  );
+  // A radio group answers to the arrow keys and holds one tab stop, not one per option.
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = KEY_STEPS[event.key];
+    if (!step || choices.length === 0) return;
+    event.preventDefault();
+    const from = selectedIndex === -1 ? 0 : selectedIndex;
+    const next = (from + step + choices.length) % choices.length;
+    const choice = choices[next];
+    if (!choice) return;
+    onSelectOption(choice.id);
+    const buttons = event.currentTarget.querySelectorAll("button");
+    buttons[next]?.focus();
+  };
+
   return (
-    <fieldset className="flex flex-col gap-2">
-      <legend className="mb-2 flex w-full items-baseline justify-between text-sm font-medium">
+    <div className="flex flex-col gap-2">
+      <span
+        id={labelId}
+        className="mb-2 flex w-full items-baseline justify-between text-sm font-medium"
+      >
         <span>
           {name}
           {!isRequired && (
@@ -102,15 +130,25 @@ export function OptionGroupPicker({
             </span>
           )}
         </span>
-      </legend>
-      <div className="flex flex-wrap gap-2">
-        {choices.map((choice) => {
+      </span>
+      <div
+        role="radiogroup"
+        aria-labelledby={labelId}
+        aria-describedby={error ? errorId : undefined}
+        onKeyDown={handleKeyDown}
+        className="flex flex-wrap gap-2"
+      >
+        {choices.map((choice, index) => {
           const isSelected = choice.id === selectedOptionId;
           return (
             <button
               key={choice.id}
               type="button"
-              aria-pressed={isSelected}
+              role="radio"
+              aria-checked={isSelected}
+              tabIndex={
+                isSelected || (selectedIndex === -1 && index === 0) ? 0 : -1
+              }
               onClick={() => onSelectOption(choice.id)}
               className={cn(
                 "flex h-10 items-center gap-1.5 border px-4 text-sm transition-colors",
@@ -134,7 +172,11 @@ export function OptionGroupPicker({
           );
         })}
       </div>
-      {error && <p className="text-[13px] text-destructive">{error}</p>}
-    </fieldset>
+      {error && (
+        <p id={errorId} className="text-[13px] text-destructive">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

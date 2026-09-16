@@ -305,6 +305,20 @@ export function computeUnitPrice(
   }, basePrice);
 }
 
+// Nobody should have to pick a size to see a price, so every required choice opens
+// on its first option and the buy box is priced from the start.
+export function toDefaultSelections(
+  groups: ProductOptionGroupData[],
+): Selections {
+  const selections: Selections = {};
+  for (const group of groups) {
+    if (group.kind === OptionGroupKind.Text || !group.is_required) continue;
+    const first = group.options[0];
+    if (first) selections[group.id] = { optionId: first.id };
+  }
+  return selections;
+}
+
 export function validateSelections(
   groups: ProductOptionGroupData[],
   selections: Selections,
