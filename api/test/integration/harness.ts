@@ -3,7 +3,9 @@ import { EventStatus, type Prisma } from "@prisma/client";
 import { Client } from "pg";
 
 import { CartService } from "@/features/cart/cart.service";
+import { ContactService } from "@/features/contact/contact.service";
 import { EventsService } from "@/features/events/events.service";
+import { NewsletterService } from "@/features/newsletter/newsletter.service";
 import { OrdersService } from "@/features/orders/orders.service";
 import { SearchService } from "@/features/search/search.service";
 import { SettingsService } from "@/features/settings/settings.service";
@@ -12,8 +14,9 @@ import {
   fromWallClock,
   toWallClock,
 } from "@/features/workshops/schedule";
+import { WishlistService } from "@/features/wishlist/wishlist.service";
 import { WorkshopsService } from "@/features/workshops/workshops.service";
-import { MailService } from "@/mail/mail.service";
+import { MailService, type MailMessage } from "@/mail/mail.service";
 import {
   PrismaService,
   withAmbientTransactions,
@@ -47,6 +50,24 @@ class StorageStub {
   }
 }
 
+// Same silence as the stub, but it keeps the envelopes so a test can count them.
+export class MailRecorder {
+  readonly sent: MailMessage[] = [];
+
+  enqueue(message: MailMessage): Promise<void> {
+    this.sent.push(message);
+    return Promise.resolve();
+  }
+
+  reset(): void {
+    this.sent.length = 0;
+  }
+
+  to(address: string): MailMessage[] {
+    return this.sent.filter((message) => message.to === address);
+  }
+}
+
 class SearchStub {
   rankProducts(): Promise<number[]> {
     return Promise.resolve([]);
@@ -63,11 +84,21 @@ export interface Harness {
   orders: OrdersService;
   events: EventsService;
   workshops: WorkshopsService;
+  wishlist: WishlistService;
+  newsletter: NewsletterService;
+  contact: ContactService;
   close: () => Promise<void>;
 }
 
+export interface HarnessOptions {
+  // Pass a recorder when the test needs to count the mail a service sends.
+  mail?: MailRecorder;
+}
+
 // Real services and a real PrismaService against the sandbox database; only the outside world is stubbed.
-export async function createHarness(): Promise<Harness> {
+export async function createHarness(
+  options: HarnessOptions = {},
+): Promise<Harness> {
   const moduleRef: TestingModule = await Test.createTestingModule({
     providers: [
       {
@@ -76,7 +107,7 @@ export async function createHarness(): Promise<Harness> {
           withAmbientTransactions(new PrismaService()),
       },
       { provide: RedisService, useClass: RedisStub },
-      { provide: MailService, useClass: MailStub },
+      { provide: MailService, useValue: options.mail ?? new MailStub() },
       { provide: SearchService, useClass: SearchStub },
       { provide: StorageService, useClass: StorageStub },
       SettingsService,
@@ -84,6 +115,9 @@ export async function createHarness(): Promise<Harness> {
       OrdersService,
       EventsService,
       WorkshopsService,
+      WishlistService,
+      NewsletterService,
+      ContactService,
     ],
   }).compile();
   await moduleRef.init();
@@ -93,6 +127,9 @@ export async function createHarness(): Promise<Harness> {
     orders: moduleRef.get(OrdersService),
     events: moduleRef.get(EventsService),
     workshops: moduleRef.get(WorkshopsService),
+    wishlist: moduleRef.get(WishlistService),
+    newsletter: moduleRef.get(NewsletterService),
+    contact: moduleRef.get(ContactService),
     close: () => moduleRef.close(),
   };
 }
@@ -116,6 +153,8 @@ const TRUNCATED = [
   "products",
   "collections",
   "addresses",
+  "newsletter_subscribers",
+  "contact_messages",
   "users",
 ];
 
