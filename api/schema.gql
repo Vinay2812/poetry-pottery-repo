@@ -335,6 +335,7 @@ type Glaze {
 type Mutation {
   addOrderNote(input: AddOrderNoteInput!): Order!
   addToCart(input: AddToCartInput!): Cart!
+  bookStudioVisit(input: StudioVisitInput!): StudioVisit!
   bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
   cancelOrder(id: String!, reason: String): Order!
   cancelRegistration(id: String!, reason: String): Registration!
@@ -580,6 +581,7 @@ type Query {
   registration(id: String!): Registration!
   relatedProducts(limit: Int = 8, slug: String!): [Product!]!
   siteSettings: SiteSettings!
+  studioVisitAvailability(days: Int, from: String): [VisitDay!]!
   suggest(q: String!): Suggestions!
   upcomingEvents(limit: Int = 3): [Event!]!
   users(limit: Int = 20, page: Int = 1): UsersResponse!
@@ -673,6 +675,22 @@ type SiteSettings {
   youtube_url: String!
 }
 
+type StudioVisit {
+  ends_at: DateTime!
+  id: String!
+  name: String!
+  note: String
+  phone: String!
+  starts_at: DateTime!
+}
+
+input StudioVisitInput {
+  name: String!
+  note: String
+  phone: String!
+  starts_at: DateTime!
+}
+
 type SuggestedEvent {
   id: Int!
   slug: String!
@@ -729,6 +747,21 @@ type UsersResponse {
   limit: Int!
   page: Int!
   total: Int!
+}
+
+type VisitDay {
+  date: String!
+  is_closed: Boolean!
+  reason: String
+  weekday: Int!
+  windows: [VisitWindow!]!
+}
+
+type VisitWindow {
+  ends_at: DateTime!
+  is_available: Boolean!
+  reason: String
+  starts_at: DateTime!
 }
 
 type WishlistToggleResult {

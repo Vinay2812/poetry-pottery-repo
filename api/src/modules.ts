@@ -107,3 +107,4 @@ export { NotificationsModule } from "@/features/notifications/notifications.modu
 export { ContactModule } from "@/features/contact/contact.module";
 export { CommissionsModule } from "@/features/commissions/commissions.module";
 export { SuggestModule } from "@/features/suggest/suggest.module";
+export { VisitsModule } from "@/features/visits/visits.module";

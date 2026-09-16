@@ -37,6 +37,7 @@ model User {
   event_registrations EventRegistration[]
   workshop_bookings   WorkshopBooking[]
   commissions         CommissionRequest[]
+  studio_visits       StudioVisit[]
   newsletter          NewsletterSubscriber?
   batch_notifications BatchNotification[]
 
@@ -653,6 +654,25 @@ model ContactMessage {
 
   @@index([is_read, created_at])
   @@map("contact_messages")
+}
+
+// Someone coming by the studio for half an hour. One visit per window, held by the unique start.
+model StudioVisit {
+  id        String   @id @default(nanoid(12))
+  starts_at DateTime @unique
+  ends_at   DateTime
+  name      String
+  phone     String
+  note      String?
+  user_id   Int?
+
+  created_at DateTime @default(now())
+
+  user User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([starts_at])
+  @@index([user_id])
+  @@map("studio_visits")
 }
 
 // A brief for a piece that does not exist yet: what it is, how big, which glaze, what to carve.

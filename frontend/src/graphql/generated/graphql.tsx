@@ -370,6 +370,7 @@ export type Mutation = {
   __typename?: 'Mutation';
   addOrderNote: Order;
   addToCart: Cart;
+  bookStudioVisit: StudioVisit;
   bookWorkshop: WorkshopBooking;
   cancelOrder: Order;
   cancelRegistration: Registration;
@@ -405,6 +406,11 @@ export type MutationAddOrderNoteArgs = {
 
 export type MutationAddToCartArgs = {
   input: AddToCartInput;
+};
+
+
+export type MutationBookStudioVisitArgs = {
+  input: StudioVisitInput;
 };
 
 
@@ -766,6 +772,7 @@ export type Query = {
   registration: Registration;
   relatedProducts: Array<Product>;
   siteSettings: SiteSettings;
+  studioVisitAvailability: Array<VisitDay>;
   suggest: Suggestions;
   upcomingEvents: Array<Event>;
   users: UsersResponse;
@@ -876,6 +883,12 @@ export type QueryRegistrationArgs = {
 export type QueryRelatedProductsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
   slug: Scalars['String']['input'];
+};
+
+
+export type QueryStudioVisitAvailabilityArgs = {
+  days?: InputMaybe<Scalars['Int']['input']>;
+  from?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -995,6 +1008,23 @@ export type SiteSettings = {
   youtube_url: Scalars['String']['output'];
 };
 
+export type StudioVisit = {
+  __typename?: 'StudioVisit';
+  ends_at: Scalars['DateTime']['output'];
+  id: Scalars['String']['output'];
+  name: Scalars['String']['output'];
+  note?: Maybe<Scalars['String']['output']>;
+  phone: Scalars['String']['output'];
+  starts_at: Scalars['DateTime']['output'];
+};
+
+export type StudioVisitInput = {
+  name: Scalars['String']['input'];
+  note?: InputMaybe<Scalars['String']['input']>;
+  phone: Scalars['String']['input'];
+  starts_at: Scalars['DateTime']['input'];
+};
+
 export type SuggestedEvent = {
   __typename?: 'SuggestedEvent';
   id: Scalars['Int']['output'];
@@ -1058,6 +1088,23 @@ export type UsersResponse = {
   limit: Scalars['Int']['output'];
   page: Scalars['Int']['output'];
   total: Scalars['Int']['output'];
+};
+
+export type VisitDay = {
+  __typename?: 'VisitDay';
+  date: Scalars['String']['output'];
+  is_closed: Scalars['Boolean']['output'];
+  reason?: Maybe<Scalars['String']['output']>;
+  weekday: Scalars['Int']['output'];
+  windows: Array<VisitWindow>;
+};
+
+export type VisitWindow = {
+  __typename?: 'VisitWindow';
+  ends_at: Scalars['DateTime']['output'];
+  is_available: Scalars['Boolean']['output'];
+  reason?: Maybe<Scalars['String']['output']>;
+  starts_at: Scalars['DateTime']['output'];
 };
 
 export type WishlistToggleResult = {
@@ -1478,6 +1525,21 @@ export type CreateCustomizationUploadMutationVariables = Exact<{
 
 
 export type CreateCustomizationUploadMutation = { createCustomizationUpload: { upload_url: string, public_url: string, key: string } };
+
+export type StudioVisitAvailabilityQueryVariables = Exact<{
+  from?: string | null | undefined;
+  days?: number | null | undefined;
+}>;
+
+
+export type StudioVisitAvailabilityQuery = { studioVisitAvailability: Array<{ date: string, weekday: number, is_closed: boolean, reason: string | null, windows: Array<{ starts_at: string, ends_at: string, is_available: boolean, reason: string | null }> }> };
+
+export type BookStudioVisitMutationVariables = Exact<{
+  input: StudioVisitInput;
+}>;
+
+
+export type BookStudioVisitMutation = { bookStudioVisit: { id: string, starts_at: string, ends_at: string, name: string } };
 
 export type WishlistQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -3528,6 +3590,85 @@ export function useCreateCustomizationUploadMutation(baseOptions?: ApolloReactHo
       }
 export type CreateCustomizationUploadMutationHookResult = ReturnType<typeof useCreateCustomizationUploadMutation>;
 export type CreateCustomizationUploadMutationResult = ApolloReactCommon.MutationResult<CreateCustomizationUploadMutation>;
+export const StudioVisitAvailabilityDocument = gql`
+    query StudioVisitAvailability($from: String, $days: Int) {
+  studioVisitAvailability(from: $from, days: $days) {
+    date
+    weekday
+    is_closed
+    reason
+    windows {
+      starts_at
+      ends_at
+      is_available
+      reason
+    }
+  }
+}
+    `;
+
+/**
+ * __useStudioVisitAvailabilityQuery__
+ *
+ * To run a query within a React component, call `useStudioVisitAvailabilityQuery` and pass it any options that fit your needs.
+ * When your component renders, `useStudioVisitAvailabilityQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useStudioVisitAvailabilityQuery({
+ *   variables: {
+ *      from: // value for 'from'
+ *      days: // value for 'days'
+ *   },
+ * });
+ */
+export function useStudioVisitAvailabilityQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<StudioVisitAvailabilityQuery, StudioVisitAvailabilityQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<StudioVisitAvailabilityQuery, StudioVisitAvailabilityQueryVariables>(StudioVisitAvailabilityDocument, options);
+      }
+export function useStudioVisitAvailabilityLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<StudioVisitAvailabilityQuery, StudioVisitAvailabilityQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<StudioVisitAvailabilityQuery, StudioVisitAvailabilityQueryVariables>(StudioVisitAvailabilityDocument, options);
+        }
+export type StudioVisitAvailabilityQueryHookResult = ReturnType<typeof useStudioVisitAvailabilityQuery>;
+export type StudioVisitAvailabilityLazyQueryHookResult = ReturnType<typeof useStudioVisitAvailabilityLazyQuery>;
+export type StudioVisitAvailabilityQueryResult = ApolloReactCommon.QueryResult<StudioVisitAvailabilityQuery, StudioVisitAvailabilityQueryVariables>;
+export const BookStudioVisitDocument = gql`
+    mutation BookStudioVisit($input: StudioVisitInput!) {
+  bookStudioVisit(input: $input) {
+    id
+    starts_at
+    ends_at
+    name
+  }
+}
+    `;
+
+/**
+ * __useBookStudioVisitMutation__
+ *
+ * To run a mutation, you first call `useBookStudioVisitMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useBookStudioVisitMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [bookStudioVisitMutation, { data, loading, error }] = useBookStudioVisitMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useBookStudioVisitMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<BookStudioVisitMutation, BookStudioVisitMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<BookStudioVisitMutation, BookStudioVisitMutationVariables>(BookStudioVisitDocument, options);
+      }
+export type BookStudioVisitMutationHookResult = ReturnType<typeof useBookStudioVisitMutation>;
+export type BookStudioVisitMutationResult = ApolloReactCommon.MutationResult<BookStudioVisitMutation>;
 export const WishlistDocument = gql`
     query Wishlist {
   wishlist {

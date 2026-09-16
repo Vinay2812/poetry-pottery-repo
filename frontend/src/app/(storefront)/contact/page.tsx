@@ -9,6 +9,7 @@ import {
   ContentHeader,
 } from "@/features/content";
 import { buildWhatsAppUrl } from "@/features/layout";
+import { StudioVisitContainer } from "@/features/visits";
 
 export const metadata: Metadata = {
   title: "Contact the studio",
@@ -46,6 +47,13 @@ export default async function ContactPage() {
             facebookUrl={settings.facebook_url}
           />
           <ContactFormContainer />
+        </div>
+      </Reveal>
+      <Reveal>
+        <div className="border-t border-ash py-10 md:py-12">
+          <div className="max-w-xl">
+            <StudioVisitContainer />
+          </div>
         </div>
       </Reveal>
     </div>

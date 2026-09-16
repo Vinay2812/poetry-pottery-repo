@@ -15,6 +15,7 @@ import {
   fromWallClock,
   toWallClock,
 } from "@/features/workshops/schedule";
+import { VisitsService } from "@/features/visits/visits.service";
 import { WishlistService } from "@/features/wishlist/wishlist.service";
 import { WorkshopsService } from "@/features/workshops/workshops.service";
 import { MailService, type MailMessage } from "@/mail/mail.service";
@@ -110,6 +111,7 @@ export interface Harness {
   newsletter: NewsletterService;
   notifications: NotificationsService;
   contact: ContactService;
+  visits: VisitsService;
   close: () => Promise<void>;
 }
 
@@ -145,6 +147,7 @@ export async function createHarness(
       WishlistService,
       NewsletterService,
       ContactService,
+      VisitsService,
     ],
   }).compile();
   await moduleRef.init();
@@ -158,11 +161,13 @@ export async function createHarness(
     newsletter: moduleRef.get(NewsletterService),
     notifications: moduleRef.get(NotificationsService),
     contact: moduleRef.get(ContactService),
+    visits: moduleRef.get(VisitsService),
     close: () => moduleRef.close(),
   };
 }
 
 const TRUNCATED = [
+  "studio_visits",
   "cart_items",
   "order_notes",
   "order_items",

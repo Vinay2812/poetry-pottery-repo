@@ -17,3 +17,4 @@ export { NotificationsResolver } from "@/features/notifications/notifications.re
 export { ContactResolver } from "@/features/contact/contact.resolver";
 export { CommissionsResolver } from "@/features/commissions/commissions.resolver";
 export { SuggestResolver } from "@/features/suggest/suggest.resolver";
+export { VisitsResolver } from "@/features/visits/visits.resolver";

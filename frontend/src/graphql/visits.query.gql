@@ -1,0 +1,23 @@
+query StudioVisitAvailability($from: String, $days: Int) {
+  studioVisitAvailability(from: $from, days: $days) {
+    date
+    weekday
+    is_closed
+    reason
+    windows {
+      starts_at
+      ends_at
+      is_available
+      reason
+    }
+  }
+}
+
+mutation BookStudioVisit($input: StudioVisitInput!) {
+  bookStudioVisit(input: $input) {
+    id
+    starts_at
+    ends_at
+    name
+  }
+}
