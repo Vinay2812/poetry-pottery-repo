@@ -97,6 +97,7 @@ function orderItem(overrides: Partial<OrderItem> = {}): OrderItem {
     quantity: 2,
     line_total: 900,
     selections: [],
+    reference_image_urls: [],
     ...overrides,
   };
 }
