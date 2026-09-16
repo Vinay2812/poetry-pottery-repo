@@ -13,6 +13,10 @@ import {
   type OrderTimelineStep,
 } from "@/features/orders/components/OrderTimeline";
 import { OrderTotals } from "@/features/orders/components/OrderTotals";
+import {
+  StudioNote,
+  type StudioNoteProps,
+} from "@/features/orders/components/StudioNote";
 import type { StatusTone } from "@/features/orders/types";
 
 export interface OrderDetailProps {
@@ -26,6 +30,7 @@ export interface OrderDetailProps {
   isClosed: boolean;
   closedLabel: string | null;
   items: (OrderItemRowProps & { id: number })[];
+  studioNotes: (StudioNoteProps & { id: number })[];
   careLines: string[];
   subtotal: number;
   discount: number;
@@ -57,6 +62,7 @@ export function OrderDetail({
   isClosed,
   closedLabel,
   items,
+  studioNotes,
   careLines,
   subtotal,
   discount,
@@ -140,6 +146,22 @@ export function OrderDetail({
               ))}
             </ul>
           </section>
+
+          {studioNotes.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <h3 className={SECTION_HEADING}>From the studio</h3>
+              <ul className="flex flex-col">
+                {studioNotes.map((note) => (
+                  <StudioNote
+                    key={note.id}
+                    body={note.body}
+                    imageUrl={note.imageUrl}
+                    writtenOn={note.writtenOn}
+                  />
+                ))}
+              </ul>
+            </section>
+          )}
 
           {careLines.length > 0 && <OrderCareGuide lines={careLines} />}
         </div>

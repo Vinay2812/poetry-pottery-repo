@@ -67,6 +67,7 @@ const meta = {
     isClosed: false,
     closedLabel: null,
     items,
+    studioNotes: [],
     careLines: [],
     subtotal: 2300,
     discount: 0,
@@ -100,6 +101,15 @@ export const InProgress: Story = {
     steps: toSteps(3),
     currentStepIndex: 3,
     trackingNote: "Courier: Delhivery · AWB 1234567890",
+    studioNotes: [
+      {
+        id: 1,
+        body: "Your mug came out of the glaze firing this morning. The rim caught a little more sage than usual.",
+        imageUrl:
+          "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
+        writtenOn: "Tue, 15 Sep 2026, 9:10 am",
+      },
+    ],
   },
 };
 

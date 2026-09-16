@@ -14,8 +14,10 @@ import {
   orderPlacedCustomerMail,
   orderPlacedStudioMail,
   orderStatusMail,
+  orderStudioNoteMail,
 } from "@/mail/templates/orders";
 import { PrismaService } from "@/prisma/prisma.service";
+import { StorageService } from "@/storage/storage.service";
 import { CartService, shippingFor } from "@/features/cart/cart.service";
 import {
   productListInclude,
@@ -34,11 +36,14 @@ import {
 import type { Cart } from "@/features/cart/cart.type";
 import { readCustomisation } from "@/features/cart/selections";
 import type {
+  AddOrderNoteInput,
   CheckoutQuote,
   Order,
   OrdersResult,
   PlaceOrderInput,
 } from "./orders.type";
+
+export const STUDIO_NOTE_MAX_LENGTH = 1000;
 
 export const orderInclude = {
   items: {
@@ -46,6 +51,7 @@ export const orderInclude = {
     orderBy: { id: "asc" },
   },
   coupon: { select: { code: true } },
+  notes: { orderBy: { created_at: "asc" } },
 } satisfies Prisma.OrderInclude;
 
 type OrderRow = Prisma.OrderGetPayload<{ include: typeof orderInclude }>;
@@ -91,6 +97,12 @@ export function toOrder(row: OrderRow, now = new Date()): Order {
         reference_image_urls: customisation.reference_image_urls,
       };
     }),
+    studio_notes: row.notes.map((note) => ({
+      id: note.id,
+      body: note.body,
+      image_url: note.image_url,
+      created_at: note.created_at,
+    })),
     created_at: row.created_at,
     confirmed_at: row.confirmed_at,
     paid_at: row.paid_at,
@@ -108,6 +120,7 @@ export class OrdersService {
     private readonly cart: CartService,
     private readonly settings: SettingsService,
     private readonly mail: MailService,
+    private readonly storage: StorageService,
   ) {}
 
   // Same maths as placeOrder, so the checkout page never shows a total the order will not match.
@@ -421,6 +434,38 @@ export class OrdersService {
         include: orderInclude,
       });
     });
+  }
+
+  // Admin only: the note is written for the customer, so it goes out as one mail straight away.
+  async addNote(input: AddOrderNoteInput): Promise<Order> {
+    const body = input.body.trim().slice(0, STUDIO_NOTE_MAX_LENGTH);
+    if (body.length === 0) {
+      throw new BadRequestException("Write something for the customer");
+    }
+    const imageUrl = input.image_url?.trim() || null;
+    if (imageUrl !== null && !this.storage.isOwnUrl(imageUrl)) {
+      throw new BadRequestException("Attach a photo uploaded to the studio");
+    }
+    const order = await this.prisma.order.findUnique({
+      where: { id: input.order_id },
+      select: { id: true, user: { select: { email: true } } },
+    });
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+    const note = await this.prisma.orderNote.create({
+      data: { order_id: order.id, body, image_url: imageUrl },
+    });
+    const row = await this.prisma.order.findUniqueOrThrow({
+      where: { id: order.id },
+      include: orderInclude,
+    });
+    const result = toOrder(row);
+    await this.mail.enqueue({
+      to: order.user.email,
+      ...orderStudioNoteMail(result, note.body, note.image_url),
+    });
+    return result;
   }
 
   async notifyStatus(userId: number, order: Order): Promise<void> {

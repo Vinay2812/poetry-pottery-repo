@@ -1,11 +1,15 @@
 import { Args, Int, Mutation, Query, Resolver } from "@nestjs/graphql";
 
-import { AuthRequired } from "@/common/decorators/auth.decorators";
+import {
+  AdminRequired,
+  AuthRequired,
+} from "@/common/decorators/auth.decorators";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
 import { StrictThrottle } from "@/common/decorators/throttle.decorators";
 import type { AuthUser } from "@/common/clerk/clerk.type";
 import { OrdersService } from "./orders.service";
 import {
+  AddOrderNoteInput,
   CheckoutQuote,
   CheckoutQuoteInput,
   Order,
@@ -51,6 +55,13 @@ export class OrdersResolver {
   @Query(() => Order)
   order(@CurrentUser() user: AuthUser, @Args("id") id: string): Promise<Order> {
     return this.ordersService.byId(user.db_user_id, id);
+  }
+
+  // The admin console that writes these lives on its own branch; this is the write side only.
+  @AdminRequired()
+  @Mutation(() => Order)
+  addOrderNote(@Args("input") input: AddOrderNoteInput): Promise<Order> {
+    return this.ordersService.addNote(input);
   }
 
   @AuthRequired()

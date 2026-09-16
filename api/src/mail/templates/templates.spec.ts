@@ -120,6 +120,7 @@ function order(overrides: Partial<Order> = {}): Order {
     cancel_reason: null,
     can_cancel: true,
     care_notes: [],
+    studio_notes: [],
     item_count: 2,
     items: [orderItem()],
     created_at: new Date("2026-09-01T06:00:00.000Z"),

@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
+import { StorageService } from "@/storage/storage.service";
 import { CartService } from "@/features/cart/cart.service";
 import { SettingsService } from "@/features/settings/settings.service";
 import { OrdersService } from "./orders.service";
@@ -21,16 +22,21 @@ const prismaMock = {
     create: vi.fn(),
     findMany: vi.fn(),
     findFirst: vi.fn(),
+    findUnique: vi.fn(),
     findUniqueOrThrow: vi.fn(),
     count: vi.fn(),
     updateMany: vi.fn(),
   },
+  orderNote: { create: vi.fn() },
   cartItem: { deleteMany: vi.fn() },
   user: { findUnique: vi.fn() },
 };
 const cartMock = { get: vi.fn() };
 const settingsMock = { get: vi.fn() };
 const mailMock = { enqueue: vi.fn() };
+const storageMock = {
+  isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.test/")),
+};
 
 const address = {
   id: 5,
@@ -113,6 +119,7 @@ function orderRow(overrides: Record<string, unknown> = {}) {
         },
       },
     ],
+    notes: [],
     ...overrides,
   };
 }
@@ -140,6 +147,7 @@ describe("OrdersService", () => {
         { provide: CartService, useValue: cartMock },
         { provide: SettingsService, useValue: settingsMock },
         { provide: MailService, useValue: mailMock },
+        { provide: StorageService, useValue: storageMock },
       ],
     }).compile();
     service = moduleRef.get(OrdersService);
@@ -409,6 +417,65 @@ describe("OrdersService", () => {
         service.applyStatus(orderRow() as never, OrderStatus.CANCELLED),
       ).rejects.toThrow("just updated");
       expect(prismaMock.product.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("addNote", () => {
+    const PHOTO = "https://cdn.test/orders/ORD123/glaze.jpg";
+
+    beforeEach(() => {
+      prismaMock.order.findUnique.mockResolvedValue({
+        id: "ORD123",
+        user: { email: "maya@example.com" },
+      });
+      prismaMock.order.findUniqueOrThrow.mockResolvedValue(orderRow());
+      prismaMock.orderNote.create.mockResolvedValue({
+        id: 1,
+        body: "Out of the glaze firing this morning.",
+        image_url: PHOTO,
+      });
+    });
+
+    it("saves the note with its photo and mails the customer once", async () => {
+      await service.addNote({
+        order_id: "ORD123",
+        body: "  Out of the glaze firing this morning.  ",
+        image_url: PHOTO,
+      });
+
+      expect(prismaMock.orderNote.create).toHaveBeenCalledWith({
+        data: {
+          order_id: "ORD123",
+          body: "Out of the glaze firing this morning.",
+          image_url: PHOTO,
+        },
+      });
+      expect(mailMock.enqueue).toHaveBeenCalledTimes(1);
+      expect(mailMock.enqueue).toHaveBeenCalledWith(
+        containing({ to: "maya@example.com" }),
+      );
+    });
+
+    it("refuses a photo that was not uploaded to the studio", async () => {
+      await expect(
+        service.addNote({
+          order_id: "ORD123",
+          body: "Look at this",
+          image_url: "https://elsewhere.test/mug.jpg",
+        }),
+      ).rejects.toThrow("uploaded to the studio");
+      expect(prismaMock.orderNote.create).not.toHaveBeenCalled();
+    });
+
+    it("refuses an empty note and an order that does not exist", async () => {
+      await expect(
+        service.addNote({ order_id: "ORD123", body: "   " }),
+      ).rejects.toThrow("Write something");
+
+      prismaMock.order.findUnique.mockResolvedValue(null);
+      await expect(
+        service.addNote({ order_id: "nope", body: "Hello" }),
+      ).rejects.toThrow("Order not found");
     });
   });
 });

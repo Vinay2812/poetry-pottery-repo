@@ -154,6 +154,12 @@ export function OrderDetailContainer({
           selectionSummary: toSelectionSummary(item.selections),
           referenceImageUrls: item.reference_image_urls,
         }))}
+        studioNotes={optimisticOrder.studio_notes.map((note) => ({
+          id: note.id,
+          body: note.body,
+          imageUrl: note.image_url,
+          writtenOn: formatDateTime(note.created_at),
+        }))}
         careLines={toDeliveredCareLines(
           optimisticOrder.status,
           optimisticOrder.care_notes,

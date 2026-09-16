@@ -2,6 +2,12 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+input AddOrderNoteInput {
+  body: String!
+  image_url: String
+  order_id: String!
+}
+
 input AddToCartInput {
   product_id: Int!
   quantity: Int = 1
@@ -279,6 +285,7 @@ type Glaze {
 }
 
 type Mutation {
+  addOrderNote(input: AddOrderNoteInput!): Order!
   addToCart(input: AddToCartInput!): Cart!
   bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
   cancelOrder(id: String!, reason: String): Order!
@@ -341,6 +348,7 @@ type Order {
   shipping_address: ShippingAddress!
   shipping_fee: Int!
   status: OrderStatus!
+  studio_notes: [OrderNote!]!
   subtotal: Int!
   total: Int!
   tracking_note: String
@@ -356,6 +364,13 @@ type OrderItem {
   reference_image_urls: [String!]!
   selections: [CartSelection!]!
   unit_price: Int!
+}
+
+type OrderNote {
+  body: String!
+  created_at: DateTime!
+  id: Int!
+  image_url: String
 }
 
 enum OrderStatus {

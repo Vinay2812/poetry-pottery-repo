@@ -53,6 +53,12 @@ fragment OrderFields on Order {
       is_customizable
     }
   }
+  studio_notes {
+    id
+    body
+    image_url
+    created_at
+  }
 }
 
 query CheckoutQuote($input: CheckoutQuoteInput) {

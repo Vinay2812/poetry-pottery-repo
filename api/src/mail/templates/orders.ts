@@ -123,6 +123,31 @@ export function orderPlacedStudioMail(
   return { subject: `New order ${order.id} · ${inr(order.total)}`, ...body };
 }
 
+export function orderStudioNoteMail(
+  order: Order,
+  body: string,
+  imageUrl: string | null,
+): { subject: string; html: string; text: string } {
+  const mail = renderMail({
+    title: "A note from the studio",
+    intro: body,
+    blocks: [
+      { heading: "Your order", lines: itemLines(order) },
+      ...(imageUrl
+        ? [
+            {
+              heading: "Photo",
+              lines: [],
+              links: [{ label: "See the photo", href: imageUrl }],
+            },
+          ]
+        : []),
+    ],
+    cta: { label: "View your order", path: `/orders/${order.id}` },
+  });
+  return { subject: `A note about order ${order.id}`, ...mail };
+}
+
 export function orderStatusMail(
   order: Order,
 ): { subject: string; html: string; text: string } | null {

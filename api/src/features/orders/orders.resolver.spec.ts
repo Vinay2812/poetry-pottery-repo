@@ -4,6 +4,7 @@ import { OrderStatus, UserRole } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AuthUser } from "@/common/clerk/clerk.type";
+import { AdminGuard } from "@/common/guards/admin.guard";
 import { AuthGuard } from "@/common/guards/auth.guard";
 import { OrdersResolver } from "./orders.resolver";
 import { OrdersService } from "./orders.service";
@@ -61,6 +62,7 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
     cancel_reason: null,
     can_cancel: true,
     care_notes: [],
+    studio_notes: [],
     item_count: 1,
     items: [],
     created_at: new Date("2026-01-01T00:00:00.000Z"),
@@ -108,6 +110,7 @@ const ordersMock = {
   list: vi.fn<OrdersService["list"]>(),
   byId: vi.fn<OrdersService["byId"]>(),
   cancel: vi.fn<OrdersService["cancel"]>(),
+  addNote: vi.fn<OrdersService["addNote"]>(),
 };
 
 describe("OrdersResolver", () => {
@@ -123,6 +126,8 @@ describe("OrdersResolver", () => {
     })
       // Nest instantiates the guard named in the UseGuards metadata, so it is stubbed out.
       .overrideGuard(AuthGuard)
+      .useValue({ canActivate: () => true })
+      .overrideGuard(AdminGuard)
       .useValue({ canActivate: () => true })
       .compile();
     resolver = moduleRef.get(OrdersResolver);
@@ -212,6 +217,15 @@ describe("OrdersResolver", () => {
     expect(ordersMock.byId).toHaveBeenNthCalledWith(2, 8, "ord_1");
   });
 
+  it("hands a studio note straight to the service, with no session in it", async () => {
+    const order = makeOrder();
+    ordersMock.addNote.mockResolvedValue(order);
+    const input = { order_id: "ord_1", body: "Out of the glaze firing." };
+
+    await expect(resolver.addOrderNote(input)).resolves.toBe(order);
+    expect(ordersMock.addNote).toHaveBeenCalledWith(input);
+  });
+
   it("guards every field with the authentication guard", () => {
     const fields = [
       "checkoutQuote",
@@ -224,5 +238,11 @@ describe("OrdersResolver", () => {
     for (const field of fields) {
       expect(guardsOn(OrdersResolver.prototype, field)).toEqual([AuthGuard]);
     }
+  });
+
+  it("lets only an admin write a studio note", () => {
+    expect(guardsOn(OrdersResolver.prototype, "addOrderNote")).toEqual([
+      AdminGuard,
+    ]);
   });
 });

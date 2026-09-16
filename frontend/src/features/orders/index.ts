@@ -7,5 +7,6 @@ export { OrderItemRow } from "@/features/orders/components/OrderItemRow";
 export { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 export { OrderTimeline } from "@/features/orders/components/OrderTimeline";
 export { OrderTotals } from "@/features/orders/components/OrderTotals";
+export { StudioNote } from "@/features/orders/components/StudioNote";
 export { OrderDetailContainer } from "@/features/orders/containers/OrderDetailContainer";
 export { OrdersListContainer } from "@/features/orders/containers/OrdersListContainer";

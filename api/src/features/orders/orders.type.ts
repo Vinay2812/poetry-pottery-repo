@@ -71,6 +71,21 @@ export class OrderItem {
 }
 
 @ObjectType()
+export class OrderNote {
+  @Field(() => Int)
+  id!: number;
+
+  @Field()
+  body!: string;
+
+  @Field(() => String, { nullable: true })
+  image_url!: string | null;
+
+  @Field()
+  created_at!: Date;
+}
+
+@ObjectType()
 export class Order {
   @Field()
   id!: string;
@@ -122,6 +137,9 @@ export class Order {
 
   @Field(() => [OrderItem])
   items!: OrderItem[];
+
+  @Field(() => [OrderNote])
+  studio_notes!: OrderNote[];
 
   @Field()
   created_at!: Date;
@@ -203,4 +221,16 @@ export class PlaceOrderInput {
 
   @Field(() => Boolean, { nullable: true })
   hide_prices?: boolean | null;
+}
+
+@InputType()
+export class AddOrderNoteInput {
+  @Field()
+  order_id!: string;
+
+  @Field()
+  body!: string;
+
+  @Field(() => String, { nullable: true })
+  image_url?: string | null;
 }
