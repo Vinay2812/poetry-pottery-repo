@@ -78,6 +78,8 @@ function orderRow(overrides: Record<string, unknown> = {}) {
     coupon: null,
     shipping_address: address,
     customer_note: null,
+    gift_note: null,
+    hide_prices: false,
     admin_note: null,
     tracking_note: null,
     cancel_reason: null,

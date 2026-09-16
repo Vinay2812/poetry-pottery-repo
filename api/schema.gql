@@ -329,6 +329,8 @@ type Order {
   customer_note: String
   delivered_at: DateTime
   discount: Int!
+  gift_note: String
+  hide_prices: Boolean!
   id: String!
   item_count: Int!
   items: [OrderItem!]!
@@ -381,6 +383,8 @@ input PlaceOrderInput {
   address_id: Int!
   coupon_code: String
   customer_note: String
+  gift_note: String
+  hide_prices: Boolean
 }
 
 type Product {

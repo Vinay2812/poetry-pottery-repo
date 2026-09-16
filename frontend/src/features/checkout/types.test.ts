@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toCouponView } from "./types";
+import { GIFT_NOTE_MAX_LENGTH, toCouponView, toGiftView } from "./types";
 
 describe("toCouponView", () => {
   it("shows nothing when no code is in play", () => {
@@ -61,6 +61,37 @@ describe("toCouponView", () => {
       discount: 0,
       isApplied: true,
       isPending: true,
+    });
+  });
+});
+
+describe("toGiftView", () => {
+  it("carries a trimmed message and the wish that goes with it", () => {
+    expect(toGiftView(true, "  For Ma  ", true)).toEqual({
+      gift_note: "For Ma",
+      hide_prices: true,
+    });
+  });
+
+  it("cuts a long message to what fits on the card", () => {
+    const long = "a".repeat(GIFT_NOTE_MAX_LENGTH + 30);
+
+    expect(toGiftView(true, long, false).gift_note).toHaveLength(
+      GIFT_NOTE_MAX_LENGTH,
+    );
+  });
+
+  it("drops everything once the gift box is unticked", () => {
+    expect(toGiftView(false, "For Ma", true)).toEqual({
+      gift_note: null,
+      hide_prices: false,
+    });
+  });
+
+  it("still hides prices on a gift sent without a message", () => {
+    expect(toGiftView(true, "   ", true)).toEqual({
+      gift_note: null,
+      hide_prices: true,
     });
   });
 });

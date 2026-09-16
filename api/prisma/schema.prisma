@@ -298,6 +298,8 @@ model Order {
   /// [ShippingAddress]
   shipping_address Json
   customer_note    String?
+  gift_note        String?
+  hide_prices      Boolean @default(false)
   admin_note       String?
   tracking_note    String?
   cancel_reason    String?

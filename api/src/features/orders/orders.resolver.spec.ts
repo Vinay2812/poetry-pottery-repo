@@ -55,6 +55,8 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
       pincode: "416416",
     },
     customer_note: null,
+    gift_note: null,
+    hide_prices: false,
     tracking_note: null,
     cancel_reason: null,
     can_cancel: true,

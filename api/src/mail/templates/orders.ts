@@ -26,6 +26,22 @@ function referenceBlock(order: Order): MailBlock[] {
   return [{ heading: "Reference photos", lines: [], links }];
 }
 
+// What the packer needs to know before the parcel is taped shut.
+function giftBlock(order: Order): MailBlock[] {
+  if (!order.gift_note && !order.hide_prices) return [];
+  return [
+    {
+      heading: "This is a gift",
+      lines: [
+        ...(order.gift_note ? [`Card: ${order.gift_note}`] : []),
+        order.hide_prices
+          ? "Leave prices off the packing slip."
+          : "Prices may stay on the packing slip.",
+      ],
+    },
+  ];
+}
+
 function totalsLines(order: Order): string[] {
   return [
     `Subtotal ${inr(order.subtotal)}`,
@@ -72,6 +88,7 @@ export function orderPlacedStudioMail(
       { heading: "Pieces", lines: itemLines(order) },
       ...referenceBlock(order),
       { heading: "Totals", lines: totalsLines(order) },
+      ...giftBlock(order),
       ...(order.customer_note
         ? [{ heading: "Note from the customer", lines: [order.customer_note] }]
         : []),

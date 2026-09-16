@@ -114,6 +114,8 @@ function order(overrides: Partial<Order> = {}): Order {
     coupon_code: null,
     shipping_address: shippingAddress(),
     customer_note: null,
+    gift_note: null,
+    hide_prices: false,
     tracking_note: null,
     cancel_reason: null,
     can_cancel: true,

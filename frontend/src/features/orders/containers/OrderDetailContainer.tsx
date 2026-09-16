@@ -167,6 +167,8 @@ export function OrderDetailContainer({
           `${address.city}, ${address.state} ${address.pincode}`,
         ].filter((line) => line.length > 0)}
         customerNote={optimisticOrder.customer_note}
+        giftNote={optimisticOrder.gift_note}
+        hasHiddenPrices={optimisticOrder.hide_prices}
         trackingNote={optimisticOrder.tracking_note}
         whatsappUrl={whatsappUrl}
         canCancel={optimisticOrder.can_cancel}

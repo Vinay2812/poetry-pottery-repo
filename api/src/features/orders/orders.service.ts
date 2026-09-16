@@ -23,6 +23,7 @@ import {
 } from "@/features/products/products.service";
 import { SettingsService } from "@/features/settings/settings.service";
 import { checkCoupon, normaliseCouponCode } from "./coupons";
+import { readGift } from "./gift";
 import {
   canTransition,
   CUSTOMER_CANCELLABLE,
@@ -68,6 +69,8 @@ export function toOrder(row: OrderRow, now = new Date()): Order {
     coupon_code: row.coupon?.code ?? null,
     shipping_address: row.shipping_address,
     customer_note: row.customer_note,
+    gift_note: row.gift_note,
+    hide_prices: row.hide_prices,
     tracking_note: row.tracking_note,
     cancel_reason: row.cancel_reason,
     can_cancel: CUSTOMER_CANCELLABLE.includes(row.status),
@@ -170,6 +173,7 @@ export class OrdersService {
 
   async place(userId: number, input: PlaceOrderInput): Promise<Order> {
     const note = input.customer_note?.trim().slice(0, 500) || null;
+    const gift = readGift(input.gift_note, input.hide_prices);
 
     const order = await this.prisma.withTransaction(async () => {
       await this.lockCartProducts(userId);
@@ -254,6 +258,8 @@ export class OrdersService {
           total: quote.total,
           coupon_id: couponId,
           customer_note: note,
+          gift_note: gift.gift_note,
+          hide_prices: gift.hide_prices,
           shipping_address: {
             name: address.name,
             phone: address.phone,

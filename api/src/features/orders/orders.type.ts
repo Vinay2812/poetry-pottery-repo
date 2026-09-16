@@ -100,6 +100,12 @@ export class Order {
   customer_note!: string | null;
 
   @Field(() => String, { nullable: true })
+  gift_note!: string | null;
+
+  @Field()
+  hide_prices!: boolean;
+
+  @Field(() => String, { nullable: true })
   tracking_note!: string | null;
 
   @Field(() => String, { nullable: true })
@@ -188,4 +194,10 @@ export class PlaceOrderInput {
 
   @Field(() => String, { nullable: true })
   customer_note?: string | null;
+
+  @Field(() => String, { nullable: true })
+  gift_note?: string | null;
+
+  @Field(() => Boolean, { nullable: true })
+  hide_prices?: boolean | null;
 }

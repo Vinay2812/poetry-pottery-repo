@@ -32,6 +32,8 @@ export interface OrderDetailProps {
   total: number;
   addressLines: string[];
   customerNote: string | null;
+  giftNote: string | null;
+  hasHiddenPrices: boolean;
   trackingNote: string | null;
   whatsappUrl: string | null;
   canCancel: boolean;
@@ -60,6 +62,8 @@ export function OrderDetail({
   total,
   addressLines,
   customerNote,
+  giftNote,
+  hasHiddenPrices,
   trackingNote,
   whatsappUrl,
   canCancel,
@@ -161,6 +165,21 @@ export function OrderDetail({
               </p>
             )}
           </section>
+          {(giftNote || hasHiddenPrices) && (
+            <section className="flex flex-col gap-4">
+              <h3 className={SECTION_HEADING}>Sent as a gift</h3>
+              {giftNote && (
+                <p className="font-script text-lg leading-relaxed italic">
+                  “{giftNote}”
+                </p>
+              )}
+              <p className="text-[13px] text-muted-foreground">
+                {hasHiddenPrices
+                  ? "The packing slip goes in without prices."
+                  : "The packing slip goes in as usual."}
+              </p>
+            </section>
+          )}
           <div className="flex flex-col items-start gap-3">
             {whatsappUrl && !isJustPlaced && (
               <Button variant="outline" asChild>

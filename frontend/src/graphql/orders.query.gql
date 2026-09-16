@@ -7,6 +7,8 @@ fragment OrderFields on Order {
   total
   coupon_code
   customer_note
+  gift_note
+  hide_prices
   tracking_note
   cancel_reason
   can_cancel

@@ -72,6 +72,8 @@ function order(overrides: Partial<OrderData> = {}): OrderData {
     total: 2400,
     coupon_code: null,
     customer_note: null,
+    gift_note: null,
+    hide_prices: false,
     tracking_note: null,
     cancel_reason: null,
     can_cancel: true,

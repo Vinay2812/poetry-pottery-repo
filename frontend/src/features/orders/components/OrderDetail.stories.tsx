@@ -74,6 +74,8 @@ const meta = {
     total: 2450,
     addressLines,
     customerNote: null,
+    giftNote: null,
+    hasHiddenPrices: false,
     trackingNote: null,
     whatsappUrl:
       "https://wa.me/919876543210?text=Hi%2C%20I%20just%20placed%20order%20ORD7Q2X9M1KD",
@@ -122,6 +124,14 @@ export const Cancelled: Story = {
     closedLabel: "Cancelled on Wed, 16 Sep 2026",
     canCancel: false,
     customerNote: "Please deliver after 5 pm.",
+  },
+};
+
+export const AsAGift: Story = {
+  args: {
+    isJustPlaced: false,
+    giftNote: "Happy birthday, Ma. Tea tastes better in this one.",
+    hasHiddenPrices: true,
   },
 };
 

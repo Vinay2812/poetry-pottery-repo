@@ -23,8 +23,9 @@ import { toSelectionSummary } from "@/features/cart/types";
 import { CheckoutLineItem } from "@/features/checkout/components/CheckoutLineItem";
 import { CheckoutSummary } from "@/features/checkout/components/CheckoutSummary";
 import { CouponField } from "@/features/checkout/components/CouponField";
+import { GiftNoteField } from "@/features/checkout/components/GiftNoteField";
 import { OrderNoteField } from "@/features/checkout/components/OrderNoteField";
-import { toCouponView } from "@/features/checkout/types";
+import { toCouponView, toGiftView } from "@/features/checkout/types";
 import { toOrderPath } from "@/features/orders/types";
 
 export function CheckoutContainer() {
@@ -56,6 +57,9 @@ export function CheckoutContainer() {
     });
   }, []);
   const [note, setNote] = useState("");
+  const [isGift, setIsGift] = useState(false);
+  const [giftNote, setGiftNote] = useState("");
+  const [hasHiddenPrices, setHasHiddenPrices] = useState(false);
 
   const {
     data: quoteData,
@@ -132,12 +136,15 @@ export function CheckoutContainer() {
 
   const handlePlaceOrder = useCallback(() => {
     if (addressId === null) return;
+    const gift = toGiftView(isGift, giftNote, hasHiddenPrices);
     void placeOrder({
       variables: {
         input: {
           address_id: addressId,
           coupon_code: quote?.coupon_code ?? null,
           customer_note: note.trim() || null,
+          gift_note: gift.gift_note,
+          hide_prices: gift.hide_prices,
         },
       },
     })
@@ -149,7 +156,16 @@ export function CheckoutContainer() {
           error instanceof Error ? error.message : "Could not place the order",
         ),
       );
-  }, [addressId, note, placeOrder, quote, router]);
+  }, [
+    addressId,
+    giftNote,
+    hasHiddenPrices,
+    isGift,
+    note,
+    placeOrder,
+    quote,
+    router,
+  ]);
 
   const items = cart?.items.filter((item) => item.is_available) ?? [];
   const availableItemCount = items.reduce(
@@ -218,6 +234,14 @@ export function CheckoutContainer() {
               ))}
             </ul>
             <OrderNoteField value={note} onChange={setNote} />
+            <GiftNoteField
+              isGift={isGift}
+              note={giftNote}
+              hasHiddenPrices={hasHiddenPrices}
+              onIsGiftChange={setIsGift}
+              onNoteChange={setGiftNote}
+              onHiddenPricesChange={setHasHiddenPrices}
+            />
           </section>
         </div>
         <div className="lg:sticky lg:top-24">
