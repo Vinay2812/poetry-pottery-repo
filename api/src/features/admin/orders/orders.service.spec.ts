@@ -83,6 +83,41 @@ describe("AdminOrdersService", () => {
     expect(result.next_statuses).toContain(OrderStatus.CONFIRMED);
   });
 
+  it("carries the reference photos a made-to-order line was placed with", async () => {
+    prismaMock.order.findUnique.mockResolvedValue({
+      ...row,
+      items: [
+        {
+          id: 1,
+          product: {
+            id: 10,
+            name: "Chai cup, speckled",
+            image_urls: [],
+            is_customizable: true,
+            is_active: true,
+            categories: [],
+            collection: null,
+          },
+          product_name: "Chai cup, speckled",
+          product_image: null,
+          unit_price: 450,
+          quantity: 2,
+          line_total: 900,
+          selections: {
+            options: [],
+            reference_image_urls: ["https://cdn.test/customization/a.jpg"],
+          },
+        },
+      ],
+    });
+
+    const result = await service.byId(row.id);
+
+    expect(result.order.items[0]?.reference_image_urls).toEqual([
+      "https://cdn.test/customization/a.jpg",
+    ]);
+  });
+
   it("filters by status and date range", async () => {
     const from = new Date("2026-09-01");
     const to = new Date("2026-09-14");
