@@ -138,14 +138,18 @@ export function ProductCarousel({
             ))}
           </div>
         </div>
+        {/* The rule under a row is ash like every other divider; it only carries
+            a darker thumb while there is somewhere left to scroll. */}
         <div className="h-px w-full bg-ash" aria-hidden="true">
-          <div
-            className="h-px bg-ink"
-            style={{
-              width: `${thumbWidth}%`,
-              marginLeft: `${progress * (100 - thumbWidth)}%`,
-            }}
-          />
+          {snapCount > 1 && (
+            <div
+              className="h-px bg-smoke"
+              style={{
+                width: `${thumbWidth}%`,
+                marginLeft: `${progress * (100 - thumbWidth)}%`,
+              }}
+            />
+          )}
         </div>
       </div>
     </section>
