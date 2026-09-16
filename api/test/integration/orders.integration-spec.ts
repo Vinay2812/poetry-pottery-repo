@@ -70,8 +70,8 @@ describe("order placement under concurrency", () => {
     expect(outcome.errors).toHaveLength(RACERS - 1);
     // The losers are told which piece went, not that their cart is empty.
     expect(
-      outcome.errors.every((message) => message.includes("Sold out")),
-    ).toBe(true);
+      outcome.errors.filter((message) => !message.includes("Sold out")),
+    ).toEqual([]);
     const after = await harness.prisma.product.findUniqueOrThrow({
       where: { id: product.id },
     });
