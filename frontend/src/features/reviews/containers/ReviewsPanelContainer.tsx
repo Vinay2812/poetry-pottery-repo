@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useOptimistic, useState } from "react";
 
+import { DeleteReviewDialog } from "@/features/reviews/components/DeleteReviewDialog";
 import { ReviewDialog } from "@/features/reviews/components/ReviewDialog";
 import { ReviewForm } from "@/features/reviews/components/ReviewForm";
 import { ReviewItem } from "@/features/reviews/components/ReviewItem";
@@ -53,9 +54,15 @@ export function ReviewsPanelContainer({
     upload,
   } = useReviewComposer(subject, subjectName, applyAction);
   const [openPhoto, setOpenPhoto] = useState<string | null>(null);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const handleClose = useCallback(() => setIsOpen(false), [setIsOpen]);
   const handleClosePhoto = useCallback(() => setOpenPhoto(null), []);
+  const handleAskDelete = useCallback(() => setIsConfirmingDelete(true), []);
+  const handleConfirmDelete = useCallback(() => {
+    setIsConfirmingDelete(false);
+    removeMine();
+  }, [removeMine]);
 
   const hasMine = myReview !== null;
   const ctaLabel = !hasMine && canReview ? "Write a review" : null;
@@ -94,7 +101,7 @@ export function ReviewsPanelContainer({
             photoUrls={review.image_urls}
             isMine={review.is_mine}
             onEdit={review.is_mine ? open : undefined}
-            onDelete={review.is_mine ? removeMine : undefined}
+            onDelete={review.is_mine ? handleAskDelete : undefined}
             onOpenPhoto={setOpenPhoto}
           />
         ))}
@@ -119,6 +126,14 @@ export function ReviewsPanelContainer({
           onCancel={handleClose}
         />
       </ReviewDialog>
+
+      <DeleteReviewDialog
+        isOpen={isConfirmingDelete}
+        subjectName={subjectName}
+        isSubmitting={isSaving}
+        onOpenChange={setIsConfirmingDelete}
+        onConfirm={handleConfirmDelete}
+      />
 
       <ReviewPhotoDialog
         isOpen={openPhoto !== null}

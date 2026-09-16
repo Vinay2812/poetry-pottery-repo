@@ -1,6 +1,7 @@
 export { RatingInput } from "@/features/reviews/components/RatingInput";
 export { RatingMarkers } from "@/features/reviews/components/RatingMarkers";
 export { ReviewColumn } from "@/features/reviews/components/ReviewColumn";
+export { DeleteReviewDialog } from "@/features/reviews/components/DeleteReviewDialog";
 export { ReviewDialog } from "@/features/reviews/components/ReviewDialog";
 export { ReviewForm } from "@/features/reviews/components/ReviewForm";
 export { ReviewItem } from "@/features/reviews/components/ReviewItem";
