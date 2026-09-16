@@ -32,6 +32,8 @@ function makeSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
     youtube_url: "https://youtube.com/@studio",
     shipping_flat_fee: 80,
     free_shipping_above: 2000,
+    dispatch_days_min: 7,
+    dispatch_days_max: 12,
     announcement_text: null,
     announcement_href: null,
     hero_heading: "Made by hand",

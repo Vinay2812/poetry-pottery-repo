@@ -77,6 +77,43 @@ export function toStepIndex(
   );
 }
 
+const ARRIVAL_DATE = new Intl.DateTimeFormat("en-IN", {
+  day: "numeric",
+  month: "long",
+  timeZone: "Asia/Kolkata",
+});
+
+// Every piece is thrown, fired and packed before it leaves, so the studio promises a
+// window rather than a day. Both ends are counted from when the order was placed.
+export function toArrivalWindow(
+  placedAt: string,
+  dispatchDaysMin: number,
+  dispatchDaysMax: number,
+): string {
+  const placed = new Date(placedAt);
+  const earliest = Math.max(1, Math.min(dispatchDaysMin, dispatchDaysMax));
+  const latest = Math.max(earliest, dispatchDaysMin, dispatchDaysMax);
+  const from = addDays(placed, earliest);
+  const to = addDays(placed, latest);
+  if (earliest === latest) {
+    return `Should reach you around ${ARRIVAL_DATE.format(from)}`;
+  }
+  return `Should reach you between ${ARRIVAL_DATE.format(from)} and ${ARRIVAL_DATE.format(to)}`;
+}
+
+function addDays(from: Date, days: number): Date {
+  return new Date(from.getTime() + days * 86_400_000);
+}
+
+// The first word of whatever name we have; the shipping address is the fallback.
+export function toFirstName(
+  clerkName: string | null | undefined,
+  addressName: string,
+): string {
+  const source = clerkName?.trim() || addressName.trim();
+  return source.split(/\s+/)[0] ?? source;
+}
+
 // Care advice is for someone holding the piece, so it waits until the parcel has landed.
 export function toDeliveredCareLines(
   status: OrderStatus,

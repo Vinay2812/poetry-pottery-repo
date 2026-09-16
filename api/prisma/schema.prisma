@@ -639,6 +639,8 @@ model SiteSettings {
   youtube_url         String  @default("")
   shipping_flat_fee   Int     @default(150)
   free_shipping_above Int?
+  dispatch_days_min   Int     @default(7)
+  dispatch_days_max   Int     @default(12)
   announcement_text   String?
   announcement_href   String?
   hero_heading        String  @default("")

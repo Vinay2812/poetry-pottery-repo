@@ -10,6 +10,8 @@ query SiteSettings {
     youtube_url
     shipping_flat_fee
     free_shipping_above
+    dispatch_days_min
+    dispatch_days_max
     announcement_text
     announcement_href
     hero_heading

@@ -32,6 +32,12 @@ export class SiteSettings {
   @Field(() => Int, { nullable: true })
   free_shipping_above!: number | null;
 
+  @Field(() => Int)
+  dispatch_days_min!: number;
+
+  @Field(() => Int)
+  dispatch_days_max!: number;
+
   @Field(() => String, { nullable: true })
   announcement_text!: string | null;
 

@@ -6,7 +6,9 @@ import {
   applyOrderCancellation,
   isClosed,
   type OrderData,
+  toArrivalWindow,
   toDeliveredCareLines,
+  toFirstName,
   toStatusLabel,
   toStatusTone,
   toOrderPath,
@@ -152,5 +154,38 @@ describe("toDeliveredCareLines", () => {
   it("holds them back while the order is still on its way", () => {
     expect(toDeliveredCareLines(OrderStatus.Shipped, lines)).toEqual([]);
     expect(toDeliveredCareLines(OrderStatus.Cancelled, lines)).toEqual([]);
+  });
+});
+
+describe("toArrivalWindow", () => {
+  const PLACED = "2026-09-12T09:00:00.000Z";
+
+  it("counts both ends of the window from the day the order was placed", () => {
+    expect(toArrivalWindow(PLACED, 7, 12)).toBe(
+      "Should reach you between 19 September and 24 September",
+    );
+  });
+
+  it("names one day when the studio quotes a single figure", () => {
+    expect(toArrivalWindow(PLACED, 7, 7)).toBe(
+      "Should reach you around 19 September",
+    );
+  });
+
+  it("survives a settings row with the two ends the wrong way round", () => {
+    expect(toArrivalWindow(PLACED, 12, 7)).toBe(
+      "Should reach you between 19 September and 24 September",
+    );
+  });
+});
+
+describe("toFirstName", () => {
+  it("takes the first word of the name the account carries", () => {
+    expect(toFirstName("Maya Iyer", "M. Iyer")).toBe("Maya");
+  });
+
+  it("falls back to the shipping address when the account has no name", () => {
+    expect(toFirstName(null, "Maya Iyer")).toBe("Maya");
+    expect(toFirstName("   ", "Maya Iyer")).toBe("Maya");
   });
 });

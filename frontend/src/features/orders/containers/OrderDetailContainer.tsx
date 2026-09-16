@@ -15,7 +15,9 @@ import {
   applyOrderCancellation,
   isClosed,
   ORDER_STEPS,
+  toArrivalWindow,
   toDeliveredCareLines,
+  toFirstName,
   toStatusLabel,
   toStatusTone,
   toStepIndex,
@@ -27,12 +29,19 @@ export interface OrderDetailContainerProps {
   orderId: string;
   isJustPlaced: boolean;
   whatsappNumber: string;
+  dispatchDaysMin: number;
+  dispatchDaysMax: number;
 }
+
+const TRANSIT_LINE =
+  "Everything is packed by hand and goes by courier, so a day either way is normal.";
 
 export function OrderDetailContainer({
   orderId,
   isJustPlaced,
   whatsappNumber,
+  dispatchDaysMin,
+  dispatchDaysMax,
 }: OrderDetailContainerProps) {
   const { order, isLoading, hasError, isSignedIn, refetch } = useOrder(orderId);
   const [optimisticOrder, applyCancellation] = useOptimistic(
@@ -134,6 +143,14 @@ export function OrderDetailContainer({
         statusLabel={toStatusLabel(optimisticOrder.status)}
         statusTone={toStatusTone(optimisticOrder.status)}
         isJustPlaced={isJustPlaced && !closed}
+        firstName={toFirstName(user?.firstName, address.name)}
+        arrivalLine={toArrivalWindow(
+          optimisticOrder.created_at,
+          dispatchDaysMin,
+          dispatchDaysMax,
+        )}
+        transitLine={TRANSIT_LINE}
+        emailedTo={user?.primaryEmailAddress?.emailAddress ?? null}
         steps={ORDER_STEPS.map((step) => ({
           key: step.key,
           label: step.label,

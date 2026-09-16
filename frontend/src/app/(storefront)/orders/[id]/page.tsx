@@ -23,6 +23,8 @@ export default async function OrderPage({
       orderId={id}
       isJustPlaced={query.placed === "1"}
       whatsappNumber={settings.whatsapp_number}
+      dispatchDaysMin={settings.dispatch_days_min}
+      dispatchDaysMax={settings.dispatch_days_max}
     />
   );
 }

@@ -3,6 +3,7 @@ import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import { OrderCareGuide } from "@/features/orders/components/OrderCareGuide";
+import { OrderPlacedBanner } from "@/features/orders/components/OrderPlacedBanner";
 import {
   OrderItemRow,
   type OrderItemRowProps,
@@ -25,6 +26,10 @@ export interface OrderDetailProps {
   statusLabel: string;
   statusTone: StatusTone;
   isJustPlaced: boolean;
+  firstName: string;
+  arrivalLine: string;
+  transitLine: string;
+  emailedTo: string | null;
   steps: OrderTimelineStep[];
   currentStepIndex: number;
   isClosed: boolean;
@@ -57,6 +62,10 @@ export function OrderDetail({
   statusLabel,
   statusTone,
   isJustPlaced,
+  firstName,
+  arrivalLine,
+  transitLine,
+  emailedTo,
   steps,
   currentStepIndex,
   isClosed,
@@ -82,23 +91,18 @@ export function OrderDetail({
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 md:px-8 md:py-12">
       {isJustPlaced && (
-        <section className="flex flex-col items-start gap-3 border border-ash bg-clay-white p-6 md:p-8">
-          <h1 className="font-heading text-3xl tracking-tight md:text-4xl">
-            Your order is in
-          </h1>
-          <p className="max-w-xl text-[15px] text-muted-foreground">
-            We confirm every order by hand, so send us a message or wait for
-            ours within a day.
-          </p>
-          {whatsappUrl && (
-            <Button size="lg" asChild>
-              <a href={whatsappUrl} target="_blank" rel="noreferrer">
-                <MessageCircle className="size-4" strokeWidth={1.5} />
-                Confirm on WhatsApp
-              </a>
-            </Button>
-          )}
-        </section>
+        <OrderPlacedBanner
+          firstName={firstName}
+          pieces={items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            imageUrl: item.imageUrl,
+          }))}
+          arrivalLine={arrivalLine}
+          transitLine={transitLine}
+          emailedTo={emailedTo}
+          whatsappUrl={whatsappUrl}
+        />
       )}
 
       <header className="flex flex-wrap items-start justify-between gap-3">

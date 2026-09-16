@@ -878,6 +878,8 @@ export type SiteSettings = {
   announcement_text?: Maybe<Scalars['String']['output']>;
   contact_email: Scalars['String']['output'];
   contact_phone: Scalars['String']['output'];
+  dispatch_days_max: Scalars['Int']['output'];
+  dispatch_days_min: Scalars['Int']['output'];
   facebook_url: Scalars['String']['output'];
   free_shipping_above?: Maybe<Scalars['Int']['output']>;
   hero_cta_href: Scalars['String']['output'];
@@ -1285,7 +1287,7 @@ export type GlazeQuery = { glaze: { description: string, variation_note: string 
 export type SiteSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type SiteSettingsQuery = { siteSettings: { contact_phone: string, whatsapp_number: string, contact_email: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, announcement_text: string | null, announcement_href: string | null, hero_heading: string, hero_subheading: string, hero_image_url: string, hero_cta_text: string, hero_cta_href: string } };
+export type SiteSettingsQuery = { siteSettings: { contact_phone: string, whatsapp_number: string, contact_email: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, dispatch_days_min: number, dispatch_days_max: number, announcement_text: string | null, announcement_href: string | null, hero_heading: string, hero_subheading: string, hero_image_url: string, hero_cta_text: string, hero_cta_href: string } };
 
 export type CreateCustomizationUploadMutationVariables = Exact<{
   content_type: string;
@@ -2986,6 +2988,8 @@ export const SiteSettingsDocument = gql`
     youtube_url
     shipping_flat_fee
     free_shipping_above
+    dispatch_days_min
+    dispatch_days_max
     announcement_text
     announcement_href
     hero_heading
