@@ -98,7 +98,9 @@ export function ProductBuyBox({
       {options}
 
       <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
+        {/* A narrow phone cannot hold a stepper, a priced button and a heart on one line,
+            so the button takes its own line there and the row never scrolls sideways. */}
+        <div className="flex flex-wrap items-center gap-2">
           {!isSoldOut && (
             <QuantityStepper
               value={quantity}
@@ -108,7 +110,7 @@ export function ProductBuyBox({
           )}
           <Button
             size="lg"
-            className="flex-1"
+            className="order-last w-full min-w-0 sm:order-none sm:w-auto sm:flex-1"
             onClick={onAddToCart}
             disabled={!canAddToCart || isAddingToCart || isSoldOut}
           >
@@ -121,7 +123,7 @@ export function ProductBuyBox({
           <Button
             variant="outline"
             size="icon-lg"
-            className={cn(isWishlisted && "bg-ink text-white")}
+            className={cn("shrink-0", isWishlisted && "bg-ink text-white")}
             onClick={onToggleWishlist}
             aria-pressed={isWishlisted}
             aria-label={
