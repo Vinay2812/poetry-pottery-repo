@@ -31,6 +31,17 @@ export function RegistrationsListContainer() {
   const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
 
+  // The wall is the whole page when it shows, so it carries the h1 rather than
+  // sitting under a heading for a list that is not there.
+  if (!isLoading && !isSignedIn) {
+    return (
+      <SignInWall
+        message="Sign in to see your bookings"
+        onSignIn={() => openSignIn()}
+      />
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 md:px-8 md:py-12">
       <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
@@ -45,11 +56,6 @@ export function RegistrationsListContainer() {
             />
           ))}
         </div>
-      ) : !isSignedIn ? (
-        <SignInWall
-          message="Sign in to see your bookings"
-          onSignIn={() => openSignIn()}
-        />
       ) : hasError ? (
         <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
           <h2 className="font-heading text-2xl tracking-tight">

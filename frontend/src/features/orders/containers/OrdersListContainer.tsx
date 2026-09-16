@@ -31,6 +31,17 @@ export function OrdersListContainer() {
   const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
 
+  // The wall is the whole page when it shows, so it carries the h1 rather than
+  // sitting under a heading for a list that is not there.
+  if (!isLoading && !isSignedIn) {
+    return (
+      <SignInWall
+        message="Sign in to see your orders"
+        onSignIn={() => openSignIn()}
+      />
+    );
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-6 px-4 py-8 md:px-8 md:py-12">
       <h1 className="font-heading text-3xl md:text-5xl">Your orders</h1>
@@ -40,11 +51,6 @@ export function OrdersListContainer() {
             <div key={index} className="h-40 animate-pulse bg-ash" />
           ))}
         </div>
-      ) : !isSignedIn ? (
-        <SignInWall
-          message="Sign in to see your orders"
-          onSignIn={() => openSignIn()}
-        />
       ) : hasError ? (
         <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
           <h2 className="font-heading text-2xl tracking-tight">

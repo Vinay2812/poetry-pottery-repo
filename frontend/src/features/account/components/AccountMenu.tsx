@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -35,7 +36,7 @@ const LINKS = [
 ] as const;
 
 const ROW =
-  "flex items-baseline justify-between gap-4 border-b border-ash py-4 text-left transition-colors duration-200 hover:text-primary";
+  "flex items-center justify-between gap-4 border-b border-ash py-4 text-left transition-colors duration-200 hover:text-primary";
 
 export function AccountMenu({
   displayName,
@@ -58,12 +59,12 @@ export function AccountMenu({
           )}
         </span>
         <div className="min-w-0">
-          <h1 className="truncate font-heading text-2xl tracking-tight md:text-3xl">
-            {displayName}
+          <h1 className="font-heading text-2xl tracking-tight md:text-3xl">
+            Your account
           </h1>
-          <p className="truncate text-sm text-muted-foreground">{email}</p>
-          <p className="text-[13px] text-muted-foreground">
-            With us since {memberSince}
+          <p className="truncate text-sm">{displayName}</p>
+          <p className="truncate text-[13px] text-muted-foreground">
+            {email} · with us since {memberSince}
           </p>
         </div>
       </div>
@@ -72,7 +73,16 @@ export function AccountMenu({
           <li key={href}>
             <Link href={href} className={ROW}>
               <span className="text-[15px]">{label}</span>
-              <span className="text-[13px] text-muted-foreground">{hint}</span>
+              <span className="flex items-center gap-3">
+                <span className="text-[13px] text-muted-foreground">
+                  {hint}
+                </span>
+                <ArrowRight
+                  aria-hidden="true"
+                  className="size-4 shrink-0 text-muted-foreground"
+                  strokeWidth={1.5}
+                />
+              </span>
             </Link>
           </li>
         ))}
@@ -83,8 +93,15 @@ export function AccountMenu({
             className={`w-full ${ROW}`}
           >
             <span className="text-[15px]">Profile and sign-in</span>
-            <span className="text-[13px] text-muted-foreground">
-              Name, email, password
+            <span className="flex items-center gap-3">
+              <span className="text-[13px] text-muted-foreground">
+                Name, email, password
+              </span>
+              <ArrowRight
+                aria-hidden="true"
+                className="size-4 shrink-0 text-muted-foreground"
+                strokeWidth={1.5}
+              />
             </span>
           </button>
         </li>
