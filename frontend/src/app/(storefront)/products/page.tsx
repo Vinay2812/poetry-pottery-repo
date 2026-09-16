@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { getCollection } from "@/lib/data/catalog";
 
 import { ARCHIVE_VIEW, ProductListContainer } from "@/features/products";
+import Loading from "./loading";
 
 export const metadata: Metadata = {
   title: "Shop handmade pottery",
@@ -27,7 +28,7 @@ export default async function ProductsPage({
     : null;
 
   return (
-    <Suspense>
+    <Suspense fallback={<Loading />}>
       <ProductListContainer
         heading={
           collection?.name ??

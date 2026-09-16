@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { ProductListContainer } from "@/features/products";
+import Loading from "./loading";
 
 export const metadata: Metadata = {
   title: "Search",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function SearchPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<Loading />}>
       <ProductListContainer
         isSearchPage
         heading="Search the shelf"
