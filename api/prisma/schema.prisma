@@ -98,6 +98,25 @@ model Collection {
   @@map("collections")
 }
 
+// A glaze is a material the studio names, not a colour word: it behaves a certain
+// way in the kiln and it varies, and both are said out loud on the pieces that wear it.
+model Glaze {
+  id             Int     @id @default(autoincrement())
+  slug           String  @unique
+  name           String
+  description    String
+  variation_note String?
+  swatch_url     String?
+  color_code     String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  products Product[]
+
+  @@map("glazes")
+}
+
 model Product {
   id               Int      @id @default(autoincrement())
   slug             String   @unique
@@ -116,6 +135,14 @@ model Product {
   is_featured      Boolean  @default(false)
   is_customizable  Boolean  @default(false)
   collection_id    Int?
+  glaze_id         Int?
+
+  // What the piece is in the hand: filled in per piece, never guessed.
+  capacity_ml Int?
+  height_cm   Decimal? @db.Decimal(5, 1)
+  diameter_cm Decimal? @db.Decimal(5, 1)
+  weight_g    Int?
+  maker_note  String?
 
   // Denormalised so lists sort and render without aggregating.
   sales_count  Int   @default(0)
@@ -130,6 +157,7 @@ model Product {
   updated_at DateTime @default(now()) @updatedAt
 
   collection     Collection?          @relation(fields: [collection_id], references: [id], onDelete: SetNull)
+  glaze          Glaze?               @relation(fields: [glaze_id], references: [id], onDelete: SetNull)
   categories     Category[]
   option_groups  ProductOptionGroup[]
   cart_items     CartItem[]
@@ -138,6 +166,7 @@ model Product {
   reviews        Review[]
 
   @@index([collection_id])
+  @@index([glaze_id])
   @@index([is_active, created_at])
   @@index([price])
   @@index([sales_count])
