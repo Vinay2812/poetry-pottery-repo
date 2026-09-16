@@ -1,7 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 import { formatInr } from "@/lib/format";
 
 import { formatHours, type WorkshopTierData } from "@/features/workshops/types";
@@ -22,23 +21,9 @@ export function WorkshopIntro({
   href,
 }: WorkshopIntroProps) {
   return (
+    // The page title comes first; a photograph, when there is one, follows the sentence
+    // that introduces it. A drawn placeholder is not worth half a screen.
     <section className="flex flex-col gap-6">
-      <div className="relative aspect-4/3 overflow-hidden bg-white md:aspect-21/9">
-        {imageUrl ? (
-          <Image
-            src={imageUrl}
-            alt=""
-            fill
-            loading="eager"
-            fetchPriority="high"
-            sizes="(min-width: 1280px) 1280px, 100vw"
-            className="object-cover"
-          />
-        ) : (
-          <PlaceholderImage kind="vase" />
-        )}
-      </div>
-
       <div className="flex flex-col gap-3">
         <h1 className="max-w-3xl font-heading text-3xl leading-tight tracking-tight text-balance md:text-5xl">
           {name}
@@ -49,6 +34,20 @@ export function WorkshopIntro({
           </p>
         )}
       </div>
+
+      {imageUrl && (
+        <div className="relative aspect-4/3 overflow-hidden bg-white md:aspect-21/9">
+          <Image
+            src={imageUrl}
+            alt=""
+            fill
+            loading="eager"
+            fetchPriority="high"
+            sizes="(min-width: 1280px) 1280px, 100vw"
+            className="object-cover"
+          />
+        </div>
+      )}
 
       <table className="w-full max-w-xl text-sm">
         <thead>
