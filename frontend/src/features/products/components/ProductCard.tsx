@@ -170,9 +170,11 @@ export function ProductCard({
                 ? `Remove ${name} from wishlist`
                 : `Save ${name} to wishlist`
             }
+            // The heart is how a phone fills the wishlist, so it only fades at rest
+            // where there is a hover to bring it back.
             className={cn(
               OVERLAY_BUTTON,
-              "absolute top-2 right-2 hidden lg:flex",
+              "absolute top-2 right-2",
               isWishlisted && "lg:opacity-100",
             )}
           >
