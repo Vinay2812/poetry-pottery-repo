@@ -22,13 +22,16 @@ function section(
 
 describe("applyNewsletterResult", () => {
   it("swaps the pending answer in for the current one", () => {
-    const submitting: NewsletterResult = { state: "submitting", message: null };
     const subscribed: NewsletterResult = {
       state: "subscribed",
       message: "You are on the list.",
     };
-    expect(applyNewsletterResult(IDLE_NEWSLETTER, submitting)).toBe(submitting);
-    expect(applyNewsletterResult(submitting, subscribed)).toBe(subscribed);
+    const failed: NewsletterResult = {
+      state: "error",
+      message: "That address did not take.",
+    };
+    expect(applyNewsletterResult(IDLE_NEWSLETTER, subscribed)).toBe(subscribed);
+    expect(applyNewsletterResult(subscribed, failed)).toBe(failed);
   });
 });
 
