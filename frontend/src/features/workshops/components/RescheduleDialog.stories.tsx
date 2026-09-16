@@ -66,6 +66,7 @@ const meta = {
       { startsAt: "2026-09-19T09:30:00.000Z", label: "Sat, 19 Sept · 3–4 pm" },
     ],
     slotsNeeded: 2,
+    isUnchanged: false,
     isSubmitting: false,
     onOpenChange: fn(),
     onPreviousMonth: fn(),
@@ -88,6 +89,8 @@ export const NothingPicked: Story = {
 };
 
 export const Moving: Story = { args: { isSubmitting: true } };
+
+export const SameHoursAsBooked: Story = { args: { isUnchanged: true } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

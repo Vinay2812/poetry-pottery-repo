@@ -299,6 +299,18 @@ export function togglePicked(
   return [...picked, { starts_at: slot.starts_at, ends_at: slot.ends_at }];
 }
 
+// The move dialog opens on the hours already held, so an untouched selection
+// would otherwise ask the studio to move a session onto itself.
+export function isSameSelection(
+  picked: readonly SlotInterval[],
+  current: readonly SlotInterval[],
+): boolean {
+  if (picked.length !== current.length) return false;
+  const pickedStarts = picked.map((slot) => slot.starts_at).sort();
+  const currentStarts = current.map((slot) => slot.starts_at).sort();
+  return pickedStarts.every((start, index) => start === currentStarts[index]);
+}
+
 export function formatPickedProgress(picked: number, needed: number): string {
   return `${picked} of ${needed} ${needed === 1 ? "hour" : "hours"} picked`;
 }

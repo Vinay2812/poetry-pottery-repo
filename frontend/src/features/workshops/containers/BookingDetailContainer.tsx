@@ -35,6 +35,7 @@ import {
   groupSlotsByDay,
   isBookingClosed,
   isDayWithinSpan,
+  isSameSelection,
   isSlotPickable,
   pickableSlots,
   type SessionFact,
@@ -92,6 +93,8 @@ export function BookingDetailContainer({
   const hours = optimisticBooking?.hours ?? 1;
   const participants = optimisticBooking?.participants ?? 1;
   const needed = slotsNeeded(hours, slotMinutes);
+  const bookedSlots = optimisticBooking?.slots ?? [];
+  const isUnchangedMove = isSameSelection(picked, bookedSlots);
 
   const { days } = useAvailability(configSlug, month, !isMoveOpen);
   const dayByKey = useMemo(
@@ -191,7 +194,7 @@ export function BookingDetailContainer({
   }, [applyBookingChange, bookingId, cancel, reason]);
 
   const handleConfirmMove = useCallback(() => {
-    if (picked.length !== needed) return;
+    if (picked.length !== needed || isUnchangedMove) return;
     const moved = [...picked];
     setIsMoveOpen(false);
     setPicked([]);
@@ -203,7 +206,14 @@ export function BookingDetailContainer({
         moved.map((slot) => slot.starts_at),
       );
     });
-  }, [applyBookingChange, bookingId, needed, picked, reschedule]);
+  }, [
+    applyBookingChange,
+    bookingId,
+    isUnchangedMove,
+    needed,
+    picked,
+    reschedule,
+  ]);
 
   // The picker opens on the hours the guest already has, so a move can keep most of them.
   const handleOpenMove = useCallback(() => {
@@ -353,6 +363,7 @@ export function BookingDetailContainer({
         slots={slots}
         pickedSlots={pickedSlots}
         slotsNeeded={needed}
+        isUnchanged={isUnchangedMove}
         isSubmitting={isRescheduling}
         onOpenChange={setIsMoveOpen}
         onPreviousMonth={() => setMonth(shiftMonth(month, -1))}

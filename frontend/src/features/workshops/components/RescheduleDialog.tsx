@@ -31,6 +31,7 @@ export interface RescheduleDialogProps {
   slots: SlotOption[];
   pickedSlots: PickedSlot[];
   slotsNeeded: number;
+  isUnchanged: boolean;
   isSubmitting: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onPreviousMonth: () => void;
@@ -51,6 +52,7 @@ export function RescheduleDialog({
   slots,
   pickedSlots,
   slotsNeeded,
+  isUnchanged,
   isSubmitting,
   onOpenChange,
   onPreviousMonth,
@@ -112,7 +114,9 @@ export function RescheduleDialog({
           </Button>
           <Button
             onClick={onConfirm}
-            disabled={isSubmitting || pickedSlots.length !== slotsNeeded}
+            disabled={
+              isSubmitting || pickedSlots.length !== slotsNeeded || isUnchanged
+            }
           >
             {isSubmitting ? "Moving…" : "Move session"}
           </Button>
