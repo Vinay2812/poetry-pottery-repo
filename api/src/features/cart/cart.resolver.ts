@@ -17,6 +17,12 @@ export class CartResolver {
   }
 
   @AuthRequired()
+  @Query(() => Int)
+  cartCount(@CurrentUser() user: AuthUser): Promise<number> {
+    return this.cartService.count(user.db_user_id);
+  }
+
+  @AuthRequired()
   @Mutation(() => Cart)
   addToCart(
     @CurrentUser() user: AuthUser,

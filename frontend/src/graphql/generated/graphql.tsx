@@ -613,6 +613,7 @@ export type Query = {
   __typename?: 'Query';
   addresses: Array<Address>;
   cart: Cart;
+  cartCount: Scalars['Int']['output'];
   categories: Array<Category>;
   checkoutQuote: CheckoutQuote;
   collection: Collection;
@@ -1008,6 +1009,11 @@ export type CartQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type CartQuery = { cart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
+
+export type CartCountQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CartCountQuery = { cartCount: number };
 
 export type AddToCartMutationVariables = Exact<{
   input: AddToCartInput;
@@ -1712,6 +1718,38 @@ export function useCartLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOpt
 export type CartQueryHookResult = ReturnType<typeof useCartQuery>;
 export type CartLazyQueryHookResult = ReturnType<typeof useCartLazyQuery>;
 export type CartQueryResult = ApolloReactCommon.QueryResult<CartQuery, CartQueryVariables>;
+export const CartCountDocument = gql`
+    query CartCount {
+  cartCount
+}
+    `;
+
+/**
+ * __useCartCountQuery__
+ *
+ * To run a query within a React component, call `useCartCountQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCartCountQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCartCountQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useCartCountQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<CartCountQuery, CartCountQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<CartCountQuery, CartCountQueryVariables>(CartCountDocument, options);
+      }
+export function useCartCountLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<CartCountQuery, CartCountQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<CartCountQuery, CartCountQueryVariables>(CartCountDocument, options);
+        }
+export type CartCountQueryHookResult = ReturnType<typeof useCartCountQuery>;
+export type CartCountLazyQueryHookResult = ReturnType<typeof useCartCountLazyQuery>;
+export type CartCountQueryResult = ApolloReactCommon.QueryResult<CartCountQuery, CartCountQueryVariables>;
 export const AddToCartDocument = gql`
     mutation AddToCart($input: AddToCartInput!) {
   addToCart(input: $input) {

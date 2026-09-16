@@ -459,6 +459,7 @@ type ProductsResult {
 type Query {
   addresses: [Address!]!
   cart: Cart!
+  cartCount: Int!
   categories: [Category!]!
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
   collection(archive: Boolean = false, slug: String!): Collection!

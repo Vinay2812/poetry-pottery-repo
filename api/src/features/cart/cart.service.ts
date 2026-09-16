@@ -117,6 +117,15 @@ export class CartService {
     };
   }
 
+  // The header badge only needs the number, so it never builds the cart.
+  async count(userId: number): Promise<number> {
+    const totals = await this.prisma.cartItem.aggregate({
+      where: { user_id: userId },
+      _sum: { quantity: true },
+    });
+    return totals._sum.quantity ?? 0;
+  }
+
   async add(userId: number, input: AddToCartInput): Promise<Cart> {
     const quantity = Math.trunc(input.quantity);
     if (quantity < 1 || quantity > MAX_LINE_QUANTITY) {

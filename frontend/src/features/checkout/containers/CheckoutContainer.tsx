@@ -81,7 +81,7 @@ export function CheckoutContainer() {
   // Placing an order empties the cart and adds a row to the orders list; both are fetched again.
   // A refetch that fails must not swallow an order the server already saved.
   const [placeOrder, { loading: isPlacing }] = usePlaceOrderMutation({
-    refetchQueries: ["Cart", "Orders"],
+    refetchQueries: ["Cart", "CartCount", "Orders"],
     awaitRefetchQueries: true,
     onQueryUpdated: (query) =>
       query

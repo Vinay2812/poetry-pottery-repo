@@ -18,6 +18,7 @@ const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
   $executeRaw: vi.fn().mockResolvedValue(1),
   cartItem: {
+    aggregate: vi.fn(),
     findMany: vi.fn(),
     findUnique: vi.fn(),
     findFirst: vi.fn(),
@@ -188,6 +189,17 @@ describe("CartService", () => {
       ],
     }).compile();
     service = moduleRef.get(CartService);
+  });
+
+  it("counts the pieces without building the cart", async () => {
+    prismaMock.cartItem.aggregate.mockResolvedValue({ _sum: { quantity: 4 } });
+    await expect(service.count(1)).resolves.toBe(4);
+
+    prismaMock.cartItem.aggregate.mockResolvedValue({
+      _sum: { quantity: null },
+    });
+    await expect(service.count(1)).resolves.toBe(0);
+    expect(prismaMock.cartItem.findMany).not.toHaveBeenCalled();
   });
 
   it("merges into an existing line and caps at the stock", async () => {
