@@ -3,6 +3,7 @@ import { Test } from "@nestjs/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
+import { missingRow } from "@test/helpers/prisma-errors";
 import { AdminInboxService, toCsv } from "./inbox.service";
 
 const message = {
@@ -86,6 +87,7 @@ describe("AdminInboxService", () => {
       ...message,
       is_read: true,
     });
+    prismaMock.contactMessage.delete.mockResolvedValue(message);
     prismaMock.newsletterSubscriber.findMany.mockResolvedValue([subscriber]);
     prismaMock.newsletterSubscriber.count.mockResolvedValue(1);
     const moduleRef = await Test.createTestingModule({
@@ -129,6 +131,14 @@ describe("AdminInboxService", () => {
 
   it("deletes a message", async () => {
     await expect(service.deleteMessage(1)).resolves.toBe(true);
+  });
+
+  it("answers not found when the message is already gone", async () => {
+    prismaMock.contactMessage.delete.mockRejectedValue(missingRow());
+
+    await expect(service.deleteMessage(1)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it("exports the filtered subscriber list as csv", async () => {

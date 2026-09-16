@@ -10,6 +10,7 @@ import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
 import { normaliseCouponCode } from "@/features/orders/coupons";
 import { searchTerm } from "../admin.type";
+import { rethrowMissing } from "../missing-row";
 import type {
   AdminCoupon,
   AdminCouponInput,
@@ -113,7 +114,9 @@ export class AdminCouponsService {
   }
 
   async remove(id: number): Promise<boolean> {
-    await this.prisma.coupon.delete({ where: { id } });
+    await this.prisma.coupon
+      .delete({ where: { id } })
+      .catch(rethrowMissing("Code not found"));
     return true;
   }
 }

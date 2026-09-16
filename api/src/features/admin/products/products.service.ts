@@ -22,6 +22,7 @@ import type {
 import { SearchService } from "@/features/search/search.service";
 import { searchTerm } from "../admin.type";
 import { LOW_STOCK_THRESHOLD } from "../dashboard/dashboard.service";
+import { rethrowMissing } from "../missing-row";
 import { slugify, uniqueSlug } from "../slug";
 import { UploadsService } from "../uploads/uploads.service";
 import { UploadPurpose } from "../uploads/uploads.type";
@@ -124,6 +125,7 @@ export class AdminProductsService {
     assertMoney(input.price, "Price");
     assertMoney(input.compare_at_price, "Compare-at price");
     assertStock(input.stock);
+    await this.assertLinks(input.category_ids, input.collection_id);
     const image_urls = cleanList(input.image_urls);
     await this.uploads.assertConfirmed(image_urls, [], UploadPurpose.PRODUCT);
 
@@ -169,6 +171,7 @@ export class AdminProductsService {
     if (!current) {
       throw new NotFoundException("Product not found");
     }
+    await this.assertLinks(input.category_ids, input.collection_id);
     const image_urls = input.image_urls
       ? cleanList(input.image_urls)
       : undefined;
@@ -226,21 +229,25 @@ export class AdminProductsService {
   }
 
   async setActive(id: number, isActive: boolean): Promise<Product> {
-    const row = await this.prisma.product.update({
-      where: { id },
-      data: { is_active: isActive },
-      include: productListInclude,
-    });
+    const row = await this.prisma.product
+      .update({
+        where: { id },
+        data: { is_active: isActive },
+        include: productListInclude,
+      })
+      .catch(rethrowMissing("Product not found"));
     await this.afterWrite(id);
     return toProduct(row);
   }
 
   async setFeatured(id: number, isFeatured: boolean): Promise<Product> {
-    const row = await this.prisma.product.update({
-      where: { id },
-      data: { is_featured: isFeatured },
-      include: productListInclude,
-    });
+    const row = await this.prisma.product
+      .update({
+        where: { id },
+        data: { is_featured: isFeatured },
+        include: productListInclude,
+      })
+      .catch(rethrowMissing("Product not found"));
     await this.products.invalidateCatalogCache();
     return toProduct(row);
   }
@@ -311,18 +318,20 @@ export class AdminProductsService {
   ): Promise<ProductOptionGroup> {
     assertMoney(input.price_modifier, "Price modifier");
     const kind = input.kind ?? OptionGroupKind.CHOICE;
-    return this.prisma.productOptionGroup.create({
-      data: {
-        product_id: productId,
-        name: input.name.trim(),
-        kind,
-        is_required: input.is_required ?? true,
-        price_modifier: input.price_modifier ?? 0,
-        max_length: this.maxLengthFor(kind, input.max_length),
-        sort_order: input.sort_order ?? 0,
-      },
-      include: { options: { orderBy: { sort_order: "asc" } } },
-    });
+    return this.prisma.productOptionGroup
+      .create({
+        data: {
+          product_id: productId,
+          name: input.name.trim(),
+          kind,
+          is_required: input.is_required ?? true,
+          price_modifier: input.price_modifier ?? 0,
+          max_length: this.maxLengthFor(kind, input.max_length),
+          sort_order: input.sort_order ?? 0,
+        },
+        include: { options: { orderBy: { sort_order: "asc" } } },
+      })
+      .catch(rethrowMissing("Product not found"));
   }
 
   async updateOptionGroup(
@@ -353,7 +362,9 @@ export class AdminProductsService {
   }
 
   async deleteOptionGroup(id: number): Promise<boolean> {
-    await this.prisma.productOptionGroup.delete({ where: { id } });
+    await this.prisma.productOptionGroup
+      .delete({ where: { id } })
+      .catch(rethrowMissing("Option group not found"));
     return true;
   }
 
@@ -391,21 +402,25 @@ export class AdminProductsService {
     input: AdminOptionInput,
   ): Promise<ProductOptionGroup> {
     assertMoney(input.price_modifier, "Price modifier");
-    const option = await this.prisma.productOption.update({
-      where: { id },
-      data: {
-        name: input.name.trim(),
-        price_modifier: input.price_modifier ?? undefined,
-        sort_order: input.sort_order ?? undefined,
-        is_active: input.is_active ?? undefined,
-      },
-      select: { group_id: true },
-    });
+    const option = await this.prisma.productOption
+      .update({
+        where: { id },
+        data: {
+          name: input.name.trim(),
+          price_modifier: input.price_modifier ?? undefined,
+          sort_order: input.sort_order ?? undefined,
+          is_active: input.is_active ?? undefined,
+        },
+        select: { group_id: true },
+      })
+      .catch(rethrowMissing("Option not found"));
     return this.groupById(option.group_id);
   }
 
   async deleteOption(id: number): Promise<boolean> {
-    await this.prisma.productOption.delete({ where: { id } });
+    await this.prisma.productOption
+      .delete({ where: { id } })
+      .catch(rethrowMissing("Option not found"));
     return true;
   }
 
@@ -428,6 +443,33 @@ export class AdminProductsService {
       where: { id },
       include: { options: { orderBy: { sort_order: "asc" } } },
     });
+  }
+
+  // Checked before the write so a stale picker answers "that category is gone" instead of
+  // a foreign key error from the database.
+  private async assertLinks(
+    categoryIds: number[] | null | undefined,
+    collectionId: number | null | undefined,
+  ): Promise<void> {
+    const wanted = new Set(categoryIds ?? []);
+    if (wanted.size > 0) {
+      const found = await this.prisma.category.count({
+        where: { id: { in: [...wanted] } },
+      });
+      if (found !== wanted.size) {
+        throw new BadRequestException(
+          "One of those categories no longer exists",
+        );
+      }
+    }
+    if (collectionId != null) {
+      const found = await this.prisma.collection.count({
+        where: { id: collectionId },
+      });
+      if (found === 0) {
+        throw new BadRequestException("That collection no longer exists");
+      }
+    }
   }
 
   private async freeSlug(name: string): Promise<string> {

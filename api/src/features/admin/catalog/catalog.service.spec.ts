@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { ProductsService } from "@/features/products/products.service";
+import { missingRow } from "@test/helpers/prisma-errors";
 import { UploadsService } from "../uploads/uploads.service";
 import { AdminCatalogService, assertWindow } from "./catalog.service";
 import { UploadPurpose } from "../uploads/uploads.type";
@@ -52,6 +53,8 @@ describe("AdminCatalogService", () => {
     prismaMock.collection.findMany.mockResolvedValue([]);
     prismaMock.category.create.mockResolvedValue({ id: 1, slug: "mugs" });
     prismaMock.collection.create.mockResolvedValue({ id: 1, slug: "monsoon" });
+    prismaMock.category.delete.mockResolvedValue({ id: 1 });
+    prismaMock.collection.delete.mockResolvedValue({ id: 1 });
     const moduleRef = await Test.createTestingModule({
       providers: [
         AdminCatalogService,
@@ -128,5 +131,13 @@ describe("AdminCatalogService", () => {
     await expect(service.deleteCollection(1)).resolves.toBe(true);
 
     expect(productsMock.invalidateCatalogCache).toHaveBeenCalled();
+  });
+
+  it("answers not found when another admin deleted the category first", async () => {
+    prismaMock.category.delete.mockRejectedValue(missingRow());
+
+    await expect(service.deleteCategory(1)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 });

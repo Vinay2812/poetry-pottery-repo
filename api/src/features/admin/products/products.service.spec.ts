@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PrismaService } from "@/prisma/prisma.service";
 import { ProductsService } from "@/features/products/products.service";
 import { SearchService } from "@/features/search/search.service";
+import { missingRow } from "@test/helpers/prisma-errors";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { UploadsService } from "../uploads/uploads.service";
 import { cleanList, AdminProductsService } from "./products.service";
@@ -42,6 +43,8 @@ const prismaMock = {
     delete: vi.fn(),
   },
   productOption: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
+  category: { count: vi.fn() },
+  collection: { count: vi.fn() },
 };
 const productsMock = { invalidateCatalogCache: vi.fn() };
 const searchMock = { requestProductIndex: vi.fn() };
@@ -74,6 +77,8 @@ describe("AdminProductsService", () => {
     prismaMock.product.create.mockResolvedValue(row);
     prismaMock.product.update.mockResolvedValue(row);
     prismaMock.product.findUnique.mockResolvedValue(row);
+    prismaMock.category.count.mockResolvedValue(2);
+    prismaMock.collection.count.mockResolvedValue(1);
     const moduleRef = await Test.createTestingModule({
       providers: [
         AdminProductsService,
@@ -282,5 +287,35 @@ describe("AdminProductsService", () => {
     prismaMock.product.findUnique.mockResolvedValue(null);
 
     await expect(service.byId(99)).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("refuses a category or collection that no longer exists", async () => {
+    prismaMock.category.count.mockResolvedValue(1);
+
+    await expect(service.update(1, { category_ids: [2, 3] })).rejects.toThrow(
+      /categories no longer exists/,
+    );
+
+    prismaMock.category.count.mockResolvedValue(2);
+    prismaMock.collection.count.mockResolvedValue(0);
+    await expect(service.update(1, { collection_id: 4 })).rejects.toThrow(
+      /collection no longer exists/,
+    );
+  });
+
+  it("answers not found when the piece was archived out from under the toggle", async () => {
+    prismaMock.product.update.mockRejectedValue(missingRow());
+
+    await expect(service.setActive(1, false)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it("answers not found when an option group is added to a piece that is gone", async () => {
+    prismaMock.productOptionGroup.create.mockRejectedValue(missingRow("P2003"));
+
+    await expect(
+      service.createOptionGroup(99, { name: "Glaze" }),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 });

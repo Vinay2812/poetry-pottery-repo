@@ -7,6 +7,7 @@ import {
 import { PrismaService } from "@/prisma/prisma.service";
 import { ProductsService } from "@/features/products/products.service";
 import type { Category, Collection } from "@/features/products/products.type";
+import { rethrowMissing } from "../missing-row";
 import { slugify, uniqueSlug } from "../slug";
 import { UploadsService } from "../uploads/uploads.service";
 import { UploadPurpose } from "../uploads/uploads.type";
@@ -105,7 +106,9 @@ export class AdminCatalogService {
   }
 
   async deleteCategory(id: number): Promise<boolean> {
-    await this.prisma.category.delete({ where: { id } });
+    await this.prisma.category
+      .delete({ where: { id } })
+      .catch(rethrowMissing("Category not found"));
     await this.products.invalidateCatalogCache();
     return true;
   }
@@ -167,7 +170,9 @@ export class AdminCatalogService {
   }
 
   async deleteCollection(id: number): Promise<boolean> {
-    await this.prisma.collection.delete({ where: { id } });
+    await this.prisma.collection
+      .delete({ where: { id } })
+      .catch(rethrowMissing("Collection not found"));
     await this.products.invalidateCatalogCache();
     return true;
   }

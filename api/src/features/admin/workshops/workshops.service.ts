@@ -17,6 +17,7 @@ import {
 } from "@/features/workshops/workshops.service";
 import type { WorkshopConfig } from "@/features/workshops/workshops.type";
 import { searchTerm, toUserRef, trimmed } from "../admin.type";
+import { rethrowMissing } from "../missing-row";
 import { UploadsService } from "../uploads/uploads.service";
 import { UploadPurpose } from "../uploads/uploads.type";
 import type {
@@ -195,19 +196,23 @@ export class AdminWorkshopsService {
         "Tier prices and pieces cannot be negative",
       );
     }
-    await this.prisma.workshopPricingTier.upsert({
-      where: { config_id_hours: { config_id: configId, hours: input.hours } },
-      create: { config_id: configId, ...input },
-      update: {
-        price_per_person: input.price_per_person,
-        pieces_per_person: input.pieces_per_person,
-      },
-    });
+    await this.prisma.workshopPricingTier
+      .upsert({
+        where: { config_id_hours: { config_id: configId, hours: input.hours } },
+        create: { config_id: configId, ...input },
+        update: {
+          price_per_person: input.price_per_person,
+          pieces_per_person: input.pieces_per_person,
+        },
+      })
+      .catch(rethrowMissing("Workshop not found"));
     return this.configById(configId);
   }
 
   async deleteTier(id: number): Promise<boolean> {
-    await this.prisma.workshopPricingTier.delete({ where: { id } });
+    await this.prisma.workshopPricingTier
+      .delete({ where: { id } })
+      .catch(rethrowMissing("Tier not found"));
     return true;
   }
 
@@ -230,21 +235,23 @@ export class AdminWorkshopsService {
     input: AdminWorkshopBlackoutInput,
   ): Promise<AdminWorkshopBlackout> {
     this.assertBlackout(input);
-    return await this.prisma.workshopBlackout.create({
-      data: {
-        config_id: configId,
-        starts_at: input.starts_at,
-        ends_at: input.ends_at,
-        reason: trimmed(input.reason, 200),
-      },
-      select: {
-        id: true,
-        config_id: true,
-        starts_at: true,
-        ends_at: true,
-        reason: true,
-      },
-    });
+    return await this.prisma.workshopBlackout
+      .create({
+        data: {
+          config_id: configId,
+          starts_at: input.starts_at,
+          ends_at: input.ends_at,
+          reason: trimmed(input.reason, 200),
+        },
+        select: {
+          id: true,
+          config_id: true,
+          starts_at: true,
+          ends_at: true,
+          reason: true,
+        },
+      })
+      .catch(rethrowMissing("Workshop not found"));
   }
 
   async updateBlackout(
@@ -252,25 +259,29 @@ export class AdminWorkshopsService {
     input: AdminWorkshopBlackoutInput,
   ): Promise<AdminWorkshopBlackout> {
     this.assertBlackout(input);
-    return await this.prisma.workshopBlackout.update({
-      where: { id },
-      data: {
-        starts_at: input.starts_at,
-        ends_at: input.ends_at,
-        reason: trimmed(input.reason, 200),
-      },
-      select: {
-        id: true,
-        config_id: true,
-        starts_at: true,
-        ends_at: true,
-        reason: true,
-      },
-    });
+    return await this.prisma.workshopBlackout
+      .update({
+        where: { id },
+        data: {
+          starts_at: input.starts_at,
+          ends_at: input.ends_at,
+          reason: trimmed(input.reason, 200),
+        },
+        select: {
+          id: true,
+          config_id: true,
+          starts_at: true,
+          ends_at: true,
+          reason: true,
+        },
+      })
+      .catch(rethrowMissing("Blackout not found"));
   }
 
   async deleteBlackout(id: number): Promise<boolean> {
-    await this.prisma.workshopBlackout.delete({ where: { id } });
+    await this.prisma.workshopBlackout
+      .delete({ where: { id } })
+      .catch(rethrowMissing("Blackout not found"));
     return true;
   }
 

@@ -8,6 +8,7 @@ import type {
   ContactMessagesResult,
 } from "@/features/contact/contact.type";
 import { searchTerm } from "../admin.type";
+import { rethrowMissing } from "../missing-row";
 import type {
   AdminContactFilterInput,
   AdminSubscribersFilterInput,
@@ -77,14 +78,15 @@ export class AdminInboxService {
   }
 
   setMessageRead(id: number, isRead: boolean): Promise<ContactMessage> {
-    return this.prisma.contactMessage.update({
-      where: { id },
-      data: { is_read: isRead },
-    });
+    return this.prisma.contactMessage
+      .update({ where: { id }, data: { is_read: isRead } })
+      .catch(rethrowMissing("Message not found"));
   }
 
   async deleteMessage(id: number): Promise<boolean> {
-    await this.prisma.contactMessage.delete({ where: { id } });
+    await this.prisma.contactMessage
+      .delete({ where: { id } })
+      .catch(rethrowMissing("Message not found"));
     return true;
   }
 

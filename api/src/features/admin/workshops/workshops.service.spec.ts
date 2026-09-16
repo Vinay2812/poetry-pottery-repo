@@ -5,12 +5,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { WorkshopsService } from "@/features/workshops/workshops.service";
+import { missingRow } from "@test/helpers/prisma-errors";
 import { UploadsService } from "../uploads/uploads.service";
 import {
   AdminWorkshopsService,
   assertHours,
-  assertTimezone,
   assertWeekdays,
+  assertTimezone,
 } from "./workshops.service";
 
 const containing = (value: Record<string, unknown>): unknown =>
@@ -144,6 +145,11 @@ describe("AdminWorkshopsService", () => {
     prismaMock.workshopConfig.findUnique.mockResolvedValue(configRow);
     prismaMock.workshopConfig.findUniqueOrThrow.mockResolvedValue(configRow);
     prismaMock.workshopConfig.update.mockResolvedValue(configRow);
+    prismaMock.workshopPricingTier.upsert.mockResolvedValue({ id: 1 });
+    prismaMock.workshopPricingTier.delete.mockResolvedValue({ id: 1 });
+    prismaMock.workshopBlackout.create.mockResolvedValue({ id: 1 });
+    prismaMock.workshopBlackout.update.mockResolvedValue({ id: 1 });
+    prismaMock.workshopBlackout.delete.mockResolvedValue({ id: 1 });
     prismaMock.workshopBooking.findMany.mockResolvedValue([]);
     prismaMock.workshopBooking.count.mockResolvedValue(0);
     prismaMock.workshopBooking.findUnique.mockResolvedValue(bookingRow);
@@ -272,6 +278,32 @@ describe("AdminWorkshopsService", () => {
         data: containing({ reason: "Diwali" }),
       }),
     );
+  });
+
+  it("answers not found for a tier or blackout that is already gone", async () => {
+    prismaMock.workshopPricingTier.delete.mockRejectedValue(missingRow());
+    prismaMock.workshopBlackout.delete.mockRejectedValue(missingRow());
+
+    await expect(service.deleteTier(9)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    await expect(service.deleteBlackout(9)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+  });
+
+  it("answers not found when a tier is saved against a studio that went away", async () => {
+    prismaMock.workshopPricingTier.upsert.mockRejectedValue(
+      missingRow("P2003"),
+    );
+
+    await expect(
+      service.saveTier(9, {
+        hours: 2,
+        price_per_person: 1200,
+        pieces_per_person: 2,
+      }),
+    ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it("filters bookings by studio, status and date", async () => {

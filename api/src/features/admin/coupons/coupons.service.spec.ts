@@ -4,6 +4,7 @@ import { CouponKind } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
+import { missingRow } from "@test/helpers/prisma-errors";
 import { AdminCouponsService, parseCoupon } from "./coupons.service";
 
 const containing = (value: Record<string, unknown>): unknown =>
@@ -108,6 +109,7 @@ describe("AdminCouponsService", () => {
     prismaMock.coupon.count.mockResolvedValue(1);
     prismaMock.coupon.findUnique.mockResolvedValue(row);
     prismaMock.coupon.create.mockResolvedValue(row);
+    prismaMock.coupon.delete.mockResolvedValue(row);
     prismaMock.coupon.update.mockResolvedValue(row);
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -157,5 +159,11 @@ describe("AdminCouponsService", () => {
 
   it("deletes a code", async () => {
     await expect(service.remove(1)).resolves.toBe(true);
+  });
+
+  it("answers not found when the code was already deleted", async () => {
+    prismaMock.coupon.delete.mockRejectedValue(missingRow());
+
+    await expect(service.remove(1)).rejects.toBeInstanceOf(NotFoundException);
   });
 });
