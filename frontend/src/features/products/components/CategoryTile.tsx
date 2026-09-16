@@ -15,7 +15,7 @@ export function CategoryTile({ href, name, productCount }: CategoryTileProps) {
   return (
     <Link
       href={href}
-      className="group flex flex-col items-center gap-3 py-2 text-center outline-none focus-visible:ring-1 focus-visible:ring-ink"
+      className="group flex flex-col items-center gap-3 py-2 text-center"
     >
       <PotteryIcon
         kind={toPotteryIconKind(name)}

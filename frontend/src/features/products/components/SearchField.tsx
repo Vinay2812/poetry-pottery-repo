@@ -29,7 +29,7 @@ export function SearchField({
         aria-label="Search pieces"
         autoFocus={autoFocus}
         enterKeyHint="search"
-        className="h-11 w-full border border-ash bg-transparent pr-10 pl-9 text-[15px] outline-none placeholder:text-muted-foreground focus-visible:border-ink [&::-webkit-search-cancel-button]:hidden"
+        className="h-11 w-full border border-ash bg-transparent pr-10 pl-9 text-[15px] placeholder:text-muted-foreground [&::-webkit-search-cancel-button]:hidden"
       />
       {value && (
         <button

@@ -34,7 +34,7 @@ export function ArchiveCard({
     <article className="group flex flex-col gap-2.5">
       <Link
         href={href}
-        className="relative aspect-square overflow-hidden bg-white outline-none focus-visible:ring-1 focus-visible:ring-ink"
+        className="relative aspect-square overflow-hidden bg-white"
       >
         {imageUrl ? (
           <Image

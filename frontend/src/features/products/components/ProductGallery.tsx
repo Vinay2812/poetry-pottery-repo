@@ -73,7 +73,7 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
       <div
         // Width comes from the column, never from the square ratio: flex-1 only
         // means anything beside the thumbnail strip, and that starts at lg.
-        className="relative aspect-square w-full min-w-0 bg-white outline-none focus-visible:ring-1 focus-visible:ring-ink lg:flex-1"
+        className="relative aspect-square w-full min-w-0 bg-white lg:flex-1"
         role="group"
         aria-roledescription="carousel"
         aria-label={`${name} photos`}
@@ -166,10 +166,10 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
                 aria-current={index === selectedIndex}
                 onClick={() => scrollTo(index)}
                 className={cn(
-                  "relative size-16 shrink-0 overflow-hidden bg-white transition-opacity",
+                  "relative size-16 shrink-0 overflow-hidden border bg-white transition-opacity",
                   index === selectedIndex
-                    ? "ring-1 ring-ink"
-                    : "opacity-60 hover:opacity-100",
+                    ? "border-ink"
+                    : "border-transparent opacity-60 hover:opacity-100",
                 )}
               >
                 <Image

@@ -145,13 +145,30 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
   }
   html {
     @apply font-sans;
+  }
+
+  /* One focus treatment for the whole site: a 2px ink outline held 2px clear of
+     the control, so it reads on clay-white, on white and on an ink button. */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  /* Items that fill their container take the outline inside their own edge. */
+  [data-slot="dropdown-menu-item"]:focus-visible,
+  [data-slot="dropdown-menu-checkbox-item"]:focus-visible,
+  [data-slot="dropdown-menu-radio-item"]:focus-visible,
+  [data-slot="dropdown-menu-sub-trigger"]:focus-visible,
+  [data-slot="select-item"]:focus-visible,
+  [data-slot="tabs-content"]:focus-visible {
+    outline-offset: -2px;
   }
 }
 
@@ -397,10 +414,12 @@
   outline: none;
 }
 
+/* An SVG hit area cannot take an outline, so the dot's own ring is the marker. */
 .kiln-hit:focus-visible {
-  stroke: var(--color-sage);
+  stroke: var(--color-ink);
   stroke-width: 0.5;
   stroke-dasharray: 1.5 1;
+  outline: none;
 }
 
 .fact-row {
@@ -417,6 +436,5 @@
 }
 
 .fact-row:focus-visible {
-  outline: 2px solid var(--color-sage);
   outline-offset: -2px;
 }

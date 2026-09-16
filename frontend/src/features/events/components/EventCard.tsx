@@ -61,7 +61,7 @@ export function EventCard({
         <p className="text-[13px] text-muted-foreground tnum">{dateLabel}</p>
         <Link
           href={href}
-          className="text-[15px] leading-snug underline-offset-4 outline-none hover:underline focus-visible:underline"
+          className="text-[15px] leading-snug underline-offset-4 hover:underline"
         >
           {title}
         </Link>

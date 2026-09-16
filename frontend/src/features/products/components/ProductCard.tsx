@@ -85,10 +85,7 @@ export function ProductCard({
     <article className="group flex flex-col gap-2.5">
       <div className="relative aspect-square bg-white">
         {imageUrls.length === 0 ? (
-          <Link
-            href={href}
-            className="absolute inset-0 overflow-hidden outline-none focus-visible:ring-1 focus-visible:ring-ink"
-          >
+          <Link href={href} className="absolute inset-0 overflow-hidden">
             <PlaceholderImage kind={toPotteryIconKind(name)} />
           </Link>
         ) : (
@@ -141,7 +138,7 @@ export function ProductCard({
             <Link
               href={href}
               aria-label={name}
-              className="absolute inset-0 z-10 outline-none focus-visible:ring-1 focus-visible:ring-ink"
+              className="absolute inset-0 z-10"
             />
           </div>
         )}
