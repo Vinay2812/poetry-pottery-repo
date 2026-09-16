@@ -118,7 +118,14 @@ export function ImageUploaderContainer({
         return;
       }
 
-      const cropped = await cropToRatio(file, requirement.ratio ?? 1);
+      let cropped;
+      try {
+        cropped = await cropToRatio(file, requirement.ratio ?? 1);
+      } catch (cropError) {
+        setError(toErrorMessage(cropError));
+        return;
+      }
+
       if (
         cropped.width < requirement.minWidth ||
         cropped.height < requirement.minHeight
@@ -141,8 +148,12 @@ export function ImageUploaderContainer({
 
   const handleCropConfirm = useCallback(async () => {
     if (!pending || !requirement) return;
-    const cropped = await cropToRatio(pending.file, requirement.ratio ?? 1);
-    await send(cropped.blob);
+    try {
+      const cropped = await cropToRatio(pending.file, requirement.ratio ?? 1);
+      await send(cropped.blob);
+    } catch (cropError) {
+      setError(toErrorMessage(cropError));
+    }
   }, [pending, requirement, send]);
 
   if (!requirement) {
