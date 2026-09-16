@@ -46,7 +46,7 @@ function reviewRow(overrides: Record<string, unknown> = {}) {
     image_urls: [],
     created_at: new Date(),
     updated_at: new Date(),
-    user: { name: "Maya Iyer", email: "maya@example.com", image: null },
+    user: { name: "Maya Iyer", image: null },
     product: { name: "Mug", slug: "mug" },
     event: null,
     ...overrides,
@@ -69,9 +69,10 @@ describe("review helpers", () => {
     });
   });
 
-  it("shows first names only", () => {
-    expect(displayName("Maya Iyer", "maya@example.com")).toBe("Maya");
-    expect(displayName(null, "ravi.k@example.com")).toBe("ravi.k");
+  it("shows a first name and never an email local part", () => {
+    expect(displayName("Maya Iyer")).toBe("Maya");
+    expect(displayName(null)).toBe("A customer");
+    expect(displayName("   ")).toBe("A customer");
   });
 
   it("reads the subject off a row and refuses a dangling one", () => {
