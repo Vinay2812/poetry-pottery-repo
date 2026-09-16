@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reviews &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Reviews: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="workshops.html">&larr; Workshops</a><a rel="next" href="content.html">Content, settings, newsletter and contact &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 11 of 20</p>
+<h1>Reviews</h1>
+<p class="lede">A review is one row per subject per customer, allowed only after a delivery or an attended event, with the subject&#x27;s average and count denormalised onto the product or event row. Those counters are recomputed in full on every write rather than incremented, moderation is a single hidden flag rather than a queue, and photos take a lighter path than admin uploads: presigned straight to R2, checked in the browser, and verified on the server only as far as &quot;this is our own bucket&quot;.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 900 400" role="img" aria-label="Reviews: eligibility, the rating recompute, photo uploads and admin hiding" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="300" height="390"/><text x="18" y="26">Browser</text></g><g class="lane"><rect x="325" y="10" width="300" height="390"/><text x="333" y="26">API</text></g><g class="lane"><rect x="640" y="10" width="250" height="390"/><text x="648" y="26">Postgres and R2</text></g><g class="box t-client"><rect x="28" y="44" width="260" height="44"/><text x="158" y="63" text-anchor="middle" class="b">ReviewsPanelContainer</text><text x="158" y="77" text-anchor="middle">useOptimistic + applyReviewAction</text></g><g class="box t-client"><rect x="28" y="108" width="260" height="40"/><text x="158" y="132" text-anchor="middle">useReviewEligibility</text></g><g class="box t-client"><rect x="28" y="164" width="260" height="44"/><text x="158" y="183" text-anchor="middle" class="b">useReviewPhotoUpload</text><text x="158" y="197" text-anchor="middle">client-side dimension check</text></g><g class="box t-client"><rect x="28" y="228" width="260" height="40"/><text x="158" y="252" text-anchor="middle">ReviewForm, rating + body</text></g><g class="box t-client"><rect x="28" y="300" width="260" height="40"/><text x="158" y="324" text-anchor="middle">Admin ReviewsContainer</text></g><g class="box t-api"><rect x="345" y="44" width="260" height="40"/><text x="475" y="68" text-anchor="middle">ReviewsResolver, @StrictThrottle</text></g><g class="box t-svc"><rect x="345" y="98" width="260" height="40"/><text x="475" y="122" text-anchor="middle">ReviewsService.validate</text></g><g class="box t-svc"><rect x="345" y="152" width="260" height="46"/><text x="475" y="172" text-anchor="middle" class="b">ineligibleReason</text><text x="475" y="186" text-anchor="middle">delivered order, attended event</text></g><g class="box t-svc"><rect x="345" y="212" width="260" height="40"/><text x="475" y="236" text-anchor="middle">review.create</text></g><g class="box t-svc"><rect x="345" y="266" width="260" height="46"/><text x="475" y="286" text-anchor="middle" class="b">refreshRating</text><text x="475" y="300" text-anchor="middle">full recompute, no lock</text></g><g class="box t-api"><rect x="345" y="326" width="260" height="40"/><text x="475" y="350" text-anchor="middle">AdminReviewsService.setHidden</text></g><g class="box t-db"><rect x="660" y="98" width="215" height="46"/><text x="768" y="118" text-anchor="middle" class="b">reviews</text><text x="768" y="132" text-anchor="middle">unique per subject + user</text></g><g class="box t-db"><rect x="660" y="200" width="215" height="46"/><text x="768" y="220" text-anchor="middle" class="b">products / events</text><text x="768" y="234" text-anchor="middle">rating_avg, rating_count</text></g><g class="box t-ext"><rect x="660" y="300" width="215" height="46"/><text x="768" y="320" text-anchor="middle" class="b">R2 reviews/ folder</text><text x="768" y="334" text-anchor="middle">no confirm step</text></g><path class="edge" d="M 158 88 L 158 108" marker-end="url(#arrowhead)"/><path class="edge" d="M 158 148 L 158 164" marker-end="url(#arrowhead)"/><path class="edge" d="M 158 204 L 158 228" marker-end="url(#arrowhead)"/><path class="edge" d="M 288 250 Q 325 160 345 64" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 84 L 475 98" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 138 L 475 152" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 198 L 475 212" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 252 L 475 266" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 121 L 660 121" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 289 L 660 223" marker-end="url(#arrowhead)"/><path class="edge" d="M 288 186 Q 470 380 660 318" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 346 L 660 330" marker-end="url(#arrowhead)"/></svg><figcaption>Eligibility is checked against the order and registration tables rather than stored, and the denormalised rating is recomputed in full on every write rather than incremented.</figcaption></figure></section><section id="how"><h2>How it works</h2><h3>Eligibility</h3><p><code>ReviewsService.ineligibleReason</code> asks the transactional tables directly.</p><ul><li>Product: at least one <code>orderItem</code> for that product on an order belonging to the user whose status is <code>DELIVERED</code>. Otherwise <code>You can review a piece once it has been delivered to you</code>. Pending, shipped and cancelled orders do not qualify.</li><li>Event: at least one <code>eventRegistration</code> for that event and user with status <code>CONFIRMED</code>, on an event that is either <code>COMPLETED</code> or has already ended. Otherwise <code>You can review an event after attending it</code>.</li><li>Anonymous visitors get <code>Sign in to review</code>.</li></ul><p>One review per subject per user is enforced by <code>@@unique([product_id, user_id])</code> and <code>@@unique([event_id, user_id])</code>, and a lost duplicate race is caught as Prisma <code>P2002</code> and re-thrown as a conflict. Eligibility is checked on create only, never on update, so someone who reviewed a delivered order that is later refunded keeps their editing rights.</p><p><code>subjectOf</code> throws when a review is attached to neither a product nor an event; the schema allows both foreign keys to be null and the code asserts that exactly one is set.</p><h3>The rating counters</h3><p><code>refreshRating(subject)</code> does <strong>not</strong> increment. It aggregates <code>_avg</code> and <code>_count</code> over the subject&#x27;s non-hidden reviews and writes both onto the product or event row, rounding the average to one decimal place. There is no <code>SELECT ... FOR UPDATE</code> and no advisory lock here, and it runs at the default read committed isolation inside the caller&#x27;s transaction. Two concurrent reviews on the same product can therefore both read the pre-insert set and write the same stale pair; because it is a full recompute rather than a delta, the next review, hide or delete corrects it.</p><p class="note">This is the one counter in the system without a concurrency guard. Elsewhere the codebase does take them: <code>orders.service.ts:lockCartProducts</code> uses <code>SELECT ... FOR UPDATE</code> in id order, <code>cart.service.ts</code> takes <code>pg_advisory_xact_lock(userId, productId)</code>, and <code>workshops.service.ts</code> takes <code>pg_advisory_xact_lock(configId)</code>.</p><h3>Moderation</h3><p>There is no status enum and no pending queue: reviews publish on write, and moderation is the single boolean <code>is_hidden</code>, added by <code>api/prisma/migrations/20260914100000_review_moderation/migration.sql</code> together with an index on <code>(is_hidden, created_at)</code> that serves the admin list&#x27;s ordering. The migration needs no backfill because the default is false.</p><p><code>is_hidden: false</code> is filtered in the storefront list, in the <code>groupBy</code> that builds the rating distribution, in <code>recent</code>, and in the <code>refreshRating</code> aggregate, so hiding a review removes it from the page, the counts, the summary and the denormalised average together. Admin hiding runs the update and the recompute in one transaction; admin deletion forwards to the shared <code>ReviewsService.remove</code> with the admin flag, which swaps the ownership-scoped where clause for an id-only one.</p><p>The admin list filters by subject kind, rating, a tri-state <code>is_hidden</code> and a case-insensitive search over the body or the reviewer&#x27;s email, and <code>toAdminReview</code> passes a null viewer so <code>is_mine</code> is always false in the console.</p><h3>Photos</h3><p><code>createReviewImageUpload</code> is <code>@AuthRequired()</code> and <code>@StrictThrottle()</code> and presigns straight into the <code>reviews</code> folder. Server-side validation of the attached URLs happens only in <code>ReviewsService.validate</code>: trim, dedupe, at most <code>MAX_IMAGES = 3</code>, and <code>storage.isOwnUrl(url)</code> else <code>Review photos must be uploaded through the site</code>. The body is capped at <code>MAX_BODY = 1000</code> and the rating is truncated into 1 to 5.</p><p>Review photos never go through <code>UploadsService.confirm</code>, so there is no sharp decode, no dimension check and no <code>confirmed_uploads</code> row. Dimension enforcement is browser side only, in <code>frontend/src/features/reviews/types.ts:checkReviewFile</code> (JPEG, PNG and WebP, with no AVIF unlike the API&#x27;s allowlist) and <code>checkReviewDimensions</code> (at least 400 px on the shortest side).</p><h3>Display helpers</h3><ul><li><code>displayName</code> is the first token of the name, else the email local part, else <code>A customer</code>, so full identities never leave the API.</li><li><code>summariseCounts</code> clamps ratings into the 1 to 5 buckets, rounds the average to one decimal and returns a zeroed summary for an empty set.</li><li><code>recent(limit)</code> shows reviews rated 4 or better with a body, not hidden, whose subject is an active product or a published or completed event, capped at 12 with a resolver default of 6.</li></ul><h3>The client</h3><p><code>frontend/src/features/reviews/types.ts</code> holds the optimistic model: a <code>ReviewAction</code> of post, edit or remove, <code>applyReviewAction</code> with <code>withReviewAdded</code>, <code>withReviewUpdated</code> and <code>withReviewRemoved</code>, and <code>applyRatingChange</code>, which recomputes the average from the distribution. <code>toDraftReview</code> uses <code>DRAFT_REVIEW_ID = -1</code> for the not-yet-saved row. <code>ReviewsPanelContainer</code> wires that through <code>useOptimistic</code>; <code>ReviewActionContainer</code> passes no optimistic callback, which is what switches <code>toRefetchNames</code> to a smaller refetch set. <code>useReviewList</code> pages with <code>fetchMore</code>, one of the four sanctioned <code>updateQuery</code> uses in the frontend.</p></section><section id="theory"><h2>Minimal theory: call trace</h2><h3>Posting a product review</h3><ol class="trace"><li><code class="ref">frontend/src/features/reviews/containers/ReviewsPanelContainer.tsx</code><span class="desc">Opens the composer through <code>useReviewComposer</code>, applies the draft optimistically.</span></li><li><code class="ref">frontend/src/features/reviews/hooks.ts:useReviewPhotoUpload.upload</code><span class="desc">Validates type and size, measures the bitmap, presigns, PUTs to R2 and returns the public URL.</span></li><li><code class="ref">api/src/features/reviews/reviews.resolver.ts:ReviewsResolver.createProductReview</code><span class="desc"><code>@AuthRequired()</code> and <code>@StrictThrottle()</code>.</span></li><li><code class="ref">api/src/features/reviews/reviews.service.ts:ReviewsService.validate</code><span class="desc">Runs before the transaction opens: rating, body length, and the image trim, dedupe, count and <code>isOwnUrl</code> checks.</span></li><li><code class="ref">api/src/prisma/prisma.service.ts:PrismaService.withTransaction</code><span class="desc">Opens the transaction; a nested call joins the ambient one.</span></li><li><code class="ref">api/src/features/reviews/reviews.service.ts:ReviewsService.ineligibleReason</code><span class="desc">Counts a delivered order item for this user and product.</span></li><li><code class="ref">api/src/features/reviews/reviews.service.ts:ReviewsService.create</code><span class="desc">Existing-review check, then <code>review.create</code>; a <code>P2002</code> from a lost race is re-thrown as a conflict.</span></li><li><code class="ref">api/src/features/reviews/reviews.service.ts:ReviewsService.refreshRating</code><span class="desc">Aggregates the non-hidden reviews and writes <code>rating_avg</code> and <code>rating_count</code> onto the product.</span></li><li><code class="ref">frontend/src/features/reviews/hooks.ts:toRefetchNames</code><span class="desc">Refetches the subject&#x27;s review list only when one is mounted, plus the eligibility query, awaited.</span></li></ol><h3>An admin hiding a review</h3><ol class="trace"><li><code class="ref">api/src/features/admin/reviews/reviews.resolver.ts:AdminReviewsResolver.setReviewHidden</code><span class="desc"><code>@AdminRequired()</code>.</span></li><li><code class="ref">api/src/features/admin/reviews/reviews.service.ts:AdminReviewsService.setHidden</code><span class="desc">Inside one transaction: read the row, update <code>is_hidden</code>, then recompute.</span></li><li><code class="ref">api/src/features/reviews/reviews.service.ts:ReviewsService.refreshRating</code><span class="desc">The aggregate filters <code>is_hidden: false</code>, so the page, the distribution and the average move together.</span></li></ol></section><section id="edges"><h2>Edge cases and failure handling</h2><ul><li><strong>Concurrent reviews can leave a stale rating.</strong> The recompute is lock free, so two writers can both read the pre-insert set. It self corrects on the next write.</li><li><strong>A lost duplicate race</strong> becomes <code>ConflictException</code> rather than a raw Prisma error.</li><li><strong>Eligibility is not re-checked on update</strong>, so an order later refunded does not revoke editing.</li><li><strong>A hidden review is still visible to its author</strong> as <code>my_review</code>, because <code>eligibility</code> does not filter <code>is_hidden</code>, and they can still edit it.</li><li><strong>Review photos are not confirmed.</strong> <code>isOwnUrl</code> is a prefix match on the public R2 URL, so any key in the bucket, including another purpose&#x27;s folder or another user&#x27;s review photo, is accepted.</li><li><strong>There is no cleanup job.</strong> No cron, interval or queue job sweeps abandoned uploads. Deleting a review removes the row but not its objects, and replacing <code>image_urls</code> during an edit orphans the old ones.</li><li><strong>Deleting a product cascades its reviews without calling <code>refreshRating</code></strong>, which is moot for the deleted product and touches no other counter.</li><li><strong><code>deleteReview</code> is authenticated but not strict-throttled</strong>, unlike create, update and the photo presign.</li></ul></section><section id="tests"><h2>Tests</h2><ul><li><code>api/src/features/reviews/reviews.service.spec.ts</code> covers only delivered buyers being able to review a piece and the denormalised rating being refreshed, a lost duplicate race becoming a conflict, the confirmed-seat-at-a-finished-event rule, and admins deleting any review while customers may delete only their own.</li><li><code>api/src/features/admin/reviews/reviews.service.spec.ts</code> covers hiding with a rating refresh and the hard delete through the shared path.</li><li><code>frontend/src/features/reviews/types.test.ts</code> covers the optimistic reducers and the rating recompute; <code>frontend/src/lib/validations/review.test.ts</code> covers the form schema.</li><li>Every review component has a <code>.stories.tsx</code> sibling.</li></ul></section>
+<footer class="bottom">
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="workshops.html">&larr; Workshops</a><a rel="next" href="content.html">Content, settings, newsletter and contact &rarr;</a></nav>
+<p>Verified against the working tree on branch <code>docs/architecture</code>, stacked on <code>feat/admin-ui</code>.</p>
+</footer>
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>

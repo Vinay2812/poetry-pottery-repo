@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Product page and made-to-order options &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Product page and made-to-order options: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="catalogue.html">&larr; Catalogue and search</a><a rel="next" href="cart.html">Cart &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 4 of 20</p>
+<h1>Product page and made-to-order options</h1>
+<p class="lede">A made-to-order piece carries option groups: either a set of choices or a length-capped free-text field, each with its own price modifier. The browser prices and validates a customisation so the buy button can show an honest total, and then the server ignores all of that and re-derives the price from the live option rows. The result is hashed into a stable selection key, which is what decides whether two additions of the same product merge into one cart line or sit side by side as two.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 900 420" role="img" aria-label="Product detail page and made-to-order options, from the option group picker to the hashed cart line key" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="300" height="410"/><text x="18" y="26">Product page (client)</text></g><g class="lane"><rect x="325" y="10" width="300" height="410"/><text x="333" y="26">API</text></g><g class="lane"><rect x="640" y="10" width="250" height="410"/><text x="648" y="26">Postgres</text></g><g class="box t-next"><rect x="30" y="46" width="260" height="44"/><text x="160" y="65" text-anchor="middle" class="b">products/[slug]/page.tsx</text><text x="160" y="79" text-anchor="middle">RSC: getProduct or notFound</text></g><g class="box t-client"><rect x="30" y="110" width="260" height="44"/><text x="160" y="129" text-anchor="middle" class="b">ProductDetailContainer</text><text x="160" y="143" text-anchor="middle">selections, quantity</text></g><g class="box t-client"><rect x="30" y="174" width="260" height="44"/><text x="160" y="193" text-anchor="middle" class="b">OptionGroupPicker</text><text x="160" y="207" text-anchor="middle">CHOICE or TEXT</text></g><g class="box t-client"><rect x="30" y="238" width="260" height="44"/><text x="160" y="257" text-anchor="middle" class="b">computeUnitPrice</text><text x="160" y="271" text-anchor="middle">validateSelections (advisory)</text></g><g class="box t-client"><rect x="30" y="310" width="260" height="44"/><text x="160" y="336" text-anchor="middle">addToCart via CartProvider</text></g><g class="box t-api"><rect x="345" y="46" width="260" height="40"/><text x="475" y="70" text-anchor="middle">ProductsResolver.product</text></g><g class="box t-svc"><rect x="345" y="100" width="260" height="44"/><text x="475" y="119" text-anchor="middle" class="b">ProductsService.optionGroups</text><text x="475" y="133" text-anchor="middle">active options only</text></g><g class="box t-api"><rect x="345" y="166" width="260" height="40"/><text x="475" y="190" text-anchor="middle">CartResolver.addToCart</text></g><g class="box t-svc"><rect x="345" y="220" width="260" height="46"/><text x="475" y="240" text-anchor="middle" class="b">selections.ts:resolveSelections</text><text x="475" y="254" text-anchor="middle">re-prices from live rows</text></g><g class="box t-svc"><rect x="345" y="280" width="260" height="46"/><text x="475" y="300" text-anchor="middle" class="b">selections.ts:selectionKey</text><text x="475" y="314" text-anchor="middle">sha256, first 32 hex</text></g><g class="box t-svc"><rect x="345" y="346" width="260" height="40"/><text x="475" y="370" text-anchor="middle">CartService.add</text></g><g class="box t-db"><rect x="660" y="100" width="215" height="46"/><text x="768" y="120" text-anchor="middle" class="b">product_option_groups</text><text x="768" y="134" text-anchor="middle">product_options</text></g><g class="box t-db"><rect x="660" y="220" width="215" height="46"/><text x="768" y="240" text-anchor="middle" class="b">cart_items</text><text x="768" y="254" text-anchor="middle">selections JSON</text></g><g class="box t-db"><rect x="660" y="300" width="215" height="60"/><text x="768" y="320" text-anchor="middle" class="b">@@unique(user_id,</text><text x="768" y="334" text-anchor="middle">product_id,</text><text x="768" y="348" text-anchor="middle">selection_key)</text></g><path class="edge" d="M 160 90 L 160 110" marker-end="url(#arrowhead)"/><path class="edge" d="M 160 154 L 160 174" marker-end="url(#arrowhead)"/><path class="edge" d="M 160 218 L 160 238" marker-end="url(#arrowhead)"/><path class="edge" d="M 160 282 L 160 310" marker-end="url(#arrowhead)"/><path class="edge" d="M 290 68 L 345 68" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 86 L 475 100" marker-end="url(#arrowhead)"/><path class="edge" d="M 290 332 Q 325 260 345 186" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 206 L 475 220" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 266 L 475 280" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 326 L 475 346" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 123 L 660 123" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 366 L 660 340" marker-end="url(#arrowhead)"/><path class="edge" d="M 768 266 L 768 300" marker-end="url(#arrowhead)"/></svg><figcaption>The client prices and validates a customisation so the button can stay honest, but nothing it sends is trusted: <code>resolveSelections</code> re-derives every price from the live option rows and <code>selectionKey</code> decides which cart line the piece belongs to.</figcaption></figure></section><section id="how"><h2>How it works</h2><h3>The models</h3><p><code>ProductOptionGroup</code> holds <code>name</code>, <code>kind</code> (<code>CHOICE</code> or <code>TEXT</code>), <code>is_required</code>, <code>price_modifier</code>, <code>max_length</code> and <code>sort_order</code>. A <code>TEXT</code> group prices the free-text entry itself and caps its length; a <code>CHOICE</code> group owns <code>ProductOption</code> rows, each with its own <code>price_modifier</code>, <code>sort_order</code> and <code>is_active</code>. Both cascade from the product.</p><p><code>CartItem</code> carries <code>selections Json?</code> typed as <code>PrismaJson.ProductSelection[]</code> (<code>group_id</code>, <code>group_name</code>, <code>option_id</code>, <code>option_name</code>, <code>text</code>, <code>price_modifier</code>) and a <code>selection_key String @default(&quot;&quot;)</code>, with <code>@@unique([user_id, product_id, selection_key])</code>.</p><h3>Server-side resolution</h3><p><code>api/src/features/cart/selections.ts:resolveSelections(groups, inputs)</code> iterates the <strong>live option group rows</strong> in server order, never the client&#x27;s array, and builds priced snapshots.</p><ul><li><code>TEXT</code>: trim the input. Empty and required raises <code>&lt;group&gt; is required</code>; empty and optional is skipped entirely and contributes no price. Longer than <code>max_length</code> raises <code>&lt;group&gt; must be N characters or fewer</code>. The stored <code>price_modifier</code> is the group&#x27;s.</li><li><code>CHOICE</code>: a missing <code>option_id</code> on a required group raises <code>Choose a &lt;group&gt;</code>; on an optional group it is skipped. The option is looked up with <code>c.id === optionId &amp;&amp; c.is_active</code>, so an unknown id and a deactivated option produce the same <code>That &lt;group&gt; is no longer available</code>. The stored <code>price_modifier</code> is the option&#x27;s.</li><li>After the loop, any input naming a group that does not belong to this product raises <code>Unknown customisation option</code>, which blocks cross-product option injection.</li><li>A product that is not <code>is_customizable</code> silently drops any selections the client sent.</li></ul><h3>The selection key</h3><p><code>selectionKey(selections)</code> returns <code>&quot;&quot;</code> for an empty selection set, which is the column default, so uncustomised lines merge under the same unique constraint. Otherwise it copies the array, sorts by <code>group_id</code>, maps each entry to the triple <code>[group_id, option_id, text]</code>, <code>JSON.stringify</code>s that canonical form, takes a SHA-256 and keeps the first 32 hex characters (128 bits).</p><ul><li>Sorting by <code>group_id</code> makes the key order independent, so the same choices submitted in any order merge into one cart line.</li><li><code>price_modifier</code>, <code>group_name</code> and <code>option_name</code> are deliberately outside the key, so renaming a group or repricing an option does not fork an existing line.</li><li>The copy before sorting means the caller&#x27;s array is never mutated.</li></ul><h3>Add to cart</h3><p><code>CartService.add</code> truncates the quantity and refuses anything outside 1 to <code>MAX_LINE_QUANTITY = 10</code>, then loads the product with <code>sellableProductWhere()</code> and <strong>all</strong> of its options, including inactive ones, so <code>resolveSelections</code> can reject them with the right message. It resolves the selections, computes the key, and then inside a transaction takes <code>pg_advisory_xact_lock(userId, productId)</code>, reads the existing line, merges with <code>Math.min(MAX_LINE_QUANTITY, existing + incoming)</code>, asserts stock for non-customisable pieces, and upserts. The <code>update</code> branch writes <strong>only the quantity</strong>, so an existing line&#x27;s stored selection snapshot and its prices are never rewritten.</p><h3>Pricing on read</h3><p><code>toCartItem</code> computes <code>unit_price = product.price + selectionsTotal(row.selections)</code> and <code>line_total = unit_price * quantity</code>. The selection price modifiers are a snapshot frozen at add time, while the base <code>product.price</code> is read live, so an admin price change moves the base but not the option deltas.</p><h3>The client half</h3><p><code>ProductDetailContainer</code> keeps a <code>selections</code> record where each group holds exactly one value, so picking an option clears any text for that group and vice versa. <code>computeUnitPrice</code> and <code>validateSelections</code> in <code>frontend/src/features/products/types.ts</code> mirror the server rules, but only advisorily; errors are rendered only after a submit attempt (<code>showErrors</code>). <code>OptionGroupPicker</code> is pure: the <code>TEXT</code> branch sets a hard <code>maxLength</code> on the input with a live counter and <code>aria-invalid</code>, and the <code>CHOICE</code> branch renders a <code>fieldset</code> and <code>legend</code> with <code>aria-pressed</code> buttons. The GraphQL document does not select <code>is_active</code>, because the storefront resolver already filters to active options.</p><p>The sticky buy bar is driven by an <code>IntersectionObserver</code> on the buy box, cleaned up on unmount. <code>product.is_archived</code> is computed on the server and swaps the buy box for <code>ArchiveNotice</code>.</p><p class="note">Reference photos for made-to-order pieces are not implemented. There is no reference image field on option groups, options or cart items, <code>OptionGroupKind</code> has only <code>CHOICE</code> and <code>TEXT</code>, and customer imagery has no upload path. The only escape hatch is the WhatsApp ask link built by <code>toGlazeAskUrl</code> and <code>toArchiveAskUrl</code>. Image uploads exist on the admin side only.</p></section><section id="theory"><h2>Minimal theory: call trace</h2><h3>Rendering the product page</h3><ol class="trace"><li><code class="ref">frontend/src/app/(storefront)/products/[slug]/page.tsx:ProductPage</code><span class="desc">Awaits params, then <code>Promise.all([getProduct(slug), getSiteSettings()])</code>, and calls <code>notFound()</code> on a null product.</span></li><li><code class="ref">frontend/src/lib/data/catalog.ts:getProduct</code><span class="desc">Server query with <code>errorPolicy: &quot;all&quot;</code>. Only a real 404 becomes null; any other failure rethrows and surfaces as an error page.</span></li><li><code class="ref">api/src/features/products/products.resolver.ts:ProductsResolver.product</code><span class="desc"><code>bySlug</code> with no availability predicate, so archived pieces still have a page.</span></li><li><code class="ref">api/src/features/products/products.resolver.ts:ProductsResolver.option_groups</code><span class="desc">Field resolver; the list and detail queries never preload the groups, so this always calls the service.</span></li><li><code class="ref">api/src/features/products/products.service.ts:ProductsService.optionGroups</code><span class="desc">Orders groups and options by <code>sort_order</code> and filters options to <code>is_active: true</code>.</span></li><li><code class="ref">frontend/src/features/products/containers/ProductDetailContainer.tsx:ProductDetailContainer</code><span class="desc">Holds <code>selections</code>, memoises <code>computeUnitPrice</code> and <code>validateSelections</code>.</span></li></ol><h3>Adding a customised piece</h3><ol class="trace"><li><code class="ref">frontend/src/features/products/containers/ProductDetailContainer.tsx:handleAddToCart</code><span class="desc">Guards on client validation issues, then flattens the selections record into <code>{ group_id, option_id, text }</code> entries.</span></li><li><code class="ref">frontend/src/features/cart/containers/CartProvider.tsx:addToCart</code><span class="desc">Wrapped in <code>useRequireAuth</code>; deliberately not optimistic, because stock is the server&#x27;s call.</span></li><li><code class="ref">api/src/features/cart/cart.resolver.ts:CartResolver.addToCart</code><span class="desc"><code>@AuthRequired()</code>; the user id comes from <code>@CurrentUser()</code>, never from the input.</span></li><li><code class="ref">api/src/features/cart/cart.service.ts:CartService.add</code><span class="desc">Truncates and range-checks the quantity, then loads the product with <code>sellableProductWhere()</code> and all option rows.</span></li><li><code class="ref">api/src/features/cart/selections.ts:resolveSelections</code><span class="desc">Re-prices every selection from the live rows and rejects missing, overlong, unknown or deactivated ones.</span></li><li><code class="ref">api/src/features/cart/selections.ts:selectionKey</code><span class="desc">Canonicalises and hashes the selections to decide which line this belongs to.</span></li><li><code class="ref">api/src/prisma/prisma.service.ts:PrismaService.withTransaction</code><span class="desc">Opens (or joins) the transaction the advisory lock lives in.</span></li><li><code class="ref">api/src/features/cart/cart.service.ts:CartService.add</code><span class="desc"><code>pg_advisory_xact_lock(userId, productId)</code>, read the line, merge and clamp, <code>assertStock</code>, upsert on the compound unique.</span></li><li><code class="ref">api/src/features/cart/cart.service.ts:CartService.get</code><span class="desc">Every mutation returns the whole recomputed cart, so the client never patches one by hand.</span></li></ol></section><section id="edges"><h2>Edge cases and failure handling</h2><ul><li><strong>A merge that would exceed ten saturates rather than erroring.</strong> <code>Math.min(MAX_LINE_QUANTITY, ...)</code> is silent by design.</li><li><strong>An option deactivated between page load and add</strong> surfaces as the server&#x27;s <code>That &lt;group&gt; is no longer available</code>; the client cannot see it coming because the storefront query never selects <code>is_active</code>.</li><li><strong>Overlong text is mostly unreachable through the UI</strong>, because the input carries a hard <code>maxLength</code>, but the server rule still exists for direct API callers.</li><li><strong>Price drift.</strong> Selection modifiers are snapshotted on the cart row while the base price is live, so a repricing changes part of the line total and not the rest.</li><li><strong>Archived and closed-collection pieces cannot be added at all</strong>, because <code>add</code> filters with <code>sellableProductWhere()</code> and a miss is <code>NotFoundException(&quot;Product not found&quot;)</code>.</li><li><strong>Two tabs adding the same piece</strong> are serialised by the advisory lock, which is keyed on (user, product) rather than on the selection key, so different customisations of the same product also queue up. That is coarser than strictly necessary and never deadlocks with itself.</li></ul></section><section id="tests"><h2>Tests</h2><ul><li><code>api/src/features/cart/selections.spec.ts</code> covers pricing from live rows, optional text being skipped, the required, inactive, overlong and unknown rejections, and that the key is order independent, 32 characters long and empty for an empty selection set.</li><li><code>api/src/features/cart/cart.service.spec.ts</code> covers merging into an existing line and capping at the stock, and holding back a line whose collection window has not opened or has closed.</li><li><code>api/test/integration/cart.integration-spec.ts</code> proves the advisory lock under 20 concurrent adds.</li><li><code>frontend/src/features/products/types.test.ts</code> covers the customisation pricing helpers and the missing and overlong reports.</li><li>Presentational coverage comes from <code>OptionGroupPicker.stories.tsx</code> and <code>ProductBuyBox.stories.tsx</code>; there is no test for <code>ProductDetailContainer</code>.</li></ul></section>
+<footer class="bottom">
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="catalogue.html">&larr; Catalogue and search</a><a rel="next" href="cart.html">Cart &rarr;</a></nav>
+<p>Verified against the working tree on branch <code>docs/architecture</code>, stacked on <code>feat/admin-ui</code>.</p>
+</footer>
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>
