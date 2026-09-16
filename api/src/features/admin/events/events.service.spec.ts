@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { EventStatus, EventType, RegistrationStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -64,12 +68,15 @@ const registrationRow = {
 };
 
 const prismaMock = {
+  withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
   event: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
+    findUniqueOrThrow: vi.fn(),
     count: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(),
   },
   eventRegistration: {
     findMany: vi.fn(),
@@ -138,8 +145,10 @@ describe("AdminEventsService", () => {
     prismaMock.event.findMany.mockResolvedValue([]);
     prismaMock.event.count.mockResolvedValue(0);
     prismaMock.event.findUnique.mockResolvedValue(eventRow);
+    prismaMock.event.findUniqueOrThrow.mockResolvedValue(eventRow);
     prismaMock.event.create.mockResolvedValue(eventRow);
     prismaMock.event.update.mockResolvedValue(eventRow);
+    prismaMock.event.updateMany.mockResolvedValue({ count: 1 });
     prismaMock.eventRegistration.findMany.mockResolvedValue([]);
     prismaMock.eventRegistration.count.mockResolvedValue(0);
     prismaMock.eventRegistration.findUnique.mockResolvedValue(registrationRow);
@@ -198,39 +207,88 @@ describe("AdminEventsService", () => {
     );
   });
 
-  it("moves available seats by the change in room size", async () => {
+  it("moves available seats by the change in room size, predicated on the size it read", async () => {
     await service.update(3, input({ total_seats: 10 }));
 
-    expect(prismaMock.event.update).toHaveBeenCalledWith(
-      containing({
-        data: containing({
-          total_seats: 10,
-          available_seats: 8,
-        }),
+    expect(prismaMock.event.updateMany).toHaveBeenCalledWith({
+      where: { id: 3, total_seats: 8 },
+      data: containing({
+        total_seats: 10,
+        available_seats: { increment: 2 },
       }),
-    );
+    });
   });
 
-  it("never drives available seats below zero when shrinking the room", async () => {
-    await service.update(3, input({ total_seats: 1 }));
+  it("leaves available seats alone when the room size does not change", async () => {
+    await service.update(3, input());
 
-    expect(prismaMock.event.update).toHaveBeenCalledWith(
-      containing({
-        data: containing({ available_seats: 0 }),
-      }),
-    );
+    const call = prismaMock.event.updateMany.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(call.data).not.toHaveProperty("available_seats");
   });
 
-  it("publishes and unpublishes", async () => {
+  it("only gives back seats nobody is holding when shrinking the room", async () => {
+    await service.update(3, input({ total_seats: 6 }));
+
+    expect(prismaMock.event.updateMany).toHaveBeenCalledWith({
+      where: { id: 3, total_seats: 8, available_seats: { gte: 2 } },
+      data: containing({ available_seats: { increment: -2 } }),
+    });
+  });
+
+  it("refuses to shrink the room past the seats guests hold", async () => {
+    prismaMock.event.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      service.update(3, input({ total_seats: 1 })),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("reports a conflict when another edit resized the room first", async () => {
+    prismaMock.event.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.event.findUnique
+      .mockResolvedValueOnce(eventRow)
+      .mockResolvedValueOnce({ total_seats: 12, available_seats: 12 });
+
+    await expect(
+      service.update(3, input({ total_seats: 10 })),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
+  it("publishes a draft, predicated on the status it read", async () => {
     await service.setStatus(3, EventStatus.PUBLISHED);
 
-    expect(prismaMock.event.update).toHaveBeenCalledWith({
-      where: { id: 3 },
+    expect(prismaMock.event.updateMany).toHaveBeenCalledWith({
+      where: { id: 3, status: EventStatus.DRAFT },
       data: { status: EventStatus.PUBLISHED },
     });
   });
 
+  it("refuses to reopen an evening that has already run", async () => {
+    prismaMock.event.findUnique.mockResolvedValue({
+      status: EventStatus.COMPLETED,
+    });
+
+    await expect(
+      service.setStatus(3, EventStatus.PUBLISHED),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prismaMock.event.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("reports a conflict when the status moved under the write", async () => {
+    prismaMock.event.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      service.setStatus(3, EventStatus.PUBLISHED),
+    ).rejects.toBeInstanceOf(ConflictException);
+  });
+
   it("cancels every live seat through the shared transition before closing the event", async () => {
+    prismaMock.event.findUnique.mockResolvedValue({
+      ...eventRow,
+      status: EventStatus.PUBLISHED,
+    });
     prismaMock.eventRegistration.findMany.mockResolvedValue([registrationRow]);
 
     await service.cancel(3, "Kiln repair");
@@ -241,10 +299,23 @@ describe("AdminEventsService", () => {
       "Kiln repair",
     );
     expect(eventsMock.notifyStatus).toHaveBeenCalledWith(7, anything());
-    expect(prismaMock.event.update).toHaveBeenCalledWith({
-      where: { id: 3 },
+    expect(prismaMock.event.updateMany).toHaveBeenCalledWith({
+      where: { id: 3, status: EventStatus.PUBLISHED },
       data: { status: EventStatus.CANCELLED },
     });
+  });
+
+  it("refunds nothing and mails nobody when the event has already run", async () => {
+    prismaMock.event.findUnique.mockResolvedValue({
+      status: EventStatus.COMPLETED,
+    });
+    prismaMock.eventRegistration.findMany.mockResolvedValue([registrationRow]);
+
+    await expect(service.cancel(3, "Kiln repair")).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(eventsMock.applyStatus).not.toHaveBeenCalled();
+    expect(eventsMock.notifyStatus).not.toHaveBeenCalled();
   });
 
   it("moves one registration and mails the guest", async () => {

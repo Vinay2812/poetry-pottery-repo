@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
@@ -13,6 +14,7 @@ import {
   toEvent,
   toRegistration,
 } from "@/features/events/events.service";
+import { canTransition as canEventTransition } from "@/features/events/event-status";
 import { canTransition } from "@/features/events/registration-status";
 import type { Event } from "@/features/events/events.type";
 import { SearchService } from "@/features/search/search.service";
@@ -161,7 +163,8 @@ export class AdminEventsService {
     return toEvent(row);
   }
 
-  // Growing or shrinking the room moves available seats by the same delta, never below zero.
+  // Growing or shrinking the room moves available seats by the same delta, so seats taken
+  // since the edit form was opened survive the save.
   async update(id: number, input: AdminEventInput): Promise<Event> {
     assertSchedule(input);
     const current = await this.prisma.event.findUnique({ where: { id } });
@@ -177,36 +180,60 @@ export class AdminEventsService {
       UploadPurpose.EVENT,
     );
     const seatDelta = input.total_seats - current.total_seats;
-    const row = await this.prisma.event.update({
-      where: { id },
-      data: {
-        title: input.title.trim(),
-        description: input.description.trim(),
-        ...(input.event_type ? { event_type: input.event_type } : {}),
-        level: input.level ?? null,
-        starts_at: input.starts_at,
-        ends_at: input.ends_at,
-        location: input.location.trim(),
-        address: input.address.trim(),
-        price: input.price,
-        total_seats: input.total_seats,
-        available_seats: Math.max(0, current.available_seats + seatDelta),
-        instructor: input.instructor?.trim() || null,
-        image_url: input.image_url,
-        gallery,
-        includes: input.includes ?? [],
-        highlights: input.highlights ?? [],
-        performers: input.performers ?? [],
-      },
+    const row = await this.prisma.withTransaction(async () => {
+      // Predicated on the room size that was read, and on enough free seats to absorb a shrink.
+      const moved = await this.prisma.event.updateMany({
+        where: {
+          id,
+          total_seats: current.total_seats,
+          ...(seatDelta < 0 ? { available_seats: { gte: -seatDelta } } : {}),
+        },
+        data: {
+          title: input.title.trim(),
+          description: input.description.trim(),
+          ...(input.event_type ? { event_type: input.event_type } : {}),
+          level: input.level ?? null,
+          starts_at: input.starts_at,
+          ends_at: input.ends_at,
+          location: input.location.trim(),
+          address: input.address.trim(),
+          price: input.price,
+          total_seats: input.total_seats,
+          ...(seatDelta === 0
+            ? {}
+            : { available_seats: { increment: seatDelta } }),
+          instructor: input.instructor?.trim() || null,
+          image_url: input.image_url,
+          gallery,
+          includes: input.includes ?? [],
+          highlights: input.highlights ?? [],
+          performers: input.performers ?? [],
+        },
+      });
+      if (moved.count === 0) {
+        await this.refuseSeatChange(id, current.total_seats);
+      }
+      return this.prisma.event.findUniqueOrThrow({ where: { id } });
     });
     await this.search.requestEventIndex(id);
     return toEvent(row);
   }
 
+  // Publish, unpublish, complete and cancel all come through here, so one table decides
+  // which moves exist and the write is predicated on the status that was read.
   async setStatus(id: number, status: EventStatus): Promise<Event> {
-    const row = await this.prisma.event.update({
-      where: { id },
-      data: { status },
+    const row = await this.prisma.withTransaction(async () => {
+      const current = await this.requireStatus(id, status);
+      const moved = await this.prisma.event.updateMany({
+        where: { id, status: current },
+        data: { status },
+      });
+      if (moved.count === 0) {
+        throw new ConflictException(
+          "This event was just updated, refresh and try again",
+        );
+      }
+      return this.prisma.event.findUniqueOrThrow({ where: { id } });
     });
     await this.search.requestEventIndex(id);
     return toEvent(row);
@@ -214,13 +241,7 @@ export class AdminEventsService {
 
   // Calling off an evening gives every held seat back and mails the guests, through the shared transitions.
   async cancel(id: number, reason: string | null): Promise<Event> {
-    const event = await this.prisma.event.findUnique({
-      where: { id },
-      select: { id: true },
-    });
-    if (!event) {
-      throw new NotFoundException("Event not found");
-    }
+    await this.requireStatus(id, EventStatus.CANCELLED);
     const note = trimmed(reason, 300) ?? "The studio called this one off";
     const live = await this.prisma.eventRegistration.findMany({
       where: {
@@ -302,6 +323,48 @@ export class AdminEventsService {
     );
     await this.events.notifyStatus(current.user_id, toRegistration(updated));
     return toAdminRegistration({ ...updated, user: current.user });
+  }
+
+  // Reads the current status and refuses a move the event cannot make.
+  private async requireStatus(
+    id: number,
+    next: EventStatus,
+  ): Promise<EventStatus> {
+    const current = await this.prisma.event.findUnique({
+      where: { id },
+      select: { status: true },
+    });
+    if (!current) {
+      throw new NotFoundException("Event not found");
+    }
+    if (!canEventTransition(current.status, next)) {
+      throw new BadRequestException(
+        `An event cannot move from ${current.status.toLowerCase()} to ${next.toLowerCase()}`,
+      );
+    }
+    return current.status;
+  }
+
+  // Reached only when the guarded edit matched nothing, to say which of the two guards held.
+  private async refuseSeatChange(
+    id: number,
+    readSeats: number,
+  ): Promise<never> {
+    const fresh = await this.prisma.event.findUnique({
+      where: { id },
+      select: { total_seats: true, available_seats: true },
+    });
+    if (!fresh) {
+      throw new NotFoundException("Event not found");
+    }
+    if (fresh.total_seats !== readSeats) {
+      throw new ConflictException(
+        "This event was just updated, refresh and try again",
+      );
+    }
+    throw new BadRequestException(
+      `Only ${fresh.available_seats} of these seats are still free`,
+    );
   }
 
   private async freeSlug(title: string): Promise<string> {

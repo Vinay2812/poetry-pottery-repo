@@ -3,6 +3,9 @@ import { EventStatus, OrderStatus, type Prisma } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Client } from "pg";
 
+import { AdminEventsService } from "@/features/admin/events/events.service";
+import { AdminProductsService } from "@/features/admin/products/products.service";
+import { UploadsService } from "@/features/admin/uploads/uploads.service";
 import { CartService } from "@/features/cart/cart.service";
 import { CommissionsService } from "@/features/commissions/commissions.service";
 import { ContactService } from "@/features/contact/contact.service";
@@ -10,6 +13,7 @@ import { EventsService } from "@/features/events/events.service";
 import { NewsletterService } from "@/features/newsletter/newsletter.service";
 import { NotificationsService } from "@/features/notifications/notifications.service";
 import { OrdersService } from "@/features/orders/orders.service";
+import { ProductsService } from "@/features/products/products.service";
 import { ReviewsService } from "@/features/reviews/reviews.service";
 import { SearchService } from "@/features/search/search.service";
 import { SettingsService } from "@/features/settings/settings.service";
@@ -111,6 +115,20 @@ class SearchStub {
   rankEvents(): Promise<number[]> {
     return Promise.resolve([]);
   }
+
+  requestProductIndex(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  requestEventIndex(): Promise<void> {
+    return Promise.resolve();
+  }
+}
+
+class UploadsStub {
+  assertConfirmed(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 // Redis is outside the sandbox, so the tracker is stubbed and a test reads what it was told to keep.
@@ -169,6 +187,8 @@ export interface Harness {
   reviews: ReviewsService;
   commissions: CommissionsService;
   users: UsersService;
+  adminEvents: AdminEventsService;
+  adminProducts: AdminProductsService;
   close: () => Promise<void>;
 }
 
@@ -202,11 +222,13 @@ export async function createHarness(
         provide: PendingUploadsService,
         useValue: options.uploads ?? new PendingUploadsRecorder(),
       },
+      { provide: UploadsService, useClass: UploadsStub },
       SettingsService,
       NotificationsService,
       CartService,
       OrdersService,
       EventsService,
+      ProductsService,
       WorkshopsService,
       WishlistService,
       NewsletterService,
@@ -215,6 +237,8 @@ export async function createHarness(
       ReviewsService,
       CommissionsService,
       UsersService,
+      AdminEventsService,
+      AdminProductsService,
     ],
   }).compile();
   await moduleRef.init();
@@ -232,6 +256,8 @@ export async function createHarness(
     reviews: moduleRef.get(ReviewsService),
     commissions: moduleRef.get(CommissionsService),
     users: moduleRef.get(UsersService),
+    adminEvents: moduleRef.get(AdminEventsService),
+    adminProducts: moduleRef.get(AdminProductsService),
     close: () => moduleRef.close(),
   };
 }
