@@ -114,6 +114,9 @@ export class Order {
   @Field()
   can_cancel!: boolean;
 
+  @Field(() => [String])
+  care_notes!: string[];
+
   @Field(() => Int)
   item_count!: number;
 

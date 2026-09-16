@@ -77,6 +77,14 @@ export function toStepIndex(
   );
 }
 
+// Care advice is for someone holding the piece, so it waits until the parcel has landed.
+export function toDeliveredCareLines(
+  status: OrderStatus,
+  careNotes: string[],
+): string[] {
+  return status === OrderStatus.Delivered ? careNotes : [];
+}
+
 export function isClosed(status: OrderStatus): boolean {
   return status === OrderStatus.Cancelled || status === OrderStatus.Refunded;
 }

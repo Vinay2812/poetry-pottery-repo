@@ -22,6 +22,7 @@ import {
   toProduct,
 } from "@/features/products/products.service";
 import { SettingsService } from "@/features/settings/settings.service";
+import { toCareLines } from "./care";
 import { checkCoupon, normaliseCouponCode } from "./coupons";
 import { readGift } from "./gift";
 import {
@@ -74,6 +75,7 @@ export function toOrder(row: OrderRow, now = new Date()): Order {
     tracking_note: row.tracking_note,
     cancel_reason: row.cancel_reason,
     can_cancel: CUSTOMER_CANCELLABLE.includes(row.status),
+    care_notes: toCareLines(row.items.map((item) => item.product)),
     item_count: row.items.reduce((sum, item) => sum + item.quantity, 0),
     items: row.items.map((item) => {
       const customisation = readCustomisation(item.selections);

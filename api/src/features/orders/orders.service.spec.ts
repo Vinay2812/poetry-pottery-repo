@@ -103,6 +103,7 @@ function orderRow(overrides: Record<string, unknown> = {}) {
         selections: null,
         product: {
           id: 10,
+          care_notes: [],
           is_active: true,
           is_customizable: false,
           categories: [],

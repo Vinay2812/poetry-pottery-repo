@@ -6,6 +6,7 @@ import {
   applyOrderCancellation,
   isClosed,
   type OrderData,
+  toDeliveredCareLines,
   toStatusLabel,
   toStatusTone,
   toOrderPath,
@@ -77,6 +78,7 @@ function order(overrides: Partial<OrderData> = {}): OrderData {
     tracking_note: null,
     cancel_reason: null,
     can_cancel: true,
+    care_notes: [],
     item_count: 1,
     created_at: "2026-09-10T09:00:00.000Z",
     confirmed_at: "2026-09-11T09:00:00.000Z",
@@ -136,5 +138,18 @@ describe("applyOrderCancellation", () => {
         at: "2026-09-12T09:00:00.000Z",
       }),
     ).toBeNull();
+  });
+});
+
+describe("toDeliveredCareLines", () => {
+  const lines = ["Hand wash", "No dishwasher"];
+
+  it("gives the lines once the parcel has landed", () => {
+    expect(toDeliveredCareLines(OrderStatus.Delivered, lines)).toEqual(lines);
+  });
+
+  it("holds them back while the order is still on its way", () => {
+    expect(toDeliveredCareLines(OrderStatus.Shipped, lines)).toEqual([]);
+    expect(toDeliveredCareLines(OrderStatus.Cancelled, lines)).toEqual([]);
   });
 });

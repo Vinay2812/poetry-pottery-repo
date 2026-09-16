@@ -2,6 +2,7 @@ import { MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
+import { OrderCareGuide } from "@/features/orders/components/OrderCareGuide";
 import {
   OrderItemRow,
   type OrderItemRowProps,
@@ -25,6 +26,7 @@ export interface OrderDetailProps {
   isClosed: boolean;
   closedLabel: string | null;
   items: (OrderItemRowProps & { id: number })[];
+  careLines: string[];
   subtotal: number;
   discount: number;
   couponCode: string | null;
@@ -55,6 +57,7 @@ export function OrderDetail({
   isClosed,
   closedLabel,
   items,
+  careLines,
   subtotal,
   discount,
   couponCode,
@@ -137,6 +140,8 @@ export function OrderDetail({
               ))}
             </ul>
           </section>
+
+          {careLines.length > 0 && <OrderCareGuide lines={careLines} />}
         </div>
 
         <aside className="flex flex-col gap-8 lg:sticky lg:top-24">

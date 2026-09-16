@@ -1,3 +1,6 @@
+import { OrderStatus } from "@prisma/client";
+
+import { env } from "@/config/env";
 import type { Order } from "@/features/orders/orders.type";
 import { type MailBlock, type MailLink, renderMail } from "./layout";
 
@@ -37,6 +40,20 @@ function giftBlock(order: Order): MailBlock[] {
         order.hide_prices
           ? "Leave prices off the packing slip."
           : "Prices may stay on the packing slip.",
+      ],
+    },
+  ];
+}
+
+// Only worth sending once the pieces are in the customer's hands.
+function careBlock(order: Order): MailBlock[] {
+  if (order.care_notes.length === 0) return [];
+  return [
+    {
+      heading: "Caring for these pieces",
+      lines: order.care_notes,
+      links: [
+        { label: "The full care guide", href: `${env.FRONTEND_URL}/care` },
       ],
     },
   ];
@@ -146,7 +163,10 @@ export function orderStatusMail(
   const body = renderMail({
     title: entry.title,
     intro: entry.intro,
-    blocks: [{ heading: "Pieces", lines: itemLines(order) }],
+    blocks: [
+      { heading: "Pieces", lines: itemLines(order) },
+      ...(order.status === OrderStatus.DELIVERED ? careBlock(order) : []),
+    ],
     cta: { label: "View your order", path: `/orders/${order.id}` },
   });
   return { subject: `${entry.title} · ${order.id}`, ...body };

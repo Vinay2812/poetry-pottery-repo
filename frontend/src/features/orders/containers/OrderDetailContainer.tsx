@@ -15,6 +15,7 @@ import {
   applyOrderCancellation,
   isClosed,
   ORDER_STEPS,
+  toDeliveredCareLines,
   toStatusLabel,
   toStatusTone,
   toStepIndex,
@@ -153,6 +154,10 @@ export function OrderDetailContainer({
           selectionSummary: toSelectionSummary(item.selections),
           referenceImageUrls: item.reference_image_urls,
         }))}
+        careLines={toDeliveredCareLines(
+          optimisticOrder.status,
+          optimisticOrder.care_notes,
+        )}
         subtotal={optimisticOrder.subtotal}
         discount={optimisticOrder.discount}
         couponCode={optimisticOrder.coupon_code}

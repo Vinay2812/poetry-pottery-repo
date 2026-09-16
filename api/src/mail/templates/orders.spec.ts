@@ -31,6 +31,7 @@ function order(overrides: Partial<Order> = {}): Order {
     tracking_note: null,
     cancel_reason: null,
     can_cancel: true,
+    care_notes: [],
     item_count: 1,
     items: [
       {

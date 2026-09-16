@@ -323,6 +323,7 @@ type Order {
   can_cancel: Boolean!
   cancel_reason: String
   cancelled_at: DateTime
+  care_notes: [String!]!
   confirmed_at: DateTime
   coupon_code: String
   created_at: DateTime!

@@ -67,6 +67,7 @@ const meta = {
     isClosed: false,
     closedLabel: null,
     items,
+    careLines: [],
     subtotal: 2300,
     discount: 0,
     couponCode: null,
@@ -110,6 +111,10 @@ export const Delivered: Story = {
     steps: toSteps(4),
     currentStepIndex: 4,
     canCancel: false,
+    careLines: [
+      "Hand wash with a soft cloth, no scouring pad",
+      "Safe in the microwave, not in the dishwasher",
+    ],
   },
 };
 

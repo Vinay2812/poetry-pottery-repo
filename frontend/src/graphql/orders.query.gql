@@ -12,6 +12,7 @@ fragment OrderFields on Order {
   tracking_note
   cancel_reason
   can_cancel
+  care_notes
   item_count
   created_at
   confirmed_at

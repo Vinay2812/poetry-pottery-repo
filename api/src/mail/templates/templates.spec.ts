@@ -119,6 +119,7 @@ function order(overrides: Partial<Order> = {}): Order {
     tracking_note: null,
     cancel_reason: null,
     can_cancel: true,
+    care_notes: [],
     item_count: 2,
     items: [orderItem()],
     created_at: new Date("2026-09-01T06:00:00.000Z"),
@@ -481,6 +482,28 @@ describe("order templates", () => {
 
   it("says nothing at all while an order is still pending", () => {
     expect(orderStatusMail(order({ status: OrderStatus.PENDING }))).toBeNull();
+  });
+
+  it("sends the care lines with the delivery, and only with it", () => {
+    const care_notes = ["Hand wash", "No microwave"];
+
+    const delivered = orderStatusMail(
+      order({ status: OrderStatus.DELIVERED, care_notes }),
+    );
+    expect(delivered?.html).toContain("Caring for these pieces");
+    expect(delivered?.text).toContain("Hand wash");
+    expect(delivered?.html).toContain(`href="${SITE}/care"`);
+
+    const shipped = orderStatusMail(
+      order({ status: OrderStatus.SHIPPED, care_notes }),
+    );
+    expect(shipped?.html).not.toContain("Caring for these pieces");
+  });
+
+  it("leaves the care block out of a delivery with no notes on it", () => {
+    const mail = orderStatusMail(order({ status: OrderStatus.DELIVERED }));
+
+    expect(mail?.html).not.toContain("Caring for these pieces");
   });
 
   it("adds the tracking note to a shipping mail only when there is one", () => {

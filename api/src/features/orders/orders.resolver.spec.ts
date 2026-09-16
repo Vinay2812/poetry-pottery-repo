@@ -60,6 +60,7 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
     tracking_note: null,
     cancel_reason: null,
     can_cancel: true,
+    care_notes: [],
     item_count: 1,
     items: [],
     created_at: new Date("2026-01-01T00:00:00.000Z"),
