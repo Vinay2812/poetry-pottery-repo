@@ -45,7 +45,7 @@ export function AccountContainer() {
     <AccountMenu
       displayName={toDisplayName(user.fullName, email)}
       email={email}
-      imageUrl={user.imageUrl}
+      imageUrl={user.hasImage ? user.imageUrl : null}
       memberSince={toMemberSince(user.createdAt)}
       isAdmin={user.publicMetadata.role === UserRole.Admin}
       onManageProfile={() => openUserProfile()}

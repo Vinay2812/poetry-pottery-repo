@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 
+import { toInitials } from "@/features/account/types";
+
 export interface AccountMenuProps {
   displayName: string;
   email: string;
@@ -47,12 +49,12 @@ export function AccountMenu({
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-8 md:px-8 md:py-12">
       <div className="flex items-center gap-4">
-        <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ink text-2xl text-white">
+        <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ink text-xl tracking-wide text-white">
           {imageUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={imageUrl} alt="" className="size-full object-cover" />
           ) : (
-            displayName.charAt(0).toUpperCase()
+            toInitials(displayName)
           )}
         </span>
         <div className="min-w-0">

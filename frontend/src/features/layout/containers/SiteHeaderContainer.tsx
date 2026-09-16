@@ -55,7 +55,7 @@ export function SiteHeaderContainer() {
         wishlistCount={wishlistCount}
         isSignedIn={Boolean(isSignedIn)}
         isAdmin={user?.publicMetadata.role === UserRole.Admin}
-        userImageUrl={user?.imageUrl ?? null}
+        userImageUrl={user?.hasImage ? user.imageUrl : null}
         isHome={pathname === "/"}
         onSearchClick={handleSearchClick}
         onAccountClick={handleAccountClick}

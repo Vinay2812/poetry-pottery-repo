@@ -1,6 +1,10 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 
+import {
+  clerkAppearance,
+  clerkLocalization,
+} from "@/components/providers/clerk-appearance";
 import { Toaster } from "@/components/providers/toaster";
 import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 import { ApolloProvider } from "@/lib/apollo";
@@ -26,7 +30,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={clerkAppearance}
+      localization={clerkLocalization}
+    >
       <html lang="en" className={`${fontVariables} h-full antialiased`}>
         <body className="flex min-h-full flex-col">
           <ApolloProvider>
