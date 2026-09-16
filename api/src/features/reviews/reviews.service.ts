@@ -97,10 +97,6 @@ export function summariseCounts(
   return { average, count, distribution };
 }
 
-export function summarise(ratings: number[]): RatingSummary {
-  return summariseCounts(ratings.map((rating) => ({ rating, count: 1 })));
-}
-
 @Injectable()
 export class ReviewsService {
   constructor(

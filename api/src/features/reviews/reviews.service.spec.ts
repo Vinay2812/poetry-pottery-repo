@@ -8,7 +8,6 @@ import {
   displayName,
   ReviewsService,
   subjectOf,
-  summarise,
   summariseCounts,
 } from "./reviews.service";
 
@@ -55,19 +54,6 @@ function reviewRow(overrides: Record<string, unknown> = {}) {
 }
 
 describe("review helpers", () => {
-  it("summarises ratings into an average and a distribution", () => {
-    expect(summarise([5, 4, 5, 2])).toEqual({
-      average: 4,
-      count: 4,
-      distribution: [0, 1, 0, 1, 2],
-    });
-    expect(summarise([])).toEqual({
-      average: 0,
-      count: 0,
-      distribution: [0, 0, 0, 0, 0],
-    });
-  });
-
   it("summarises grouped counts without reading every row", () => {
     expect(
       summariseCounts([
