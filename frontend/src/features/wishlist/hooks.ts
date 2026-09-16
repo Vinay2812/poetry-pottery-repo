@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useCallback } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 
 import { useWishlistQuery } from "@/graphql/generated/graphql";
 
@@ -19,15 +19,31 @@ export function useWishlistIds() {
 // Un-hearting a piece drops its card straight away: the grid follows the optimistic id list.
 export function useWishlist() {
   const { isSignedIn, isLoaded } = useAuth();
-  const { ids } = useWishlistContext();
+  const { ids, adoptIds } = useWishlistContext();
   const { data, previousData, loading, error } = useWishlistQuery({
     skip: !isSignedIn,
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
   });
-  const saved = data?.wishlist ?? previousData?.wishlist ?? [];
+  const saved = useMemo(
+    () => data?.wishlist ?? previousData?.wishlist ?? null,
+    [data, previousData],
+  );
+  const savedIds = useMemo(
+    () => saved?.map((item) => item.id) ?? null,
+    [saved],
+  );
+
+  // While this page is up it is the better source of ids, so the hearts read it instead.
+  useEffect(() => {
+    if (savedIds === null) return;
+    adoptIds(savedIds);
+    return () => adoptIds(null);
+  }, [adoptIds, savedIds]);
+
   return {
-    items: isSignedIn ? saved.filter((item) => ids.includes(item.id)) : [],
+    items:
+      isSignedIn && saved ? saved.filter((item) => ids.includes(item.id)) : [],
     isLoading: !isLoaded || (loading && !data && !previousData),
     hasError: Boolean(error),
     isSignedIn: Boolean(isSignedIn),

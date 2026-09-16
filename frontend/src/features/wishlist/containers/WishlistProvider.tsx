@@ -7,6 +7,7 @@ import {
   useContext,
   useMemo,
   useOptimistic,
+  useState,
   useTransition,
   type PropsWithChildren,
 } from "react";
@@ -25,6 +26,8 @@ interface WishlistValue {
   isSignedIn: boolean;
   isSaving: boolean;
   toggle: (productId: number, productName: string) => void;
+  // The saved pieces page already holds every id, so it lends them and the second query stops.
+  adoptIds: (ids: readonly number[] | null) => void;
 }
 
 const WishlistContext = createContext<WishlistValue | null>(null);
@@ -32,16 +35,16 @@ const WishlistContext = createContext<WishlistValue | null>(null);
 // Every heart on the site reads this one list, so a toggle anywhere shows everywhere at once.
 export function WishlistProvider({ children }: PropsWithChildren) {
   const { isSignedIn } = useAuth();
+  const [lentIds, setLentIds] = useState<readonly number[] | null>(null);
   const { data, previousData } = useWishlistIdsQuery({
-    skip: !isSignedIn,
+    skip: !isSignedIn || lentIds !== null,
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
   });
-  const ids = useMemo(
-    () =>
-      isSignedIn ? (data?.wishlistIds ?? previousData?.wishlistIds ?? []) : [],
-    [data, isSignedIn, previousData],
-  );
+  const ids = useMemo(() => {
+    if (!isSignedIn) return [];
+    return lentIds ?? data?.wishlistIds ?? previousData?.wishlistIds ?? [];
+  }, [data, isSignedIn, lentIds, previousData]);
 
   const [optimisticIds, applyToggle] = useOptimistic(ids, applyWishlistToggle);
   const [isSaving, startTransition] = useTransition();
@@ -85,6 +88,7 @@ export function WishlistProvider({ children }: PropsWithChildren) {
       isSignedIn: Boolean(isSignedIn),
       isSaving,
       toggle,
+      adoptIds: setLentIds,
     }),
     [isSaving, isSignedIn, optimisticIds, toggle],
   );
