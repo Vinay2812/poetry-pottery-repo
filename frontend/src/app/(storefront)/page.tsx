@@ -9,7 +9,13 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 import { Reveal } from "@/components/motion/Reveal";
 import { PageShell } from "@/components/layout/PageShell";
 
-import { AboutBlock, EventRow, HomeHero, HomeSection } from "@/features/home";
+import {
+  AboutBlock,
+  EventRow,
+  HomeHero,
+  HomeSection,
+  StudioTeaser,
+} from "@/features/home";
 import { toEventPath, toSeatsLabel } from "@/features/events";
 import {
   CategoryTile,
@@ -85,13 +91,13 @@ export default async function HomePage() {
         </div>
       )}
 
-      {upcomingEvents.length > 0 && (
-        <HomeSection
-          title="At the studio"
-          note="Wheel sessions run every afternoon except Monday. Book an hour or three."
-          linkHref="/events"
-          linkLabel="All dates"
-        >
+      <HomeSection
+        title="At the studio"
+        note="Wheel sessions run every afternoon except Monday. Book an hour or three."
+        linkHref={upcomingEvents.length > 0 ? "/events" : "/workshops"}
+        linkLabel={upcomingEvents.length > 0 ? "All dates" : "Open studio"}
+      >
+        {upcomingEvents.length > 0 ? (
           <div className="border-t border-ash">
             {upcomingEvents.map((event) => (
               <EventRow
@@ -107,8 +113,14 @@ export default async function HomePage() {
               />
             ))}
           </div>
-        </HomeSection>
-      )}
+        ) : (
+          <StudioTeaser
+            line="Nothing is on the calendar this week, but the wheels are free most afternoons. Pick an hour and we will set one up for you."
+            href="/workshops"
+            linkLabel="Book a wheel session"
+          />
+        )}
+      </HomeSection>
 
       <HomeSection title="A small studio in Sangli">
         <AboutBlock
