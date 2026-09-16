@@ -46,7 +46,7 @@ export default async function HomePage() {
 
       {categories.length > 0 && (
         <HomeSection title="Shapes we throw">
-          <div className="grid grid-cols-3 gap-6 sm:grid-cols-4 md:grid-cols-7">
+          <div className="grid grid-cols-3 gap-6 lift-and-dim sm:grid-cols-4 md:grid-cols-7">
             {categories.map((category) => (
               <CategoryTile
                 key={category.id}

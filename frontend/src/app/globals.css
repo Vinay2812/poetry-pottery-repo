@@ -207,6 +207,55 @@
   }
 }
 
+/* A row of siblings dims so the one under the cursor stays lit. No lift and no
+   scale: on a flat, shadowless page the dim alone carries the focus. */
+@utility lift-and-dim {
+  & > * {
+    transition: opacity 140ms ease;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    & > * {
+      transition: opacity 350ms ease;
+    }
+  }
+
+  &:hover > * {
+    opacity: 0.55;
+  }
+
+  & > *:hover,
+  & > *:focus-within {
+    opacity: 1;
+  }
+}
+
+/* Drawn icons hang slightly crooked and straighten when you reach for them.
+   Only ink drawings, never a photograph or a control. */
+@utility tilt-straighten {
+  --tilt: -1.5deg;
+  transition: color 200ms ease-out;
+
+  /* The wobble and the straightening are transforms, so reduced motion gets
+     neither: the drawing simply hangs level. */
+  @media (prefers-reduced-motion: no-preference) {
+    transform: rotate(var(--tilt));
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 200ms ease-out;
+
+    .group:hover &,
+    .group:focus-visible & {
+      transform: rotate(0deg) translateY(-4px);
+    }
+  }
+}
+
+/* Alternate the hang so the row reads as pinned by hand. */
+.lift-and-dim > *:nth-child(even) .tilt-straighten {
+  --tilt: 1.5deg;
+}
+
 /* A hairline that draws in from the left on hover. Never an active-state marker. */
 @utility link-underline {
   background-image: linear-gradient(currentColor, currentColor);

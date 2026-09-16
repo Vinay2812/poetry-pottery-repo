@@ -19,7 +19,7 @@ export function CategoryTile({ href, name, productCount }: CategoryTileProps) {
     >
       <PotteryIcon
         kind={toPotteryIconKind(name)}
-        className="size-10 text-ink transition-colors group-hover:text-primary"
+        className="size-10 tilt-straighten text-ink group-hover:text-primary"
       />
       <span className="text-sm underline-offset-4 group-hover:underline">
         {name}

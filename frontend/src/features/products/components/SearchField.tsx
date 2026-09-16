@@ -36,7 +36,7 @@ export function SearchField({
           type="button"
           onClick={onClear}
           aria-label="Clear search"
-          className="absolute top-1/2 right-1 flex size-9 -translate-y-1/2 items-center justify-center hover:text-primary"
+          className="absolute top-1/2 right-1 flex size-9 -translate-y-1/2 items-center justify-center ghost-hover hover:text-primary"
         >
           <X className="size-4" strokeWidth={1.5} />
         </button>

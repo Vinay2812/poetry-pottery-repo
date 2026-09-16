@@ -18,7 +18,7 @@ export function QuantityStepper({
   size = "md",
 }: QuantityStepperProps) {
   const buttonClass = cn(
-    "flex items-center justify-center transition-colors hover:text-primary disabled:opacity-40",
+    "flex items-center justify-center ghost-hover hover:text-primary disabled:opacity-40",
     size === "sm" ? "size-8" : "size-11",
   );
   return (
