@@ -118,6 +118,10 @@ Three separate mechanisms, in play at different moments:
 
 Each app validates `process.env` with zod at boot and fails fast. `.env.example` in each folder lists every variable the code actually reads — they are the reference.
 
+## Architecture
+
+[`architecture/index.html`](architecture/index.html) — one page per system (auth, catalogue and search, cart, checkout, workshops, queue, uploads, admin, frontend data, …), each with a diagram, the algorithm and its guards, a call trace through the real files, edge cases and the specs that cover it. Self-contained HTML; open it from disk.
+
 ## Branches
 
 The rewrite is built as one PR per feature, each stacked on the previous branch. The owner opens the PRs from the pushed branches (no `gh` access from here), so a branch landing here as "pushed" is ready for a PR, not already merged.
