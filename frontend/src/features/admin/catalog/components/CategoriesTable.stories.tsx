@@ -12,7 +12,7 @@ const ROWS: CategoryRow[] = [
     name: "Mugs",
     icon: "mug",
     imageUrl: null,
-    position: 1,
+    sortOrder: 1,
     productCount: 12,
   },
   {
@@ -20,7 +20,7 @@ const ROWS: CategoryRow[] = [
     name: "Bowls",
     icon: "bowl",
     imageUrl: null,
-    position: 2,
+    sortOrder: 2,
     productCount: 1,
   },
   {
@@ -28,7 +28,7 @@ const ROWS: CategoryRow[] = [
     name: "Planters",
     icon: "",
     imageUrl: null,
-    position: 3,
+    sortOrder: 3,
     productCount: 0,
   },
 ];

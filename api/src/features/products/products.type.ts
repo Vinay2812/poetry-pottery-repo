@@ -40,6 +40,10 @@ export class Category {
   @Field(() => String, { nullable: true })
   image_url!: string | null;
 
+  // The console edits this directly, so it has to read back the stored value.
+  @Field(() => Int)
+  sort_order!: number;
+
   @Field(() => Int)
   product_count!: number;
 }

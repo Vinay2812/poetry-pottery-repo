@@ -4,6 +4,7 @@ fragment AdminCategoryFields on Category {
   name
   icon
   image_url
+  sort_order
   product_count
 }
 

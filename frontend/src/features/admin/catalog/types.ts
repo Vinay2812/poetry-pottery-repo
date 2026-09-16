@@ -10,8 +10,7 @@ export interface CategoryRow {
   name: string;
   icon: string;
   imageUrl: string | null;
-  /** The server returns categories in sort order, so the position is the sort order. */
-  position: number;
+  sortOrder: number;
   productCount: number;
 }
 
@@ -92,9 +91,7 @@ export function applyCategoryPatch(
   patch: CategoryPatch,
 ): CategoryRow[] {
   if (patch.kind === "remove") {
-    return rows
-      .filter((row) => row.id !== patch.id)
-      .map((row, index) => ({ ...row, position: index + 1 }));
+    return rows.filter((row) => row.id !== patch.id);
   }
   return rows.map((row) =>
     row.id === patch.id

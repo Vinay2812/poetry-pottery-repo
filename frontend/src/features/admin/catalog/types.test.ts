@@ -20,7 +20,7 @@ function categoryRows(): CategoryRow[] {
       name: "Mugs",
       icon: "mug",
       imageUrl: null,
-      position: 1,
+      sortOrder: 1,
       productCount: 4,
     },
     {
@@ -28,7 +28,7 @@ function categoryRows(): CategoryRow[] {
       name: "Bowls",
       icon: "bowl",
       imageUrl: "https://cdn.test/bowl.jpg",
-      position: 2,
+      sortOrder: 2,
       productCount: 0,
     },
     {
@@ -36,7 +36,7 @@ function categoryRows(): CategoryRow[] {
       name: "Vases",
       icon: "vase",
       imageUrl: null,
-      position: 3,
+      sortOrder: 3,
       productCount: 2,
     },
   ];
@@ -133,10 +133,10 @@ describe("applyCategoryPatch", () => {
     expect(next[0].name).toBe("Mugs");
   });
 
-  it("renumbers the rest after a delete so the order still reads 1, 2, 3", () => {
+  it("drops the removed row and leaves the stored sort order alone", () => {
     const next = applyCategoryPatch(categoryRows(), { kind: "remove", id: 1 });
     expect(next.map((row) => row.id)).toEqual([2, 3]);
-    expect(next.map((row) => row.position)).toEqual([1, 2]);
+    expect(next.map((row) => row.sortOrder)).toEqual([2, 3]);
   });
 
   it("leaves the list alone when the id is unknown", () => {

@@ -76,7 +76,7 @@ export function CategoriesTable({
               <td className={`${ADMIN_TD} text-muted-foreground`}>
                 {row.icon === "" ? "—" : row.icon}
               </td>
-              <td className={`${ADMIN_TD} tnum`}>{row.position}</td>
+              <td className={`${ADMIN_TD} tnum`}>{row.sortOrder}</td>
               <td className={`${ADMIN_TD} text-muted-foreground tnum`}>
                 {describePieces(row.productCount)}
               </td>

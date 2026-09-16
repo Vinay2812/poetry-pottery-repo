@@ -89,12 +89,12 @@ export function CatalogContainer() {
 
   const categoryRows = useMemo<CategoryRow[]>(
     () =>
-      (categories?.adminCategories ?? []).map((category, index) => ({
+      (categories?.adminCategories ?? []).map((category) => ({
         id: category.id,
         name: category.name,
         icon: category.icon ?? "",
         imageUrl: category.image_url ?? null,
-        position: index + 1,
+        sortOrder: category.sort_order,
         productCount: category.product_count,
       })),
     [categories],
@@ -137,7 +137,7 @@ export function CatalogContainer() {
     return {
       name: editedCategory.name,
       icon: editedCategory.icon,
-      sort_order: String(editedCategory.position),
+      sort_order: String(editedCategory.sortOrder),
     };
   }, [editedCategory]);
 
@@ -190,7 +190,6 @@ export function CatalogContainer() {
           } else {
             await updateCategory({ variables: { id, input } });
           }
-          // Category never returns sort_order, so the refetched list order is the sort order.
           await categoriesQuery.refetch();
           setEditor(null);
           setImageUrl(null);

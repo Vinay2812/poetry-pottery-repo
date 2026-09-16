@@ -625,6 +625,7 @@ export type Category = {
   name: Scalars['String']['output'];
   product_count: Scalars['Int']['output'];
   slug: Scalars['String']['output'];
+  sort_order: Scalars['Int']['output'];
 };
 
 export type CategoryRef = {
@@ -2399,14 +2400,14 @@ export type SetDefaultAddressMutationVariables = Exact<{
 
 export type SetDefaultAddressMutation = { setDefaultAddress: { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean } };
 
-export type AdminCategoryFieldsFragment = { id: number, slug: string, name: string, icon: string | null, image_url: string | null, product_count: number };
+export type AdminCategoryFieldsFragment = { id: number, slug: string, name: string, icon: string | null, image_url: string | null, sort_order: number, product_count: number };
 
 export type AdminCollectionFieldsFragment = { id: number, slug: string, name: string, description: string | null, image_url: string | null, starts_at: string | null, ends_at: string | null, product_count: number };
 
 export type AdminCategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type AdminCategoriesQuery = { adminCategories: Array<{ id: number, slug: string, name: string, icon: string | null, image_url: string | null, product_count: number }> };
+export type AdminCategoriesQuery = { adminCategories: Array<{ id: number, slug: string, name: string, icon: string | null, image_url: string | null, sort_order: number, product_count: number }> };
 
 export type AdminCollectionsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2418,7 +2419,7 @@ export type CreateCategoryMutationVariables = Exact<{
 }>;
 
 
-export type CreateCategoryMutation = { createCategory: { id: number, slug: string, name: string, icon: string | null, image_url: string | null, product_count: number } };
+export type CreateCategoryMutation = { createCategory: { id: number, slug: string, name: string, icon: string | null, image_url: string | null, sort_order: number, product_count: number } };
 
 export type UpdateCategoryMutationVariables = Exact<{
   id: number;
@@ -2426,7 +2427,7 @@ export type UpdateCategoryMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCategoryMutation = { updateCategory: { id: number, slug: string, name: string, icon: string | null, image_url: string | null, product_count: number } };
+export type UpdateCategoryMutation = { updateCategory: { id: number, slug: string, name: string, icon: string | null, image_url: string | null, sort_order: number, product_count: number } };
 
 export type DeleteCategoryMutationVariables = Exact<{
   id: number;
@@ -3473,6 +3474,7 @@ export const AdminCategoryFieldsFragmentDoc = gql`
   name
   icon
   image_url
+  sort_order
   product_count
 }
     `;

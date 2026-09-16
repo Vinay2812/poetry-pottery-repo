@@ -574,6 +574,7 @@ type Category {
   name: String!
   product_count: Int!
   slug: String!
+  sort_order: Int!
 }
 
 type CategoryRef {
