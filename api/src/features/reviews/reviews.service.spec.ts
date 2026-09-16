@@ -298,6 +298,7 @@ describe("ReviewsService", () => {
         where: {
           rating: { gte: 4 },
           body: { not: null },
+          is_hidden: false,
           OR: [
             { product: { is_active: true } },
             { event: { status: { in: ["PUBLISHED", "COMPLETED"] } } },
