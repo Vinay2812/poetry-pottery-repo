@@ -35,10 +35,15 @@ export function ReviewsPanelContainer({
     () => ({ kind, id: subjectId, slug }),
     [kind, slug, subjectId],
   );
-  const { result, isLoading, isLoadingMore, loadMore } = useReviewList(subject);
+  const { result, isLoading, isLoadingMore, loadMore, refetchLoaded } =
+    useReviewList(subject);
   const [optimisticResult, applyAction] = useOptimistic(
     result,
     applyReviewAction,
+  );
+  const list = useMemo(
+    () => ({ onOptimistic: applyAction, refetchLoaded }),
+    [applyAction, refetchLoaded],
   );
   const {
     canReview,
@@ -52,7 +57,7 @@ export function ReviewsPanelContainer({
     setIsOpen,
     submit,
     upload,
-  } = useReviewComposer(subject, subjectName, applyAction);
+  } = useReviewComposer(subject, subjectName, list);
   const [openPhoto, setOpenPhoto] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 

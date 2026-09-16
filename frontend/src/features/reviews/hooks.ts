@@ -124,10 +124,10 @@ export function useReviewList(subject: ReviewSubject) {
 
   const loadMore = useCallback(() => {
     if (!pageInfo?.has_more || loading) return;
-    const nextPage = pageInfo.page + 1;
+    const next = { page: pageInfo.page + 1, limit: pageInfo.limit };
     if (isProduct) {
       void productQuery.fetchMore({
-        variables: { page: nextPage },
+        variables: next,
         updateQuery: (previous, { fetchMoreResult }) => ({
           productReviews: {
             ...fetchMoreResult.productReviews,
@@ -141,7 +141,7 @@ export function useReviewList(subject: ReviewSubject) {
       return;
     }
     void eventQuery.fetchMore({
-      variables: { page: nextPage },
+      variables: next,
       updateQuery: (previous, { fetchMoreResult }) => ({
         eventReviews: {
           ...fetchMoreResult.eventReviews,
@@ -154,11 +154,33 @@ export function useReviewList(subject: ReviewSubject) {
     });
   }, [eventQuery, isProduct, loading, pageInfo, productQuery]);
 
+  // After a post or a delete the whole loaded window is read again, so the list keeps every
+  // page the reader asked for instead of snapping back to the first five.
+  const loadedCount = result?.items.length ?? 0;
+  const refetchLoaded = useCallback(async () => {
+    const window = {
+      page: 1,
+      limit: Math.max(REVIEWS_PAGE_SIZE, loadedCount),
+    };
+    if (isProduct) {
+      await productQuery.fetchMore({
+        variables: window,
+        updateQuery: (_previous, { fetchMoreResult }) => fetchMoreResult,
+      });
+      return;
+    }
+    await eventQuery.fetchMore({
+      variables: window,
+      updateQuery: (_previous, { fetchMoreResult }) => fetchMoreResult,
+    });
+  }, [eventQuery, isProduct, loadedCount, productQuery]);
+
   return {
     result: result ?? null,
     isLoading: loading && !result,
     isLoadingMore: loading && Boolean(result),
     loadMore,
+    refetchLoaded,
   };
 }
 
@@ -191,17 +213,24 @@ function useReviewEligibility(subject: ReviewSubject) {
 }
 
 // A reply only carries the review itself, never the counts, so the refetched
-// answers are the new baseline. Only the panel has the list mounted.
-function toRefetchNames(subject: ReviewSubject, hasList: boolean): string[] {
-  const isProduct = subject.kind === "product";
-  const eligibility = isProduct
+// answers are the new baseline.
+function toEligibilityName(subject: ReviewSubject): string {
+  return subject.kind === "product"
     ? "ProductReviewEligibility"
     : "EventReviewEligibility";
-  if (!hasList) return [eligibility];
-  return [isProduct ? "ProductReviews" : "EventReviews", eligibility];
 }
 
-function useReviewMutations(subject: ReviewSubject, hasList: boolean) {
+// What the panel lends the composer: its optimistic dispatcher and a way to re-read the window
+// already on screen. An order line has neither.
+export interface ReviewListSync {
+  onOptimistic: (action: ReviewAction) => void;
+  refetchLoaded: () => Promise<void>;
+}
+
+function useReviewMutations(
+  subject: ReviewSubject,
+  list: ReviewListSync | undefined,
+) {
   const [createProduct] = useCreateProductReviewMutation();
   const [createEvent] = useCreateEventReviewMutation();
   const [updateMutation] = useUpdateReviewMutation();
@@ -211,52 +240,51 @@ function useReviewMutations(subject: ReviewSubject, hasList: boolean) {
     async (values: ReviewFormValues, id: number | null): Promise<void> => {
       const input = toReviewInput(values);
       const settle = {
-        refetchQueries: toRefetchNames(subject, hasList),
+        refetchQueries: [toEligibilityName(subject)],
         awaitRefetchQueries: true,
       };
       if (id !== null) {
         await updateMutation({ variables: { id, input }, ...settle });
-        return;
-      }
-      if (subject.kind === "product") {
+      } else if (subject.kind === "product") {
         await createProduct({
           variables: { product_id: subject.id, input },
           ...settle,
         });
-        return;
+      } else {
+        await createEvent({
+          variables: { event_id: subject.id, input },
+          ...settle,
+        });
       }
-      await createEvent({
-        variables: { event_id: subject.id, input },
-        ...settle,
-      });
+      await list?.refetchLoaded();
     },
-    [createEvent, createProduct, hasList, subject, updateMutation],
+    [createEvent, createProduct, list, subject, updateMutation],
   );
 
   const remove = useCallback(
     async (id: number): Promise<void> => {
       await removeMutation({
         variables: { id },
-        refetchQueries: toRefetchNames(subject, hasList),
+        refetchQueries: [toEligibilityName(subject)],
         awaitRefetchQueries: true,
       });
+      await list?.refetchLoaded();
     },
-    [hasList, removeMutation, subject],
+    [list, removeMutation, subject],
   );
 
   return { save, remove };
 }
 
 // Everything the write-a-review dialog needs, wherever it is opened from. The panel
-// hands in its optimistic dispatcher; an order line has no list on screen to patch.
+// lends its list; an order line has none on screen to patch.
 export function useReviewComposer(
   subject: ReviewSubject,
   subjectName: string,
-  onOptimistic?: (action: ReviewAction) => void,
+  list?: ReviewListSync,
 ) {
-  const hasList = onOptimistic !== undefined;
   const { canReview, myReview, isSignedIn } = useReviewEligibility(subject);
-  const { save, remove } = useReviewMutations(subject, hasList);
+  const { save, remove } = useReviewMutations(subject, list);
   const { upload, isUploading } = useReviewPhotoUpload(subject);
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
@@ -284,7 +312,7 @@ export function useReviewComposer(
           subjectHref: toSubjectHref(subject),
           createdAt: new Date().toISOString(),
         });
-        onOptimistic?.(
+        list?.onOptimistic(
           previous
             ? { kind: "edit", review: draft }
             : { kind: "post", review: draft },
@@ -298,7 +326,7 @@ export function useReviewComposer(
         }
       });
     },
-    [myReview, onOptimistic, save, subject, subjectName, user],
+    [list, myReview, save, subject, subjectName, user],
   );
 
   const removeMine = useCallback(() => {
@@ -306,7 +334,7 @@ export function useReviewComposer(
     if (!previous) return;
     setIsOpen(false);
     startTransition(async () => {
-      onOptimistic?.({ kind: "remove", id: previous.id });
+      list?.onOptimistic({ kind: "remove", id: previous.id });
       try {
         await remove(previous.id);
         toast.success("Review removed");
@@ -314,7 +342,7 @@ export function useReviewComposer(
         toast.error(toErrorMessage(caught));
       }
     });
-  }, [myReview, onOptimistic, remove]);
+  }, [list, myReview, remove]);
 
   return {
     canReview,
