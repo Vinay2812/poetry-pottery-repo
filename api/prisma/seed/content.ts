@@ -324,8 +324,56 @@ export const contentPages: SeedContentPage[] = [
             body: "Yes, from your orders page, any time before we mark it as paid. After that, message us on WhatsApp and we will do our best.",
           },
           {
+            title: "How long until it ships?",
+            body: "Pieces on the shelf leave the studio within three working days of payment. Made-to-order pieces take two to three weeks, because they still have to be thrown, dried, fired twice and glazed.",
+          },
+          {
+            title: "Do prices include GST, and do I get an invoice?",
+            body: "Prices on the site are in rupees and include GST. The invoice goes out with the shipping confirmation; tell us on WhatsApp if you need it made out to a company.",
+          },
+        ],
+      },
+      {
+        heading: "The pieces",
+        body: "",
+        items: [
+          {
             title: "Is every piece exactly like the photo?",
-            body: "No. Glaze colours vary between firings and no two pieces are identical. That is the point of handmade.",
+            body: "No. We photograph one piece from a batch, and the one you get is its sibling rather than its twin.",
+          },
+          {
+            title: "Why do two pieces in the same glaze look different?",
+            body: "Glaze is mixed in small batches and a kiln has hotter and cooler shelves, so the same recipe can come out darker on one piece than the next. Thickness where the glaze was poured changes it again.",
+          },
+          {
+            title: "Are they food safe?",
+            body: "Yes. Every glaze we use is food safe and lead free, and glazed pieces are made for daily eating and drinking. Unglazed terracotta absorbs water, so those are for plants and dry use.",
+          },
+          {
+            title: "Microwave and dishwasher?",
+            body: "Both are fine for glazed stoneware, and the top rack is kinder to it. Hand washing keeps the glaze bright for longer.",
+          },
+          {
+            title: "What counts as a fault?",
+            body: "A stray glaze speck, a thumb dent or a slightly uneven rim is how a handmade piece looks. A crack, a chip or a piece that will not sit flat is a fault, so send us a photo.",
+          },
+        ],
+      },
+      {
+        heading: "Shipping and returns",
+        body: "",
+        items: [
+          {
+            title: "What if it arrives broken?",
+            body: "Send us a photo of the piece and the box on WhatsApp within 48 hours and we will replace it or refund you, shipping included. Keep the packaging until it is settled.",
+          },
+          {
+            title: "How is it packed?",
+            body: "Each piece is wrapped in paper, then bubble wrap, then packed into a double-walled box with the gaps filled. Nothing travels loose.",
+          },
+          {
+            title: "Can I return a made-to-order piece?",
+            body: "No. A piece thrown to your brief cannot go back on the shelf, so it is final once we start. If it arrives damaged or is not what we agreed, we remake it.",
           },
         ],
       },
@@ -344,6 +392,10 @@ export const contentPages: SeedContentPage[] = [
           {
             title: "What should I wear?",
             body: "Something you do not mind getting muddy. Aprons are provided, but clay finds a way.",
+          },
+          {
+            title: "Can I cancel a workshop?",
+            body: "Cancel up to 24 hours before the session and we refund you in full. Later than that we can move you to another date once.",
           },
         ],
       },
@@ -375,8 +427,38 @@ export const contentPages: SeedContentPage[] = [
     hero_image_url: "",
     sections: [
       {
+        heading: "The first wash",
+        body: "Rinse a new piece in warm soapy water and dry it with a cloth before you use it. Nothing needs seasoning or soaking. The faint kiln smell some pieces carry goes after that first wash.",
+        items: [],
+      },
+      {
         heading: "Everyday use",
         body: "All our glazed pieces are food safe, microwave safe and dishwasher safe on a gentle cycle. Hand washing keeps glazes bright for longer. Unglazed terracotta will absorb water, so keep those pieces for dry use or plants.",
+        items: [],
+      },
+      {
+        heading: "Heat and cold",
+        body: "Stoneware minds sudden changes in temperature more than heat itself. Warm a mug with a little hot water before you pour boiling tea into it, and let a dish come up to room temperature before it goes into a hot oven. A piece taken from the fridge to the oven can crack straight through.",
+        items: [],
+      },
+      {
+        heading: "Tea and coffee stains",
+        body: "The brown ring inside a well-used mug is tannin, not damage. Leave a paste of bicarbonate of soda and water in the mug for an hour, then wipe it out with a soft sponge. Scouring powder and steel wool will take the stain off and the shine with it.",
+        items: [],
+      },
+      {
+        heading: "Crazing is not a fault",
+        body: "Fine lines across the glaze, like a cracked eggshell, are crazing: the glaze and the clay beneath it settle at slightly different rates as they cool. The piece is still sound and still holds water, and some glazes are made to do it. Tell us only if a crazed piece starts to weep or hold a smell.",
+        items: [],
+      },
+      {
+        heading: "Wood-fired pieces",
+        body: "Ash lands on these in the kiln, so one side is usually darker and rougher than the other and the foot feels like stone. Wash them by hand and keep them off the dishwasher's hot cycle. They are happiest serving food and sitting out on a shelf.",
+        items: [],
+      },
+      {
+        heading: "Storing",
+        body: "Do not hang mugs by the handle or stack them inside one another. Between stacked bowls, put a cloth or a paper napkin so the unglazed foot ring does not score the piece below. Planters go on a saucer, never straight onto wood.",
         items: [],
       },
       {
@@ -384,16 +466,16 @@ export const contentPages: SeedContentPage[] = [
         body: "",
         items: [
           {
-            title: "Thermal shock",
-            body: "Do not move a piece straight from the fridge into a hot oven, or pour boiling water into a cold mug.",
-          },
-          {
             title: "Abrasive scrubbers",
             body: "Steel wool scratches glaze. A soft sponge is enough.",
           },
           {
             title: "Open flame",
-            body: "None of our pieces are made for the stovetop.",
+            body: "None of our pieces are made for the stovetop or an induction plate.",
+          },
+          {
+            title: "Long soaking",
+            body: "Leaving a piece in the sink overnight lets water into the unglazed foot. Wash it and dry it.",
           },
         ],
       },
