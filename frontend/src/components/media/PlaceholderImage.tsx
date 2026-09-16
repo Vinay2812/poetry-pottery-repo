@@ -6,21 +6,20 @@ import { cn } from "@/lib/utils";
 
 export interface PlaceholderImageProps {
   kind: PotteryIconKind;
-  size?: "default" | "hero";
   className?: string;
 }
 
 const CENTRE = VESSEL_BOX / 2;
+// The drawn piece sits in the middle half of its box, so left alone it reads far smaller
+// than a photographed piece does in its frame. These lift it to the same optical size.
+const PIECE_CENTRE_Y = 108;
+const FILL_SCALE = 1.4;
 
 /**
  * Stands in wherever a photo is missing: the piece itself, drawn and shaded the
  * way the hero jar is, so an unphotographed product still looks handmade.
  */
-export function PlaceholderImage({
-  kind,
-  size = "default",
-  className,
-}: PlaceholderImageProps) {
+export function PlaceholderImage({ kind, className }: PlaceholderImageProps) {
   const vessel = toDrawnVessel(kind);
   // A grid can hold several unphotographed pieces of one kind, and every url(#…)
   // in the document would otherwise resolve to whichever one rendered first.
@@ -30,8 +29,6 @@ export function PlaceholderImage({
   const shadeId = `${id}-shade`;
   const mouthId = `${id}-mouth`;
   const clipId = `${id}-body`;
-  // Cards leave a little air around the piece; the product page fills its square.
-  const scale = size === "hero" ? 1 : 0.88;
 
   return (
     <span
@@ -79,7 +76,7 @@ export function PlaceholderImage({
         </defs>
 
         <g
-          transform={`translate(${CENTRE} ${CENTRE}) scale(${scale}) translate(${-CENTRE} ${-CENTRE})`}
+          transform={`translate(${CENTRE} ${PIECE_CENTRE_Y}) scale(${FILL_SCALE}) translate(${-CENTRE} ${-PIECE_CENTRE_Y})`}
         >
           {/* The shadow it drops on the shelf. */}
           {vessel.shadow.map((ring) => (

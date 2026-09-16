@@ -51,17 +51,18 @@ export function ArchiveCard({
         )}
       </Link>
 
+      {/* Same reserved name and note heights as ProductCard, so mixed rows stay level. */}
       <div className="flex min-w-0 flex-col gap-1">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex min-h-10 items-start justify-between gap-3">
           <Link
             href={href}
-            className="line-clamp-2 min-w-0 text-sm leading-snug underline-offset-4 hover:underline"
+            className="min-w-0 text-sm leading-snug break-words underline-offset-4 hover:underline"
           >
             {name}
           </Link>
           <PriceTag price={price} compareAtPrice={null} />
         </div>
-        <p className="text-[13px] text-muted-foreground">{note}</p>
+        <p className="min-h-5 text-[13px] text-muted-foreground">{note}</p>
         {onRemoveFromWishlist && (
           <button
             type="button"

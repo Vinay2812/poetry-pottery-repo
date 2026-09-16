@@ -60,7 +60,7 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
   if (images.length === 0) {
     return (
       <div className="relative aspect-square bg-white">
-        <PlaceholderImage kind={toPotteryIconKind(name)} size="hero" />
+        <PlaceholderImage kind={toPotteryIconKind(name)} />
         {overlay}
       </div>
     );

@@ -36,7 +36,7 @@ export const SmallThings: Story = { args: { kind: "small-things" } };
 
 /** The product page square, where the kiln labels are laid over the drawing. */
 export const Hero: Story = {
-  args: { kind: "vase", size: "hero" },
+  args: { kind: "vase" },
   decorators: [
     (Story) => (
       <div className="aspect-square w-[600px] bg-white">

@@ -213,28 +213,28 @@ export function ProductCard({
         ) : null}
       </div>
 
+      {/* Two lines kept for the name and one for the stock line, so a short name and a
+          missing stock line leave a card the same height as every other one. */}
       <div className="flex min-w-0 flex-col gap-1">
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex min-h-10 items-start justify-between gap-3">
           <Link
             href={href}
-            className="line-clamp-2 min-w-0 text-sm leading-snug underline-offset-4 hover:underline"
+            className="min-w-0 text-sm leading-snug break-words underline-offset-4 hover:underline"
           >
             {name}
           </Link>
           <PriceTag price={price} compareAtPrice={compareAtPrice} />
         </div>
-        {stockTone !== "in_stock" && (
-          <p
-            className={cn(
-              "text-[13px]",
-              stockTone === "made_to_order"
-                ? "text-primary"
-                : "text-muted-foreground",
-            )}
-          >
-            {stockLabel}
-          </p>
-        )}
+        <p
+          className={cn(
+            "min-h-5 text-[13px]",
+            stockTone === "made_to_order"
+              ? "text-primary"
+              : "text-muted-foreground",
+          )}
+        >
+          {stockTone === "in_stock" ? null : stockLabel}
+        </p>
       </div>
     </article>
   );
