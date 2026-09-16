@@ -340,6 +340,18 @@ flow_product_to_order() {
   expect_text "Cancel this order" "a fresh order can still be cancelled"
   shot "order-placed"
 
+  # The list is the first place a customer looks after paying, so it is checked
+  # on the order they just placed rather than on the page rendering at all.
+  local order_id
+  order_id="$(ab get url 2>/dev/null | tail -1 | sed -e 's#.*/orders/##' -e 's#?.*##')"
+  note "order placed: $order_id"
+  goto "/orders"
+  expect_text "Your orders" "the orders list renders"
+  expect_no_text "Your orders did not load" "the orders list query did not fail"
+  expect_text "$order_id" "the list shows the order just placed"
+  shot "orders-list"
+
+  goto "/orders/$order_id"
   click_matching '^Cancel this order$' "open the cancel dialog" || {
     end_flow
     return
