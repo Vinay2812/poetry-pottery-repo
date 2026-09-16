@@ -12,17 +12,23 @@ import { KilnLabels, type KilnLabel } from "@/components/motion/KilnLabels";
 import { Reveal } from "@/components/motion/Reveal";
 
 import { useAddToCart } from "@/features/cart/hooks";
+import { useReferencePhotos } from "@/features/products/hooks";
 import { ArchiveNotice } from "@/features/products/components/ArchiveNotice";
 import { KilnCard } from "@/features/products/components/KilnCard";
 import { OptionGroupPicker } from "@/features/products/components/OptionGroupPicker";
 import { ProductBuyBox } from "@/features/products/components/ProductBuyBox";
 import { ProductCarousel } from "@/features/products/components/ProductCarousel";
 import { ProductGallery } from "@/features/products/components/ProductGallery";
+import { ReferencePhotoPicker } from "@/features/products/components/ReferencePhotoPicker";
 import { StickyBuyBar } from "@/features/products/components/StickyBuyBar";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
   computeUnitPrice,
+  isPhotoUploadPending,
+  MAX_REFERENCE_PHOTOS,
   type ProductDetailData,
+  REFERENCE_PHOTO_ACCEPT,
+  toConfirmedPhotoUrls,
   toArchiveAskUrl,
   toArchiveNote,
   type Selections,
@@ -57,6 +63,14 @@ export function ProductDetailContainer({
   pageUrl,
 }: ProductDetailContainerProps) {
   const { addToCart, isAdding } = useAddToCart();
+  const {
+    photos,
+    error: photoError,
+    setError: setPhotoError,
+    addFiles,
+    removePhoto,
+    clearPhotos,
+  } = useReferencePhotos();
   const { isWishlisted } = useWishlistIds();
   const { toggle } = useToggleWishlist();
   const [quantity, setQuantity] = useState(1);
@@ -134,6 +148,10 @@ export function ProductDetailContainer({
       setShowErrors(true);
       return;
     }
+    if (isPhotoUploadPending(photos)) {
+      setPhotoError("Wait for the photos to finish uploading");
+      return;
+    }
     addToCart(
       {
         product_id: product.id,
@@ -143,16 +161,21 @@ export function ProductDetailContainer({
           option_id: "optionId" in value ? value.optionId : null,
           text: "text" in value ? value.text : null,
         })),
+        reference_image_urls: toConfirmedPhotoUrls(photos),
       },
       product.name,
     );
+    clearPhotos();
   }, [
     addToCart,
+    clearPhotos,
     issues.length,
+    photos,
     product.id,
     product.name,
     quantity,
     selections,
+    setPhotoError,
   ]);
 
   const handleToggleWishlist = useCallback(() => {
@@ -238,7 +261,7 @@ export function ProductDetailContainer({
               onAddToCart={handleAddToCart}
               onToggleWishlist={handleToggleWishlist}
               options={
-                groups.length > 0 ? (
+                groups.length > 0 || product.is_customizable ? (
                   <div className="flex flex-col gap-5 border-y border-ash py-6">
                     {groups.map((group) => {
                       const selection = selections[group.id];
@@ -285,6 +308,23 @@ export function ProductDetailContainer({
                         />
                       );
                     })}
+                    {product.is_customizable && (
+                      <ReferencePhotoPicker
+                        photos={photos.map((photo) => ({
+                          id: photo.id,
+                          name: photo.name,
+                          previewUrl: photo.previewUrl,
+                          progress: photo.progress,
+                          error: photo.error,
+                          isUploaded: photo.url !== null,
+                        }))}
+                        maxPhotos={MAX_REFERENCE_PHOTOS}
+                        accept={REFERENCE_PHOTO_ACCEPT}
+                        error={photoError}
+                        onAddFiles={addFiles}
+                        onRemove={removePhoto}
+                      />
+                    )}
                   </div>
                 ) : undefined
               }

@@ -5,6 +5,12 @@ import { OptionGroupKind, ProductSort } from "@/graphql/generated/graphql";
 import {
   applyFilterAction,
   computeUnitPrice,
+  isPhotoUploadPending,
+  MAX_REFERENCE_PHOTO_BYTES,
+  type ReferencePhoto,
+  remainingReferenceSlots,
+  toConfirmedPhotoUrls,
+  validateReferencePhoto,
   countActiveFilters,
   toCardPhotoLoading,
   EMPTY_FILTERS,
@@ -309,5 +315,87 @@ describe("toCardPhotoLoading", () => {
       isPriority: false,
       isEager: false,
     });
+  });
+});
+
+function photo(overrides: Partial<ReferencePhoto>): ReferencePhoto {
+  return {
+    id: "1",
+    name: "shelf.jpg",
+    previewUrl: "blob:shelf",
+    progress: 100,
+    url: null,
+    error: null,
+    ...overrides,
+  };
+}
+
+describe("validateReferencePhoto", () => {
+  it("accepts a small JPEG, PNG or WebP", () => {
+    expect(validateReferencePhoto({ type: "image/jpeg", size: 1024 })).toBe(
+      null,
+    );
+    expect(validateReferencePhoto({ type: "image/png", size: 1024 })).toBe(
+      null,
+    );
+    expect(validateReferencePhoto({ type: "image/webp", size: 1024 })).toBe(
+      null,
+    );
+  });
+
+  it("turns away other types, empty files and anything over 8 MB", () => {
+    expect(validateReferencePhoto({ type: "image/gif", size: 1024 })).toBe(
+      "Use a JPEG, PNG or WebP photo",
+    );
+    expect(validateReferencePhoto({ type: "image/jpeg", size: 0 })).toBe(
+      "Photos must be under 8 MB",
+    );
+    expect(
+      validateReferencePhoto({
+        type: "image/jpeg",
+        size: MAX_REFERENCE_PHOTO_BYTES + 1,
+      }),
+    ).toBe("Photos must be under 8 MB");
+    expect(
+      validateReferencePhoto({
+        type: "image/jpeg",
+        size: MAX_REFERENCE_PHOTO_BYTES,
+      }),
+    ).toBe(null);
+  });
+});
+
+describe("remainingReferenceSlots", () => {
+  it("counts down to three and never below zero", () => {
+    expect(remainingReferenceSlots(0)).toBe(3);
+    expect(remainingReferenceSlots(2)).toBe(1);
+    expect(remainingReferenceSlots(3)).toBe(0);
+    expect(remainingReferenceSlots(5)).toBe(0);
+  });
+});
+
+describe("toConfirmedPhotoUrls", () => {
+  it("keeps only the photos the server confirmed", () => {
+    expect(
+      toConfirmedPhotoUrls([
+        photo({ id: "1", url: "https://cdn.test/a.jpg" }),
+        photo({ id: "2", url: null }),
+        photo({ id: "3", url: null, error: "Upload failed" }),
+      ]),
+    ).toEqual(["https://cdn.test/a.jpg"]);
+    expect(toConfirmedPhotoUrls([])).toEqual([]);
+  });
+});
+
+describe("isPhotoUploadPending", () => {
+  it("waits on photos still in flight but not on failed ones", () => {
+    expect(isPhotoUploadPending([])).toBe(false);
+    expect(
+      isPhotoUploadPending([photo({ url: "https://cdn.test/a.jpg" })]),
+    ).toBe(false);
+    expect(isPhotoUploadPending([photo({ url: null })])).toBe(true);
+    expect(
+      isPhotoUploadPending([photo({ url: null, error: "Upload failed" })]),
+    ).toBe(false);
   });
 });

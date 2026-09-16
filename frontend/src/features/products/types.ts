@@ -367,3 +367,50 @@ export interface CardPhotoLoading {
 export function toCardPhotoLoading(index: number): CardPhotoLoading {
   return { isPriority: index < 2, isEager: index < 4 };
 }
+
+export const MAX_REFERENCE_PHOTOS = 3;
+export const MAX_REFERENCE_PHOTO_BYTES = 8 * 1024 * 1024;
+const REFERENCE_PHOTO_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+] as const;
+export const REFERENCE_PHOTO_ACCEPT = REFERENCE_PHOTO_TYPES.join(",");
+
+export interface ReferencePhoto {
+  id: string;
+  name: string;
+  previewUrl: string;
+  progress: number;
+  url: string | null;
+  error: string | null;
+}
+
+// The API repeats every one of these checks; this only saves the customer a round trip.
+export function validateReferencePhoto(file: {
+  type: string;
+  size: number;
+}): string | null {
+  if (!REFERENCE_PHOTO_TYPES.some((type) => type === file.type)) {
+    return "Use a JPEG, PNG or WebP photo";
+  }
+  if (file.size <= 0 || file.size > MAX_REFERENCE_PHOTO_BYTES) {
+    return "Photos must be under 8 MB";
+  }
+  return null;
+}
+
+export function remainingReferenceSlots(count: number): number {
+  return Math.max(0, MAX_REFERENCE_PHOTOS - count);
+}
+
+// Only photos the server confirmed travel with the line; the rest are still local previews.
+export function toConfirmedPhotoUrls(photos: ReferencePhoto[]): string[] {
+  return photos
+    .map((photo) => photo.url)
+    .filter((url): url is string => url !== null);
+}
+
+export function isPhotoUploadPending(photos: ReferencePhoto[]): boolean {
+  return photos.some((photo) => photo.url === null && photo.error === null);
+}

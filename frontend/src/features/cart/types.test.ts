@@ -67,6 +67,7 @@ function line(
     is_available: isAvailable,
     unavailable_reason: null,
     selections: [],
+    reference_image_urls: [],
     product: {
       id,
       slug: `piece-${id}`,
