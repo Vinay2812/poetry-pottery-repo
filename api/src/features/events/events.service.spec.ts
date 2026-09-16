@@ -1,3 +1,4 @@
+import { ConflictException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { EventStatus, RegistrationStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -199,17 +200,20 @@ describe("EventsService", () => {
     expect(registration.can_cancel).toBe(true);
   });
 
-  it("reuses a cancelled row instead of violating the unique index", async () => {
+  it("reuses a cancelled row, predicated on the status it read", async () => {
     prismaMock.eventRegistration.findUnique.mockResolvedValue(
       registrationRow({ status: RegistrationStatus.CANCELLED }),
+    );
+    prismaMock.eventRegistration.findUniqueOrThrow.mockResolvedValue(
+      registrationRow(),
     );
 
     await service.register(1, { event_id: 1, seats: 1 });
 
     expect(prismaMock.eventRegistration.create).not.toHaveBeenCalled();
-    expect(prismaMock.eventRegistration.update).toHaveBeenCalledWith(
+    expect(prismaMock.eventRegistration.updateMany).toHaveBeenCalledWith(
       containing({
-        where: { id: "EV-1" },
+        where: { id: "EV-1", status: RegistrationStatus.CANCELLED },
         data: containing({
           status: RegistrationStatus.PENDING,
           seats: 1,
@@ -217,6 +221,17 @@ describe("EventsService", () => {
         }),
       }),
     );
+  });
+
+  it("refuses the rebooking that loses the race for a cancelled row", async () => {
+    prismaMock.eventRegistration.findUnique.mockResolvedValue(
+      registrationRow({ status: RegistrationStatus.CANCELLED }),
+    );
+    prismaMock.eventRegistration.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(
+      service.register(1, { event_id: 1, seats: 1 }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it("blocks duplicate, full, closed and oversized requests", async () => {

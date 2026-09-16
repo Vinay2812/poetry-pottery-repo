@@ -117,7 +117,7 @@ describe("wishlist toggles under concurrency", () => {
     );
   });
 
-  it("leaks a raw foreign key error when the piece is pulled from the shelf mid-tap", async () => {
+  it("answers with not found when the piece is pulled from the shelf mid-tap", async () => {
     const product = await makeProduct(harness.prisma);
     const [user] = await makeUsers(harness.prisma, 1);
     if (!user) throw new Error("no user");
@@ -137,11 +137,8 @@ describe("wishlist toggles under concurrency", () => {
       () => null,
       (reason: unknown) => reason,
     );
-    // Pinning a bug, not blessing it: the caller should get the NotFound the presence check
-    // already knows how to raise, and instead gets the constraint name and a source path.
-    expect(error).toBeInstanceOf(Error);
-    expect(String(error)).toContain("wishlist_items_product_id_fkey");
-    expect(error).not.toBeInstanceOf(NotFoundException);
+    expect(error).toBeInstanceOf(NotFoundException);
+    expect(String(error)).not.toContain("wishlist_items_product_id_fkey");
     expect(await harness.prisma.wishlistItem.count()).toBe(0);
   });
 });

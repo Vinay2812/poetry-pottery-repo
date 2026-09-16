@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { Prisma } from "@prisma/client";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import {
@@ -7,6 +8,13 @@ import {
 } from "@/features/products/products.service";
 import type { Product } from "@/features/products/products.type";
 import type { WishlistToggleResult } from "./wishlist.type";
+
+function isMissingProduct(error: unknown): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2003"
+  );
+}
 
 @Injectable()
 export class WishlistService {
@@ -41,18 +49,26 @@ export class WishlistService {
     if (!product) {
       throw new NotFoundException("Product not found");
     }
-    const isWishlisted = await this.prisma.withTransaction(async () => {
-      const removed = await this.prisma.wishlistItem.deleteMany({
-        where: { user_id: userId, product_id: productId },
+    const isWishlisted = await this.prisma
+      .withTransaction(async () => {
+        const removed = await this.prisma.wishlistItem.deleteMany({
+          where: { user_id: userId, product_id: productId },
+        });
+        if (removed.count > 0) return false;
+        // A double tap can race the insert; duplicates are simply skipped.
+        await this.prisma.wishlistItem.createMany({
+          data: { user_id: userId, product_id: productId },
+          skipDuplicates: true,
+        });
+        return true;
+      })
+      .catch((error: unknown) => {
+        // The piece can be deleted between the check above and the insert.
+        if (isMissingProduct(error)) {
+          throw new NotFoundException("Product not found");
+        }
+        throw error;
       });
-      if (removed.count > 0) return false;
-      // A double tap can race the insert; duplicates are simply skipped.
-      await this.prisma.wishlistItem.createMany({
-        data: { user_id: userId, product_id: productId },
-        skipDuplicates: true,
-      });
-      return true;
-    });
     const wishlist_count = await this.prisma.wishlistItem.count({
       where: { user_id: userId },
     });

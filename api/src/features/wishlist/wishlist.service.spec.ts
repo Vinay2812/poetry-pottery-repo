@@ -1,4 +1,6 @@
+import { NotFoundException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { Prisma } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
@@ -58,6 +60,21 @@ describe("WishlistService", () => {
   it("rejects unknown products", async () => {
     prismaMock.product.findUnique.mockResolvedValue(null);
     await expect(service.toggle(1, 99)).rejects.toThrow("Product not found");
+  });
+
+  it("answers not found when the piece goes while the toggle writes", async () => {
+    prismaMock.product.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.wishlistItem.deleteMany.mockResolvedValue({ count: 0 });
+    prismaMock.wishlistItem.createMany.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("fk violated", {
+        code: "P2003",
+        clientVersion: "7.9.1",
+      }),
+    );
+
+    await expect(service.toggle(1, 1)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
   });
 
   it("keeps archived pieces on the list", async () => {

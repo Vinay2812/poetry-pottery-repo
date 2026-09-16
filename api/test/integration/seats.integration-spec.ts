@@ -122,7 +122,7 @@ describe("event seat accounting under concurrency", () => {
     expect(cancelled).toBe(placed.length);
   });
 
-  it("loses seats when one guest rebooks a cancelled seat twice at the same moment", async () => {
+  it("lets one of two simultaneous rebookings of a cancelled seat through", async () => {
     const event = await makeEvent(harness.prisma, TOTAL_SEATS);
     const [user] = await makeUsers(harness.prisma, 1);
     if (!user) throw new Error("no user");
@@ -148,22 +148,18 @@ describe("event seat accounting under concurrency", () => {
     await writer.end();
 
     const outcome = await rebooking;
-    expect(outcome.wins).toHaveLength(2);
+    expect(outcome.wins).toHaveLength(1);
+    expect(outcome.errors).toEqual([
+      "This registration was just updated, refresh and try again",
+    ]);
     const rows = await harness.prisma.eventRegistration.findMany({
       where: { event_id: event.id },
     });
     expect(rows).toHaveLength(1);
     expect(rows[0]?.status).toBe(RegistrationStatus.PENDING);
-    const after = await harness.prisma.event.findUniqueOrThrow({
-      where: { id: event.id },
-    });
-    // Pinning a bug, not blessing it: both rebookings took seats, only one registration holds
-    // them, so two seats are gone from the evening for good.
+    // The loser rolled its seat hold back with its transaction, so the ledger still balances.
     expect(await heldSeats(event.id)).toBe(2);
-    expect(after.available_seats).toBe(TOTAL_SEATS - 4);
-    expect(after.available_seats).toBeLessThan(
-      TOTAL_SEATS - (await heldSeats(event.id)),
-    );
+    await expectLedgerBalances(event.id, TOTAL_SEATS);
   });
 
   it("never conjures a seat, however bookings and cancellations interleave", async () => {

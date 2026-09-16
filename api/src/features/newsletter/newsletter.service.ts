@@ -40,21 +40,33 @@ export class NewsletterService {
     const email = parseEmail(rawEmail);
     const { subscriber, wasActive } = await this.prisma.withTransaction(
       async () => {
-        const existing = await this.prisma.newsletterSubscriber.findUnique({
+        // A new row starts dormant so the wake-up below is the single write that decides
+        // who gets to send the welcome; a storm of signups only wakes it once.
+        await this.prisma.newsletterSubscriber.createMany({
+          data: { email, is_active: false },
+          skipDuplicates: true,
+        });
+        const row = await this.prisma.newsletterSubscriber.findUniqueOrThrow({
           where: { email },
+          select: { id: true },
         });
         // user_id is unique, so only link when the account is free or already on this row.
-        const linked = await this.linkableUserId(userId, existing?.id ?? null);
-        const row = await this.prisma.newsletterSubscriber.upsert({
-          where: { email },
-          create: { email, user_id: linked },
-          update: {
-            is_active: true,
-            unsubscribed_at: null,
-            ...(linked === null ? {} : { user_id: linked }),
-          },
+        const linked = await this.linkableUserId(userId, row.id);
+        if (linked !== null) {
+          await this.prisma.newsletterSubscriber.updateMany({
+            where: { email },
+            data: { user_id: linked },
+          });
+        }
+        const woken = await this.prisma.newsletterSubscriber.updateMany({
+          where: { email, is_active: false },
+          data: { is_active: true, unsubscribed_at: null },
         });
-        return { subscriber: row, wasActive: existing?.is_active === true };
+        const subscriber =
+          await this.prisma.newsletterSubscriber.findUniqueOrThrow({
+            where: { email },
+          });
+        return { subscriber, wasActive: woken.count === 0 };
       },
     );
 

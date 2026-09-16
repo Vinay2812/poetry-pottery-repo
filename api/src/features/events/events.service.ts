@@ -238,21 +238,32 @@ export class EventsService {
         cancelled_at: null,
       };
       // A cancelled or rejected row is reused so one person keeps one row per event.
-      return existing
-        ? this.prisma.eventRegistration.update({
-            where: { id: existing.id },
-            data,
-            include: registrationInclude,
-          })
-        : this.prisma.eventRegistration.create({
-            data: {
-              id: newPublicId("EV"),
-              event_id: event.id,
-              user_id: userId,
-              ...data,
-            },
-            include: registrationInclude,
-          });
+      if (existing) {
+        // Predicated on the status we read: two rebookings of the same row would each have
+        // held seats above, and the loser rolls its hold back with the transaction.
+        const rebooked = await this.prisma.eventRegistration.updateMany({
+          where: { id: existing.id, status: existing.status },
+          data,
+        });
+        if (rebooked.count === 0) {
+          throw new ConflictException(
+            "This registration was just updated, refresh and try again",
+          );
+        }
+        return this.prisma.eventRegistration.findUniqueOrThrow({
+          where: { id: existing.id },
+          include: registrationInclude,
+        });
+      }
+      return this.prisma.eventRegistration.create({
+        data: {
+          id: newPublicId("EV"),
+          event_id: event.id,
+          user_id: userId,
+          ...data,
+        },
+        include: registrationInclude,
+      });
     });
 
     const registration = toRegistration(row);

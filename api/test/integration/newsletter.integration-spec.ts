@@ -51,7 +51,7 @@ describe("newsletter signup under concurrency", () => {
     expect(rows[0]?.unsubscribed_at).toBeNull();
   });
 
-  it("greets the same address again for every signup that read an empty table", async () => {
+  it("greets a burst of signups from one address exactly once", async () => {
     await race(
       Array.from(
         { length: RACERS },
@@ -63,16 +63,14 @@ describe("newsletter signup under concurrency", () => {
       where: { email: ADDRESS },
     });
     const welcomes = mail.to(ADDRESS);
-    // One row, but the greeting is decided from a read that races the write, so a burst can
-    // mail the same human many times. Pinning the range, not the win: the count is a timing.
-    expect(welcomes.length).toBeGreaterThanOrEqual(1);
-    expect(welcomes.length).toBeLessThanOrEqual(RACERS);
+    // The wake-up is the one write that decides, so only the signup that flipped the row mails.
+    expect(welcomes).toHaveLength(1);
     expect(welcomes.every((note) => note.html.includes(row.token))).toBe(true);
   });
 
-  it("greets a subscriber who was already on the list when the check ran early", async () => {
-    // The writer inserts the subscriber and holds it open: the service reads nothing, decides
-    // this is a new signup, then its upsert waits on the unique index and quietly updates.
+  it("stays quiet for a subscriber who landed while the signup was in flight", async () => {
+    // The writer inserts the subscriber and holds it open: the signup waits on the unique
+    // index, then finds an address that is already awake and says nothing.
     const writer = await openWriter();
     await writer.query("BEGIN");
     await writer.query(
@@ -88,9 +86,8 @@ describe("newsletter signup under concurrency", () => {
     const result = await subscribing;
     expect(await harness.prisma.newsletterSubscriber.count()).toBe(1);
     expect(result.is_active).toBe(true);
-    // Both of these are the bug: the address was already an active subscriber.
-    expect(result.was_already_subscribed).toBe(false);
-    expect(mail.to(ADDRESS)).toHaveLength(1);
+    expect(result.was_already_subscribed).toBe(true);
+    expect(mail.to(ADDRESS)).toHaveLength(0);
   });
 
   it("trims and lowercases before the uniqueness check, so one human is one subscriber", async () => {
