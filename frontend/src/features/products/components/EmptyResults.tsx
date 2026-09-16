@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty/EmptyState";
 
 export interface EmptyResultsProps {
   search: string;
@@ -11,21 +11,36 @@ export function EmptyResults({
   hasActiveFilters,
   onClear,
 }: EmptyResultsProps) {
+  // Nothing is coming to a filtered result, so "yet" would be a lie here.
+  if (search) {
+    return (
+      <EmptyState
+        kind="mug"
+        heading={`Nothing matches “${search}”`}
+        line="Try a glaze, a clay body or a simpler word."
+        actionLabel="Clear the search"
+        onAction={onClear}
+      />
+    );
+  }
+  if (hasActiveFilters) {
+    return (
+      <EmptyState
+        kind="mug"
+        heading="Nothing matches these filters"
+        line="Loosen one and the shelf fills back up."
+        actionLabel="Clear filters"
+        onAction={onClear}
+      />
+    );
+  }
   return (
-    <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
-      <h2 className="font-heading text-2xl tracking-tight">
-        Nothing on this shelf yet
-      </h2>
-      <p className="max-w-sm text-[15px] text-muted-foreground">
-        {search
-          ? `No pieces match “${search}”. Try a glaze, a clay body or a simpler word.`
-          : "No pieces match these filters. Loosen one and try again."}
-      </p>
-      {(hasActiveFilters || search) && (
-        <Button variant="outline" onClick={onClear}>
-          Clear filters
-        </Button>
-      )}
-    </div>
+    <EmptyState
+      kind="mug"
+      heading="Nothing on this shelf yet"
+      line="The next batch goes in the kiln shortly."
+      actionLabel="Ask for a piece"
+      actionHref="/custom"
+    />
   );
 }

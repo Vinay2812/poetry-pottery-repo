@@ -1,6 +1,4 @@
-import Link from "next/link";
-
-import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/empty/EmptyState";
 
 export interface EmptyCartProps {
   isSignedIn: boolean;
@@ -8,26 +6,24 @@ export interface EmptyCartProps {
 }
 
 export function EmptyCart({ isSignedIn, onSignIn }: EmptyCartProps) {
+  if (!isSignedIn) {
+    return (
+      <EmptyState
+        kind="mug"
+        heading="Your cart is empty"
+        line="Sign in to see the pieces you saved."
+        actionLabel="Sign in"
+        onAction={onSignIn}
+      />
+    );
+  }
   return (
-    <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
-      <h2 className="font-heading text-2xl tracking-tight">
-        Your cart is empty
-      </h2>
-      <p className="max-w-sm text-[15px] text-muted-foreground">
-        {isSignedIn
-          ? "Nothing in here yet."
-          : "Sign in to see the pieces you saved."}
-      </p>
-      <div className="flex gap-3">
-        {!isSignedIn && (
-          <Button variant="outline" onClick={onSignIn}>
-            Sign in
-          </Button>
-        )}
-        <Button variant="outline" asChild>
-          <Link href="/products">Browse pieces</Link>
-        </Button>
-      </div>
-    </div>
+    <EmptyState
+      kind="mug"
+      heading="Your cart is empty"
+      line="Nothing in here yet."
+      actionLabel="Browse pieces"
+      actionHref="/products"
+    />
   );
 }
