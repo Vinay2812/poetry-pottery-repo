@@ -96,6 +96,7 @@ function makeOptionGroup(
     is_required: true,
     price_modifier: 0,
     max_length: null,
+    sort_order: 0,
     options: [],
     ...overrides,
   };

@@ -49,6 +49,7 @@ function makeConfig(overrides: Partial<WorkshopConfig> = {}): WorkshopConfig {
     name: "Open Studio",
     description: null,
     image_url: null,
+    is_active: true,
     timezone: "Asia/Kolkata",
     opening_minutes: 780,
     closing_minutes: 1140,

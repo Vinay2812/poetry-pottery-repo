@@ -2,14 +2,9 @@ import { GUARDS_METADATA } from "@nestjs/common/constants";
 import { Test } from "@nestjs/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { AdminGuard } from "@/common/guards/admin.guard";
 import { ContactResolver } from "./contact.resolver";
 import { ContactService } from "./contact.service";
-import type {
-  ContactMessage,
-  ContactMessageInput,
-  ContactMessagesResult,
-} from "./contact.type";
+import type { ContactMessageInput } from "./contact.type";
 
 function guardsOn(prototype: object, field: string): unknown[] {
   const handler: unknown = Object.getOwnPropertyDescriptor(
@@ -24,20 +19,6 @@ function guardsOn(prototype: object, field: string): unknown[] {
   return Array.isArray(guards) ? (guards as unknown[]) : [];
 }
 
-function makeMessage(overrides: Partial<ContactMessage> = {}): ContactMessage {
-  return {
-    id: 1,
-    name: "Potter",
-    email: "potter@example.com",
-    phone: null,
-    subject: null,
-    message: "Do you ship to Sangli?",
-    is_read: false,
-    created_at: new Date("2026-01-01T00:00:00.000Z"),
-    ...overrides,
-  };
-}
-
 function makeMessageInput(
   overrides: Partial<ContactMessageInput> = {},
 ): ContactMessageInput {
@@ -49,21 +30,7 @@ function makeMessageInput(
   };
 }
 
-function makeResult(
-  overrides: Partial<ContactMessagesResult> = {},
-): ContactMessagesResult {
-  return {
-    items: [makeMessage()],
-    page_info: { total: 1, page: 1, limit: 20, has_more: false },
-    ...overrides,
-  };
-}
-
-const contactMock = {
-  send: vi.fn<ContactService["send"]>(),
-  list: vi.fn<ContactService["list"]>(),
-  markRead: vi.fn<ContactService["markRead"]>(),
-};
+const contactMock = { send: vi.fn<ContactService["send"]>() };
 
 describe("ContactResolver", () => {
   let resolver: ContactResolver;
@@ -75,11 +42,7 @@ describe("ContactResolver", () => {
         ContactResolver,
         { provide: ContactService, useValue: contactMock },
       ],
-    })
-      // Nest instantiates the guard named in the UseGuards metadata, so it is stubbed out.
-      .overrideGuard(AdminGuard)
-      .useValue({ canActivate: () => true })
-      .compile();
+    }).compile();
     resolver = moduleRef.get(ContactResolver);
   });
 
@@ -94,41 +57,9 @@ describe("ContactResolver", () => {
     expect(contactMock.send).toHaveBeenCalledWith(input);
   });
 
-  it("lists the inbox with the page ahead of the limit", async () => {
-    const result = makeResult();
-    contactMock.list.mockResolvedValue(result);
-
-    await expect(resolver.contactMessages(2, 30)).resolves.toBe(result);
-    expect(contactMock.list).toHaveBeenCalledWith(2, 30);
-  });
-
-  it("passes an absent page and limit on so the service picks the bounds", async () => {
-    contactMock.list.mockResolvedValue(makeResult());
-
-    await resolver.contactMessages(null, null);
-
-    expect(contactMock.list).toHaveBeenCalledWith(null, null);
-  });
-
-  it("marks a single message read by its id", async () => {
-    const read = makeMessage({ is_read: true });
-    contactMock.markRead.mockResolvedValue(read);
-
-    await expect(resolver.markContactMessageRead(1)).resolves.toBe(read);
-    expect(contactMock.markRead).toHaveBeenCalledWith(1);
-  });
-
   it("leaves the enquiry form open to anyone", () => {
     expect(guardsOn(ContactResolver.prototype, "sendContactMessage")).toEqual(
       [],
     );
-  });
-
-  it("keeps the inbox behind the administrator guard", () => {
-    const fields = ["contactMessages", "markContactMessageRead"];
-
-    for (const field of fields) {
-      expect(guardsOn(ContactResolver.prototype, field)).toEqual([AdminGuard]);
-    }
   });
 });

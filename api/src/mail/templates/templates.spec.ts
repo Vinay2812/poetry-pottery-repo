@@ -193,6 +193,7 @@ function workshopConfig(
     name: "Wheel session",
     description: null,
     image_url: null,
+    is_active: true,
     timezone: "Asia/Kolkata",
     opening_minutes: 600,
     closing_minutes: 1140,
