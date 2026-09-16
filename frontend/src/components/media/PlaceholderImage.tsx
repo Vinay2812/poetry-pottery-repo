@@ -1,7 +1,12 @@
 import { useId } from "react";
 
 import type { PotteryIconKind } from "@/components/icons/pottery";
-import { VESSEL_BOX, toDrawnVessel } from "@/components/media/vessels";
+import {
+  FILL_SCALE,
+  PIECE_CENTRE_Y,
+  VESSEL_BOX,
+  toDrawnVessel,
+} from "@/components/media/vessels";
 import { cn } from "@/lib/utils";
 
 export interface PlaceholderImageProps {
@@ -10,10 +15,6 @@ export interface PlaceholderImageProps {
 }
 
 const CENTRE = VESSEL_BOX / 2;
-// The drawn piece sits in the middle half of its box, so left alone it reads far smaller
-// than a photographed piece does in its frame. These lift it to the same optical size.
-const PIECE_CENTRE_Y = 108;
-const FILL_SCALE = 1.4;
 
 /**
  * Stands in wherever a photo is missing: the piece itself, drawn and shaded the

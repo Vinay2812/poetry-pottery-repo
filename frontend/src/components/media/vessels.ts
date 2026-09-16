@@ -21,6 +21,10 @@ import {
 
 export const VESSEL_BOX = 200;
 const AXIS = 100;
+// The drawn piece sits in the middle half of its box, so left alone it reads far smaller
+// than a photographed piece does in its frame. These lift it to the same optical size.
+export const PIECE_CENTRE_Y = 108;
+export const FILL_SCALE = 1.4;
 
 interface VesselSpec {
   /** Rim first, foot last, as [height, half width]. */
@@ -32,7 +36,15 @@ interface VesselSpec {
   seed: number;
 }
 
+/** Where the kiln label's dots land, as a percentage of the rendered square. */
+interface VesselAnchors {
+  glaze: { x: number; y: number };
+  clay: { x: number; y: number };
+  size: { x: number; y: number };
+}
+
 export interface DrawnVessel {
+  anchors: VesselAnchors;
   body: string;
   nearWall: string;
   farWall: string;
@@ -161,6 +173,12 @@ function ellipsePath(cx: number, cy: number, rx: number, ry: number): string {
   );
 }
 
+// The drawing is scaled about its own centre before it is rendered, so an anchor
+// has to be put through the same transform to land where the eye sees the piece.
+function toBoxPercent(value: number, centre: number): number {
+  return ((centre + FILL_SCALE * (value - centre)) / VESSEL_BOX) * 100;
+}
+
 function build(spec: VesselSpec): DrawnVessel {
   const [rimY, rimHalf] = spec.profile[0];
   const [footY, footHalf] = spec.profile[spec.profile.length - 1];
@@ -189,7 +207,26 @@ function build(spec: VesselSpec): DrawnVessel {
     seed: spec.seed + 31,
   });
 
+  // Every dot has to sit on the thing its label names: the glaze band, the bare wall
+  // under it, and the rim where the width is read.
+  const clayY = glazeBottomY + (footY - glazeBottomY) * 0.55;
+  const glazeY = (glazeTopY + glazeBottomY) / 2;
+
   return {
+    anchors: {
+      glaze: {
+        x: toBoxPercent(AXIS + halfWidthAt(glazeY) * 0.45, AXIS),
+        y: toBoxPercent(glazeY, PIECE_CENTRE_Y),
+      },
+      clay: {
+        x: toBoxPercent(AXIS - halfWidthAt(clayY) * 0.5, AXIS),
+        y: toBoxPercent(clayY, PIECE_CENTRE_Y),
+      },
+      size: {
+        x: toBoxPercent(AXIS + rimHalf, AXIS),
+        y: toBoxPercent(rimY, PIECE_CENTRE_Y),
+      },
+    },
     body: closedBody(near, far, footCurve),
     nearWall: splineD(near),
     farWall: splineD(far),
@@ -242,4 +279,55 @@ const VESSELS = Object.fromEntries(
 
 export function toDrawnVessel(kind: PotteryIconKind): DrawnVessel {
   return VESSELS[kind];
+}
+
+/** The cup a piece is measured against: an ordinary 250 ml tea cup. */
+export const REFERENCE_CUP = {
+  kind: "mug" as PotteryIconKind,
+  heightCm: 9,
+  diameterCm: 8,
+  capacityMl: 250,
+};
+
+export interface Silhouette {
+  /** Closed outline, foot on y = 0, axis on x = 0, rim at y = -height. */
+  body: string;
+  /** The mouth seen slightly from above, so the piece is not a flat cut-out. */
+  rim: string;
+}
+
+/**
+ * The same profile as the drawn placeholder, redrawn to a height and a width the
+ * caller chooses, so two pieces can stand side by side at the size they really are.
+ */
+export function toSilhouette(
+  kind: PotteryIconKind,
+  height: number,
+  width: number,
+): Silhouette {
+  const spec = SPECS[kind];
+  const rimBoxY = spec.profile[0][0];
+  const footBoxY = spec.profile[spec.profile.length - 1][0];
+  const widest = Math.max(...spec.profile.map(([, half]) => half));
+  const points = spec.profile.map<Point>(([boxY, half]) => [
+    (half / widest) * (width / 2),
+    -((footBoxY - boxY) / (footBoxY - rimBoxY)) * height,
+  ]);
+  const near = wallSpline(
+    points.map<Point>(([half, y]) => [-half, y]),
+    spec.seed,
+    0,
+  );
+  const far = wallSpline(
+    points.map<Point>(([half, y]) => [half, y]),
+    spec.seed,
+    0,
+  );
+  const [footHalf] = points[points.length - 1];
+  const footCurve = `C${pointD([-footHalf * 0.55, height * 0.03])} ${pointD([footHalf * 0.55, height * 0.03])} ${pointD([footHalf, 0])}`;
+  const [rimHalf, rimY] = points[0];
+  return {
+    body: closedBody(near, far, footCurve),
+    rim: ellipsePath(0, rimY, rimHalf, rimHalf * RING_SQUASH),
+  };
 }
