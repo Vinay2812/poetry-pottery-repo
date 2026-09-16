@@ -140,6 +140,17 @@ export function applyRatingChange(
   };
 }
 
+// The presign asks for the same subject the review will hang off, so the API can check the
+// caller may review it before it hands out a URL.
+export function toUploadSubject(subject: ReviewSubject): {
+  product_id: number | null;
+  event_id: number | null;
+} {
+  return subject.kind === "product"
+    ? { product_id: subject.id, event_id: null }
+    : { product_id: null, event_id: subject.id };
+}
+
 export function toSubjectHref(subject: ReviewSubject): string {
   return subject.kind === "product"
     ? `/products/${subject.slug}`

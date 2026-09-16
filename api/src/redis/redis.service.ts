@@ -70,6 +70,47 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return value;
   }
 
+  // Short-lived per-owner sets of keys awaiting a home. Every call degrades to a no-op so a
+  // Redis outage never blocks a write, the same way the caches above do.
+  async trackPending(
+    key: string,
+    member: string,
+    ttlSeconds: number,
+  ): Promise<void> {
+    await this.client
+      .multi()
+      .zadd(key, Date.now(), member)
+      .expire(key, ttlSeconds)
+      .exec()
+      .catch(() => null);
+  }
+
+  // Hands back everything older than the cutoff and how many are still outstanding.
+  async sweepPending(
+    key: string,
+    cutoffMs: number,
+  ): Promise<{ expired: string[]; pending: number }> {
+    const replies = await this.client
+      .multi()
+      .zrangebyscore(key, 0, cutoffMs)
+      .zremrangebyscore(key, 0, cutoffMs)
+      .zcard(key)
+      .exec()
+      .catch(() => null);
+    if (!replies) return { expired: [], pending: 0 };
+    const expired = replies[0]?.[1];
+    const pending = replies[2]?.[1];
+    return {
+      expired: Array.isArray(expired) ? (expired as string[]) : [],
+      pending: typeof pending === "number" ? pending : 0,
+    };
+  }
+
+  async dropPending(key: string, members: string[]): Promise<void> {
+    if (members.length === 0) return;
+    await this.client.zrem(key, ...members).catch(() => undefined);
+  }
+
   async del(...keys: string[]): Promise<void> {
     if (keys.length === 0) return;
     await this.client.del(...keys).catch(() => undefined);

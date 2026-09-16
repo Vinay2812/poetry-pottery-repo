@@ -14,6 +14,8 @@ import {
 
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
+import { QueueService } from "@/queue/queue.service";
+import { RedisService } from "@/redis/redis.service";
 import { StorageService, type UploadTarget } from "@/storage/storage.service";
 import type {
   RatingSummary,
@@ -21,12 +23,20 @@ import type {
   ReviewEligibility,
   ReviewInput,
   ReviewsResult,
+  ReviewUploadInput,
 } from "./reviews.type";
 
 const MAX_BODY = 1000;
 const MAX_IMAGES = 3;
+// A photo waits a day for the review it belongs to; after that it is an orphan in the bucket.
+const PENDING_UPLOAD_SECONDS = 24 * 60 * 60;
+const MAX_PENDING_UPLOADS = 12;
 const ALREADY_REVIEWED =
   "You have already reviewed this. Edit your review instead.";
+
+function pendingUploadsKey(userId: number): string {
+  return `reviews:uploads:${userId}`;
+}
 
 export const reviewInclude = {
   user: { select: { name: true, image: true } },
@@ -97,6 +107,8 @@ export class ReviewsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly redis: RedisService,
+    private readonly queue: QueueService,
   ) {}
 
   async list(
@@ -218,6 +230,7 @@ export class ReviewsService {
         }
         throw error;
       });
+    await this.settleImages(userId, data.image_urls, []);
     return toReview(row, userId);
   }
 
@@ -227,26 +240,33 @@ export class ReviewsService {
     input: ReviewInput,
   ): Promise<Review> {
     const data = this.validate(input);
-    const row = await this.prisma.withTransaction(async () => {
-      const current = await this.prisma.review.findFirst({
-        where: { id, user_id: userId },
-      });
-      if (!current) {
-        throw new NotFoundException("Review not found");
-      }
-      const updated = await this.prisma.review.update({
-        where: { id },
-        data,
-        include: reviewInclude,
-      });
-      await this.refreshRating(subjectOf(current));
-      return updated;
-    });
+    const { row, previousImages } = await this.prisma.withTransaction(
+      async () => {
+        const current = await this.prisma.review.findFirst({
+          where: { id, user_id: userId },
+        });
+        if (!current) {
+          throw new NotFoundException("Review not found");
+        }
+        const updated = await this.prisma.review.update({
+          where: { id },
+          data,
+          include: reviewInclude,
+        });
+        await this.refreshRating(subjectOf(current));
+        return { row: updated, previousImages: current.image_urls };
+      },
+    );
+    await this.settleImages(
+      userId,
+      data.image_urls,
+      previousImages.filter((url) => !data.image_urls.includes(url)),
+    );
     return toReview(row, userId);
   }
 
   async remove(id: number, userId: number, isAdmin = false): Promise<boolean> {
-    await this.prisma.withTransaction(async () => {
+    const images = await this.prisma.withTransaction(async () => {
       const current = await this.prisma.review.findFirst({
         where: isAdmin ? { id } : { id, user_id: userId },
       });
@@ -256,16 +276,79 @@ export class ReviewsService {
       const subject = subjectOf(current);
       await this.prisma.review.delete({ where: { id } });
       await this.refreshRating(subject);
+      return current.image_urls;
     });
+    await this.discardImages(images);
     return true;
   }
 
-  createImageUpload(input: {
-    filename: string;
-    content_type: string;
-    size: number;
-  }): Promise<UploadTarget> {
-    return this.storage.createImageUpload({ folder: "reviews", ...input });
+  // A presigned URL is only minted for someone who may actually review this piece or event, and
+  // every key is parked for a day so anything that never reaches a review can be swept.
+  async createImageUpload(
+    userId: number,
+    input: ReviewUploadInput,
+  ): Promise<UploadTarget> {
+    const subject = subjectOf({
+      product_id: input.product_id ?? null,
+      event_id: input.event_id ?? null,
+    });
+    const [reason, existing] = await Promise.all([
+      this.ineligibleReason(subject, userId),
+      this.prisma.review.findFirst({
+        where: { ...subject, user_id: userId },
+        select: { id: true },
+      }),
+    ]);
+    if (reason && !existing) {
+      throw new ForbiddenException(reason);
+    }
+    const pendingKey = pendingUploadsKey(userId);
+    const { expired, pending } = await this.redis.sweepPending(
+      pendingKey,
+      Date.now() - PENDING_UPLOAD_SECONDS * 1000,
+    );
+    await this.deleteObjects(expired);
+    if (pending >= MAX_PENDING_UPLOADS) {
+      throw new BadRequestException(
+        "Too many photos are waiting on a review; post the ones you have first",
+      );
+    }
+    const target = await this.storage.createImageUpload({
+      folder: "reviews",
+      filename: input.filename,
+      content_type: input.content_type,
+      size: input.size,
+    });
+    await this.redis.trackPending(
+      pendingKey,
+      target.key,
+      PENDING_UPLOAD_SECONDS,
+    );
+    return target;
+  }
+
+  // Photos that reached a review stop waiting to be swept; the ones it let go are reclaimed now.
+  private async settleImages(
+    userId: number,
+    kept: string[],
+    dropped: string[],
+  ): Promise<void> {
+    await this.redis.dropPending(pendingUploadsKey(userId), this.toKeys(kept));
+    await this.discardImages(dropped);
+  }
+
+  private discardImages(urls: string[]): Promise<void> {
+    return this.deleteObjects(this.toKeys(urls));
+  }
+
+  private toKeys(urls: string[]): string[] {
+    return urls.flatMap((url) => this.storage.keyFor(url) ?? []);
+  }
+
+  private async deleteObjects(keys: string[]): Promise<void> {
+    for (const key of keys) {
+      await this.queue.publish("storage.delete-object", { key });
+    }
   }
 
   // Product reviews need a delivered order with the piece; event reviews need a confirmed seat at a past event.

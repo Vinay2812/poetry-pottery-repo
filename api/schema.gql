@@ -688,7 +688,9 @@ input ReviewInput {
 
 input ReviewUploadInput {
   content_type: String!
+  event_id: Int
   filename: String!
+  product_id: Int
   size: Int!
 }
 

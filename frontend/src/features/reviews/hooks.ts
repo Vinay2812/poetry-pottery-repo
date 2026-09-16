@@ -28,6 +28,7 @@ import {
   toDraftReview,
   toReviewInput,
   toSubjectHref,
+  toUploadSubject,
 } from "./types";
 
 function toErrorMessage(error: unknown): string {
@@ -46,7 +47,7 @@ async function readDimensions(file: File): Promise<string | null> {
 }
 
 // Photos are checked here, signed for, then pushed straight to storage.
-function useReviewPhotoUpload() {
+function useReviewPhotoUpload(subject: ReviewSubject) {
   const [createUpload] = useCreateReviewImageUploadMutation();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -64,9 +65,12 @@ function useReviewPhotoUpload() {
           toast.error(sizeProblem);
           return null;
         }
+        const subjectIds = toUploadSubject(subject);
         const { data } = await createUpload({
           variables: {
             input: {
+              product_id: subjectIds.product_id,
+              event_id: subjectIds.event_id,
               filename: file.name,
               content_type: file.type,
               size: file.size,
@@ -92,7 +96,7 @@ function useReviewPhotoUpload() {
         setIsUploading(false);
       }
     },
-    [createUpload],
+    [createUpload, subject],
   );
 
   return { upload, isUploading };
@@ -253,7 +257,7 @@ export function useReviewComposer(
   const hasList = onOptimistic !== undefined;
   const { canReview, myReview, isSignedIn } = useReviewEligibility(subject);
   const { save, remove } = useReviewMutations(subject, hasList);
-  const { upload, isUploading } = useReviewPhotoUpload();
+  const { upload, isUploading } = useReviewPhotoUpload(subject);
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, startTransition] = useTransition();

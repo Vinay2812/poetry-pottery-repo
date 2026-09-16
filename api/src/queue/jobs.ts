@@ -16,7 +16,7 @@ export const jobSchemas = {
     html: z.string().min(1),
     text: z.string().optional(),
   }),
-  // A reference photo nobody kept: uploaded, then abandoned before it reached a cart or a brief.
+  // A photo nobody kept: abandoned before it reached a cart or a brief, or left by a removed review.
   "storage.delete-object": z.object({ key: z.string().min(1) }),
 } as const;
 

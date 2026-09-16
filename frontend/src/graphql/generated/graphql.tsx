@@ -1071,7 +1071,9 @@ export type ReviewInput = {
 
 export type ReviewUploadInput = {
   content_type: Scalars['String']['input'];
+  event_id?: InputMaybe<Scalars['Int']['input']>;
   filename: Scalars['String']['input'];
+  product_id?: InputMaybe<Scalars['Int']['input']>;
   size: Scalars['Int']['input'];
 };
 

@@ -133,9 +133,10 @@ export class ReviewsResolver {
   @StrictThrottle()
   @Mutation(() => UploadTarget)
   createReviewImageUpload(
+    @CurrentUser() user: AuthUser,
     @Args("input") input: ReviewUploadInput,
   ): Promise<UploadTarget> {
-    return this.reviewsService.createImageUpload(input);
+    return this.reviewsService.createImageUpload(user.db_user_id, input);
   }
 }
 

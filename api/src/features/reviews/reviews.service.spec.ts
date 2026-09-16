@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
+import { QueueService } from "@/queue/queue.service";
+import { RedisService } from "@/redis/redis.service";
 import { StorageService } from "@/storage/storage.service";
 import {
   displayName,
@@ -32,8 +34,19 @@ const prismaMock = {
 };
 const storageMock = {
   isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.test/")),
+  keyFor: vi.fn((url: string) =>
+    url.startsWith("https://cdn.test/")
+      ? url.slice("https://cdn.test/".length)
+      : null,
+  ),
   createImageUpload: vi.fn(),
 };
+const redisMock = {
+  trackPending: vi.fn(),
+  sweepPending: vi.fn(),
+  dropPending: vi.fn(),
+};
+const queueMock = { publish: vi.fn() };
 
 function reviewRow(overrides: Record<string, unknown> = {}) {
   return {
@@ -101,11 +114,14 @@ describe("ReviewsService", () => {
     prismaMock.review.groupBy.mockResolvedValue([
       { rating: 5, _count: { _all: 2 } },
     ]);
+    redisMock.sweepPending.mockResolvedValue({ expired: [], pending: 0 });
     const moduleRef = await Test.createTestingModule({
       providers: [
         ReviewsService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: StorageService, useValue: storageMock },
+        { provide: RedisService, useValue: redisMock },
+        { provide: QueueService, useValue: queueMock },
       ],
     }).compile();
     service = moduleRef.get(ReviewsService);
@@ -238,6 +254,91 @@ describe("ReviewsService", () => {
     const eligibility = await service.eligibility({ product_id: 3 }, 7);
     expect(eligibility.can_review).toBe(true);
     expect(eligibility.my_review?.id).toBe(1);
+  });
+
+  it("releases the photos an edit dropped and keeps the ones it kept", async () => {
+    prismaMock.review.findFirst.mockResolvedValue(
+      reviewRow({
+        image_urls: [
+          "https://cdn.test/reviews/a.jpg",
+          "https://cdn.test/reviews/b.jpg",
+        ],
+      }),
+    );
+    prismaMock.review.update.mockResolvedValue(reviewRow());
+    await service.update(1, 7, {
+      rating: 4,
+      image_urls: ["https://cdn.test/reviews/a.jpg"],
+    });
+
+    expect(redisMock.dropPending).toHaveBeenCalledWith("reviews:uploads:7", [
+      "reviews/a.jpg",
+    ]);
+    expect(queueMock.publish).toHaveBeenCalledWith("storage.delete-object", {
+      key: "reviews/b.jpg",
+    });
+  });
+
+  it("only signs a review photo for someone who may review the subject", async () => {
+    const upload = {
+      product_id: 3,
+      filename: "a.jpg",
+      content_type: "image/jpeg",
+      size: 2048,
+    };
+    prismaMock.review.findFirst.mockResolvedValue(null);
+    prismaMock.orderItem.count.mockResolvedValue(0);
+    await expect(service.createImageUpload(7, upload)).rejects.toThrow(
+      "delivered",
+    );
+    expect(storageMock.createImageUpload).not.toHaveBeenCalled();
+
+    prismaMock.orderItem.count.mockResolvedValue(1);
+    storageMock.createImageUpload.mockResolvedValue({
+      upload_url: "https://upload.test/put",
+      public_url: "https://cdn.test/reviews/a.jpg",
+      key: "reviews/a.jpg",
+    });
+    const target = await service.createImageUpload(7, upload);
+
+    expect(target.key).toBe("reviews/a.jpg");
+    expect(redisMock.trackPending).toHaveBeenCalledWith(
+      "reviews:uploads:7",
+      "reviews/a.jpg",
+      86_400,
+    );
+  });
+
+  it("sweeps day-old keys and refuses a reviewer hoarding presigned uploads", async () => {
+    prismaMock.review.findFirst.mockResolvedValue(null);
+    prismaMock.orderItem.count.mockResolvedValue(1);
+    redisMock.sweepPending.mockResolvedValue({
+      expired: ["reviews/old.jpg"],
+      pending: 12,
+    });
+
+    await expect(
+      service.createImageUpload(7, {
+        product_id: 3,
+        filename: "a.jpg",
+        content_type: "image/jpeg",
+        size: 2048,
+      }),
+    ).rejects.toThrow("waiting on a review");
+    expect(queueMock.publish).toHaveBeenCalledWith("storage.delete-object", {
+      key: "reviews/old.jpg",
+    });
+    expect(storageMock.createImageUpload).not.toHaveBeenCalled();
+  });
+
+  it("reclaims the photos a removed review pointed at", async () => {
+    prismaMock.review.findFirst.mockResolvedValue(
+      reviewRow({ image_urls: ["https://cdn.test/reviews/a.jpg"] }),
+    );
+    await service.remove(1, 7);
+    expect(queueMock.publish).toHaveBeenCalledWith("storage.delete-object", {
+      key: "reviews/a.jpg",
+    });
   });
 
   it("lets admins delete any review but customers only their own", async () => {

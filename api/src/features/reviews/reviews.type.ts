@@ -92,6 +92,12 @@ export class ReviewInput {
 
 @InputType()
 export class ReviewUploadInput {
+  @Field(() => Int, { nullable: true })
+  product_id?: number | null;
+
+  @Field(() => Int, { nullable: true })
+  event_id?: number | null;
+
   @Field()
   filename!: string;
 
