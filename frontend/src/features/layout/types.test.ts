@@ -5,6 +5,7 @@ import {
   formatBadgeCount,
   isActiveLink,
   isActivePath,
+  toFocusedHeader,
 } from "./types";
 
 describe("isActivePath", () => {
@@ -60,5 +61,24 @@ describe("formatBadgeCount", () => {
   it("caps at 9+", () => {
     expect(formatBadgeCount(3)).toBe("3");
     expect(formatBadgeCount(12)).toBe("9+");
+  });
+});
+
+describe("toFocusedHeader", () => {
+  it("gives the buying pages one way back", () => {
+    expect(toFocusedHeader("/checkout")).toEqual({
+      href: "/cart",
+      label: "Back to cart",
+    });
+    expect(toFocusedHeader("/cart")).toEqual({
+      href: "/products",
+      label: "Back to the shop",
+    });
+  });
+
+  it("leaves every other route with the full header", () => {
+    expect(toFocusedHeader("/")).toBeNull();
+    expect(toFocusedHeader("/orders")).toBeNull();
+    expect(toFocusedHeader("/cart/extra")).toBeNull();
   });
 });

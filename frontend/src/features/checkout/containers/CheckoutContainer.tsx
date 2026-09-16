@@ -33,6 +33,7 @@ export function CheckoutContainer() {
   const { cart, isLoading: isCartLoading, isSignedIn } = useCart();
   const [addressId, setAddressId] = useState<number | null>(null);
   const [couponDraft, setCouponDraft] = useState("");
+  const [isCouponOpen, setIsCouponOpen] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
   // The code shows on the summary straight away; the quote that comes back decides whether it stays.
   const [optimisticCoupon, applyOptimisticCoupon] =
@@ -115,6 +116,8 @@ export function CheckoutContainer() {
     refetchQuote,
     startCouponTransition,
   ]);
+
+  const handleOpenCoupon = useCallback(() => setIsCouponOpen(true), []);
 
   const handleRemoveCoupon = useCallback(() => {
     const requestId = ++couponRequestId.current;
@@ -244,9 +247,11 @@ export function CheckoutContainer() {
                 }
                 isApplied={coupon.isApplied}
                 isChecking={isCouponPending}
+                isOpen={isCouponOpen}
                 onChange={setCouponDraft}
                 onApply={handleApplyCoupon}
                 onRemove={handleRemoveCoupon}
+                onOpen={handleOpenCoupon}
               />
             }
           />

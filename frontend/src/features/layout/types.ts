@@ -63,6 +63,14 @@ export function isActiveLink(
   return (linkView ?? null) === (view || null);
 }
 
+// Cart and checkout drop the nav so the only moves are finish or go back.
+export function toFocusedHeader(pathname: string): NavLink | null {
+  if (pathname === "/checkout") return { href: "/cart", label: "Back to cart" };
+  if (pathname === "/cart")
+    return { href: "/products", label: "Back to the shop" };
+  return null;
+}
+
 export function buildWhatsAppUrl(number: string, text: string): string {
   const digits = number.replace(/\D/g, "");
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;

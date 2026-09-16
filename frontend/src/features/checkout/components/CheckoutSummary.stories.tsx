@@ -11,9 +11,11 @@ const coupon = (
     message={null}
     isApplied={false}
     isChecking={false}
+    isOpen={false}
     onChange={fn()}
     onApply={fn()}
     onRemove={fn()}
+    onOpen={fn()}
   />
 );
 

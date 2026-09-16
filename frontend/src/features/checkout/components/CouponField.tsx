@@ -8,9 +8,11 @@ export interface CouponFieldProps {
   message: string | null;
   isApplied: boolean;
   isChecking: boolean;
+  isOpen: boolean;
   onChange: (value: string) => void;
   onApply: () => void;
   onRemove: () => void;
+  onOpen: () => void;
 }
 
 export function CouponField({
@@ -18,10 +20,25 @@ export function CouponField({
   message,
   isApplied,
   isChecking,
+  isOpen,
   onChange,
   onApply,
   onRemove,
+  onOpen,
 }: CouponFieldProps) {
+  // A discount box standing open above the totals asks a question nobody needed asking.
+  if (!isOpen && !isApplied) {
+    return (
+      <button
+        type="button"
+        onClick={onOpen}
+        className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
+      >
+        Have a code?
+      </button>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor="coupon" className="text-[13px] text-muted-foreground">
@@ -33,7 +50,8 @@ export function CouponField({
           id="coupon"
           value={value}
           onChange={(event) => onChange(event.target.value.toUpperCase())}
-          placeholder="WELCOME10"
+          placeholder="Enter your code"
+          autoFocus
           className="uppercase"
           disabled={isApplied}
           aria-describedby="coupon-message"

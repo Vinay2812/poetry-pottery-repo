@@ -19,9 +19,11 @@ const meta = {
     message: null,
     isApplied: false,
     isChecking: false,
+    isOpen: false,
     onChange: fn(),
     onApply: fn(),
     onRemove: fn(),
+    onOpen: fn(),
   },
 } satisfies Meta<typeof CouponField>;
 
@@ -29,10 +31,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Empty: Story = {};
+export const Collapsed: Story = {};
+
+export const Empty: Story = {
+  args: { isOpen: true },
+};
 
 export const Applied: Story = {
   args: {
+    isOpen: true,
     value: "WELCOME10",
     message: "WELCOME10 applied",
     isApplied: true,
@@ -41,6 +48,7 @@ export const Applied: Story = {
 
 export const Checking: Story = {
   args: {
+    isOpen: true,
     value: "WELCOME10",
     isChecking: true,
   },
@@ -48,6 +56,7 @@ export const Checking: Story = {
 
 export const RemovePending: Story = {
   args: {
+    isOpen: true,
     value: "WELCOME10",
     message: "WELCOME10 applied",
     isApplied: true,
@@ -57,6 +66,7 @@ export const RemovePending: Story = {
 
 export const Rejected: Story = {
   args: {
+    isOpen: true,
     value: "SUMMER22",
     message: "That code has expired",
   },

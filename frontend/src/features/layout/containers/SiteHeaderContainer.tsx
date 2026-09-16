@@ -9,7 +9,11 @@ import { UserRole } from "@/graphql/generated/graphql";
 import { useCartCount } from "@/features/cart/hooks";
 import { SiteHeader } from "@/features/layout/components/SiteHeader";
 import { MobileMenuContainer } from "@/features/layout/containers/MobileMenuContainer";
-import { isActivePath, NAV_LINKS } from "@/features/layout/types";
+import {
+  isActivePath,
+  NAV_LINKS,
+  toFocusedHeader,
+} from "@/features/layout/types";
 import { useWishlistIds } from "@/features/wishlist/hooks";
 
 export function SiteHeaderContainer() {
@@ -26,6 +30,8 @@ export function SiteHeaderContainer() {
       NAV_LINKS.find((link) => isActivePath(pathname, link.href))?.href ?? null,
     [pathname],
   );
+  // Buying pages keep the wordmark and one way back, nothing else to wander into.
+  const focused = toFocusedHeader(pathname);
   const handleSearchClick = useCallback(() => {
     router.push("/search");
   }, [router]);
@@ -57,6 +63,9 @@ export function SiteHeaderContainer() {
         isAdmin={user?.publicMetadata.role === UserRole.Admin}
         userImageUrl={user?.hasImage ? user.imageUrl : null}
         isHome={pathname === "/"}
+        variant={focused ? "focused" : "full"}
+        backHref={focused?.href ?? null}
+        backLabel={focused?.label ?? null}
         onSearchClick={handleSearchClick}
         onAccountClick={handleAccountClick}
         onMenuClick={() => setIsMenuOpen(true)}

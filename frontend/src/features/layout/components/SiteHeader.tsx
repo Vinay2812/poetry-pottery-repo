@@ -1,4 +1,11 @@
-import { Heart, Menu, Search, ShoppingBag, UserRound } from "lucide-react";
+import {
+  ArrowLeft,
+  Heart,
+  Menu,
+  Search,
+  ShoppingBag,
+  UserRound,
+} from "lucide-react";
 import Link from "next/link";
 
 import { cn } from "@/lib/utils";
@@ -15,6 +22,10 @@ export interface SiteHeaderProps {
   isAdmin: boolean;
   userImageUrl: string | null;
   isHome?: boolean;
+  // "focused" strips the header to a wordmark and a way back, for cart and checkout.
+  variant?: "full" | "focused";
+  backHref?: string | null;
+  backLabel?: string | null;
   onSearchClick: () => void;
   onAccountClick: () => void;
   onMenuClick: () => void;
@@ -53,6 +64,9 @@ export function SiteHeader({
   isAdmin,
   userImageUrl,
   isHome = false,
+  variant = "full",
+  backHref = null,
+  backLabel = null,
   onSearchClick,
   onAccountClick,
   onMenuClick,
@@ -67,80 +81,101 @@ export function SiteHeader({
       <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-5 px-4 md:px-8">
         <Wordmark />
 
-        <span aria-hidden="true" className="hidden h-6 w-px bg-ash lg:block" />
-
-        <nav aria-label="Main" className="hidden items-center gap-6 lg:flex">
-          {navLinks.map((link) => {
-            const isActive = link.href === activeHref;
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={isActive ? "page" : undefined}
-                className={cn(
-                  "text-sm transition-colors",
-                  isActive
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="ml-auto flex items-center gap-1">
-          <button
-            type="button"
-            onClick={onSearchClick}
-            aria-label="Search"
-            className="flex size-10 items-center justify-center ghost-hover hover:text-primary"
-          >
-            <Search className="size-5" strokeWidth={1.5} />
-          </button>
-          <IconLink href="/wishlist" label="Wishlist" count={wishlistCount}>
-            <Heart className="size-5" strokeWidth={1.5} />
-          </IconLink>
-          <span className="hidden lg:contents">
-            <IconLink href="/cart" label="Cart" count={cartCount}>
-              <ShoppingBag className="size-5" strokeWidth={1.5} />
-            </IconLink>
-          </span>
-          {isAdmin && (
+        {variant === "focused" ? (
+          backHref &&
+          backLabel && (
             <Link
-              href="/dashboard"
-              className="hidden px-3 py-2 text-[11px] tracking-[0.18em] text-muted-foreground uppercase hover:text-foreground lg:block"
+              href={backHref}
+              className="ml-auto flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
             >
-              Admin
+              <ArrowLeft className="size-4" strokeWidth={1.5} />
+              {backLabel}
             </Link>
-          )}
-          <button
-            type="button"
-            onClick={onMenuClick}
-            aria-label="Menu"
-            className="ml-1 flex size-10 items-center justify-center border border-ash ghost-hover hover:border-ink lg:hidden"
-          >
-            <Menu className="size-5" strokeWidth={1.5} />
-          </button>
-          <button
-            type="button"
-            onClick={onAccountClick}
-            aria-label={isSignedIn ? "Your account" : "Sign in"}
-            className="ml-1 hidden size-10 items-center justify-center ghost-hover hover:text-primary lg:flex"
-          >
-            {isSignedIn && userImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={userImageUrl}
-                alt=""
-                className="size-8 rounded-full object-cover"
-              />
-            ) : (
-              <UserRound className="size-5" strokeWidth={1.5} />
-            )}
-          </button>
-        </div>
+          )
+        ) : (
+          <>
+            <span
+              aria-hidden="true"
+              className="hidden h-6 w-px bg-ash lg:block"
+            />
+
+            <nav
+              aria-label="Main"
+              className="hidden items-center gap-6 lg:flex"
+            >
+              {navLinks.map((link) => {
+                const isActive = link.href === activeHref;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={cn(
+                      "text-sm transition-colors",
+                      isActive
+                        ? "text-primary"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            <div className="ml-auto flex items-center gap-1">
+              <button
+                type="button"
+                onClick={onSearchClick}
+                aria-label="Search"
+                className="flex size-10 items-center justify-center ghost-hover hover:text-primary"
+              >
+                <Search className="size-5" strokeWidth={1.5} />
+              </button>
+              <IconLink href="/wishlist" label="Wishlist" count={wishlistCount}>
+                <Heart className="size-5" strokeWidth={1.5} />
+              </IconLink>
+              <span className="hidden lg:contents">
+                <IconLink href="/cart" label="Cart" count={cartCount}>
+                  <ShoppingBag className="size-5" strokeWidth={1.5} />
+                </IconLink>
+              </span>
+              {isAdmin && (
+                <Link
+                  href="/dashboard"
+                  className="hidden px-3 py-2 text-[11px] tracking-[0.18em] text-muted-foreground uppercase hover:text-foreground lg:block"
+                >
+                  Admin
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={onMenuClick}
+                aria-label="Menu"
+                className="ml-1 flex size-10 items-center justify-center border border-ash ghost-hover hover:border-ink lg:hidden"
+              >
+                <Menu className="size-5" strokeWidth={1.5} />
+              </button>
+              <button
+                type="button"
+                onClick={onAccountClick}
+                aria-label={isSignedIn ? "Your account" : "Sign in"}
+                className="ml-1 hidden size-10 items-center justify-center ghost-hover hover:text-primary lg:flex"
+              >
+                {isSignedIn && userImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={userImageUrl}
+                    alt=""
+                    className="size-8 rounded-full object-cover"
+                  />
+                ) : (
+                  <UserRound className="size-5" strokeWidth={1.5} />
+                )}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </header>
   );
