@@ -81,6 +81,7 @@ query Product($slug: String!) {
   product(slug: $slug) {
     ...ProductCard
     description
+    created_at
     flaw_note
     dimensions
     capacity_ml

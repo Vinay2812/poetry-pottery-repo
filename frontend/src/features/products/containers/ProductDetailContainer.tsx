@@ -13,6 +13,7 @@ import { REFERENCE_CUP, toDrawnVessel } from "@/components/media/vessels";
 import { KilnLabels, type KilnLabel } from "@/components/motion/KilnLabels";
 import { Reveal } from "@/components/motion/Reveal";
 
+import { toProvenance } from "@/features/archive/types";
 import { useAddToCart } from "@/features/cart/hooks";
 import { canWatchPiece, NextBatchContainer } from "@/features/notify";
 import { useReferencePhotos } from "@/features/products/hooks";
@@ -267,6 +268,12 @@ export function ProductDetailContainer({
               name={product.name}
               priceLabel={formatInr(product.price)}
               collectionName={product.collection?.name ?? null}
+              provenance={toProvenance(
+                product.created_at,
+                product.color_name,
+                product.material,
+                product.stock,
+              )}
               note={toArchiveNote(product.stock)}
               askUrl={archiveAskUrl}
             />

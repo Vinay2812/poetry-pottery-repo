@@ -2,6 +2,7 @@ export interface ArchiveNoticeProps {
   name: string;
   priceLabel: string;
   collectionName: string | null;
+  provenance: string;
   note: string;
   askUrl: string | null;
 }
@@ -11,6 +12,7 @@ export function ArchiveNotice({
   name,
   priceLabel,
   collectionName,
+  provenance,
   note,
   askUrl,
 }: ArchiveNoticeProps) {
@@ -25,6 +27,7 @@ export function ArchiveNotice({
         {name}
       </h1>
       <p className="text-lg text-muted-foreground tnum">{priceLabel}</p>
+      <p className="text-[13px] text-muted-foreground">{provenance}</p>
       <div className="flex flex-col gap-3 border-y border-ash py-6">
         <p className="text-[15px]">{note}</p>
         {askUrl && (

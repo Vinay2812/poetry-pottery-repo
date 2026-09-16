@@ -14,7 +14,7 @@ export const NAV_LINKS: NavLink[] = [
 // The mobile sheet carries the full list; the desktop bar keeps the short one.
 export const MOBILE_MENU_LINKS: NavLink[] = [
   { href: "/products", label: "Shop" },
-  { href: "/products?view=archive", label: "Archive" },
+  { href: "/archive", label: "Archive" },
   { href: "/custom", label: "Custom" },
   { href: "/workshops", label: "Workshops" },
   { href: "/events", label: "Events" },
@@ -26,7 +26,7 @@ export const FOOTER_SHOP_LINKS: NavLink[] = [
   { href: "/products?sort=NEWEST", label: "New arrivals" },
   { href: "/products?sort=BEST_SELLING", label: "Best sellers" },
   { href: "/custom", label: "Made to order" },
-  { href: "/products?view=archive", label: "Archive" },
+  { href: "/archive", label: "Archive" },
 ];
 
 export const FOOTER_STUDIO_LINKS: NavLink[] = [

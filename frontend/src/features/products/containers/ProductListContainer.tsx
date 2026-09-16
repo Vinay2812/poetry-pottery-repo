@@ -19,6 +19,8 @@ import {
 
 import { cn } from "@/lib/utils";
 
+import { ARCHIVE_PATH } from "@/features/archive/types";
+
 import { EmptyResults } from "@/features/products/components/EmptyResults";
 import { FilterSheet } from "@/features/products/components/FilterSheet";
 import { LoadFailed } from "@/features/products/components/LoadFailed";
@@ -166,8 +168,11 @@ export function ProductListContainer({
     (slug: string) => dispatch({ type: "glaze", slug }),
     [dispatch],
   );
+  // The archive tab is a real link to its own gallery, so only the shelf tab is intercepted.
   const handleSelectView = useCallback(
-    (isArchive: boolean) => dispatch({ type: "view", isArchive }),
+    (isArchive: boolean) => {
+      if (!isArchive) dispatch({ type: "view", isArchive });
+    },
     [dispatch],
   );
   const handlePriceCommit = useCallback(
@@ -303,7 +308,7 @@ export function ProductListContainer({
       {!isSearchPage && (
         <ShelfTabs
           shelfHref={toHref({ ...filters, isArchive: false })}
-          archiveHref={toHref({ ...filters, isArchive: true })}
+          archiveHref={ARCHIVE_PATH}
           shelfCount={facets?.active_count ?? 0}
           archiveCount={facets?.archive_count ?? 0}
           isArchive={filters.isArchive}

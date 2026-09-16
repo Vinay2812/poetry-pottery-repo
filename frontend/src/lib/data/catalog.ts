@@ -1,4 +1,7 @@
 import {
+  ArchiveWallDocument,
+  type ArchiveWallQuery,
+  type ArchiveWallQueryVariables,
   CategoriesDocument,
   CommissionOptionsDocument,
   type CommissionOptionsQuery,
@@ -21,6 +24,7 @@ import {
   type FeaturedProductsQuery,
   type FeaturedProductsQueryVariables,
   ProductDocument,
+  ProductSort,
   type ProductQuery,
   type ProductQueryVariables,
   UpcomingEventsDocument,
@@ -97,6 +101,27 @@ export async function getFeaturedProducts(
     variables: { limit },
   });
   return data?.featuredProducts ?? [];
+}
+
+// The whole wall in one request; the shelf's page size is the ceiling the API enforces.
+export async function getArchiveWall(
+  limit = 48,
+): Promise<ArchiveWallQuery["products"]> {
+  const { data } = await getClient().query<
+    ArchiveWallQuery,
+    ArchiveWallQueryVariables
+  >({
+    query: ArchiveWallDocument,
+    variables: {
+      filter: { archive: true, sort: ProductSort.Newest, page: 1, limit },
+    },
+  });
+  return (
+    data?.products ?? {
+      items: [],
+      page_info: { total: 0, page: 1, limit, has_more: false },
+    }
+  );
 }
 
 export async function getCommissionOptions(): Promise<

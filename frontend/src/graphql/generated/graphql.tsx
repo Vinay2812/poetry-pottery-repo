@@ -1152,6 +1152,15 @@ export type SetDefaultAddressMutationVariables = Exact<{
 
 export type SetDefaultAddressMutation = { setDefaultAddress: { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean } };
 
+export type ArchivePieceFragment = { id: number, slug: string, name: string, image_urls: Array<string>, material: string, color_name: string | null, created_at: string, collection: { id: number, slug: string, name: string } | null };
+
+export type ArchiveWallQueryVariables = Exact<{
+  filter?: ProductsFilterInput | null | undefined;
+}>;
+
+
+export type ArchiveWallQuery = { products: { items: Array<{ id: number, slug: string, name: string, image_urls: Array<string>, material: string, color_name: string | null, created_at: string, collection: { id: number, slug: string, name: string } | null }>, page_info: { total: number, page: number, limit: number, has_more: boolean } } };
+
 export type CartFieldsFragment = { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, is_second: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> };
 
 export type CartQueryVariables = Exact<{ [key: string]: never; }>;
@@ -1201,7 +1210,7 @@ export type CommissionPiecesQueryVariables = Exact<{
 }>;
 
 
-export type CommissionPiecesQuery = { commissionPieces: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, is_second: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
+export type CommissionPiecesQuery = { commissionPieces: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, is_second: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
 
 export type CreateCommissionRequestMutationVariables = Exact<{
   input: CommissionRequestInput;
@@ -1363,7 +1372,7 @@ export type ProductQueryVariables = Exact<{
 }>;
 
 
-export type ProductQuery = { product: { description: string, flaw_note: string | null, dimensions: string | null, capacity_ml: number | null, height_cm: number | null, diameter_cm: number | null, weight_g: number | null, maker_note: string | null, care_notes: Array<string>, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, is_second: boolean, rating_avg: number, rating_count: number, glaze: { description: string, variation_note: string | null, id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, categories: Array<{ id: number, slug: string, name: string }>, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, price_modifier: number, max_length: number | null, options: Array<{ id: number, name: string, price_modifier: number }> }>, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } };
+export type ProductQuery = { product: { description: string, created_at: string, flaw_note: string | null, dimensions: string | null, capacity_ml: number | null, height_cm: number | null, diameter_cm: number | null, weight_g: number | null, maker_note: string | null, care_notes: Array<string>, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, is_second: boolean, rating_avg: number, rating_count: number, glaze: { description: string, variation_note: string | null, id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, categories: Array<{ id: number, slug: string, name: string }>, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, price_modifier: number, max_length: number | null, options: Array<{ id: number, name: string, price_modifier: number }> }>, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } };
 
 export type RelatedProductsQueryVariables = Exact<{
   slug: string;
@@ -1514,6 +1523,22 @@ export const AddressFieldsFragmentDoc = gql`
   state
   pincode
   is_default
+}
+    `;
+export const ArchivePieceFragmentDoc = gql`
+    fragment ArchivePiece on Product {
+  id
+  slug
+  name
+  image_urls
+  material
+  color_name
+  created_at
+  collection {
+    id
+    slug
+    name
+  }
 }
     `;
 export const GlazeCardFragmentDoc = gql`
@@ -1902,6 +1927,49 @@ export function useSetDefaultAddressMutation(baseOptions?: ApolloReactHooks.Muta
       }
 export type SetDefaultAddressMutationHookResult = ReturnType<typeof useSetDefaultAddressMutation>;
 export type SetDefaultAddressMutationResult = ApolloReactCommon.MutationResult<SetDefaultAddressMutation>;
+export const ArchiveWallDocument = gql`
+    query ArchiveWall($filter: ProductsFilterInput) {
+  products(filter: $filter) {
+    items {
+      ...ArchivePiece
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+  }
+}
+    ${ArchivePieceFragmentDoc}`;
+
+/**
+ * __useArchiveWallQuery__
+ *
+ * To run a query within a React component, call `useArchiveWallQuery` and pass it any options that fit your needs.
+ * When your component renders, `useArchiveWallQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useArchiveWallQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useArchiveWallQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<ArchiveWallQuery, ArchiveWallQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ArchiveWallQuery, ArchiveWallQueryVariables>(ArchiveWallDocument, options);
+      }
+export function useArchiveWallLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ArchiveWallQuery, ArchiveWallQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ArchiveWallQuery, ArchiveWallQueryVariables>(ArchiveWallDocument, options);
+        }
+export type ArchiveWallQueryHookResult = ReturnType<typeof useArchiveWallQuery>;
+export type ArchiveWallLazyQueryHookResult = ReturnType<typeof useArchiveWallLazyQuery>;
+export type ArchiveWallQueryResult = ApolloReactCommon.QueryResult<ArchiveWallQuery, ArchiveWallQueryVariables>;
 export const CartDocument = gql`
     query Cart {
   cart {
@@ -2144,7 +2212,8 @@ export const CommissionPiecesDocument = gql`
     ...ProductCard
   }
 }
-    ${ProductCardFragmentDoc}`;
+    ${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useCommissionPiecesQuery__
@@ -2938,6 +3007,7 @@ export const ProductDocument = gql`
   product(slug: $slug) {
     ...ProductCard
     description
+    created_at
     flaw_note
     dimensions
     capacity_ml
