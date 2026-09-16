@@ -103,6 +103,18 @@ expect_control() {
   if has_control "$name"; then pass "$what"; else fail "$what"; fi
 }
 
+# A page wider than the viewport is invisible in a screenshot and obvious on a phone.
+expect_no_sideways_scroll() {
+  local what="${1:-the page does not scroll sideways}"
+  local measured
+  measured="$(ab eval "document.documentElement.scrollWidth - document.documentElement.clientWidth" 2>/dev/null | tail -1 | tr -dc '0-9-')"
+  if [ "${measured:-0}" = "0" ]; then
+    pass "$what"
+  else
+    fail "$what (overflows by ${measured}px)"
+  fi
+}
+
 expect_url() {
   local fragment="$1"
   local actual
@@ -300,6 +312,14 @@ flow_product_to_order() {
   expect_url "/products/"
   shot "product-detail"
   expect_text "Add to cart" "the buy box offers the cart"
+
+  # The gallery is the widest thing on the page, so the phone check belongs here.
+  ab set viewport 375 812 >/dev/null 2>&1
+  settle 1500
+  expect_no_sideways_scroll "the product page fits a 375px phone"
+  shot "product-detail-375"
+  ab set viewport 1440 900 >/dev/null 2>&1
+  settle 1500
 
   click_matching '^Add to cart' "add the piece to the cart" || {
     end_flow

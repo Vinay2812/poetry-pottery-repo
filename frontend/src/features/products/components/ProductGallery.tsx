@@ -71,7 +71,9 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
   return (
     <div className="flex flex-col gap-3 lg:flex-row-reverse lg:gap-4">
       <div
-        className="relative aspect-square min-w-0 flex-1 bg-white outline-none focus-visible:ring-1 focus-visible:ring-ink"
+        // Width comes from the column, never from the square ratio: flex-1 only
+        // means anything beside the thumbnail strip, and that starts at lg.
+        className="relative aspect-square w-full min-w-0 bg-white outline-none focus-visible:ring-1 focus-visible:ring-ink lg:flex-1"
         role="group"
         aria-roledescription="carousel"
         aria-label={`${name} photos`}
