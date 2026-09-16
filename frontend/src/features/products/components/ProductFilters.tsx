@@ -25,6 +25,8 @@ export interface ProductFiltersProps {
   selectedCollection: string | null;
   materialOptions: FilterOption[];
   selectedMaterials: string[];
+  glazeOptions: FilterOption[];
+  selectedGlazes: string[];
   priceFloor: number;
   priceCeiling: number;
   priceRange: [number, number];
@@ -33,6 +35,7 @@ export interface ProductFiltersProps {
   onToggleCategory: (slug: string) => void;
   onToggleCollection: (slug: string) => void;
   onToggleMaterial: (material: string) => void;
+  onToggleGlaze: (slug: string) => void;
   onPriceRangeChange: (range: [number, number]) => void;
   onPriceRangeCommit: (range: [number, number]) => void;
   onInStockOnlyChange: (value: boolean) => void;
@@ -90,6 +93,8 @@ export function ProductFilters({
   selectedCollection,
   materialOptions,
   selectedMaterials,
+  glazeOptions,
+  selectedGlazes,
   priceFloor,
   priceCeiling,
   priceRange,
@@ -98,6 +103,7 @@ export function ProductFilters({
   onToggleCategory,
   onToggleCollection,
   onToggleMaterial,
+  onToggleGlaze,
   onPriceRangeChange,
   onPriceRangeCommit,
   onInStockOnlyChange,
@@ -160,6 +166,14 @@ export function ProductFilters({
         options={materialOptions}
         selected={selectedMaterials}
         onToggle={onToggleMaterial}
+      />
+
+      <CheckGroup
+        title="Glaze"
+        idPrefix="glaze"
+        options={glazeOptions}
+        selected={selectedGlazes}
+        onToggle={onToggleGlaze}
       />
 
       <div className="flex flex-col gap-4">

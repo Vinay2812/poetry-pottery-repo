@@ -68,6 +68,8 @@ export function ProductCardContainer({
       compareAtPrice={product.compare_at_price}
       stockTone={stock.tone}
       stockLabel={stock.label}
+      glazeName={product.glaze?.name ?? null}
+      glazeColor={product.glaze?.color_code ?? null}
       isWishlisted={isWishlisted(product.id)}
       isCustomizable={product.is_customizable}
       isAddingToCart={isAdding}

@@ -10,6 +10,7 @@ import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 import { useImageCarousel } from "@/components/media/useImageCarousel";
 import { cn } from "@/lib/utils";
 
+import { GlazeSwatch } from "@/features/products/components/GlazeSwatch";
 import { PriceTag } from "@/features/products/components/PriceTag";
 import {
   type StockTone,
@@ -25,6 +26,8 @@ export interface ProductCardProps {
   compareAtPrice: number | null;
   stockTone: StockTone;
   stockLabel: string;
+  glazeName?: string | null;
+  glazeColor?: string | null;
   isWishlisted: boolean;
   isCustomizable?: boolean;
   isAddingToCart?: boolean;
@@ -47,6 +50,8 @@ export function ProductCard({
   compareAtPrice,
   stockTone,
   stockLabel,
+  glazeName = null,
+  glazeColor = null,
   isWishlisted,
   isCustomizable = false,
   isAddingToCart = false,
@@ -213,12 +218,22 @@ export function ProductCard({
           missing stock line leave a card the same height as every other one. */}
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex min-h-10 items-start justify-between gap-3">
-          <Link
-            href={href}
-            className="min-w-0 text-sm leading-snug break-words underline-offset-4 hover:underline"
-          >
-            {name}
-          </Link>
+          <span className="flex min-w-0 items-start gap-2">
+            {glazeColor && (
+              <GlazeSwatch
+                name={glazeName ?? name}
+                colorCode={glazeColor}
+                size="sm"
+                className="mt-1 border border-ink/15"
+              />
+            )}
+            <Link
+              href={href}
+              className="min-w-0 text-sm leading-snug break-words underline-offset-4 hover:underline"
+            >
+              {name}
+            </Link>
+          </span>
           <PriceTag price={price} compareAtPrice={compareAtPrice} />
         </div>
         <p

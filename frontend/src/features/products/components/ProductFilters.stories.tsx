@@ -33,6 +33,12 @@ const meta = {
       { value: "terracotta", label: "Terracotta", count: 11 },
     ],
     selectedMaterials: [],
+    glazeOptions: [
+      { value: "ocean-blue", label: "Ocean Blue", count: 7 },
+      { value: "reduction-brown", label: "Reduction Brown", count: 4 },
+      { value: "wood-fired", label: "Wood Fired", count: 2 },
+    ],
+    selectedGlazes: [],
     priceFloor: 400,
     priceCeiling: 4500,
     priceRange: [400, 4500],
@@ -41,6 +47,7 @@ const meta = {
     onToggleCategory: fn(),
     onToggleCollection: fn(),
     onToggleMaterial: fn(),
+    onToggleGlaze: fn(),
     onPriceRangeChange: fn(),
     onPriceRangeCommit: fn(),
     onInStockOnlyChange: fn(),
@@ -58,6 +65,7 @@ export const WithActiveFilters: Story = {
   args: {
     selectedCategories: ["mugs", "bowls"],
     selectedCollection: "rustic-charm",
+    selectedGlazes: ["ocean-blue"],
     selectedMaterials: ["stoneware"],
     priceRange: [850, 2100],
     inStockOnly: true,

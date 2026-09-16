@@ -162,6 +162,10 @@ export function ProductListContainer({
     (material: string) => dispatch({ type: "material", material }),
     [dispatch],
   );
+  const handleToggleGlaze = useCallback(
+    (slug: string) => dispatch({ type: "glaze", slug }),
+    [dispatch],
+  );
   const handleSelectView = useCallback(
     (isArchive: boolean) => dispatch({ type: "view", isArchive }),
     [dispatch],
@@ -250,6 +254,8 @@ export function ProductListContainer({
       selectedCollection={filters.collection}
       materialOptions={facets.materials}
       selectedMaterials={filters.materials}
+      glazeOptions={facets.glazes}
+      selectedGlazes={filters.glazes}
       priceFloor={priceFloor}
       priceCeiling={priceCeiling}
       priceRange={priceRange}
@@ -258,6 +264,7 @@ export function ProductListContainer({
       onToggleCategory={handleToggleCategory}
       onToggleCollection={handleToggleCollection}
       onToggleMaterial={handleToggleMaterial}
+      onToggleGlaze={handleToggleGlaze}
       onPriceRangeChange={setPriceDraft}
       onPriceRangeCommit={handlePriceCommit}
       onInStockOnlyChange={handleInStockChange}

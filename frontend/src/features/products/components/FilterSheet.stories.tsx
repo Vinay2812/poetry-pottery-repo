@@ -33,6 +33,11 @@ const meta = {
           { value: "terracotta", label: "Terracotta", count: 11 },
         ]}
         selectedMaterials={[]}
+        glazeOptions={[
+          { value: "ocean-blue", label: "Ocean Blue", count: 7 },
+          { value: "wood-fired", label: "Wood Fired", count: 2 },
+        ]}
+        selectedGlazes={[]}
         priceFloor={400}
         priceCeiling={4500}
         priceRange={[400, 4500]}
@@ -41,6 +46,7 @@ const meta = {
         onToggleCategory={fn()}
         onToggleCollection={fn()}
         onToggleMaterial={fn()}
+        onToggleGlaze={fn()}
         onPriceRangeChange={fn()}
         onPriceRangeCommit={fn()}
         onInStockOnlyChange={fn()}
