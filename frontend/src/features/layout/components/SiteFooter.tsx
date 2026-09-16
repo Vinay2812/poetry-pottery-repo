@@ -72,6 +72,8 @@ export function SiteFooter({
   return (
     <footer className="mt-20 border-t border-ash bg-background pb-20 lg:pb-0">
       <PageShell className="py-12 md:py-16">
+        {/* The column headings are h3s; this is the h2 they hang from. */}
+        <h2 className="sr-only">More from the studio</h2>
         <div className="grid gap-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="flex flex-col gap-4">
             <Wordmark />
