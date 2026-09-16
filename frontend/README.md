@@ -170,6 +170,59 @@ For motion or layout changes, verify from a recording rather than stills: `agent
 -vf fps=15 frames-%03d.png` and read the frames for shift and flicker. Static changes can still use
 an `agent-browser` screenshot pass against `localhost:3030`.
 
+### Browser flows
+
+`scripts/browser-flows.sh` drives the storefront end to end through the journeys
+a visitor actually takes, against a running API and frontend. Unit tests and
+stories prove pieces; this proves the seams between them.
+
+```bash
+pnpm dev                                  # or point BASE_URL at any instance
+./scripts/browser-flows.sh                # all ten flows
+./scripts/browser-flows.sh order wishlist # only the named ones
+```
+
+| Flow         | What it drives                                                                     |
+| ------------ | ---------------------------------------------------------------------------------- |
+| `home`       | Hero, categories, featured shelf, hero link into the shop                          |
+| `shop`       | Shelf heading, category filter narrows the grid, shelf/archive tabs                |
+| `order`      | Product → add to cart → cart → checkout (address) → place order → cancel the order |
+| `wishlist`   | Save a piece, see it listed, unsave it, empty state returns                        |
+| `events`     | Events heading, the empty state, the past filter                                   |
+| `workshops`  | Tier → day → hour → book → move to another day → cancel                            |
+| `contact`    | Fill and send a message                                                            |
+| `newsletter` | Footer subscribe, and the unsubscribe page without a token                         |
+| `notfound`   | 404 copy, the way back, and that the storefront chrome survives                    |
+| `signout`    | Sign out from the account page, header offers sign in again                        |
+
+Every step asserts against what the page renders — a URL, a heading, a status
+word, or a value that changed — so the run fails when a journey breaks rather
+than when a click misses. The script exits non-zero on the first failing
+assertion it records and prints them all at the end.
+
+Configuration, all environment variables:
+
+| Variable                     | Default                       |
+| ---------------------------- | ----------------------------- |
+| `BASE_URL`                   | `http://localhost:3030`       |
+| `OUT_DIR`                    | `/tmp/flows`                  |
+| `FLOW_SESSION`               | `poetry-flows`                |
+| `FLOW_EMAIL` / `FLOW_PASSWORD` | the Clerk test user          |
+| `FLOW_HEADLESS`              | `1` (set `0` to watch it run) |
+
+Evidence lands in `$OUT_DIR/screens/*.png` and `$OUT_DIR/video/<flow>.webm`, one
+video per flow, and survives the run. A failing step screenshots itself before
+moving on. To read a video frame by frame:
+
+```bash
+ffmpeg -i /tmp/flows/video/order.webm -vf fps=4 /tmp/flows/frames/order-%03d.png
+```
+
+The suite needs a signed-in user, so it runs against a development Clerk
+instance with the `+clerk_test` address above. It writes real rows — orders,
+bookings, contact messages, newsletter subscribers — and cancels what it can, so
+point it at a disposable database rather than anything you care about.
+
 ## Storybook
 
 Four global viewports are defined in `src/lib/storybook/viewports.ts`: mobile
