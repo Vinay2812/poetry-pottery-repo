@@ -182,7 +182,7 @@ export function toProductInput(
   };
 }
 
-/** Active and featured are not on the update input: they move through their own mutations. */
+/** Active, featured and stock are not on the update input: each has its own mutation. */
 export function toProductUpdateInput(
   values: ProductFormValues,
   imageUrls: readonly string[],
@@ -196,7 +196,6 @@ export function toProductUpdateInput(
     dimensions: optionalText(values.dimensions),
     color_name: optionalText(values.color_name),
     color_code: optionalText(values.color_code),
-    stock: values.stock,
     care_notes: parseCareNotes(values.care_notes),
     category_ids: values.category_ids,
     collection_id: values.collection_id,

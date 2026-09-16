@@ -214,23 +214,26 @@ export function PieceForm({
             })}
           />
         </AdminField>
-        <AdminField
-          id="piece-stock"
-          label="Stock"
-          hint="How many are made in this batch."
-          error={errors.stock?.message}
-        >
-          <Input
+        {/* On an existing piece stock only moves through the guarded adjustment. */}
+        {isCreate && (
+          <AdminField
             id="piece-stock"
-            type="number"
-            min={0}
-            step={1}
-            inputMode="numeric"
-            className="tnum"
-            aria-invalid={Boolean(errors.stock)}
-            {...register("stock", { valueAsNumber: true })}
-          />
-        </AdminField>
+            label="Stock"
+            hint="How many are made in this batch."
+            error={errors.stock?.message}
+          >
+            <Input
+              id="piece-stock"
+              type="number"
+              min={0}
+              step={1}
+              inputMode="numeric"
+              className="tnum"
+              aria-invalid={Boolean(errors.stock)}
+              {...register("stock", { valueAsNumber: true })}
+            />
+          </AdminField>
+        )}
       </section>
 
       <section className="flex flex-col gap-3">
