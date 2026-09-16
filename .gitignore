@@ -33,4 +33,7 @@ pnpm-debug.log*
 
 # model caches
 .cache/
-.claude/
+
+# agent scratch, except the project verification skill
+.claude/*
+!.claude/skills/
