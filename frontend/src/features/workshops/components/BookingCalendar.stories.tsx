@@ -39,6 +39,8 @@ const meta = {
   parameters: { layout: "padded" },
   args: {
     monthLabel: "September 2026",
+    notice:
+      "Pick within 7 days of your first slot. Days further out are closed off.",
     weeks: WEEKS,
     selectedDate: "2026-09-19",
     canGoBack: false,
@@ -57,6 +59,7 @@ export const Default: Story = {};
 
 export const NothingPicked: Story = {
   args: {
+    notice: null,
     selectedDate: null,
     weeks: toMonthGrid(MONTH).map((week) =>
       week.map((dateKey) =>

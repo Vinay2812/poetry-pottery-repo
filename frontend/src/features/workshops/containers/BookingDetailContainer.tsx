@@ -356,6 +356,11 @@ export function BookingDetailContainer({
       <RescheduleDialog
         isOpen={isMoveOpen}
         monthLabel={formatMonth(month)}
+        notice={
+          picked.length > 0
+            ? `${spanNotice(spanAllowance)}. Days further out are closed off.`
+            : null
+        }
         weeks={weeks}
         selectedDate={selectedDate}
         canGoBack={month > toMonthKey(todayKey)}

@@ -24,6 +24,7 @@ import {
 export interface RescheduleDialogProps {
   isOpen: boolean;
   monthLabel: string;
+  notice: string | null;
   weeks: (CalendarDay | null)[][];
   selectedDate: string | null;
   canGoBack: boolean;
@@ -57,6 +58,7 @@ export function RescheduleDialog({
   onOpenChange,
   onPreviousMonth,
   onNextMonth,
+  notice,
   onSelectDate,
   onToggleSlot,
   onRemoveSlot,
@@ -77,6 +79,7 @@ export function RescheduleDialog({
 
         <BookingCalendar
           monthLabel={monthLabel}
+          notice={notice}
           weeks={weeks}
           selectedDate={selectedDate}
           canGoBack={canGoBack}

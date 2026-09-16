@@ -32,6 +32,7 @@ import {
   toBookingStepIndex,
   toBookingWhenLines,
   toDateKey,
+  toDayNote,
   isSameSelection,
   togglePicked,
   toMonthGrid,
@@ -438,5 +439,51 @@ describe("applyBookingAction", () => {
         at: "2026-09-12T09:00:00.000Z",
       }),
     ).toBeNull();
+  });
+});
+
+describe("toDayNote", () => {
+  const day = {
+    wheelsFree: 6,
+    pickedCount: 0,
+    isClosed: false,
+    isPast: false,
+    mutedReason: null as string | null,
+  };
+
+  it("counts the wheels a bookable day still has", () => {
+    expect(toDayNote(day)).toEqual({
+      caption: "6 wheels free",
+      description: "6 wheels free",
+      isPickable: true,
+    });
+    expect(toDayNote({ ...day, pickedCount: 2 }).description).toBe(
+      "6 wheels free, 2 picked",
+    );
+  });
+
+  it("tells a past day apart from a closed one", () => {
+    expect(toDayNote({ ...day, isPast: true, isClosed: true })).toEqual({
+      caption: "past",
+      description: "past",
+      isPickable: false,
+    });
+    expect(toDayNote({ ...day, isClosed: true }).description).toBe(
+      "studio closed",
+    );
+  });
+
+  it("names the span and the empty day as their own reasons", () => {
+    expect(toDayNote({ ...day, wheelsFree: 0 }).caption).toBe("full");
+    expect(
+      toDayNote({
+        ...day,
+        mutedReason: "Pick within 7 days of your first slot",
+      }),
+    ).toEqual({
+      caption: "too far",
+      description: "pick within 7 days of your first slot",
+      isPickable: false,
+    });
   });
 });

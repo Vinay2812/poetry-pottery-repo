@@ -404,6 +404,56 @@ export function formatWheels(remaining: number): string {
   return `${remaining} ${remaining === 1 ? "wheel" : "wheels"} free`;
 }
 
+export interface CalendarDayState {
+  wheelsFree: number;
+  pickedCount: number;
+  isClosed: boolean;
+  isPast: boolean;
+  mutedReason: string | null;
+}
+
+export interface DayNote {
+  caption: string;
+  description: string;
+  isPickable: boolean;
+}
+
+// A day that cannot be booked says why on the face of it: past, closed, full, or out of
+// reach of the hours already picked. "Studio closed" was answering all four.
+export function toDayNote(day: CalendarDayState): DayNote {
+  if (day.isPast) {
+    return { caption: "past", description: "past", isPickable: false };
+  }
+  if (day.isClosed) {
+    return {
+      caption: "closed",
+      description: "studio closed",
+      isPickable: false,
+    };
+  }
+  if (day.wheelsFree <= 0) {
+    return {
+      caption: "full",
+      description: "no wheels free",
+      isPickable: false,
+    };
+  }
+  if (day.mutedReason) {
+    return {
+      caption: "too far",
+      description: day.mutedReason.toLowerCase(),
+      isPickable: false,
+    };
+  }
+  const free = formatWheels(day.wheelsFree);
+  return {
+    caption: free,
+    description:
+      day.pickedCount > 0 ? `${free}, ${day.pickedCount} picked` : free,
+    isPickable: true,
+  };
+}
+
 export type BookingAction =
   | { kind: "cancel"; reason: string; at: string }
   | { kind: "reschedule"; slots: readonly SlotInterval[] };

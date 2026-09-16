@@ -57,6 +57,7 @@ const meta = {
   args: {
     isOpen: true,
     monthLabel: "September 2026",
+    notice: null,
     weeks: WEEKS,
     selectedDate: "2026-09-19",
     canGoBack: false,

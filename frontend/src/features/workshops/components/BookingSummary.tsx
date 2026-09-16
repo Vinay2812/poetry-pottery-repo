@@ -53,7 +53,7 @@ export function BookingSummary({
       <PickedSlots
         slots={pickedSlots}
         needed={slotsNeeded}
-        emptyMessage="Pick your hours from the calendar."
+        emptyMessage="Pick a day on the calendar, then an hour from the chips under it."
         onRemoveSlot={onRemoveSlot}
       />
 

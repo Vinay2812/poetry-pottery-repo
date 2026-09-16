@@ -243,6 +243,11 @@ export function WorkshopBookingContainer({
           ) : (
             <BookingCalendar
               monthLabel={formatMonth(month)}
+              notice={
+                picked.length > 0
+                  ? `${spanNotice(workshop.slot_span_days)}. Days further out are closed off.`
+                  : null
+              }
               weeks={weeks}
               selectedDate={selectedDate}
               canGoBack={month > firstMonth}

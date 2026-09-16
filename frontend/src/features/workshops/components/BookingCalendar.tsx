@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-import { formatWheels, WEEKDAY_LABELS } from "@/features/workshops/types";
+import { toDayNote, WEEKDAY_LABELS } from "@/features/workshops/types";
 
 export interface CalendarDay {
   dateKey: string;
@@ -15,6 +15,7 @@ export interface CalendarDay {
 
 export interface BookingCalendarProps {
   monthLabel: string;
+  notice: string | null;
   weeks: (CalendarDay | null)[][];
   selectedDate: string | null;
   canGoBack: boolean;
@@ -29,6 +30,7 @@ const NAV_BUTTON =
 
 export function BookingCalendar({
   monthLabel,
+  notice,
   weeks,
   selectedDate,
   canGoBack,
@@ -61,6 +63,9 @@ export function BookingCalendar({
         </div>
       </header>
 
+      {/* The rule that closes days off is on the calendar, not only in a tooltip. */}
+      {notice && <p className="text-[13px] text-muted-foreground">{notice}</p>}
+
       <div className="grid grid-cols-7 border-t border-ash">
         {WEEKDAY_LABELS.map((label) => (
           <span
@@ -83,24 +88,15 @@ export function BookingCalendar({
               />
             );
           const isSelected = day.dateKey === selectedDate;
-          const isDisabled =
-            day.isClosed ||
-            day.isPast ||
-            day.wheelsFree <= 0 ||
-            day.mutedReason !== null;
-          const description =
-            day.mutedReason ??
-            (isDisabled
-              ? "studio closed"
-              : `${formatWheels(day.wheelsFree)}${day.pickedCount > 0 ? `, ${day.pickedCount} picked` : ""}`);
+          const note = toDayNote(day);
+          const isDisabled = !note.isPickable;
           return (
             <button
               key={day.dateKey}
               type="button"
               disabled={isDisabled && day.pickedCount === 0}
               aria-pressed={isSelected}
-              aria-label={`${day.dayLabel}, ${description}`}
-              title={day.mutedReason ?? undefined}
+              aria-label={`${day.dayLabel}, ${note.description}`}
               onClick={() => onSelectDate(day.dateKey)}
               className={cn(
                 "flex aspect-square flex-col items-center justify-center gap-0.5 bg-background transition-colors",
@@ -123,16 +119,14 @@ export function BookingCalendar({
                   ))}
                 </span>
               ) : (
-                !isDisabled && (
-                  <span
-                    className={cn(
-                      "text-[10px] tnum",
-                      isSelected ? "text-white/70" : "text-muted-foreground",
-                    )}
-                  >
-                    {day.wheelsFree} wheels
-                  </span>
-                )
+                <span
+                  className={cn(
+                    "px-1 text-center text-[10px] leading-tight tnum",
+                    isSelected ? "text-white/70" : "text-muted-foreground",
+                  )}
+                >
+                  {note.caption}
+                </span>
               )}
             </button>
           );
