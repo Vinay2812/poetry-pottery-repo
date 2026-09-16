@@ -31,6 +31,7 @@ export interface ProductFilters {
   search: string;
   categories: string[];
   materials: string[];
+  glazes: string[];
   collection: string | null;
   minPrice: number | null;
   maxPrice: number | null;
@@ -44,6 +45,7 @@ export const EMPTY_FILTERS: ProductFilters = {
   search: "",
   categories: [],
   materials: [],
+  glazes: [],
   collection: null,
   minPrice: null,
   maxPrice: null,
@@ -76,6 +78,7 @@ export function parseFilters(params: URLSearchParams): ProductFilters {
     search: params.get("q")?.trim() ?? "",
     categories: readList(params, "category"),
     materials: readList(params, "material"),
+    glazes: readList(params, "glaze"),
     collection: params.get("collection"),
     minPrice: readInt(params, "min"),
     maxPrice: readInt(params, "max"),
@@ -94,6 +97,7 @@ export type FilterAction =
   | { type: "category"; slug: string }
   | { type: "collection"; slug: string }
   | { type: "material"; material: string }
+  | { type: "glaze"; slug: string }
   | { type: "price"; min: number | null; max: number | null }
   | { type: "inStock"; value: boolean }
   | { type: "customizable"; value: boolean }
@@ -130,6 +134,8 @@ export function applyFilterAction(
         ...current,
         materials: toggle(current.materials, action.material),
       };
+    case "glaze":
+      return { ...current, glazes: toggle(current.glazes, action.slug) };
     case "price":
       return { ...current, minPrice: action.min, maxPrice: action.max };
     case "inStock":
@@ -152,6 +158,7 @@ export function toSearchParams(filters: ProductFilters): URLSearchParams {
     params.set("category", filters.categories.join(","));
   if (filters.materials.length)
     params.set("material", filters.materials.join(","));
+  if (filters.glazes.length) params.set("glaze", filters.glazes.join(","));
   if (filters.collection) params.set("collection", filters.collection);
   if (filters.minPrice !== null) params.set("min", String(filters.minPrice));
   if (filters.maxPrice !== null) params.set("max", String(filters.maxPrice));
@@ -170,6 +177,7 @@ export function toFilterInput(
     search: filters.search || null,
     category_slugs: filters.categories.length ? filters.categories : null,
     materials: filters.materials.length ? filters.materials : null,
+    glaze_slugs: filters.glazes.length ? filters.glazes : null,
     collection_slug: filters.collection,
     min_price: filters.minPrice,
     max_price: filters.maxPrice,
@@ -187,6 +195,7 @@ export function countActiveFilters(filters: ProductFilters): number {
     filters.categories.length +
     (filters.collection ? 1 : 0) +
     filters.materials.length +
+    filters.glazes.length +
     (filters.minPrice !== null || filters.maxPrice !== null ? 1 : 0) +
     (filters.inStockOnly ? 1 : 0) +
     (filters.customizableOnly ? 1 : 0)
@@ -364,6 +373,129 @@ export function clampPriceRange(
 
 export function toProductPath(slug: string): string {
   return `/products/${slug}`;
+}
+
+export function toGlazePath(slug: string): string {
+  return `/products?glaze=${slug}`;
+}
+
+// Whole numbers lose the decimal point: 8.0 cm is written 8 cm, 9.5 cm stays 9.5 cm.
+export function formatCentimetres(value: number | null): string | null {
+  if (value === null || !Number.isFinite(value) || value <= 0) return null;
+  return `${Number(value.toFixed(1))} cm`;
+}
+
+export function formatCapacity(millilitres: number | null): string | null {
+  if (millilitres === null || millilitres <= 0) return null;
+  return `${millilitres} ml`;
+}
+
+export function formatWeight(grams: number | null): string | null {
+  if (grams === null || grams <= 0) return null;
+  return `${grams} g`;
+}
+
+// The studio's own words first; measurements only stand in when nobody wrote a size.
+export function toSizeLine(
+  dimensions: string | null,
+  heightCm: number | null,
+  diameterCm: number | null,
+): string | null {
+  const written = dimensions?.trim();
+  if (written) return written;
+  const height = formatCentimetres(heightCm);
+  const across = formatCentimetres(diameterCm);
+  if (height && across) return `${height} tall, ${across} across`;
+  return height ?? (across ? `${across} across` : null);
+}
+
+export interface FactRow {
+  label: string;
+  value: string;
+}
+
+export interface PieceFacts {
+  material: string;
+  glazeName: string | null;
+  dimensions: string | null;
+  heightCm: number | null;
+  diameterCm: number | null;
+  capacityMl: number | null;
+  weightG: number | null;
+  isCustomizable: boolean;
+  sizeChoices: string[];
+}
+
+// The kiln card: clay body, glaze and size always have something to say, the
+// measurements only appear once the studio has taken them.
+export function toFactRows(facts: PieceFacts): FactRow[] {
+  const glaze =
+    facts.glazeName ?? (facts.isCustomizable ? "Chosen with you" : null);
+  const size =
+    toSizeLine(facts.dimensions, facts.heightCm, facts.diameterCm) ??
+    (facts.sizeChoices.length > 0 ? facts.sizeChoices.join(", ") : null);
+  const rows: [string, string | null][] = [
+    ["Clay body", facts.material],
+    ["Glaze", glaze],
+    ["Size", size],
+    ["Capacity", formatCapacity(facts.capacityMl)],
+    ["Weight", formatWeight(facts.weightG)],
+    ["Made in", "Sangli, Maharashtra"],
+    [
+      "Ships in",
+      facts.isCustomizable ? "About ten days" : "Three working days",
+    ],
+  ];
+  return rows.flatMap(([label, value]) => (value ? [{ label, value }] : []));
+}
+
+// The drawing is measured in tenths of a centimetre, so a path number is never
+// rounded past a millimetre.
+const SCALE_UNITS_PER_CM = 10;
+const SCALE_GAP = 26;
+const SCALE_PAD = 8;
+const SCALE_CAPTION = 30;
+
+export interface PieceScale {
+  width: number;
+  height: number;
+  minY: number;
+  pieceX: number;
+  pieceHeight: number;
+  pieceWidth: number;
+  cupX: number;
+  cupHeight: number;
+  cupWidth: number;
+}
+
+/**
+ * Two silhouettes on one floor at the size they really are: the piece, and an
+ * ordinary 250 ml cup to measure it against.
+ */
+export function toPieceScale(
+  pieceHeightCm: number,
+  pieceDiameterCm: number,
+  cupHeightCm: number,
+  cupDiameterCm: number,
+): PieceScale {
+  const pieceHeight = pieceHeightCm * SCALE_UNITS_PER_CM;
+  const pieceWidth = pieceDiameterCm * SCALE_UNITS_PER_CM;
+  const cupHeight = cupHeightCm * SCALE_UNITS_PER_CM;
+  const cupWidth = cupDiameterCm * SCALE_UNITS_PER_CM;
+  const pieceX = SCALE_PAD + pieceWidth / 2;
+  const cupX = pieceX + pieceWidth / 2 + SCALE_GAP + cupWidth / 2;
+  const tallest = Math.max(pieceHeight, cupHeight);
+  return {
+    width: cupX + cupWidth / 2 + SCALE_PAD,
+    height: tallest + SCALE_PAD + SCALE_CAPTION,
+    minY: -(tallest + SCALE_PAD),
+    pieceX,
+    pieceHeight,
+    pieceWidth,
+    cupX,
+    cupHeight,
+    cupWidth,
+  };
 }
 
 export function toPhotoLabel(index: number, total: number): string {

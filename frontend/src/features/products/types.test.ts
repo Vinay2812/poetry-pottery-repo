@@ -26,8 +26,16 @@ import {
   toGlazeAskUrl,
   toPhotoAlt,
   toPhotoLabel,
+  formatCapacity,
+  formatCentimetres,
+  formatWeight,
+  type PieceFacts,
+  toFactRows,
+  toGlazePath,
+  toPieceScale,
   toProductPath,
   toShortDescription,
+  toSizeLine,
   toStockStatus,
   validateSelections,
   type ProductOptionGroupData,
@@ -122,6 +130,7 @@ describe("toFilterInput", () => {
     expect(toFilterInput(EMPTY_FILTERS, 1)).toEqual({
       search: null,
       category_slugs: null,
+      glaze_slugs: null,
       materials: null,
       collection_slug: null,
       min_price: null,
@@ -506,5 +515,115 @@ describe("toDefaultSelections", () => {
         { ...groups[0]!, id: 4, options: [] },
       ]),
     ).toEqual({});
+  });
+});
+
+const FACTS: PieceFacts = {
+  material: "Stoneware",
+  glazeName: "Ocean Blue",
+  dimensions: null,
+  heightCm: 9.5,
+  diameterCm: 8,
+  capacityMl: 250,
+  weightG: 320,
+  isCustomizable: false,
+  sizeChoices: [],
+};
+
+describe("piece measurements", () => {
+  it("writes a whole number of centimetres without a decimal point", () => {
+    expect(formatCentimetres(8)).toBe("8 cm");
+    expect(formatCentimetres(9.5)).toBe("9.5 cm");
+    expect(formatCentimetres(9.47)).toBe("9.5 cm");
+    expect(formatCentimetres(0)).toBeNull();
+    expect(formatCentimetres(null)).toBeNull();
+  });
+
+  it("only writes a capacity and a weight the studio has taken", () => {
+    expect(formatCapacity(250)).toBe("250 ml");
+    expect(formatCapacity(0)).toBeNull();
+    expect(formatCapacity(null)).toBeNull();
+    expect(formatWeight(320)).toBe("320 g");
+    expect(formatWeight(null)).toBeNull();
+  });
+
+  it("prefers the written size and falls back to the measurements", () => {
+    expect(toSizeLine("Holds a full cup", 9.5, 8)).toBe("Holds a full cup");
+    expect(toSizeLine(null, 9.5, 8)).toBe("9.5 cm tall, 8 cm across");
+    expect(toSizeLine(null, 9.5, null)).toBe("9.5 cm");
+    expect(toSizeLine(null, null, 18)).toBe("18 cm across");
+    expect(toSizeLine("  ", null, null)).toBeNull();
+  });
+});
+
+describe("toFactRows", () => {
+  it("lists the measurements it has and drops the ones it does not", () => {
+    expect(toFactRows(FACTS)).toEqual([
+      { label: "Clay body", value: "Stoneware" },
+      { label: "Glaze", value: "Ocean Blue" },
+      { label: "Size", value: "9.5 cm tall, 8 cm across" },
+      { label: "Capacity", value: "250 ml" },
+      { label: "Weight", value: "320 g" },
+      { label: "Made in", value: "Sangli, Maharashtra" },
+      { label: "Ships in", value: "Three working days" },
+    ]);
+    const bare = toFactRows({
+      ...FACTS,
+      glazeName: null,
+      heightCm: null,
+      diameterCm: null,
+      capacityMl: null,
+      weightG: null,
+    });
+    expect(bare.map((row) => row.label)).toEqual([
+      "Clay body",
+      "Made in",
+      "Ships in",
+    ]);
+  });
+
+  it("still names clay body, glaze and size on a made-to-order piece", () => {
+    const rows = toFactRows({
+      ...FACTS,
+      glazeName: null,
+      heightCm: null,
+      diameterCm: null,
+      capacityMl: null,
+      weightG: null,
+      isCustomizable: true,
+      sizeChoices: ["Small", "Large"],
+    });
+    expect(rows).toContainEqual({ label: "Glaze", value: "Chosen with you" });
+    expect(rows).toContainEqual({ label: "Size", value: "Small, Large" });
+    expect(rows).toContainEqual({
+      label: "Ships in",
+      value: "About ten days",
+    });
+  });
+});
+
+describe("toPieceScale", () => {
+  it("draws both silhouettes on one floor at true relative scale", () => {
+    const scale = toPieceScale(9.5, 8, 9, 8);
+    expect(scale.pieceHeight / scale.cupHeight).toBeCloseTo(9.5 / 9);
+    expect(scale.pieceWidth / scale.cupWidth).toBeCloseTo(1);
+    // Both stand on y = 0 and the box reaches the taller of the two.
+    expect(scale.minY).toBeLessThan(-scale.pieceHeight);
+    expect(scale.height + scale.minY).toBeGreaterThan(0);
+  });
+
+  it("keeps a tall piece and the cup from overlapping", () => {
+    const scale = toPieceScale(26, 13, 9, 8);
+    expect(scale.pieceX + scale.pieceWidth / 2).toBeLessThan(
+      scale.cupX - scale.cupWidth / 2,
+    );
+    expect(scale.cupX + scale.cupWidth / 2).toBeLessThan(scale.width);
+    expect(scale.minY).toBeCloseTo(-(26 * 10 + 8));
+  });
+});
+
+describe("toGlazePath", () => {
+  it("points at the shelf filtered to one glaze", () => {
+    expect(toGlazePath("ocean-blue")).toBe("/products?glaze=ocean-blue");
   });
 });

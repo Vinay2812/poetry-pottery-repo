@@ -8,14 +8,19 @@ import {
 
 import { formatInr } from "@/lib/format";
 
+import { toPotteryIconKind } from "@/components/icons/pottery";
+import { REFERENCE_CUP, toDrawnVessel } from "@/components/media/vessels";
 import { KilnLabels, type KilnLabel } from "@/components/motion/KilnLabels";
 import { Reveal } from "@/components/motion/Reveal";
 
 import { useAddToCart } from "@/features/cart/hooks";
 import { useReferencePhotos } from "@/features/products/hooks";
 import { ArchiveNotice } from "@/features/products/components/ArchiveNotice";
+import { GlazeNote } from "@/features/products/components/GlazeNote";
 import { KilnCard } from "@/features/products/components/KilnCard";
+import { MakerNote } from "@/features/products/components/MakerNote";
 import { OptionGroupPicker } from "@/features/products/components/OptionGroupPicker";
+import { PieceScale } from "@/features/products/components/PieceScale";
 import { ProductBuyBox } from "@/features/products/components/ProductBuyBox";
 import { ProductCarousel } from "@/features/products/components/ProductCarousel";
 import { ProductGallery } from "@/features/products/components/ProductGallery";
@@ -34,7 +39,9 @@ import {
   type Selections,
   toBatchLabel,
   toDefaultSelections,
+  toFactRows,
   toGlazeAskUrl,
+  toGlazePath,
   toShortDescription,
   toStockStatus,
   validateSelections,
@@ -50,12 +57,16 @@ export interface ProductDetailContainerProps {
 
 const MAX_QUANTITY = 10;
 
-// Anchors sit on the drawn piece, which fills the middle 60% of the square.
-const LABEL_POSITIONS = [
-  { x: 30, y: 26, anchorX: 38, anchorY: 38 },
-  { x: 68, y: 52, anchorX: 62, anchorY: 55 },
-  { x: 62, y: 82, anchorX: 50, anchorY: 72 },
-];
+// The drawing names three facts. Each leader leaves its dot at the same 25 degrees,
+// and each dot is read off the piece itself so "Clay body" never lands on the glaze.
+const LEADER_TAN = 0.4663;
+// A piece measured in height alone is still drawn in proportion, using the cup's own.
+const CUP_WIDTH_RATIO = REFERENCE_CUP.diameterCm / REFERENCE_CUP.heightCm;
+const LEADER_RUN: Record<string, number> = {
+  "Clay body": -20,
+  Glaze: 20,
+  Size: 14,
+};
 
 export function ProductDetailContainer({
   product,
@@ -114,17 +125,47 @@ export function ProductDetailContainer({
   // The device only reads over the drawn placeholder; a real photo keeps the frame clean
   // and the fact list carries clay body, glaze and size instead.
   const hasPhoto = product.image_urls.length > 0;
+  const glaze = product.glaze;
+  const factRows = useMemo(
+    () =>
+      toFactRows({
+        material: product.material,
+        glazeName: glaze?.name ?? product.color_name,
+        dimensions: product.dimensions,
+        heightCm: product.height_cm,
+        diameterCm: product.diameter_cm,
+        capacityMl: product.capacity_ml,
+        weightG: product.weight_g,
+        isCustomizable: product.is_customizable,
+        sizeChoices: groups.flatMap((group) =>
+          group.options.map((option) => option.name),
+        ),
+      }),
+    [glaze, groups, product],
+  );
   const kilnLabels = useMemo<KilnLabel[]>(() => {
-    const texts = [
-      product.material ? "Clay body" : null,
-      product.color_name ? "Glaze" : null,
-      product.dimensions ? "Size" : null,
-    ].filter((text): text is string => Boolean(text));
-    return texts.map((text, index) => ({
-      text,
-      ...(LABEL_POSITIONS[index] ?? LABEL_POSITIONS[0]!),
-    }));
-  }, [product.color_name, product.dimensions, product.material]);
+    const anchors = toDrawnVessel(toPotteryIconKind(product.name)).anchors;
+    const named = new Set(factRows.map((row) => row.label));
+    const spots = [
+      { text: "Clay body", anchor: anchors.clay },
+      { text: "Glaze", anchor: anchors.glaze },
+      { text: "Size", anchor: anchors.size },
+    ];
+    return spots
+      .filter((spot) => named.has(spot.text))
+      .map(({ text, anchor }) => {
+        const run = LEADER_RUN[text] ?? 18;
+        // The rim label climbs away from the piece; the others fall away from it.
+        const rise = text === "Size" ? -1 : 1;
+        return {
+          text,
+          anchorX: anchor.x,
+          anchorY: anchor.y,
+          x: anchor.x + run,
+          y: anchor.y + Math.abs(run) * LEADER_TAN * rise,
+        };
+      });
+  }, [factRows, product.name]);
 
   useEffect(() => {
     const node = buyBoxRef.current;
@@ -192,22 +233,12 @@ export function ProductDetailContainer({
   // Only the facts the drawing also names can light up with it.
   const hasKilnDiagram = !hasPhoto && kilnLabels.length > 0;
   const linkedLabels = hasKilnDiagram
-    ? kilnLabels.map((label) => label.text)
-    : [];
-  const kilnRows = [
-    { label: "Clay body", value: product.material },
-    ...(product.color_name
-      ? [{ label: "Glaze", value: product.color_name }]
-      : []),
-    ...(product.dimensions
-      ? [{ label: "Size", value: product.dimensions }]
-      : []),
-    { label: "Made in", value: "Sangli, Maharashtra" },
-    {
-      label: "Ships in",
-      value: product.is_customizable ? "About ten days" : "Three working days",
-    },
-  ].map((row) => ({ ...row, isLinked: linkedLabels.includes(row.label) }));
+    ? new Set(kilnLabels.map((label) => label.text))
+    : new Set<string>();
+  const kilnRows = factRows.map((row) => ({
+    ...row,
+    isLinked: linkedLabels.has(row.label),
+  }));
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-16 px-4 py-8 md:px-8 md:py-12">
@@ -367,11 +398,38 @@ export function ProductDetailContainer({
             </div>
           )}
         </div>
-        <KilnCard
-          rows={kilnRows}
-          activeLabel={activeFact}
-          onActivate={hasKilnDiagram ? setActiveFact : undefined}
-        />
+        <div className="flex flex-col">
+          <div className="flex items-start gap-6">
+            <div className="min-w-0 flex-1">
+              <KilnCard
+                rows={kilnRows}
+                activeLabel={activeFact}
+                onActivate={hasKilnDiagram ? setActiveFact : undefined}
+              />
+            </div>
+            {product.height_cm !== null && (
+              <PieceScale
+                kind={toPotteryIconKind(product.name)}
+                heightCm={product.height_cm}
+                diameterCm={
+                  product.diameter_cm ?? product.height_cm * CUP_WIDTH_RATIO
+                }
+                className="hidden w-[180px] shrink-0 sm:flex"
+              />
+            )}
+          </div>
+          {product.maker_note && <MakerNote note={product.maker_note} />}
+          {glaze && (
+            <GlazeNote
+              name={glaze.name}
+              colorCode={glaze.color_code}
+              swatchUrl={glaze.swatch_url}
+              description={glaze.description}
+              variationNote={glaze.variation_note}
+              href={toGlazePath(glaze.slug)}
+            />
+          )}
+        </div>
       </div>
 
       {related.length > 0 && (
