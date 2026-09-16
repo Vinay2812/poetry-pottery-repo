@@ -93,6 +93,7 @@ function line(
       material: "Stoneware",
       color_name: null,
       color_code: null,
+      glaze: null,
       image_urls: [],
       stock: 10,
       is_active: true,

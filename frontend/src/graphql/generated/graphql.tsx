@@ -296,6 +296,18 @@ export type FacetCount = {
   value: Scalars['String']['output'];
 };
 
+export type Glaze = {
+  __typename?: 'Glaze';
+  color_code?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  pieces: Array<Product>;
+  slug: Scalars['String']['output'];
+  swatch_url?: Maybe<Scalars['String']['output']>;
+  variation_note?: Maybe<Scalars['String']['output']>;
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addToCart: Cart;
@@ -522,6 +534,7 @@ export type PlaceOrderInput = {
 
 export type Product = {
   __typename?: 'Product';
+  capacity_ml?: Maybe<Scalars['Int']['output']>;
   care_notes: Array<Scalars['String']['output']>;
   categories: Array<CategoryRef>;
   collection?: Maybe<CollectionRef>;
@@ -530,7 +543,10 @@ export type Product = {
   compare_at_price?: Maybe<Scalars['Int']['output']>;
   created_at: Scalars['DateTime']['output'];
   description: Scalars['String']['output'];
+  diameter_cm?: Maybe<Scalars['Float']['output']>;
   dimensions?: Maybe<Scalars['String']['output']>;
+  glaze?: Maybe<Glaze>;
+  height_cm?: Maybe<Scalars['Float']['output']>;
   id: Scalars['Int']['output'];
   image_urls: Array<Scalars['String']['output']>;
   in_wishlist: Scalars['Boolean']['output'];
@@ -538,6 +554,7 @@ export type Product = {
   is_archived: Scalars['Boolean']['output'];
   is_customizable: Scalars['Boolean']['output'];
   is_featured: Scalars['Boolean']['output'];
+  maker_note?: Maybe<Scalars['String']['output']>;
   material: Scalars['String']['output'];
   name: Scalars['String']['output'];
   option_groups: Array<ProductOptionGroup>;
@@ -547,6 +564,7 @@ export type Product = {
   sales_count: Scalars['Int']['output'];
   slug: Scalars['String']['output'];
   stock: Scalars['Int']['output'];
+  weight_g?: Maybe<Scalars['Int']['output']>;
 };
 
 export type ProductFacets = {
@@ -555,6 +573,7 @@ export type ProductFacets = {
   archive_count: Scalars['Int']['output'];
   categories: Array<FacetCount>;
   collections: Array<FacetCount>;
+  glazes: Array<FacetCount>;
   materials: Array<FacetCount>;
   price_max: Scalars['Int']['output'];
   price_min: Scalars['Int']['output'];
@@ -592,6 +611,7 @@ export type ProductsFilterInput = {
   category_slugs?: InputMaybe<Array<Scalars['String']['input']>>;
   collection_slug?: InputMaybe<Scalars['String']['input']>;
   customizable_only?: InputMaybe<Scalars['Boolean']['input']>;
+  glaze_slugs?: InputMaybe<Array<Scalars['String']['input']>>;
   in_stock_only?: InputMaybe<Scalars['Boolean']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   materials?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -624,6 +644,8 @@ export type Query = {
   event: Event;
   events: EventsResult;
   featuredProducts: Array<Product>;
+  glaze: Glaze;
+  glazes: Array<Glaze>;
   myRegistrations: RegistrationsResult;
   myWorkshopBookings: WorkshopBookingsResult;
   newsletterStatus: NewsletterStatus;
@@ -684,6 +706,11 @@ export type QueryEventsArgs = {
 
 export type QueryFeaturedProductsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryGlazeArgs = {
+  slug: Scalars['String']['input'];
 };
 
 
@@ -1003,12 +1030,12 @@ export type SetDefaultAddressMutationVariables = Exact<{
 
 export type SetDefaultAddressMutation = { setDefaultAddress: { id: number, name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string, is_default: boolean } };
 
-export type CartFieldsFragment = { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> };
+export type CartFieldsFragment = { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> };
 
 export type CartQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CartQuery = { cart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
+export type CartQuery = { cart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type CartCountQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1020,7 +1047,7 @@ export type AddToCartMutationVariables = Exact<{
 }>;
 
 
-export type AddToCartMutation = { addToCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
+export type AddToCartMutation = { addToCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type UpdateCartItemMutationVariables = Exact<{
   id: number;
@@ -1028,19 +1055,19 @@ export type UpdateCartItemMutationVariables = Exact<{
 }>;
 
 
-export type UpdateCartItemMutation = { updateCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
+export type UpdateCartItemMutation = { updateCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type RemoveCartItemMutationVariables = Exact<{
   id: number;
 }>;
 
 
-export type RemoveCartItemMutation = { removeCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
+export type RemoveCartItemMutation = { removeCartItem: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type ClearCartMutationVariables = Exact<{ [key: string]: never; }>;
 
 
-export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
+export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
 
 export type ContentPageQueryVariables = Exact<{
   slug: string;
@@ -1164,21 +1191,23 @@ export type CancelOrderMutationVariables = Exact<{
 
 export type CancelOrderMutation = { cancelOrder: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }> } };
 
-export type ProductCardFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null };
+export type GlazeCardFragment = { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null };
+
+export type ProductCardFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null };
 
 export type ProductsQueryVariables = Exact<{
   filter?: ProductsFilterInput | null | undefined;
 }>;
 
 
-export type ProductsQuery = { products: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }>, page_info: { total: number, page: number, limit: number, has_more: boolean }, facets: { price_min: number, price_max: number, active_count: number, archive_count: number, categories: Array<{ value: string, label: string, count: number }>, collections: Array<{ value: string, label: string, count: number }>, materials: Array<{ value: string, label: string, count: number }> } } };
+export type ProductsQuery = { products: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }>, page_info: { total: number, page: number, limit: number, has_more: boolean }, facets: { price_min: number, price_max: number, active_count: number, archive_count: number, categories: Array<{ value: string, label: string, count: number }>, collections: Array<{ value: string, label: string, count: number }>, materials: Array<{ value: string, label: string, count: number }>, glazes: Array<{ value: string, label: string, count: number }> } } };
 
 export type ProductQueryVariables = Exact<{
   slug: string;
 }>;
 
 
-export type ProductQuery = { product: { description: string, dimensions: string | null, care_notes: Array<string>, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, categories: Array<{ id: number, slug: string, name: string }>, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, price_modifier: number, max_length: number | null, options: Array<{ id: number, name: string, price_modifier: number }> }>, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } };
+export type ProductQuery = { product: { description: string, dimensions: string | null, capacity_ml: number | null, height_cm: number | null, diameter_cm: number | null, weight_g: number | null, maker_note: string | null, care_notes: Array<string>, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { description: string, variation_note: string | null, id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, categories: Array<{ id: number, slug: string, name: string }>, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, price_modifier: number, max_length: number | null, options: Array<{ id: number, name: string, price_modifier: number }> }>, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } };
 
 export type RelatedProductsQueryVariables = Exact<{
   slug: string;
@@ -1186,14 +1215,14 @@ export type RelatedProductsQueryVariables = Exact<{
 }>;
 
 
-export type RelatedProductsQuery = { relatedProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
+export type RelatedProductsQuery = { relatedProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
 
 export type FeaturedProductsQueryVariables = Exact<{
   limit?: number | null | undefined;
 }>;
 
 
-export type FeaturedProductsQuery = { featuredProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
+export type FeaturedProductsQuery = { featuredProducts: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
 
 export type CategoriesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1215,6 +1244,18 @@ export type CollectionQueryVariables = Exact<{
 
 export type CollectionQuery = { collection: { id: number, slug: string, name: string, description: string | null, image_url: string | null, ends_at: string | null, product_count: number } };
 
+export type GlazesQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GlazesQuery = { glazes: Array<{ description: string, variation_note: string | null, id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null }> };
+
+export type GlazeQueryVariables = Exact<{
+  slug: string;
+}>;
+
+
+export type GlazeQuery = { glaze: { description: string, variation_note: string | null, id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null, pieces: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> } };
+
 export type SiteSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1231,7 +1272,7 @@ export type CreateCustomizationUploadMutation = { createCustomizationUpload: { u
 export type WishlistQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type WishlistQuery = { wishlist: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
+export type WishlistQuery = { wishlist: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
 
 export type WishlistIdsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -1319,6 +1360,15 @@ export const AddressFieldsFragmentDoc = gql`
   is_default
 }
     `;
+export const GlazeCardFragmentDoc = gql`
+    fragment GlazeCard on Glaze {
+  id
+  slug
+  name
+  color_code
+  swatch_url
+}
+    `;
 export const ProductCardFragmentDoc = gql`
     fragment ProductCard on Product {
   id
@@ -1329,6 +1379,9 @@ export const ProductCardFragmentDoc = gql`
   material
   color_name
   color_code
+  glaze {
+    ...GlazeCard
+  }
   image_urls
   stock
   is_active
@@ -1690,7 +1743,8 @@ export const CartDocument = gql`
   }
 }
     ${CartFieldsFragmentDoc}
-${ProductCardFragmentDoc}`;
+${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useCartQuery__
@@ -1757,7 +1811,8 @@ export const AddToCartDocument = gql`
   }
 }
     ${CartFieldsFragmentDoc}
-${ProductCardFragmentDoc}`;
+${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useAddToCartMutation__
@@ -1789,7 +1844,8 @@ export const UpdateCartItemDocument = gql`
   }
 }
     ${CartFieldsFragmentDoc}
-${ProductCardFragmentDoc}`;
+${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useUpdateCartItemMutation__
@@ -1822,7 +1878,8 @@ export const RemoveCartItemDocument = gql`
   }
 }
     ${CartFieldsFragmentDoc}
-${ProductCardFragmentDoc}`;
+${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useRemoveCartItemMutation__
@@ -1854,7 +1911,8 @@ export const ClearCartDocument = gql`
   }
 }
     ${CartFieldsFragmentDoc}
-${ProductCardFragmentDoc}`;
+${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useClearCartMutation__
@@ -2498,6 +2556,11 @@ export const ProductsDocument = gql`
         label
         count
       }
+      glazes {
+        value
+        label
+        count
+      }
       price_min
       price_max
       active_count
@@ -2505,7 +2568,8 @@ export const ProductsDocument = gql`
     }
   }
 }
-    ${ProductCardFragmentDoc}`;
+    ${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useProductsQuery__
@@ -2540,7 +2604,17 @@ export const ProductDocument = gql`
     ...ProductCard
     description
     dimensions
+    capacity_ml
+    height_cm
+    diameter_cm
+    weight_g
+    maker_note
     care_notes
+    glaze {
+      ...GlazeCard
+      description
+      variation_note
+    }
     sales_count
     categories {
       id
@@ -2562,7 +2636,8 @@ export const ProductDocument = gql`
     }
   }
 }
-    ${ProductCardFragmentDoc}`;
+    ${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useProductQuery__
@@ -2597,7 +2672,8 @@ export const RelatedProductsDocument = gql`
     ...ProductCard
   }
 }
-    ${ProductCardFragmentDoc}`;
+    ${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useRelatedProductsQuery__
@@ -2633,7 +2709,8 @@ export const FeaturedProductsDocument = gql`
     ...ProductCard
   }
 }
-    ${ProductCardFragmentDoc}`;
+    ${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useFeaturedProductsQuery__
@@ -2784,6 +2861,83 @@ export function useCollectionLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryH
 export type CollectionQueryHookResult = ReturnType<typeof useCollectionQuery>;
 export type CollectionLazyQueryHookResult = ReturnType<typeof useCollectionLazyQuery>;
 export type CollectionQueryResult = ApolloReactCommon.QueryResult<CollectionQuery, CollectionQueryVariables>;
+export const GlazesDocument = gql`
+    query Glazes {
+  glazes {
+    ...GlazeCard
+    description
+    variation_note
+  }
+}
+    ${GlazeCardFragmentDoc}`;
+
+/**
+ * __useGlazesQuery__
+ *
+ * To run a query within a React component, call `useGlazesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGlazesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGlazesQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGlazesQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<GlazesQuery, GlazesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GlazesQuery, GlazesQueryVariables>(GlazesDocument, options);
+      }
+export function useGlazesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GlazesQuery, GlazesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GlazesQuery, GlazesQueryVariables>(GlazesDocument, options);
+        }
+export type GlazesQueryHookResult = ReturnType<typeof useGlazesQuery>;
+export type GlazesLazyQueryHookResult = ReturnType<typeof useGlazesLazyQuery>;
+export type GlazesQueryResult = ApolloReactCommon.QueryResult<GlazesQuery, GlazesQueryVariables>;
+export const GlazeDocument = gql`
+    query Glaze($slug: String!) {
+  glaze(slug: $slug) {
+    ...GlazeCard
+    description
+    variation_note
+    pieces {
+      ...ProductCard
+    }
+  }
+}
+    ${GlazeCardFragmentDoc}
+${ProductCardFragmentDoc}`;
+
+/**
+ * __useGlazeQuery__
+ *
+ * To run a query within a React component, call `useGlazeQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGlazeQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGlazeQuery({
+ *   variables: {
+ *      slug: // value for 'slug'
+ *   },
+ * });
+ */
+export function useGlazeQuery(baseOptions: ApolloReactHooks.QueryHookOptions<GlazeQuery, GlazeQueryVariables> & ({ variables: GlazeQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<GlazeQuery, GlazeQueryVariables>(GlazeDocument, options);
+      }
+export function useGlazeLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<GlazeQuery, GlazeQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<GlazeQuery, GlazeQueryVariables>(GlazeDocument, options);
+        }
+export type GlazeQueryHookResult = ReturnType<typeof useGlazeQuery>;
+export type GlazeLazyQueryHookResult = ReturnType<typeof useGlazeLazyQuery>;
+export type GlazeQueryResult = ApolloReactCommon.QueryResult<GlazeQuery, GlazeQueryVariables>;
 export const SiteSettingsDocument = gql`
     query SiteSettings {
   siteSettings {
@@ -2874,7 +3028,8 @@ export const WishlistDocument = gql`
     ...ProductCard
   }
 }
-    ${ProductCardFragmentDoc}`;
+    ${ProductCardFragmentDoc}
+${GlazeCardFragmentDoc}`;
 
 /**
  * __useWishlistQuery__
