@@ -117,8 +117,6 @@ interface LegacyCartItem {
 }
 
 interface LegacyAbout {
-  storyTitle?: string;
-  storySubtitle?: string;
   storyContent?: string[];
   values?: { title: string; description: string }[];
   processSteps?: { title: string; description: string }[];
@@ -176,6 +174,10 @@ const LEAD_PHOTOS: Record<string, string> = {
   "stripe-sipper": `${STUDIO_CDN}products/1770105651540-aixd99-1000004761.jpg`,
   "zebra-mug": `${STUDIO_CDN}products/1770036892017-b3921h-1000004738.jpg`,
 };
+
+// The legacy about heading was title case marketing copy; the house voice is plain and sentence case.
+const ABOUT_TITLE = "Where clay meets verses";
+const ABOUT_SUBTITLE = "A small studio in Sangli, throwing since 2025.";
 
 // The legacy admin typed care notes by hand; this is the studio's vocabulary, keyed by what was typed.
 const CARE_NOTES: Record<string, string> = {
@@ -625,7 +627,7 @@ function toAboutSections(about: LegacyAbout): PrismaJson.ContentSections {
   const sections: PrismaJson.ContentSections = [];
   if (about.storyContent?.length) {
     sections.push({
-      heading: about.storyTitle ?? "Our story",
+      heading: "Our story",
       body: about.storyContent.join("\n\n"),
       items: [],
     });
@@ -660,8 +662,8 @@ async function importContent(
 ): Promise<void> {
   if (about) {
     const data = {
-      title: about.storyTitle ?? "About the studio",
-      subtitle: about.storySubtitle ?? null,
+      title: ABOUT_TITLE,
+      subtitle: ABOUT_SUBTITLE,
       hero_image_url: toStudioPhoto(aboutHero),
       sections: toAboutSections(about),
     };
