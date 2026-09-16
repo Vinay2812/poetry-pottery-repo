@@ -1,5 +1,7 @@
 import { getSiteSettings } from "@/lib/data/site-settings";
 
+import { SkipLink } from "@/components/layout/SkipLink";
+
 import { SignInPromptContainer } from "@/features/auth";
 import { CartProvider } from "@/features/cart";
 import { NewsletterFormContainer } from "@/features/content";
@@ -21,6 +23,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
   return (
     <CartProvider>
       <WishlistProvider>
+        <SkipLink targetId="main" />
         {settings.announcement_text && (
           <AnnouncementBar
             text={settings.announcement_text}
@@ -28,7 +31,14 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
           />
         )}
         <SiteHeaderContainer />
-        <main className="flex flex-1 flex-col pb-16 lg:pb-0">{children}</main>
+        {/* The skip link's target takes focus but draws no outline of its own. */}
+        <main
+          id="main"
+          tabIndex={-1}
+          className="flex flex-1 flex-col pb-16 focus:outline-none lg:pb-0"
+        >
+          {children}
+        </main>
         <SiteFooter
           shopLinks={FOOTER_SHOP_LINKS}
           studioLinks={FOOTER_STUDIO_LINKS}
