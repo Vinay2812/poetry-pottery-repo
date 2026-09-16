@@ -19,6 +19,7 @@ import {
   withAmbientTransactions,
 } from "@/prisma/prisma.service";
 import { RedisService } from "@/redis/redis.service";
+import { StorageService } from "@/storage/storage.service";
 
 class RedisStub {
   getOrSet<T>(
@@ -37,6 +38,12 @@ class RedisStub {
 class MailStub {
   enqueue(): Promise<void> {
     return Promise.resolve();
+  }
+}
+
+class StorageStub {
+  isOwnUrl(): boolean {
+    return true;
   }
 }
 
@@ -71,6 +78,7 @@ export async function createHarness(): Promise<Harness> {
       { provide: RedisService, useClass: RedisStub },
       { provide: MailService, useClass: MailStub },
       { provide: SearchService, useClass: SearchStub },
+      { provide: StorageService, useClass: StorageStub },
       SettingsService,
       CartService,
       OrdersService,
