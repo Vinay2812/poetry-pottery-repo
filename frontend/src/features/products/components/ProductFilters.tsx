@@ -4,6 +4,14 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { formatInr } from "@/lib/format";
 
+// The shared slider ships a sage range and pill ends; the shelf wants an ash rail
+// with an ink handle, and the parts are only reachable from the root.
+const PRICE_SLIDER_CLASS =
+  "[&_[data-slot=slider-track]]:rounded-none [&_[data-slot=slider-track]]:bg-ash " +
+  "[&_[data-slot=slider-range]]:bg-smoke " +
+  "[&_[data-slot=slider-thumb]]:rounded-none [&_[data-slot=slider-thumb]]:border-ink " +
+  "[&_[data-slot=slider-thumb]]:bg-ink [&_[data-slot=slider-thumb]]:ring-ink/30";
+
 interface FilterOption {
   value: string;
   label: string;
@@ -120,6 +128,7 @@ export function ProductFilters({
             Price
           </h3>
           <Slider
+            className={PRICE_SLIDER_CLASS}
             min={priceFloor}
             max={priceCeiling}
             step={50}

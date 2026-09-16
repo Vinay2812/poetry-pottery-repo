@@ -4,6 +4,7 @@ import { OptionGroupKind, ProductSort } from "@/graphql/generated/graphql";
 
 import {
   applyFilterAction,
+  clampPriceRange,
   computeUnitPrice,
   isPhotoUploadPending,
   MAX_REFERENCE_PHOTO_BYTES,
@@ -477,5 +478,17 @@ describe("isPhotoUploadPending", () => {
     expect(
       isPhotoUploadPending([photo({ url: null, error: "Upload failed" })]),
     ).toBe(false);
+  });
+});
+
+describe("clampPriceRange", () => {
+  it("pulls a range from the url inside the bounds the shelf offers", () => {
+    expect(clampPriceRange([250, 25000], 400, 15000)).toEqual([400, 15000]);
+    expect(clampPriceRange([600, 3800], 400, 15000)).toEqual([600, 3800]);
+  });
+
+  it("keeps the handles in order when the bounds collapse", () => {
+    expect(clampPriceRange([900, 300], 400, 15000)).toEqual([900, 900]);
+    expect(clampPriceRange([200, 800], 600, 600)).toEqual([600, 600]);
   });
 });

@@ -336,6 +336,18 @@ export function validateSelections(
   return issues;
 }
 
+// A url can name a price the shelf no longer reaches; the handles and the labels
+// under them have to agree on the bounds the slider actually offers.
+export function clampPriceRange(
+  range: [number, number],
+  floor: number,
+  ceiling: number,
+): [number, number] {
+  const low = Math.min(Math.max(range[0], floor), ceiling);
+  const high = Math.max(Math.min(range[1], ceiling), low);
+  return [low, high];
+}
+
 export function toProductPath(slug: string): string {
   return `/products/${slug}`;
 }

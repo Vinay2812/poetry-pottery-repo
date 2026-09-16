@@ -180,6 +180,14 @@ describe("ProductsService", () => {
         where: { AND: [availableProductWhere()] },
       }),
     );
+    // The price bounds follow the other filters, so the slider spans what is on show.
+    expect(prismaMock.product.aggregate).toHaveBeenCalledWith(
+      containing({
+        where: {
+          AND: [availableProductWhere(), { material: { in: ["Stoneware"] } }],
+        },
+      }),
+    );
     // Options come from the whole catalogue; only their counts follow the filters.
     expect(prismaMock.category.findMany).toHaveBeenCalledWith(
       containing({

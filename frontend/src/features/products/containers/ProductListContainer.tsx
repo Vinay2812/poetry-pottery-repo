@@ -32,6 +32,7 @@ import { ShelfTabs } from "@/features/products/components/ShelfTabs";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
   applyFilterAction,
+  clampPriceRange,
   countActiveFilters,
   type FilterAction,
   parseFilters,
@@ -231,10 +232,14 @@ export function ProductListContainer({
 
   const priceFloor = facets?.price_min ?? 0;
   const priceCeiling = facets?.price_max ?? 0;
-  const priceRange: [number, number] = priceDraft ?? [
-    filters.minPrice ?? priceFloor,
-    filters.maxPrice ?? priceCeiling,
-  ];
+  const priceRange = clampPriceRange(
+    priceDraft ?? [
+      filters.minPrice ?? priceFloor,
+      filters.maxPrice ?? priceCeiling,
+    ],
+    priceFloor,
+    priceCeiling,
+  );
   const activeFilterCount = countActiveFilters(filters);
 
   const filterPanel = facets && (

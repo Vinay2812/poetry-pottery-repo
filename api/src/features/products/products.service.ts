@@ -208,6 +208,7 @@ export class ProductsService {
         categories: scoped("category"),
         collections: scoped("collection"),
         materials: scoped("material"),
+        prices: scoped("price"),
       }),
       this.prisma.product.count({
         where: { AND: [availableProductWhere(now), ...tabWhere] },
@@ -372,6 +373,7 @@ export class ProductsService {
     categories: Prisma.ProductWhereInput;
     collections: Prisma.ProductWhereInput;
     materials: Prisma.ProductWhereInput;
+    prices: Prisma.ProductWhereInput;
   }): Promise<Omit<ProductFacets, "active_count" | "archive_count">> {
     const [categories, collections, materialNames, materialCounts, prices] =
       await Promise.all([
@@ -401,7 +403,9 @@ export class ProductsService {
           _count: { _all: true },
           orderBy: { material: "asc" },
         }),
+        // Bounds for the slider, so they span the pieces on show rather than every row.
         this.prisma.product.aggregate({
+          where: count.prices,
           _min: { price: true },
           _max: { price: true },
         }),
