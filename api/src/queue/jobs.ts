@@ -8,6 +8,8 @@ export const DEAD_LETTER_QUEUE = "poetry.dead-letters";
 export const jobSchemas = {
   "search.index-product": z.object({ productId: z.number().int() }),
   "search.index-event": z.object({ eventId: z.number().int() }),
+  // Fired when a piece goes from sold out to back on the shelf.
+  "notify.back-in-stock": z.object({ productId: z.number().int() }),
   "mail.send": z.object({
     to: z.string().min(1),
     subject: z.string().min(1),

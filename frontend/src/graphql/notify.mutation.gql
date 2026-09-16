@@ -1,0 +1,10 @@
+mutation NotifyWhenBackInStock($productId: Int!, $email: String!) {
+  notifyWhenBackInStock(product_id: $productId, email: $email) {
+    email
+    was_already_waiting
+  }
+}
+
+mutation StopBatchNotification($token: String!) {
+  stopBatchNotification(token: $token)
+}

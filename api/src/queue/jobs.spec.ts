@@ -34,6 +34,18 @@ describe("search indexing job payloads", () => {
   });
 });
 
+describe("back in stock job payload", () => {
+  it("accepts an integer product id and nothing else", () => {
+    expect(jobSchemas["notify.back-in-stock"].parse({ productId: 12 })).toEqual(
+      { productId: 12 },
+    );
+    expect(() =>
+      jobSchemas["notify.back-in-stock"].parse({ productId: "12" }),
+    ).toThrow();
+    expect(() => jobSchemas["notify.back-in-stock"].parse({})).toThrow();
+  });
+});
+
 describe("mail send job payload", () => {
   const message = {
     to: "potter@example.com",
@@ -78,6 +90,7 @@ describe("queue topology", () => {
   const jobNames: JobName[] = [
     "search.index-product",
     "search.index-event",
+    "notify.back-in-stock",
     "mail.send",
   ];
 
@@ -86,6 +99,7 @@ describe("queue topology", () => {
     expect(jobNames.map(queueNameFor)).toEqual([
       "poetry.search.index-product",
       "poetry.search.index-event",
+      "poetry.notify.back-in-stock",
       "poetry.mail.send",
     ]);
   });

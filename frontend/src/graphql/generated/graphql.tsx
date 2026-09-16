@@ -57,6 +57,12 @@ export type AddressInput = {
   state: Scalars['String']['input'];
 };
 
+export type BatchNotificationResult = {
+  __typename?: 'BatchNotificationResult';
+  email: Scalars['String']['output'];
+  was_already_waiting: Scalars['Boolean']['output'];
+};
+
 export type BookWorkshopInput = {
   config_slug: Scalars['String']['input'];
   hours: Scalars['Int']['input'];
@@ -327,12 +333,14 @@ export type Mutation = {
   createCustomizationUpload: UploadTicket;
   deleteAddress: Scalars['Boolean']['output'];
   markContactMessageRead: ContactMessage;
+  notifyWhenBackInStock: BatchNotificationResult;
   placeOrder: Order;
   registerForEvent: Registration;
   removeCartItem: Cart;
   rescheduleWorkshopBooking: WorkshopBooking;
   sendContactMessage: Scalars['Boolean']['output'];
   setDefaultAddress: Address;
+  stopBatchNotification: Scalars['Boolean']['output'];
   subscribeToNewsletter: NewsletterResult;
   toggleWishlist: WishlistToggleResult;
   unsubscribeFromNewsletter: Scalars['Boolean']['output'];
@@ -396,6 +404,12 @@ export type MutationMarkContactMessageReadArgs = {
 };
 
 
+export type MutationNotifyWhenBackInStockArgs = {
+  email: Scalars['String']['input'];
+  product_id: Scalars['Int']['input'];
+};
+
+
 export type MutationPlaceOrderArgs = {
   input: PlaceOrderInput;
 };
@@ -423,6 +437,11 @@ export type MutationSendContactMessageArgs = {
 
 export type MutationSetDefaultAddressArgs = {
   id: Scalars['Int']['input'];
+};
+
+
+export type MutationStopBatchNotificationArgs = {
+  token: Scalars['String']['input'];
 };
 
 
@@ -1179,6 +1198,21 @@ export type CancelRegistrationMutationVariables = Exact<{
 
 
 export type CancelRegistrationMutation = { cancelRegistration: { id: string, seats: number, unit_price: number, discount: number, total: number, status: RegistrationStatus, note: string | null, cancel_reason: string | null, can_cancel: boolean, created_at: string, approved_at: string | null, confirmed_at: string | null, rejected_at: string | null, cancelled_at: string | null, event: { address: string, id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, instructor: string | null, image_url: string, rating_avg: number, rating_count: number, is_past: boolean } } };
+
+export type NotifyWhenBackInStockMutationVariables = Exact<{
+  productId: number;
+  email: string;
+}>;
+
+
+export type NotifyWhenBackInStockMutation = { notifyWhenBackInStock: { email: string, was_already_waiting: boolean } };
+
+export type StopBatchNotificationMutationVariables = Exact<{
+  token: string;
+}>;
+
+
+export type StopBatchNotificationMutation = { stopBatchNotification: boolean };
 
 export type OrderFieldsFragment = { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, gift_note: string | null, hide_prices: boolean, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, care_notes: Array<string>, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }>, studio_notes: Array<{ id: number, body: string, image_url: string | null, created_at: string }> };
 
@@ -2381,6 +2415,68 @@ export function useCancelRegistrationMutation(baseOptions?: ApolloReactHooks.Mut
       }
 export type CancelRegistrationMutationHookResult = ReturnType<typeof useCancelRegistrationMutation>;
 export type CancelRegistrationMutationResult = ApolloReactCommon.MutationResult<CancelRegistrationMutation>;
+export const NotifyWhenBackInStockDocument = gql`
+    mutation NotifyWhenBackInStock($productId: Int!, $email: String!) {
+  notifyWhenBackInStock(product_id: $productId, email: $email) {
+    email
+    was_already_waiting
+  }
+}
+    `;
+
+/**
+ * __useNotifyWhenBackInStockMutation__
+ *
+ * To run a mutation, you first call `useNotifyWhenBackInStockMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useNotifyWhenBackInStockMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [notifyWhenBackInStockMutation, { data, loading, error }] = useNotifyWhenBackInStockMutation({
+ *   variables: {
+ *      productId: // value for 'productId'
+ *      email: // value for 'email'
+ *   },
+ * });
+ */
+export function useNotifyWhenBackInStockMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<NotifyWhenBackInStockMutation, NotifyWhenBackInStockMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<NotifyWhenBackInStockMutation, NotifyWhenBackInStockMutationVariables>(NotifyWhenBackInStockDocument, options);
+      }
+export type NotifyWhenBackInStockMutationHookResult = ReturnType<typeof useNotifyWhenBackInStockMutation>;
+export type NotifyWhenBackInStockMutationResult = ApolloReactCommon.MutationResult<NotifyWhenBackInStockMutation>;
+export const StopBatchNotificationDocument = gql`
+    mutation StopBatchNotification($token: String!) {
+  stopBatchNotification(token: $token)
+}
+    `;
+
+/**
+ * __useStopBatchNotificationMutation__
+ *
+ * To run a mutation, you first call `useStopBatchNotificationMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useStopBatchNotificationMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [stopBatchNotificationMutation, { data, loading, error }] = useStopBatchNotificationMutation({
+ *   variables: {
+ *      token: // value for 'token'
+ *   },
+ * });
+ */
+export function useStopBatchNotificationMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<StopBatchNotificationMutation, StopBatchNotificationMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<StopBatchNotificationMutation, StopBatchNotificationMutationVariables>(StopBatchNotificationDocument, options);
+      }
+export type StopBatchNotificationMutationHookResult = ReturnType<typeof useStopBatchNotificationMutation>;
+export type StopBatchNotificationMutationResult = ApolloReactCommon.MutationResult<StopBatchNotificationMutation>;
 export const CheckoutQuoteDocument = gql`
     query CheckoutQuote($input: CheckoutQuoteInput) {
   checkoutQuote(input: $input) {

@@ -37,6 +37,7 @@ model User {
   event_registrations EventRegistration[]
   workshop_bookings   WorkshopBooking[]
   newsletter          NewsletterSubscriber?
+  batch_notifications BatchNotification[]
 
   @@map("users")
 }
@@ -164,6 +165,8 @@ model Product {
   wishlist_items WishlistItem[]
   order_items    OrderItem[]
   reviews        Review[]
+
+  batch_notifications BatchNotification[]
 
   @@index([collection_id])
   @@index([glaze_id])
@@ -610,6 +613,25 @@ model NewsletterSubscriber {
   user User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
 
   @@map("newsletter_subscribers")
+}
+
+// Someone waiting for a sold-out piece to come out of the next kiln load.
+model BatchNotification {
+  id          Int       @id @default(autoincrement())
+  email       String
+  product_id  Int
+  user_id     Int?
+  token       String    @unique @default(nanoid(24))
+  notified_at DateTime?
+
+  created_at DateTime @default(now())
+
+  product Product @relation(fields: [product_id], references: [id], onDelete: Cascade)
+  user    User?   @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@unique([email, product_id])
+  @@index([product_id, notified_at])
+  @@map("batch_notifications")
 }
 
 model ContactMessage {

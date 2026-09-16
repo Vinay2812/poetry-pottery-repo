@@ -40,6 +40,11 @@ input AddressInput {
   state: String!
 }
 
+type BatchNotificationResult {
+  email: String!
+  was_already_waiting: Boolean!
+}
+
 input BookWorkshopInput {
   config_slug: String!
   hours: Int!
@@ -296,12 +301,14 @@ type Mutation {
   createCustomizationUpload(content_type: String!, size: Int!): UploadTicket!
   deleteAddress(id: Int!): Boolean!
   markContactMessageRead(id: Int!): ContactMessage!
+  notifyWhenBackInStock(email: String!, product_id: Int!): BatchNotificationResult!
   placeOrder(input: PlaceOrderInput!): Order!
   registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
   rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
   sendContactMessage(input: ContactMessageInput!): Boolean!
   setDefaultAddress(id: Int!): Address!
+  stopBatchNotification(token: String!): Boolean!
   subscribeToNewsletter(email: String!): NewsletterResult!
   toggleWishlist(product_id: Int!): WishlistToggleResult!
   unsubscribeFromNewsletter(token: String!): Boolean!

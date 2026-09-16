@@ -6,6 +6,7 @@ import { CartService } from "@/features/cart/cart.service";
 import { ContactService } from "@/features/contact/contact.service";
 import { EventsService } from "@/features/events/events.service";
 import { NewsletterService } from "@/features/newsletter/newsletter.service";
+import { NotificationsService } from "@/features/notifications/notifications.service";
 import { OrdersService } from "@/features/orders/orders.service";
 import { SearchService } from "@/features/search/search.service";
 import { SettingsService } from "@/features/settings/settings.service";
@@ -21,6 +22,7 @@ import {
   PrismaService,
   withAmbientTransactions,
 } from "@/prisma/prisma.service";
+import { QueueService } from "@/queue/queue.service";
 import { RedisService } from "@/redis/redis.service";
 import { StorageService } from "@/storage/storage.service";
 
@@ -78,6 +80,26 @@ class SearchStub {
   }
 }
 
+// No broker in the sandbox, so a test reads the jobs a service meant to publish.
+export class QueueRecorder {
+  readonly published: { job: string; payload: unknown }[] = [];
+
+  publish(job: string, payload: unknown): Promise<void> {
+    this.published.push({ job, payload });
+    return Promise.resolve();
+  }
+
+  reset(): void {
+    this.published.length = 0;
+  }
+
+  productIdsFor(job: string): number[] {
+    return this.published
+      .filter((entry) => entry.job === job)
+      .map((entry) => (entry.payload as { productId: number }).productId);
+  }
+}
+
 export interface Harness {
   prisma: PrismaService;
   cart: CartService;
@@ -86,6 +108,7 @@ export interface Harness {
   workshops: WorkshopsService;
   wishlist: WishlistService;
   newsletter: NewsletterService;
+  notifications: NotificationsService;
   contact: ContactService;
   close: () => Promise<void>;
 }
@@ -93,6 +116,8 @@ export interface Harness {
 export interface HarnessOptions {
   // Pass a recorder when the test needs to count the mail a service sends.
   mail?: MailRecorder;
+  // Pass one when the test needs to read the jobs a service published.
+  queue?: QueueRecorder;
 }
 
 // Real services and a real PrismaService against the sandbox database; only the outside world is stubbed.
@@ -110,7 +135,9 @@ export async function createHarness(
       { provide: MailService, useValue: options.mail ?? new MailStub() },
       { provide: SearchService, useClass: SearchStub },
       { provide: StorageService, useClass: StorageStub },
+      { provide: QueueService, useValue: options.queue ?? new QueueRecorder() },
       SettingsService,
+      NotificationsService,
       CartService,
       OrdersService,
       EventsService,
@@ -129,6 +156,7 @@ export async function createHarness(
     workshops: moduleRef.get(WorkshopsService),
     wishlist: moduleRef.get(WishlistService),
     newsletter: moduleRef.get(NewsletterService),
+    notifications: moduleRef.get(NotificationsService),
     contact: moduleRef.get(ContactService),
     close: () => moduleRef.close(),
   };
@@ -136,6 +164,7 @@ export async function createHarness(
 
 const TRUNCATED = [
   "cart_items",
+  "order_notes",
   "order_items",
   "orders",
   "coupons",
@@ -150,6 +179,7 @@ const TRUNCATED = [
   "wishlist_items",
   "product_options",
   "product_option_groups",
+  "batch_notifications",
   "products",
   "collections",
   "addresses",

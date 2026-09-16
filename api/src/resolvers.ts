@@ -13,4 +13,5 @@ export { EventsResolver } from "@/features/events/events.resolver";
 export { WorkshopsResolver } from "@/features/workshops/workshops.resolver";
 export { ContentResolver } from "@/features/content/content.resolver";
 export { NewsletterResolver } from "@/features/newsletter/newsletter.resolver";
+export { NotificationsResolver } from "@/features/notifications/notifications.resolver";
 export { ContactResolver } from "@/features/contact/contact.resolver";

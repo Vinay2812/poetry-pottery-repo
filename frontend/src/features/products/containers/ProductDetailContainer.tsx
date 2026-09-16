@@ -14,6 +14,7 @@ import { KilnLabels, type KilnLabel } from "@/components/motion/KilnLabels";
 import { Reveal } from "@/components/motion/Reveal";
 
 import { useAddToCart } from "@/features/cart/hooks";
+import { canWatchPiece, NextBatchContainer } from "@/features/notify";
 import { useReferencePhotos } from "@/features/products/hooks";
 import { ArchiveNotice } from "@/features/products/components/ArchiveNotice";
 import { GlazeNote } from "@/features/products/components/GlazeNote";
@@ -363,6 +364,15 @@ export function ProductDetailContainer({
                 ) : undefined
               }
             />
+          )}
+          {canWatchPiece(
+            product.stock,
+            product.is_customizable,
+            isArchived,
+          ) && (
+            <div className="mt-6">
+              <NextBatchContainer productId={product.id} />
+            </div>
           )}
         </div>
       </div>

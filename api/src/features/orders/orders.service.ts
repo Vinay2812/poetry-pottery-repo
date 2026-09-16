@@ -23,6 +23,8 @@ import {
   productListInclude,
   toProduct,
 } from "@/features/products/products.service";
+import { NotificationsService } from "@/features/notifications/notifications.service";
+import { cameBackInStock } from "@/features/notifications/restock";
 import { SettingsService } from "@/features/settings/settings.service";
 import { toCareLines } from "./care";
 import { checkCoupon, normaliseCouponCode } from "./coupons";
@@ -121,6 +123,7 @@ export class OrdersService {
     private readonly settings: SettingsService,
     private readonly mail: MailService,
     private readonly storage: StorageService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // Same maths as placeOrder, so the checkout page never shows a total the order will not match.
@@ -392,7 +395,9 @@ export class OrdersService {
         `An order cannot move from ${current.status.toLowerCase()} to ${next.toLowerCase()}`,
       );
     }
-    return this.prisma.withTransaction(async () => {
+    // Filled inside the transaction, announced once it has committed.
+    const restocked: number[] = [];
+    const row = await this.prisma.withTransaction(async () => {
       const stamp = STATUS_TIMESTAMP[next];
       // Predicated on the status we read, so two concurrent transitions cannot both release stock.
       const moved = await this.prisma.order.updateMany({
@@ -412,7 +417,7 @@ export class OrdersService {
         STOCK_HOLDING.includes(current.status) && !STOCK_HOLDING.includes(next);
       if (releasesStock) {
         for (const item of current.items) {
-          await this.prisma.product.update({
+          const restored = await this.prisma.product.update({
             where: { id: item.product_id },
             data: {
               sales_count: { decrement: item.quantity },
@@ -420,7 +425,14 @@ export class OrdersService {
                 ? {}
                 : { stock: { increment: item.quantity } }),
             },
+            select: { id: true, stock: true },
           });
+          if (
+            !item.product.is_customizable &&
+            cameBackInStock(restored.stock - item.quantity, restored.stock)
+          ) {
+            restocked.push(restored.id);
+          }
         }
         if (current.coupon_id !== null) {
           await this.prisma.coupon.updateMany({
@@ -434,6 +446,10 @@ export class OrdersService {
         include: orderInclude,
       });
     });
+    for (const productId of restocked) {
+      await this.notifications.announceRestock(productId);
+    }
+    return row;
   }
 
   // Admin only: the note is written for the customer, so it goes out as one mail straight away.
