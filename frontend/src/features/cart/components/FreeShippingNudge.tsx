@@ -1,38 +1,45 @@
 import { formatInr } from "@/lib/format";
 
+import { toFreeShippingProgress } from "@/features/cart/types";
+
 export interface FreeShippingNudgeProps {
   subtotal: number;
   threshold: number;
 }
 
-// One line and one hairline: how close this cart is to free shipping.
+// A meter while there is a gap to close, one line once it is closed. Never a bare rule.
 export function FreeShippingNudge({
   subtotal,
   threshold,
 }: FreeShippingNudgeProps) {
-  const remaining = Math.max(0, threshold - subtotal);
-  const progress =
-    threshold > 0
-      ? Math.min(100, Math.round((subtotal / threshold) * 100))
-      : 100;
+  const { hasEarnedIt, percent, label } = toFreeShippingProgress(
+    subtotal,
+    threshold,
+    formatInr,
+  );
+
+  if (hasEarnedIt) {
+    return <p className="text-[13px] text-muted-foreground">{label}</p>;
+  }
+
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[13px] text-muted-foreground">
-        {remaining > 0
-          ? `${formatInr(remaining)} more for free shipping.`
-          : "Shipping is free on this order."}
+      <p className="flex justify-between gap-3 text-[13px] text-muted-foreground">
+        <span>{label}</span>
+        <span className="tnum">{formatInr(threshold)}</span>
       </p>
       <div
-        className="h-px w-full bg-ash"
+        className="h-0.5 w-full bg-ash"
         role="progressbar"
-        aria-valuenow={progress}
+        aria-label="Progress to free shipping"
+        aria-valuenow={percent}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="Progress to free shipping"
+        aria-valuetext={label}
       >
         <div
           className="h-full bg-ink transition-[width] duration-500 ease-out"
-          style={{ width: `${progress}%` }}
+          style={{ width: `${percent}%` }}
         />
       </div>
     </div>

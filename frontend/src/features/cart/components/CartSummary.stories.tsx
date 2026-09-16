@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { atViewport } from "@/lib/storybook/viewports";
 import { CartSummary } from "./CartSummary";
+import { FreeShippingNudge } from "./FreeShippingNudge";
 
 const meta = {
   title: "Features/Cart/CartSummary",
@@ -31,6 +32,12 @@ export const Default: Story = {};
 
 export const FreeShipping: Story = {
   args: { shippingFee: 0, total: 2300 },
+};
+
+export const WithFreeShippingMeter: Story = {
+  args: {
+    meter: <FreeShippingNudge subtotal={2300} threshold={2500} />,
+  },
 };
 
 export const CheckoutDisabled: Story = {

@@ -34,6 +34,36 @@ export function canPredictShipping(
   return !shipsFreeNow || shipsFreeNext;
 }
 
+export interface FreeShippingProgress {
+  hasEarnedIt: boolean;
+  percent: number;
+  label: string;
+}
+
+// One sentence and one number, so the meter never has to be read off a bar.
+export function toFreeShippingProgress(
+  subtotal: number,
+  threshold: number,
+  format: (amount: number) => string,
+): FreeShippingProgress {
+  const remaining = Math.max(0, threshold - subtotal);
+  if (threshold <= 0 || remaining === 0) {
+    return {
+      hasEarnedIt: true,
+      percent: 100,
+      label: "Shipping is free on this order.",
+    };
+  }
+  return {
+    hasEarnedIt: false,
+    percent: Math.min(
+      100,
+      Math.max(0, Math.round((subtotal / threshold) * 100)),
+    ),
+    label: `${format(remaining)} more for free shipping.`,
+  };
+}
+
 export type CartData = CartFieldsFragment;
 
 // Both the badge and the lines are server-owned totals, so every write reads them back.

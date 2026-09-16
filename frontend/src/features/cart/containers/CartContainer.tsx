@@ -87,14 +87,16 @@ export function CartContainer() {
             ))}
           </ul>
           <div className="flex flex-col gap-8 lg:sticky lg:top-24">
-            {cart && cart.free_shipping_above !== null && (
-              <FreeShippingNudge
-                subtotal={cart.subtotal}
-                threshold={cart.free_shipping_above}
-              />
-            )}
             {cart && (
               <CartSummary
+                meter={
+                  cart.free_shipping_above !== null ? (
+                    <FreeShippingNudge
+                      subtotal={cart.subtotal}
+                      threshold={cart.free_shipping_above}
+                    />
+                  ) : undefined
+                }
                 subtotal={cart.subtotal}
                 shippingFee={cart.shipping_fee}
                 total={cart.total}

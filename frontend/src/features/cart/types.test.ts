@@ -4,6 +4,7 @@ import {
   applyCartAction,
   canPredictShipping,
   type CartData,
+  toFreeShippingProgress,
   toMaxQuantity,
   toSelectionSummary,
 } from "./types";
@@ -199,5 +200,26 @@ describe("applyCartAction", () => {
 
   it("has nothing to do before the cart loads", () => {
     expect(applyCartAction(null, { kind: "clear" })).toBeNull();
+  });
+});
+
+describe("toFreeShippingProgress", () => {
+  const rupees = (amount: number) => `Rs${amount}`;
+
+  it("names the gap left to close", () => {
+    expect(toFreeShippingProgress(600, 2500, rupees)).toEqual({
+      hasEarnedIt: false,
+      percent: 24,
+      label: "Rs1900 more for free shipping.",
+    });
+  });
+
+  it("confirms free shipping in one line once the threshold is met", () => {
+    expect(toFreeShippingProgress(2500, 2500, rupees)).toEqual({
+      hasEarnedIt: true,
+      percent: 100,
+      label: "Shipping is free on this order.",
+    });
+    expect(toFreeShippingProgress(0, 0, rupees).hasEarnedIt).toBe(true);
   });
 });
