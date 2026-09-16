@@ -6,6 +6,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
+import { safeTimeZone } from "@/lib/timezones";
 
 export type WorkshopConfigData = AdminWorkshopConfigFieldsFragment;
 export type WorkshopTierData = WorkshopConfigData["tiers"][number];
@@ -82,9 +83,10 @@ interface WallClock {
   minute: number;
 }
 
+// Every zone-aware helper funnels through here, so a junk zone degrades rather than throws.
 function readWallClock(instant: Date, timezone: string): WallClock {
   const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: timezone,
+    timeZone: safeTimeZone(timezone),
     hour12: false,
     year: "numeric",
     month: "2-digit",

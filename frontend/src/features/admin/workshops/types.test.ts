@@ -138,6 +138,21 @@ describe("datetime-local conversion", () => {
     expect(fromDateTimeLocal("", IST)).toBe("");
     expect(fromDateTimeLocal("not-a-date", IST)).toBe("");
   });
+
+  it("falls back to IST instead of throwing on a stored zone Intl cannot read", () => {
+    expect(toDateTimeLocal("2026-09-14T03:30:00.000Z", "Asia/Kolkatta")).toBe(
+      toDateTimeLocal("2026-09-14T03:30:00.000Z", IST),
+    );
+    expect(fromDateTimeLocal("2026-09-14T09:00", "Asia/Kolkatta")).toBe(
+      fromDateTimeLocal("2026-09-14T09:00", IST),
+    );
+    expect(toRangeStart("2026-09-14", "Asia/Kolkatta")).toBe(
+      toRangeStart("2026-09-14", IST),
+    );
+    expect(toRangeEnd("2026-09-14", "Asia/Kolkatta")).toBe(
+      toRangeEnd("2026-09-14", IST),
+    );
+  });
 });
 
 describe("date range filters", () => {

@@ -15,6 +15,7 @@ import {
   useUpdateWorkshopConfigMutation,
 } from "@/graphql/generated/graphql";
 
+import { DEFAULT_TIME_ZONE, safeTimeZone } from "@/lib/timezones";
 import type { WorkshopConfigFormValues } from "@/lib/validations/admin/workshop";
 
 import { toErrorMessage, useAdminQueryState } from "@/features/admin/shell";
@@ -79,6 +80,11 @@ export function WorkshopsContainer() {
       ? pickedImage.url
       : (selected?.image_url ?? null);
 
+  // A stored zone Intl cannot read would throw inside every date helper below.
+  const storedTimezone = selected?.timezone ?? DEFAULT_TIME_ZONE;
+  const timezone = safeTimeZone(storedTimezone);
+  const hasBrokenTimezone = timezone !== storedTimezone;
+
   const handleSubmit = useCallback(
     (formValues: WorkshopConfigFormValues) => {
       if (!selected) return;
@@ -135,6 +141,12 @@ export function WorkshopsContainer() {
           />
         }
       />
+      {hasBrokenTimezone && (
+        <p role="alert" className="bg-ash px-3 py-2 text-[13px]">
+          {storedTimezone} is not a timezone this browser knows, so times below
+          are read in {timezone}. Pick a real zone and save to fix it.
+        </p>
+      )}
       <WorkshopConfigForm
         // Switching studios swaps every default, so the form starts over.
         key={selected.id}
@@ -166,14 +178,8 @@ export function WorkshopsContainer() {
         tiers={selected.tiers}
         onRefetch={refetch}
       />
-      <WorkshopBlackoutsContainer
-        configId={selected.id}
-        timezone={selected.timezone}
-      />
-      <WorkshopBookingsContainer
-        configId={selected.id}
-        timezone={selected.timezone}
-      />
+      <WorkshopBlackoutsContainer configId={selected.id} timezone={timezone} />
+      <WorkshopBookingsContainer configId={selected.id} timezone={timezone} />
     </div>
   );
 }

@@ -93,6 +93,18 @@ describe("workshopConfigSchema", () => {
     );
     expect(configError({ timezone: "  " })).toBe("Timezone is required");
   });
+
+  it("rejects a timezone Intl cannot read", () => {
+    expect(configError({ timezone: "Asia/Kolkatta" })).toBe(
+      "Use an IANA zone like Asia/Kolkata",
+    );
+    expect(configError({ timezone: "Mars/Olympus" })).toBe(
+      "Use an IANA zone like Asia/Kolkata",
+    );
+    expect(
+      workshopConfigSchema.safeParse(configValues({ timezone: "UTC" })).success,
+    ).toBe(true);
+  });
 });
 
 function tierError(overrides: Record<string, unknown>): string {

@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 
+import { supportedTimeZones } from "@/lib/timezones";
 import {
   type WorkshopConfigFormValues,
   workshopConfigSchema,
@@ -23,6 +24,8 @@ import {
   toggleWeekday,
   WEEKDAY_LABELS,
 } from "@/features/admin/workshops/types";
+
+const TIME_ZONES = supportedTimeZones();
 
 export interface WorkshopConfigFormProps {
   name: string;
@@ -110,10 +113,17 @@ export function WorkshopConfigForm({
         >
           <Input
             id="workshop-timezone"
+            list="workshop-timezone-options"
+            autoComplete="off"
             className="h-9 text-[13px]"
             aria-invalid={Boolean(errors.timezone)}
             {...register("timezone")}
           />
+          <datalist id="workshop-timezone-options">
+            {TIME_ZONES.map((zone) => (
+              <option key={zone} value={zone} />
+            ))}
+          </datalist>
         </AdminField>
       </div>
 

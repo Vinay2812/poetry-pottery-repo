@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isTimeZone } from "@/lib/timezones";
+
 const TIME_INPUT = /^([01]\d|2[0-3]):[0-5]\d$/;
 
 function wholeNumber(label: string, least: number) {
@@ -25,7 +27,8 @@ export const workshopConfigSchema = z
       .string()
       .trim()
       .min(1, "Timezone is required")
-      .max(60, "Timezone must be 60 characters or fewer"),
+      .max(60, "Timezone must be 60 characters or fewer")
+      .refine(isTimeZone, "Use an IANA zone like Asia/Kolkata"),
     opening_time: z.string().regex(TIME_INPUT, "Opening time is not valid"),
     closing_time: z.string().regex(TIME_INPUT, "Closing time is not valid"),
     slot_minutes: wholeNumber("Slot length", 1),
