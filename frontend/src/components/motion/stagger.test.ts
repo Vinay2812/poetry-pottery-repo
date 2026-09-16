@@ -17,4 +17,8 @@ describe("toRevealDelay", () => {
   it("treats anything before the first card as the first card", () => {
     expect(toRevealDelay(-3)).toEqual({ "--reveal-delay": "0ms" });
   });
+
+  it("rounds a fractional index down to the card it sits on", () => {
+    expect(toRevealDelay(2.9)).toEqual({ "--reveal-delay": "80ms" });
+  });
 });

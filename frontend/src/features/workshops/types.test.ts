@@ -3,15 +3,20 @@ import { describe, expect, it } from "vitest";
 import { RegistrationStatus } from "@/graphql/generated/graphql";
 
 import {
+  addDays,
   applyBookingAction,
   type BookingData,
   daysInMonth,
   formatDayRange,
   formatDateKey,
   formatHourRange,
+  formatHours,
+  formatMonth,
   formatPickedProgress,
   formatSlotLine,
+  formatWheels,
   groupSlotsByDay,
+  isBookingClosed,
   isDayWithinSpan,
   isSlotPickable,
   pickableSlots,
@@ -21,12 +26,19 @@ import {
   slotsNeeded,
   spanDays,
   spanNotice,
+  toBookingPath,
+  toBookingStatusLabel,
+  toBookingStatusTone,
+  toBookingStepIndex,
   toBookingWhenLines,
   toDateKey,
+  isSameSelection,
   togglePicked,
   toMonthGrid,
+  toMonthKey,
   toPickedSlots,
   toWhatsAppSessionMessage,
+  toWorkshopPath,
   type WorkshopDayData,
 } from "./types";
 
@@ -49,6 +61,15 @@ function slot(hour: number, remaining: number, available = true) {
   };
 }
 
+describe("paths", () => {
+  it("builds workshop and booking paths", () => {
+    expect(toWorkshopPath("wheel-throwing")).toBe("/workshops/wheel-throwing");
+    expect(toBookingPath("BK7Q2X9M1KD3")).toBe(
+      "/workshops/bookings/BK7Q2X9M1KD3",
+    );
+  });
+});
+
 describe("calendar helpers", () => {
   it("keys dates in the studio timezone", () => {
     expect(toDateKey("2026-09-12T20:30:00.000Z", "Asia/Kolkata")).toBe(
@@ -57,6 +78,16 @@ describe("calendar helpers", () => {
     expect(shiftMonth("2026-12", 1)).toBe("2027-01");
     expect(daysInMonth("2026-02")).toBe(28);
     expect(formatDateKey("2026-09-13")).toBe("Sun, 13 Sept");
+  });
+
+  it("walks days and months across their boundaries", () => {
+    expect(addDays("2026-09-30", 1)).toBe("2026-10-01");
+    expect(addDays("2026-01-01", -1)).toBe("2025-12-31");
+    expect(addDays("2026-09-13", 0)).toBe("2026-09-13");
+    expect(toMonthKey("2026-09-13")).toBe("2026-09");
+    expect(shiftMonth("2026-01", -1)).toBe("2025-12");
+    expect(daysInMonth("2028-02")).toBe(29);
+    expect(formatMonth("2026-09")).toBe("September 2026");
   });
 
   it("builds a Monday-first grid", () => {
@@ -93,6 +124,37 @@ describe("session helpers", () => {
     expect(quoteSession(null, 3)).toEqual({ subtotal: 0, pieces: 0 });
   });
 
+  it("has no tier for an hour count the studio does not sell", () => {
+    expect(pickTier(tiers, 5)).toBeNull();
+    expect(pickTier([], 1)).toBeNull();
+  });
+
+  it("multiplies whole rupees, from a free seat to a studio buyout", () => {
+    expect(
+      quoteSession({ hours: 1, price_per_person: 0, pieces_per_person: 1 }, 4),
+    ).toEqual({ subtotal: 0, pieces: 4 });
+    expect(quoteSession(pickTier(tiers, 1), 0)).toEqual({
+      subtotal: 0,
+      pieces: 0,
+    });
+    expect(quoteSession(pickTier(tiers, 1), 1)).toEqual({
+      subtotal: 950,
+      pieces: 1,
+    });
+    expect(
+      quoteSession(
+        { hours: 8, price_per_person: 12_500, pieces_per_person: 6 },
+        40,
+      ),
+    ).toEqual({ subtotal: 500_000, pieces: 240 });
+  });
+
+  it("counts the hours a tier needs from the studio's slot length", () => {
+    expect(slotsNeeded(2, 30)).toBe(4);
+    expect(slotsNeeded(1.5, 60)).toBe(2);
+    expect(slotsNeeded(0, 60)).toBe(1);
+  });
+
   it("offers only the hours with room for the whole group", () => {
     expect(slotsNeeded(3, 60)).toBe(3);
     expect(isSlotPickable(day.slots[0]!, 6)).toBe(true);
@@ -126,6 +188,17 @@ describe("session helpers", () => {
     expect(togglePicked([first, second], third, 2)).toEqual([first, second]);
     expect(formatPickedProgress(2, 3)).toBe("2 of 3 hours picked");
     expect(formatPickedProgress(0, 1)).toBe("0 of 1 hour picked");
+  });
+
+  it("knows when a move would land on the hours already held", () => {
+    const first = { starts_at: "a", ends_at: "b" };
+    const second = { starts_at: "c", ends_at: "d" };
+    const other = { starts_at: "e", ends_at: "f" };
+    expect(isSameSelection([first], [first])).toBe(true);
+    expect(isSameSelection([first, second], [second, first])).toBe(true);
+    expect(isSameSelection([first], [other])).toBe(false);
+    expect(isSameSelection([first], [first, second])).toBe(false);
+    expect(isSameSelection([], [])).toBe(true);
   });
 
   it("labels hours and groups them by day", () => {
@@ -165,6 +238,23 @@ describe("session helpers", () => {
     ]);
   });
 
+  it("spells out both meridiems when an hour crosses noon", () => {
+    expect(
+      formatHourRange(
+        "2026-09-13T05:30:00.000Z",
+        "2026-09-13T06:30:00.000Z",
+        IST,
+      ),
+    ).toBe("11 am–12 pm");
+  });
+
+  it("has no days to name before an hour is picked", () => {
+    expect(formatDayRange([], IST)).toBe("");
+    expect(groupSlotsByDay([], IST)).toEqual([]);
+    expect(toBookingWhenLines([], IST)).toEqual([]);
+    expect(toPickedSlots([], IST)).toEqual([]);
+  });
+
   it("writes the WhatsApp message", () => {
     const message = toWhatsAppSessionMessage({
       bookingId: "WS-ABC",
@@ -176,6 +266,64 @@ describe("session helpers", () => {
     });
     expect(message).toContain("Booking: WS-ABC");
     expect(message).toContain("2 hours for 1 person");
+  });
+
+  it("says one hour and several people the way a person would", () => {
+    expect(
+      toWhatsAppSessionMessage({
+        bookingId: "WS-DEF",
+        when: "Sun 20 Sep, 3:00 pm",
+        hours: 1,
+        participants: 3,
+        total: "₹2,850",
+        guestName: "Ravi",
+      }),
+    ).toContain("1 hour for 3 people");
+  });
+});
+
+describe("booking status helpers", () => {
+  it("maps statuses to labels, tones and steps", () => {
+    expect(toBookingStatusLabel(RegistrationStatus.Pending)).toBe(
+      "Awaiting confirmation",
+    );
+    expect(toBookingStatusLabel(RegistrationStatus.Approved)).toBe(
+      "Wheel held, awaiting payment",
+    );
+    expect(toBookingStatusLabel(RegistrationStatus.Confirmed)).toBe(
+      "Confirmed",
+    );
+    expect(toBookingStatusLabel(RegistrationStatus.Rejected)).toBe(
+      "Not confirmed",
+    );
+    expect(toBookingStatusLabel(RegistrationStatus.Cancelled)).toBe(
+      "Cancelled",
+    );
+    expect(toBookingStatusTone(RegistrationStatus.Pending)).toBe("pending");
+    expect(toBookingStatusTone(RegistrationStatus.Approved)).toBe("active");
+    expect(toBookingStatusTone(RegistrationStatus.Confirmed)).toBe("done");
+    expect(toBookingStatusTone(RegistrationStatus.Rejected)).toBe("off");
+    expect(toBookingStatusTone(RegistrationStatus.Cancelled)).toBe("off");
+    expect(toBookingStepIndex(RegistrationStatus.Pending)).toBe(0);
+    expect(toBookingStepIndex(RegistrationStatus.Approved)).toBe(1);
+    expect(toBookingStepIndex(RegistrationStatus.Confirmed)).toBe(2);
+  });
+
+  it("freezes a closed booking on the first step", () => {
+    expect(toBookingStepIndex(RegistrationStatus.Cancelled)).toBe(0);
+    expect(toBookingStepIndex(RegistrationStatus.Rejected)).toBe(0);
+    expect(isBookingClosed(RegistrationStatus.Cancelled)).toBe(true);
+    expect(isBookingClosed(RegistrationStatus.Rejected)).toBe(true);
+    expect(isBookingClosed(RegistrationStatus.Approved)).toBe(false);
+    expect(isBookingClosed(RegistrationStatus.Confirmed)).toBe(false);
+  });
+
+  it("counts hours and free wheels", () => {
+    expect(formatHours(1)).toBe("1 hour");
+    expect(formatHours(3)).toBe("3 hours");
+    expect(formatWheels(1)).toBe("1 wheel free");
+    expect(formatWheels(0)).toBe("0 wheels free");
+    expect(formatWheels(4)).toBe("4 wheels free");
   });
 });
 

@@ -163,6 +163,13 @@ describe("event filters", () => {
         level: null,
       }).toString(),
     ).toBe("when=past&type=OPEN_MIC");
+    expect(
+      toEventSearchParams({
+        when: EventWhen.Upcoming,
+        eventType: EventType.PotteryWorkshop,
+        level: EventLevel.Beginner,
+      }).toString(),
+    ).toBe("type=POTTERY_WORKSHOP&level=BEGINNER");
   });
 
   it("builds the query input", () => {

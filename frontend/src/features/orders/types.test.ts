@@ -8,6 +8,7 @@ import {
   type OrderData,
   toStatusLabel,
   toStatusTone,
+  toOrderPath,
   toStepIndex,
   toWhatsAppOrderMessage,
 } from "./types";
@@ -38,6 +39,12 @@ describe("order status helpers", () => {
     expect(toStepIndex(OrderStatus.Cancelled, dates)).toBe(2);
     expect(toStepIndex(OrderStatus.Refunded, dates)).toBe(2);
     expect(toStepIndex(OrderStatus.Shipped, dates)).toBe(3);
+  });
+});
+
+describe("toOrderPath", () => {
+  it("links an order by its id", () => {
+    expect(toOrderPath("ORD7Q2X9M1KD3F5H")).toBe("/orders/ORD7Q2X9M1KD3F5H");
   });
 });
 

@@ -38,6 +38,16 @@ describe("toAddressInput", () => {
     expect(input.line2).toBeNull();
     expect(input.landmark).toBe("Near the old well");
   });
+
+  it("sends a blank landmark as null and keeps a filled second line", () => {
+    const input = toAddressInput({
+      ...toFormValues(address()),
+      line2: "Apt 4",
+      landmark: "",
+    });
+    expect(input.line2).toBe("Apt 4");
+    expect(input.landmark).toBeNull();
+  });
 });
 
 describe("toFormValues", () => {
@@ -137,6 +147,11 @@ describe("afterDelete", () => {
     expect(afterDelete(list, 2)).toEqual([
       address({ id: 3, is_default: true }),
     ]);
+  });
+
+  it("leaves the list alone when the id is not on it", () => {
+    const list = [address({ id: 3, is_default: true }), address({ id: 2 })];
+    expect(afterDelete(list, 9)).toEqual(list);
   });
 
   it("returns nothing when the last address goes", () => {

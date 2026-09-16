@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  applyNewsletterResult,
   type ContentSectionData,
+  IDLE_NEWSLETTER,
+  type NewsletterResult,
   sectionAt,
   splitParagraphs,
   toAnchorId,
@@ -16,6 +19,18 @@ function section(
 ): ContentSectionData {
   return { heading, body, items };
 }
+
+describe("applyNewsletterResult", () => {
+  it("swaps the pending answer in for the current one", () => {
+    const submitting: NewsletterResult = { state: "submitting", message: null };
+    const subscribed: NewsletterResult = {
+      state: "subscribed",
+      message: "You are on the list.",
+    };
+    expect(applyNewsletterResult(IDLE_NEWSLETTER, submitting)).toBe(submitting);
+    expect(applyNewsletterResult(submitting, subscribed)).toBe(subscribed);
+  });
+});
 
 describe("splitParagraphs", () => {
   it("splits on blank lines and trims each paragraph", () => {

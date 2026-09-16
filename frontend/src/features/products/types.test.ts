@@ -24,6 +24,7 @@ import {
   toGlazeAskUrl,
   toPhotoAlt,
   toPhotoLabel,
+  toProductPath,
   toShortDescription,
   toStockStatus,
   validateSelections,
@@ -85,6 +86,16 @@ describe("filters round-trip", () => {
     expect(filters.maxPrice).toBeNull();
   });
 
+  it("serialises the two filters an empty shelf URL keeps quiet", () => {
+    expect(
+      toSearchParams({
+        ...EMPTY_FILTERS,
+        collection: "spring-2025",
+        customizableOnly: true,
+      }).toString(),
+    ).toBe("collection=spring-2025&customizable=true");
+  });
+
   it("counts active filters excluding search and sort", () => {
     expect(countActiveFilters(EMPTY_FILTERS)).toBe(0);
     expect(
@@ -98,6 +109,49 @@ describe("filters round-trip", () => {
         search: "x",
       }),
     ).toBe(4);
+    expect(
+      countActiveFilters({ ...EMPTY_FILTERS, customizableOnly: true }),
+    ).toBe(1);
+  });
+});
+
+describe("toFilterInput", () => {
+  it("sends the untouched filters as null so the API ignores them", () => {
+    expect(toFilterInput(EMPTY_FILTERS, 1)).toEqual({
+      search: null,
+      category_slugs: null,
+      materials: null,
+      collection_slug: null,
+      min_price: null,
+      max_price: null,
+      in_stock_only: null,
+      customizable_only: null,
+      archive: false,
+      sort: ProductSort.Featured,
+      page: 1,
+      limit: 24,
+    });
+  });
+
+  it("passes the picked lists and the rupee range straight through", () => {
+    const input = toFilterInput(
+      {
+        ...EMPTY_FILTERS,
+        search: "mug",
+        materials: ["Stoneware", "Porcelain"],
+        minPrice: 0,
+        maxPrice: 250_000,
+        inStockOnly: true,
+        customizableOnly: true,
+      },
+      3,
+    );
+    expect(input.materials).toEqual(["Stoneware", "Porcelain"]);
+    expect(input.min_price).toBe(0);
+    expect(input.max_price).toBe(250_000);
+    expect(input.in_stock_only).toBe(true);
+    expect(input.customizable_only).toBe(true);
+    expect(input.page).toBe(3);
   });
 });
 
@@ -140,6 +194,10 @@ describe("toShortDescription", () => {
     expect(long.short).toBe("One. Two. Three.");
     expect(long.hasMore).toBe(true);
   });
+
+  it("has nothing to trim when the piece has no description", () => {
+    expect(toShortDescription("")).toEqual({ short: "", hasMore: false });
+  });
 });
 
 describe("toGlazeAskUrl", () => {
@@ -162,6 +220,11 @@ describe("customisation pricing", () => {
       }),
     ).toBe(1200);
     expect(computeUnitPrice(950, groups, { 2: { text: "   " } })).toBe(950);
+  });
+
+  it("ignores a pick that no longer fits its group", () => {
+    expect(computeUnitPrice(950, groups, { 1: { optionId: 99 } })).toBe(950);
+    expect(computeUnitPrice(950, groups, { 1: { text: "Maya" } })).toBe(950);
   });
 
   it("reports missing and overlong selections", () => {
@@ -230,6 +293,10 @@ describe("archive view", () => {
     expect(toPhotoAlt("Drip sip mug", 0)).toBe("Drip sip mug");
     expect(toPhotoAlt("Drip sip mug", 2)).toBe("Drip sip mug, view 3");
   });
+
+  it("links a piece by its slug", () => {
+    expect(toProductPath("drip-sip-mug")).toBe("/products/drip-sip-mug");
+  });
 });
 
 describe("applyFilterAction", () => {
@@ -246,6 +313,28 @@ describe("applyFilterAction", () => {
       applyFilterAction(base, { type: "material", material: "Stoneware" })
         .materials,
     ).toEqual(["Stoneware"]);
+  });
+
+  it("trims a typed search and carries the rupee range", () => {
+    expect(
+      applyFilterAction(base, { type: "search", value: "  speckled mug " })
+        .search,
+    ).toBe("speckled mug");
+    const priced = applyFilterAction(base, {
+      type: "price",
+      min: 0,
+      max: 4000,
+    });
+    expect(priced.minPrice).toBe(0);
+    expect(priced.maxPrice).toBe(4000);
+    expect(
+      applyFilterAction(priced, { type: "price", min: null, max: null })
+        .maxPrice,
+    ).toBeNull();
+    expect(
+      applyFilterAction(base, { type: "customizable", value: true })
+        .customizableOnly,
+    ).toBe(true);
   });
 
   it("keeps one collection at a time and clears it when re-picked", () => {

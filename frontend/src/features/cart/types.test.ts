@@ -32,6 +32,21 @@ describe("toSelectionSummary", () => {
     ).toBe("Size: Large · Carved text: Maya");
     expect(toSelectionSummary([])).toBeNull();
   });
+
+  it("names the group even when nothing was chosen under it", () => {
+    expect(
+      toSelectionSummary([
+        {
+          group_id: 3,
+          group_name: "Glaze",
+          option_id: null,
+          option_name: null,
+          text: null,
+          price_modifier: 0,
+        },
+      ]),
+    ).toBe("Glaze: ");
+  });
 });
 
 describe("toMaxQuantity", () => {
