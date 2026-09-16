@@ -244,6 +244,148 @@ function toColorCode(value: string): string | null {
   return /^#[0-9a-f]{6}$/i.test(value) ? value : null;
 }
 
+interface GlazeNote {
+  description: string;
+  variation_note: string;
+  color_code: string;
+}
+
+// What each glaze the studio has used actually does in the kiln, and how it varies.
+// The legacy colour field held palette indexes rather than glaze colours, so the
+// swatches are set here against the glaze name instead of read off the product.
+const GLAZE_NOTES: Record<string, GlazeNote> = {
+  "Baby Pink": {
+    description:
+      "A pale clay pink, matt to the touch, with the body showing faintly through it.",
+    variation_note:
+      "It takes the colour of the clay underneath, so a darker body makes a dustier pink.",
+    color_code: "#AA8888",
+  },
+  "Forest Green": {
+    description:
+      "A matt green that breaks brown wherever the wall turns, so the throwing rings stay visible.",
+    variation_note:
+      "It breaks harder over a thin wall, so the pattern follows how the piece was thrown.",
+    color_code: "#4F6F52",
+  },
+  "Forest Green and Transparent": {
+    description:
+      "Forest green over the lower half, with a clear glaze over bare clay above it.",
+    variation_note:
+      "The two meet in a soft edge that moves a centimetre either way in every firing.",
+    color_code: "#5F7355",
+  },
+  Green: {
+    description:
+      "A plain leaf green, glossy where it runs thick and dry where it runs thin.",
+    variation_note:
+      "Thickness is judged by hand at the dipping bucket, so the gloss changes from pot to pot.",
+    color_code: "#6B8F5A",
+  },
+  Maroon: {
+    description:
+      "A dark red that goes almost brown where it lies thick and pink where it thins over an edge.",
+    variation_note:
+      "Rims and handles come out lighter than the body nearly every time.",
+    color_code: "#7B3F44",
+  },
+  Multan: {
+    description:
+      "Golden clay under a clear glaze, so the colour is the body itself rather than a coat over it.",
+    variation_note:
+      "Every load of clay comes out of the ground a little different, so the gold runs warmer or paler.",
+    color_code: "#B07C4F",
+  },
+  "Ocean Blue": {
+    description:
+      "A deep blue that thins to grey on the rims and gathers dark in the throwing rings.",
+    variation_note:
+      "How dark it goes depends on where the piece stood in the kiln, so no two pots match.",
+    color_code: "#3F6C8F",
+  },
+  "Reduction Brown": {
+    description:
+      "Fired with the kiln starved of air, which pulls the iron in the clay to the surface as brown.",
+    variation_note:
+      "Reduction is never even across a load; some pieces come out ruddy, some nearly grey.",
+    color_code: "#6E4B34",
+  },
+  "Shades of Blue": {
+    description:
+      "Two blues poured over each other, so the wall moves from pale at the rim to deep near the foot.",
+    variation_note:
+      "The line where they meet is drawn by the firing, never by hand.",
+    color_code: "#5C7FA3",
+  },
+  "Shades of Nature": {
+    description:
+      "Earth tones laid over one another, sand at the rim giving way to darker brown at the foot.",
+    variation_note:
+      "Where one tone hands over to the next is settled in the kiln.",
+    color_code: "#9A8566",
+  },
+  Transparent: {
+    description:
+      "A clear glaze over bare clay: it seals the piece for daily use and lets the body do the colour.",
+    variation_note:
+      "Every mark left by the wheel and the trimming tool stays visible under it.",
+    color_code: "#D9CDBB",
+  },
+  "Wood Brown": {
+    description:
+      "A warm brown that darkens into the throwing lines and lightens across the rim.",
+    variation_note:
+      "The grain follows the potter's fingers, so it lies differently on every wall.",
+    color_code: "#7A5B42",
+  },
+  "Wood Fired": {
+    description:
+      "Fired with wood, so ash carried through the kiln lands on the piece and melts into the surface.",
+    variation_note:
+      "The side facing the firebox takes more ash, so each piece is given a front and a back.",
+    color_code: "#8A6A4B",
+  },
+  Zebra: {
+    description:
+      "Black and white poured in bands and left to run into each other down the wall.",
+    variation_note:
+      "How far they run depends on the heat, so the stripes are never the same width twice.",
+    color_code: "#4A4540",
+  },
+};
+
+const GLAZE_FALLBACK: Omit<GlazeNote, "color_code"> = {
+  description:
+    "Mixed and dipped in the studio, then fired with the rest of the load.",
+  variation_note:
+    "Thickness is judged by hand, so the same glaze reads differently on every piece.",
+};
+
+const LOWERCASE_WORDS = new Set(["and", "of", "the"]);
+
+// "Forest green and transparent " and "Forest Green And Transparent" are one glaze.
+function toGlazeName(value: string): string {
+  return cleanText(value)
+    .toLowerCase()
+    .split(" ")
+    .map((word, index) =>
+      index > 0 && LOWERCASE_WORDS.has(word)
+        ? word
+        : word.charAt(0).toUpperCase() + word.slice(1),
+    )
+    .join(" ");
+}
+
+// The studio's name is "where clay meets verses": a description written as a verse
+// belongs in the maker's note, not in the paragraph that says what the piece is.
+function isVerse(description: string): boolean {
+  const lines = description
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  return lines.length >= 3 && lines.every((line) => line.length <= 80);
+}
+
 function toBookingStatus(status: LegacyBooking["status"]): RegistrationStatus {
   return status === "PAID" ? RegistrationStatus.CONFIRMED : status;
 }
@@ -386,9 +528,40 @@ async function importUsers(
   return ids;
 }
 
+// One glaze per distinct colour the studio wrote on a piece, with what it does in the kiln.
+async function importGlazes(
+  products: LegacyProduct[],
+): Promise<Map<string, number>> {
+  const names = [
+    ...new Set(
+      products
+        .map((product) => toGlazeName(product.color_name))
+        .filter(Boolean),
+    ),
+  ].sort();
+  const ids = new Map<string, number>();
+  for (const name of names) {
+    const note = GLAZE_NOTES[name];
+    const data = {
+      name,
+      description: note?.description ?? GLAZE_FALLBACK.description,
+      variation_note: note?.variation_note ?? GLAZE_FALLBACK.variation_note,
+      color_code: note?.color_code ?? null,
+    };
+    const row = await prisma.glaze.upsert({
+      where: { slug: slugify(name) },
+      create: { slug: slugify(name), ...data },
+      update: data,
+    });
+    ids.set(name, row.id);
+  }
+  return ids;
+}
+
 async function importCatalog(
   collections: LegacyCollection[],
   products: LegacyProduct[],
+  glazeIds: Map<string, number>,
 ): Promise<Map<number, number>> {
   const categoryNames = new Set(
     products.flatMap((product) => product.categories),
@@ -429,10 +602,16 @@ async function importCatalog(
     const collection_id = product.collection_id
       ? collectionIds.get(product.collection_id)
       : undefined;
+    const glaze_id = glazeIds.get(toGlazeName(product.color_name));
+    const legacyText = (product.description ?? "").trim();
+    const hasVerse = isVerse(legacyText);
     const data: Prisma.ProductUpsertArgs["create"] = {
       slug,
       name: cleanText(product.name),
-      description: toDescription(product.description),
+      description: hasVerse
+        ? FALLBACK_DESCRIPTION
+        : toDescription(product.description),
+      maker_note: hasVerse ? legacyText : null,
       price: product.price,
       material: cleanText(product.material) || "Stoneware",
       color_name: cleanText(product.color_name) || null,
@@ -445,6 +624,7 @@ async function importCatalog(
       collection: collection_id
         ? { connect: { id: collection_id } }
         : undefined,
+      glaze: glaze_id ? { connect: { id: glaze_id } } : undefined,
       categories: {
         connect: product.categories.map((name) => ({ slug: slugify(name) })),
       },
@@ -454,6 +634,8 @@ async function importCatalog(
       create: data,
       update: {
         ...data,
+        // A piece whose colour was cleared loses its glaze rather than keeping the old one.
+        glaze: glaze_id ? { connect: { id: glaze_id } } : { disconnect: true },
         categories: {
           set: product.categories.map((name) => ({ slug: slugify(name) })),
         },
@@ -702,7 +884,12 @@ async function main(): Promise<void> {
   }
 
   const userIds = await importUsers(legacy.users, legacy.addresses);
-  const productIds = await importCatalog(legacy.collections, legacy.products);
+  const glazeIds = await importGlazes(legacy.products);
+  const productIds = await importCatalog(
+    legacy.collections,
+    legacy.products,
+    glazeIds,
+  );
   const custom = await importCustomPieces(legacy.customize);
   const bookings = await importWorkshop(
     legacy.workshop,
@@ -712,7 +899,7 @@ async function main(): Promise<void> {
   const cart = await importCart(legacy.cart, userIds, productIds);
   await importContent(legacy.about, legacy.aboutHero, legacy.contact);
   process.stdout.write(
-    `Imported ${userIds.size} users, ${productIds.size} products, ${custom} custom pieces, ${bookings} bookings, ${cart} cart lines\n`,
+    `Imported ${userIds.size} users, ${glazeIds.size} glazes, ${productIds.size} products, ${custom} custom pieces, ${bookings} bookings, ${cart} cart lines\n`,
   );
   process.stdout.write(
     "Run `pnpm search:reindex` to embed the imported products\n",
