@@ -10,6 +10,7 @@ import {
   folderFor,
   IMAGE_SPECS,
   MAX_IMAGE_BYTES,
+  orientedSize,
 } from "./image-specs";
 import { ConfirmedImage, ImageSpec, UploadPurpose } from "./uploads.type";
 
@@ -56,10 +57,12 @@ export class UploadsService {
     const meta = await sharp(body)
       .metadata()
       .catch(() => null);
+    // Browsers and the image optimiser both honour EXIF, so measure the photo as it will render.
+    const size = meta ? orientedSize(meta) : { width: 0, height: 0 };
     const problem = meta
       ? checkImage(purpose, {
-          width: meta.width,
-          height: meta.height,
+          width: size.width,
+          height: size.height,
           format: meta.format,
           bytes: body.byteLength,
         })
@@ -71,8 +74,8 @@ export class UploadsService {
 
     const record = {
       purpose,
-      width: meta?.width ?? 0,
-      height: meta?.height ?? 0,
+      width: size.width ?? 0,
+      height: size.height ?? 0,
       bytes: body.byteLength,
     };
     await this.prisma.confirmedUpload.upsert({

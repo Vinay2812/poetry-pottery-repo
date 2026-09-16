@@ -118,6 +118,19 @@ export interface ImageMeta {
   bytes: number;
 }
 
+// EXIF orientations 5 to 8 store the photo a quarter turn from how it is shown, so the
+// stored width and height are the wrong way round for the spec table.
+export function orientedSize(meta: {
+  width?: number;
+  height?: number;
+  orientation?: number;
+}): { width: number | undefined; height: number | undefined } {
+  const quarterTurn = (meta.orientation ?? 1) >= 5;
+  return quarterTurn
+    ? { width: meta.height, height: meta.width }
+    : { width: meta.width, height: meta.height };
+}
+
 // Returns null when the file matches its spec, otherwise the sentence shown to the admin.
 export function checkImage(
   purpose: UploadPurpose,

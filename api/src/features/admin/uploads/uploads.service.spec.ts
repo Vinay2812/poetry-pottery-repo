@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { StorageService } from "@/storage/storage.service";
-import { checkImage } from "./image-specs";
+import { checkImage, orientedSize } from "./image-specs";
 import { UploadsService } from "./uploads.service";
 import { UploadPurpose } from "./uploads.type";
 
@@ -19,6 +19,21 @@ function png(width: number, height: number): Promise<Buffer> {
     },
   })
     .png()
+    .toBuffer();
+}
+
+// A phone photo: the pixels sit one way round and the EXIF tag says to show them the other.
+function turnedJpeg(width: number, height: number): Promise<Buffer> {
+  return sharp({
+    create: {
+      width,
+      height,
+      channels: 3,
+      background: { r: 200, g: 190, b: 175 },
+    },
+  })
+    .jpeg()
+    .withMetadata({ orientation: 6 })
     .toBuffer();
 }
 
@@ -103,6 +118,21 @@ describe("checkImage", () => {
     ).toMatch(/shortest side/);
   });
 
+  it("swaps the sides for a quarter-turn exif orientation", () => {
+    expect(orientedSize({ width: 1200, height: 900, orientation: 6 })).toEqual({
+      width: 900,
+      height: 1200,
+    });
+    expect(orientedSize({ width: 1200, height: 900, orientation: 3 })).toEqual({
+      width: 1200,
+      height: 900,
+    });
+    expect(orientedSize({ width: 1200, height: 900 })).toEqual({
+      width: 1200,
+      height: 900,
+    });
+  });
+
   it("rejects an unsupported format and an oversized file", () => {
     expect(
       checkImage(UploadPurpose.HERO, {
@@ -178,6 +208,23 @@ describe("UploadsService", () => {
     expect(result.width).toBe(1000);
     expect(prismaMock.confirmedUpload.upsert).toHaveBeenCalled();
     expect(storageMock.deleteObject).not.toHaveBeenCalled();
+  });
+
+  it("measures a rotated phone photo the way a browser will show it", async () => {
+    storageMock.readObject.mockResolvedValue(await turnedJpeg(900, 1200));
+
+    const result = await service.confirm("events/one.jpg", UploadPurpose.EVENT);
+
+    expect(result.width).toBe(1200);
+    expect(result.height).toBe(900);
+  });
+
+  it("rejects a photo that only fits the spec before its exif turn", async () => {
+    storageMock.readObject.mockResolvedValue(await turnedJpeg(1200, 900));
+
+    await expect(
+      service.confirm("events/two.jpg", UploadPurpose.EVENT),
+    ).rejects.toBeInstanceOf(BadRequestException);
   });
 
   it("deletes and rejects an upload that misses the spec", async () => {
