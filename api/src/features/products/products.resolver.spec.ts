@@ -110,6 +110,7 @@ function makeCategory(overrides: Partial<Category> = {}): Category {
     name: "Mugs",
     icon: null,
     image_url: null,
+    sort_order: 0,
     product_count: 3,
     ...overrides,
   };
