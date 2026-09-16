@@ -95,6 +95,7 @@ export function AdminOrderDetailContainer({
         href: item.product ? toProductPath(item.product.slug) : null,
         imageUrl: item.product_image,
         selectionLabels: item.selections.map(toSelectionLabel),
+        referenceImageUrls: item.reference_image_urls,
         unitPriceLabel: formatInr(item.unit_price),
         quantity: item.quantity,
         lineTotalLabel: formatInr(item.line_total),

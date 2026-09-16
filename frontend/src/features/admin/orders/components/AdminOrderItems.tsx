@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { toPotteryIconKind } from "@/components/icons/pottery";
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
+import { ReferencePhotoStrip } from "@/components/media/ReferencePhotoStrip";
 
 import {
   ADMIN_TD,
@@ -17,6 +18,7 @@ export interface AdminOrderItemRow {
   href: string | null;
   imageUrl: string | null;
   selectionLabels: string[];
+  referenceImageUrls: string[];
   unitPriceLabel: string;
   quantity: number;
   lineTotalLabel: string;
@@ -76,6 +78,10 @@ export function AdminOrderItems({ rows }: AdminOrderItemsProps) {
                   {label}
                 </span>
               ))}
+              <ReferencePhotoStrip
+                urls={row.referenceImageUrls}
+                label={`Reference photo for ${row.name}`}
+              />
             </td>
             <td className={`${ADMIN_TD} text-right tnum`}>
               {row.unitPriceLabel}

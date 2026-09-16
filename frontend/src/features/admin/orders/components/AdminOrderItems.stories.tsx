@@ -16,6 +16,7 @@ const meta = {
         imageUrl:
           "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
         selectionLabels: [],
+        referenceImageUrls: [],
         unitPriceLabel: "₹850",
         quantity: 2,
         lineTotalLabel: "₹1,700",
@@ -26,6 +27,10 @@ const meta = {
         href: "/products/carved-initial-mug",
         imageUrl: null,
         selectionLabels: ["Size: Large +₹200", "Carving: Meera"],
+        referenceImageUrls: [
+          "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
+          "https://images.pexels.com/photos/15028227/pexels-photo-15028227.jpeg",
+        ],
         unitPriceLabel: "₹1,450",
         quantity: 1,
         lineTotalLabel: "₹1,450",
