@@ -26,7 +26,15 @@ import {
 import { SearchMenuContainer } from "@/features/search";
 import { useWishlistIds } from "@/features/wishlist/hooks";
 
-export function SiteHeaderContainer() {
+export interface SiteHeaderContainerProps {
+  contactPhone: string;
+  whatsappUrl: string | null;
+}
+
+export function SiteHeaderContainer({
+  contactPhone,
+  whatsappUrl,
+}: SiteHeaderContainerProps) {
   const cartCount = useCartCount();
   const { count: wishlistCount } = useWishlistIds();
   const pathname = usePathname();
@@ -107,6 +115,8 @@ export function SiteHeaderContainer() {
           isOpen={isMenuOpen}
           isSignedIn={Boolean(isSignedIn)}
           wishlistCount={wishlistCount}
+          contactPhone={contactPhone}
+          whatsappUrl={whatsappUrl}
           onOpenChange={setIsMenuOpen}
           onNavigate={handleCloseMenu}
           onAccountClick={handleAccountClick}

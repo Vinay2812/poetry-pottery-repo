@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useRef } from "react";
 
 import { ActiveMarker } from "@/components/nav/ActiveMarker";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
+  SheetFooter,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
@@ -20,14 +22,19 @@ export interface MobileMenuSheetProps {
   activeHref: string | null;
   isSignedIn: boolean;
   wishlistCount: number;
+  contactPhone: string;
+  whatsappUrl: string | null;
   onOpenChange: (isOpen: boolean) => void;
   onNavigate: () => void;
   onAccountClick: () => void;
   onSignOut: () => void;
 }
 
+// One left edge for every label; the active marker hangs in the gutter beside it.
+// Rows are 44px so the whole row is the hit area, not the words in it.
 const ROW_CLASS =
-  "flex items-center gap-3 py-3 text-[15px] transition-colors hover:text-primary";
+  "relative flex min-h-11 w-full items-center gap-2 text-left text-[15px] transition-colors hover:text-primary";
+const MARKER_CLASS = "absolute top-1/2 -left-4 -translate-y-1/2";
 
 export function MobileMenuSheet({
   isOpen,
@@ -35,6 +42,8 @@ export function MobileMenuSheet({
   activeHref,
   isSignedIn,
   wishlistCount,
+  contactPhone,
+  whatsappUrl,
   onOpenChange,
   onNavigate,
   onAccountClick,
@@ -59,13 +68,13 @@ export function MobileMenuSheet({
           openerRef.current.focus();
         }}
       >
-        <SheetHeader>
+        <SheetHeader className="px-6 py-5">
           <SheetTitle className="font-heading text-xl tracking-tight">
             Menu
           </SheetTitle>
         </SheetHeader>
 
-        <nav aria-label="Menu" className="flex-1 overflow-y-auto px-4">
+        <nav aria-label="Menu" className="flex-1 overflow-y-auto px-6">
           <ul className="flex flex-col">
             {links.map((link) => {
               const isActive = link.href === activeHref;
@@ -80,7 +89,10 @@ export function MobileMenuSheet({
                       isActive ? "text-foreground" : "text-muted-foreground",
                     )}
                   >
-                    <ActiveMarker isActive={isActive} />
+                    <ActiveMarker
+                      isActive={isActive}
+                      className={MARKER_CLASS}
+                    />
                     {link.label}
                   </Link>
                 </li>
@@ -95,7 +107,6 @@ export function MobileMenuSheet({
                 onClick={onNavigate}
                 className={cn(ROW_CLASS, "text-muted-foreground")}
               >
-                <ActiveMarker isActive={false} />
                 Saved pieces
                 {wishlistCount > 0 && (
                   <span className="tnum">({wishlistCount})</span>
@@ -103,29 +114,61 @@ export function MobileMenuSheet({
               </Link>
             </li>
             <li>
-              <button
-                type="button"
-                onClick={onAccountClick}
-                className={cn(ROW_CLASS, "w-full text-muted-foreground")}
+              <Link
+                href="/cart"
+                onClick={onNavigate}
+                className={cn(ROW_CLASS, "text-muted-foreground")}
               >
-                <ActiveMarker isActive={false} />
-                {isSignedIn ? "Your account" : "Sign in"}
-              </button>
+                Your cart
+              </Link>
             </li>
             {isSignedIn && (
-              <li>
-                <button
-                  type="button"
-                  onClick={onSignOut}
-                  className={cn(ROW_CLASS, "w-full text-muted-foreground")}
-                >
-                  <ActiveMarker isActive={false} />
-                  Sign out
-                </button>
-              </li>
+              <>
+                <li>
+                  <button
+                    type="button"
+                    onClick={onAccountClick}
+                    className={cn(ROW_CLASS, "text-muted-foreground")}
+                  >
+                    Your account
+                  </button>
+                </li>
+                <li>
+                  <button
+                    type="button"
+                    onClick={onSignOut}
+                    className={cn(ROW_CLASS, "text-muted-foreground")}
+                  >
+                    Sign out
+                  </button>
+                </li>
+              </>
             )}
           </ul>
         </nav>
+
+        <SheetFooter className="gap-4 border-t border-ash px-6 py-5">
+          {!isSignedIn && (
+            <Button onClick={onAccountClick} className="w-full">
+              Sign in
+            </Button>
+          )}
+          <div className="flex flex-col gap-1.5 text-[13px]">
+            <a href={`tel:${contactPhone}`} className="w-fit link-underline">
+              {contactPhone}
+            </a>
+            {whatsappUrl && (
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="w-fit link-underline text-primary"
+              >
+                Message us on WhatsApp
+              </a>
+            )}
+          </div>
+        </SheetFooter>
       </SheetContent>
     </Sheet>
   );

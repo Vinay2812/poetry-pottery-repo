@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
 import { atViewport } from "@/lib/storybook/viewports";
-import { MOBILE_MENU_LINKS } from "@/features/layout/types";
+import { MOBILE_MENU_LINKS, buildWhatsAppUrl } from "@/features/layout/types";
 import { MobileMenuSheet } from "./MobileMenuSheet";
 
 const meta = {
@@ -15,6 +15,11 @@ const meta = {
     activeHref: "/products",
     isSignedIn: false,
     wishlistCount: 0,
+    contactPhone: "+91 91234 56789",
+    whatsappUrl: buildWhatsAppUrl(
+      "+91 91234 56789",
+      "Hi, I have a question about Poetry & Pottery.",
+    ),
     onOpenChange: fn(),
     onNavigate: fn(),
     onAccountClick: fn(),

@@ -19,6 +19,12 @@ import { WishlistProvider } from "@/features/wishlist";
 
 export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
   const settings = await getSiteSettings();
+  const whatsappUrl = settings.whatsapp_number
+    ? buildWhatsAppUrl(
+        settings.whatsapp_number,
+        "Hi, I have a question about Poetry & Pottery.",
+      )
+    : null;
 
   return (
     <CartProvider>
@@ -30,7 +36,10 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
             href={settings.announcement_href}
           />
         )}
-        <SiteHeaderContainer />
+        <SiteHeaderContainer
+          contactPhone={settings.contact_phone}
+          whatsappUrl={whatsappUrl}
+        />
         {/* The skip link's target takes focus but draws no outline of its own. */}
         <main
           id="main"
@@ -47,14 +56,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
           openingHours={settings.opening_hours}
           contactEmail={settings.contact_email}
           contactPhone={settings.contact_phone}
-          whatsappUrl={
-            settings.whatsapp_number
-              ? buildWhatsAppUrl(
-                  settings.whatsapp_number,
-                  "Hi, I have a question about Poetry & Pottery.",
-                )
-              : null
-          }
+          whatsappUrl={whatsappUrl}
           instagramUrl={settings.instagram_url}
           facebookUrl={settings.facebook_url}
           youtubeUrl={settings.youtube_url}
