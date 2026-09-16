@@ -260,15 +260,20 @@ export function useReviewComposer(
   const { upload, isUploading } = useReviewPhotoUpload(subject);
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [isSaving, startTransition] = useTransition();
 
-  const open = useCallback(() => setIsOpen(true), []);
+  const open = useCallback(() => {
+    setError(null);
+    setIsOpen(true);
+  }, []);
 
-  // The dialog closes and the review shows at once; a refusal rolls both back with a toast.
+  // The review shows at once behind the dialog; a refusal leaves the dialog standing with the
+  // typed words and the uploaded photos still in it, and says why.
   const submit = useCallback(
     (values: ReviewFormValues) => {
       const previous = myReview;
-      setIsOpen(false);
+      setError(null);
       startTransition(async () => {
         const draft = toDraftReview(values, previous, {
           author: {
@@ -286,9 +291,10 @@ export function useReviewComposer(
         );
         try {
           await save(values, previous?.id ?? null);
+          setIsOpen(false);
           toast.success(previous ? "Review updated" : "Review posted");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
+        } catch (caught) {
+          setError(toErrorMessage(caught));
         }
       });
     },
@@ -304,14 +310,15 @@ export function useReviewComposer(
       try {
         await remove(previous.id);
         toast.success("Review removed");
-      } catch (error) {
-        toast.error(toErrorMessage(error));
+      } catch (caught) {
+        toast.error(toErrorMessage(caught));
       }
     });
   }, [myReview, onOptimistic, remove]);
 
   return {
     canReview,
+    error,
     isOpen,
     isSaving,
     isSignedIn,

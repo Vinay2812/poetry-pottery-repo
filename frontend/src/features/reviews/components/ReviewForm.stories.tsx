@@ -21,6 +21,7 @@ const meta = {
     isSubmitting: false,
     isUploading: false,
     submitLabel: "Post review",
+    error: null,
     onSubmit: fn(),
     onUploadPhoto: fn(async () => null),
     onCancel: fn(),
@@ -42,6 +43,14 @@ export const Editing: Story = {
 };
 
 export const Posting: Story = { args: { isSubmitting: true } };
+
+export const Refused: Story = {
+  args: {
+    defaultRating: 5,
+    defaultBody: "The glaze pools beautifully around the foot.",
+    error: "You can review a piece once it has been delivered to you",
+  },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

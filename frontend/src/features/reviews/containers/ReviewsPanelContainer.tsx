@@ -41,6 +41,7 @@ export function ReviewsPanelContainer({
   );
   const {
     canReview,
+    error,
     isOpen,
     isSaving,
     isUploading,
@@ -112,6 +113,7 @@ export function ReviewsPanelContainer({
           isSubmitting={isSaving}
           isUploading={isUploading}
           submitLabel={hasMine ? "Save changes" : "Post review"}
+          error={error}
           onSubmit={submit}
           onUploadPhoto={upload}
           onCancel={handleClose}

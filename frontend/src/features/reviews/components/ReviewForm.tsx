@@ -25,6 +25,7 @@ export interface ReviewFormProps {
   isSubmitting: boolean;
   isUploading: boolean;
   submitLabel: string;
+  error: string | null;
   onSubmit: (values: ReviewFormValues) => void;
   onUploadPhoto: (file: File) => Promise<string | null>;
   onCancel: () => void;
@@ -37,6 +38,7 @@ export function ReviewForm({
   isSubmitting,
   isUploading,
   submitLabel,
+  error,
   onSubmit,
   onUploadPhoto,
   onCancel,
@@ -174,6 +176,12 @@ export function ReviewForm({
           </Label>
         )}
       </div>
+
+      {error && (
+        <p role="alert" className="text-[13px] text-destructive">
+          {error}
+        </p>
+      )}
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={isSubmitting || isUploading}>
