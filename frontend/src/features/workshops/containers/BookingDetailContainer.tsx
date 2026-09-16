@@ -11,6 +11,8 @@ import {
 
 import { formatDateTime, formatInr } from "@/lib/format";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { SignInWall } from "@/features/auth";
 import { buildWhatsAppUrl } from "@/features/layout/types";
 import { BookingDetail } from "@/features/workshops/components/BookingDetail";
@@ -236,13 +238,10 @@ export function BookingDetailContainer({
 
   if (isLoading) {
     return (
-      <div
-        className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-12"
-        aria-busy="true"
-      >
+      <PageShell column="wide" className="py-8 md:py-12" isBusy>
         <div className="h-8 w-56 animate-pulse bg-ash" />
         <div className="mt-8 h-64 animate-pulse bg-ash/60" />
-      </div>
+      </PageShell>
     );
   }
   if (!isSignedIn) {
@@ -255,7 +254,10 @@ export function BookingDetailContainer({
   }
   if (hasError || !optimisticBooking) {
     return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-3 px-4 py-16 md:px-8">
+      <PageShell
+        column="wide"
+        className="flex flex-col items-start gap-3 py-16"
+      >
         <h1 className="font-heading text-2xl tracking-tight">
           We could not find that session
         </h1>
@@ -266,7 +268,7 @@ export function BookingDetailContainer({
         >
           Try again
         </button>
-      </div>
+      </PageShell>
     );
   }
 

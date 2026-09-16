@@ -5,6 +5,8 @@ import { useCallback, useOptimistic, useState, useTransition } from "react";
 
 import { formatDateTime, formatInr } from "@/lib/format";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { toSelectionSummary } from "@/features/cart/types";
 import { buildWhatsAppUrl } from "@/features/layout/types";
 import { CancelOrderDialog } from "@/features/orders/components/CancelOrderDialog";
@@ -66,13 +68,10 @@ export function OrderDetailContainer({
 
   if (isLoading) {
     return (
-      <div
-        className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-12"
-        aria-busy="true"
-      >
+      <PageShell column="wide" className="py-8 md:py-12" isBusy>
         <div className="h-8 w-56 animate-pulse bg-ash" />
         <div className="mt-8 h-64 animate-pulse bg-ash" />
-      </div>
+      </PageShell>
     );
   }
   if (!isSignedIn) {
@@ -85,7 +84,10 @@ export function OrderDetailContainer({
   }
   if (hasError || !optimisticOrder) {
     return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-start gap-4 px-4 py-16 md:px-8">
+      <PageShell
+        column="wide"
+        className="flex flex-col items-start gap-4 py-16"
+      >
         <h1 className="font-heading text-2xl tracking-tight">
           We could not find that order
         </h1>
@@ -96,7 +98,7 @@ export function OrderDetailContainer({
         >
           Try again
         </button>
-      </div>
+      </PageShell>
     );
   }
 

@@ -7,6 +7,7 @@ import {
 import { getSiteSettings } from "@/lib/data/site-settings";
 
 import { Reveal } from "@/components/motion/Reveal";
+import { PageShell } from "@/components/layout/PageShell";
 
 import { AboutBlock, EventRow, HomeHero, HomeSection } from "@/features/home";
 import { toEventPath, toSeatsLabel } from "@/features/events";
@@ -28,7 +29,7 @@ export default async function HomePage() {
     featured.find((product) => product.is_customizable) ?? null;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col px-4 md:px-8">
+    <PageShell className="flex flex-col">
       <HomeHero
         heading={settings.hero_heading}
         subheading={settings.hero_subheading}
@@ -117,6 +118,6 @@ export default async function HomePage() {
           href="/about"
         />
       </HomeSection>
-    </div>
+    </PageShell>
   );
 }

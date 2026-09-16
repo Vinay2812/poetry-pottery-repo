@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useOptimistic, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 import { cn } from "@/lib/utils";
 import {
   type EventLevel,
@@ -96,7 +97,7 @@ export function EventListContainer({
     filters.when !== DEFAULT_EVENT_FILTERS.when;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-4 py-8 md:px-8 md:py-12">
+    <PageShell className="flex flex-col gap-8 py-8 md:py-12">
       <header className="flex flex-col gap-3">
         <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
           {heading}
@@ -186,6 +187,6 @@ export function EventListContainer({
           )}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 
 export const metadata: Metadata = {
   title: "Page not found",
@@ -10,7 +11,10 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-4 px-4 py-20 md:px-8 md:py-28">
+    <PageShell
+      column="narrow"
+      className="flex flex-col items-start gap-4 py-20 md:py-28"
+    >
       <p className="text-[13px] tracking-widest text-muted-foreground uppercase">
         404
       </p>
@@ -29,6 +33,6 @@ export default function NotFound() {
           <Link href="/">Back to the studio</Link>
         </Button>
       </div>
-    </div>
+    </PageShell>
   );
 }

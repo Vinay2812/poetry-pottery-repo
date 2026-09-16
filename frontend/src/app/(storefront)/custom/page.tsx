@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { PageShell } from "@/components/layout/PageShell";
 import { Reveal } from "@/components/motion/Reveal";
 import { getCommissionOptions, getCommissionPieces } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
@@ -29,7 +30,7 @@ export default async function CustomPage() {
   ]);
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 md:gap-16 md:px-8 md:py-12">
+    <PageShell className="flex flex-col gap-12 py-8 md:gap-16 md:py-12">
       <Reveal>
         <header className="flex flex-col gap-3">
           <h1 className="font-heading text-3xl md:text-5xl">
@@ -91,6 +92,6 @@ export default async function CustomPage() {
           </div>
         </section>
       </Reveal>
-    </div>
+    </PageShell>
   );
 }

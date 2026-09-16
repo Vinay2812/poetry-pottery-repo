@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { ContentHeader, UnsubscribeContainer } from "@/features/content";
 
 export const metadata: Metadata = {
@@ -14,12 +16,12 @@ export default async function UnsubscribePage({
   const token = typeof params.token === "string" ? params.token : "";
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-4 md:px-8">
+    <PageShell column="narrow">
       <ContentHeader
         title="Studio letters"
         subtitle="One note when a batch comes out of the kiln, nothing else."
       />
       <UnsubscribeContainer token={token} />
-    </div>
+    </PageShell>
   );
 }

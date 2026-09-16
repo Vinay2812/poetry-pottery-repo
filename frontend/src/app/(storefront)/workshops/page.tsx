@@ -3,6 +3,8 @@ import Link from "next/link";
 
 import { getWorkshops } from "@/lib/data/catalog";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import {
   toWorkshopPath,
   WorkshopBookingContainer,
@@ -22,7 +24,7 @@ export default async function WorkshopsPage() {
   if (only) return <WorkshopBookingContainer workshop={only} />;
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-16 px-4 py-8 md:px-8 md:py-12">
+    <PageShell className="flex flex-col gap-16 py-8 md:py-12">
       {workshops.length === 0 ? (
         <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
           <h1 className="font-heading text-3xl tracking-tight">
@@ -50,6 +52,6 @@ export default async function WorkshopsPage() {
           />
         ))
       )}
-    </div>
+    </PageShell>
   );
 }

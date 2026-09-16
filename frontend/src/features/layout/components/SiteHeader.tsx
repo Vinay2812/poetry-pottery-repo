@@ -10,6 +10,8 @@ import Link from "next/link";
 
 import { cn } from "@/lib/utils";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { Wordmark } from "@/features/layout/components/Wordmark";
 import { formatBadgeCount, type NavLink } from "@/features/layout/types";
 
@@ -80,7 +82,7 @@ export function SiteHeader({
         isHome ? "border-kiln" : "border-ash",
       )}
     >
-      <div className="mx-auto flex h-16 w-full max-w-7xl items-center gap-5 px-4 md:px-8">
+      <PageShell className="flex h-16 items-center gap-5">
         <Wordmark />
 
         {variant === "focused" ? (
@@ -179,7 +181,7 @@ export function SiteHeader({
             </div>
           </>
         )}
-      </div>
+      </PageShell>
     </header>
   );
 }

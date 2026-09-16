@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 
 import { Reveal } from "@/components/motion/Reveal";
+import { PageShell } from "@/components/layout/PageShell";
 import { getContentPage } from "@/lib/data/catalog";
 
 import { AboutClosing } from "@/features/content/components/AboutClosing";
@@ -22,7 +23,7 @@ export async function AboutPageContainer() {
   const process = sectionAt(page.sections, 2);
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+    <PageShell>
       <Reveal>
         <ContentHero
           title={page.title}
@@ -72,6 +73,6 @@ export async function AboutPageContainer() {
       <Reveal>
         <AboutClosing />
       </Reveal>
-    </div>
+    </PageShell>
   );
 }

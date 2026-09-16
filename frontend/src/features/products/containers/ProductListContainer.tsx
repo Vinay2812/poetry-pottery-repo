@@ -19,6 +19,8 @@ import {
 
 import { cn } from "@/lib/utils";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { ARCHIVE_PATH } from "@/features/archive/types";
 
 import { EmptyResults } from "@/features/products/components/EmptyResults";
@@ -285,7 +287,7 @@ export function ProductListContainer({
   );
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 md:px-8 md:py-12">
+    <PageShell className="flex flex-col gap-6 py-8 md:py-12">
       {/* The description line is always in the layout, so a collection without one
           does not lift the tabs and the grid under it. */}
       <header className="flex flex-col gap-2">
@@ -389,6 +391,6 @@ export function ProductListContainer({
       >
         {filterPanel}
       </FilterSheet>
-    </div>
+    </PageShell>
   );
 }

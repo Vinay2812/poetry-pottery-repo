@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { Reveal } from "@/components/motion/Reveal";
+import { PageShell } from "@/components/layout/PageShell";
 import { getSiteSettings } from "@/lib/data/site-settings";
 
 import {
@@ -21,7 +22,7 @@ export default async function ContactPage() {
   const settings = await getSiteSettings();
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+    <PageShell>
       <Reveal>
         <ContentHeader
           title="Come by, or write to us"
@@ -56,6 +57,6 @@ export default async function ContactPage() {
           </div>
         </div>
       </Reveal>
-    </div>
+    </PageShell>
   );
 }

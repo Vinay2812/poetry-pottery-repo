@@ -5,6 +5,8 @@ import { useCallback, useOptimistic, useState, useTransition } from "react";
 
 import { formatDate, formatDateTime, formatInr } from "@/lib/format";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { SignInWall } from "@/features/auth/components/SignInWall";
 import { CancelRegistrationDialog } from "@/features/events/components/CancelRegistrationDialog";
 import { RegistrationDetail } from "@/features/events/components/RegistrationDetail";
@@ -62,13 +64,10 @@ export function RegistrationDetailContainer({
 
   if (isLoading) {
     return (
-      <div
-        className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-12"
-        aria-busy="true"
-      >
+      <PageShell column="wide" className="py-8 md:py-12" isBusy>
         <div className="h-8 w-56 animate-pulse bg-ash" />
         <div className="mt-8 h-64 animate-pulse bg-ash/60" />
-      </div>
+      </PageShell>
     );
   }
   if (!isSignedIn) {
@@ -81,7 +80,10 @@ export function RegistrationDetailContainer({
   }
   if (hasError || !optimisticRegistration) {
     return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-3 px-4 py-16 text-center md:px-8">
+      <PageShell
+        column="wide"
+        className="flex flex-col items-center gap-3 py-16 text-center"
+      >
         <h1 className="font-heading text-2xl tracking-tight">
           We could not find that booking
         </h1>
@@ -92,7 +94,7 @@ export function RegistrationDetailContainer({
         >
           Try again
         </button>
-      </div>
+      </PageShell>
     );
   }
 

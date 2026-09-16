@@ -16,6 +16,8 @@ import {
   usePlaceOrderMutation,
 } from "@/graphql/generated/graphql";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { AddressPickerContainer } from "@/features/addresses";
 import { EmptyCart } from "@/features/cart/components/EmptyCart";
 import { useCart } from "@/features/cart/hooks";
@@ -183,27 +185,24 @@ export function CheckoutContainer() {
 
   if (isCartLoading) {
     return (
-      <div
-        className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-12"
-        aria-busy="true"
-      >
+      <PageShell column="wide" className="py-8 md:py-12" isBusy>
         <div className="h-8 w-40 animate-pulse bg-ash" />
         <div className="mt-8 h-64 animate-pulse bg-ash" />
-      </div>
+      </PageShell>
     );
   }
 
   if (!isSignedIn || (cart?.items.length ?? 0) === 0) {
     return (
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-8 md:py-12">
+      <PageShell column="wide" className="flex flex-col gap-6 py-8 md:py-12">
         <h1 className="font-heading text-3xl md:text-5xl">Checkout</h1>
         <EmptyCart isSignedIn={isSignedIn} onSignIn={() => openSignIn()} />
-      </div>
+      </PageShell>
     );
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-8 md:py-12">
+    <PageShell column="wide" className="flex flex-col gap-6 py-8 md:py-12">
       <h1 className="font-heading text-3xl md:text-5xl">Checkout</h1>
       <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
         <div className="flex flex-col gap-8">
@@ -281,6 +280,6 @@ export function CheckoutContainer() {
           />
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }

@@ -2,6 +2,7 @@ import { MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 import { formatInr, pluralize } from "@/lib/format";
 
 import type { EventFact } from "@/features/events/types";
@@ -60,7 +61,7 @@ export function RegistrationDetail({
   onCancel,
 }: RegistrationDetailProps) {
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-8 md:px-8 md:py-12">
+    <PageShell column="wide" className="flex flex-col gap-10 py-8 md:py-12">
       {isJustPlaced && (
         <section className="flex flex-col gap-3 border border-ash bg-white p-6 md:p-8">
           <h1 className="font-heading text-3xl tracking-tight md:text-4xl">
@@ -180,6 +181,6 @@ export function RegistrationDetail({
           </div>
         </aside>
       </div>
-    </div>
+    </PageShell>
   );
 }

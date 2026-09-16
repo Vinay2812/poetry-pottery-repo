@@ -2,6 +2,8 @@
 
 import { useCallback, useMemo, useState } from "react";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { AvailabilitySkeleton } from "@/features/workshops/components/AvailabilitySkeleton";
 import {
   BookingCalendar,
@@ -204,7 +206,7 @@ export function WorkshopBookingContainer({
   const lastMonth = toMonthKey(addDays(todayKey, workshop.booking_window_days));
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-8 md:px-8 md:py-12">
+    <PageShell className="flex flex-col gap-10 py-8 md:py-12">
       {/* The calendar is the page. The title and one sentence are all that sit above it. */}
       <header className="flex flex-col gap-3">
         <h1 className="max-w-3xl font-heading text-3xl leading-tight tracking-tight text-balance md:text-5xl">
@@ -301,6 +303,6 @@ export function WorkshopBookingContainer({
           />
         </aside>
       </div>
-    </div>
+    </PageShell>
   );
 }

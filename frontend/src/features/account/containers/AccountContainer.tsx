@@ -6,6 +6,8 @@ import { useCallback, useTransition } from "react";
 
 import { UserRole } from "@/graphql/generated/graphql";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { AccountMenu } from "@/features/account/components/AccountMenu";
 import { SignInWall } from "@/features/auth/components/SignInWall";
 import { toDisplayName, toMemberSince } from "@/features/account/types";
@@ -24,12 +26,9 @@ export function AccountContainer() {
 
   if (!isLoaded) {
     return (
-      <div
-        className="mx-auto w-full max-w-3xl px-4 py-8 md:px-8 md:py-12"
-        aria-busy="true"
-      >
+      <PageShell column="narrow" className="py-8 md:py-12" isBusy>
         <div className="h-16 animate-pulse bg-ash" />
-      </div>
+      </PageShell>
     );
   }
   if (!isSignedIn || !user) {

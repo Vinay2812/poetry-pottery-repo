@@ -1,6 +1,7 @@
 import Image from "next/image";
 
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
+import { PageShell } from "@/components/layout/PageShell";
 
 import type { EventFact } from "@/features/events/types";
 
@@ -28,7 +29,7 @@ export function EventDetail({
   reserveBox,
 }: EventDetailProps) {
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 py-8 md:px-8 md:py-12">
+    <PageShell className="flex flex-col gap-10 py-8 md:py-12">
       <div className="relative aspect-4/3 overflow-hidden bg-white md:aspect-21/9">
         {imageUrl ? (
           <Image
@@ -127,6 +128,6 @@ export function EventDetail({
           {reserveBox}
         </aside>
       </div>
-    </div>
+    </PageShell>
   );
 }

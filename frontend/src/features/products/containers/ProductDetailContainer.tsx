@@ -12,6 +12,7 @@ import { toPotteryIconKind } from "@/components/icons/pottery";
 import { REFERENCE_CUP, toDrawnVessel } from "@/components/media/vessels";
 import { KilnLabels, type KilnLabel } from "@/components/motion/KilnLabels";
 import { Reveal } from "@/components/motion/Reveal";
+import { PageShell } from "@/components/layout/PageShell";
 
 import { toProvenance } from "@/features/archive/types";
 import { useAddToCart } from "@/features/cart/hooks";
@@ -245,7 +246,7 @@ export function ProductDetailContainer({
   }));
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-16 px-4 py-8 md:px-8 md:py-12">
+    <PageShell className="flex flex-col gap-16 py-8 md:py-12">
       <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
         <ProductGallery
           images={product.image_urls}
@@ -477,6 +478,6 @@ export function ProductDetailContainer({
         canAddToCart={product.stock > 0 || product.is_customizable}
         onAddToCart={handleAddToCart}
       />
-    </div>
+    </PageShell>
   );
 }

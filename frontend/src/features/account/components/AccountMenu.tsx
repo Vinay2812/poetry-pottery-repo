@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 
 import { toInitials } from "@/features/account/types";
 
@@ -48,7 +49,7 @@ export function AccountMenu({
   onSignOut,
 }: AccountMenuProps) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-8 md:px-8 md:py-12">
+    <PageShell column="narrow" className="flex flex-col gap-8 py-8 md:py-12">
       <div className="flex items-center gap-4">
         <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ink text-xl tracking-wide text-white">
           {imageUrl ? (
@@ -120,6 +121,6 @@ export function AccountMenu({
           Sign out
         </button>
       </div>
-    </div>
+    </PageShell>
   );
 }

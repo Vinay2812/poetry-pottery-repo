@@ -5,6 +5,7 @@ import {
   InstagramIcon,
   YoutubeIcon,
 } from "@/components/icons/social";
+import { PageShell } from "@/components/layout/PageShell";
 
 import { Wordmark } from "@/features/layout/components/Wordmark";
 import type { NavLink } from "@/features/layout/types";
@@ -70,7 +71,7 @@ export function SiteFooter({
 
   return (
     <footer className="mt-20 border-t border-ash bg-background pb-20 lg:pb-0">
-      <div className="mx-auto w-full max-w-7xl px-4 py-12 md:px-8 md:py-16">
+      <PageShell className="py-12 md:py-16">
         <div className="grid gap-8 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
           <div className="flex flex-col gap-4">
             <Wordmark />
@@ -126,7 +127,7 @@ export function SiteFooter({
         <p className="mt-12 border-t border-ash pt-6 text-[13px] text-muted-foreground">
           © {year} Poetry &amp; Pottery, Sangli.
         </p>
-      </div>
+      </PageShell>
     </footer>
   );
 }

@@ -3,6 +3,8 @@
 import { useClerk } from "@clerk/nextjs";
 import { useCallback } from "react";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { CartLineItem } from "@/features/cart/components/CartLineItem";
 import { CartSummary } from "@/features/cart/components/CartSummary";
 import { EmptyCart } from "@/features/cart/components/EmptyCart";
@@ -28,17 +30,14 @@ export function CartContainer() {
 
   if (isLoading) {
     return (
-      <div
-        className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-12"
-        aria-busy="true"
-      >
+      <PageShell column="wide" className="py-8 md:py-12" isBusy>
         <div className="h-8 w-40 animate-pulse bg-ash" />
         <div className="mt-8 flex flex-col gap-4">
           {[0, 1, 2].map((index) => (
             <div key={index} className="h-28 animate-pulse bg-ash" />
           ))}
         </div>
-      </div>
+      </PageShell>
     );
   }
 
@@ -46,7 +45,7 @@ export function CartContainer() {
   const available = items.filter((item) => item.is_available);
 
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-8 md:px-8 md:py-12">
+    <PageShell column="wide" className="flex flex-col gap-6 py-8 md:py-12">
       <h1 className="font-heading text-3xl md:text-5xl">Your cart</h1>
       {items.length === 0 ? (
         <EmptyCart isSignedIn={isSignedIn} onSignIn={() => openSignIn()} />
@@ -111,6 +110,6 @@ export function CartContainer() {
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

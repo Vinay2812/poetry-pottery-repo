@@ -2,6 +2,8 @@
 
 import { useClerk } from "@clerk/nextjs";
 
+import { PageShell } from "@/components/layout/PageShell";
+
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import { ProductCardSkeleton } from "@/features/products/components/ProductCardSkeleton";
 import { ProductGrid } from "@/features/products/components/ProductGrid";
@@ -13,7 +15,7 @@ export function WishlistContainer() {
   const { openSignIn } = useClerk();
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-8 md:px-8 md:py-12">
+    <PageShell className="flex flex-col gap-6 py-8 md:py-12">
       <div className="flex flex-col gap-1">
         <h1 className="font-heading text-3xl md:text-5xl">Saved pieces</h1>
         {items.length > 0 && (
@@ -38,6 +40,6 @@ export function WishlistContainer() {
           ))}
         </ProductGrid>
       )}
-    </div>
+    </PageShell>
   );
 }

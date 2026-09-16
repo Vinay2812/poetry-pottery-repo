@@ -1,6 +1,7 @@
 import { MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PageShell } from "@/components/layout/PageShell";
 
 import { OrderCareGuide } from "@/features/orders/components/OrderCareGuide";
 import { OrderPlacedBanner } from "@/features/orders/components/OrderPlacedBanner";
@@ -89,7 +90,7 @@ export function OrderDetail({
   onCancel,
 }: OrderDetailProps) {
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 md:px-8 md:py-12">
+    <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
       {isJustPlaced && (
         <OrderPlacedBanner
           firstName={firstName}
@@ -233,6 +234,6 @@ export function OrderDetail({
           </div>
         </aside>
       </div>
-    </div>
+    </PageShell>
   );
 }

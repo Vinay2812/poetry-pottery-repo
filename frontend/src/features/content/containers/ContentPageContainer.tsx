@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Reveal } from "@/components/motion/Reveal";
+import { PageShell } from "@/components/layout/PageShell";
 import { getContentPage } from "@/lib/data/catalog";
 
 import { ContentHeader } from "@/features/content/components/ContentHeader";
@@ -33,7 +34,7 @@ export async function ContentPageContainer({
   const sections = toSectionViews(page.sections);
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 md:px-8">
+    <PageShell>
       <Reveal>
         <ContentHeader title={page.title} subtitle={page.subtitle} />
       </Reveal>
@@ -60,6 +61,6 @@ export async function ContentPageContainer({
           ))}
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
