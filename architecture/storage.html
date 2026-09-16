@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storage and uploads &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Storage and uploads: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="queue-mail.html">&larr; Queue and mail</a><a rel="next" href="admin.html">Admin API and console &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 14 of 20</p>
+<h1>Storage and uploads</h1>
+<p class="lede">Images go straight from the browser to Cloudflare R2 through a presigned PUT, so bytes never pass through the API. What makes that safe is that the API afterwards reads the stored object back, decodes it with sharp, and checks it against a per-purpose spec table - deleting the object and refusing if it misses. Only keys that pass are written into a <code>confirmed_uploads</code> ledger, and every entity save re-asserts against that ledger before persisting an image URL.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 900 420" role="img" aria-label="Storage and uploads: presign, direct PUT, confirm with sharp, the confirmed_uploads ledger and the save-time assertion" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="300" height="410"/><text x="18" y="26">Admin console</text></g><g class="lane"><rect x="325" y="10" width="300" height="410"/><text x="333" y="26">API</text></g><g class="lane"><rect x="640" y="10" width="250" height="410"/><text x="648" y="26">R2 and Postgres</text></g><g class="box t-client"><rect x="28" y="44" width="260" height="44"/><text x="158" y="63" text-anchor="middle" class="b">ImageDropField</text><text x="158" y="77" text-anchor="middle">checkFile: MIME and bytes</text></g><g class="box t-client"><rect x="28" y="108" width="260" height="44"/><text x="158" y="127" text-anchor="middle" class="b">measureFile</text><text x="158" y="141" text-anchor="middle">createImageBitmap</text></g><g class="box t-client"><rect x="28" y="172" width="260" height="44"/><text x="158" y="191" text-anchor="middle" class="b">checkDimensions</text><text x="158" y="205" text-anchor="middle">ok / too-small / wrong-ratio</text></g><g class="box t-client"><rect x="28" y="236" width="260" height="44"/><text x="158" y="255" text-anchor="middle" class="b">cropToRatio, ImageCropDialog</text><text x="158" y="269" text-anchor="middle">centreCrop on canvas</text></g><g class="box t-client"><rect x="28" y="310" width="260" height="44"/><text x="158" y="329" text-anchor="middle" class="b">useConfirmedUpload</text><text x="158" y="343" text-anchor="middle">presign, PUT, confirm</text></g><g class="box t-api"><rect x="345" y="44" width="260" height="40"/><text x="475" y="68" text-anchor="middle">imageSpecs query</text></g><g class="box t-svc"><rect x="345" y="98" width="260" height="44"/><text x="475" y="117" text-anchor="middle" class="b">createAdminUpload</text><text x="475" y="131" text-anchor="middle">type and size allowlist</text></g><g class="box t-svc"><rect x="345" y="160" width="260" height="44"/><text x="475" y="179" text-anchor="middle" class="b">StorageService.createImageUpload</text><text x="475" y="193" text-anchor="middle">key + presigned PUT</text></g><g class="box t-svc"><rect x="345" y="222" width="260" height="44"/><text x="475" y="241" text-anchor="middle" class="b">confirmUpload</text><text x="475" y="255" text-anchor="middle">folder prefix check</text></g><g class="box t-svc"><rect x="345" y="284" width="260" height="46"/><text x="475" y="304" text-anchor="middle" class="b">sharp().metadata + checkImage</text><text x="475" y="318" text-anchor="middle">delete and throw on failure</text></g><g class="box t-svc"><rect x="345" y="348" width="260" height="40"/><text x="475" y="372" text-anchor="middle">assertConfirmed at save time</text></g><g class="box t-ext"><rect x="660" y="98" width="215" height="46"/><text x="768" y="118" text-anchor="middle" class="b">R2 bucket</text><text x="768" y="132" text-anchor="middle">presigned URL, 600 s</text></g><g class="box t-ext"><rect x="660" y="222" width="215" height="46"/><text x="768" y="242" text-anchor="middle" class="b">object bytes read back</text><text x="768" y="256" text-anchor="middle">not the client&#x27;s claims</text></g><g class="box t-db"><rect x="660" y="320" width="215" height="46"/><text x="768" y="340" text-anchor="middle" class="b">confirmed_uploads</text><text x="768" y="354" text-anchor="middle">key is the primary key</text></g><path class="edge" d="M 158 88 L 158 108" marker-end="url(#arrowhead)"/><path class="edge" d="M 158 152 L 158 172" marker-end="url(#arrowhead)"/><path class="edge" d="M 158 216 L 158 236" marker-end="url(#arrowhead)"/><path class="edge" d="M 158 280 L 158 310" marker-end="url(#arrowhead)"/><path class="edge" d="M 288 66 L 345 64" marker-end="url(#arrowhead)"/><path class="edge" d="M 288 320 Q 325 230 345 118" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 142 L 475 160" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 204 L 475 222" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 266 L 475 284" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 330 L 475 348" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 121 L 660 121" marker-end="url(#arrowhead)"/><path class="edge" d="M 288 332 Q 470 400 660 130" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 245 L 660 245" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 307 L 660 330" marker-end="url(#arrowhead)"/></svg><figcaption>Bytes never pass through the API. The browser PUTs straight to a presigned URL, and the API then reads the stored object back and decides with sharp whether it matches the spec.</figcaption></figure></section><section id="how"><h2>How it works</h2><h3>Configuration</h3><p><code>readR2Config()</code> requires all five of <code>R2_ACCOUNT_ID</code>, <code>R2_ACCESS_KEY_ID</code>, <code>R2_SECRET_ACCESS_KEY</code>, <code>R2_BUCKET</code> and <code>R2_PUBLIC_URL</code>; any gap leaves <code>isEnabled</code> false. The trailing slash is stripped from the public URL and the S3 client points at <code>https://&lt;accountId&gt;.r2.cloudflarestorage.com</code> with region <code>auto</code>. Module constants: seven upload folders, an allowlist of JPEG, PNG, WebP and AVIF, <code>MAX_IMAGE_BYTES</code> of 8 MB and a presign lifetime of 600 seconds.</p><h3>Presigning</h3><ol><li><code>createAdminUpload(purpose, content_type, size)</code> is <code>@AdminRequired()</code>. It checks the content type against the allowlist and that the size is above zero and within 8 MB.</li><li><code>folderFor(purpose)</code> and <code>extensionFor(contentType)</code> build a synthetic filename <code>&lt;purpose&gt;.&lt;ext&gt;</code>; the client&#x27;s own filename never reaches the key on this path.</li><li><code>StorageService.createImageUpload</code> re-checks type and size, sanitises the name to lowercase alphanumerics and dashes keeping the last 80 characters, and builds the key as <code>&lt;folder&gt;/&lt;timestamp&gt;-&lt;4 random bytes hex&gt;-&lt;safeName&gt;</code>. That makes collisions effectively impossible and keys unguessable enough that one presign cannot overwrite another&#x27;s object.</li><li><code>getSignedUrl</code> over a <code>PutObjectCommand</code> that includes <code>ContentType</code> and <code>ContentLength</code>, so the browser cannot PUT a larger body than it declared.</li></ol><h3>Confirming</h3><p><code>UploadsService.confirm(key, purpose)</code> is where the real file is inspected for the first and only time.</p><ol><li>The first path segment of the key must equal <code>folderFor(purpose)</code>, which stops a category tile being confirmed as a product photo.</li><li><code>StorageService.readObject(key)</code> pulls the bytes back; a missing body is <code>That upload is no longer in the bucket</code>.</li><li><code>sharp(body).metadata()</code> decides the real format and dimensions; a decode failure is <code>That file does not read as an image</code>.</li><li><code>checkImage(purpose, { width, height, format, bytes })</code> checks, in order: the decoded format against the allowlist, the byte size, that dimensions exist, then either the shortest side (for <code>REVIEW</code>, whose ratio is null) or both minimum dimensions followed by the ratio within <code>RATIO_TOLERANCE = 0.02</code> relative.</li><li><strong>On any problem the object is deleted and then the error is thrown</strong>, so a rejected upload does not linger in the bucket.</li><li>On success it upserts a <code>confirmedUpload</code> row keyed on the object key, which makes re-confirmation idempotent, and returns the public URL and the measured dimensions.</li></ol><div class="scroll"><table><caption>api/src/features/admin/uploads/image-specs.ts:IMAGE_SPECS. All share max_bytes of 8 MB and the same content type allowlist, and the whole table is exposed over the imageSpecs query so console and API cannot drift.</caption><thead><tr><th scope="col">Purpose</th><th scope="col">Ratio</th><th scope="col">Minimum size</th><th scope="col">Used for</th></tr></thead><tbody><tr><td><code>PRODUCT</code></td><td>1:1</td><td>1000 x 1000</td><td>Cards, gallery, cart lines</td></tr><tr><td><code>CATEGORY</code></td><td>1:1</td><td>600 x 600</td><td>Category tiles</td></tr><tr><td><code>COLLECTION</code></td><td>3:2</td><td>1200 x 800</td><td>Collection headers</td></tr><tr><td><code>EVENT</code></td><td>4:3</td><td>1200 x 900</td><td>Event covers</td></tr><tr><td><code>HERO</code></td><td>16:9</td><td>1600 x 900</td><td>Site and workshop hero images</td></tr><tr><td><code>CONTENT</code></td><td>16:9</td><td>1600 x 900</td><td>Content page heroes</td></tr><tr><td><code>REVIEW</code></td><td>any</td><td>400 on the shortest side</td><td>Customer review photos</td></tr></tbody></table></div><h3>The ledger</h3><p><code>confirmed_uploads</code> has <code>key</code> as its primary key plus <code>purpose</code>, <code>width</code>, <code>height</code>, <code>bytes</code> and <code>created_at</code>. <code>purpose</code> is stored as plain text rather than the enum, and the API compares it against the enum string at query time. There is no foreign key to anything and no index beyond the primary key.</p><h3>Enforcement at save time</h3><p><code>assertConfirmed(urls, alreadySaved, purpose?)</code> is what every entity write calls before persisting image URLs. It returns immediately when storage is disabled or the list is empty; it grandfathers URLs already on the row being edited, so an old image survives a re-save after the spec table changes; it maps each remaining URL back to a key, rejecting anything outside the bucket with <code>Images must be uploaded through the console</code>; and it requires a confirmed row for each key, matching on purpose, else <code>One of these images was never confirmed against the size and ratio rules</code>. The purpose match is what stops a 600 by 600 category tile being reused as a product photo.</p><p>Callers: the admin products service (twice), the admin catalog service (four times, for categories and collections), the admin events service (twice), the admin workshops service, and the admin content service for both the content hero and the site hero. The storefront review path does <strong>not</strong> call it; see the <a href="reviews.html">reviews page</a>.</p><h3>The console uploader</h3><p><code>useImageRequirement(purpose)</code> reads the rules from the <code>imageSpecs</code> query with a cache-first policy, and the field renders a placeholder until they arrive, so the browser never validates against hardcoded numbers. Then: <code>checkFile</code> on type and bytes; <code>measureFile</code> via <code>createImageBitmap</code>, closing the bitmap; <code>checkDimensions</code> returning <code>ok</code>, <code>too-small</code> or <code>wrong-ratio</code>. <code>too-small</code> is fatal before any dialog opens, because cropping cannot add pixels. <code>wrong-ratio</code> runs <code>cropToRatio</code>, which draws the <code>centreCrop</code> rectangle onto a canvas and writes PNG for a PNG source and JPEG at quality 0.92 otherwise; if the centred crop would fall below the minimum it errors out before the dialog. The dialog shows the preview, and confirming runs <code>cropToRatio</code> a second time on the original file rather than reusing the preview blob. Object URLs are revoked in an effect cleanup.</p><p class="note"><code>RATIO_TOLERANCE = 0.02</code> is declared in both <code>api/src/features/admin/uploads/image-specs.ts</code> and <code>frontend/src/features/admin/uploads/types.ts</code>, and the check is written differently on each side (<code>Math.abs(w / h - ratio) &gt; ratio * TOLERANCE</code> versus <code>Math.abs(actual - spec.ratio) / spec.ratio &gt; TOLERANCE</code>). They are algebraically equal but textually divergent, so they have to be changed together.</p></section><section id="theory"><h2>Minimal theory: call trace</h2><ol class="trace"><li><code class="ref">frontend/src/features/admin/uploads/hooks.ts:useImageRequirement</code><span class="desc"><code>useImageSpecsQuery</code> with <code>fetchPolicy: &quot;cache-first&quot;</code>, mapped into an <code>ImageRequirement</code>.</span></li><li><code class="ref">api/src/features/admin/uploads/uploads.service.ts:UploadsService.specs</code><span class="desc">Returns <code>IMAGE_SPECS</code> so the console and the API share one table.</span></li><li><code class="ref">frontend/src/features/admin/uploads/types.ts:checkFile</code><span class="desc">MIME and byte guard, naming the actual type and size in the message.</span></li><li><code class="ref">frontend/src/features/admin/uploads/hooks.ts:measureFile</code><span class="desc"><code>createImageBitmap</code>, then <code>bitmap.close()</code>.</span></li><li><code class="ref">frontend/src/features/admin/uploads/types.ts:checkDimensions</code><span class="desc">Verdict; <code>too-small</code> stops here, <code>ok</code> uploads directly.</span></li><li><code class="ref">frontend/src/features/admin/uploads/hooks.ts:cropToRatio</code><span class="desc">Canvas crop through <code>centreCrop</code>; runs again on confirm rather than reusing the preview.</span></li><li><code class="ref">frontend/src/features/admin/uploads/hooks.ts:useConfirmedUpload</code><span class="desc"><code>createAdminUpload</code>, then a direct <code>fetch</code> PUT to the presigned URL, then <code>confirmUpload</code>.</span></li><li><code class="ref">api/src/features/admin/uploads/uploads.service.ts:UploadsService.createUpload</code><span class="desc">Allowlist and size checks, then the folder and synthetic filename.</span></li><li><code class="ref">api/src/storage/storage.service.ts:StorageService.createImageUpload</code><span class="desc">Sanitises the name, builds the unguessable key and signs the PUT with content type and length.</span></li><li><code class="ref">api/src/features/admin/uploads/uploads.service.ts:UploadsService.confirm</code><span class="desc">Folder prefix check, <code>readObject</code>, <code>sharp().metadata()</code>, <code>checkImage</code>, delete-and-throw on failure, upsert on success.</span></li><li><code class="ref">api/src/features/admin/uploads/uploads.service.ts:UploadsService.assertConfirmed</code><span class="desc">Called later by the entity save, re-asserting that every URL on the form was confirmed for this purpose.</span></li></ol></section><section id="edges"><h2>Edge cases and failure handling</h2><ul><li><strong>Without R2 the whole gate is a no-op.</strong> <code>assertConfirmed</code> returns immediately when storage is disabled, which unblocks local development but means a misconfigured production deploy would silently accept arbitrary URLs.</li><li><strong>An image below the minimum cannot be rescued by cropping</strong> and is rejected before the dialog opens; a crop that would land below the minimum is also rejected up front.</li><li><strong>Two confirms of the same key</strong> are idempotent through the upsert on the primary key.</li><li><strong>A confirm racing an entity save</strong> is possible, because <code>assertConfirmed</code> reads outside any transaction; the console recovers by re-saving.</li><li><strong>Time of check to time of use.</strong> The presigned URL stays valid for its full 600 second window, so the same key could be overwritten with different bytes after confirmation while the ledger row still vouches for it. The only mitigations are the unguessable key and the single-purpose presign; there is no ETag or version check.</li><li><strong>There is no cleanup job.</strong> Nothing sweeps R2 for objects with no ledger row, nothing removes ledger rows whose URL was never attached, and nothing deletes objects when an entity&#x27;s image list shrinks or the entity is deleted. Abandoned and replaced images leak indefinitely, and <code>confirmed_uploads</code> grows monotonically. Its unused <code>created_at</code> column is the obvious hook for such a sweeper.</li><li><strong>The gallery uploader silently drops a duplicate URL</strong> rather than saying so.</li></ul></section><section id="tests"><h2>Tests</h2><ul><li><code>api/src/features/admin/uploads/uploads.service.spec.ts</code> covers <code>checkImage</code> (a ratio two percent off the spec is allowed, further off is rejected, review photos only check the shortest side) and the service (presigning into the folder that matches the purpose, recording a matching upload and returning its public URL, deleting and rejecting an upload that misses the spec, rejecting a key from another purpose&#x27;s folder, grandfathering URLs already saved on the row being edited, and skipping the check entirely when storage is not configured).</li><li><code>frontend/src/features/admin/uploads/types.test.ts</code> covers <code>checkFile</code>, <code>checkDimensions</code>, <code>centreCrop</code> and <code>moveUrl</code>. Stories: <code>ImageCropDialog</code>, <code>ImageDropField</code> and <code>ImageStrip</code>.</li><li>There is no test for <code>api/src/storage/storage.service.ts</code>.</li></ul></section>
+<footer class="bottom">
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="queue-mail.html">&larr; Queue and mail</a><a rel="next" href="admin.html">Admin API and console &rarr;</a></nav>
+<p>Verified against the working tree on branch <code>docs/architecture</code>, stacked on <code>feat/admin-ui</code>.</p>
+</footer>
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>
