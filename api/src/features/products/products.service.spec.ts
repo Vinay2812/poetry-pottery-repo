@@ -133,6 +133,35 @@ describe("ProductsService", () => {
     expect(searchMock.rankProducts).not.toHaveBeenCalled();
   });
 
+  it("narrows the shelf to seconds and counts them without the toggle", async () => {
+    prismaMock.product.findMany.mockResolvedValue([row(1)]);
+
+    await service.list({ seconds_only: true, materials: ["Stoneware"] });
+
+    expect(prismaMock.product.findMany).toHaveBeenCalledWith(
+      containing({
+        where: {
+          AND: [
+            availableProductWhere(),
+            { material: { in: ["Stoneware"] } },
+            { is_second: true },
+          ],
+        },
+      }),
+    );
+    // The seconds count answers "how many would this leave", so it skips its own clause once.
+    expect(prismaMock.product.count).toHaveBeenCalledWith({
+      where: {
+        AND: [
+          {
+            AND: [availableProductWhere(), { material: { in: ["Stoneware"] } }],
+          },
+          { is_second: true },
+        ],
+      },
+    });
+  });
+
   it("keeps search relevance order and paginates in memory", async () => {
     searchMock.rankProducts.mockResolvedValue([3, 1, 2]);
     prismaMock.product.findMany.mockResolvedValue([row(1), row(2), row(3)]);
@@ -186,6 +215,7 @@ describe("ProductsService", () => {
       price_max: 3800,
       active_count: 0,
       archive_count: 0,
+      seconds_count: 0,
     });
     // The material filter must not narrow its own facet.
     expect(prismaMock.product.groupBy).toHaveBeenCalledWith(

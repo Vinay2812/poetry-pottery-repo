@@ -71,6 +71,7 @@ export function ProductCardContainer({
       glazeName={product.glaze?.name ?? null}
       glazeColor={product.glaze?.color_code ?? null}
       isWishlisted={isWishlisted(product.id)}
+      isSecond={product.is_second}
       isCustomizable={product.is_customizable}
       isAddingToCart={isAdding}
       isPriority={isPriority}

@@ -95,6 +95,7 @@ function line(
       color_code: null,
       glaze: null,
       image_urls: [],
+      is_second: false,
       stock: 10,
       is_active: true,
       is_archived: false,

@@ -192,6 +192,10 @@ export function ProductListContainer({
     (value: boolean) => dispatch({ type: "customizable", value }),
     [dispatch],
   );
+  const handleSecondsChange = useCallback(
+    (value: boolean) => dispatch({ type: "seconds", value }),
+    [dispatch],
+  );
   const handleClear = useCallback(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
     setSearchDraft(null);
@@ -261,6 +265,8 @@ export function ProductListContainer({
       priceRange={priceRange}
       inStockOnly={filters.inStockOnly}
       customizableOnly={filters.customizableOnly}
+      secondsOnly={filters.secondsOnly}
+      secondsCount={facets.seconds_count}
       onToggleCategory={handleToggleCategory}
       onToggleCollection={handleToggleCollection}
       onToggleMaterial={handleToggleMaterial}
@@ -269,6 +275,7 @@ export function ProductListContainer({
       onPriceRangeCommit={handlePriceCommit}
       onInStockOnlyChange={handleInStockChange}
       onCustomizableOnlyChange={handleCustomizableChange}
+      onSecondsOnlyChange={handleSecondsChange}
     />
   );
 

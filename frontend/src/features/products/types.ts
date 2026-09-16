@@ -37,6 +37,7 @@ export interface ProductFilters {
   maxPrice: number | null;
   inStockOnly: boolean;
   customizableOnly: boolean;
+  secondsOnly: boolean;
   isArchive: boolean;
   sort: ProductSort;
 }
@@ -51,6 +52,7 @@ export const EMPTY_FILTERS: ProductFilters = {
   maxPrice: null,
   inStockOnly: false,
   customizableOnly: false,
+  secondsOnly: false,
   isArchive: false,
   sort: ProductSort.Featured,
 };
@@ -84,6 +86,7 @@ export function parseFilters(params: URLSearchParams): ProductFilters {
     maxPrice: readInt(params, "max"),
     inStockOnly: params.get("in_stock") === "1",
     customizableOnly: params.get("customizable") === "true",
+    secondsOnly: params.get("seconds") === "1",
     isArchive: params.get("view") === ARCHIVE_VIEW,
     sort:
       sort && SORT_VALUES.has(sort)
@@ -101,6 +104,7 @@ export type FilterAction =
   | { type: "price"; min: number | null; max: number | null }
   | { type: "inStock"; value: boolean }
   | { type: "customizable"; value: boolean }
+  | { type: "seconds"; value: boolean }
   | { type: "sort"; sort: ProductSort }
   | { type: "view"; isArchive: boolean }
   | { type: "clear" };
@@ -142,6 +146,8 @@ export function applyFilterAction(
       return { ...current, inStockOnly: action.value };
     case "customizable":
       return { ...current, customizableOnly: action.value };
+    case "seconds":
+      return { ...current, secondsOnly: action.value };
     case "sort":
       return { ...current, sort: action.sort };
     case "view":
@@ -164,6 +170,7 @@ export function toSearchParams(filters: ProductFilters): URLSearchParams {
   if (filters.maxPrice !== null) params.set("max", String(filters.maxPrice));
   if (filters.inStockOnly) params.set("in_stock", "1");
   if (filters.customizableOnly) params.set("customizable", "true");
+  if (filters.secondsOnly) params.set("seconds", "1");
   if (filters.isArchive) params.set("view", ARCHIVE_VIEW);
   if (filters.sort !== ProductSort.Featured) params.set("sort", filters.sort);
   return params;
@@ -183,6 +190,7 @@ export function toFilterInput(
     max_price: filters.maxPrice,
     in_stock_only: filters.inStockOnly || null,
     customizable_only: filters.customizableOnly || null,
+    seconds_only: filters.secondsOnly || null,
     archive: filters.isArchive,
     sort: filters.sort,
     page,
@@ -198,7 +206,8 @@ export function countActiveFilters(filters: ProductFilters): number {
     filters.glazes.length +
     (filters.minPrice !== null || filters.maxPrice !== null ? 1 : 0) +
     (filters.inStockOnly ? 1 : 0) +
-    (filters.customizableOnly ? 1 : 0)
+    (filters.customizableOnly ? 1 : 0) +
+    (filters.secondsOnly ? 1 : 0)
   );
 }
 
@@ -228,6 +237,29 @@ export function toBatchLabel(stock: number, isCustomizable: boolean): string {
   if (stock <= 0) return "Sold out \u00b7 next batch soon";
   if (stock === 1) return "One made in this batch";
   return `${stock} made in this batch`;
+}
+
+// A second still says what is left in the batch; both facts share the card's one reserved line.
+export function toCardStatusLine(
+  isSecond: boolean,
+  tone: StockTone,
+  stockLabel: string,
+): string | null {
+  const parts = [
+    isSecond ? "Second" : null,
+    tone === "in_stock" ? null : stockLabel,
+  ].filter((part): part is string => part !== null);
+  return parts.length > 0 ? parts.join(" · ") : null;
+}
+
+export const SECOND_HEADING = "What is different about this one";
+
+// Every second should carry its own note; until it does, the page still admits what it is.
+export function toFlawNote(flawNote: string | null): string {
+  return (
+    flawNote?.trim() ||
+    "This one came out of the kiln with a mark, so it leaves the studio at a lower price."
+  );
 }
 
 export const STUDIO_NOTE =

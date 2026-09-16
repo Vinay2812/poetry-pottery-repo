@@ -23,6 +23,8 @@ import {
   toFilterInput,
   toSearchParams,
   toBatchLabel,
+  toCardStatusLine,
+  toFlawNote,
   toGlazeAskUrl,
   toPhotoAlt,
   toPhotoLabel,
@@ -122,6 +124,16 @@ describe("filters round-trip", () => {
     expect(
       countActiveFilters({ ...EMPTY_FILTERS, customizableOnly: true }),
     ).toBe(1);
+    expect(countActiveFilters({ ...EMPTY_FILTERS, secondsOnly: true })).toBe(1);
+  });
+
+  it("round-trips the seconds toggle through the URL", () => {
+    const filters = parseFilters(new URLSearchParams("seconds=1&view=archive"));
+    expect(filters.secondsOnly).toBe(true);
+    expect(filters.isArchive).toBe(true);
+    expect(toSearchParams(filters).toString()).toBe("seconds=1&view=archive");
+    expect(toFilterInput(filters, 1).seconds_only).toBe(true);
+    expect(toSearchParams(EMPTY_FILTERS).has("seconds")).toBe(false);
   });
 });
 
@@ -137,6 +149,7 @@ describe("toFilterInput", () => {
       max_price: null,
       in_stock_only: null,
       customizable_only: null,
+      seconds_only: null,
       archive: false,
       sort: ProductSort.Featured,
       page: 1,
@@ -625,5 +638,32 @@ describe("toPieceScale", () => {
 describe("toGlazePath", () => {
   it("points at the shelf filtered to one glaze", () => {
     expect(toGlazePath("ocean-blue")).toBe("/products?glaze=ocean-blue");
+  });
+});
+
+describe("toCardStatusLine", () => {
+  it("says nothing when a full-price piece is simply in stock", () => {
+    expect(toCardStatusLine(false, "in_stock", "Ready to ship")).toBeNull();
+  });
+
+  it("names the second on its own and alongside the batch line", () => {
+    expect(toCardStatusLine(true, "in_stock", "Ready to ship")).toBe("Second");
+    expect(toCardStatusLine(true, "low", "Only 2")).toBe(
+      "Second \u00b7 Only 2",
+    );
+    expect(toCardStatusLine(false, "low", "Only 2")).toBe("Only 2");
+  });
+});
+
+describe("toFlawNote", () => {
+  it("prefers the studio's own note", () => {
+    expect(toFlawNote("  The rim dipped in the firing.  ")).toBe(
+      "The rim dipped in the firing.",
+    );
+  });
+
+  it("still admits the piece is a second when no note was written", () => {
+    expect(toFlawNote(null)).toContain("lower price");
+    expect(toFlawNote("   ")).toBe(toFlawNote(null));
   });
 });

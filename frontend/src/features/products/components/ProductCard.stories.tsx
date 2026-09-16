@@ -41,6 +41,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const Second: Story = {
+  args: {
+    name: "Ash glaze bowl",
+    price: 600,
+    compareAtPrice: 900,
+    isSecond: true,
+  },
+};
+
 export const OnePhoto: Story = {
   args: { imageUrls: PHOTOS.slice(0, 1) },
 };

@@ -123,6 +123,7 @@ const NARROW_KEYS = [
   "glaze",
   "price",
   "stock",
+  "seconds",
 ] as const;
 
 type NarrowKey = (typeof NARROW_KEYS)[number];
@@ -197,6 +198,7 @@ export class ProductsService {
             ]
           : [],
       stock: filter.in_stock_only ? [{ stock: { gt: 0 } }] : [],
+      seconds: filter.seconds_only ? [{ is_second: true }] : [],
     };
 
     // A facet counts against every other active filter but not against itself, so its own options never vanish.
@@ -208,30 +210,34 @@ export class ProductsService {
     const where = scoped();
     const tabWhere = [...pool, ...NARROW_KEYS.flatMap((key) => narrowing[key])];
 
-    const [rows, facets, activeCount, archiveCount] = await Promise.all([
-      rankedIds
-        ? this.prisma.product.findMany({ where, include: productListInclude })
-        : this.prisma.product.findMany({
-            where,
-            include: productListInclude,
-            orderBy: SORT_ORDER[filter.sort ?? ProductSort.FEATURED],
-            skip: bounds.skip,
-            take: bounds.limit,
-          }),
-      this.facets({
-        categories: scoped("category"),
-        collections: scoped("collection"),
-        materials: scoped("material"),
-        glazes: scoped("glaze"),
-        prices: scoped("price"),
-      }),
-      this.prisma.product.count({
-        where: { AND: [availableProductWhere(now), ...tabWhere] },
-      }),
-      this.prisma.product.count({
-        where: { AND: [archivedProductWhere(now), ...tabWhere] },
-      }),
-    ]);
+    const [rows, facets, activeCount, archiveCount, secondsCount] =
+      await Promise.all([
+        rankedIds
+          ? this.prisma.product.findMany({ where, include: productListInclude })
+          : this.prisma.product.findMany({
+              where,
+              include: productListInclude,
+              orderBy: SORT_ORDER[filter.sort ?? ProductSort.FEATURED],
+              skip: bounds.skip,
+              take: bounds.limit,
+            }),
+        this.facets({
+          categories: scoped("category"),
+          collections: scoped("collection"),
+          materials: scoped("material"),
+          glazes: scoped("glaze"),
+          prices: scoped("price"),
+        }),
+        this.prisma.product.count({
+          where: { AND: [availableProductWhere(now), ...tabWhere] },
+        }),
+        this.prisma.product.count({
+          where: { AND: [archivedProductWhere(now), ...tabWhere] },
+        }),
+        this.prisma.product.count({
+          where: { AND: [scoped("seconds"), { is_second: true }] },
+        }),
+      ]);
     const total = isArchive ? archiveCount : activeCount;
 
     // Search results keep the relevance order, so paginate after re-sorting by rank.
@@ -249,6 +255,7 @@ export class ProductsService {
         ...facets,
         active_count: activeCount,
         archive_count: archiveCount,
+        seconds_count: secondsCount,
       },
     };
   }
@@ -412,7 +419,9 @@ export class ProductsService {
     materials: Prisma.ProductWhereInput;
     glazes: Prisma.ProductWhereInput;
     prices: Prisma.ProductWhereInput;
-  }): Promise<Omit<ProductFacets, "active_count" | "archive_count">> {
+  }): Promise<
+    Omit<ProductFacets, "active_count" | "archive_count" | "seconds_count">
+  > {
     const [
       categories,
       collections,
@@ -502,6 +511,7 @@ function emptyFacets(): ProductFacets {
     price_max: 0,
     active_count: 0,
     archive_count: 0,
+    seconds_count: 0,
   };
 }
 

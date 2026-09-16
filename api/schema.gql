@@ -422,6 +422,7 @@ type Product {
   description: String!
   diameter_cm: Float
   dimensions: String
+  flaw_note: String
   glaze: Glaze
   height_cm: Float
   id: Int!
@@ -431,6 +432,7 @@ type Product {
   is_archived: Boolean!
   is_customizable: Boolean!
   is_featured: Boolean!
+  is_second: Boolean!
   maker_note: String
   material: String!
   name: String!
@@ -453,6 +455,7 @@ type ProductFacets {
   materials: [FacetCount!]!
   price_max: Int!
   price_min: Int!
+  seconds_count: Int!
 }
 
 type ProductOption {
@@ -493,6 +496,7 @@ input ProductsFilterInput {
   min_price: Int
   page: Int
   search: String
+  seconds_only: Boolean
   sort: ProductSort
 }
 

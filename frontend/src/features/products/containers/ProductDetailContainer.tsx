@@ -26,6 +26,7 @@ import { ProductBuyBox } from "@/features/products/components/ProductBuyBox";
 import { ProductCarousel } from "@/features/products/components/ProductCarousel";
 import { ProductGallery } from "@/features/products/components/ProductGallery";
 import { ReferencePhotoPicker } from "@/features/products/components/ReferencePhotoPicker";
+import { SecondNotice } from "@/features/products/components/SecondNotice";
 import { StickyBuyBar } from "@/features/products/components/StickyBuyBar";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
@@ -41,6 +42,7 @@ import {
   toBatchLabel,
   toDefaultSelections,
   toFactRows,
+  toFlawNote,
   toGlazeAskUrl,
   toGlazePath,
   toShortDescription,
@@ -394,6 +396,13 @@ export function ProductDetailContainer({
             >
               {isDescriptionOpen ? "Read less" : "Read more"}
             </button>
+          )}
+          {product.is_second && (
+            <SecondNotice
+              name={product.name}
+              flawNote={toFlawNote(product.flaw_note)}
+              flawPhotoUrl={product.image_urls[0] ?? null}
+            />
           )}
           {product.care_notes.length > 0 && (
             <div className="flex flex-col gap-2 pt-4">

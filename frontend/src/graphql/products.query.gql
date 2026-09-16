@@ -24,6 +24,7 @@ fragment ProductCard on Product {
   is_archived
   is_featured
   is_customizable
+  is_second
   rating_avg
   rating_count
   collection {
@@ -71,6 +72,7 @@ query Products($filter: ProductsFilterInput) {
       price_max
       active_count
       archive_count
+      seconds_count
     }
   }
 }
@@ -79,6 +81,7 @@ query Product($slug: String!) {
   product(slug: $slug) {
     ...ProductCard
     description
+    flaw_note
     dimensions
     capacity_ml
     height_cm

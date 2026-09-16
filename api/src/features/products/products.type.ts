@@ -202,6 +202,12 @@ export class Product {
   @Field()
   is_customizable!: boolean;
 
+  @Field()
+  is_second!: boolean;
+
+  @Field(() => String, { nullable: true })
+  flaw_note!: string | null;
+
   @Field(() => Int)
   sales_count!: number;
 
@@ -291,6 +297,10 @@ export class ProductFacets {
 
   @Field(() => Int)
   archive_count!: number;
+
+  // How many pieces the seconds toggle would leave, counted without the toggle itself.
+  @Field(() => Int)
+  seconds_count!: number;
 }
 
 @ObjectType()
@@ -333,6 +343,9 @@ export class ProductsFilterInput {
 
   @Field(() => Boolean, { nullable: true })
   customizable_only?: boolean | null;
+
+  @Field(() => Boolean, { nullable: true })
+  seconds_only?: boolean | null;
 
   // False lists the shelf, true lists retired, sold and closed-collection pieces.
   @Field(() => Boolean, { nullable: true, defaultValue: false })

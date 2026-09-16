@@ -43,6 +43,8 @@ const meta = {
         priceRange={[400, 4500]}
         inStockOnly={false}
         customizableOnly={false}
+        secondsOnly={false}
+        secondsCount={3}
         onToggleCategory={fn()}
         onToggleCollection={fn()}
         onToggleMaterial={fn()}
@@ -51,6 +53,7 @@ const meta = {
         onPriceRangeCommit={fn()}
         onInStockOnlyChange={fn()}
         onCustomizableOnlyChange={fn()}
+        onSecondsOnlyChange={fn()}
       />
     ),
   },

@@ -135,6 +135,9 @@ model Product {
   is_active        Boolean  @default(true)
   is_featured      Boolean  @default(false)
   is_customizable  Boolean  @default(false)
+  // A piece the kiln marked: sold honestly at a discount, with the flaw named.
+  is_second        Boolean  @default(false)
+  flaw_note        String?
   collection_id    Int?
   glaze_id         Int?
 

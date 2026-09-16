@@ -32,6 +32,8 @@ export interface ProductFiltersProps {
   priceRange: [number, number];
   inStockOnly: boolean;
   customizableOnly: boolean;
+  secondsOnly: boolean;
+  secondsCount: number;
   onToggleCategory: (slug: string) => void;
   onToggleCollection: (slug: string) => void;
   onToggleMaterial: (material: string) => void;
@@ -40,6 +42,7 @@ export interface ProductFiltersProps {
   onPriceRangeCommit: (range: [number, number]) => void;
   onInStockOnlyChange: (value: boolean) => void;
   onCustomizableOnlyChange: (value: boolean) => void;
+  onSecondsOnlyChange: (value: boolean) => void;
 }
 
 interface CheckGroupProps {
@@ -100,6 +103,8 @@ export function ProductFilters({
   priceRange,
   inStockOnly,
   customizableOnly,
+  secondsOnly,
+  secondsCount,
   onToggleCategory,
   onToggleCollection,
   onToggleMaterial,
@@ -108,6 +113,7 @@ export function ProductFilters({
   onPriceRangeCommit,
   onInStockOnlyChange,
   onCustomizableOnlyChange,
+  onSecondsOnlyChange,
 }: ProductFiltersProps) {
   const hasPriceRange = priceCeiling > priceFloor;
   return (
@@ -197,6 +203,21 @@ export function ProductFilters({
             onCheckedChange={onCustomizableOnlyChange}
           />
         </div>
+        {/* The seconds shelf is listed on the shelf and in the archive alike, count and all. */}
+        <div className="flex items-center justify-between gap-3">
+          <Label htmlFor="filter-seconds" className="font-normal">
+            Seconds{" "}
+            <span className="text-muted-foreground tnum">({secondsCount})</span>
+          </Label>
+          <Switch
+            id="filter-seconds"
+            checked={secondsOnly}
+            onCheckedChange={onSecondsOnlyChange}
+          />
+        </div>
+        <p className="text-[13px] text-muted-foreground">
+          Pieces the kiln marked, sold at a lower price with the flaw named.
+        </p>
       </div>
     </div>
   );

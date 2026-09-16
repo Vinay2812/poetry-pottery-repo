@@ -14,6 +14,7 @@ import { GlazeSwatch } from "@/features/products/components/GlazeSwatch";
 import { PriceTag } from "@/features/products/components/PriceTag";
 import {
   type StockTone,
+  toCardStatusLine,
   toPhotoAlt,
   toPhotoLabel,
 } from "@/features/products/types";
@@ -29,6 +30,7 @@ export interface ProductCardProps {
   glazeName?: string | null;
   glazeColor?: string | null;
   isWishlisted: boolean;
+  isSecond?: boolean;
   isCustomizable?: boolean;
   isAddingToCart?: boolean;
   isPriority?: boolean;
@@ -53,6 +55,7 @@ export function ProductCard({
   glazeName = null,
   glazeColor = null,
   isWishlisted,
+  isSecond = false,
   isCustomizable = false,
   isAddingToCart = false,
   isPriority = false,
@@ -244,7 +247,7 @@ export function ProductCard({
               : "text-muted-foreground",
           )}
         >
-          {stockTone === "in_stock" ? null : stockLabel}
+          {toCardStatusLine(isSecond, stockTone, stockLabel)}
         </p>
       </div>
     </article>
