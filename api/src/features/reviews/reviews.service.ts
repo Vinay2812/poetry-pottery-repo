@@ -203,6 +203,7 @@ export class ReviewsService {
     const data = this.validate(input);
     const row = await this.prisma
       .withTransaction(async () => {
+        await this.lockSubject(subject);
         const reason = await this.ineligibleReason(subject, userId);
         if (reason) {
           throw new ForbiddenException(reason);
@@ -248,6 +249,7 @@ export class ReviewsService {
         if (!current) {
           throw new NotFoundException("Review not found");
         }
+        await this.lockSubject(subjectOf(current));
         const updated = await this.prisma.review.update({
           where: { id },
           data,
@@ -274,6 +276,7 @@ export class ReviewsService {
         throw new NotFoundException("Review not found");
       }
       const subject = subjectOf(current);
+      await this.lockSubject(subject);
       await this.prisma.review.delete({ where: { id } });
       await this.refreshRating(subject);
       return current.image_urls;
@@ -418,6 +421,20 @@ export class ReviewsService {
       }
     }
     return { rating, body, image_urls };
+  }
+
+  // Pins the piece or event for the rest of the transaction, the way orders pin stock, so two
+  // overlapping review writes cannot each aggregate without seeing the other. It has to come
+  // before the insert: writing a review takes a share lock on the same row, and upgrading that
+  // to an exclusive lock afterwards deadlocks a crowd posting at once.
+  private async lockSubject(subject: ReviewSubject): Promise<void> {
+    if ("product_id" in subject) {
+      await this.prisma
+        .$executeRaw`SELECT id FROM products WHERE id = ${subject.product_id} FOR UPDATE`;
+      return;
+    }
+    await this.prisma
+      .$executeRaw`SELECT id FROM events WHERE id = ${subject.event_id} FOR UPDATE`;
   }
 
   // Denormalised averages keep cards and sorting cheap.

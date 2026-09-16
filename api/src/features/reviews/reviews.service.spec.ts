@@ -18,6 +18,7 @@ const containing = (value: Record<string, unknown>): unknown =>
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  $executeRaw: vi.fn(),
   review: {
     findMany: vi.fn(),
     findFirst: vi.fn(),

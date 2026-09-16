@@ -1,5 +1,5 @@
 import { Test, type TestingModule } from "@nestjs/testing";
-import { EventStatus, type Prisma } from "@prisma/client";
+import { EventStatus, OrderStatus, type Prisma } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Client } from "pg";
 
@@ -10,6 +10,7 @@ import { EventsService } from "@/features/events/events.service";
 import { NewsletterService } from "@/features/newsletter/newsletter.service";
 import { NotificationsService } from "@/features/notifications/notifications.service";
 import { OrdersService } from "@/features/orders/orders.service";
+import { ReviewsService } from "@/features/reviews/reviews.service";
 import { SearchService } from "@/features/search/search.service";
 import { SettingsService } from "@/features/settings/settings.service";
 import {
@@ -43,6 +44,18 @@ class RedisStub {
   del(): Promise<void> {
     return Promise.resolve();
   }
+
+  trackPending(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  sweepPending(): Promise<{ expired: string[]; pending: number }> {
+    return Promise.resolve({ expired: [], pending: 0 });
+  }
+
+  dropPending(): Promise<void> {
+    return Promise.resolve();
+  }
 }
 
 class LoggerStub {
@@ -53,18 +66,22 @@ class LoggerStub {
   error(): void {}
 }
 
-class MailStub {
-  enqueue(): Promise<void> {
-    return Promise.resolve();
-  }
-}
-
 // The studio's own bucket inside the sandbox; every other origin is somebody else's.
 export const STUDIO_CDN = "https://cdn.test";
 
 class StorageStub {
   isOwnUrl(url: string): boolean {
     return url.startsWith(`${STUDIO_CDN}/`);
+  }
+
+  keyFor(): string | null {
+    return null;
+  }
+}
+
+class MailStub {
+  enqueue(): Promise<void> {
+    return Promise.resolve();
   }
 }
 
@@ -149,6 +166,7 @@ export interface Harness {
   notifications: NotificationsService;
   contact: ContactService;
   visits: VisitsService;
+  reviews: ReviewsService;
   commissions: CommissionsService;
   users: UsersService;
   close: () => Promise<void>;
@@ -194,6 +212,7 @@ export async function createHarness(
       NewsletterService,
       ContactService,
       VisitsService,
+      ReviewsService,
       CommissionsService,
       UsersService,
     ],
@@ -210,6 +229,7 @@ export async function createHarness(
     notifications: moduleRef.get(NotificationsService),
     contact: moduleRef.get(ContactService),
     visits: moduleRef.get(VisitsService),
+    reviews: moduleRef.get(ReviewsService),
     commissions: moduleRef.get(CommissionsService),
     users: moduleRef.get(UsersService),
     close: () => moduleRef.close(),
@@ -311,6 +331,45 @@ export function makeProduct(
     },
     select: { id: true, price: true, stock: true },
   });
+}
+
+// The only thing that makes a buyer eligible to review a piece: a delivered line for it.
+export async function deliverProduct(
+  prisma: PrismaService,
+  users: TestUser[],
+  productId: number,
+): Promise<void> {
+  for (const user of users) {
+    await prisma.order.create({
+      data: {
+        user_id: user.id,
+        status: OrderStatus.DELIVERED,
+        subtotal: 1000,
+        shipping_fee: 0,
+        total: 1000,
+        delivered_at: new Date(),
+        shipping_address: {
+          name: "Guest",
+          phone: "9876543210",
+          line1: "1 Kiln Lane",
+          line2: null,
+          landmark: null,
+          city: "Bengaluru",
+          state: "Karnataka",
+          pincode: "560001",
+        },
+        items: {
+          create: {
+            product_id: productId,
+            product_name: "Piece",
+            unit_price: 1000,
+            quantity: 1,
+            line_total: 1000,
+          },
+        },
+      },
+    });
+  }
 }
 
 export function makeEvent(
