@@ -67,6 +67,10 @@ export const LowStock: Story = {
   args: { quantity: 2, maxQuantity: 2 },
 };
 
+export const MultipleOfOnePiece: Story = {
+  args: { quantity: 3, lineTotal: 2550 },
+};
+
 export const WithReferencePhotos: Story = {
   args: {
     name: "Carved Initial Mug",

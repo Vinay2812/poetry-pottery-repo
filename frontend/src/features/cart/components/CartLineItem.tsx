@@ -80,9 +80,12 @@ export function CartLineItem({
                 {selectionSummary}
               </p>
             )}
-            <p className="mt-1 text-[13px] text-muted-foreground tnum">
-              {formatInr(unitPrice)} each
-            </p>
+            {/* One of one costs what the line costs; "each" only means something above that. */}
+            {quantity > 1 && (
+              <p className="mt-1 text-[13px] text-muted-foreground tnum">
+                {formatInr(unitPrice)} each
+              </p>
+            )}
             <ReferencePhotoStrip
               urls={referenceImageUrls}
               label={`Reference photo for ${name}`}
@@ -113,6 +116,8 @@ export function CartLineItem({
           >
             Remove
           </button>
+          {/* Two actions on one line read as one sentence without something between them. */}
+          <span aria-hidden="true" className="h-3 w-px bg-ash" />
           <button
             type="button"
             onClick={onSaveForLater}
