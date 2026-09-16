@@ -4,7 +4,6 @@ import {
   EventLevel,
   EventStatus,
   EventType,
-  RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
@@ -56,27 +55,12 @@ export function describeWhen(startsAt: string, endsAt: string): string {
     : `${formatDateTime(startsAt)} – ${formatDateTime(endsAt)}`;
 }
 
-export function personLabel(name: string | null, email: string): string {
-  return name && name.trim().length > 0 ? name : email;
-}
-
-export function toPageNumber(raw: string | undefined): number {
-  const page = Number.parseInt(raw ?? "", 10);
-  return Number.isInteger(page) && page > 0 ? page : 1;
-}
-
 export function toEventStatus(value: string): EventStatus | null {
   return Object.values(EventStatus).find((member) => member === value) ?? null;
 }
 
 export function toEventType(value: string): EventType | null {
   return Object.values(EventType).find((member) => member === value) ?? null;
-}
-
-export function toRegistrationStatus(value: string): RegistrationStatus | null {
-  return (
-    Object.values(RegistrationStatus).find((member) => member === value) ?? null
-  );
 }
 
 export type EventAction = "publish" | "unpublish" | "complete" | "cancel";
@@ -132,28 +116,6 @@ export function eventActionNeedsReason(action: EventAction): boolean {
 
 export function isDestructiveEventAction(action: EventAction): boolean {
   return action === "cancel";
-}
-
-const REGISTRATION_ACTION_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Move to pending",
-  [RegistrationStatus.Approved]: "Approve",
-  [RegistrationStatus.Confirmed]: "Confirm",
-  [RegistrationStatus.Rejected]: "Reject",
-  [RegistrationStatus.Cancelled]: "Cancel",
-};
-
-export function registrationActionLabel(status: RegistrationStatus): string {
-  return REGISTRATION_ACTION_LABEL[status];
-}
-
-/** Turning someone away is worth a sentence; letting them in is not. */
-export function registrationActionNeedsReason(
-  status: RegistrationStatus,
-): boolean {
-  return (
-    status === RegistrationStatus.Rejected ||
-    status === RegistrationStatus.Cancelled
-  );
 }
 
 export function isWorkshop(eventType: EventType): boolean {

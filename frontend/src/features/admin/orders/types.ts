@@ -33,10 +33,6 @@ export function toOrderStatus(value: string | undefined): OrderStatus | null {
   return value && members.includes(value) ? (value as OrderStatus) : null;
 }
 
-export function toCustomerLabel(name: string | null, email: string): string {
-  return name && name.trim().length > 0 ? name : email;
-}
-
 export function describeItems(count: number): string {
   return pluralize(count, "piece");
 }

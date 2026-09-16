@@ -28,6 +28,7 @@ import {
   AdminReasonDialog,
   AdminStatusPill,
   orderStatusTone,
+  toPersonName,
 } from "@/features/admin/ui";
 
 import { AdminOrderActions } from "@/features/admin/orders/components/AdminOrderActions";
@@ -44,7 +45,6 @@ import {
   buildOrderTimeline,
   describeItems,
   toAdminNoteValue,
-  toCustomerLabel,
   toSelectionLabel,
   toStatusActions,
 } from "@/features/admin/orders/types";
@@ -310,7 +310,7 @@ export function AdminOrderDetailContainer({
 
         <aside className="flex flex-col gap-8">
           <AdminOrderCustomer
-            name={toCustomerLabel(customer.name, customer.email)}
+            name={toPersonName(customer.name, customer.email)}
             email={customer.email}
             personHref={`/dashboard/people/${customer.id}`}
             addressLines={addressLines}

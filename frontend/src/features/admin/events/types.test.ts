@@ -5,7 +5,6 @@ import {
   EventLevel,
   EventStatus,
   EventType,
-  RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
 import {
@@ -21,17 +20,12 @@ import {
   fromDateTimeLocal,
   fromLines,
   isWorkshop,
-  personLabel,
-  registrationActionLabel,
-  registrationActionNeedsReason,
   toDateTimeLocal,
   toEventFormValues,
   toEventInput,
   toEventStatus,
   toEventType,
   toLines,
-  toPageNumber,
-  toRegistrationStatus,
 } from "./types";
 
 const EVENT: AdminEventDetailFragment = {
@@ -134,30 +128,14 @@ describe("row copy", () => {
   it("falls back to nothing when the start is unreadable", () => {
     expect(describeWhen("nope", "also nope")).toBe("");
   });
-
-  it("names a person, or falls back to their email", () => {
-    expect(personLabel("Asha", "asha@example.com")).toBe("Asha");
-    expect(personLabel(null, "asha@example.com")).toBe("asha@example.com");
-    expect(personLabel("  ", "asha@example.com")).toBe("asha@example.com");
-  });
 });
 
 describe("query values", () => {
-  it("reads a page number, defaulting to one", () => {
-    expect(toPageNumber("3")).toBe(3);
-    expect(toPageNumber(undefined)).toBe(1);
-    expect(toPageNumber("0")).toBe(1);
-    expect(toPageNumber("-2")).toBe(1);
-    expect(toPageNumber("later")).toBe(1);
-  });
-
   it("only accepts enum members from the URL", () => {
     expect(toEventStatus("PUBLISHED")).toBe(EventStatus.Published);
     expect(toEventStatus("published")).toBeNull();
     expect(toEventType("OPEN_MIC")).toBe(EventType.OpenMic);
     expect(toEventType("")).toBeNull();
-    expect(toRegistrationStatus("APPROVED")).toBe(RegistrationStatus.Approved);
-    expect(toRegistrationStatus("nope")).toBeNull();
   });
 });
 
@@ -213,32 +191,6 @@ describe("event actions", () => {
 
   it("says what happened afterwards", () => {
     expect(eventActionDoneMessage("publish")).toBe("Event published");
-  });
-});
-
-describe("registration actions", () => {
-  it("labels each next status", () => {
-    expect(registrationActionLabel(RegistrationStatus.Approved)).toBe(
-      "Approve",
-    );
-    expect(registrationActionLabel(RegistrationStatus.Confirmed)).toBe(
-      "Confirm",
-    );
-  });
-
-  it("asks why only when someone is turned away", () => {
-    expect(registrationActionNeedsReason(RegistrationStatus.Rejected)).toBe(
-      true,
-    );
-    expect(registrationActionNeedsReason(RegistrationStatus.Cancelled)).toBe(
-      true,
-    );
-    expect(registrationActionNeedsReason(RegistrationStatus.Approved)).toBe(
-      false,
-    );
-    expect(registrationActionNeedsReason(RegistrationStatus.Confirmed)).toBe(
-      false,
-    );
   });
 });
 

@@ -64,9 +64,13 @@ export function toQueryString(values: QueryValues): string {
   return search.toString();
 }
 
-export function readPage(values: QueryValues): number {
-  const page = Number.parseInt(values.page ?? "", 10);
+export function toPageNumber(raw: string | undefined): number {
+  const page = Number.parseInt(raw ?? "", 10);
   return Number.isInteger(page) && page > 0 ? page : 1;
+}
+
+export function readPage(values: QueryValues): number {
+  return toPageNumber(values.page);
 }
 
 /** Turns a GraphQL enum member into console copy: OPEN_MIC becomes "Open mic". */

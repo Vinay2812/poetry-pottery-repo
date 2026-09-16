@@ -25,7 +25,13 @@ export { AdminToolbar } from "@/features/admin/ui/components/AdminToolbar";
 export {
   enumOptions,
   eventStatusTone,
+  fromDateTimeLocal,
   orderStatusTone,
+  registrationActionLabel,
+  registrationActionNeedsReason,
   registrationStatusTone,
+  toDateTimeLocal,
   toNullableNumber,
+  toPersonName,
+  toRegistrationStatus,
 } from "@/features/admin/ui/types";

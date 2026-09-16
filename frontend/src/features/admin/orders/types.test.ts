@@ -9,7 +9,6 @@ import {
   type AdminOrderDetailData,
   type OrderTimelineSource,
   toAdminNoteValue,
-  toCustomerLabel,
   toDayEndIso,
   toDayStartIso,
   toOrderStatus,
@@ -99,18 +98,6 @@ describe("toOrderStatus", () => {
     expect(toOrderStatus("SHIPPED")).toBe(OrderStatus.Shipped);
     expect(toOrderStatus("shipped")).toBeNull();
     expect(toOrderStatus(undefined)).toBeNull();
-  });
-});
-
-describe("toCustomerLabel", () => {
-  it("falls back to the email when there is no name", () => {
-    expect(toCustomerLabel("Meera", "meera@example.com")).toBe("Meera");
-    expect(toCustomerLabel(null, "meera@example.com")).toBe(
-      "meera@example.com",
-    );
-    expect(toCustomerLabel("  ", "meera@example.com")).toBe(
-      "meera@example.com",
-    );
   });
 });
 

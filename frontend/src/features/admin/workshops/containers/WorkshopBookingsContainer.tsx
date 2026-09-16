@@ -31,7 +31,11 @@ import {
   AdminSelectFilter,
   AdminToolbar,
   enumOptions,
+  registrationActionLabel,
+  registrationActionNeedsReason,
   registrationStatusTone,
+  toPersonName,
+  toRegistrationStatus,
 } from "@/features/admin/ui";
 
 import {
@@ -40,15 +44,12 @@ import {
 } from "@/features/admin/workshops/components/WorkshopBookingsTable";
 import {
   applyBookingStatus,
-  bookingActionLabel,
   BOOKINGS_PAGE_SIZE,
   describeSession,
   formatHoursLabel,
   formatParticipantsLabel,
-  isReasonRequired,
   toRangeEnd,
   toRangeStart,
-  toRegistrationStatus,
 } from "@/features/admin/workshops/types";
 
 export interface WorkshopBookingsContainerProps {
@@ -113,7 +114,7 @@ export function WorkshopBookingsContainer({
     () =>
       optimisticItems.map((item) => ({
         id: item.booking.id,
-        personName: item.customer.name ?? item.customer.email,
+        personName: toPersonName(item.customer.name, item.customer.email),
         personEmail: item.customer.email,
         sessionLabel: describeSession(
           item.booking.starts_at,
@@ -128,7 +129,7 @@ export function WorkshopBookingsContainer({
         bookedLabel: formatDate(item.booking.created_at),
         actions: item.next_statuses.map((next) => ({
           status: next,
-          label: bookingActionLabel(next),
+          label: registrationActionLabel(next),
         })),
       })),
     [optimisticItems],
@@ -158,7 +159,7 @@ export function WorkshopBookingsContainer({
 
   const handleAction = useCallback(
     (id: string, next: RegistrationStatus) => {
-      if (isReasonRequired(next)) {
+      if (registrationActionNeedsReason(next)) {
         setReason("");
         setPendingReason({ id, status: next });
         return;
@@ -236,7 +237,7 @@ export function WorkshopBookingsContainer({
         value={reason}
         error={undefined}
         confirmLabel={
-          pendingReason ? bookingActionLabel(pendingReason.status) : ""
+          pendingReason ? registrationActionLabel(pendingReason.status) : ""
         }
         isDestructive
         isRequired

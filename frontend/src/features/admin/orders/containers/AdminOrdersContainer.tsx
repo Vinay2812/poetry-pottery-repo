@@ -16,6 +16,7 @@ import {
   AdminPagination,
   enumOptions,
   orderStatusTone,
+  toPersonName,
 } from "@/features/admin/ui";
 
 import {
@@ -26,7 +27,6 @@ import { AdminOrdersToolbar } from "@/features/admin/orders/components/AdminOrde
 import {
   describeItems,
   ORDERS_PAGE_SIZE,
-  toCustomerLabel,
   toDayEndIso,
   toDayStartIso,
   toOrderStatus,
@@ -70,7 +70,7 @@ export function AdminOrdersContainer() {
     () =>
       (result?.items ?? []).map((item) => ({
         id: item.order.id,
-        customerLabel: toCustomerLabel(item.customer.name, item.customer.email),
+        customerLabel: toPersonName(item.customer.name, item.customer.email),
         customerEmail: item.customer.email,
         statusLabel: formatEnumLabel(item.order.status),
         statusTone: orderStatusTone(item.order.status),

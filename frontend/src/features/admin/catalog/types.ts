@@ -57,25 +57,6 @@ export function describeWindow(
   return "Always on";
 }
 
-/** An input[type=datetime-local] speaks local wall time; the API speaks ISO. */
-export function toDateTimeLocal(iso: string | null): string {
-  if (iso === null || iso === "") return "";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  const pad = (part: number) => String(part).padStart(2, "0");
-  return [
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
-    `${pad(date.getHours())}:${pad(date.getMinutes())}`,
-  ].join("T");
-}
-
-export function fromDateTimeLocal(value: string): string | null {
-  const trimmed = value.trim();
-  if (trimmed === "") return null;
-  const date = new Date(trimmed);
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
-}
-
 export type CategoryPatch =
   | {
       kind: "save";

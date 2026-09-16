@@ -12,7 +12,11 @@ import {
 import { formatDate } from "@/lib/format";
 
 import { formatEnumLabel, toErrorMessage } from "@/features/admin/shell";
-import { AdminConfirmDialog, AdminPageHeader } from "@/features/admin/ui";
+import {
+  AdminConfirmDialog,
+  AdminPageHeader,
+  toPersonName,
+} from "@/features/admin/ui";
 
 import { AdminPersonCard } from "@/features/admin/people/components/AdminPersonCard";
 import { AdminPersonRole } from "@/features/admin/people/components/AdminPersonRole";
@@ -24,7 +28,6 @@ import {
   roleTone,
   toInitials,
   toOppositeRole,
-  toPersonName,
   toRoleConfirmLabel,
 } from "@/features/admin/people/types";
 

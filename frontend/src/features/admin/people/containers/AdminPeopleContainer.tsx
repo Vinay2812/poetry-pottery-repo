@@ -15,6 +15,7 @@ import {
   AdminPageHeader,
   AdminPagination,
   enumOptions,
+  toPersonName,
 } from "@/features/admin/ui";
 
 import {
@@ -26,7 +27,6 @@ import {
   PEOPLE_PAGE_SIZE,
   roleTone,
   toInitials,
-  toPersonName,
   toUserRole,
 } from "@/features/admin/people/types";
 

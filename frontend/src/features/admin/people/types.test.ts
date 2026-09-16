@@ -10,7 +10,6 @@ import {
   roleTone,
   toInitials,
   toOppositeRole,
-  toPersonName,
   toRoleConfirmLabel,
   toUserRole,
 } from "./types";
@@ -36,14 +35,6 @@ describe("toUserRole", () => {
     expect(toUserRole("ADMIN")).toBe(UserRole.Admin);
     expect(toUserRole("OWNER")).toBeNull();
     expect(toUserRole(undefined)).toBeNull();
-  });
-});
-
-describe("toPersonName", () => {
-  it("falls back to the email", () => {
-    expect(toPersonName("Meera", "meera@example.com")).toBe("Meera");
-    expect(toPersonName(null, "meera@example.com")).toBe("meera@example.com");
-    expect(toPersonName("   ", "meera@example.com")).toBe("meera@example.com");
   });
 });
 

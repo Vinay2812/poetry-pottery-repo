@@ -7,20 +7,17 @@ import {
   applyBookingStatus,
   applyConfigPatch,
   applyTierPatch,
-  bookingActionLabel,
   describeClosedDays,
   describeSession,
   formatHoursLabel,
   formatParticipantsLabel,
   fromDateTimeLocal,
-  isReasonRequired,
   minutesToTimeInput,
   timeInputToMinutes,
   toDateTimeLocal,
   toggleWeekday,
   toRangeEnd,
   toRangeStart,
-  toRegistrationStatus,
   toWeekdayLabels,
   toWeekdayNumbers,
   type WorkshopBlackoutData,
@@ -195,20 +192,6 @@ describe("booking copy", () => {
       describeSession("2026-09-14T03:30:00.000Z", "2026-09-15T05:30:00.000Z"),
     ).toBe("Mon, 14 Sept, 2026, 9:00 am → Tue, 15 Sept, 2026, 11:00 am");
   });
-
-  it("labels the actions a booking can move to", () => {
-    expect(bookingActionLabel(RegistrationStatus.Approved)).toBe("Approve");
-    expect(bookingActionLabel(RegistrationStatus.Confirmed)).toBe("Confirm");
-    expect(bookingActionLabel(RegistrationStatus.Rejected)).toBe("Reject");
-    expect(bookingActionLabel(RegistrationStatus.Cancelled)).toBe("Cancel");
-  });
-
-  it("asks for a reason only when turning a booking down", () => {
-    expect(isReasonRequired(RegistrationStatus.Rejected)).toBe(true);
-    expect(isReasonRequired(RegistrationStatus.Cancelled)).toBe(true);
-    expect(isReasonRequired(RegistrationStatus.Approved)).toBe(false);
-    expect(isReasonRequired(RegistrationStatus.Confirmed)).toBe(false);
-  });
 });
 
 function bookingRow(id: string, status: RegistrationStatus) {
@@ -265,21 +248,6 @@ describe("applyBookingStatus", () => {
         status: RegistrationStatus.Cancelled,
       }),
     ).toEqual(rows);
-  });
-});
-
-describe("toRegistrationStatus", () => {
-  it("reads a status the URL is allowed to hold", () => {
-    expect(toRegistrationStatus("PENDING")).toBe(RegistrationStatus.Pending);
-    expect(toRegistrationStatus("CONFIRMED")).toBe(
-      RegistrationStatus.Confirmed,
-    );
-  });
-
-  it("drops anything else", () => {
-    expect(toRegistrationStatus("")).toBeNull();
-    expect(toRegistrationStatus("pending")).toBeNull();
-    expect(toRegistrationStatus("MAYBE")).toBeNull();
   });
 });
 

@@ -11,9 +11,8 @@ import {
   type AdminStatusTone,
   AdminStatusPill,
   AdminTableFrame,
+  registrationActionLabel,
 } from "@/features/admin/ui";
-
-import { registrationActionLabel } from "@/features/admin/events/types";
 
 export interface RegistrationTableRow {
   id: string;

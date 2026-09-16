@@ -20,6 +20,7 @@ import { formatDate, formatInr } from "@/lib/format";
 import {
   formatEnumLabel,
   toErrorMessage,
+  toPageNumber,
   useAdminQueryState,
   useSearchDraft,
 } from "@/features/admin/shell";
@@ -30,21 +31,17 @@ import {
   AdminSelectFilter,
   AdminToolbar,
   enumOptions,
+  registrationActionLabel,
+  registrationActionNeedsReason,
   registrationStatusTone,
+  toPersonName,
+  toRegistrationStatus,
 } from "@/features/admin/ui";
 
 import {
   EventRegistrationsTable,
   type RegistrationTableRow,
 } from "@/features/admin/events/components/EventRegistrationsTable";
-import {
-  personLabel,
-  registrationActionLabel,
-  registrationActionNeedsReason,
-  toPageNumber,
-  toRegistrationStatus,
-} from "@/features/admin/events/types";
-
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS = enumOptions(RegistrationStatus);
 
@@ -123,7 +120,7 @@ export function EventRegistrationsContainer({
     () =>
       (result?.items ?? []).map((entry) => ({
         id: entry.registration.id,
-        personName: personLabel(entry.customer.name, entry.customer.email),
+        personName: toPersonName(entry.customer.name, entry.customer.email),
         personEmail: entry.customer.email,
         seatsLabel: String(entry.registration.seats),
         unitPriceLabel: formatInr(entry.registration.unit_price),

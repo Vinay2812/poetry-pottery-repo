@@ -7,6 +7,7 @@ import {
   isNavLinkActive,
   readPage,
   readQueryValues,
+  toPageNumber,
   toQueryString,
 } from "./types";
 
@@ -60,6 +61,16 @@ describe("toQueryString", () => {
     expect(toQueryString({ status: "PAID", page: "2" })).toBe(
       "page=2&status=PAID",
     );
+  });
+});
+
+describe("toPageNumber", () => {
+  it("reads a page number, defaulting to one", () => {
+    expect(toPageNumber("3")).toBe(3);
+    expect(toPageNumber(undefined)).toBe(1);
+    expect(toPageNumber("0")).toBe(1);
+    expect(toPageNumber("-2")).toBe(1);
+    expect(toPageNumber("later")).toBe(1);
   });
 });
 

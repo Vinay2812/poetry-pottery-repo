@@ -19,6 +19,4 @@ export {
   describeWindow,
   EMPTY_CATEGORY_FORM,
   EMPTY_COLLECTION_FORM,
-  fromDateTimeLocal,
-  toDateTimeLocal,
 } from "@/features/admin/catalog/types";

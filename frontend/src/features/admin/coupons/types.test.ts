@@ -12,10 +12,8 @@ import {
   describeUses,
   formatCouponValue,
   formatMinOrder,
-  fromDateTimeLocal,
   readActiveFilter,
   toCouponRow,
-  toDateTimeLocal,
 } from "./types";
 
 function rows(): CouponRow[] {
@@ -98,23 +96,6 @@ describe("coupon status", () => {
     expect(couponStatusTone(false)).toBe("quiet");
     expect(couponStatusLabel(true)).toBe("Active");
     expect(couponStatusLabel(false)).toBe("Paused");
-  });
-});
-
-describe("datetime-local conversion", () => {
-  it("round-trips an instant down to the minute", () => {
-    const iso = "2026-06-01T03:30:00.000Z";
-    expect(fromDateTimeLocal(toDateTimeLocal(iso))).toBe(iso);
-  });
-
-  it("treats an empty field as no date", () => {
-    expect(toDateTimeLocal(null)).toBe("");
-    expect(fromDateTimeLocal("")).toBeNull();
-  });
-
-  it("shrugs off text that is not a date", () => {
-    expect(toDateTimeLocal("not a date")).toBe("");
-    expect(fromDateTimeLocal("not a date")).toBeNull();
   });
 });
 

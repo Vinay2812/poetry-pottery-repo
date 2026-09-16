@@ -14,10 +14,6 @@ export function toUserRole(value: string | undefined): UserRole | null {
   return value && members.includes(value) ? (value as UserRole) : null;
 }
 
-export function toPersonName(name: string | null, email: string): string {
-  return name && name.trim().length > 0 ? name : email;
-}
-
 /** Two letters in the circle: initials when we have a name, the email when we do not. */
 export function toInitials(name: string | null, email: string): string {
   const source = name && name.trim().length > 0 ? name.trim() : email;

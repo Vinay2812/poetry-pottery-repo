@@ -9,8 +9,6 @@ import {
   describeCollectionDeletion,
   describePieces,
   describeWindow,
-  fromDateTimeLocal,
-  toDateTimeLocal,
 } from "./types";
 
 function categoryRows(): CategoryRow[] {
@@ -91,30 +89,6 @@ describe("describeWindow", () => {
     expect(
       describeWindow("2026-06-01T03:30:00.000Z", "2026-08-31T03:30:00.000Z"),
     ).toBe("Mon, 1 Jun, 2026 → Mon, 31 Aug, 2026");
-  });
-});
-
-describe("datetime-local conversion", () => {
-  it("round-trips an instant down to the minute", () => {
-    const iso = "2026-06-01T03:30:00.000Z";
-    expect(fromDateTimeLocal(toDateTimeLocal(iso))).toBe(iso);
-  });
-
-  it("treats an empty field as no date", () => {
-    expect(toDateTimeLocal(null)).toBe("");
-    expect(toDateTimeLocal("")).toBe("");
-    expect(fromDateTimeLocal("")).toBeNull();
-    expect(fromDateTimeLocal("   ")).toBeNull();
-  });
-
-  it("shrugs off text that is not a date", () => {
-    expect(toDateTimeLocal("not a date")).toBe("");
-    expect(fromDateTimeLocal("not a date")).toBeNull();
-  });
-
-  it("pads every part to the shape the input wants", () => {
-    const local = toDateTimeLocal("2026-01-05T00:04:00.000Z");
-    expect(local).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
   });
 });
 

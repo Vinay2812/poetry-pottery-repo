@@ -180,33 +180,6 @@ export function describeSession(startsAt: string, endsAt: string): string {
   return `${from} → ${formatDateTime(endsAt)}`;
 }
 
-const ACTION_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Move back to pending",
-  [RegistrationStatus.Approved]: "Approve",
-  [RegistrationStatus.Confirmed]: "Confirm",
-  [RegistrationStatus.Rejected]: "Reject",
-  [RegistrationStatus.Cancelled]: "Cancel",
-};
-
-export function bookingActionLabel(status: RegistrationStatus): string {
-  return ACTION_LABEL[status];
-}
-
-/** Turning a booking down is worth a sentence; approving it is not. */
-export function isReasonRequired(status: RegistrationStatus): boolean {
-  return (
-    status === RegistrationStatus.Rejected ||
-    status === RegistrationStatus.Cancelled
-  );
-}
-
-/** The URL only ever holds a string, so an unknown status filter is simply dropped. */
-export function toRegistrationStatus(value: string): RegistrationStatus | null {
-  return (
-    Object.values(RegistrationStatus).find((status) => status === value) ?? null
-  );
-}
-
 export interface WorkshopConfigPatch {
   id: number;
   changes: Partial<WorkshopConfigData>;

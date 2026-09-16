@@ -31,6 +31,8 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
+  fromDateTimeLocal,
+  toDateTimeLocal,
 } from "@/features/admin/ui";
 
 import { Button } from "@/components/ui/button";
@@ -43,10 +45,8 @@ import {
   type CouponRow,
   describeCouponDeletion,
   EMPTY_COUPON_FORM,
-  fromDateTimeLocal,
   readActiveFilter,
   toCouponRow,
-  toDateTimeLocal,
 } from "@/features/admin/coupons/types";
 
 // Only ever one draft at a time, and no saved coupon can hold this id.
