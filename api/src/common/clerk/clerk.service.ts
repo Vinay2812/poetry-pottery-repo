@@ -19,8 +19,8 @@ export class ClerkService {
       return user.fullName;
     }
     const composed = [user.firstName, user.lastName]
-      .filter((part): part is string => part !== null && part.length > 0)
-      .map((part) => part.trim())
+      .map((part) => part?.trim() ?? "")
+      .filter((part) => part.length > 0)
       .join(" ");
     return composed.length > 0 ? composed : undefined;
   }
