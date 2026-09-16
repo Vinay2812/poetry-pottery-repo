@@ -27,6 +27,7 @@ import {
   spanDays,
   spanNotice,
   toBookingPath,
+  toBookingGroup,
   toBookingStatusLabel,
   toBookingStatusTone,
   toBookingStepIndex,
@@ -485,5 +486,40 @@ describe("toDayNote", () => {
       description: "pick within 7 days of your first slot",
       isPickable: false,
     });
+  });
+});
+
+describe("toBookingGroup", () => {
+  const now = new Date("2026-09-17T12:00:00Z");
+  const slots = [
+    { starts_at: "2026-09-20T09:00:00Z", ends_at: "2026-09-20T10:00:00Z" },
+  ];
+
+  it("keeps a session still to run in front", () => {
+    expect(toBookingGroup(slots, RegistrationStatus.Confirmed, now)).toBe(
+      "upcoming",
+    );
+  });
+
+  it("files a finished session behind", () => {
+    expect(
+      toBookingGroup(
+        [
+          {
+            starts_at: "2026-09-01T09:00:00Z",
+            ends_at: "2026-09-01T10:00:00Z",
+          },
+        ],
+        RegistrationStatus.Confirmed,
+        now,
+      ),
+    ).toBe("past");
+  });
+
+  it("files a cancelled session behind however far off it was", () => {
+    expect(toBookingGroup(slots, RegistrationStatus.Cancelled, now)).toBe(
+      "past",
+    );
+    expect(toBookingGroup([], RegistrationStatus.Pending, now)).toBe("past");
   });
 });

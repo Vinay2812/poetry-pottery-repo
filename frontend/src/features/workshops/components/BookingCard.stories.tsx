@@ -21,6 +21,7 @@ const meta = {
     participants: 2,
     total: 3400,
     statusLabel: "Wheel held, awaiting payment",
+    isCancelled: false,
   },
 } satisfies Meta<typeof BookingCard>;
 
@@ -41,7 +42,9 @@ export const OnePerson: Story = {
   },
 };
 
-export const Cancelled: Story = { args: { statusLabel: "Cancelled" } };
+export const Cancelled: Story = {
+  args: { statusLabel: "Cancelled", isCancelled: true },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

@@ -13,10 +13,17 @@ import { EmptyBookings } from "@/features/workshops/components/EmptyBookings";
 import { useMyWorkshopBookings } from "@/features/workshops/hooks";
 import {
   formatDayRange,
+  isBookingClosed,
+  toBookingGroup,
   toBookingWhenLines,
   toBookingPath,
   toBookingStatusLabel,
 } from "@/features/workshops/types";
+
+const GROUPS: { key: ReturnType<typeof toBookingGroup>; heading: string }[] = [
+  { key: "upcoming", heading: "Upcoming" },
+  { key: "past", heading: "Past" },
+];
 
 export function BookingsListContainer() {
   const [page, setPage] = useState(1);
@@ -69,28 +76,45 @@ export function BookingsListContainer() {
           <div
             aria-busy={isPaging}
             className={cn(
-              "flex flex-col border-t border-ash transition-opacity duration-200",
+              "flex flex-col gap-10 transition-opacity duration-200",
               isPaging && "opacity-60",
             )}
           >
-            {bookings.map((booking) => (
-              <BookingCard
-                key={booking.id}
-                href={toBookingPath(booking.id)}
-                dateLabel={formatDayRange(
-                  booking.slots,
-                  booking.config.timezone,
-                )}
-                whenLines={toBookingWhenLines(
-                  booking.slots,
-                  booking.config.timezone,
-                )}
-                hours={booking.hours}
-                participants={booking.participants}
-                total={booking.total}
-                statusLabel={toBookingStatusLabel(booking.status)}
-              />
-            ))}
+            {GROUPS.map(({ key, heading }) => {
+              const group = bookings.filter(
+                (booking) =>
+                  toBookingGroup(booking.slots, booking.status) === key,
+              );
+              if (group.length === 0) return null;
+              return (
+                <section key={key} className="flex flex-col gap-3">
+                  <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+                    {heading}
+                  </h2>
+                  <div className="flex flex-col border-t border-ash">
+                    {group.map((booking) => (
+                      <BookingCard
+                        key={booking.id}
+                        href={toBookingPath(booking.id)}
+                        dateLabel={formatDayRange(
+                          booking.slots,
+                          booking.config.timezone,
+                        )}
+                        whenLines={toBookingWhenLines(
+                          booking.slots,
+                          booking.config.timezone,
+                        )}
+                        hours={booking.hours}
+                        participants={booking.participants}
+                        total={booking.total}
+                        statusLabel={toBookingStatusLabel(booking.status)}
+                        isCancelled={isBookingClosed(booking.status)}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
           </div>
           {pageInfo && pageInfo.total > pageInfo.limit && (
             <div className="flex items-center justify-center gap-3">

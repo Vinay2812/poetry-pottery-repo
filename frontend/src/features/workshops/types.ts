@@ -389,6 +389,23 @@ export function toBookingStepIndex(status: RegistrationStatus): number {
   return index === -1 ? 0 : index;
 }
 
+export type BookingGroup = "upcoming" | "past";
+
+// A session that has run, or one the studio will never run, belongs behind the ones
+// still ahead of the visitor.
+export function toBookingGroup(
+  slots: SlotInterval[],
+  status: RegistrationStatus,
+  now = new Date(),
+): BookingGroup {
+  if (isBookingClosed(status)) return "past";
+  const last = slots.reduce(
+    (latest, slot) => (slot.ends_at > latest ? slot.ends_at : latest),
+    "",
+  );
+  return last && new Date(last) > now ? "upcoming" : "past";
+}
+
 export function isBookingClosed(status: RegistrationStatus): boolean {
   return (
     status === RegistrationStatus.Cancelled ||
