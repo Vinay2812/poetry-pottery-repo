@@ -53,7 +53,7 @@ export function renderMail(content: MailContent): {
     .join("");
   const ctaHref = content.cta ? `${env.FRONTEND_URL}${content.cta.path}` : "";
   const cta = content.cta
-    ? `<p style="margin:24px 0 0"><a href="${ctaHref}" style="display:inline-block;background:#4f6f52;color:#fafaf9;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600">${escapeHtml(content.cta.label)}</a></p>`
+    ? `<p style="margin:24px 0 0"><a href="${escapeHtml(ctaHref)}" style="display:inline-block;background:#4f6f52;color:#fafaf9;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600">${escapeHtml(content.cta.label)}</a></p>`
     : "";
 
   const html = `<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">

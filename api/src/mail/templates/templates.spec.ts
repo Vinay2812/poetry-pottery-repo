@@ -28,6 +28,7 @@ import {
   registrationPlacedStudioMail,
   registrationStatusMail,
 } from "./events";
+import { renderMail } from "./layout";
 import { newsletterWelcomeMail } from "./newsletter";
 import {
   orderPlacedCustomerMail,
@@ -876,5 +877,23 @@ describe("workshop booking templates", () => {
     expect(mail.html).not.toContain("</script>");
     expect(mail.html).toContain("&lt;script&gt;");
     expect(mail.html).toContain("&quot;");
+  });
+});
+describe("mail layout", () => {
+  it("escapes the call to action link so a path cannot break out of the attribute", () => {
+    const mail = renderMail({
+      title: "Your order",
+      intro: "Thanks for the order.",
+      cta: { label: "Track it", path: '/orders/a"><script>alert(1)</script>' },
+    });
+
+    expect(mail.html).toContain(
+      `href="${SITE}/orders/a&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;"`,
+    );
+    expect(mail.html).not.toContain("<script>");
+    // The text part is not markup, so the link stays readable there.
+    expect(mail.text).toContain(
+      `Track it: ${SITE}/orders/a"><script>alert(1)</script>`,
+    );
   });
 });
