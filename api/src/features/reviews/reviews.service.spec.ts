@@ -257,6 +257,53 @@ describe("ReviewsService", () => {
     expect(eligibility.my_review?.id).toBe(1);
   });
 
+  it("only lets the owner edit, then pins the piece and refreshes its rating", async () => {
+    prismaMock.review.findFirst.mockResolvedValue(null);
+    await expect(service.update(1, 8, { rating: 3 })).rejects.toThrow(
+      "Review not found",
+    );
+    expect(prismaMock.review.findFirst).toHaveBeenCalledWith({
+      where: { id: 1, user_id: 8 },
+    });
+    expect(prismaMock.review.update).not.toHaveBeenCalled();
+
+    prismaMock.review.findFirst.mockResolvedValue(reviewRow());
+    prismaMock.review.update.mockResolvedValue(reviewRow({ rating: 3 }));
+    const updated = await service.update(1, 7, { rating: 3 });
+
+    expect(updated.rating).toBe(3);
+    expect(prismaMock.$executeRaw).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.stringContaining("FOR UPDATE")]),
+      3,
+    );
+    expect(prismaMock.product.update).toHaveBeenCalledWith({
+      where: { id: 3 },
+      data: { rating_avg: 4.5, rating_count: 2 },
+    });
+  });
+
+  it("only shelves warm reviews of pieces and events still on the site", async () => {
+    prismaMock.review.findMany.mockResolvedValue([reviewRow()]);
+    const rows = await service.recent(50);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.is_mine).toBe(false);
+    expect(prismaMock.review.findMany).toHaveBeenCalledWith(
+      containing({
+        take: 12,
+        orderBy: { created_at: "desc" },
+        where: {
+          rating: { gte: 4 },
+          body: { not: null },
+          OR: [
+            { product: { is_active: true } },
+            { event: { status: { in: ["PUBLISHED", "COMPLETED"] } } },
+          ],
+        },
+      }),
+    );
+  });
+
   it("releases the photos an edit dropped and keeps the ones it kept", async () => {
     prismaMock.review.findFirst.mockResolvedValue(
       reviewRow({
