@@ -80,6 +80,18 @@ export function assertWeekdays(days: readonly number[]): void {
   }
 }
 
+// The scheduler formats every slot in this zone, so a typo here would turn every availability,
+// booking and status call for the studio into a RangeError.
+export function assertTimezone(value: string): void {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: value }).format(new Date());
+  } catch {
+    throw new BadRequestException(
+      "Timezone must be an IANA name such as Asia/Kolkata",
+    );
+  }
+}
+
 @Injectable()
 export class AdminWorkshopsService {
   constructor(
@@ -116,6 +128,10 @@ export class AdminWorkshopsService {
     if (input.closed_weekdays) {
       assertWeekdays(input.closed_weekdays);
     }
+    const timezone = input.timezone?.trim();
+    if (timezone != null) {
+      assertTimezone(timezone);
+    }
     this.assertPositive(input.capacity_per_slot, "Capacity");
     this.assertPositive(input.booking_window_days, "The booking window");
     this.assertPositive(input.slot_span_days, "The slot span");
@@ -138,7 +154,7 @@ export class AdminWorkshopsService {
           : { description: input.description?.trim() || null }),
         ...(input.image_url === undefined ? {} : { image_url }),
         ...(input.is_active == null ? {} : { is_active: input.is_active }),
-        ...(input.timezone == null ? {} : { timezone: input.timezone }),
+        ...(timezone == null ? {} : { timezone }),
         ...(input.opening_minutes == null
           ? {}
           : { opening_minutes: input.opening_minutes }),

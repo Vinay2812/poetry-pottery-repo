@@ -9,6 +9,7 @@ import { UploadsService } from "../uploads/uploads.service";
 import {
   AdminWorkshopsService,
   assertHours,
+  assertTimezone,
   assertWeekdays,
 } from "./workshops.service";
 
@@ -122,6 +123,18 @@ describe("assertWeekdays", () => {
   });
 });
 
+describe("assertTimezone", () => {
+  it("accepts a zone the scheduler can format in", () => {
+    expect(() => assertTimezone("Asia/Kolkata")).not.toThrow();
+    expect(() => assertTimezone("UTC")).not.toThrow();
+  });
+
+  it("refuses a misspelled zone and an empty one", () => {
+    expect(() => assertTimezone("Asia/Kolkatta")).toThrow(BadRequestException);
+    expect(() => assertTimezone("")).toThrow(BadRequestException);
+  });
+});
+
 describe("AdminWorkshopsService", () => {
   let service: AdminWorkshopsService;
 
@@ -187,6 +200,21 @@ describe("AdminWorkshopsService", () => {
     await expect(
       service.updateConfig(1, { capacity_per_slot: 0 }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("refuses a timezone the scheduler cannot read", async () => {
+    await expect(
+      service.updateConfig(1, { timezone: "Asia/Kolkatta" }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prismaMock.workshopConfig.update).not.toHaveBeenCalled();
+  });
+
+  it("saves a timezone the scheduler can read", async () => {
+    await service.updateConfig(1, { timezone: " Europe/Lisbon " });
+
+    expect(prismaMock.workshopConfig.update).toHaveBeenCalledWith(
+      containing({ data: containing({ timezone: "Europe/Lisbon" }) }),
+    );
   });
 
   it("reports a missing studio", async () => {
