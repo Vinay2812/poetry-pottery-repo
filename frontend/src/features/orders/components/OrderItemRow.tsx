@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { toPotteryIconKind } from "@/components/icons/pottery";
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
+import { ReferencePhotoStrip } from "@/components/media/ReferencePhotoStrip";
 import { formatInr } from "@/lib/format";
 
 export interface OrderItemRowProps {
@@ -13,6 +14,7 @@ export interface OrderItemRowProps {
   unitPrice: number;
   lineTotal: number;
   selectionSummary: string | null;
+  referenceImageUrls: string[];
 }
 
 export function OrderItemRow({
@@ -23,6 +25,7 @@ export function OrderItemRow({
   unitPrice,
   lineTotal,
   selectionSummary,
+  referenceImageUrls,
 }: OrderItemRowProps) {
   const title = href ? (
     <Link href={href} className="text-sm underline-offset-4 hover:underline">
@@ -56,6 +59,10 @@ export function OrderItemRow({
         <p className="text-[13px] text-muted-foreground tnum">
           {quantity} × {formatInr(unitPrice)}
         </p>
+        <ReferencePhotoStrip
+          urls={referenceImageUrls}
+          label={`Reference photo for ${name}`}
+        />
       </div>
       <span className="text-sm tnum">{formatInr(lineTotal)}</span>
     </li>

@@ -22,6 +22,7 @@ const meta = {
     unitPrice: 850,
     lineTotal: 850,
     selectionSummary: null,
+    referenceImageUrls: [],
   },
 } satisfies Meta<typeof OrderItemRow>;
 
@@ -39,11 +40,26 @@ export const WithSelections: Story = {
     unitPrice: 1450,
     lineTotal: 1450,
     selectionSummary: "Size: Large · Carved text: Maya",
+    referenceImageUrls: [
+      "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+      "https://images.pexels.com/photos/1005058/pexels-photo-1005058.jpeg",
+    ],
   },
 };
 
 export const NoLink: Story = {
   args: { href: null },
+};
+
+export const WithReferencePhotos: Story = {
+  args: {
+    name: "Carved Initial Mug",
+    selectionSummary: "Size: Large · Carved text: Maya",
+    referenceImageUrls: [
+      "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+      "https://images.pexels.com/photos/1005058/pexels-photo-1005058.jpeg",
+    ],
+  },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

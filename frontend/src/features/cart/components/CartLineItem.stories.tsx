@@ -24,6 +24,7 @@ const meta = {
     quantity: 1,
     maxQuantity: 10,
     selectionSummary: null,
+    referenceImageUrls: [],
     isAvailable: true,
     canAdjustQuantity: true,
     unavailableReason: null,
@@ -47,6 +48,10 @@ export const WithSelections: Story = {
     unitPrice: 1450,
     lineTotal: 1450,
     selectionSummary: "Size: Large · Carved text: Maya",
+    referenceImageUrls: [
+      "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+      "https://images.pexels.com/photos/1005058/pexels-photo-1005058.jpeg",
+    ],
   },
 };
 
@@ -60,6 +65,17 @@ export const Unavailable: Story = {
 
 export const LowStock: Story = {
   args: { quantity: 2, maxQuantity: 2 },
+};
+
+export const WithReferencePhotos: Story = {
+  args: {
+    name: "Carved Initial Mug",
+    selectionSummary: "Size: Large · Carved text: Maya",
+    referenceImageUrls: [
+      "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+      "https://images.pexels.com/photos/1005058/pexels-photo-1005058.jpeg",
+    ],
+  },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

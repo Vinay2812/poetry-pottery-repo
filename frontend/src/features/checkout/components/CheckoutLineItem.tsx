@@ -2,6 +2,7 @@ import Image from "next/image";
 
 import { toPotteryIconKind } from "@/components/icons/pottery";
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
+import { ReferencePhotoStrip } from "@/components/media/ReferencePhotoStrip";
 import { formatInr } from "@/lib/format";
 
 export interface CheckoutLineItemProps {
@@ -10,6 +11,7 @@ export interface CheckoutLineItemProps {
   quantity: number;
   lineTotal: number;
   selectionSummary: string | null;
+  referenceImageUrls: string[];
 }
 
 export function CheckoutLineItem({
@@ -18,6 +20,7 @@ export function CheckoutLineItem({
   quantity,
   lineTotal,
   selectionSummary,
+  referenceImageUrls,
 }: CheckoutLineItemProps) {
   return (
     <li className="flex items-center gap-3 border-b border-ash py-4">
@@ -44,6 +47,10 @@ export function CheckoutLineItem({
         <p className="text-[13px] text-muted-foreground tnum">
           Quantity {quantity}
         </p>
+        <ReferencePhotoStrip
+          urls={referenceImageUrls}
+          label={`Reference photo for ${name}`}
+        />
       </div>
       <span className="text-sm tnum">{formatInr(lineTotal)}</span>
     </li>

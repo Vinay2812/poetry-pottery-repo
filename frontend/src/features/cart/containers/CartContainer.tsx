@@ -68,6 +68,7 @@ export function CartContainer() {
                   item.product.is_customizable,
                 )}
                 selectionSummary={toSelectionSummary(item.selections)}
+                referenceImageUrls={item.reference_image_urls}
                 isAvailable={item.is_available}
                 canAdjustQuantity={
                   item.is_available ||

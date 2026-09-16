@@ -128,6 +128,7 @@ export function OrderDetail({
                   unitPrice={item.unitPrice}
                   lineTotal={item.lineTotal}
                   selectionSummary={item.selectionSummary}
+                  referenceImageUrls={item.referenceImageUrls}
                 />
               ))}
             </ul>

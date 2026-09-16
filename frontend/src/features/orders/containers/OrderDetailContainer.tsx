@@ -151,6 +151,7 @@ export function OrderDetailContainer({
           unitPrice: item.unit_price,
           lineTotal: item.line_total,
           selectionSummary: toSelectionSummary(item.selections),
+          referenceImageUrls: item.reference_image_urls,
         }))}
         subtotal={optimisticOrder.subtotal}
         discount={optimisticOrder.discount}

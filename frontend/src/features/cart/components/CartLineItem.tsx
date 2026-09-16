@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { toPotteryIconKind } from "@/components/icons/pottery";
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
+import { ReferencePhotoStrip } from "@/components/media/ReferencePhotoStrip";
 import { formatInr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ export interface CartLineItemProps {
   quantity: number;
   maxQuantity: number;
   selectionSummary: string | null;
+  referenceImageUrls: string[];
   isAvailable: boolean;
   canAdjustQuantity: boolean;
   unavailableReason: string | null;
@@ -37,6 +39,7 @@ export function CartLineItem({
   quantity,
   maxQuantity,
   selectionSummary,
+  referenceImageUrls,
   isAvailable,
   canAdjustQuantity,
   unavailableReason,
@@ -80,6 +83,10 @@ export function CartLineItem({
             <p className="mt-1 text-[13px] text-muted-foreground tnum">
               {formatInr(unitPrice)} each
             </p>
+            <ReferencePhotoStrip
+              urls={referenceImageUrls}
+              label={`Reference photo for ${name}`}
+            />
           </div>
           <p className="shrink-0 text-sm tnum">{formatInr(lineTotal)}</p>
         </div>

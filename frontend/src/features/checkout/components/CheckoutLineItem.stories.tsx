@@ -20,6 +20,7 @@ const meta = {
     quantity: 1,
     lineTotal: 850,
     selectionSummary: null,
+    referenceImageUrls: [],
   },
 } satisfies Meta<typeof CheckoutLineItem>;
 
@@ -37,6 +38,21 @@ export const WithSelections: Story = {
     quantity: 2,
     lineTotal: 2900,
     selectionSummary: "Size: Large · Carved text: Maya",
+    referenceImageUrls: [
+      "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+      "https://images.pexels.com/photos/1005058/pexels-photo-1005058.jpeg",
+    ],
+  },
+};
+
+export const WithReferencePhotos: Story = {
+  args: {
+    name: "Carved Initial Mug",
+    selectionSummary: "Size: Large · Carved text: Maya",
+    referenceImageUrls: [
+      "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+      "https://images.pexels.com/photos/1005058/pexels-photo-1005058.jpeg",
+    ],
   },
 };
 

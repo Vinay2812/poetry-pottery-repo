@@ -210,6 +210,7 @@ export function CheckoutContainer() {
                   quantity={item.quantity}
                   lineTotal={item.line_total}
                   selectionSummary={toSelectionSummary(item.selections)}
+                  referenceImageUrls={item.reference_image_urls}
                 />
               ))}
             </ul>
