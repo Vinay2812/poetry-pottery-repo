@@ -105,6 +105,8 @@ function orderRow(overrides: Record<string, unknown> = {}) {
           is_customizable: false,
           categories: [],
           collection: null,
+          height_cm: null,
+          diameter_cm: null,
         },
       },
     ],

@@ -8,6 +8,7 @@ import { SearchService } from "@/features/search/search.service";
 import {
   type Category,
   type Collection,
+  type Glaze,
   type Product,
   type ProductFacets,
   type ProductOptionGroup,
@@ -31,6 +32,7 @@ export const productListInclude = {
       ends_at: true,
     },
   },
+  glaze: true,
 } satisfies Prisma.ProductInclude;
 
 type ProductRow = Prisma.ProductGetPayload<{
@@ -118,14 +120,23 @@ const NARROW_KEYS = [
   "category",
   "collection",
   "material",
+  "glaze",
   "price",
   "stock",
 ] as const;
 
 type NarrowKey = (typeof NARROW_KEYS)[number];
 
+// Decimal columns arrive as Prisma objects; GraphQL Float wants a number.
+const toCm = (value: Prisma.Decimal | null): number | null =>
+  value === null ? null : value.toNumber();
+
 export function toProduct(row: ProductRow): Product {
-  return row;
+  return {
+    ...row,
+    height_cm: toCm(row.height_cm),
+    diameter_cm: toCm(row.diameter_cm),
+  };
 }
 
 @Injectable()
@@ -171,6 +182,9 @@ export class ProductsService {
       material: filter.materials?.length
         ? [{ material: { in: filter.materials } }]
         : [],
+      glaze: filter.glaze_slugs?.length
+        ? [{ glaze: { slug: { in: filter.glaze_slugs } } }]
+        : [],
       price:
         filter.min_price != null || filter.max_price != null
           ? [
@@ -208,6 +222,7 @@ export class ProductsService {
         categories: scoped("category"),
         collections: scoped("collection"),
         materials: scoped("material"),
+        glazes: scoped("glaze"),
         prices: scoped("price"),
       }),
       this.prisma.product.count({
@@ -293,6 +308,28 @@ export class ProductsService {
     return rows.map(toProduct);
   }
 
+  glazes(): Promise<Glaze[]> {
+    return this.prisma.glaze.findMany({ orderBy: { name: "asc" } });
+  }
+
+  async glazeBySlug(slug: string): Promise<Glaze> {
+    const row = await this.prisma.glaze.findUnique({ where: { slug } });
+    if (!row) {
+      throw new NotFoundException("Glaze not found");
+    }
+    return row;
+  }
+
+  // The pieces a visitor can actually buy in this glaze; the archive has its own route.
+  async glazePieces(glazeId: number): Promise<Product[]> {
+    const rows = await this.prisma.product.findMany({
+      where: { ...availableProductWhere(), glaze_id: glazeId },
+      include: productListInclude,
+      orderBy: SORT_ORDER[ProductSort.FEATURED],
+    });
+    return rows.map(toProduct);
+  }
+
   categories(): Promise<Category[]> {
     return this.redis.getOrSet(
       "catalog:categories",
@@ -373,43 +410,58 @@ export class ProductsService {
     categories: Prisma.ProductWhereInput;
     collections: Prisma.ProductWhereInput;
     materials: Prisma.ProductWhereInput;
+    glazes: Prisma.ProductWhereInput;
     prices: Prisma.ProductWhereInput;
   }): Promise<Omit<ProductFacets, "active_count" | "archive_count">> {
-    const [categories, collections, materialNames, materialCounts, prices] =
-      await Promise.all([
-        this.prisma.category.findMany({
-          orderBy: [{ sort_order: "asc" }, { name: "asc" }],
-          select: {
-            slug: true,
-            name: true,
-            _count: { select: { products: { where: count.categories } } },
-          },
-        }),
-        this.prisma.collection.findMany({
-          orderBy: [{ created_at: "desc" }],
-          select: {
-            slug: true,
-            name: true,
-            _count: { select: { products: { where: count.collections } } },
-          },
-        }),
-        this.prisma.product.groupBy({
-          by: ["material"],
-          orderBy: { material: "asc" },
-        }),
-        this.prisma.product.groupBy({
-          by: ["material"],
-          where: count.materials,
-          _count: { _all: true },
-          orderBy: { material: "asc" },
-        }),
-        // Bounds for the slider, so they span the pieces on show rather than every row.
-        this.prisma.product.aggregate({
-          where: count.prices,
-          _min: { price: true },
-          _max: { price: true },
-        }),
-      ]);
+    const [
+      categories,
+      collections,
+      materialNames,
+      materialCounts,
+      glazes,
+      prices,
+    ] = await Promise.all([
+      this.prisma.category.findMany({
+        orderBy: [{ sort_order: "asc" }, { name: "asc" }],
+        select: {
+          slug: true,
+          name: true,
+          _count: { select: { products: { where: count.categories } } },
+        },
+      }),
+      this.prisma.collection.findMany({
+        orderBy: [{ created_at: "desc" }],
+        select: {
+          slug: true,
+          name: true,
+          _count: { select: { products: { where: count.collections } } },
+        },
+      }),
+      this.prisma.product.groupBy({
+        by: ["material"],
+        orderBy: { material: "asc" },
+      }),
+      this.prisma.product.groupBy({
+        by: ["material"],
+        where: count.materials,
+        _count: { _all: true },
+        orderBy: { material: "asc" },
+      }),
+      this.prisma.glaze.findMany({
+        orderBy: { name: "asc" },
+        select: {
+          slug: true,
+          name: true,
+          _count: { select: { products: { where: count.glazes } } },
+        },
+      }),
+      // Bounds for the slider, so they span the pieces on show rather than every row.
+      this.prisma.product.aggregate({
+        where: count.prices,
+        _min: { price: true },
+        _max: { price: true },
+      }),
+    ]);
     const counted = new Map(
       materialCounts.map((row) => [row.material, row._count._all]),
     );
@@ -429,6 +481,11 @@ export class ProductsService {
         label: m.material,
         count: counted.get(m.material) ?? 0,
       })),
+      glazes: glazes.map((g) => ({
+        value: g.slug,
+        label: g.name,
+        count: g._count.products,
+      })),
       price_min: prices._min.price ?? 0,
       price_max: prices._max.price ?? 0,
     };
@@ -440,6 +497,7 @@ function emptyFacets(): ProductFacets {
     categories: [],
     collections: [],
     materials: [],
+    glazes: [],
     price_min: 0,
     price_max: 0,
     active_count: 0,

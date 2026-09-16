@@ -11,11 +11,12 @@ import type {
   GqlContext,
 } from "@/common/types/express";
 import { WishlistService } from "@/features/wishlist/wishlist.service";
-import { ProductsResolver } from "./products.resolver";
+import { GlazeResolver, ProductsResolver } from "./products.resolver";
 import { ProductsService } from "./products.service";
 import {
   type Category,
   type Collection,
+  type Glaze,
   type Product,
   type ProductOptionGroup,
   type ProductsFilterInput,
@@ -70,6 +71,12 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     created_at: new Date("2026-01-01T00:00:00.000Z"),
     categories: [],
     collection: null,
+    glaze: null,
+    capacity_ml: null,
+    height_cm: null,
+    diameter_cm: null,
+    weight_g: null,
+    maker_note: null,
     description: "Thrown on the wheel.",
     dimensions: null,
     care_notes: [],
@@ -118,6 +125,19 @@ function makeCollection(overrides: Partial<Collection> = {}): Collection {
   };
 }
 
+function makeGlaze(overrides: Partial<Glaze> = {}): Glaze {
+  return {
+    id: 3,
+    slug: "ocean-blue",
+    name: "Ocean Blue",
+    description: "A deep blue that gathers dark in the throwing rings.",
+    variation_note: "No two pots take it the same way.",
+    swatch_url: null,
+    color_code: "#3F6C8F",
+    ...overrides,
+  };
+}
+
 function makeProductsResult(
   overrides: Partial<ProductsResult> = {},
 ): ProductsResult {
@@ -128,6 +148,7 @@ function makeProductsResult(
       categories: [],
       collections: [],
       materials: [],
+      glazes: [],
       price_min: 0,
       price_max: 0,
       active_count: 1,
@@ -146,6 +167,9 @@ const productsMock = {
   categories: vi.fn<ProductsService["categories"]>(),
   collections: vi.fn<ProductsService["collections"]>(),
   collectionBySlug: vi.fn<ProductsService["collectionBySlug"]>(),
+  glazes: vi.fn<ProductsService["glazes"]>(),
+  glazeBySlug: vi.fn<ProductsService["glazeBySlug"]>(),
+  glazePieces: vi.fn<ProductsService["glazePieces"]>(),
 };
 
 const wishlistMock = {
@@ -367,10 +391,46 @@ describe("ProductsResolver", () => {
       "categories",
       "collections",
       "collection",
+      "glazes",
+      "glaze",
     ];
 
     for (const field of fields) {
       expect(guardsOn(ProductsResolver.prototype, field)).toEqual([]);
     }
+    expect(guardsOn(GlazeResolver.prototype, "pieces")).toEqual([]);
+  });
+
+  it("lists the studio's glazes and reads one by slug", async () => {
+    const glazes = [makeGlaze()];
+    productsMock.glazes.mockResolvedValue(glazes);
+    productsMock.glazeBySlug.mockResolvedValue(glazes[0]!);
+
+    await expect(resolver.glazes()).resolves.toBe(glazes);
+    await expect(resolver.glaze("ocean-blue")).resolves.toBe(glazes[0]);
+    expect(productsMock.glazeBySlug).toHaveBeenCalledWith("ocean-blue");
+  });
+});
+
+describe("GlazeResolver", () => {
+  let resolver: GlazeResolver;
+
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        GlazeResolver,
+        { provide: ProductsService, useValue: productsMock },
+      ],
+    }).compile();
+    resolver = moduleRef.get(GlazeResolver);
+  });
+
+  it("loads the pieces wearing the glaze it was handed", async () => {
+    const pieces = [makeProduct()];
+    productsMock.glazePieces.mockResolvedValue(pieces);
+
+    await expect(resolver.pieces(makeGlaze())).resolves.toBe(pieces);
+    expect(productsMock.glazePieces).toHaveBeenCalledWith(3);
   });
 });

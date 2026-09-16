@@ -267,6 +267,17 @@ type FacetCount {
   value: String!
 }
 
+type Glaze {
+  color_code: String
+  description: String!
+  id: Int!
+  name: String!
+  pieces: [Product!]!
+  slug: String!
+  swatch_url: String
+  variation_note: String
+}
+
 type Mutation {
   addToCart(input: AddToCartInput!): Cart!
   bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
@@ -373,6 +384,7 @@ input PlaceOrderInput {
 }
 
 type Product {
+  capacity_ml: Int
   care_notes: [String!]!
   categories: [CategoryRef!]!
   collection: CollectionRef
@@ -381,7 +393,10 @@ type Product {
   compare_at_price: Int
   created_at: DateTime!
   description: String!
+  diameter_cm: Float
   dimensions: String
+  glaze: Glaze
+  height_cm: Float
   id: Int!
   image_urls: [String!]!
   in_wishlist: Boolean!
@@ -389,6 +404,7 @@ type Product {
   is_archived: Boolean!
   is_customizable: Boolean!
   is_featured: Boolean!
+  maker_note: String
   material: String!
   name: String!
   option_groups: [ProductOptionGroup!]!
@@ -398,6 +414,7 @@ type Product {
   sales_count: Int!
   slug: String!
   stock: Int!
+  weight_g: Int
 }
 
 type ProductFacets {
@@ -405,6 +422,7 @@ type ProductFacets {
   archive_count: Int!
   categories: [FacetCount!]!
   collections: [FacetCount!]!
+  glazes: [FacetCount!]!
   materials: [FacetCount!]!
   price_max: Int!
   price_min: Int!
@@ -440,6 +458,7 @@ input ProductsFilterInput {
   category_slugs: [String!]
   collection_slug: String
   customizable_only: Boolean
+  glaze_slugs: [String!]
   in_stock_only: Boolean
   limit: Int
   materials: [String!]
@@ -470,6 +489,8 @@ type Query {
   event(slug: String!): Event!
   events(filter: EventsFilterInput): EventsResult!
   featuredProducts(limit: Int = 8): [Product!]!
+  glaze(slug: String!): Glaze!
+  glazes: [Glaze!]!
   myRegistrations(limit: Int, page: Int): RegistrationsResult!
   myWorkshopBookings(limit: Int, page: Int): WorkshopBookingsResult!
   newsletterStatus: NewsletterStatus!

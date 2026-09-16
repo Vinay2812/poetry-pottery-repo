@@ -16,6 +16,7 @@ import { isProductArchived, ProductsService } from "./products.service";
 import {
   Category,
   Collection,
+  Glaze,
   Product,
   ProductOptionGroup,
   ProductsFilterInput,
@@ -92,6 +93,16 @@ export class ProductsResolver {
     return this.productsService.categories();
   }
 
+  @Query(() => [Glaze])
+  glazes(): Promise<Glaze[]> {
+    return this.productsService.glazes();
+  }
+
+  @Query(() => Glaze)
+  glaze(@Args("slug") slug: string): Promise<Glaze> {
+    return this.productsService.glazeBySlug(slug);
+  }
+
   @Query(() => [Collection])
   collections(
     @Args("archive", {
@@ -115,5 +126,16 @@ export class ProductsResolver {
     archive: boolean,
   ): Promise<Collection> {
     return this.productsService.collectionBySlug(slug, archive);
+  }
+}
+
+@Resolver(() => Glaze)
+export class GlazeResolver {
+  constructor(private readonly productsService: ProductsService) {}
+
+  // Only loaded when a caller asks, so the facet list stays one query.
+  @ResolveField(() => [Product])
+  pieces(@Parent() glaze: Glaze): Promise<Product[]> {
+    return this.productsService.glazePieces(glaze.id);
   }
 }

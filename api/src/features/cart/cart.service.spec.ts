@@ -50,6 +50,8 @@ function productRow(overrides: Record<string, unknown> = {}) {
     collection: null,
     categories: [],
     option_groups: [],
+    height_cm: null,
+    diameter_cm: null,
     ...overrides,
   };
 }

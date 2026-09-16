@@ -1,4 +1,6 @@
+import { NotFoundException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { Prisma } from "@prisma/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
@@ -22,6 +24,7 @@ const prismaMock = {
     aggregate: vi.fn(),
   },
   category: { findMany: vi.fn() },
+  glaze: { findMany: vi.fn(), findUnique: vi.fn() },
   collection: { findMany: vi.fn(), findFirst: vi.fn() },
 };
 
@@ -39,7 +42,15 @@ const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
 
 function row(id: number) {
-  return { id, slug: `p-${id}`, categories: [], collection: null };
+  return {
+    id,
+    slug: `p-${id}`,
+    categories: [],
+    collection: null,
+    glaze: null,
+    height_cm: null,
+    diameter_cm: null,
+  };
 }
 
 const NOW = new Date("2026-09-14T00:00:00.000Z");
@@ -64,6 +75,7 @@ describe("ProductsService", () => {
     vi.setSystemTime(NOW);
     prismaMock.product.count.mockResolvedValue(0);
     prismaMock.category.findMany.mockResolvedValue([]);
+    prismaMock.glaze.findMany.mockResolvedValue([]);
     prismaMock.collection.findMany.mockResolvedValue([]);
     prismaMock.product.groupBy.mockResolvedValue([]);
     prismaMock.product.aggregate.mockResolvedValue({
@@ -169,6 +181,7 @@ describe("ProductsService", () => {
       categories: [{ value: "mugs", label: "Mugs", count: 4 }],
       collections: [{ value: "spring-2025", label: "Spring 2025", count: 2 }],
       materials: [{ value: "Stoneware", label: "Stoneware", count: 4 }],
+      glazes: [],
       price_min: 480,
       price_max: 3800,
       active_count: 0,
@@ -220,6 +233,85 @@ describe("ProductsService", () => {
       prismaMock.collection.findMany.mock.calls[0]?.[0];
     expect(categoryArgs).not.toHaveProperty("where");
     expect(collectionArgs).not.toHaveProperty("where");
+  });
+
+  it("narrows by glaze and counts every glaze without narrowing by itself", async () => {
+    prismaMock.product.findMany.mockResolvedValue([]);
+    prismaMock.glaze.findMany.mockResolvedValue([
+      { slug: "ocean-blue", name: "Ocean Blue", _count: { products: 5 } },
+      { slug: "wood-fired", name: "Wood Fired", _count: { products: 0 } },
+    ]);
+
+    const result = await service.list({ glaze_slugs: ["ocean-blue"] });
+
+    expect(result.facets.glazes).toEqual([
+      { value: "ocean-blue", label: "Ocean Blue", count: 5 },
+      { value: "wood-fired", label: "Wood Fired", count: 0 },
+    ]);
+    expect(prismaMock.product.findMany).toHaveBeenCalledWith(
+      containing({
+        where: {
+          AND: [
+            availableProductWhere(),
+            { glaze: { slug: { in: ["ocean-blue"] } } },
+          ],
+        },
+      }),
+    );
+    // The glaze facet counts against the other filters only, so its own options stay listed.
+    expect(prismaMock.glaze.findMany).toHaveBeenCalledWith(
+      containing({
+        select: containing({
+          _count: {
+            select: { products: { where: { AND: [availableProductWhere()] } } },
+          },
+        }),
+      }),
+    );
+  });
+
+  it("reads the piece measurements off the row as numbers", async () => {
+    prismaMock.product.findFirst.mockResolvedValue({
+      ...row(1),
+      capacity_ml: 250,
+      height_cm: new Prisma.Decimal("9.5"),
+      diameter_cm: new Prisma.Decimal("8.0"),
+      weight_g: 320,
+      maker_note: "Fired in the last load of the monsoon.",
+    });
+
+    const product = await service.bySlug("p-1");
+
+    expect(product.capacity_ml).toBe(250);
+    expect(product.height_cm).toBe(9.5);
+    expect(product.diameter_cm).toBe(8);
+    expect(product.weight_g).toBe(320);
+    expect(product.maker_note).toBe("Fired in the last load of the monsoon.");
+  });
+
+  it("lists glazes by name and refuses an unknown slug", async () => {
+    const glaze = { id: 3, slug: "ocean-blue", name: "Ocean Blue" };
+    prismaMock.glaze.findMany.mockResolvedValue([glaze]);
+    prismaMock.glaze.findUnique.mockResolvedValue(null);
+
+    await expect(service.glazes()).resolves.toEqual([glaze]);
+    expect(prismaMock.glaze.findMany).toHaveBeenCalledWith({
+      orderBy: { name: "asc" },
+    });
+    await expect(service.glazeBySlug("gone")).rejects.toThrow(
+      NotFoundException,
+    );
+  });
+
+  it("lists only the pieces still for sale in a glaze", async () => {
+    prismaMock.product.findMany.mockResolvedValue([row(4)]);
+
+    const pieces = await service.glazePieces(3);
+
+    expect(pieces.map((piece) => piece.id)).toEqual([4]);
+    expect(prismaMock.product.findMany).toHaveBeenCalledWith(
+      containing({ where: { ...availableProductWhere(), glaze_id: 3 } }),
+    );
   });
 
   it("throws a not-found error for unknown slugs", async () => {

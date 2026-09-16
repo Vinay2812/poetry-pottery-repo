@@ -90,6 +90,30 @@ export class CollectionRef {
 }
 
 @ObjectType()
+export class Glaze {
+  @Field(() => Int)
+  id!: number;
+
+  @Field()
+  slug!: string;
+
+  @Field()
+  name!: string;
+
+  @Field()
+  description!: string;
+
+  @Field(() => String, { nullable: true })
+  variation_note!: string | null;
+
+  @Field(() => String, { nullable: true })
+  swatch_url!: string | null;
+
+  @Field(() => String, { nullable: true })
+  color_code!: string | null;
+}
+
+@ObjectType()
 export class CategoryRef {
   @Field(() => Int)
   id!: number;
@@ -196,11 +220,30 @@ export class Product {
   @Field(() => CollectionRef, { nullable: true })
   collection!: CollectionRef | null;
 
+  @Field(() => Glaze, { nullable: true })
+  glaze!: Glaze | null;
+
   @Field()
   description!: string;
 
   @Field(() => String, { nullable: true })
   dimensions!: string | null;
+
+  // What the piece is in the hand. Null wherever the studio has not measured it yet.
+  @Field(() => Int, { nullable: true })
+  capacity_ml!: number | null;
+
+  @Field(() => Float, { nullable: true })
+  height_cm!: number | null;
+
+  @Field(() => Float, { nullable: true })
+  diameter_cm!: number | null;
+
+  @Field(() => Int, { nullable: true })
+  weight_g!: number | null;
+
+  @Field(() => String, { nullable: true })
+  maker_note!: string | null;
 
   @Field(() => [String])
   care_notes!: string[];
@@ -232,6 +275,9 @@ export class ProductFacets {
 
   @Field(() => [FacetCount])
   materials!: FacetCount[];
+
+  @Field(() => [FacetCount])
+  glazes!: FacetCount[];
 
   @Field(() => Int)
   price_min!: number;
@@ -272,6 +318,9 @@ export class ProductsFilterInput {
 
   @Field(() => [String], { nullable: true })
   materials?: string[] | null;
+
+  @Field(() => [String], { nullable: true })
+  glaze_slugs?: string[] | null;
 
   @Field(() => Int, { nullable: true })
   min_price?: number | null;
