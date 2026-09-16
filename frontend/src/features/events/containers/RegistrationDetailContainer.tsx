@@ -63,7 +63,7 @@ export function RegistrationDetailContainer({
   if (isLoading) {
     return (
       <div
-        className="mx-auto w-full max-w-6xl px-4 py-10 md:px-8"
+        className="mx-auto w-full max-w-6xl px-4 py-8 md:px-8 md:py-12"
         aria-busy="true"
       >
         <div className="h-8 w-56 animate-pulse bg-ash" />

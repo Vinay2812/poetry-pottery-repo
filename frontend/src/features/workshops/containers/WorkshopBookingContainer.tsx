@@ -205,7 +205,7 @@ export function WorkshopBookingContainer({
   const lastMonth = toMonthKey(addDays(todayKey, workshop.booking_window_days));
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 md:px-6 md:py-12">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 md:px-8 md:py-12">
       <WorkshopIntro
         name={workshop.name}
         description={workshop.description}

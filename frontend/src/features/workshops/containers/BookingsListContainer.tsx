@@ -42,7 +42,7 @@ export function BookingsListContainer() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 md:px-6 md:py-12">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8 md:px-8 md:py-12">
       <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
         Your wheel sessions
       </h1>

@@ -67,7 +67,7 @@ export function OrderDetail({
   onCancel,
 }: OrderDetailProps) {
   return (
-    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-8 md:px-8 md:py-12">
       {isJustPlaced && (
         <section className="flex flex-col items-start gap-3 border border-ash bg-clay-white p-6 md:p-8">
           <h1 className="font-heading text-3xl tracking-tight md:text-4xl">

@@ -45,7 +45,7 @@ export function AccountMenu({
   onSignOut,
 }: AccountMenuProps) {
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-6 md:px-8 md:py-10">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-8 md:px-8 md:py-12">
       <div className="flex items-center gap-4">
         <span className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-ink text-2xl text-white">
           {imageUrl ? (
