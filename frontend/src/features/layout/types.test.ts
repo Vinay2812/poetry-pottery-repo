@@ -5,7 +5,9 @@ import {
   formatBadgeCount,
   isActiveLink,
   isActivePath,
+  toCartAnnouncement,
   toFocusedHeader,
+  toWishlistAnnouncement,
 } from "./types";
 
 describe("isActivePath", () => {
@@ -80,5 +82,21 @@ describe("toFocusedHeader", () => {
     expect(toFocusedHeader("/")).toBeNull();
     expect(toFocusedHeader("/orders")).toBeNull();
     expect(toFocusedHeader("/cart/extra")).toBeNull();
+  });
+});
+
+describe("toCartAnnouncement", () => {
+  it("counts pieces, and says so when there are none", () => {
+    expect(toCartAnnouncement(0)).toBe("Your cart is empty");
+    expect(toCartAnnouncement(1)).toBe("1 piece in your cart");
+    expect(toCartAnnouncement(4)).toBe("4 pieces in your cart");
+  });
+});
+
+describe("toWishlistAnnouncement", () => {
+  it("counts saved pieces, and says so when there are none", () => {
+    expect(toWishlistAnnouncement(0)).toBe("Nothing saved yet");
+    expect(toWishlistAnnouncement(1)).toBe("1 piece saved");
+    expect(toWishlistAnnouncement(7)).toBe("7 pieces saved");
   });
 });

@@ -41,7 +41,10 @@ export function MobileNav({ activeHref, cartCount }: MobileNavProps) {
                 <span className="relative">
                   <Icon className="size-5" strokeWidth={1.5} />
                   {count > 0 && (
-                    <span className="absolute -top-1 -right-2.5 text-[10px] font-medium text-primary tnum">
+                    <span
+                      aria-hidden="true"
+                      className="absolute -top-1 -right-2.5 text-[10px] font-medium text-primary tnum"
+                    >
                       {formatBadgeCount(count)}
                     </span>
                   )}

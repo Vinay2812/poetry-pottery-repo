@@ -79,3 +79,14 @@ export function buildWhatsAppUrl(number: string, text: string): string {
 export function formatBadgeCount(count: number): string {
   return count > 9 ? "9+" : String(count);
 }
+
+// The badge is a number in the corner of an icon; this is what it says out loud.
+export function toCartAnnouncement(count: number): string {
+  if (count <= 0) return "Your cart is empty";
+  return count === 1 ? "1 piece in your cart" : `${count} pieces in your cart`;
+}
+
+export function toWishlistAnnouncement(count: number): string {
+  if (count <= 0) return "Nothing saved yet";
+  return count === 1 ? "1 piece saved" : `${count} pieces saved`;
+}

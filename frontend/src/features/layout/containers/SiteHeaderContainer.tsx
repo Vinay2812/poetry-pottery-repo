@@ -2,7 +2,14 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
-import { Suspense, useCallback, useMemo, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { UserRole } from "@/graphql/generated/graphql";
 
@@ -12,7 +19,9 @@ import { MobileMenuContainer } from "@/features/layout/containers/MobileMenuCont
 import {
   isActivePath,
   NAV_LINKS,
+  toCartAnnouncement,
   toFocusedHeader,
+  toWishlistAnnouncement,
 } from "@/features/layout/types";
 import { SearchMenuContainer } from "@/features/search";
 import { useWishlistIds } from "@/features/wishlist/hooks";
@@ -26,6 +35,22 @@ export function SiteHeaderContainer() {
   const { openSignIn, signOut } = useClerk();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [countAnnouncement, setCountAnnouncement] = useState("");
+  const lastCounts = useRef({ cart: cartCount, wishlist: wishlistCount });
+
+  // Only the count that moved is spoken, so adding to the cart does not also
+  // read the wishlist back.
+  useEffect(() => {
+    const last = lastCounts.current;
+    lastCounts.current = { cart: cartCount, wishlist: wishlistCount };
+    if (last.cart !== cartCount) {
+      setCountAnnouncement(toCartAnnouncement(cartCount));
+      return;
+    }
+    if (last.wishlist !== wishlistCount) {
+      setCountAnnouncement(toWishlistAnnouncement(wishlistCount));
+    }
+  }, [cartCount, wishlistCount]);
 
   const activeHref = useMemo(
     () =>
@@ -63,6 +88,7 @@ export function SiteHeaderContainer() {
         activeHref={activeHref}
         cartCount={cartCount}
         wishlistCount={wishlistCount}
+        countAnnouncement={countAnnouncement}
         isSignedIn={Boolean(isSignedIn)}
         isAdmin={user?.publicMetadata.role === UserRole.Admin}
         userImageUrl={user?.hasImage ? user.imageUrl : null}

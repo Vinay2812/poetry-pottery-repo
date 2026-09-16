@@ -18,6 +18,7 @@ const meta = {
     activeHref: "/products",
     cartCount: 0,
     wishlistCount: 0,
+    countAnnouncement: "",
     isSignedIn: false,
     isAdmin: false,
     userImageUrl: null,
@@ -50,6 +51,7 @@ export const WithCounts: Story = {
     userImageUrl: AVATAR_URL,
     cartCount: 3,
     wishlistCount: 12,
+    countAnnouncement: "3 pieces in your cart",
   },
 };
 

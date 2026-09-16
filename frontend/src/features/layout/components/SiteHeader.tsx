@@ -20,6 +20,7 @@ export interface SiteHeaderProps {
   activeHref: string | null;
   cartCount: number;
   wishlistCount: number;
+  countAnnouncement: string;
   isSignedIn: boolean;
   isAdmin: boolean;
   userImageUrl: string | null;
@@ -50,7 +51,10 @@ function IconLink({ href, label, count = 0, children }: IconLinkProps) {
     >
       {children}
       {count > 0 && (
-        <span className="absolute top-1 right-0 text-[11px] font-medium text-primary tnum">
+        <span
+          aria-hidden="true"
+          className="absolute top-1 right-0 text-[11px] font-medium text-primary tnum"
+        >
           {formatBadgeCount(count)}
         </span>
       )}
@@ -63,6 +67,7 @@ export function SiteHeader({
   activeHref,
   cartCount,
   wishlistCount,
+  countAnnouncement,
   isSignedIn,
   isAdmin,
   userImageUrl,
@@ -83,6 +88,10 @@ export function SiteHeader({
       )}
     >
       <PageShell className="flex h-16 items-center gap-5">
+        {/* Cart and wishlist changes are spoken here, not read off the badges. */}
+        <p aria-live="polite" aria-atomic="true" className="sr-only">
+          {countAnnouncement}
+        </p>
         <Wordmark />
 
         {variant === "focused" ? (
