@@ -1,0 +1,23 @@
+query Suggest($q: String!) {
+  suggest(q: $q) {
+    pieces {
+      id
+      slug
+      name
+      price
+      image_url
+      is_archived
+    }
+    events {
+      id
+      slug
+      title
+      starts_at
+    }
+    workshops {
+      id
+      slug
+      name
+    }
+  }
+}

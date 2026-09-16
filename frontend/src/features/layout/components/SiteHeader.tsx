@@ -26,6 +26,7 @@ export interface SiteHeaderProps {
   variant?: "full" | "focused";
   backHref?: string | null;
   backLabel?: string | null;
+  isSearchOpen?: boolean;
   onSearchClick: () => void;
   onAccountClick: () => void;
   onMenuClick: () => void;
@@ -67,6 +68,7 @@ export function SiteHeader({
   variant = "full",
   backHref = null,
   backLabel = null,
+  isSearchOpen = false,
   onSearchClick,
   onAccountClick,
   onMenuClick,
@@ -128,6 +130,7 @@ export function SiteHeader({
                 type="button"
                 onClick={onSearchClick}
                 aria-label="Search"
+                aria-expanded={isSearchOpen}
                 className="flex size-10 items-center justify-center ghost-hover hover:text-primary"
               >
                 <Search className="size-5" strokeWidth={1.5} />

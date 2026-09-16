@@ -14,6 +14,7 @@ import {
   NAV_LINKS,
   toFocusedHeader,
 } from "@/features/layout/types";
+import { SearchMenuContainer } from "@/features/search";
 import { useWishlistIds } from "@/features/wishlist/hooks";
 
 export function SiteHeaderContainer() {
@@ -24,6 +25,7 @@ export function SiteHeaderContainer() {
   const { isSignedIn, user } = useUser();
   const { openSignIn, signOut } = useClerk();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const activeHref = useMemo(
     () =>
@@ -33,8 +35,10 @@ export function SiteHeaderContainer() {
   // Buying pages keep the wordmark and one way back, nothing else to wander into.
   const focused = toFocusedHeader(pathname);
   const handleSearchClick = useCallback(() => {
-    router.push("/search");
-  }, [router]);
+    setIsMenuOpen(false);
+    setIsSearchOpen(true);
+  }, []);
+  const handleCloseSearch = useCallback(() => setIsSearchOpen(false), []);
 
   const handleAccountClick = useCallback(() => {
     setIsMenuOpen(false);
@@ -66,10 +70,12 @@ export function SiteHeaderContainer() {
         variant={focused ? "focused" : "full"}
         backHref={focused?.href ?? null}
         backLabel={focused?.label ?? null}
+        isSearchOpen={isSearchOpen}
         onSearchClick={handleSearchClick}
         onAccountClick={handleAccountClick}
         onMenuClick={() => setIsMenuOpen(true)}
       />
+      <SearchMenuContainer isOpen={isSearchOpen} onClose={handleCloseSearch} />
       <Suspense>
         <MobileMenuContainer
           isOpen={isMenuOpen}

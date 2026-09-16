@@ -766,6 +766,7 @@ export type Query = {
   registration: Registration;
   relatedProducts: Array<Product>;
   siteSettings: SiteSettings;
+  suggest: Suggestions;
   upcomingEvents: Array<Event>;
   users: UsersResponse;
   wishlist: Array<Product>;
@@ -878,6 +879,11 @@ export type QueryRelatedProductsArgs = {
 };
 
 
+export type QuerySuggestArgs = {
+  q: Scalars['String']['input'];
+};
+
+
 export type QueryUpcomingEventsArgs = {
   limit?: InputMaybe<Scalars['Int']['input']>;
 };
@@ -987,6 +993,38 @@ export type SiteSettings = {
   updated_at: Scalars['DateTime']['output'];
   whatsapp_number: Scalars['String']['output'];
   youtube_url: Scalars['String']['output'];
+};
+
+export type SuggestedEvent = {
+  __typename?: 'SuggestedEvent';
+  id: Scalars['Int']['output'];
+  slug: Scalars['String']['output'];
+  starts_at: Scalars['DateTime']['output'];
+  title: Scalars['String']['output'];
+};
+
+export type SuggestedPiece = {
+  __typename?: 'SuggestedPiece';
+  id: Scalars['Int']['output'];
+  image_url?: Maybe<Scalars['String']['output']>;
+  is_archived: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  price: Scalars['Int']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type SuggestedWorkshop = {
+  __typename?: 'SuggestedWorkshop';
+  id: Scalars['Int']['output'];
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
+export type Suggestions = {
+  __typename?: 'Suggestions';
+  events: Array<SuggestedEvent>;
+  pieces: Array<SuggestedPiece>;
+  workshops: Array<SuggestedWorkshop>;
 };
 
 export type UploadTicket = {
@@ -1425,6 +1463,13 @@ export type SiteSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type SiteSettingsQuery = { siteSettings: { contact_phone: string, whatsapp_number: string, contact_email: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, dispatch_days_min: number, dispatch_days_max: number, announcement_text: string | null, announcement_href: string | null, hero_heading: string, hero_subheading: string, hero_image_url: string, hero_cta_text: string, hero_cta_href: string } };
+
+export type SuggestQueryVariables = Exact<{
+  q: string;
+}>;
+
+
+export type SuggestQuery = { suggest: { pieces: Array<{ id: number, slug: string, name: string, price: number, image_url: string | null, is_archived: boolean }>, events: Array<{ id: number, slug: string, title: string, starts_at: string }>, workshops: Array<{ id: number, slug: string, name: string }> } };
 
 export type CreateCustomizationUploadMutationVariables = Exact<{
   content_type: string;
@@ -3396,6 +3441,59 @@ export function useSiteSettingsLazyQuery(baseOptions?: ApolloReactHooks.LazyQuer
 export type SiteSettingsQueryHookResult = ReturnType<typeof useSiteSettingsQuery>;
 export type SiteSettingsLazyQueryHookResult = ReturnType<typeof useSiteSettingsLazyQuery>;
 export type SiteSettingsQueryResult = ApolloReactCommon.QueryResult<SiteSettingsQuery, SiteSettingsQueryVariables>;
+export const SuggestDocument = gql`
+    query Suggest($q: String!) {
+  suggest(q: $q) {
+    pieces {
+      id
+      slug
+      name
+      price
+      image_url
+      is_archived
+    }
+    events {
+      id
+      slug
+      title
+      starts_at
+    }
+    workshops {
+      id
+      slug
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useSuggestQuery__
+ *
+ * To run a query within a React component, call `useSuggestQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSuggestQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSuggestQuery({
+ *   variables: {
+ *      q: // value for 'q'
+ *   },
+ * });
+ */
+export function useSuggestQuery(baseOptions: ApolloReactHooks.QueryHookOptions<SuggestQuery, SuggestQueryVariables> & ({ variables: SuggestQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<SuggestQuery, SuggestQueryVariables>(SuggestDocument, options);
+      }
+export function useSuggestLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<SuggestQuery, SuggestQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<SuggestQuery, SuggestQueryVariables>(SuggestDocument, options);
+        }
+export type SuggestQueryHookResult = ReturnType<typeof useSuggestQuery>;
+export type SuggestLazyQueryHookResult = ReturnType<typeof useSuggestLazyQuery>;
+export type SuggestQueryResult = ApolloReactCommon.QueryResult<SuggestQuery, SuggestQueryVariables>;
 export const CreateCustomizationUploadDocument = gql`
     mutation CreateCustomizationUpload($content_type: String!, $size: Int!) {
   createCustomizationUpload(content_type: $content_type, size: $size) {

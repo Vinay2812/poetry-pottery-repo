@@ -580,6 +580,7 @@ type Query {
   registration(id: String!): Registration!
   relatedProducts(limit: Int = 8, slug: String!): [Product!]!
   siteSettings: SiteSettings!
+  suggest(q: String!): Suggestions!
   upcomingEvents(limit: Int = 3): [Event!]!
   users(limit: Int = 20, page: Int = 1): UsersResponse!
   wishlist: [Product!]!
@@ -670,6 +671,34 @@ type SiteSettings {
   updated_at: DateTime!
   whatsapp_number: String!
   youtube_url: String!
+}
+
+type SuggestedEvent {
+  id: Int!
+  slug: String!
+  starts_at: DateTime!
+  title: String!
+}
+
+type SuggestedPiece {
+  id: Int!
+  image_url: String
+  is_archived: Boolean!
+  name: String!
+  price: Int!
+  slug: String!
+}
+
+type SuggestedWorkshop {
+  id: Int!
+  name: String!
+  slug: String!
+}
+
+type Suggestions {
+  events: [SuggestedEvent!]!
+  pieces: [SuggestedPiece!]!
+  workshops: [SuggestedWorkshop!]!
 }
 
 type UploadTicket {
