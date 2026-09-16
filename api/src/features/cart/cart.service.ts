@@ -12,8 +12,15 @@ import {
   toProduct,
 } from "@/features/products/products.service";
 import { SettingsService } from "@/features/settings/settings.service";
+import { StorageService } from "@/storage/storage.service";
 import type { AddToCartInput, Cart, CartItem } from "./cart.type";
-import { resolveSelections, selectionKey, selectionsTotal } from "./selections";
+import {
+  readCustomisation,
+  resolveReferenceImages,
+  resolveSelections,
+  selectionKey,
+  selectionsTotal,
+} from "./selections";
 
 export const MAX_LINE_QUANTITY = 10;
 
@@ -59,8 +66,8 @@ function availability(
 }
 
 export function toCartItem(row: CartItemRow, now = new Date()): CartItem {
-  const selections = row.selections ?? [];
-  const unit_price = row.product.price + selectionsTotal(selections);
+  const { options, reference_image_urls } = readCustomisation(row.selections);
+  const unit_price = row.product.price + selectionsTotal(options);
   const { is_available, reason } = availability(row, now);
   return {
     id: row.id,
@@ -68,7 +75,8 @@ export function toCartItem(row: CartItemRow, now = new Date()): CartItem {
     quantity: row.quantity,
     unit_price,
     line_total: unit_price * row.quantity,
-    selections,
+    selections: options,
+    reference_image_urls,
     is_available,
     unavailable_reason: reason,
   };
@@ -79,6 +87,7 @@ export class CartService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly settings: SettingsService,
+    private readonly storage: StorageService,
   ) {}
 
   async get(userId: number): Promise<Cart> {
@@ -125,7 +134,12 @@ export class CartService {
     const selections = product.is_customizable
       ? resolveSelections(product.option_groups, input.selections ?? [])
       : [];
-    const key = selectionKey(selections);
+    const referenceImages = product.is_customizable
+      ? resolveReferenceImages(input.reference_image_urls, (url) =>
+          this.storage.isOwnUrl(url),
+        )
+      : [];
+    const key = selectionKey(selections, referenceImages);
 
     await this.prisma.withTransaction(async () => {
       // The merge reads the line before rewriting it, so two tabs adding at once must queue up.
@@ -157,7 +171,10 @@ export class CartService {
           user_id: userId,
           product_id: product.id,
           quantity: nextQuantity,
-          selections,
+          selections: {
+            options: selections,
+            reference_image_urls: referenceImages,
+          },
           selection_key: key,
         },
         update: { quantity: nextQuantity },

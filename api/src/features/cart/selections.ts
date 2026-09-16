@@ -25,6 +25,43 @@ export interface OptionGroupRow {
 }
 
 export type Selection = PrismaJson.ProductSelection;
+export type Customisation = PrismaJson.ProductCustomisation;
+
+export const MAX_REFERENCE_IMAGES = 3;
+
+// Older rows stored a bare option array; newer ones carry reference photos alongside.
+export function readCustomisation(
+  stored: PrismaJson.ProductSelections | null | undefined,
+): Customisation {
+  if (!stored) return { options: [], reference_image_urls: [] };
+  if (Array.isArray(stored)) {
+    return { options: stored, reference_image_urls: [] };
+  }
+  return {
+    options: stored.options ?? [],
+    reference_image_urls: stored.reference_image_urls ?? [],
+  };
+}
+
+// Only URLs we handed out through a presigned upload are ever stored.
+export function resolveReferenceImages(
+  urls: readonly string[] | null | undefined,
+  isOwnUrl: (url: string) => boolean,
+): string[] {
+  const cleaned = (urls ?? []).map((url) => url.trim()).filter(Boolean);
+  const unique = [...new Set(cleaned)];
+  if (unique.length > MAX_REFERENCE_IMAGES) {
+    throw new BadRequestException(
+      `Attach up to ${MAX_REFERENCE_IMAGES} reference photos`,
+    );
+  }
+  for (const url of unique) {
+    if (!isOwnUrl(url)) {
+      throw new BadRequestException("That reference photo was not uploaded");
+    }
+  }
+  return unique;
+}
 
 // Turns client choices into priced snapshots using the live option rows, never client prices.
 export function resolveSelections(
@@ -95,14 +132,18 @@ export function resolveSelections(
   return resolved;
 }
 
-// Same choices in any order produce the same key, so they merge into one cart line.
-export function selectionKey(selections: Selection[]): string {
-  if (selections.length === 0) return "";
-  const normalised = JSON.stringify(
+// Same choices and photos in any order produce the same key, so they merge into one cart line.
+export function selectionKey(
+  selections: Selection[],
+  referenceImageUrls: readonly string[] = [],
+): string {
+  if (selections.length === 0 && referenceImageUrls.length === 0) return "";
+  const normalised = JSON.stringify([
     [...selections]
       .sort((a, b) => a.group_id - b.group_id)
       .map((s) => [s.group_id, s.option_id, s.text]),
-  );
+    [...referenceImageUrls].sort(),
+  ]);
   return createHash("sha256").update(normalised).digest("hex").slice(0, 32);
 }
 

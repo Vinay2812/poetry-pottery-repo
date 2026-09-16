@@ -30,6 +30,7 @@ import {
   STOCK_HOLDING,
 } from "./order-status";
 import type { Cart } from "@/features/cart/cart.type";
+import { readCustomisation } from "@/features/cart/selections";
 import type {
   CheckoutQuote,
   Order,
@@ -71,16 +72,20 @@ export function toOrder(row: OrderRow, now = new Date()): Order {
     cancel_reason: row.cancel_reason,
     can_cancel: CUSTOMER_CANCELLABLE.includes(row.status),
     item_count: row.items.reduce((sum, item) => sum + item.quantity, 0),
-    items: row.items.map((item) => ({
-      id: item.id,
-      product: isLinkable(item.product, now) ? toProduct(item.product) : null,
-      product_name: item.product_name,
-      product_image: item.product_image,
-      unit_price: item.unit_price,
-      quantity: item.quantity,
-      line_total: item.line_total,
-      selections: item.selections ?? [],
-    })),
+    items: row.items.map((item) => {
+      const customisation = readCustomisation(item.selections);
+      return {
+        id: item.id,
+        product: isLinkable(item.product, now) ? toProduct(item.product) : null,
+        product_name: item.product_name,
+        product_image: item.product_image,
+        unit_price: item.unit_price,
+        quantity: item.quantity,
+        line_total: item.line_total,
+        selections: customisation.options,
+        reference_image_urls: customisation.reference_image_urls,
+      };
+    }),
     created_at: row.created_at,
     confirmed_at: row.confirmed_at,
     paid_at: row.paid_at,
@@ -267,7 +272,10 @@ export class OrdersService {
               unit_price: item.unit_price,
               quantity: item.quantity,
               line_total: item.line_total,
-              selections: item.selections,
+              selections: {
+                options: item.selections,
+                reference_image_urls: item.reference_image_urls,
+              },
             })),
           },
         },

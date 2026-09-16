@@ -5,6 +5,7 @@
 input AddToCartInput {
   product_id: Int!
   quantity: Int = 1
+  reference_image_urls: [String!]
   selections: [SelectionInputType!]
 }
 
@@ -56,6 +57,7 @@ type CartItem {
   line_total: Int!
   product: Product!
   quantity: Int!
+  reference_image_urls: [String!]!
   selections: [CartSelection!]!
   unavailable_reason: String
   unit_price: Int!
@@ -273,6 +275,7 @@ type Mutation {
   cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
   createAddress(input: AddressInput!): Address!
+  createCustomizationUpload(content_type: String!, size: Int!): UploadTicket!
   deleteAddress(id: Int!): Boolean!
   markContactMessageRead(id: Int!): ContactMessage!
   placeOrder(input: PlaceOrderInput!): Order!
@@ -336,6 +339,7 @@ type OrderItem {
   product_image: String
   product_name: String!
   quantity: Int!
+  reference_image_urls: [String!]!
   selections: [CartSelection!]!
   unit_price: Int!
 }
@@ -563,6 +567,12 @@ type SiteSettings {
   updated_at: DateTime!
   whatsapp_number: String!
   youtube_url: String!
+}
+
+type UploadTicket {
+  key: String!
+  public_url: String!
+  upload_url: String!
 }
 
 type User {

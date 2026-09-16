@@ -2,7 +2,10 @@ import { OptionGroupKind } from "@prisma/client";
 import { describe, expect, it } from "vitest";
 
 import {
+  MAX_REFERENCE_IMAGES,
   type OptionGroupRow,
+  readCustomisation,
+  resolveReferenceImages,
   resolveSelections,
   selectionKey,
   selectionsTotal,
@@ -99,5 +102,70 @@ describe("selectionKey", () => {
     expect(selectionKey(a)).toBe(selectionKey(b));
     expect(selectionKey(a)).toHaveLength(32);
     expect(selectionKey([])).toBe("");
+  });
+
+  it("separates lines by reference photos but ignores their order", () => {
+    const options = resolveSelections(groups, [{ group_id: 1, option_id: 10 }]);
+    const one = selectionKey(options, ["https://cdn.test/a.jpg"]);
+    const two = selectionKey(options, [
+      "https://cdn.test/b.jpg",
+      "https://cdn.test/a.jpg",
+    ]);
+    const twoReversed = selectionKey(options, [
+      "https://cdn.test/a.jpg",
+      "https://cdn.test/b.jpg",
+    ]);
+
+    expect(one).not.toBe(selectionKey(options));
+    expect(two).not.toBe(one);
+    expect(two).toBe(twoReversed);
+    expect(selectionKey([], ["https://cdn.test/a.jpg"])).not.toBe("");
+  });
+});
+
+const isOwnUrl = (url: string): boolean => url.startsWith("https://cdn.test/");
+
+describe("resolveReferenceImages", () => {
+  it("trims, drops blanks and de-duplicates", () => {
+    expect(
+      resolveReferenceImages(
+        [" https://cdn.test/a.jpg ", "", "https://cdn.test/a.jpg"],
+        isOwnUrl,
+      ),
+    ).toEqual(["https://cdn.test/a.jpg"]);
+    expect(resolveReferenceImages(null, isOwnUrl)).toEqual([]);
+  });
+
+  it("rejects more than the limit and URLs we did not issue", () => {
+    const urls = Array.from(
+      { length: MAX_REFERENCE_IMAGES + 1 },
+      (_, index) => `https://cdn.test/${index}.jpg`,
+    );
+    expect(() => resolveReferenceImages(urls, isOwnUrl)).toThrow(
+      "up to 3 reference photos",
+    );
+    expect(() =>
+      resolveReferenceImages(["https://elsewhere.test/a.jpg"], isOwnUrl),
+    ).toThrow("was not uploaded");
+  });
+});
+
+describe("readCustomisation", () => {
+  it("reads legacy arrays, the new object shape and empty rows", () => {
+    const options = resolveSelections(groups, [{ group_id: 1, option_id: 10 }]);
+    expect(readCustomisation(options)).toEqual({
+      options,
+      reference_image_urls: [],
+    });
+    expect(
+      readCustomisation({
+        options,
+        reference_image_urls: ["https://cdn.test/a.jpg"],
+      }),
+    ).toEqual({ options, reference_image_urls: ["https://cdn.test/a.jpg"] });
+    expect(readCustomisation(null)).toEqual({
+      options: [],
+      reference_image_urls: [],
+    });
   });
 });

@@ -8,9 +8,15 @@ function escapeHtml(value: string): string {
     .replaceAll('"', "&quot;");
 }
 
+export interface MailLink {
+  label: string;
+  href: string;
+}
+
 export interface MailBlock {
   heading?: string;
   lines: string[];
+  links?: MailLink[];
 }
 
 export interface MailContent {
@@ -36,7 +42,13 @@ export function renderMail(content: MailContent): {
             `<p style="margin:0 0 4px;color:#404040">${escapeHtml(line)}</p>`,
         )
         .join("");
-      return heading + lines;
+      const links = (block.links ?? [])
+        .map(
+          (link) =>
+            `<p style="margin:0 0 4px"><a href="${escapeHtml(link.href)}" style="color:#4f6f52">${escapeHtml(link.label)}</a></p>`,
+        )
+        .join("");
+      return heading + lines + links;
     })
     .join("");
   const ctaHref = content.cta ? `${env.FRONTEND_URL}${content.cta.path}` : "";
@@ -57,7 +69,13 @@ ${blocks}${cta}
 
   const textBlocks = (content.blocks ?? [])
     .map((block) =>
-      [block.heading ?? "", ...block.lines].filter(Boolean).join("\n"),
+      [
+        block.heading ?? "",
+        ...block.lines,
+        ...(block.links ?? []).map((link) => `${link.label}: ${link.href}`),
+      ]
+        .filter(Boolean)
+        .join("\n"),
     )
     .join("\n\n");
   const text = [

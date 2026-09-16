@@ -65,6 +65,9 @@ export class OrderItem {
 
   @Field(() => [CartSelection])
   selections!: CartSelection[];
+
+  @Field(() => [String])
+  reference_image_urls!: string[];
 }
 
 @ObjectType()

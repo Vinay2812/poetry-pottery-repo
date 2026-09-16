@@ -1,5 +1,5 @@
 import type { Order } from "@/features/orders/orders.type";
-import { renderMail } from "./layout";
+import { type MailBlock, type MailLink, renderMail } from "./layout";
 
 const inr = (value: number): string => `₹${value.toLocaleString("en-IN")}`;
 
@@ -8,6 +8,22 @@ function itemLines(order: Order): string[] {
     (item) =>
       `${item.quantity} × ${item.product_name} — ${inr(item.line_total)}`,
   );
+}
+
+// Reference photos the customer attached to a made-to-order piece.
+function referenceLinks(order: Order): MailLink[] {
+  return order.items.flatMap((item) =>
+    item.reference_image_urls.map((href, index) => ({
+      label: `${item.product_name} — photo ${index + 1}`,
+      href,
+    })),
+  );
+}
+
+function referenceBlock(order: Order): MailBlock[] {
+  const links = referenceLinks(order);
+  if (links.length === 0) return [];
+  return [{ heading: "Reference photos", lines: [], links }];
 }
 
 function totalsLines(order: Order): string[] {
@@ -29,6 +45,7 @@ export function orderPlacedCustomerMail(order: Order): {
     intro: `Thanks for ordering from the studio. We will message you on WhatsApp within a day to confirm order ${order.id} and share payment details.`,
     blocks: [
       { heading: "Pieces", lines: itemLines(order) },
+      ...referenceBlock(order),
       { heading: "Totals", lines: totalsLines(order) },
       {
         heading: "Shipping to",
@@ -53,6 +70,7 @@ export function orderPlacedStudioMail(
     intro: `${order.shipping_address.name} (${customerEmail}, ${order.shipping_address.phone}) placed an order worth ${inr(order.total)}.`,
     blocks: [
       { heading: "Pieces", lines: itemLines(order) },
+      ...referenceBlock(order),
       { heading: "Totals", lines: totalsLines(order) },
       ...(order.customer_note
         ? [{ heading: "Note from the customer", lines: [order.customer_note] }]

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { SettingsService } from "@/features/settings/settings.service";
+import { StorageService } from "@/storage/storage.service";
 import {
   CartService,
   MAX_LINE_QUANTITY,
@@ -26,6 +27,10 @@ const prismaMock = {
     deleteMany: vi.fn(),
   },
   product: { findFirst: vi.fn() },
+};
+
+const storageMock = {
+  isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.test/")),
 };
 
 const settingsMock = {
@@ -179,6 +184,7 @@ describe("CartService", () => {
         CartService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: SettingsService, useValue: settingsMock },
+        { provide: StorageService, useValue: storageMock },
       ],
     }).compile();
     service = moduleRef.get(CartService);
@@ -201,6 +207,37 @@ describe("CartService", () => {
       }),
     );
     expect(prismaMock.$executeRaw).toHaveBeenCalled();
+  });
+
+  it("stores reference photos on a custom line and rejects foreign URLs", async () => {
+    prismaMock.product.findFirst.mockResolvedValue(
+      productRow({ is_customizable: true }),
+    );
+    prismaMock.cartItem.findUnique.mockResolvedValue(null);
+
+    await service.add(1, {
+      product_id: 1,
+      quantity: 1,
+      reference_image_urls: ["https://cdn.test/customization/1/a.jpg"],
+    });
+    expect(prismaMock.cartItem.upsert).toHaveBeenCalledWith(
+      containing({
+        create: containing({
+          selections: {
+            options: [],
+            reference_image_urls: ["https://cdn.test/customization/1/a.jpg"],
+          },
+        }),
+      }),
+    );
+
+    await expect(
+      service.add(1, {
+        product_id: 1,
+        quantity: 1,
+        reference_image_urls: ["https://evil.test/a.jpg"],
+      }),
+    ).rejects.toThrow("was not uploaded");
   });
 
   it("rejects quantities outside the allowed range", async () => {

@@ -43,6 +43,9 @@ export class CartItem {
   @Field(() => [CartSelection])
   selections!: CartSelection[];
 
+  @Field(() => [String])
+  reference_image_urls!: string[];
+
   @Field()
   is_available!: boolean;
 
@@ -93,4 +96,7 @@ export class AddToCartInput {
 
   @Field(() => [SelectionInputType], { nullable: true })
   selections?: SelectionInputType[] | null;
+
+  @Field(() => [String], { nullable: true })
+  reference_image_urls?: string[] | null;
 }

@@ -13,6 +13,7 @@ export const UPLOAD_FOLDERS = [
   "categories",
   "content",
   "reviews",
+  "customization",
 ] as const;
 export type UploadFolder = (typeof UPLOAD_FOLDERS)[number];
 
@@ -87,6 +88,7 @@ export class StorageService {
 
   async createImageUpload(input: {
     folder: UploadFolder;
+    subfolder?: string;
     filename: string;
     content_type: string;
     size: number;
@@ -107,7 +109,10 @@ export class StorageService {
       .toLowerCase()
       .replace(/[^a-z0-9.-]+/g, "-")
       .slice(-80);
-    const key = `${input.folder}/${Date.now()}-${randomBytes(4).toString("hex")}-${safeName}`;
+    const prefix = input.subfolder
+      ? `${input.folder}/${input.subfolder}`
+      : input.folder;
+    const key = `${prefix}/${Date.now()}-${randomBytes(4).toString("hex")}-${safeName}`;
     const command = new PutObjectCommand({
       Bucket: this.config.bucket,
       Key: key,

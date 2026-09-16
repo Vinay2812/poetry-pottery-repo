@@ -9,7 +9,13 @@ declare global {
       price_modifier: number;
     }
 
-    type ProductSelections = ProductSelection[];
+    interface ProductCustomisation {
+      options: ProductSelection[];
+      reference_image_urls: string[];
+    }
+
+    // Rows written before reference photos existed hold a bare option array.
+    type ProductSelections = ProductSelection[] | ProductCustomisation;
 
     interface ShippingAddress {
       name: string;
