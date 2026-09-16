@@ -43,6 +43,7 @@ fragment OrderFields on Order {
       text
       price_modifier
     }
+    reference_image_urls
     product {
       id
       slug

@@ -19,6 +19,7 @@ fragment CartFields on Cart {
       text
       price_modifier
     }
+    reference_image_urls
     product {
       ...ProductCard
     }
