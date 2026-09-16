@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview and repo layout &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Overview and repo layout: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<span class="home">Poetry &amp; Pottery architecture</span>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><span class="off">&larr; start</span><a rel="next" href="infra.html">Infra and environments &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Poetry and Pottery architecture</p>
+<h1>Overview and repo layout</h1>
+<p class="lede">Poetry and Pottery is an e-commerce platform for handcrafted pottery with workshop and event booking, built as three independent applications in one repository: a Next.js storefront and admin console, a NestJS GraphQL API, and a local infrastructure stack. These pages document each system as it is actually implemented - one page per system, each with a diagram, the algorithm, a verified call trace through real files and functions, the edge cases, and the specs that cover it.</p>
+<section id="diagram"><h2>System overview</h2><figure class="diagram"><svg viewBox="0 0 920 480" role="img" aria-label="System overview: the Next.js frontend, the NestJS API and the infrastructure behind them" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="270" height="470"/><text x="18" y="26">frontend, port 3030</text></g><g class="lane"><rect x="295" y="10" width="330" height="470"/><text x="303" y="26">api, port 6060</text></g><g class="lane"><rect x="640" y="10" width="270" height="470"/><text x="648" y="26">infra and external</text></g><g class="box t-next"><rect x="28" y="44" width="230" height="44"/><text x="143" y="63" text-anchor="middle" class="b">app/(storefront)</text><text x="143" y="77" text-anchor="middle">RSC pages, initial data</text></g><g class="box t-next"><rect x="28" y="108" width="230" height="44"/><text x="143" y="127" text-anchor="middle" class="b">app/(admin)/dashboard</text><text x="143" y="141" text-anchor="middle">Clerk claim gate</text></g><g class="box t-client"><rect x="28" y="172" width="230" height="44"/><text x="143" y="191" text-anchor="middle" class="b">features/&lt;name&gt;</text><text x="143" y="205" text-anchor="middle">containers + components</text></g><g class="box t-client"><rect x="28" y="236" width="230" height="44"/><text x="143" y="255" text-anchor="middle" class="b">lib/apollo</text><text x="143" y="269" text-anchor="middle">browser and RSC clients</text></g><g class="box t-client"><rect x="28" y="300" width="230" height="44"/><text x="143" y="319" text-anchor="middle" class="b">graphql/*.gql</text><text x="143" y="333" text-anchor="middle">codegen into one file</text></g><g class="box t-client"><rect x="28" y="380" width="230" height="44"/><text x="143" y="399" text-anchor="middle" class="b">store/ui-store.ts</text><text x="143" y="413" text-anchor="middle">interface state only</text></g><g class="box t-api"><rect x="315" y="44" width="290" height="40"/><text x="460" y="68" text-anchor="middle">main.ts, helmet, CORS, Clerk</text></g><g class="box t-api"><rect x="315" y="98" width="290" height="44"/><text x="460" y="117" text-anchor="middle" class="b">GqlThrottlerGuard (global)</text><text x="460" y="131" text-anchor="middle">AllExceptionsFilter</text></g><g class="box t-api"><rect x="315" y="156" width="290" height="44"/><text x="460" y="175" text-anchor="middle" class="b">AuthGuard / AdminGuard</text><text x="460" y="189" text-anchor="middle">identity from the DB row</text></g><g class="box t-api"><rect x="315" y="214" width="290" height="44"/><text x="460" y="233" text-anchor="middle" class="b">features/&lt;name&gt;</text><text x="460" y="247" text-anchor="middle">resolver, service, type</text></g><g class="box t-api"><rect x="315" y="272" width="290" height="44"/><text x="460" y="291" text-anchor="middle" class="b">features/admin/&lt;name&gt;</text><text x="460" y="305" text-anchor="middle">12 guarded modules</text></g><g class="box t-svc"><rect x="315" y="330" width="290" height="40"/><text x="460" y="354" text-anchor="middle">queue, mail, storage, embeddings</text></g><g class="box t-svc"><rect x="315" y="384" width="290" height="40"/><text x="460" y="408" text-anchor="middle">PrismaService.withTransaction</text></g><g class="box t-ext"><rect x="660" y="98" width="230" height="44"/><text x="775" y="117" text-anchor="middle" class="b">Clerk</text><text x="775" y="131" text-anchor="middle">sessions both sides</text></g><g class="box t-cache"><rect x="660" y="172" width="230" height="44"/><text x="775" y="191" text-anchor="middle" class="b">Redis 8</text><text x="775" y="205" text-anchor="middle">caches and throttling</text></g><g class="box t-queue"><rect x="660" y="246" width="230" height="44"/><text x="775" y="265" text-anchor="middle" class="b">RabbitMQ 4</text><text x="775" y="279" text-anchor="middle">search and mail jobs</text></g><g class="box t-ext"><rect x="660" y="320" width="230" height="44"/><text x="775" y="339" text-anchor="middle" class="b">Cloudflare R2, SMTP</text><text x="775" y="353" text-anchor="middle">both optional</text></g><g class="box t-db"><rect x="660" y="394" width="230" height="44"/><text x="775" y="413" text-anchor="middle" class="b">Postgres 17 + pgvector</text><text x="775" y="427" text-anchor="middle">port 5433</text></g><path class="edge" d="M 258 258 Q 295 160 315 66" marker-end="url(#arrowhead)"/><path class="edge" d="M 460 84 L 460 98" marker-end="url(#arrowhead)"/><path class="edge" d="M 460 142 L 460 156" marker-end="url(#arrowhead)"/><path class="edge" d="M 460 200 L 460 214" marker-end="url(#arrowhead)"/><path class="edge" d="M 460 258 L 460 272" marker-end="url(#arrowhead)"/><path class="edge" d="M 460 316 L 460 330" marker-end="url(#arrowhead)"/><path class="edge" d="M 460 370 L 460 384" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 178 L 660 120" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 236 L 660 194" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 350 L 660 268" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 350 L 660 342" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 404 L 660 416" marker-end="url(#arrowhead)"/></svg><figcaption>Three independent applications in one repository. The frontend talks to exactly one GraphQL endpoint; the API owns every store; and slow or external work leaves the request path through RabbitMQ.</figcaption></figure></section><section id="pages"><h2>The pages</h2><p>Each page below covers one system: a purpose, a diagram, the algorithm or state machine step by step, an ordered call trace naming real files and functions, the edge cases, and the specs that cover it.</p><div class="cards"><div class="card"><h3><a href="infra.html">Infra and environments</a></h3><p>Compose services, ports, zod-validated environment, Redis, health checks, introspection gating.</p></div><div class="card"><h3><a href="auth.html">Auth and user provisioning</a></h3><p>Clerk middleware, the guard, just-in-time provisioning, stale claim repair, the admin gate, throttling.</p></div><div class="card"><h3><a href="catalogue.html">Catalogue and search</a></h3><p>Availability and archive predicates, facets, tsvector and pgvector hybrid ranking, the embedding job.</p></div><div class="card"><h3><a href="product-options.html">Product page and made-to-order options</a></h3><p>Option groups, server-side selection pricing, the selection key hash.</p></div><div class="card"><h3><a href="cart.html">Cart</a></h3><p>The advisory lock around the merge, availability rules, the optimistic provider.</p></div><div class="card"><h3><a href="wishlist.html">Wishlist</a></h3><p>The id-only query, the idempotent toggle, the optimistic id set.</p></div><div class="card"><h3><a href="checkout.html">Checkout and orders</a></h3><p>Quote, coupons, row locks, the conditional stock decrement, the status machine, cancel and restock.</p></div><div class="card"><h3><a href="addresses.html">Addresses</a></h3><p>Validation, ownership scoping and the default-address invariant.</p></div><div class="card"><h3><a href="events.html">Events and registrations</a></h3><p>The seat guard, the registration transition table, the admin paths.</p></div><div class="card"><h3><a href="workshops.html">Workshops</a></h3><p>The schedule grid, the per-studio advisory lock, multi-slot booking, reschedule, availability.</p></div><div class="card"><h3><a href="reviews.html">Reviews</a></h3><p>Eligibility, the lock-free rating recompute, photo uploads, moderation.</p></div><div class="card"><h3><a href="content.html">Content, settings, newsletter and contact</a></h3><p>Content pages, site settings, newsletter tokens, the contact form and their caches.</p></div><div class="card"><h3><a href="queue-mail.html">Queue and mail</a></h3><p>The three jobs, the exchange and queue topology, the dead letter path, mail templates.</p></div><div class="card"><h3><a href="storage.html">Storage and uploads</a></h3><p>Presign, confirm with sharp, the image spec table and the confirmed uploads ledger.</p></div><div class="card"><h3><a href="admin.html">Admin API and console</a></h3><p>The twelve admin modules, the guard, the console shell and the optimistic list pattern.</p></div><div class="card"><h3><a href="frontend-data.html">Frontend data layer</a></h3><p>Apollo fetch-only, useOptimistic and useTransition, URL-driven filters, store clearing.</p></div><div class="card"><h3><a href="design.html">Design system and motion</a></h3><p>Tokens, the shared vessel drawing engine, reveal and stagger, the verification surface.</p></div><div class="card"><h3><a href="legacy-import.html">Legacy import and seeding</a></h3><p>The read-only import from the old production database, and what the seeds cover.</p></div><div class="card"><h3><a href="testing.html">Testing and verification</a></h3><p>Unit, integration races, Storybook a11y, the schema sync hook.</p></div><div class="card"><h3><a href="branches.html">Branch stack and PRs</a></h3><p>The stacked branches, their commit counts and where the line actually forks.</p></div></div></section><section id="layout"><h2>Repo layout</h2><div class="scroll"><table><caption>Repository layout. There is no workspace and nothing is shared: each application has its own package.json and lockfile.</caption><thead><tr><th scope="col">Path</th><th scope="col">What lives there</th></tr></thead><tbody><tr><td><code>frontend/</code></td><td>Next.js 16 App Router, React 19, Tailwind 4, Apollo, Clerk. Port 3030.</td></tr><tr><td><code>frontend/src/app/(storefront)</code></td><td>Public pages; server components fetch only what the first paint and the metadata need.</td></tr><tr><td><code>frontend/src/app/(admin)/dashboard</code></td><td>The console, behind a server-side Clerk claim gate.</td></tr><tr><td><code>frontend/src/features/&lt;name&gt;</code></td><td><code>components/</code>, <code>containers/</code>, <code>types.ts</code>, <code>index.ts</code>. Containers own state and fetching; components take flat props.</td></tr><tr><td><code>frontend/src/graphql</code></td><td>Hand-written <code>.gql</code> operations; codegen emits one generated file.</td></tr><tr><td><code>frontend/src/lib</code></td><td>Apollo clients, the RSC data readers, the drawing engine, validations, formatters.</td></tr><tr><td><code>api/</code></td><td>NestJS 11, code-first GraphQL, Prisma, Postgres. Port 6060.</td></tr><tr><td><code>api/src/common</code></td><td>Guards, decorators, the exception filter, GraphQL plugins, pagination, public ids.</td></tr><tr><td><code>api/src/features/&lt;name&gt;</code></td><td><code>&lt;name&gt;.resolver.ts</code>, <code>&lt;name&gt;.service.ts</code>, <code>&lt;name&gt;.type.ts</code>, plus specs.</td></tr><tr><td><code>api/src/features/admin/&lt;name&gt;</code></td><td>Twelve admin modules, every field <code>@AdminRequired()</code>.</td></tr><tr><td><code>api/src/{queue,mail,storage,redis,embeddings,prisma,health}</code></td><td>Infrastructure modules, mostly global.</td></tr><tr><td><code>api/prisma</code></td><td>The schema, five migrations and the seeds.</td></tr><tr><td><code>api/scripts</code></td><td><code>emit-schema</code>, <code>import-legacy</code>, <code>make-admin</code>, <code>reindex-search</code>.</td></tr><tr><td><code>api/test</code></td><td>Helpers, one e2e spec and four integration specs.</td></tr><tr><td><code>infra/docker</code></td><td>Two compose files, the API Dockerfile and the pgvector init script.</td></tr><tr><td><code>docs/</code></td><td>Design direction, the animation study, the optimistic audit, the legacy import notes.</td></tr><tr><td><code>scripts/</code></td><td><code>check-schema-sync.sh</code>, run by the pre-push hook.</td></tr></tbody></table></div></section><section id="how"><h2>The shape of the system</h2><h3>Request path</h3><p>A browser request reaches Next.js. Server components fetch their initial data through a per-request Apollo client that forwards the visitor&#x27;s IP and the Clerk token; client containers fetch the rest through the browser client. Both hit one GraphQL endpoint. Inside the API, a request passes the Clerk middleware, a request id, the globally registered throttler guard, then either no guard (public), an optional-auth call, <code>AuthGuard</code> or <code>AdminGuard</code>, then a resolver, a service, and Prisma.</p><h3>Recurring patterns</h3><ul><li><strong>Identity comes from the Clerk context, never from a GraphQL input.</strong> The <code>User</code> row that owns the auth id decides both identity and role.</li><li><strong>Money is integer rupees end to end</strong>, with discounts floored and clamped.</li><li><strong>Client-sent prices are never trusted.</strong> Customisations are re-priced from live option rows and orders are priced from <code>FOR UPDATE</code>-locked product rows.</li><li><strong>Contended resources each have one named guard.</strong> Stock and seats use conditional updates whose affected-row count is the signal; the cart merge and workshop capacity use transaction-scoped advisory locks; every status transition uses a status-predicated compare and swap.</li><li><strong>Slow or external work goes through RabbitMQ</strong>, and publishing never fails a mutation.</li><li><strong>Redis is a cache and a throttler store, never a source of truth</strong>; every read degrades to the loader.</li><li><strong>The frontend never hand-edits the Apollo cache.</strong> Optimism is <code>useOptimistic</code> over a pure, tested reducer, settled by the mutation payload or an awaited refetch.</li><li><strong>Presentational components take flat props</strong> and have stories at four viewports; containers own state, fetching and effects.</li></ul><h3>Tech</h3><div class="scroll"><table><thead><tr><th scope="col">Layer</th><th scope="col">Choice</th></tr></thead><tbody><tr><td>Frontend</td><td>Next.js 16 App Router, React 19, TypeScript, Tailwind 4, Apollo Client, Clerk, Radix primitives, React Hook Form with zod, Zustand for interface state only</td></tr><tr><td>API</td><td>NestJS 11, code-first GraphQL over Apollo Server, Prisma, zod, winston, Sentry, Terminus</td></tr><tr><td>Data</td><td>Postgres 17 with pgvector, Redis 8, RabbitMQ 4</td></tr><tr><td>External</td><td>Clerk for auth, Cloudflare R2 for images, SMTP for mail, all of the last two optional</td></tr><tr><td>Embeddings</td><td><code>@huggingface/transformers</code> in process, <code>Xenova/all-MiniLM-L6-v2</code>, 384 dimensions</td></tr><tr><td>Tooling</td><td>pnpm 11, Node 24, Vitest, Storybook with the a11y addon, knip, Lighthouse CI, husky</td></tr></tbody></table></div><h3>Where the interesting problems are</h3><ul><li><a href="checkout.html">Checkout</a> - the one transaction that locks, re-quotes, decrements and redeems in a fixed order.</li><li><a href="workshops.html">Workshops</a> - the only capacity that cannot be a counter, and therefore the only advisory lock the correctness of a feature rests on.</li><li><a href="catalogue.html">Catalogue and search</a> - the hybrid ranking query and the archive-as-negation invariant.</li><li><a href="storage.html">Storage and uploads</a> - bytes that never pass through the API, verified by reading them back.</li><li><a href="frontend-data.html">Frontend data layer</a> - the fetch-only rule and what replaces cache editing.</li></ul></section><section id="reading"><h2>How to read these pages</h2><p>Every page has the same six parts. The <strong>purpose</strong> is one paragraph. The <strong>diagram</strong> is inline SVG drawn for that specific flow rather than a generic block chart. The <strong>how it works</strong> section is the algorithm or state machine, with the invariants and the races called out. <strong>Minimal theory</strong> at the bottom of that is an ordered <code>file:function</code> call trace, verified against the code in this worktree rather than inferred. Then the <strong>edge cases</strong> and the <strong>tests</strong> that cover them.</p><p>Every page is a single self-contained file with inline CSS and no external assets, so it opens from <code>file://</code>. Dark mode follows the operating system preference and can be toggled per page; the choice is remembered. The pages are also styled for print.</p><p class="note">Where something is missing, unguarded or stale, these pages say so rather than describing the intended design. Those notes are marked as such on each page.</p></section>
+<footer class="bottom">
+<nav class="pager" aria-label="Page navigation"><span class="off">&larr; start</span><a rel="next" href="infra.html">Infra and environments &rarr;</a></nav>
+<p>Verified against the working tree on branch <code>docs/architecture</code>, stacked on <code>feat/admin-ui</code>.</p>
+</footer>
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>
