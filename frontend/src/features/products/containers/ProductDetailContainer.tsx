@@ -64,7 +64,7 @@ const LEADER_TAN = 0.4663;
 const CUP_WIDTH_RATIO = REFERENCE_CUP.diameterCm / REFERENCE_CUP.heightCm;
 const LEADER_RUN: Record<string, number> = {
   "Clay body": -20,
-  Glaze: 20,
+  Glaze: -24,
   Size: 14,
 };
 
@@ -155,8 +155,8 @@ export function ProductDetailContainer({
       .filter((spot) => named.has(spot.text))
       .map(({ text, anchor }) => {
         const run = LEADER_RUN[text] ?? 18;
-        // The rim label climbs away from the piece; the others fall away from it.
-        const rise = text === "Size" ? -1 : 1;
+        // The two upper labels climb away from the piece, the clay body falls away.
+        const rise = text === "Clay body" ? 1 : -1;
         return {
           text,
           anchorX: anchor.x,
@@ -399,7 +399,7 @@ export function ProductDetailContainer({
           )}
         </div>
         <div className="flex flex-col">
-          <div className="flex items-start gap-6">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
             <div className="min-w-0 flex-1">
               <KilnCard
                 rows={kilnRows}
@@ -414,7 +414,7 @@ export function ProductDetailContainer({
                 diameterCm={
                   product.diameter_cm ?? product.height_cm * CUP_WIDTH_RATIO
                 }
-                className="hidden w-[180px] shrink-0 sm:flex"
+                className="w-full max-w-[200px] shrink-0 sm:w-[180px]"
               />
             )}
           </div>

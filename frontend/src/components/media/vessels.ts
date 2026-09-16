@@ -208,14 +208,15 @@ function build(spec: VesselSpec): DrawnVessel {
   });
 
   // Every dot has to sit on the thing its label names: the glaze band, the bare wall
-  // under it, and the rim where the width is read.
+  // under it, and the rim where the width is read. Both wall dots stay left of the
+  // axis, where a mug's handle never is.
   const clayY = glazeBottomY + (footY - glazeBottomY) * 0.55;
   const glazeY = (glazeTopY + glazeBottomY) / 2;
 
   return {
     anchors: {
       glaze: {
-        x: toBoxPercent(AXIS + halfWidthAt(glazeY) * 0.45, AXIS),
+        x: toBoxPercent(AXIS - halfWidthAt(glazeY) * 0.45, AXIS),
         y: toBoxPercent(glazeY, PIECE_CENTRE_Y),
       },
       clay: {

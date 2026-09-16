@@ -50,9 +50,10 @@ describe("kiln label anchors", () => {
       const { anchors } = toDrawnVessel(kind);
       expect(anchors.clay.y).toBeGreaterThan(anchors.glaze.y);
       expect(anchors.size.y).toBeLessThan(anchors.glaze.y);
-      // The clay dot sits on the lit side, the glaze dot on the shaded one.
+      // Both wall dots stay on the lit left side, clear of a mug's handle.
       expect(anchors.clay.x).toBeLessThan(50);
-      expect(anchors.glaze.x).toBeGreaterThan(50);
+      expect(anchors.glaze.x).toBeLessThan(50);
+      expect(anchors.size.x).toBeGreaterThan(50);
       for (const anchor of Object.values(anchors)) {
         expect(anchor.x).toBeGreaterThan(0);
         expect(anchor.x).toBeLessThan(100);
