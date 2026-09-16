@@ -144,6 +144,22 @@ export async function getCommissionPieces(
   return data?.commissionPieces ?? [];
 }
 
+// The 404 offers these as a way back, so a failed lookup returns nothing rather
+// than turning a missing page into an error page.
+export async function getArchiveProducts(
+  limit = 4,
+): Promise<ProductsQuery["products"]["items"]> {
+  const { data } = await getClient().query<
+    ProductsQuery,
+    ProductsQueryVariables
+  >({
+    query: ProductsDocument,
+    variables: { filter: { archive: true, limit } },
+    errorPolicy: "all",
+  });
+  return data?.products.items ?? [];
+}
+
 // Only a real not-found becomes a 404; any other failure surfaces as an error page.
 export async function getProduct(
   slug: string,
