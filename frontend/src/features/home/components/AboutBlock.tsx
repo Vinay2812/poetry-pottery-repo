@@ -10,6 +10,8 @@ export interface AboutBlockProps {
   href: string;
 }
 
+// Two lines and a link do not need a full-bleed photograph above them: the
+// landscape frame sits beside the copy and the block ends where the copy does.
 export function AboutBlock({
   imageUrl,
   firstLine,
@@ -17,33 +19,31 @@ export function AboutBlock({
   href,
 }: AboutBlockProps) {
   return (
-    <div className="flex flex-col gap-10">
-      <div className="relative aspect-16/7 overflow-hidden bg-white">
+    <div className="grid items-center gap-8 md:grid-cols-[1.15fr_1fr] md:gap-12">
+      <div className="relative aspect-16/9 overflow-hidden bg-white">
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt=""
             fill
-            sizes="100vw"
+            sizes="(min-width: 768px) 55vw, 100vw"
             className="object-cover"
           />
         ) : (
           <PlaceholderImage kind="bowl" />
         )}
       </div>
-      <div className="grid gap-6 md:grid-cols-2 md:gap-16">
-        <p className="max-w-md text-[15px] leading-relaxed">{firstLine}</p>
-        <div className="flex flex-col gap-4">
-          <p className="max-w-md text-[15px] leading-relaxed text-muted-foreground">
-            {secondLine}
-          </p>
-          <Link
-            href={href}
-            className="w-fit border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
-          >
-            Our story
-          </Link>
-        </div>
+      <div className="flex flex-col gap-4">
+        <p className="text-[15px] leading-relaxed">{firstLine}</p>
+        <p className="text-[15px] leading-relaxed text-muted-foreground">
+          {secondLine}
+        </p>
+        <Link
+          href={href}
+          className="w-fit border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
+        >
+          Our story
+        </Link>
       </div>
     </div>
   );
