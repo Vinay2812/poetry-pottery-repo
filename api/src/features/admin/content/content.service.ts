@@ -69,9 +69,11 @@ export class AdminContentService {
   }
 
   async deletePage(slug: string): Promise<boolean> {
-    await this.page(slug);
-    await this.prisma.contentPage.delete({ where: { slug } });
-    await this.redis.del(contentCacheKey(slug));
+    // The same slugify that wrote the row, so a delete cannot miss the page it just read.
+    const key = slugify(slug);
+    await this.page(key);
+    await this.prisma.contentPage.delete({ where: { slug: key } });
+    await this.redis.del(contentCacheKey(key));
     return true;
   }
 

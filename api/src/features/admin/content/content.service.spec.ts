@@ -94,6 +94,15 @@ describe("AdminContentService", () => {
     expect(redisMock.del).toHaveBeenCalledWith("content:about");
   });
 
+  it("normalises the slug before deleting, so it hits the row it saved", async () => {
+    await expect(service.deletePage("About Us")).resolves.toBe(true);
+
+    expect(prismaMock.contentPage.delete).toHaveBeenCalledWith({
+      where: { slug: "about-us" },
+    });
+    expect(redisMock.del).toHaveBeenCalledWith("content:about-us");
+  });
+
   it("refuses a negative shipping fee", async () => {
     await expect(
       service.updateSettings({ shipping_flat_fee: -1 }),
