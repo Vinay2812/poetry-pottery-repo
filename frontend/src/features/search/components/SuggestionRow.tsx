@@ -60,8 +60,14 @@ export function SuggestionRow({
       )}
       <span className="flex min-w-0 flex-col">
         <span className="truncate text-sm">{label}</span>
+        {/* The highlight tint darkens the row, so the note goes to ink to stay readable on it. */}
         {note && (
-          <span className="truncate text-[13px] text-muted-foreground">
+          <span
+            className={cn(
+              "truncate text-[13px]",
+              isActive ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
             {note}
           </span>
         )}
