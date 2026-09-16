@@ -18,6 +18,7 @@ SESSION="${FLOW_SESSION:-poetry-flows}"
 FLOW_EMAIL="${FLOW_EMAIL:-maya+clerk_test@example.com}"
 FLOW_PASSWORD="${FLOW_PASSWORD:-PotteryTest#2026}"
 HEADLESS="${FLOW_HEADLESS:-1}"
+API_HEALTH_URL="${API_HEALTH_URL:-http://localhost:6060/health}"
 
 AB=(agent-browser --session "$SESSION")
 if [ "$HEADLESS" = "0" ]; then AB+=(--headed); fi
@@ -178,18 +179,41 @@ end_flow() {
 # ---------------------------------------------------------------- preconditions
 
 doctor() {
+  local ok=0
+  if command -v agent-browser >/dev/null 2>&1; then
+    log "harness   agent-browser $(agent-browser --version 2>/dev/null | tail -1)"
+  else
+    log "harness   MISSING — agent-browser is not on PATH"
+    ok=1
+  fi
+
   local code
   code="$(curl -s -o /dev/null -m 10 -w '%{http_code}' "$BASE_URL/" || true)"
-  if [ "$code" != "200" ]; then
-    log "storefront at $BASE_URL is not answering (http $code)"
-    log "start it with: pnpm dev   (or BASE_URL=... to point elsewhere)"
-    exit 2
+  if [ "$code" = "200" ]; then
+    log "storefront $BASE_URL"
+  else
+    log "storefront UNREACHABLE at $BASE_URL (http $code) — start it with pnpm dev"
+    ok=1
   fi
-  if ! command -v agent-browser >/dev/null 2>&1; then
-    log "agent-browser is not on PATH"
-    exit 2
+
+  local health
+  health="$(curl -s -m 10 "$API_HEALTH_URL" || true)"
+  case "$health" in
+  *'"status":"ok"'*) log "api       $API_HEALTH_URL ok" ;;
+  "") log "api       UNREACHABLE at $API_HEALTH_URL"; ok=1 ;;
+  *) log "api       DEGRADED at $API_HEALTH_URL: $health"; ok=1 ;;
+  esac
+
+  if command -v ffmpeg >/dev/null 2>&1; then
+    log "video     ffmpeg present, recording enabled"
+  else
+    log "video     ffmpeg missing — screenshots only"
   fi
-  log "storefront ready at $BASE_URL"
+
+  log "session   $SESSION"
+  log "evidence  $OUT_DIR"
+  log "user      $FLOW_EMAIL"
+  return "$ok"
 }
 
 sign_in() {
@@ -499,7 +523,18 @@ ALL_FLOWS=(home shop order wishlist events workshops contact newsletter notfound
 
 main() {
   mkdir -p "$OUT_DIR/screens" "$OUT_DIR/video"
-  doctor
+
+  # `doctor` on its own is the read-only "is this instance worth driving?" check.
+  if [ "${1:-}" = "doctor" ] && [ "$#" -eq 1 ]; then
+    doctor
+    exit "$?"
+  fi
+
+  if ! doctor; then
+    log ""
+    log "refusing to drive an unhealthy stack"
+    exit 2
+  fi
 
   local selected=("$@")
   if [ "${#selected[@]}" -eq 0 ]; then selected=("${ALL_FLOWS[@]}"); fi

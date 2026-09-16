@@ -178,9 +178,15 @@ stories prove pieces; this proves the seams between them.
 
 ```bash
 pnpm dev                                  # or point BASE_URL at any instance
+./scripts/browser-flows.sh doctor         # is this stack worth driving?
 ./scripts/browser-flows.sh                # all ten flows
 ./scripts/browser-flows.sh order wishlist # only the named ones
 ```
+
+`doctor` is read-only: it reports the agent-browser version, whether the
+storefront answers, whether the API's database, Redis and queue are up, whether
+ffmpeg is present for video, and which session, evidence directory and test user
+are in play. A full run refuses to start when it fails.
 
 | Flow         | What it drives                                                                     |
 | ------------ | ---------------------------------------------------------------------------------- |
@@ -202,13 +208,14 @@ assertion it records and prints them all at the end.
 
 Configuration, all environment variables:
 
-| Variable                     | Default                       |
-| ---------------------------- | ----------------------------- |
-| `BASE_URL`                   | `http://localhost:3030`       |
-| `OUT_DIR`                    | `/tmp/flows`                  |
-| `FLOW_SESSION`               | `poetry-flows`                |
-| `FLOW_EMAIL` / `FLOW_PASSWORD` | the Clerk test user          |
-| `FLOW_HEADLESS`              | `1` (set `0` to watch it run) |
+| Variable                       | Default                        |
+| ------------------------------ | ------------------------------ |
+| `BASE_URL`                     | `http://localhost:3030`        |
+| `API_HEALTH_URL`               | `http://localhost:6060/health` |
+| `OUT_DIR`                      | `/tmp/flows`                   |
+| `FLOW_SESSION`                 | `poetry-flows`                 |
+| `FLOW_EMAIL` / `FLOW_PASSWORD` | the Clerk test user            |
+| `FLOW_HEADLESS`                | `1` (set `0` to watch it run)  |
 
 Evidence lands in `$OUT_DIR/screens/*.png` and `$OUT_DIR/video/<flow>.webm`, one
 video per flow, and survives the run. A failing step screenshots itself before
