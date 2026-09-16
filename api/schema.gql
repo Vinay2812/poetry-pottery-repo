@@ -132,6 +132,49 @@ type CollectionRef {
   starts_at: DateTime
 }
 
+type CommissionOptions {
+  glazes: [String!]!
+  piece_types: [String!]!
+  sizes: [String!]!
+}
+
+type CommissionRequest {
+  carved_words: String
+  created_at: DateTime!
+  email: String!
+  glaze: String!
+  id: String!
+  is_read: Boolean!
+  name: String!
+  notes: String
+  phone: String
+  piece_type: String!
+  reference_image_urls: [String!]!
+  size: String!
+}
+
+input CommissionRequestInput {
+  carved_words: String
+  email: String!
+  glaze: String!
+  name: String!
+  notes: String
+  phone: String
+  piece_type: String!
+  reference_image_urls: [String!]
+  size: String!
+}
+
+input CommissionRequestsFilterInput {
+  limit: Int
+  page: Int
+}
+
+type CommissionRequestsResult {
+  items: [CommissionRequest!]!
+  page_info: PageInfo!
+}
+
 type ContactMessage {
   created_at: DateTime!
   email: String!
@@ -298,8 +341,10 @@ type Mutation {
   cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
   createAddress(input: AddressInput!): Address!
+  createCommissionRequest(input: CommissionRequestInput!): CommissionRequest!
   createCustomizationUpload(content_type: String!, size: Int!): UploadTicket!
   deleteAddress(id: Int!): Boolean!
+  markCommissionRequestRead(id: String!): CommissionRequest!
   markContactMessageRead(id: Int!): ContactMessage!
   notifyWhenBackInStock(email: String!, product_id: Int!): BatchNotificationResult!
   placeOrder(input: PlaceOrderInput!): Order!
@@ -514,6 +559,9 @@ type Query {
   checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
   collection(archive: Boolean = false, slug: String!): Collection!
   collections(archive: Boolean = false): [Collection!]!
+  commissionOptions: CommissionOptions!
+  commissionPieces(limit: Int = 6): [Product!]!
+  commissionRequests(filter: CommissionRequestsFilterInput): CommissionRequestsResult!
   contactMessages(limit: Int, page: Int): ContactMessagesResult!
   contentPage(slug: String!): ContentPage!
   contentPages: [ContentPageSummary!]!

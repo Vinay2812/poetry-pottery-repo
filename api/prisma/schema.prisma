@@ -36,6 +36,7 @@ model User {
   reviews             Review[]
   event_registrations EventRegistration[]
   workshop_bookings   WorkshopBooking[]
+  commissions         CommissionRequest[]
   newsletter          NewsletterSubscriber?
   batch_notifications BatchNotification[]
 
@@ -138,6 +139,8 @@ model Product {
   // A piece the kiln marked: sold honestly at a discount, with the flaw named.
   is_second        Boolean  @default(false)
   flaw_note        String?
+  // Thrown for someone in particular; the commission page shows these as past work.
+  is_commission    Boolean  @default(false)
   collection_id    Int?
   glaze_id         Int?
 
@@ -650,6 +653,30 @@ model ContactMessage {
 
   @@index([is_read, created_at])
   @@map("contact_messages")
+}
+
+// A brief for a piece that does not exist yet: what it is, how big, which glaze, what to carve.
+model CommissionRequest {
+  id                   String   @id @default(nanoid(12))
+  piece_type           String
+  size                 String
+  glaze                String
+  carved_words         String?
+  notes                String?
+  name                 String
+  email                String
+  phone                String?
+  reference_image_urls String[] @default([])
+  is_read              Boolean  @default(false)
+  user_id              Int?
+
+  created_at DateTime @default(now())
+
+  user User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([is_read, created_at])
+  @@index([user_id])
+  @@map("commission_requests")
 }
 
 model SiteSettings {

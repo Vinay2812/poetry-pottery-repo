@@ -105,3 +105,4 @@ export { ContentModule } from "@/features/content/content.module";
 export { NewsletterModule } from "@/features/newsletter/newsletter.module";
 export { NotificationsModule } from "@/features/notifications/notifications.module";
 export { ContactModule } from "@/features/contact/contact.module";
+export { CommissionsModule } from "@/features/commissions/commissions.module";

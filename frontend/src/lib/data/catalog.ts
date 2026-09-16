@@ -1,5 +1,11 @@
 import {
   CategoriesDocument,
+  CommissionOptionsDocument,
+  type CommissionOptionsQuery,
+  type CommissionOptionsQueryVariables,
+  CommissionPiecesDocument,
+  type CommissionPiecesQuery,
+  type CommissionPiecesQueryVariables,
   type CategoriesQuery,
   type CategoriesQueryVariables,
   CollectionDocument,
@@ -17,9 +23,6 @@ import {
   ProductDocument,
   type ProductQuery,
   type ProductQueryVariables,
-  ProductsDocument,
-  type ProductsQuery,
-  type ProductsQueryVariables,
   UpcomingEventsDocument,
   type UpcomingEventsQuery,
   type UpcomingEventsQueryVariables,
@@ -96,17 +99,24 @@ export async function getFeaturedProducts(
   return data?.featuredProducts ?? [];
 }
 
-export async function getCustomProducts(): Promise<
-  ProductsQuery["products"]["items"]
+export async function getCommissionOptions(): Promise<
+  CommissionOptionsQuery["commissionOptions"]
 > {
   const { data } = await getClient().query<
-    ProductsQuery,
-    ProductsQueryVariables
-  >({
-    query: ProductsDocument,
-    variables: { filter: { customizable_only: true, limit: 12 } },
-  });
-  return data?.products.items ?? [];
+    CommissionOptionsQuery,
+    CommissionOptionsQueryVariables
+  >({ query: CommissionOptionsDocument });
+  return data?.commissionOptions ?? { piece_types: [], sizes: [], glazes: [] };
+}
+
+export async function getCommissionPieces(
+  limit = 6,
+): Promise<CommissionPiecesQuery["commissionPieces"]> {
+  const { data } = await getClient().query<
+    CommissionPiecesQuery,
+    CommissionPiecesQueryVariables
+  >({ query: CommissionPiecesDocument, variables: { limit } });
+  return data?.commissionPieces ?? [];
 }
 
 // Only a real not-found becomes a 404; any other failure surfaces as an error page.

@@ -158,6 +158,52 @@ export type CollectionRef = {
   starts_at?: Maybe<Scalars['DateTime']['output']>;
 };
 
+export type CommissionOptions = {
+  __typename?: 'CommissionOptions';
+  glazes: Array<Scalars['String']['output']>;
+  piece_types: Array<Scalars['String']['output']>;
+  sizes: Array<Scalars['String']['output']>;
+};
+
+export type CommissionRequest = {
+  __typename?: 'CommissionRequest';
+  carved_words?: Maybe<Scalars['String']['output']>;
+  created_at: Scalars['DateTime']['output'];
+  email: Scalars['String']['output'];
+  glaze: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  is_read: Scalars['Boolean']['output'];
+  name: Scalars['String']['output'];
+  notes?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  piece_type: Scalars['String']['output'];
+  reference_image_urls: Array<Scalars['String']['output']>;
+  size: Scalars['String']['output'];
+};
+
+export type CommissionRequestInput = {
+  carved_words?: InputMaybe<Scalars['String']['input']>;
+  email: Scalars['String']['input'];
+  glaze: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  notes?: InputMaybe<Scalars['String']['input']>;
+  phone?: InputMaybe<Scalars['String']['input']>;
+  piece_type: Scalars['String']['input'];
+  reference_image_urls?: InputMaybe<Array<Scalars['String']['input']>>;
+  size: Scalars['String']['input'];
+};
+
+export type CommissionRequestsFilterInput = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type CommissionRequestsResult = {
+  __typename?: 'CommissionRequestsResult';
+  items: Array<CommissionRequest>;
+  page_info: PageInfo;
+};
+
 export type ContactMessage = {
   __typename?: 'ContactMessage';
   created_at: Scalars['DateTime']['output'];
@@ -330,8 +376,10 @@ export type Mutation = {
   cancelWorkshopBooking: WorkshopBooking;
   clearCart: Cart;
   createAddress: Address;
+  createCommissionRequest: CommissionRequest;
   createCustomizationUpload: UploadTicket;
   deleteAddress: Scalars['Boolean']['output'];
+  markCommissionRequestRead: CommissionRequest;
   markContactMessageRead: ContactMessage;
   notifyWhenBackInStock: BatchNotificationResult;
   placeOrder: Order;
@@ -388,6 +436,11 @@ export type MutationCreateAddressArgs = {
 };
 
 
+export type MutationCreateCommissionRequestArgs = {
+  input: CommissionRequestInput;
+};
+
+
 export type MutationCreateCustomizationUploadArgs = {
   content_type: Scalars['String']['input'];
   size: Scalars['Int']['input'];
@@ -396,6 +449,11 @@ export type MutationCreateCustomizationUploadArgs = {
 
 export type MutationDeleteAddressArgs = {
   id: Scalars['Int']['input'];
+};
+
+
+export type MutationMarkCommissionRequestReadArgs = {
+  id: Scalars['String']['input'];
 };
 
 
@@ -687,6 +745,9 @@ export type Query = {
   checkoutQuote: CheckoutQuote;
   collection: Collection;
   collections: Array<Collection>;
+  commissionOptions: CommissionOptions;
+  commissionPieces: Array<Product>;
+  commissionRequests: CommissionRequestsResult;
   contactMessages: ContactMessagesResult;
   contentPage: ContentPage;
   contentPages: Array<ContentPageSummary>;
@@ -729,6 +790,16 @@ export type QueryCollectionArgs = {
 
 export type QueryCollectionsArgs = {
   archive?: InputMaybe<Scalars['Boolean']['input']>;
+};
+
+
+export type QueryCommissionPiecesArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
+export type QueryCommissionRequestsArgs = {
+  filter?: InputMaybe<CommissionRequestsFilterInput>;
 };
 
 
@@ -1119,6 +1190,25 @@ export type ClearCartMutationVariables = Exact<{ [key: string]: never; }>;
 
 
 export type ClearCartMutation = { clearCart: { item_count: number, subtotal: number, shipping_fee: number, free_shipping_above: number | null, total: number, items: Array<{ id: number, quantity: number, unit_price: number, line_total: number, is_available: boolean, unavailable_reason: string | null, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, is_second: boolean, rating_avg: number, rating_count: number, glaze: { id: number, slug: string, name: string, color_code: string | null, swatch_url: string | null } | null, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null } }> } };
+
+export type CommissionOptionsQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type CommissionOptionsQuery = { commissionOptions: { piece_types: Array<string>, sizes: Array<string>, glazes: Array<string> } };
+
+export type CommissionPiecesQueryVariables = Exact<{
+  limit?: number | null | undefined;
+}>;
+
+
+export type CommissionPiecesQuery = { commissionPieces: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, material: string, color_name: string | null, color_code: string | null, image_urls: Array<string>, stock: number, is_active: boolean, is_archived: boolean, is_featured: boolean, is_customizable: boolean, is_second: boolean, rating_avg: number, rating_count: number, collection: { id: number, slug: string, name: string, starts_at: string | null, ends_at: string | null } | null }> };
+
+export type CreateCommissionRequestMutationVariables = Exact<{
+  input: CommissionRequestInput;
+}>;
+
+
+export type CreateCommissionRequestMutation = { createCommissionRequest: { id: string, piece_type: string, size: string, glaze: string, created_at: string } };
 
 export type ContentPageQueryVariables = Exact<{
   slug: string;
@@ -2012,6 +2102,112 @@ export function useClearCartMutation(baseOptions?: ApolloReactHooks.MutationHook
       }
 export type ClearCartMutationHookResult = ReturnType<typeof useClearCartMutation>;
 export type ClearCartMutationResult = ApolloReactCommon.MutationResult<ClearCartMutation>;
+export const CommissionOptionsDocument = gql`
+    query CommissionOptions {
+  commissionOptions {
+    piece_types
+    sizes
+    glazes
+  }
+}
+    `;
+
+/**
+ * __useCommissionOptionsQuery__
+ *
+ * To run a query within a React component, call `useCommissionOptionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCommissionOptionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCommissionOptionsQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useCommissionOptionsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<CommissionOptionsQuery, CommissionOptionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<CommissionOptionsQuery, CommissionOptionsQueryVariables>(CommissionOptionsDocument, options);
+      }
+export function useCommissionOptionsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<CommissionOptionsQuery, CommissionOptionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<CommissionOptionsQuery, CommissionOptionsQueryVariables>(CommissionOptionsDocument, options);
+        }
+export type CommissionOptionsQueryHookResult = ReturnType<typeof useCommissionOptionsQuery>;
+export type CommissionOptionsLazyQueryHookResult = ReturnType<typeof useCommissionOptionsLazyQuery>;
+export type CommissionOptionsQueryResult = ApolloReactCommon.QueryResult<CommissionOptionsQuery, CommissionOptionsQueryVariables>;
+export const CommissionPiecesDocument = gql`
+    query CommissionPieces($limit: Int) {
+  commissionPieces(limit: $limit) {
+    ...ProductCard
+  }
+}
+    ${ProductCardFragmentDoc}`;
+
+/**
+ * __useCommissionPiecesQuery__
+ *
+ * To run a query within a React component, call `useCommissionPiecesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCommissionPiecesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCommissionPiecesQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useCommissionPiecesQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<CommissionPiecesQuery, CommissionPiecesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<CommissionPiecesQuery, CommissionPiecesQueryVariables>(CommissionPiecesDocument, options);
+      }
+export function useCommissionPiecesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<CommissionPiecesQuery, CommissionPiecesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<CommissionPiecesQuery, CommissionPiecesQueryVariables>(CommissionPiecesDocument, options);
+        }
+export type CommissionPiecesQueryHookResult = ReturnType<typeof useCommissionPiecesQuery>;
+export type CommissionPiecesLazyQueryHookResult = ReturnType<typeof useCommissionPiecesLazyQuery>;
+export type CommissionPiecesQueryResult = ApolloReactCommon.QueryResult<CommissionPiecesQuery, CommissionPiecesQueryVariables>;
+export const CreateCommissionRequestDocument = gql`
+    mutation CreateCommissionRequest($input: CommissionRequestInput!) {
+  createCommissionRequest(input: $input) {
+    id
+    piece_type
+    size
+    glaze
+    created_at
+  }
+}
+    `;
+
+/**
+ * __useCreateCommissionRequestMutation__
+ *
+ * To run a mutation, you first call `useCreateCommissionRequestMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateCommissionRequestMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createCommissionRequestMutation, { data, loading, error }] = useCreateCommissionRequestMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateCommissionRequestMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateCommissionRequestMutation, CreateCommissionRequestMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateCommissionRequestMutation, CreateCommissionRequestMutationVariables>(CreateCommissionRequestDocument, options);
+      }
+export type CreateCommissionRequestMutationHookResult = ReturnType<typeof useCreateCommissionRequestMutation>;
+export type CreateCommissionRequestMutationResult = ApolloReactCommon.MutationResult<CreateCommissionRequestMutation>;
 export const ContentPageDocument = gql`
     query ContentPage($slug: String!) {
   contentPage(slug: $slug) {
