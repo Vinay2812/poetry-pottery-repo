@@ -12,6 +12,7 @@ import { AdminProductsModule } from "./products/products.module";
 import { AdminReviewsModule } from "./reviews/reviews.module";
 import { AdminUploadsModule } from "./uploads/uploads.module";
 import { AdminUsersModule } from "./users/users.module";
+import { AdminVisitsModule } from "./visits/visits.module";
 import { AdminWorkshopsModule } from "./workshops/workshops.module";
 
 @Module({
@@ -25,6 +26,7 @@ import { AdminWorkshopsModule } from "./workshops/workshops.module";
     AdminUsersModule,
     AdminEventsModule,
     AdminWorkshopsModule,
+    AdminVisitsModule,
     AdminReviewsModule,
     AdminContentModule,
     AdminCouponsModule,

@@ -395,6 +395,26 @@ input AdminSiteSettingsInput {
   youtube_url: String
 }
 
+type AdminStudioVisit {
+  created_at: DateTime!
+  customer: AdminUserRef
+  visit: StudioVisit!
+}
+
+input AdminStudioVisitsFilterInput {
+  from: DateTime
+  include_cancelled: Boolean
+  limit: Int
+  page: Int
+  search: String
+  to: DateTime
+}
+
+type AdminStudioVisitsResult {
+  items: [AdminStudioVisit!]!
+  page_info: PageInfo!
+}
+
 type AdminSubscriber {
   created_at: DateTime!
   email: String!
@@ -846,6 +866,7 @@ type Mutation {
   cancelOrder(id: String!, reason: String): Order!
   cancelOrderAsAdmin(id: String!, reason: String): AdminOrder!
   cancelRegistration(id: String!, reason: String): Registration!
+  cancelStudioVisit(id: String!, reason: String): StudioVisit!
   cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
   clearCart: Cart!
   completeEvent(id: Int!): Event!
@@ -1139,6 +1160,7 @@ type Query {
   adminProductOptionGroups(product_id: Int!): [ProductOptionGroup!]!
   adminProducts(filter: AdminProductsFilterInput): AdminProductsResult!
   adminReviews(filter: AdminReviewsFilterInput): AdminReviewsResult!
+  adminStudioVisits(filter: AdminStudioVisitsFilterInput): AdminStudioVisitsResult!
   adminUser(id: Int!): AdminUser!
   adminUsers(filter: AdminUsersFilterInput): AdminUsersResult!
   adminWorkshopBlackouts(config_id: Int!): [AdminWorkshopBlackout!]!
@@ -1323,6 +1345,7 @@ type SiteSettings {
 }
 
 type StudioVisit {
+  cancelled_at: DateTime
   ends_at: DateTime!
   id: String!
   name: String!

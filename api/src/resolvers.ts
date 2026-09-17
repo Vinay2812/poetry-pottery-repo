@@ -32,6 +32,7 @@ export { AdminOrdersResolver } from "@/features/admin/orders/orders.resolver";
 export { AdminUsersResolver } from "@/features/admin/users/users.resolver";
 export { AdminEventsResolver } from "@/features/admin/events/events.resolver";
 export { AdminWorkshopsResolver } from "@/features/admin/workshops/workshops.resolver";
+export { AdminVisitsResolver } from "@/features/admin/visits/visits.resolver";
 export { AdminReviewsResolver } from "@/features/admin/reviews/reviews.resolver";
 export { AdminContentResolver } from "@/features/admin/content/content.resolver";
 export { AdminCouponsResolver } from "@/features/admin/coupons/coupons.resolver";

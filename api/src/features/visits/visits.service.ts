@@ -1,10 +1,17 @@
-import { BadRequestException, Injectable } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { env } from "@/config/env";
 import { MailService } from "@/mail/mail.service";
-import { studioVisitMail } from "@/mail/templates/visits";
+import {
+  studioVisitCancelledMail,
+  studioVisitMail,
+} from "@/mail/templates/visits";
 import { PrismaService } from "@/prisma/prisma.service";
 import { normalisePhone } from "@/features/addresses/address-validation";
 import {
@@ -212,9 +219,46 @@ export class VisitsService {
     }
   }
 
+  // A cancelled window is free again, so it is neither an occupant nor a duplicate.
+  async cancel(id: string, reason: string | null): Promise<StudioVisit> {
+    const visit = await this.prisma.studioVisit.findUnique({
+      where: { id },
+      include: { user: { select: { email: true } } },
+    });
+    if (!visit) {
+      throw new NotFoundException("Visit not found");
+    }
+    if (visit.cancelled_at) return visit;
+
+    const cancelled = await this.prisma.studioVisit.update({
+      where: { id },
+      data: { cancelled_at: new Date() },
+    });
+    const note = reason?.trim().slice(0, 300) || null;
+    const config = await this.config();
+    // Only a signed-in visitor left an address; the studio copy carries the phone for the rest.
+    if (visit.user?.email) {
+      await this.mail.enqueue({
+        to: visit.user.email,
+        ...studioVisitCancelledMail(cancelled, config.timezone, note),
+      });
+    }
+    if (env.BUSINESS_EMAIL) {
+      await this.mail.enqueue({
+        to: env.BUSINESS_EMAIL,
+        ...studioVisitCancelledMail(cancelled, config.timezone, note),
+      });
+    }
+    return cancelled;
+  }
+
   private async occupants(from: Date, to: Date): Promise<Occupant[]> {
     const rows = await this.prisma.studioVisit.findMany({
-      where: { starts_at: { lt: to }, ends_at: { gt: from } },
+      where: {
+        starts_at: { lt: to },
+        ends_at: { gt: from },
+        cancelled_at: null,
+      },
       select: { starts_at: true, ends_at: true },
     });
     return rows.map((row) => ({ ...row, participants: 1 }));

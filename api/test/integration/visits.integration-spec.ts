@@ -116,6 +116,42 @@ describe("studio visits under concurrency", () => {
     expect(taken?.reason).toBe("Fully booked");
   });
 
+  it("puts a cancelled window back on offer and races it again", async () => {
+    const starts = visitWindow(studio, 2, 1);
+    const first = await harness.visits.book(
+      { starts_at: starts, name: "Maya", phone: "9876543210" },
+      null,
+    );
+    await harness.visits.cancel(first.id, "The kiln is running");
+
+    const outcome = await race(
+      Array.from(
+        { length: 5 },
+        (_, index) => () =>
+          harness.visits.book(
+            {
+              starts_at: starts,
+              name: `Guest ${index}`,
+              phone: "9876543210",
+            },
+            null,
+          ),
+      ),
+    );
+
+    expect(outcome.wins).toHaveLength(1);
+    expect(outcome.errors).toHaveLength(4);
+    // The cancelled row stays for the record; only one live row holds the window.
+    expect(
+      await harness.prisma.studioVisit.count({
+        where: { starts_at: starts, cancelled_at: null },
+      }),
+    ).toBe(1);
+    expect(
+      await harness.prisma.studioVisit.count({ where: { starts_at: starts } }),
+    ).toBe(2);
+  });
+
   it("refuses a window that is not on the half-hour grid, however hard it is pushed", async () => {
     const offGrid = new Date(visitWindow(studio, 2, 0).getTime() + 7 * 60_000);
 

@@ -657,15 +657,18 @@ model ContactMessage {
   @@map("contact_messages")
 }
 
-// Someone coming by the studio for half an hour. One visit per window, held by the unique start.
+// Someone coming by the studio for half an hour. One live visit per window, held by a
+// partial unique index on starts_at WHERE cancelled_at IS NULL, which Prisma cannot
+// express; it is created by hand in the migration, so the plain index is all that is here.
 model StudioVisit {
-  id        String   @id @default(nanoid(12))
-  starts_at DateTime @unique
-  ends_at   DateTime
-  name      String
-  phone     String
-  note      String?
-  user_id   Int?
+  id           String    @id @default(nanoid(12))
+  starts_at    DateTime
+  ends_at      DateTime
+  name         String
+  phone        String
+  note         String?
+  cancelled_at DateTime?
+  user_id      Int?
 
   created_at DateTime @default(now())
 

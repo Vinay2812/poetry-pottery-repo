@@ -14,6 +14,7 @@ import { AdminProductsResolver } from "./products/products.resolver";
 import { AdminReviewsResolver } from "./reviews/reviews.resolver";
 import { AdminUploadsResolver } from "./uploads/uploads.resolver";
 import { AdminUsersResolver } from "./users/users.resolver";
+import { AdminVisitsResolver } from "./visits/visits.resolver";
 import { AdminWorkshopsResolver } from "./workshops/workshops.resolver";
 
 const RESOLVERS = {
@@ -29,6 +30,7 @@ const RESOLVERS = {
   AdminReviewsResolver,
   AdminUploadsResolver,
   AdminUsersResolver,
+  AdminVisitsResolver,
   AdminWorkshopsResolver,
 };
 

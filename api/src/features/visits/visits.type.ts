@@ -52,6 +52,9 @@ export class StudioVisit {
 
   @Field(() => String, { nullable: true })
   note!: string | null;
+
+  @Field(() => Date, { nullable: true })
+  cancelled_at!: Date | null;
 }
 
 @InputType()

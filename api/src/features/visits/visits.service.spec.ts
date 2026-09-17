@@ -21,7 +21,12 @@ const containing = (value: Record<string, unknown>): unknown =>
 const prismaMock = {
   workshopConfig: { findFirst: vi.fn() },
   workshopBlackout: { findMany: vi.fn() },
-  studioVisit: { findMany: vi.fn(), create: vi.fn() },
+  studioVisit: {
+    findMany: vi.fn(),
+    create: vi.fn(),
+    findUnique: vi.fn(),
+    update: vi.fn(),
+  },
 };
 const mailMock = { enqueue: vi.fn() };
 
@@ -201,5 +206,86 @@ describe("VisitsService", () => {
     await expect(service.book(input(), null)).rejects.toThrow(
       "Someone just took that window, pick another",
     );
+  });
+
+  describe("cancel", () => {
+    const visit = {
+      id: "VIS123",
+      starts_at: window(),
+      ends_at: window(),
+      name: "Maya",
+      phone: "9123456789",
+      note: null,
+      cancelled_at: null,
+      user_id: 7,
+      created_at: NOW,
+    };
+
+    it("stamps the cancellation and mails the visitor who signed in", async () => {
+      prismaMock.studioVisit.findUnique.mockResolvedValue({
+        ...visit,
+        user: { email: "maya@example.com" },
+      });
+      prismaMock.studioVisit.update.mockResolvedValue({
+        ...visit,
+        cancelled_at: NOW,
+      });
+
+      await service.cancel("VIS123", "  The kiln is running  ");
+
+      expect(prismaMock.studioVisit.update).toHaveBeenCalledWith(
+        containing({ where: { id: "VIS123" } }),
+      );
+      const call = prismaMock.studioVisit.update.mock.calls[0]?.[0] as {
+        data: { cancelled_at: Date };
+      };
+      expect(call.data.cancelled_at).toBeInstanceOf(Date);
+      expect(mailMock.enqueue).toHaveBeenCalledWith(
+        containing({ to: "maya@example.com" }),
+      );
+    });
+
+    it("says nothing to a visitor who left no address", async () => {
+      prismaMock.studioVisit.findUnique.mockResolvedValue({
+        ...visit,
+        user_id: null,
+        user: null,
+      });
+      prismaMock.studioVisit.update.mockResolvedValue({
+        ...visit,
+        cancelled_at: NOW,
+      });
+
+      await service.cancel("VIS123", null);
+
+      expect(
+        mailMock.enqueue.mock.calls.every(
+          ([message]: [{ to: string }]) => message.to !== "maya@example.com",
+        ),
+      ).toBe(true);
+    });
+
+    it("leaves an already cancelled window alone", async () => {
+      prismaMock.studioVisit.findUnique.mockResolvedValue({
+        ...visit,
+        cancelled_at: NOW,
+        user: { email: "maya@example.com" },
+      });
+
+      await service.cancel("VIS123", null);
+
+      expect(prismaMock.studioVisit.update).not.toHaveBeenCalled();
+      expect(mailMock.enqueue).not.toHaveBeenCalled();
+    });
+
+    it("stops counting a cancelled window as taken", async () => {
+      prismaMock.studioVisit.findMany.mockResolvedValue([]);
+
+      await service.availability(null, 1);
+
+      expect(prismaMock.studioVisit.findMany).toHaveBeenCalledWith(
+        containing({ where: containing({ cancelled_at: null }) }),
+      );
+    });
   });
 });
