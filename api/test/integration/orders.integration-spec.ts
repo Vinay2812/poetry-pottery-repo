@@ -5,11 +5,13 @@ import { orderInclude } from "@/features/orders/orders.service";
 import {
   createHarness,
   type Harness,
+  MailRecorder,
   makeProduct,
   makeUsers,
   openWriter,
   race,
   resetData,
+  STUDIO_CDN,
   type TestUser,
 } from "./harness";
 
@@ -254,5 +256,82 @@ describe("order placement under concurrency", () => {
       where: { id: staying.id },
     });
     expect(after.stock).toBe(5);
+  });
+});
+
+describe("studio notes on an order", () => {
+  let harness: Harness;
+  const mail = new MailRecorder();
+
+  beforeAll(async () => {
+    harness = await createHarness({ mail });
+  });
+
+  afterAll(async () => {
+    await harness.close();
+  });
+
+  beforeEach(async () => {
+    await resetData(harness.prisma);
+    mail.reset();
+  });
+
+  async function placeOrder(): Promise<{ id: string; email: string }> {
+    const [buyer] = await makeUsers(harness.prisma, 1);
+    if (!buyer) throw new Error("no user");
+    const piece = await makeProduct(harness.prisma, { stock: 2 });
+    await harness.cart.add(buyer.id, { product_id: piece.id, quantity: 1 });
+    const order = await harness.orders.place(buyer.id, {
+      address_id: buyer.address_id,
+    });
+    const row = await harness.prisma.user.findUniqueOrThrow({
+      where: { id: buyer.id },
+      select: { email: true },
+    });
+    mail.reset();
+    return { id: order.id, email: row.email };
+  }
+
+  it("files the note on the order and writes to the buyer once", async () => {
+    const order = await placeOrder();
+
+    const result = await harness.orders.addNote({
+      order_id: order.id,
+      body: "  Glazed this morning  ",
+      image_url: `${STUDIO_CDN}/orders/kiln.jpg`,
+    });
+
+    expect(result.studio_notes).toHaveLength(1);
+    expect(result.studio_notes[0]?.body).toBe("Glazed this morning");
+    expect(mail.to(order.email)).toHaveLength(1);
+  });
+
+  it("refuses a photo that is not in the studio bucket", async () => {
+    const order = await placeOrder();
+
+    await expect(
+      harness.orders.addNote({
+        order_id: order.id,
+        body: "Glazed this morning",
+        image_url: "https://evil.test/a.jpg",
+      }),
+    ).rejects.toThrow("Attach a photo uploaded to the studio");
+    expect(await harness.prisma.orderNote.count()).toBe(0);
+    expect(mail.sent).toEqual([]);
+  });
+
+  it("refuses a note with nothing in it", async () => {
+    const order = await placeOrder();
+
+    await expect(
+      harness.orders.addNote({ order_id: order.id, body: "   " }),
+    ).rejects.toThrow("Write something for the customer");
+    expect(await harness.prisma.orderNote.count()).toBe(0);
+  });
+
+  it("refuses a note on an order that is not there", async () => {
+    await expect(
+      harness.orders.addNote({ order_id: "missing", body: "Glazed today" }),
+    ).rejects.toThrow("Order not found");
   });
 });

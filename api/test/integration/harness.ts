@@ -4,6 +4,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Client } from "pg";
 
 import { CartService } from "@/features/cart/cart.service";
+import { CommissionsService } from "@/features/commissions/commissions.service";
 import { ContactService } from "@/features/contact/contact.service";
 import { EventsService } from "@/features/events/events.service";
 import { NewsletterService } from "@/features/newsletter/newsletter.service";
@@ -58,9 +59,12 @@ class MailStub {
   }
 }
 
+// The studio's own bucket inside the sandbox; every other origin is somebody else's.
+export const STUDIO_CDN = "https://cdn.test";
+
 class StorageStub {
-  isOwnUrl(): boolean {
-    return true;
+  isOwnUrl(url: string): boolean {
+    return url.startsWith(`${STUDIO_CDN}/`);
   }
 }
 
@@ -145,6 +149,7 @@ export interface Harness {
   notifications: NotificationsService;
   contact: ContactService;
   visits: VisitsService;
+  commissions: CommissionsService;
   users: UsersService;
   close: () => Promise<void>;
 }
@@ -189,6 +194,7 @@ export async function createHarness(
       NewsletterService,
       ContactService,
       VisitsService,
+      CommissionsService,
       UsersService,
     ],
   }).compile();
@@ -204,6 +210,7 @@ export async function createHarness(
     notifications: moduleRef.get(NotificationsService),
     contact: moduleRef.get(ContactService),
     visits: moduleRef.get(VisitsService),
+    commissions: moduleRef.get(CommissionsService),
     users: moduleRef.get(UsersService),
     close: () => moduleRef.close(),
   };
@@ -233,6 +240,7 @@ const TRUNCATED = [
   "addresses",
   "newsletter_subscribers",
   "contact_messages",
+  "commission_requests",
   "users",
 ];
 
