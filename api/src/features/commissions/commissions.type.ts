@@ -50,7 +50,20 @@ export class CommissionRequestsResult {
   page_info!: PageInfo;
 }
 
-// The three lists the brief form offers, taken from what the shelf actually carries.
+// A glaze as the brief form needs it: the name to file, and the colour to show beside it.
+@ObjectType()
+export class CommissionGlaze {
+  @Field()
+  slug!: string;
+
+  @Field()
+  name!: string;
+
+  @Field(() => String, { nullable: true })
+  color_code!: string | null;
+}
+
+// The three lists the brief form offers, taken from what the studio actually fires.
 @ObjectType()
 export class CommissionOptions {
   @Field(() => [String])
@@ -59,8 +72,8 @@ export class CommissionOptions {
   @Field(() => [String])
   sizes!: string[];
 
-  @Field(() => [String])
-  glazes!: string[];
+  @Field(() => [CommissionGlaze])
+  glazes!: CommissionGlaze[];
 }
 
 @InputType()

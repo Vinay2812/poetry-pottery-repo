@@ -9,6 +9,7 @@ import {
   COMMISSION_STEPS,
   CommissionBriefContainer,
   CommissionSteps,
+  toGlazeChoices,
 } from "@/features/commissions";
 import {
   ProductCardContainer,
@@ -86,7 +87,7 @@ export default async function CustomPage() {
             <CommissionBriefContainer
               pieceTypes={options.piece_types}
               sizes={options.sizes}
-              glazes={options.glazes}
+              glazes={toGlazeChoices(options.glazes)}
               whatsappNumber={settings.whatsapp_number}
             />
           </div>

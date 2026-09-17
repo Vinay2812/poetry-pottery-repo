@@ -27,6 +27,9 @@ import {
   MAX_CARVED_WORDS,
 } from "@/lib/validations/commission";
 
+import type { GlazeChoice } from "@/features/commissions/types";
+import { GlazeSwatch } from "@/features/products/components/GlazeSwatch";
+
 interface FieldProps {
   id: string;
   label: string;
@@ -66,7 +69,7 @@ function TextField({
 export interface CommissionBriefFormProps {
   pieceTypes: string[];
   sizes: string[];
-  glazes: string[];
+  glazes: GlazeChoice[];
   isSubmitting: boolean;
   errorMessage: string | null;
   photoPicker?: React.ReactNode;
@@ -173,8 +176,15 @@ export function CommissionBriefForm({
                   </SelectTrigger>
                   <SelectContent>
                     {glazes.map((glaze) => (
-                      <SelectItem key={glaze} value={glaze}>
-                        {glaze}
+                      <SelectItem key={glaze.slug} value={glaze.name}>
+                        <span className="flex items-center gap-2">
+                          <GlazeSwatch
+                            name={glaze.name}
+                            colorCode={glaze.colorCode}
+                            size="sm"
+                          />
+                          {glaze.name}
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>

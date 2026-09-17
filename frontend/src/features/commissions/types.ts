@@ -9,6 +9,23 @@ export interface CommissionStep {
   detail: string;
 }
 
+// A glaze as the brief form shows it: the name is what gets filed, the colour is the swatch.
+export interface GlazeChoice {
+  slug: string;
+  name: string;
+  colorCode: string | null;
+}
+
+export function toGlazeChoices(
+  glazes: readonly { slug: string; name: string; color_code: string | null }[],
+): GlazeChoice[] {
+  return glazes.map((glaze) => ({
+    slug: glaze.slug,
+    name: glaze.name,
+    colorCode: glaze.color_code,
+  }));
+}
+
 // The real sequence a commission runs through, with the two waits it actually has.
 export const COMMISSION_STEPS: CommissionStep[] = [
   {

@@ -115,7 +115,8 @@ export class CommissionsService {
     private readonly storage: StorageService,
   ) {}
 
-  // The form never invents a size or a glaze; it offers what the product pages already carry.
+  // The form never invents a size or a glaze; it offers the glazes the studio fires and the
+  // sizes and pieces the product pages already carry.
   // Read straight through: nothing in the API writes glazes, categories or options, so a
   // cache here could only ever be invalidated by a TTL guessing when the seed last ran.
   async options(): Promise<CommissionOptions> {
@@ -133,19 +134,15 @@ export class CommissionsService {
         orderBy: [{ sort_order: "asc" }, { name: "asc" }],
         select: { name: true },
       }),
-      this.prisma.product.findMany({
-        where: { ...sellableProductWhere(), color_name: { not: null } },
-        distinct: ["color_name"],
-        orderBy: { color_name: "asc" },
-        select: { color_name: true },
+      this.prisma.glaze.findMany({
+        orderBy: { name: "asc" },
+        select: { slug: true, name: true, color_code: true },
       }),
     ]);
     return {
       piece_types: unique(categories.map((row) => row.name)),
       sizes: unique(sizes.map((row) => row.name)),
-      glazes: unique(
-        glazes.flatMap((row) => (row.color_name ? [row.color_name] : [])),
-      ),
+      glazes,
     };
   }
 

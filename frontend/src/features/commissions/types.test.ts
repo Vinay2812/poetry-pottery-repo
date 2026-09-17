@@ -11,6 +11,7 @@ import {
   toCommissionAskUrl,
   toCommissionInput,
   toCommissionMessage,
+  toGlazeChoices,
 } from "./types";
 
 function values(
@@ -105,5 +106,23 @@ describe("toBriefSummary", () => {
       "Mug · Short (150 ml) · Ocean Blue",
     );
     expect(toBriefSummary("Mug", "  ", "Ocean Blue")).toBe("Mug · Ocean Blue");
+  });
+});
+
+describe("toGlazeChoices", () => {
+  it("carries the glaze table's own name, slug and colour to the form", () => {
+    expect(
+      toGlazeChoices([
+        { slug: "ocean-blue", name: "Ocean Blue", color_code: "#2F5D7C" },
+        { slug: "multan", name: "Multan", color_code: null },
+      ]),
+    ).toEqual([
+      { slug: "ocean-blue", name: "Ocean Blue", colorCode: "#2F5D7C" },
+      { slug: "multan", name: "Multan", colorCode: null },
+    ]);
+  });
+
+  it("has nothing to offer when the studio lists no glazes", () => {
+    expect(toGlazeChoices([])).toEqual([]);
   });
 });

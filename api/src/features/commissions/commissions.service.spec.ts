@@ -22,6 +22,7 @@ const prismaMock = {
   category: { findMany: vi.fn() },
   productOption: { findMany: vi.fn() },
   product: { findMany: vi.fn() },
+  glaze: { findMany: vi.fn() },
 };
 
 const mailMock = { enqueue: vi.fn() };
@@ -151,7 +152,7 @@ describe("CommissionsService", () => {
     });
   });
 
-  it("offers only the sizes and glazes the shelf already carries", async () => {
+  it("offers the pieces and sizes the shelf carries and the glazes the studio fires", async () => {
     prismaMock.category.findMany.mockResolvedValue([
       { name: "Mugs" },
       { name: "Bowls" },
@@ -161,23 +162,30 @@ describe("CommissionsService", () => {
       { name: "Short (150 ml)" },
       { name: "Short (150 ml)" },
     ]);
-    prismaMock.product.findMany.mockResolvedValue([
-      { color_name: "Ocean Blue" },
-      { color_name: null },
-      { color_name: "Wood Fired" },
+    prismaMock.glaze.findMany.mockResolvedValue([
+      { slug: "ocean-blue", name: "Ocean Blue", color_code: "#2f5d7c" },
+      { slug: "wood-fired", name: "Wood Fired", color_code: null },
     ]);
 
     await expect(service.options()).resolves.toEqual({
       piece_types: ["Mugs", "Bowls"],
       sizes: ["Espresso (30 ml)", "Short (150 ml)"],
-      glazes: ["Ocean Blue", "Wood Fired"],
+      glazes: [
+        { slug: "ocean-blue", name: "Ocean Blue", color_code: "#2f5d7c" },
+        { slug: "wood-fired", name: "Wood Fired", color_code: null },
+      ],
+    });
+    // The glaze list is the studio's own table, not a distinct over whatever is on the shelf.
+    expect(prismaMock.glaze.findMany).toHaveBeenCalledWith({
+      orderBy: { name: "asc" },
+      select: { slug: true, name: true, color_code: true },
     });
   });
 
   it("reads the options straight from the tables, with nothing cached in between", async () => {
     prismaMock.category.findMany.mockResolvedValue([{ name: "Mugs" }]);
     prismaMock.productOption.findMany.mockResolvedValue([{ name: "Short" }]);
-    prismaMock.product.findMany.mockResolvedValue([{ color_name: "Ash" }]);
+    prismaMock.glaze.findMany.mockResolvedValue([]);
 
     await service.options();
     await service.options();

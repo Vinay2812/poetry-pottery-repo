@@ -132,8 +132,14 @@ type CollectionRef {
   starts_at: DateTime
 }
 
+type CommissionGlaze {
+  color_code: String
+  name: String!
+  slug: String!
+}
+
 type CommissionOptions {
-  glazes: [String!]!
+  glazes: [CommissionGlaze!]!
   piece_types: [String!]!
   sizes: [String!]!
 }

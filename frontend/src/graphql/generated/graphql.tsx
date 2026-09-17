@@ -158,9 +158,16 @@ export type CollectionRef = {
   starts_at?: Maybe<Scalars['DateTime']['output']>;
 };
 
+export type CommissionGlaze = {
+  __typename?: 'CommissionGlaze';
+  color_code?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  slug: Scalars['String']['output'];
+};
+
 export type CommissionOptions = {
   __typename?: 'CommissionOptions';
-  glazes: Array<Scalars['String']['output']>;
+  glazes: Array<CommissionGlaze>;
   piece_types: Array<Scalars['String']['output']>;
   sizes: Array<Scalars['String']['output']>;
 };
@@ -1288,7 +1295,7 @@ export type ClearCartMutation = { clearCart: { item_count: number, subtotal: num
 export type CommissionOptionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CommissionOptionsQuery = { commissionOptions: { piece_types: Array<string>, sizes: Array<string>, glazes: Array<string> } };
+export type CommissionOptionsQuery = { commissionOptions: { piece_types: Array<string>, sizes: Array<string>, glazes: Array<{ slug: string, name: string, color_code: string | null }> } };
 
 export type CommissionPiecesQueryVariables = Exact<{
   limit?: number | null | undefined;
@@ -2282,7 +2289,11 @@ export const CommissionOptionsDocument = gql`
   commissionOptions {
     piece_types
     sizes
-    glazes
+    glazes {
+      slug
+      name
+      color_code
+    }
   }
 }
     `;

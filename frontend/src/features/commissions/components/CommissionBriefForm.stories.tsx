@@ -17,7 +17,12 @@ const meta = {
   args: {
     pieceTypes: ["Mugs", "Bowls", "Plates", "Vases"],
     sizes: ["Espresso (30 ml)", "Short (150 ml)", "Tall (300 ml)"],
-    glazes: ["Ocean Blue", "Wood Fired", "Forest Green", "Multan"],
+    glazes: [
+      { slug: "ocean-blue", name: "Ocean Blue", colorCode: "#2F5D7C" },
+      { slug: "wood-fired", name: "Wood Fired", colorCode: "#7A5C3E" },
+      { slug: "forest-green", name: "Forest Green", colorCode: "#588157" },
+      { slug: "multan", name: "Multan", colorCode: null },
+    ],
     isSubmitting: false,
     errorMessage: null,
     toAskUrl: (): string | null => "https://wa.me/919000000000?text=Hi",

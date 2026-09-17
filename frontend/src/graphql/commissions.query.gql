@@ -2,7 +2,11 @@ query CommissionOptions {
   commissionOptions {
     piece_types
     sizes
-    glazes
+    glazes {
+      slug
+      name
+      color_code
+    }
   }
 }
 

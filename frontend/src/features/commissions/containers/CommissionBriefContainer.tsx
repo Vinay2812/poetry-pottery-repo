@@ -8,6 +8,7 @@ import type { CommissionFormValues } from "@/lib/validations/commission";
 
 import { CommissionBriefForm } from "@/features/commissions/components/CommissionBriefForm";
 import { CommissionSent } from "@/features/commissions/components/CommissionSent";
+import type { GlazeChoice } from "@/features/commissions/types";
 import {
   toBriefSummary,
   toCommissionAskUrl,
@@ -26,7 +27,7 @@ import {
 export interface CommissionBriefContainerProps {
   pieceTypes: string[];
   sizes: string[];
-  glazes: string[];
+  glazes: GlazeChoice[];
   whatsappNumber: string;
 }
 
