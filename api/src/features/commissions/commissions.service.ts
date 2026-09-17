@@ -9,7 +9,6 @@ import {
   commissionStudioMail,
 } from "@/mail/templates/commissions";
 import { PrismaService } from "@/prisma/prisma.service";
-import { RedisService } from "@/redis/redis.service";
 import { StorageService } from "@/storage/storage.service";
 import { normalisePhone } from "@/features/addresses/address-validation";
 import { type Product } from "@/features/products/products.type";
@@ -27,8 +26,6 @@ import type {
 } from "./commissions.type";
 
 export const MAX_REFERENCE_PHOTOS = 3;
-const OPTIONS_CACHE_KEY = "commissions:options";
-const OPTIONS_CACHE_SECONDS = 120;
 const MAX_COMMISSION_PIECES = 12;
 
 // The words are carved by hand into wet clay, so the line has to stay short enough to fit.
@@ -114,47 +111,42 @@ const SIZE_GROUP_NAMES = ["size", "sizes"];
 export class CommissionsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly redis: RedisService,
     private readonly mail: MailService,
     private readonly storage: StorageService,
   ) {}
 
   // The form never invents a size or a glaze; it offers what the product pages already carry.
-  options(): Promise<CommissionOptions> {
-    return this.redis.getOrSet(
-      OPTIONS_CACHE_KEY,
-      OPTIONS_CACHE_SECONDS,
-      async () => {
-        const [categories, sizes, glazes] = await Promise.all([
-          this.prisma.category.findMany({
-            where: { products: { some: sellableProductWhere() } },
-            orderBy: [{ sort_order: "asc" }, { name: "asc" }],
-            select: { name: true },
-          }),
-          this.prisma.productOption.findMany({
-            where: {
-              is_active: true,
-              group: { name: { in: SIZE_GROUP_NAMES, mode: "insensitive" } },
-            },
-            orderBy: [{ sort_order: "asc" }, { name: "asc" }],
-            select: { name: true },
-          }),
-          this.prisma.product.findMany({
-            where: { ...sellableProductWhere(), color_name: { not: null } },
-            distinct: ["color_name"],
-            orderBy: { color_name: "asc" },
-            select: { color_name: true },
-          }),
-        ]);
-        return {
-          piece_types: unique(categories.map((row) => row.name)),
-          sizes: unique(sizes.map((row) => row.name)),
-          glazes: unique(
-            glazes.flatMap((row) => (row.color_name ? [row.color_name] : [])),
-          ),
-        };
-      },
-    );
+  // Read straight through: nothing in the API writes glazes, categories or options, so a
+  // cache here could only ever be invalidated by a TTL guessing when the seed last ran.
+  async options(): Promise<CommissionOptions> {
+    const [categories, sizes, glazes] = await Promise.all([
+      this.prisma.category.findMany({
+        where: { products: { some: sellableProductWhere() } },
+        orderBy: [{ sort_order: "asc" }, { name: "asc" }],
+        select: { name: true },
+      }),
+      this.prisma.productOption.findMany({
+        where: {
+          is_active: true,
+          group: { name: { in: SIZE_GROUP_NAMES, mode: "insensitive" } },
+        },
+        orderBy: [{ sort_order: "asc" }, { name: "asc" }],
+        select: { name: true },
+      }),
+      this.prisma.product.findMany({
+        where: { ...sellableProductWhere(), color_name: { not: null } },
+        distinct: ["color_name"],
+        orderBy: { color_name: "asc" },
+        select: { color_name: true },
+      }),
+    ]);
+    return {
+      piece_types: unique(categories.map((row) => row.name)),
+      sizes: unique(sizes.map((row) => row.name)),
+      glazes: unique(
+        glazes.flatMap((row) => (row.color_name ? [row.color_name] : [])),
+      ),
+    };
   }
 
   // Past commissions if the studio has flagged any; the made-to-order shelf until then.
@@ -228,10 +220,6 @@ export class CommissionsService {
       where: { id },
       data: { is_read: true },
     });
-  }
-
-  invalidateOptionsCache(): Promise<void> {
-    return this.redis.del(OPTIONS_CACHE_KEY);
   }
 }
 

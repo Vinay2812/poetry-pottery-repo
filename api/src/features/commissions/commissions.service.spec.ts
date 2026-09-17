@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { env } from "@/config/env";
 import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
-import { RedisService } from "@/redis/redis.service";
 import { StorageService } from "@/storage/storage.service";
 import { CommissionsService } from "./commissions.service";
 import type { CommissionRequestInput } from "./commissions.type";
@@ -25,12 +24,6 @@ const prismaMock = {
   product: { findMany: vi.fn() },
 };
 
-const redisMock = {
-  getOrSet: vi.fn(
-    (_key: string, _ttl: number, loader: () => Promise<unknown>) => loader(),
-  ),
-  del: vi.fn(),
-};
 const mailMock = { enqueue: vi.fn() };
 const storageMock = {
   isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.studio/")),
@@ -76,7 +69,6 @@ describe("CommissionsService", () => {
       providers: [
         CommissionsService,
         { provide: PrismaService, useValue: prismaMock },
-        { provide: RedisService, useValue: redisMock },
         { provide: MailService, useValue: mailMock },
         { provide: StorageService, useValue: storageMock },
       ],
@@ -180,6 +172,20 @@ describe("CommissionsService", () => {
       sizes: ["Espresso (30 ml)", "Short (150 ml)"],
       glazes: ["Ocean Blue", "Wood Fired"],
     });
+  });
+
+  it("reads the options straight from the tables, with nothing cached in between", async () => {
+    prismaMock.category.findMany.mockResolvedValue([{ name: "Mugs" }]);
+    prismaMock.productOption.findMany.mockResolvedValue([{ name: "Short" }]);
+    prismaMock.product.findMany.mockResolvedValue([{ color_name: "Ash" }]);
+
+    await service.options();
+    await service.options();
+
+    // Nothing in the API writes glazes, categories or options, so a cache could never be
+    // told to drop; both calls have to go to the database.
+    expect(prismaMock.category.findMany).toHaveBeenCalledTimes(2);
+    expect(prismaMock.productOption.findMany).toHaveBeenCalledTimes(2);
   });
 
   it("shows flagged commissions, and the made-to-order shelf until there are any", async () => {
