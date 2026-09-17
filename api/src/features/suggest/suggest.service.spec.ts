@@ -28,6 +28,7 @@ const redisMock = {
 const searchMock = {
   rankProducts: vi.fn(),
   rankEvents: vi.fn(),
+  safeEmbed: vi.fn(),
 };
 
 function product(id: number, overrides: Record<string, unknown> = {}) {
@@ -60,6 +61,7 @@ describe("SuggestService", () => {
     prismaMock.workshopConfig.findMany.mockResolvedValue([]);
     searchMock.rankProducts.mockResolvedValue([]);
     searchMock.rankEvents.mockResolvedValue([]);
+    searchMock.safeEmbed.mockResolvedValue("[0.1,0.2]");
     const moduleRef = await Test.createTestingModule({
       providers: [
         SuggestService,
@@ -90,8 +92,13 @@ describe("SuggestService", () => {
     expect(searchMock.rankProducts).toHaveBeenCalledWith(
       "Blue Mug",
       MAX_PIECES,
+      "[0.1,0.2]",
     );
-    expect(searchMock.rankEvents).toHaveBeenCalledWith("Blue Mug", MAX_EVENTS);
+    expect(searchMock.rankEvents).toHaveBeenCalledWith(
+      "Blue Mug",
+      MAX_EVENTS,
+      "[0.1,0.2]",
+    );
     expect(redisMock.getOrSet).toHaveBeenCalledWith(
       "suggest:blue mug",
       expect.any(Number),
@@ -100,6 +107,13 @@ describe("SuggestService", () => {
     // Rank order wins over the order the rows came back in.
     expect(result.pieces.map((piece) => piece.id)).toEqual([3, 1]);
     expect(result.pieces[0]?.image_url).toBe("https://cdn.test/3.jpg");
+  });
+
+  it("runs the term through the embedding model once for both rankings", async () => {
+    // The model is the expensive half of a suggestion and every keystroke can reach it.
+    await service.suggest("blue mug");
+
+    expect(searchMock.safeEmbed).toHaveBeenCalledTimes(1);
   });
 
   it("marks an archived piece so the panel can say where it is", async () => {

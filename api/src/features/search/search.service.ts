@@ -27,18 +27,27 @@ export class SearchService {
   ) {}
 
   // Keyword rank and semantic similarity are blended so exact names win and near-misses still surface.
-  async rankProducts(term: string, limit: number): Promise<number[]> {
-    const vector = await this.safeEmbed(term);
+  // A caller ranking two tables for one term passes the vector in rather than embedding twice.
+  async rankProducts(
+    term: string,
+    limit: number,
+    vector?: string | null,
+  ): Promise<number[]> {
+    const embedded = vector === undefined ? await this.safeEmbed(term) : vector;
     const rows = await this.prisma.$queryRaw<RankedRow[]>(
-      rankQuery("products", term, vector, limit),
+      rankQuery("products", term, embedded, limit),
     );
     return rows.map((row) => row.id);
   }
 
-  async rankEvents(term: string, limit: number): Promise<number[]> {
-    const vector = await this.safeEmbed(term);
+  async rankEvents(
+    term: string,
+    limit: number,
+    vector?: string | null,
+  ): Promise<number[]> {
+    const embedded = vector === undefined ? await this.safeEmbed(term) : vector;
     const rows = await this.prisma.$queryRaw<RankedRow[]>(
-      rankQuery("events", term, vector, limit),
+      rankQuery("events", term, embedded, limit),
     );
     return rows.map((row) => row.id);
   }
@@ -114,7 +123,7 @@ export class SearchService {
   }
 
   // Search must keep working on keywords alone if the model is unavailable.
-  private async safeEmbed(term: string): Promise<string | null> {
+  async safeEmbed(term: string): Promise<string | null> {
     try {
       return toVectorLiteral(await this.embeddings.embed(term));
     } catch (error) {

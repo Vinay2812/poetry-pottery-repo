@@ -1,6 +1,8 @@
 export const RECENT_SEARCH_KEY = "poetry.recent-searches";
 export const MAX_RECENT_SEARCHES = 5;
 export const MIN_SUGGEST_LENGTH = 2;
+// Long enough that a word typed at speed asks the API once, short enough to feel immediate.
+export const SUGGEST_DEBOUNCE_MS = 200;
 
 export function toSearchHref(term: string): string {
   return `/search?q=${encodeURIComponent(term.trim())}`;

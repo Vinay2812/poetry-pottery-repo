@@ -1,14 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  useCallback,
-  useDeferredValue,
-  useEffect,
-  useId,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useEffect, useId, useMemo, useState } from "react";
 
 import { useSuggestQuery } from "@/graphql/generated/graphql";
 import { formatDate, formatInr } from "@/lib/format";
@@ -17,6 +10,7 @@ import {
   SearchPanel,
   type SearchPanelEntry,
 } from "@/features/search/components/SearchPanel";
+import { useDebouncedTerm } from "@/features/search/hooks";
 import {
   addRecentSearch,
   MIN_SUGGEST_LENGTH,
@@ -52,8 +46,7 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
     parseRecentSearches(localStorage.getItem(RECENT_SEARCH_KEY)),
   );
 
-  // The field paints on every keystroke; suggestions follow this copy at a lower priority.
-  const term = useDeferredValue(value.trim());
+  const term = useDebouncedTerm(value);
   const isTermReady = term.length >= MIN_SUGGEST_LENGTH;
 
   // Escape closes from anywhere, not just from the field.

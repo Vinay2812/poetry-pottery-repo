@@ -40,10 +40,12 @@ export class SuggestService {
   }
 
   private async lookUp(term: string): Promise<Suggestions> {
-    // Pieces and evenings come off the same hybrid ranking the search page uses.
+    // Pieces and evenings come off the same hybrid ranking the search page uses, and off one
+    // trip through the embedding model: it is the expensive half of a suggestion.
+    const vector = await this.search.safeEmbed(term);
     const [pieceIds, eventIds] = await Promise.all([
-      this.search.rankProducts(term, MAX_PIECES),
-      this.search.rankEvents(term, MAX_EVENTS),
+      this.search.rankProducts(term, MAX_PIECES, vector),
+      this.search.rankEvents(term, MAX_EVENTS, vector),
     ]);
     const [pieces, events, workshops] = await Promise.all([
       pieceIds.length > 0
