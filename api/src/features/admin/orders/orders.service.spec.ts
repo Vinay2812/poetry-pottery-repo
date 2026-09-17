@@ -31,6 +31,7 @@ const row = {
   cancelled_at: null,
   refunded_at: null,
   user: { id: 7, name: "Maya", email: "maya@example.com", image: null },
+  notes: [],
 };
 
 const prismaMock = {
@@ -97,6 +98,9 @@ describe("AdminOrdersService", () => {
             is_active: true,
             categories: [],
             collection: null,
+            height_cm: null,
+            diameter_cm: null,
+            care_notes: [],
           },
           product_name: "Chai cup, speckled",
           product_image: null,

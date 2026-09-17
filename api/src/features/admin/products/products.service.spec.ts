@@ -23,6 +23,8 @@ const row = {
   image_urls: ["https://cdn.example.com/products/one.png"],
   categories: [],
   collection: null,
+  height_cm: null,
+  diameter_cm: null,
 };
 
 const prismaMock = {
