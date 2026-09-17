@@ -23,6 +23,7 @@ function makeVisit(): StudioVisit {
     name: "Maya",
     phone: "9123456789",
     note: null,
+    cancelled_at: null,
   };
 }
 

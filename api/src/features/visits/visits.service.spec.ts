@@ -28,7 +28,7 @@ const prismaMock = {
     update: vi.fn(),
   },
 };
-const mailMock = { enqueue: vi.fn() };
+const mailMock = { enqueue: vi.fn<MailService["enqueue"]>() };
 
 const NOW = new Date("2026-09-17T03:30:00.000Z");
 const STUDIO = {
@@ -260,7 +260,7 @@ describe("VisitsService", () => {
 
       expect(
         mailMock.enqueue.mock.calls.every(
-          ([message]: [{ to: string }]) => message.to !== "maya@example.com",
+          ([message]) => message.to !== "maya@example.com",
         ),
       ).toBe(true);
     });

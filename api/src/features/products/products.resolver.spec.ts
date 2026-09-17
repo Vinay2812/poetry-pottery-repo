@@ -67,6 +67,7 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     is_customizable: false,
     is_second: false,
     flaw_note: null,
+    is_commission: false,
     sales_count: 0,
     rating_avg: 0,
     rating_count: 0,

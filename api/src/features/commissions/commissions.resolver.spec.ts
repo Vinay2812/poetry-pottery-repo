@@ -1,5 +1,6 @@
 import { GUARDS_METADATA } from "@nestjs/common/constants";
 import { Test } from "@nestjs/testing";
+import { CommissionStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { AdminGuard } from "@/common/guards/admin.guard";
@@ -39,6 +40,7 @@ function makeRequest(
     phone: null,
     reference_image_urls: [],
     is_read: false,
+    status: CommissionStatus.NEW,
     created_at: new Date("2026-09-17T00:00:00.000Z"),
     ...overrides,
   };
