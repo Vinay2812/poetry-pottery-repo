@@ -60,6 +60,14 @@ docker compose -f infra/docker/docker-compose.api.yml ps
 docker compose -f infra/docker/docker-compose.api.yml logs -f api
 docker compose -f infra/docker/docker-compose.api.yml run --rm migrate            # migrations
 docker compose -f infra/docker/docker-compose.api.yml run --rm migrate pnpm db:seed
+docker compose -f infra/docker/docker-compose.api.yml run --rm migrate pnpm search:reindex   # after an import or restore
+```
+
+To see whether the search index is complete, count the pieces and evenings still missing an embedding (zero means indexed):
+
+```bash
+docker compose -f infra/docker/docker-compose.api.yml exec postgres \
+  psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "select (select count(*) from products where embedding is null) as products_missing, (select count(*) from events where embedding is null) as events_missing;"
 ```
 
 `docker-compose.db.yml` alone starts only the three data services for local development (host ports 5433, 6381, 5672).
