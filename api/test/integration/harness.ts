@@ -25,6 +25,7 @@ import {
 } from "@/prisma/prisma.service";
 import { QueueService } from "@/queue/queue.service";
 import { RedisService } from "@/redis/redis.service";
+import { PendingUploadsService } from "@/storage/pending-uploads.service";
 import { StorageService } from "@/storage/storage.service";
 
 class RedisStub {
@@ -81,6 +82,28 @@ class SearchStub {
   }
 }
 
+// Redis is outside the sandbox, so the tracker is stubbed and a test reads what it was told to keep.
+export class PendingUploadsRecorder {
+  readonly kept: { userId: number; urls: readonly string[] }[] = [];
+
+  track(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  keep(userId: number, urls: readonly string[]): Promise<void> {
+    this.kept.push({ userId, urls });
+    return Promise.resolve();
+  }
+
+  sweep(): Promise<number> {
+    return Promise.resolve(0);
+  }
+
+  reset(): void {
+    this.kept.length = 0;
+  }
+}
+
 // No broker in the sandbox, so a test reads the jobs a service meant to publish.
 export class QueueRecorder {
   readonly published: { job: string; payload: unknown }[] = [];
@@ -120,6 +143,8 @@ export interface HarnessOptions {
   mail?: MailRecorder;
   // Pass one when the test needs to read the jobs a service published.
   queue?: QueueRecorder;
+  // Pass one when the test needs to see which reference photos were kept.
+  uploads?: PendingUploadsRecorder;
 }
 
 // Real services and a real PrismaService against the sandbox database; only the outside world is stubbed.
@@ -138,6 +163,10 @@ export async function createHarness(
       { provide: SearchService, useClass: SearchStub },
       { provide: StorageService, useClass: StorageStub },
       { provide: QueueService, useValue: options.queue ?? new QueueRecorder() },
+      {
+        provide: PendingUploadsService,
+        useValue: options.uploads ?? new PendingUploadsRecorder(),
+      },
       SettingsService,
       NotificationsService,
       CartService,

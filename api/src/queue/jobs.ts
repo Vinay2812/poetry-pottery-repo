@@ -16,6 +16,8 @@ export const jobSchemas = {
     html: z.string().min(1),
     text: z.string().optional(),
   }),
+  // A reference photo nobody kept: uploaded, then abandoned before it reached a cart or a brief.
+  "storage.delete-object": z.object({ key: z.string().min(1) }),
 } as const;
 
 export type JobName = keyof typeof jobSchemas;

@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { env } from "@/config/env";
 import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
+import { PendingUploadsService } from "@/storage/pending-uploads.service";
 import { StorageService } from "@/storage/storage.service";
 import { CommissionsService } from "./commissions.service";
 import type { CommissionRequestInput } from "./commissions.type";
@@ -29,6 +30,7 @@ const mailMock = { enqueue: vi.fn() };
 const storageMock = {
   isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.studio/")),
 };
+const pendingUploadsMock = { keep: vi.fn(), track: vi.fn(), sweep: vi.fn() };
 
 const row = {
   id: "abc123def456",
@@ -72,6 +74,7 @@ describe("CommissionsService", () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: MailService, useValue: mailMock },
         { provide: StorageService, useValue: storageMock },
+        { provide: PendingUploadsService, useValue: pendingUploadsMock },
       ],
     }).compile();
     service = moduleRef.get(CommissionsService);
@@ -93,6 +96,27 @@ describe("CommissionsService", () => {
     expect(mailMock.enqueue).toHaveBeenCalledWith(
       containing({ to: "maya@example.com" }),
     );
+  });
+
+  it("stops sweeping the photos a signed-in brief kept", async () => {
+    prismaMock.commissionRequest.create.mockResolvedValue(row);
+
+    await service.create(
+      input({ reference_image_urls: ["https://cdn.studio/1.jpg"] }),
+      7,
+    );
+
+    expect(pendingUploadsMock.keep).toHaveBeenCalledWith(7, [
+      "https://cdn.studio/1.jpg",
+    ]);
+  });
+
+  it("has nothing to untrack for a brief sent by a stranger", async () => {
+    prismaMock.commissionRequest.create.mockResolvedValue(row);
+
+    await service.create(input(), null);
+
+    expect(pendingUploadsMock.keep).not.toHaveBeenCalled();
   });
 
   it("tells the studio about a new brief when an address is configured", async () => {

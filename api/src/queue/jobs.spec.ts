@@ -86,12 +86,30 @@ describe("mail send job payload", () => {
   });
 });
 
+describe("delete object job payload", () => {
+  it("accepts a non-empty key and nothing else", () => {
+    expect(
+      jobSchemas["storage.delete-object"].parse({
+        key: "customization/7/a.jpg",
+      }),
+    ).toEqual({ key: "customization/7/a.jpg" });
+    expect(() =>
+      jobSchemas["storage.delete-object"].parse({ key: "" }),
+    ).toThrow();
+    expect(() => jobSchemas["storage.delete-object"].parse({})).toThrow();
+    expect(() =>
+      jobSchemas["storage.delete-object"].parse({ key: 42 }),
+    ).toThrow();
+  });
+});
+
 describe("queue topology", () => {
   const jobNames: JobName[] = [
     "search.index-product",
     "search.index-event",
     "notify.back-in-stock",
     "mail.send",
+    "storage.delete-object",
   ];
 
   it("names one durable queue per job under the topic exchange", () => {
@@ -101,6 +119,7 @@ describe("queue topology", () => {
       "poetry.search.index-event",
       "poetry.notify.back-in-stock",
       "poetry.mail.send",
+      "poetry.storage.delete-object",
     ]);
   });
 

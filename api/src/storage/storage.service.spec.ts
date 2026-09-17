@@ -1,4 +1,8 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { BadRequestException } from "@nestjs/common";
 import {
@@ -20,9 +24,14 @@ import {
   type UploadFolder,
 } from "./storage.service";
 
+const { sendMock } = vi.hoisted(() => ({ sendMock: vi.fn() }));
+
 vi.mock("@aws-sdk/client-s3", () => ({
-  S3Client: vi.fn(),
+  S3Client: vi.fn(function (this: { send: typeof sendMock }) {
+    this.send = sendMock;
+  }),
   PutObjectCommand: vi.fn(),
+  DeleteObjectCommand: vi.fn(),
 }));
 
 vi.mock("@aws-sdk/s3-request-presigner", () => ({ getSignedUrl: vi.fn() }));
@@ -46,6 +55,7 @@ vi.mock("@/config/env", async () => {
 
 const clientMock = vi.mocked(S3Client);
 const commandMock = vi.mocked(PutObjectCommand);
+const deleteCommandMock = vi.mocked(DeleteObjectCommand);
 const presign = vi.mocked(getSignedUrl);
 
 const SIGNED_URL = "https://acc-1.r2.cloudflarestorage.com/poetry-media/signed";
@@ -256,5 +266,39 @@ describe("StorageService", () => {
 
   it("reports itself enabled once every R2 value is present", () => {
     expect(new StorageService().isEnabled).toBe(true);
+  });
+
+  it("reads the object key back out of its own public url", () => {
+    const service = new StorageService();
+
+    expect(
+      service.keyFor("https://media.poetry.test/customization/7/a.jpg"),
+    ).toBe("customization/7/a.jpg");
+    expect(service.keyFor("https://media.poetry.test/")).toBeNull();
+    expect(
+      service.keyFor("https://evil.test/customization/7/a.jpg"),
+    ).toBeNull();
+  });
+
+  it("deletes an object from the configured bucket", async () => {
+    const service = new StorageService();
+
+    await service.deleteObject("customization/7/a.jpg");
+
+    expect(deleteCommandMock).toHaveBeenCalledWith({
+      Bucket: "poetry-media",
+      Key: "customization/7/a.jpg",
+    });
+    expect(sendMock).toHaveBeenCalledWith(expect.any(DeleteObjectCommand));
+  });
+
+  it("has nothing to delete when R2 is not configured", async () => {
+    env.R2_BUCKET = undefined;
+    const service = new StorageService();
+
+    await expect(
+      service.deleteObject("customization/7/a.jpg"),
+    ).resolves.toBeUndefined();
+    expect(deleteCommandMock).not.toHaveBeenCalled();
   });
 });

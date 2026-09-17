@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { SettingsService } from "@/features/settings/settings.service";
+import { PendingUploadsService } from "@/storage/pending-uploads.service";
 import { StorageService } from "@/storage/storage.service";
 import {
   CartService,
@@ -33,6 +34,8 @@ const prismaMock = {
 const storageMock = {
   isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.test/")),
 };
+
+const pendingUploadsMock = { keep: vi.fn(), track: vi.fn(), sweep: vi.fn() };
 
 const settingsMock = {
   get: vi
@@ -188,6 +191,7 @@ describe("CartService", () => {
         { provide: PrismaService, useValue: prismaMock },
         { provide: SettingsService, useValue: settingsMock },
         { provide: StorageService, useValue: storageMock },
+        { provide: PendingUploadsService, useValue: pendingUploadsMock },
       ],
     }).compile();
     service = moduleRef.get(CartService);
@@ -244,6 +248,11 @@ describe("CartService", () => {
         }),
       }),
     );
+
+    // The photo is on a line now, so the sweeper must stop counting it as abandoned.
+    expect(pendingUploadsMock.keep).toHaveBeenCalledWith(1, [
+      "https://cdn.test/customization/1/a.jpg",
+    ]);
 
     await expect(
       service.add(1, {

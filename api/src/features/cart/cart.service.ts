@@ -12,6 +12,7 @@ import {
   toProduct,
 } from "@/features/products/products.service";
 import { SettingsService } from "@/features/settings/settings.service";
+import { PendingUploadsService } from "@/storage/pending-uploads.service";
 import { StorageService } from "@/storage/storage.service";
 import type { AddToCartInput, Cart, CartItem } from "./cart.type";
 import {
@@ -88,6 +89,7 @@ export class CartService {
     private readonly prisma: PrismaService,
     private readonly settings: SettingsService,
     private readonly storage: StorageService,
+    private readonly pendingUploads: PendingUploadsService,
   ) {}
 
   async get(userId: number): Promise<Cart> {
@@ -190,6 +192,8 @@ export class CartService {
       });
     });
 
+    // The photos are on a cart line now, so they are no longer waiting to be swept.
+    await this.pendingUploads.keep(userId, referenceImages);
     return this.get(userId);
   }
 

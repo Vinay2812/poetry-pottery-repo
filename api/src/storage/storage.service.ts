@@ -1,6 +1,10 @@
 import { randomBytes } from "node:crypto";
 
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { BadRequestException, Injectable } from "@nestjs/common";
 
@@ -85,6 +89,19 @@ export class StorageService {
   // User-supplied image URLs are only accepted when they point at our own bucket.
   isOwnUrl(url: string): boolean {
     return this.config !== null && url.startsWith(`${this.config.publicUrl}/`);
+  }
+
+  // The object key behind one of our own public urls, or null for anyone else's.
+  keyFor(url: string): string | null {
+    if (!this.config || !this.isOwnUrl(url)) return null;
+    return url.slice(this.config.publicUrl.length + 1) || null;
+  }
+
+  async deleteObject(key: string): Promise<void> {
+    if (!this.client || !this.config) return;
+    await this.client.send(
+      new DeleteObjectCommand({ Bucket: this.config.bucket, Key: key }),
+    );
   }
 
   async createImageUpload(input: {

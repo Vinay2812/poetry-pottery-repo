@@ -9,6 +9,7 @@ import {
   commissionStudioMail,
 } from "@/mail/templates/commissions";
 import { PrismaService } from "@/prisma/prisma.service";
+import { PendingUploadsService } from "@/storage/pending-uploads.service";
 import { StorageService } from "@/storage/storage.service";
 import { normalisePhone } from "@/features/addresses/address-validation";
 import { type Product } from "@/features/products/products.type";
@@ -113,6 +114,7 @@ export class CommissionsService {
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
     private readonly storage: StorageService,
+    private readonly pendingUploads: PendingUploadsService,
   ) {}
 
   // The form never invents a size or a glaze; it offers the glazes the studio fires and the
@@ -183,6 +185,11 @@ export class CommissionsService {
     const request = await this.prisma.commissionRequest.create({
       data: { ...fields, user_id: userId },
     });
+
+    // The brief keeps its photos, so they are no longer waiting to be swept.
+    if (userId !== null) {
+      await this.pendingUploads.keep(userId, fields.reference_image_urls);
+    }
 
     if (env.BUSINESS_EMAIL) {
       await this.mail.enqueue({
