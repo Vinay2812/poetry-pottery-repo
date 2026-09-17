@@ -96,11 +96,13 @@ export default async function HomePage() {
         </div>
       )}
 
+      {/* With nothing on the calendar the teaser carries the only link, so the
+          heading row does not offer a second way to the same page. */}
       <HomeSection
         title="At the studio"
         note="Wheel sessions run every afternoon except Monday. Book an hour or three."
-        linkHref={upcomingEvents.length > 0 ? "/events" : "/workshops"}
-        linkLabel={upcomingEvents.length > 0 ? "All dates" : "Open studio"}
+        linkHref={upcomingEvents.length > 0 ? "/events" : undefined}
+        linkLabel={upcomingEvents.length > 0 ? "All dates" : undefined}
       >
         {upcomingEvents.length > 0 ? (
           <div className="border-t border-ash">

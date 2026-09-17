@@ -35,8 +35,6 @@ export function ProductCarousel({
   });
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [snapCount, setSnapCount] = useState(1);
   // Held in a ref so a motion preference change never forces a re-render mid-drag.
   const isReducedMotion = useRef(false);
 
@@ -55,13 +53,11 @@ export function ProductCarousel({
     const update = () => {
       setCanPrev(embla.canScrollPrev());
       setCanNext(embla.canScrollNext());
-      setSnapCount(Math.max(1, embla.scrollSnapList().length));
-      setProgress(Math.min(1, Math.max(0, embla.scrollProgress())));
     };
     update();
-    embla.on("select", update).on("reInit", update).on("scroll", update);
+    embla.on("select", update).on("reInit", update);
     return () => {
-      embla.off("select", update).off("reInit", update).off("scroll", update);
+      embla.off("select", update).off("reInit", update);
     };
   }, [embla]);
 
@@ -74,8 +70,6 @@ export function ProductCarousel({
     () => embla?.scrollNext(isReducedMotion.current),
     [embla],
   );
-
-  const thumbWidth = 100 / snapCount;
 
   return (
     <section className="flex flex-col gap-6">
@@ -122,34 +116,21 @@ export function ProductCarousel({
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
-        <div
-          ref={emblaRef}
-          className="-mx-4 overflow-hidden px-4 md:mx-0 md:px-0"
-        >
-          <div className="flex gap-2">
-            {Children.map(children, (child, index) => (
-              <div
-                style={toRevealDelay(index + 1)}
-                className="reveal-item min-w-0 flex-[0_0_calc(45.45%-0.28rem)] sm:flex-[0_0_calc(33.333%-0.34rem)] lg:flex-[0_0_calc(25%-0.375rem)]"
-              >
-                {child}
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* The rule under a row is ash like every other divider; it only carries
-            a darker thumb while there is somewhere left to scroll. */}
-        <div className="h-px w-full bg-ash" aria-hidden="true">
-          {snapCount > 1 && (
+      {/* Cards sit as far apart as they do on the shop grid, so a price never lands
+          beside the next card's name. The arrows and the peeking card say it scrolls. */}
+      <div
+        ref={emblaRef}
+        className="-mx-4 overflow-hidden px-4 md:mx-0 md:px-0"
+      >
+        <div className="flex gap-3 md:gap-6">
+          {Children.map(children, (child, index) => (
             <div
-              className="h-px bg-smoke"
-              style={{
-                width: `${thumbWidth}%`,
-                marginLeft: `${progress * (100 - thumbWidth)}%`,
-              }}
-            />
-          )}
+              style={toRevealDelay(index + 1)}
+              className="reveal-item min-w-0 flex-[0_0_calc(45.45%-0.41rem)] sm:flex-[0_0_calc(33.333%-0.5rem)] md:flex-[0_0_calc(33.333%-1rem)] lg:flex-[0_0_calc(25%-1.125rem)]"
+            >
+              {child}
+            </div>
+          ))}
         </div>
       </div>
     </section>

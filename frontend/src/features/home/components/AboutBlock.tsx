@@ -11,7 +11,7 @@ export interface AboutBlockProps {
 }
 
 // Two lines and a link do not need a full-bleed photograph above them: the
-// landscape frame sits beside the copy and the block ends where the copy does.
+// landscape frame sits beside the copy, and the copy sits level with it.
 export function AboutBlock({
   imageUrl,
   firstLine,
@@ -19,7 +19,7 @@ export function AboutBlock({
   href,
 }: AboutBlockProps) {
   return (
-    <div className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-start md:gap-12">
+    <div className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-center md:gap-12">
       <div className="relative aspect-16/9 overflow-hidden bg-white">
         {imageUrl ? (
           <Image
