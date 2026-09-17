@@ -148,19 +148,24 @@ export async function getCommissionPieces(
 }
 
 // The 404 offers these as a way back, so a failed lookup returns nothing rather
-// than turning a missing page into an error page.
+// than turning a missing page into an error page. errorPolicy only covers GraphQL
+// errors, so an API that is down has to be caught as well.
 export async function getArchiveProducts(
   limit = 4,
 ): Promise<ProductsQuery["products"]["items"]> {
-  const { data } = await getClient().query<
-    ProductsQuery,
-    ProductsQueryVariables
-  >({
-    query: ProductsDocument,
-    variables: { filter: { archive: true, limit } },
-    errorPolicy: "all",
-  });
-  return data?.products.items ?? [];
+  try {
+    const { data } = await getClient().query<
+      ProductsQuery,
+      ProductsQueryVariables
+    >({
+      query: ProductsDocument,
+      variables: { filter: { archive: true, limit } },
+      errorPolicy: "all",
+    });
+    return data?.products.items ?? [];
+  } catch {
+    return [];
+  }
 }
 
 // Only a real not-found becomes a 404; any other failure surfaces as an error page.
