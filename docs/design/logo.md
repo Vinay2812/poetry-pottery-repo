@@ -3,22 +3,37 @@
 ## What the mark is
 
 A two-line serif wordmark. "Poetry" sits on the first line, "&Pottery" on the second with the
-ampersand leading and kerned into the P. Inside the "o" of Poetry the counter is replaced by a
-single-stroke spiral of two turns: a coil of clay seen from above, or a thumbprint left in a wet
-wall. It is the only drawn element in the mark and the only place the studio's hand shows.
+ampersand leading and kerned into the P. The "o" of Poetry is not the font's "o": it is a round
+bowl drawn for this logo, and inside it sits a single-stroke spiral of two turns ending in a
+pressed dot — a coil of clay seen from above, or a thumbprint left in a wet wall. It is the only
+drawn element in the mark and the only place the studio's hand shows.
 
-The spiral is a true spiral, not a decoration dropped in. Its radii are taken from the counter of
-the "o" itself, so it is the same tall oval the letterform already is; it starts at the top of the
-bowl at the counter wall and winds inward, clockwise, ending just off centre. It is stroked at 20
-units on a 1000-unit em, which is exactly the weight of the hairline top and bottom of DM Serif
-Display's "o", with round caps. At any size the coil therefore reads as the same weight as the
-thin strokes around it, and it thickens and thins with the wordmark as one drawing.
+## The round "o"
+
+DM Serif Display's "o" is a high-contrast Didone: 497 units wide with a counter only 193 wide, far
+too narrow to hold a coil. The logo's "o" widens that same outline to **560 × 511** units on a
+1000-unit em, and widens its counter further, to **300 × 471**. Both contours are scaled about the
+one axis, so the Didone curvature, the overshoots above the x-height and below the baseline, and
+the 20-unit hairline top and bottom all survive untouched; only the width changes. The stems come
+out at 130 units, keeping the vertical stress and the thick/thin axis of every letter beside it.
+Sidebearings drop to 16 units and "P o e" closes up by 10 more on each side, because a rounder
+bowl carries more optical weight than the one it replaced.
+
+## The spiral
+
+A true spiral, not a decoration dropped in. It is centred in the new counter, starts at the top,
+winds inward clockwise for two turns, and finishes in a round dot of 20 units radius at the dead
+centre — the coil pressed down with a thumb. Its radii come from the counter but are pulled back
+towards a circle, so the two turns sit evenly instead of stretching with the bowl. It is stroked
+at 20 units, exactly the weight of the hairline top and bottom of the "o" around it, with round
+caps. At any size the coil therefore reads as the same weight as the thin strokes beside it, and
+it thickens and thins with the wordmark as one drawing.
 
 ## Letterforms
 
-DM Serif Display Regular, the site's display face, converted to outlines with `opentype.js`. The
-published files contain no text elements and no font references, so they render identically
-everywhere.
+Every other letter is DM Serif Display Regular, the site's display face, converted to outlines
+with `opentype.js`; the round "o" is derived from the same outline. The published files contain no
+text elements and no font references, so they render identically everywhere.
 
 **Licence:** SIL Open Font License 1.1. DM Serif Display is by Colophon Foundry, derived from
 Source Serif — "Copyright 2014-2018 Adobe (http://www.adobe.com/), with Reserved Font Name
@@ -41,8 +56,8 @@ photograph behind a solid clay-white or ink panel first.
 
 ## Clear space
 
-One "o" width on every side — measure the width of the spiral "o" in whatever size the lockup is
-set at and keep that much empty on all four sides. Nothing crosses it: no rule, no nav link, no
+One "o" width on every side — measure the width of the round spiral "o" in whatever size the
+lockup is set at (0.61 of the lockup's height, inline) and keep that much empty on all four sides. Nothing crosses it: no rule, no nav link, no
 image edge. The header already satisfies this with its 20px gap to the vertical rule.
 
 ## Minimum sizes
@@ -51,14 +66,15 @@ image edge. The header already satisfies this with its 20px gap to the vertical 
 | ---------------- | ------------------------ | ------------------------------------------------- |
 | Inline wordmark  | 16 px tall (130 px wide) | the header uses 18 px mobile, 22 px desktop       |
 | Stacked wordmark | 32 px tall (65 px wide)  | below this the two lines close up                 |
-| Mark alone       | 24 px square             | 16 px works as a favicon, where the OS softens it |
+| Mark alone       | 20 px square             | 16 px works as a favicon, where the OS softens it |
 
 Below the minimum the second turn of the spiral closes and the mark reads as a blob. Prefer the
 mark over a shrunken wordmark whenever the space is under 130 px wide.
 
 ## Do not
 
-- Do not retype the wordmark in a live font — the spiral only exists in these files.
+- Do not retype the wordmark in a live font — the round "o" and its spiral only exist in these
+  files, and DM Serif Display's own "o" will not stand in for them.
 - Do not change the line break: it is always "Poetry" over "&Pottery", never "Poetry &" over
   "Pottery".
 - Do not set the two lines flush left; the short line is optically centred over the long one.
