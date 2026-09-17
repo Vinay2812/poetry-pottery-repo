@@ -1,3 +1,5 @@
+import { toPhoneHref } from "@/lib/format";
+
 export interface ContactDetailsProps {
   address: string;
   openingHours: string;
@@ -34,6 +36,8 @@ export function ContactDetails({
   instagramUrl,
   facebookUrl,
 }: ContactDetailsProps) {
+  const phoneHref = toPhoneHref(contactPhone);
+
   return (
     <div className="flex flex-col">
       <DetailRow label="Studio">
@@ -45,12 +49,14 @@ export function ContactDetails({
         <p className="text-[15px] leading-relaxed">{openingHours}</p>
       </DetailRow>
       <DetailRow label="Talk to us">
-        <a
-          href={`tel:${contactPhone}`}
-          className="text-[15px] underline-offset-4 hover:underline"
-        >
-          {contactPhone}
-        </a>
+        {phoneHref && (
+          <a
+            href={phoneHref}
+            className="text-[15px] underline-offset-4 hover:underline"
+          >
+            {contactPhone}
+          </a>
+        )}
         <a
           href={`mailto:${contactEmail}`}
           className="text-[15px] underline-offset-4 hover:underline"

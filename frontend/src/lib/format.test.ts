@@ -6,6 +6,7 @@ import {
   formatInr,
   formatTime,
   pluralize,
+  toPhoneHref,
 } from "./format";
 
 describe("formatInr", () => {
@@ -41,5 +42,16 @@ describe("dates", () => {
     expect(formatDate(new Date("2026-10-03T09:30:00.000Z"))).toBe(
       "Sat, 3 Oct, 2026",
     );
+  });
+});
+
+describe("toPhoneHref", () => {
+  it("dials the number the studio put on file", () => {
+    expect(toPhoneHref("+91 91234 56789")).toBe("tel:+91 91234 56789");
+  });
+
+  it("has nothing to offer when no number is configured", () => {
+    expect(toPhoneHref("")).toBeNull();
+    expect(toPhoneHref("   ")).toBeNull();
   });
 });

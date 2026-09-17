@@ -6,6 +6,7 @@ import {
   YoutubeIcon,
 } from "@/components/icons/social";
 import { PageShell } from "@/components/layout/PageShell";
+import { toPhoneHref } from "@/lib/format";
 
 import { Wordmark } from "@/features/layout/components/Wordmark";
 import type { NavLink } from "@/features/layout/types";
@@ -68,6 +69,7 @@ export function SiteFooter({
     { href: facebookUrl, label: "Facebook", Icon: FacebookIcon },
     { href: youtubeUrl, label: "YouTube", Icon: YoutubeIcon },
   ].filter((social) => social.href.length > 0);
+  const phoneHref = toPhoneHref(contactPhone);
 
   return (
     <footer className="mt-20 border-t border-ash bg-background pb-20 lg:pb-0">
@@ -86,9 +88,11 @@ export function SiteFooter({
               <a href={`mailto:${contactEmail}`} className="link-underline">
                 {contactEmail}
               </a>
-              <a href={`tel:${contactPhone}`} className="link-underline">
-                {contactPhone}
-              </a>
+              {phoneHref && (
+                <a href={phoneHref} className="link-underline">
+                  {contactPhone}
+                </a>
+              )}
               {whatsappUrl && (
                 <a
                   href={whatsappUrl}

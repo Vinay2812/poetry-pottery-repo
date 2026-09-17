@@ -41,6 +41,11 @@ export const OnArchive: Story = {
   args: { activeHref: "/products?view=archive" },
 };
 
+// A fresh install has no number on file, and an empty tel: link is a link with no name.
+export const NoContactNumber: Story = {
+  args: { contactPhone: "", whatsappUrl: null },
+};
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };

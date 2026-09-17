@@ -12,6 +12,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { toPhoneHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import type { NavLink } from "@/features/layout/types";
@@ -52,6 +53,7 @@ export function MobileMenuSheet({
   // The sheet is opened from the header, not a Radix trigger, so it has to remember
   // the button itself or closing drops focus on the body.
   const openerRef = useRef<HTMLElement | null>(null);
+  const phoneHref = toPhoneHref(contactPhone);
 
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
@@ -154,9 +156,11 @@ export function MobileMenuSheet({
             </Button>
           )}
           <div className="flex flex-col gap-1.5 text-[13px]">
-            <a href={`tel:${contactPhone}`} className="w-fit link-underline">
-              {contactPhone}
-            </a>
+            {phoneHref && (
+              <a href={phoneHref} className="w-fit link-underline">
+                {contactPhone}
+              </a>
+            )}
             {whatsappUrl && (
               <a
                 href={whatsappUrl}

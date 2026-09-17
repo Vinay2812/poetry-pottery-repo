@@ -41,3 +41,9 @@ export function formatTime(value: string | Date): string {
 export function formatDateTime(value: string | Date): string {
   return `${formatDate(value)}, ${formatTime(value)}`;
 }
+
+// A studio with no number on file would otherwise render a link with no text and nowhere to go.
+export function toPhoneHref(phone: string): string | null {
+  const trimmed = phone.trim();
+  return trimmed.length > 0 ? `tel:${trimmed}` : null;
+}
