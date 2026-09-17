@@ -378,7 +378,7 @@ export function ProductDetailContainer({
           {canWatchPiece(
             product.stock,
             product.is_customizable,
-            isArchived,
+            product.is_active,
           ) && (
             <div className="mt-6">
               <NextBatchContainer productId={product.id} />

@@ -21,12 +21,11 @@ export function applyNotifyResult(
   return next;
 }
 
-// The form only offers itself for a piece nobody can buy right now.
+// Only a listed piece can come back, so a retired one is never offered the form the API refuses.
 export function canWatchPiece(
   stock: number,
   isCustomizable: boolean,
-  isArchived: boolean,
+  isActive: boolean,
 ): boolean {
-  if (isArchived) return true;
-  return !isCustomizable && stock <= 0;
+  return isActive && !isCustomizable && stock <= 0;
 }

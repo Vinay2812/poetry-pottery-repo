@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 
 import { MailService } from "@/mail/mail.service";
 import { backInStockMail } from "@/mail/templates/notifications";
@@ -25,10 +29,14 @@ export class NotificationsService {
     const email = parseEmail(rawEmail);
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
-      select: { id: true, is_active: true },
+      select: { id: true, is_active: true, is_customizable: true },
     });
     if (!product?.is_active) {
       throw new NotFoundException("That piece is no longer listed");
+    }
+    // A piece thrown to order never has a next batch to wait for.
+    if (product.is_customizable) {
+      throw new BadRequestException("That piece is made to order");
     }
     const existing = await this.prisma.batchNotification.findUnique({
       where: { email_product_id: { email, product_id: product.id } },

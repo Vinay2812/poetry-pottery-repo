@@ -112,6 +112,30 @@ describe("next-batch notifications", () => {
     expect(queue.productIdsFor("notify.back-in-stock")).toEqual([]);
   });
 
+  it("refuses a piece the studio has taken down", async () => {
+    const piece = await makeProduct(harness.prisma, {
+      stock: 0,
+      is_active: false,
+    });
+
+    await expect(
+      harness.notifications.watch(piece.id, ADDRESS, null),
+    ).rejects.toThrow("That piece is no longer listed");
+    expect(await harness.prisma.batchNotification.count()).toBe(0);
+  });
+
+  it("refuses a piece that is thrown to order", async () => {
+    const piece = await makeProduct(harness.prisma, {
+      stock: 0,
+      is_customizable: true,
+    });
+
+    await expect(
+      harness.notifications.watch(piece.id, ADDRESS, null),
+    ).rejects.toThrow("That piece is made to order");
+    expect(await harness.prisma.batchNotification.count()).toBe(0);
+  });
+
   it("spends the stop link once", async () => {
     const piece = await makeProduct(harness.prisma, { stock: 0 });
     await harness.notifications.watch(piece.id, ADDRESS, null);
