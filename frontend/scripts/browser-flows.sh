@@ -153,6 +153,24 @@ click_matching() {
   settle
 }
 
+# A select keeps its options in a portal as role=option elements, which the
+# button-and-link helper above cannot see, so the list is opened and its first
+# entry taken. The entries are catalogue data, so none of them can be named here.
+pick_first_option() {
+  local trigger="$1" what="$2"
+  if ! ab click "$trigger" >/dev/null 2>&1; then
+    fail "$what"
+    return 1
+  fi
+  settle 900
+  if ! ab find first '[role=option]' click >/dev/null 2>&1; then
+    fail "$what"
+    return 1
+  fi
+  pass "$what"
+  settle
+}
+
 count_matching() {
   local counted
   counted="$(ab eval "(() => {
@@ -497,6 +515,86 @@ flow_workshops() {
   end_flow
 }
 
+flow_seconds() {
+  start_flow seconds
+  goto "/products"
+  expect_text "Seconds" "the shelf lists the seconds filter"
+  act "turn the seconds shelf on" click "#filter-seconds" || {
+    end_flow
+    return
+  }
+  settle 2500
+  expect_url "seconds=1"
+  shot "seconds-on"
+
+  if ab read 2>/dev/null | grep -qiF "Nothing matches these filters"; then
+    note "the kiln has marked nothing on this instance; skipping the piece"
+    end_flow
+    return
+  fi
+  expect_text "Second" "a marked piece says so on its card"
+  # Card labels are catalogue names, so the first card in the grid is taken.
+  act "open the marked piece" find first '.reveal-item a[href^="/products/"]' click || {
+    end_flow
+    return
+  }
+  settle 3000
+  expect_url "/products/"
+  expect_text "What is different about this one" "the piece owns up to its flaw"
+  shot "seconds-piece"
+  end_flow
+}
+
+flow_visit() {
+  start_flow visit
+  goto "/contact"
+  expect_text "Pick a half hour in the next fortnight" "the visit picker renders"
+  if ab read 2>/dev/null | grep -qiF "Nothing free in the next fortnight"; then
+    pass "the empty state explains there is nothing free to book"
+    end_flow
+    return
+  fi
+  # Window labels are clock times, so the windows group is the stable handle.
+  act "pick a half hour at the studio" find first '[role=group][aria-label^="Half-hour windows"] button' click || {
+    end_flow
+    return
+  }
+  settle 1200
+  expect_text "You are coming by" "the form repeats the window picked"
+  act "give a name" fill "#visit-name" "Flow Check"
+  ab fill "#visit-phone" "9876543210" >/dev/null 2>&1
+  act "book the visit" find role button click --name "Book the visit"
+  settle 4000
+  expect_text "Come to the gate and ring the bell" "the studio confirms the visit"
+  shot "visit-booked"
+  end_flow
+}
+
+flow_commission() {
+  start_flow commission
+  goto "/custom"
+  expect_text "Commission a piece" "the commission page renders"
+  expect_text "Send us the brief" "the brief form renders"
+  act "say what to make" fill "#commission-piece" "A chai mug with a wide belly"
+  pick_first_option "#commission-size" "pick a size the studio throws" || {
+    end_flow
+    return
+  }
+  pick_first_option "#commission-glaze" "pick a glaze the studio fires" || {
+    end_flow
+    return
+  }
+  ab fill "#commission-words" "for Aai" >/dev/null 2>&1
+  ab fill "#commission-name" "Flow Check" >/dev/null 2>&1
+  ab fill "#commission-email" "flows+$(date +%s)@example.test" >/dev/null 2>&1
+  act "send the brief" find role button click --name "Send the brief"
+  settle 4000
+  expect_text "Your brief is with us" "the studio takes the brief"
+  expect_text "Reference" "the brief comes back with a reference to quote"
+  shot "commission-sent"
+  end_flow
+}
+
 flow_contact() {
   start_flow contact
   goto "/contact"
@@ -551,7 +649,7 @@ flow_signout() {
 
 # ----------------------------------------------------------------------- main
 
-ALL_FLOWS=(home shop order wishlist events workshops contact newsletter notfound signout)
+ALL_FLOWS=(home shop seconds order wishlist events workshops visit commission contact newsletter notfound signout)
 
 main() {
   mkdir -p "$OUT_DIR/screens" "$OUT_DIR/video"
@@ -580,10 +678,13 @@ main() {
     case "$flow" in
     home) flow_home ;;
     shop) flow_shop ;;
+    seconds) flow_seconds ;;
     order) flow_product_to_order ;;
     wishlist) flow_wishlist ;;
     events) flow_events ;;
     workshops) flow_workshops ;;
+    visit) flow_visit ;;
+    commission) flow_commission ;;
     contact) flow_contact ;;
     newsletter) flow_newsletter ;;
     notfound) flow_notfound ;;
