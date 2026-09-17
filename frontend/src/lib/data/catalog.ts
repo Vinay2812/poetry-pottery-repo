@@ -106,25 +106,44 @@ export async function getFeaturedProducts(
   return data?.featuredProducts ?? [];
 }
 
-// The whole wall in one request; the shelf's page size is the ceiling the API enforces.
-export async function getArchiveWall(
-  limit = 48,
-): Promise<ArchiveWallQuery["products"]> {
-  const { data } = await getClient().query<
-    ArchiveWallQuery,
-    ArchiveWallQueryVariables
-  >({
-    query: ArchiveWallDocument,
-    variables: {
-      filter: { archive: true, sort: ProductSort.Newest, page: 1, limit },
+// The wall is grouped by year, so it needs every piece rather than a first page. Pages are
+// walked up to a cap and the count reports what reached the wall, so the header cannot
+// promise more pieces than are on it.
+const ARCHIVE_PAGE_SIZE = 60;
+const MAX_ARCHIVE_PAGES = 10;
+
+export async function getArchiveWall(): Promise<ArchiveWallQuery["products"]> {
+  const items: ArchiveWallQuery["products"]["items"] = [];
+  let hasMore = false;
+  for (let page = 1; page <= MAX_ARCHIVE_PAGES; page += 1) {
+    const { data } = await getClient().query<
+      ArchiveWallQuery,
+      ArchiveWallQueryVariables
+    >({
+      query: ArchiveWallDocument,
+      variables: {
+        filter: {
+          archive: true,
+          sort: ProductSort.Newest,
+          page,
+          limit: ARCHIVE_PAGE_SIZE,
+        },
+      },
+    });
+    if (!data) break;
+    items.push(...data.products.items);
+    hasMore = data.products.page_info.has_more;
+    if (!hasMore) break;
+  }
+  return {
+    items,
+    page_info: {
+      total: items.length,
+      page: 1,
+      limit: ARCHIVE_PAGE_SIZE,
+      has_more: hasMore,
     },
-  });
-  return (
-    data?.products ?? {
-      items: [],
-      page_info: { total: 0, page: 1, limit, has_more: false },
-    }
-  );
+  };
 }
 
 export async function getCommissionOptions(): Promise<
