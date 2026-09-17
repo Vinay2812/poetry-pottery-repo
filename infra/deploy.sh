@@ -118,10 +118,13 @@ if [ "$MODE" = setup ]; then
     # Prints a login URL and waits until the node is authorised.
     tailscale up --hostname "$TS_HOSTNAME" --ssh
   fi
-  TS_IP="$(tailscale ip -4 | head -n1)"
-  [ -n "$TS_IP" ] || { echo "tailscale did not report an IPv4 address" >&2; exit 1; }
-  log "Tailscale IPv4 is ${TS_IP}"
 fi
+
+# The data services bind to the tailnet address, so it is resolved on every run, not just setup.
+command -v tailscale >/dev/null || { echo "tailscale is not installed; run with --full" >&2; exit 1; }
+TS_IP="$(tailscale ip -4 2>/dev/null | head -n1 || true)"
+[ -n "$TS_IP" ] || { echo "tailscale has no IPv4 address; run 'tailscale up' and retry" >&2; exit 1; }
+log "Tailscale IPv4 is ${TS_IP}"
 
 # ---------------------------------------------------------------- repo
 if [ -d "$TARGET_DIR/.git" ]; then
@@ -148,8 +151,6 @@ if [ "$MODE" = setup ] || [ "${PULL_ENVS:-0}" = "1" ]; then
   export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
   export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
   R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-  # The bind settings are appended by this script, not stored in R2; keep them across a refresh.
-  BIND_LINES="$(grep -E '^(BIND_HOST|API_BIND_HOST)=' infra/docker/.env 2>/dev/null || true)"
   ENV_STAGE="$(mktemp -d)"
   trap 'rm -rf "$ENV_STAGE"' EXIT
   for pair in "api:api/.env" "frontend:frontend/.env" "docker:infra/docker/.env"; do
@@ -159,19 +160,19 @@ if [ "$MODE" = setup ] || [ "${PULL_ENVS:-0}" = "1" ]; then
       --endpoint-url "$R2_ENDPOINT" --only-show-errors
     chmod 600 "$ENV_STAGE/$name"
   done
-  sed -i '/^BIND_HOST=/d;/^API_BIND_HOST=/d' "$ENV_STAGE/docker"
-  if [ "$MODE" = setup ]; then
-    # Data services listen on the tailnet address only; the API stays on loopback behind nginx.
-    printf 'BIND_HOST=%s\nAPI_BIND_HOST=127.0.0.1\n' "$TS_IP" >> "$ENV_STAGE/docker"
-  else
-    printf '%s\n' "$BIND_LINES" >> "$ENV_STAGE/docker"
-  fi
   mv "$ENV_STAGE/api" api/.env
   mv "$ENV_STAGE/frontend" frontend/.env
   mv "$ENV_STAGE/docker" infra/docker/.env
   rmdir "$ENV_STAGE"
   trap - EXIT
 fi
+
+# Data services listen on the tailnet address only; the API stays on loopback behind nginx.
+# Written on every run so a refreshed env file or a changed tailnet address never leaves them on loopback.
+[ -f infra/docker/.env ] || { echo "infra/docker/.env is missing; run with PULL_ENVS=1" >&2; exit 1; }
+sed -i '/^BIND_HOST=/d;/^API_BIND_HOST=/d' infra/docker/.env
+printf 'BIND_HOST=%s\nAPI_BIND_HOST=127.0.0.1\n' "$TS_IP" >> infra/docker/.env
+log "Data services bind to ${TS_IP}; the API binds to 127.0.0.1"
 
 # ---------------------------------------------------------------- firewall (setup only)
 if [ "$MODE" = setup ]; then
@@ -193,8 +194,9 @@ chmod -R a+rX infra/docker/initdb
 log "Building the API image"
 "${COMPOSE[@]}" build api migrate
 
+# Recreated only when their configuration (such as the bind address) changed; data lives in named volumes.
 log "Starting Postgres, Redis and RabbitMQ"
-"${COMPOSE[@]}" up -d --no-recreate --wait --wait-timeout 120 postgres redis rabbitmq
+"${COMPOSE[@]}" up -d --wait --wait-timeout 120 postgres redis rabbitmq
 
 log "Applying migrations"
 "${COMPOSE[@]}" run --rm migrate
@@ -261,7 +263,7 @@ if [ "$MODE" = setup ]; then
   echo "  RabbitMQ   ${TS_IP}:$(port RABBITMQ_PORT 5672)   (management on $(port RABBITMQ_MANAGEMENT_PORT 15672))"
   echo "  Set TRUSTED_PROXY_HOPS=1 in api/.env so client IPs are read from nginx."
 fi
-"${COMPOSE[@]}" ps
+"${COMPOSE[@]}" ps --format 'table {{.Name}}\t{{.Status}}\t{{.Ports}}'
 if [ "$MODE" = setup ]; then
   touch "$TARGET_DIR/.git/deploy-setup-complete"
 fi
