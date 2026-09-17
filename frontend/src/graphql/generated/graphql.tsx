@@ -2624,6 +2624,37 @@ export type SetRegistrationStatusMutationVariables = Exact<{
 
 export type SetRegistrationStatusMutation = { setRegistrationStatus: { next_statuses: Array<RegistrationStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, registration: { id: string, seats: number, unit_price: number, total: number, status: RegistrationStatus, note: string | null, created_at: string, event: { id: number, title: string, starts_at: string } } } };
 
+export type AdminGlazeFieldsFragment = { product_count: number, glaze: { id: number, slug: string, name: string, description: string, variation_note: string | null, swatch_url: string | null, color_code: string | null } };
+
+export type AdminGlazesQueryVariables = Exact<{
+  filter?: AdminGlazesFilterInput | null | undefined;
+}>;
+
+
+export type AdminGlazesQuery = { adminGlazes: { items: Array<{ product_count: number, glaze: { id: number, slug: string, name: string, description: string, variation_note: string | null, swatch_url: string | null, color_code: string | null } }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type CreateGlazeMutationVariables = Exact<{
+  input: AdminGlazeInput;
+}>;
+
+
+export type CreateGlazeMutation = { createGlaze: { product_count: number, glaze: { id: number, slug: string, name: string, description: string, variation_note: string | null, swatch_url: string | null, color_code: string | null } } };
+
+export type UpdateGlazeMutationVariables = Exact<{
+  id: number;
+  input: AdminGlazeInput;
+}>;
+
+
+export type UpdateGlazeMutation = { updateGlaze: { product_count: number, glaze: { id: number, slug: string, name: string, description: string, variation_note: string | null, swatch_url: string | null, color_code: string | null } } };
+
+export type DeleteGlazeMutationVariables = Exact<{
+  id: number;
+}>;
+
+
+export type DeleteGlazeMutation = { deleteGlaze: boolean };
+
 export type AdminContactMessageFieldsFragment = { id: number, name: string, email: string, phone: string | null, subject: string | null, message: string, is_read: boolean, created_at: string };
 
 export type AdminSubscriberFieldsFragment = { id: number, email: string, user_id: number | null, is_active: boolean, created_at: string, unsubscribed_at: string | null };
@@ -3603,6 +3634,20 @@ export const AdminRegistrationRowFragmentDoc = gql`
       starts_at
     }
   }
+}
+    `;
+export const AdminGlazeFieldsFragmentDoc = gql`
+    fragment AdminGlazeFields on AdminGlaze {
+  glaze {
+    id
+    slug
+    name
+    description
+    variation_note
+    swatch_url
+    color_code
+  }
+  product_count
 }
     `;
 export const AdminContactMessageFieldsFragmentDoc = gql`
@@ -5277,6 +5322,139 @@ export function useSetRegistrationStatusMutation(baseOptions?: ApolloReactHooks.
       }
 export type SetRegistrationStatusMutationHookResult = ReturnType<typeof useSetRegistrationStatusMutation>;
 export type SetRegistrationStatusMutationResult = ApolloReactCommon.MutationResult<SetRegistrationStatusMutation>;
+export const AdminGlazesDocument = gql`
+    query AdminGlazes($filter: AdminGlazesFilterInput) {
+  adminGlazes(filter: $filter) {
+    items {
+      ...AdminGlazeFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminGlazeFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminGlazesQuery__
+ *
+ * To run a query within a React component, call `useAdminGlazesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminGlazesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminGlazesQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminGlazesQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminGlazesQuery, AdminGlazesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminGlazesQuery, AdminGlazesQueryVariables>(AdminGlazesDocument, options);
+      }
+export function useAdminGlazesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminGlazesQuery, AdminGlazesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminGlazesQuery, AdminGlazesQueryVariables>(AdminGlazesDocument, options);
+        }
+export type AdminGlazesQueryHookResult = ReturnType<typeof useAdminGlazesQuery>;
+export type AdminGlazesLazyQueryHookResult = ReturnType<typeof useAdminGlazesLazyQuery>;
+export type AdminGlazesQueryResult = ApolloReactCommon.QueryResult<AdminGlazesQuery, AdminGlazesQueryVariables>;
+export const CreateGlazeDocument = gql`
+    mutation CreateGlaze($input: AdminGlazeInput!) {
+  createGlaze(input: $input) {
+    ...AdminGlazeFields
+  }
+}
+    ${AdminGlazeFieldsFragmentDoc}`;
+
+/**
+ * __useCreateGlazeMutation__
+ *
+ * To run a mutation, you first call `useCreateGlazeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateGlazeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createGlazeMutation, { data, loading, error }] = useCreateGlazeMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useCreateGlazeMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CreateGlazeMutation, CreateGlazeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CreateGlazeMutation, CreateGlazeMutationVariables>(CreateGlazeDocument, options);
+      }
+export type CreateGlazeMutationHookResult = ReturnType<typeof useCreateGlazeMutation>;
+export type CreateGlazeMutationResult = ApolloReactCommon.MutationResult<CreateGlazeMutation>;
+export const UpdateGlazeDocument = gql`
+    mutation UpdateGlaze($id: Int!, $input: AdminGlazeInput!) {
+  updateGlaze(id: $id, input: $input) {
+    ...AdminGlazeFields
+  }
+}
+    ${AdminGlazeFieldsFragmentDoc}`;
+
+/**
+ * __useUpdateGlazeMutation__
+ *
+ * To run a mutation, you first call `useUpdateGlazeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateGlazeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateGlazeMutation, { data, loading, error }] = useUpdateGlazeMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useUpdateGlazeMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<UpdateGlazeMutation, UpdateGlazeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<UpdateGlazeMutation, UpdateGlazeMutationVariables>(UpdateGlazeDocument, options);
+      }
+export type UpdateGlazeMutationHookResult = ReturnType<typeof useUpdateGlazeMutation>;
+export type UpdateGlazeMutationResult = ApolloReactCommon.MutationResult<UpdateGlazeMutation>;
+export const DeleteGlazeDocument = gql`
+    mutation DeleteGlaze($id: Int!) {
+  deleteGlaze(id: $id)
+}
+    `;
+
+/**
+ * __useDeleteGlazeMutation__
+ *
+ * To run a mutation, you first call `useDeleteGlazeMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteGlazeMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteGlazeMutation, { data, loading, error }] = useDeleteGlazeMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useDeleteGlazeMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<DeleteGlazeMutation, DeleteGlazeMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<DeleteGlazeMutation, DeleteGlazeMutationVariables>(DeleteGlazeDocument, options);
+      }
+export type DeleteGlazeMutationHookResult = ReturnType<typeof useDeleteGlazeMutation>;
+export type DeleteGlazeMutationResult = ApolloReactCommon.MutationResult<DeleteGlazeMutation>;
 export const AdminContactMessagesDocument = gql`
     query AdminContactMessages($filter: AdminContactFilterInput) {
   adminContactMessages(filter: $filter) {
