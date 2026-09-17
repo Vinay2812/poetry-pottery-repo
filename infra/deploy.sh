@@ -184,6 +184,8 @@ if [ "$MODE" = setup ]; then
   for port in 22 80 443; do ufw allow "${port}/tcp" >/dev/null; done
   ufw allow in on tailscale0 >/dev/null
   ufw --force enable >/dev/null
+  # ufw reset/enable flushes iptables, taking Docker's published-port rules with it; a restart reinstalls them.
+  systemctl restart docker
 fi
 
 # ---------------------------------------------------------------- stack
@@ -261,9 +263,20 @@ fi
 
 docker image prune -f >/dev/null
 
+log "Checking the data services answer on the tailnet address"
+port() { grep -E "^$1=" infra/docker/.env | cut -d= -f2 || echo "$2"; }
+for target in "Postgres:$(port POSTGRES_PORT 5433)" "Redis:$(port REDIS_PORT 6381)" "RabbitMQ:$(port RABBITMQ_PORT 5672)"; do
+  name="${target%%:*}"; p="${target##*:}"
+  if timeout 5 bash -c "exec 3<>/dev/tcp/${TS_IP}/${p}" 2>/dev/null; then
+    echo "  ${name} reachable on ${TS_IP}:${p}"
+  else
+    echo "${name} is not reachable on ${TS_IP}:${p}; try 'systemctl restart docker' then rerun, and check 'ufw status' and '${COMPOSE[*]} ps'" >&2
+    exit 1
+  fi
+done
+
 log "Done: $MODE of $BRANCH at $AFTER"
 if [ "$MODE" = setup ]; then
-  port() { grep -E "^$1=" infra/docker/.env | cut -d= -f2 || echo "$2"; }
   echo "  API        https://${API_DOMAIN}  (nginx -> 127.0.0.1:6060)"
   echo "  Postgres   ${TS_IP}:$(port POSTGRES_PORT 5433)   (tailnet only)"
   echo "  Redis      ${TS_IP}:$(port REDIS_PORT 6381)"
