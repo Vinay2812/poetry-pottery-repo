@@ -7,8 +7,8 @@
 #   later runs (already set up)        -> fast-forwards the checkout, rebuilds the API image,
 #                                         applies migrations and swaps the API container
 #
-# It decides which by looking for a git checkout in TARGET_DIR; nothing is reinstalled or
-# reconfigured on a redeploy, and every step is idempotent, so `--full` is safe to force.
+# A marker inside .git records completed setup. Interrupted setup runs resume the setup
+# path on retry. Use `--full` to repeat setup on an existing installation.
 #
 # Export before running (required on the first run):
 #   export GITHUB_ACCESS_TOKEN=ghp_...   # repo-scoped token; used for the HTTPS clone and never written to disk
@@ -26,7 +26,7 @@
 #   export GITHUB_REPO=Vinay2812/poetry-pottery-repo
 #   export BRANCH=main
 #   export TARGET_DIR=/opt/poetry-pottery
-#   export ENV_PREFIX=envs/poetry-potter-v2     # objects: <prefix>/{api,frontend,docker}/.env.production
+#   export ENV_PREFIX=envs/poetry-potter-v2     # objects: <prefix>/{api,frontend,docker}/.env.prod
 #   export TS_AUTHKEY=tskey-auth-...            # Tailscale auth key; without it `tailscale up` prints a login URL
 #   export TS_HOSTNAME=poetry-pottery-api       # this machine's name on the tailnet
 #   export PULL_ENVS=1                          # redeploy: also re-pull the env files from R2
@@ -35,9 +35,9 @@
 #   export FULL=1                               # force the full setup path even on an existing checkout
 #
 # Files written on the setup path (each chmod 600):
-#   <prefix>/api/.env.production       -> api/.env
-#   <prefix>/frontend/.env.production  -> frontend/.env
-#   <prefix>/docker/.env.production    -> infra/docker/.env   (+ BIND_HOST=<tailscale ip> appended)
+#   <prefix>/api/.env.prod       -> api/.env
+#   <prefix>/frontend/.env.prod  -> frontend/.env
+#   <prefix>/docker/.env.prod    -> infra/docker/.env   (+ BIND_HOST=<tailscale ip> appended)
 #
 # Network layout afterwards:
 #   API        127.0.0.1:6060 behind nginx at https://<API_DOMAIN>
@@ -46,6 +46,7 @@
 #
 # Run as root: sudo -E ./infra/deploy.sh   (add --full to force the setup path)
 set -euo pipefail
+umask 077
 
 GITHUB_REPO="${GITHUB_REPO:-Vinay2812/poetry-pottery-repo}"
 BRANCH="${BRANCH:-main}"
@@ -64,14 +65,17 @@ require() { for name in "$@"; do [ -n "${!name:-}" ] || { echo "set $name" >&2; 
 git_remote_url() { printf 'https://github.com/%s.git' "$GITHUB_REPO"; }
 git_auth() {
   if [ -n "${GITHUB_ACCESS_TOKEN:-}" ]; then
-    git -c "http.https://github.com/.extraheader=Authorization: Basic $(printf 'x-access-token:%s' "$GITHUB_ACCESS_TOKEN" | base64 | tr -d '\n')" "$@"
+    GITHUB_HTTP_HEADER="Authorization: Basic $(printf 'x-access-token:%s' "$GITHUB_ACCESS_TOKEN" | base64 | tr -d '\n')" \
+      git --config-env=http.https://github.com/.extraheader=GITHUB_HTTP_HEADER "$@"
   else
     git "$@"
   fi
 }
 
-# Setup on a fresh box, redeploy on an existing checkout; --full or FULL=1 forces setup.
-if [ -d "$TARGET_DIR/.git" ] && [ "${FULL:-0}" != "1" ]; then
+# The checkout can exist before env downloads, migrations or TLS setup succeed.
+if [ -d "$TARGET_DIR/.git" ] &&
+   [ -f "$TARGET_DIR/.git/deploy-setup-complete" ] &&
+   [ "${FULL:-0}" != "1" ]; then
   MODE=redeploy
 else
   MODE=setup
@@ -82,6 +86,7 @@ log "Mode: $MODE (repo $GITHUB_REPO, branch $BRANCH, dir $TARGET_DIR)"
 
 # ---------------------------------------------------------------- tools (setup only)
 if [ "$MODE" = setup ]; then
+  rm -f "$TARGET_DIR/.git/deploy-setup-complete"
   command -v apt-get >/dev/null || { echo "this script installs packages with apt; use Ubuntu or Debian" >&2; exit 1; }
   require GITHUB_ACCESS_TOKEN R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_ENV_BUCKET
   [ "${SKIP_TLS:-0}" = "1" ] || require LETSENCRYPT_EMAIL
@@ -144,20 +149,27 @@ if [ "$MODE" = setup ] || [ "${PULL_ENVS:-0}" = "1" ]; then
   R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
   # The bind settings are appended by this script, not stored in R2; keep them across a refresh.
   BIND_LINES="$(grep -E '^(BIND_HOST|API_BIND_HOST)=' infra/docker/.env 2>/dev/null || true)"
+  ENV_STAGE="$(mktemp -d)"
+  trap 'rm -rf "$ENV_STAGE"' EXIT
   for pair in "api:api/.env" "frontend:frontend/.env" "docker:infra/docker/.env"; do
     name="${pair%%:*}"; dest="${pair#*:}"
-    log "Pulling ${ENV_PREFIX}/${name}/.env.production -> ${dest}"
-    aws s3 cp "s3://${R2_ENV_BUCKET}/${ENV_PREFIX}/${name}/.env.production" "$dest" \
+    log "Pulling ${ENV_PREFIX}/${name}/.env.prod -> ${dest}"
+    aws s3 cp "s3://${R2_ENV_BUCKET}/${ENV_PREFIX}/${name}/.env.prod" "$ENV_STAGE/$name" \
       --endpoint-url "$R2_ENDPOINT" --only-show-errors
-    chmod 600 "$dest"
+    chmod 600 "$ENV_STAGE/$name"
   done
-  sed -i '/^BIND_HOST=/d;/^API_BIND_HOST=/d' infra/docker/.env
+  sed -i '/^BIND_HOST=/d;/^API_BIND_HOST=/d' "$ENV_STAGE/docker"
   if [ "$MODE" = setup ]; then
     # Data services listen on the tailnet address only; the API stays on loopback behind nginx.
-    printf 'BIND_HOST=%s\nAPI_BIND_HOST=127.0.0.1\n' "$TS_IP" >> infra/docker/.env
+    printf 'BIND_HOST=%s\nAPI_BIND_HOST=127.0.0.1\n' "$TS_IP" >> "$ENV_STAGE/docker"
   else
-    printf '%s\n' "$BIND_LINES" >> infra/docker/.env
+    printf '%s\n' "$BIND_LINES" >> "$ENV_STAGE/docker"
   fi
+  mv "$ENV_STAGE/api" api/.env
+  mv "$ENV_STAGE/frontend" frontend/.env
+  mv "$ENV_STAGE/docker" infra/docker/.env
+  rmdir "$ENV_STAGE"
+  trap - EXIT
 fi
 
 # ---------------------------------------------------------------- firewall (setup only)
@@ -177,10 +189,8 @@ COMPOSE=(docker compose -f infra/docker/docker-compose.api.yml)
 log "Building the API image"
 "${COMPOSE[@]}" build api migrate
 
-if [ "$MODE" = setup ]; then
-  log "Starting Postgres, Redis and RabbitMQ"
-  "${COMPOSE[@]}" up -d postgres redis rabbitmq
-fi
+log "Starting Postgres, Redis and RabbitMQ"
+"${COMPOSE[@]}" up -d --no-recreate --wait --wait-timeout 120 postgres redis rabbitmq
 
 log "Applying migrations"
 "${COMPOSE[@]}" run --rm migrate
@@ -196,7 +206,7 @@ log "Starting the API on the new image"
 log "Waiting for the API health check"
 healthy=0
 for _ in $(seq 1 30); do
-  if curl -fsS http://127.0.0.1:6060/health >/dev/null 2>&1; then healthy=1; break; fi
+  if curl --connect-timeout 2 --max-time 5 -fsS http://127.0.0.1:6060/health >/dev/null 2>&1; then healthy=1; break; fi
   sleep 2
 done
 [ "$healthy" = 1 ] || { echo "API did not report healthy; see: ${COMPOSE[*]} logs api" >&2; exit 1; }
@@ -248,3 +258,6 @@ if [ "$MODE" = setup ]; then
   echo "  Set TRUSTED_PROXY_HOPS=1 in api/.env so client IPs are read from nginx."
 fi
 "${COMPOSE[@]}" ps
+if [ "$MODE" = setup ]; then
+  touch "$TARGET_DIR/.git/deploy-setup-complete"
+fi
