@@ -2458,6 +2458,30 @@ export type DeleteCollectionMutationVariables = Exact<{
 
 export type DeleteCollectionMutation = { deleteCollection: boolean };
 
+export type AdminCommissionFieldsFragment = { id: string, piece_type: string, size: string, glaze: string, carved_words: string | null, notes: string | null, name: string, email: string, phone: string | null, reference_image_urls: Array<string>, is_read: boolean, status: CommissionStatus, created_at: string };
+
+export type CommissionRequestsQueryVariables = Exact<{
+  filter?: CommissionRequestsFilterInput | null | undefined;
+}>;
+
+
+export type CommissionRequestsQuery = { commissionRequests: { items: Array<{ id: string, piece_type: string, size: string, glaze: string, carved_words: string | null, notes: string | null, name: string, email: string, phone: string | null, reference_image_urls: Array<string>, is_read: boolean, status: CommissionStatus, created_at: string }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type MarkCommissionRequestReadMutationVariables = Exact<{
+  id: string;
+}>;
+
+
+export type MarkCommissionRequestReadMutation = { markCommissionRequestRead: { id: string, piece_type: string, size: string, glaze: string, carved_words: string | null, notes: string | null, name: string, email: string, phone: string | null, reference_image_urls: Array<string>, is_read: boolean, status: CommissionStatus, created_at: string } };
+
+export type SetCommissionRequestStatusMutationVariables = Exact<{
+  id: string;
+  status: CommissionStatus;
+}>;
+
+
+export type SetCommissionRequestStatusMutation = { setCommissionRequestStatus: { id: string, piece_type: string, size: string, glaze: string, carved_words: string | null, notes: string | null, name: string, email: string, phone: string | null, reference_image_urls: Array<string>, is_read: boolean, status: CommissionStatus, created_at: string } };
+
 export type AdminContentPageFieldsFragment = { slug: string, title: string, subtitle: string | null, hero_image_url: string | null, is_published: boolean, updated_at: string, sections: Array<{ heading: string, body: string, items: Array<{ title: string, body: string }> }> };
 
 export type AdminSiteSettingsFieldsFragment = { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, dispatch_days_min: number, dispatch_days_max: number, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string };
@@ -3528,6 +3552,23 @@ export const AdminCollectionFieldsFragmentDoc = gql`
   product_count
 }
     `;
+export const AdminCommissionFieldsFragmentDoc = gql`
+    fragment AdminCommissionFields on CommissionRequest {
+  id
+  piece_type
+  size
+  glaze
+  carved_words
+  notes
+  name
+  email
+  phone
+  reference_image_urls
+  is_read
+  status
+  created_at
+}
+    `;
 export const AdminContentPageFieldsFragmentDoc = gql`
     fragment AdminContentPageFields on ContentPage {
   slug
@@ -4570,6 +4611,110 @@ export function useDeleteCollectionMutation(baseOptions?: ApolloReactHooks.Mutat
       }
 export type DeleteCollectionMutationHookResult = ReturnType<typeof useDeleteCollectionMutation>;
 export type DeleteCollectionMutationResult = ApolloReactCommon.MutationResult<DeleteCollectionMutation>;
+export const CommissionRequestsDocument = gql`
+    query CommissionRequests($filter: CommissionRequestsFilterInput) {
+  commissionRequests(filter: $filter) {
+    items {
+      ...AdminCommissionFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminCommissionFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useCommissionRequestsQuery__
+ *
+ * To run a query within a React component, call `useCommissionRequestsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useCommissionRequestsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useCommissionRequestsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useCommissionRequestsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<CommissionRequestsQuery, CommissionRequestsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<CommissionRequestsQuery, CommissionRequestsQueryVariables>(CommissionRequestsDocument, options);
+      }
+export function useCommissionRequestsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<CommissionRequestsQuery, CommissionRequestsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<CommissionRequestsQuery, CommissionRequestsQueryVariables>(CommissionRequestsDocument, options);
+        }
+export type CommissionRequestsQueryHookResult = ReturnType<typeof useCommissionRequestsQuery>;
+export type CommissionRequestsLazyQueryHookResult = ReturnType<typeof useCommissionRequestsLazyQuery>;
+export type CommissionRequestsQueryResult = ApolloReactCommon.QueryResult<CommissionRequestsQuery, CommissionRequestsQueryVariables>;
+export const MarkCommissionRequestReadDocument = gql`
+    mutation MarkCommissionRequestRead($id: String!) {
+  markCommissionRequestRead(id: $id) {
+    ...AdminCommissionFields
+  }
+}
+    ${AdminCommissionFieldsFragmentDoc}`;
+
+/**
+ * __useMarkCommissionRequestReadMutation__
+ *
+ * To run a mutation, you first call `useMarkCommissionRequestReadMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useMarkCommissionRequestReadMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [markCommissionRequestReadMutation, { data, loading, error }] = useMarkCommissionRequestReadMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *   },
+ * });
+ */
+export function useMarkCommissionRequestReadMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<MarkCommissionRequestReadMutation, MarkCommissionRequestReadMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<MarkCommissionRequestReadMutation, MarkCommissionRequestReadMutationVariables>(MarkCommissionRequestReadDocument, options);
+      }
+export type MarkCommissionRequestReadMutationHookResult = ReturnType<typeof useMarkCommissionRequestReadMutation>;
+export type MarkCommissionRequestReadMutationResult = ApolloReactCommon.MutationResult<MarkCommissionRequestReadMutation>;
+export const SetCommissionRequestStatusDocument = gql`
+    mutation SetCommissionRequestStatus($id: String!, $status: CommissionStatus!) {
+  setCommissionRequestStatus(id: $id, status: $status) {
+    ...AdminCommissionFields
+  }
+}
+    ${AdminCommissionFieldsFragmentDoc}`;
+
+/**
+ * __useSetCommissionRequestStatusMutation__
+ *
+ * To run a mutation, you first call `useSetCommissionRequestStatusMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSetCommissionRequestStatusMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [setCommissionRequestStatusMutation, { data, loading, error }] = useSetCommissionRequestStatusMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      status: // value for 'status'
+ *   },
+ * });
+ */
+export function useSetCommissionRequestStatusMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SetCommissionRequestStatusMutation, SetCommissionRequestStatusMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SetCommissionRequestStatusMutation, SetCommissionRequestStatusMutationVariables>(SetCommissionRequestStatusDocument, options);
+      }
+export type SetCommissionRequestStatusMutationHookResult = ReturnType<typeof useSetCommissionRequestStatusMutation>;
+export type SetCommissionRequestStatusMutationResult = ApolloReactCommon.MutationResult<SetCommissionRequestStatusMutation>;
 export const AdminContentPagesDocument = gql`
     query AdminContentPages {
   adminContentPages {
