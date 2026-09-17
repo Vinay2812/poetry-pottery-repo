@@ -21,9 +21,18 @@ const VALID: ProductFormValues = {
   color_code: "#4F6F52",
   stock: 6,
   care_notes: "Hand wash\nNo microwave",
+  capacity_ml: 300,
+  height_cm: 9.5,
+  diameter_cm: 8,
+  weight_g: 420,
+  maker_note: "Thrown on a wet Tuesday.",
   category_ids: [1, 2],
   collection_id: 3,
+  glaze_id: 4,
   is_customizable: false,
+  is_second: false,
+  flaw_note: "",
+  is_commission: false,
   is_featured: false,
   is_active: true,
 };
@@ -160,5 +169,49 @@ describe("stockAdjustSchema", () => {
   it("needs a reason", () => {
     const parsed = stockAdjustSchema.safeParse({ delta: 2, reason: "" });
     expect(parsed.success).toBe(false);
+  });
+});
+
+describe("productSchema measurements", () => {
+  it("takes an unmeasured piece as it is", () => {
+    expect(
+      productSchema.safeParse({
+        ...VALID,
+        capacity_ml: null,
+        height_cm: null,
+        diameter_cm: null,
+        weight_g: null,
+      }).success,
+    ).toBe(true);
+  });
+
+  it("refuses a measurement of zero", () => {
+    expect(messageFor({ ...VALID, height_cm: 0 }, "height_cm")).toBe(
+      "Height must be more than zero",
+    );
+  });
+
+  it("refuses a capacity no pot could hold", () => {
+    expect(messageFor({ ...VALID, capacity_ml: 99999 }, "capacity_ml")).toBe(
+      "Capacity must be 20000 or less",
+    );
+  });
+});
+
+describe("productSchema seconds", () => {
+  it("wants the flaw named before a piece is sold as a second", () => {
+    expect(
+      messageFor({ ...VALID, is_second: true, flaw_note: "" }, "flaw_note"),
+    ).toBe("Say what the kiln left on this piece");
+  });
+
+  it("is happy once the flaw is named", () => {
+    expect(
+      productSchema.safeParse({
+        ...VALID,
+        is_second: true,
+        flaw_note: "Glaze crawl on the foot ring.",
+      }).success,
+    ).toBe(true);
   });
 });

@@ -29,10 +29,14 @@ export interface PieceFormProps {
   submitLabel: string;
   categoryOptions: PieceTaxonomyOption[];
   collectionOptions: PieceTaxonomyOption[];
+  glazeOptions: PieceTaxonomyOption[];
   gallery: ReactNode;
   onSubmit: (values: ProductFormValues) => void;
   onCancel: () => void;
 }
+
+const SELECT_CLASS =
+  "h-11 w-full border border-ash bg-transparent px-2.5 text-[13px] outline-none focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary";
 
 export function PieceForm({
   defaultValues,
@@ -41,6 +45,7 @@ export function PieceForm({
   submitLabel,
   categoryOptions,
   collectionOptions,
+  glazeOptions,
   gallery,
   onSubmit,
   onCancel,
@@ -58,7 +63,10 @@ export function PieceForm({
 
   const categoryIds = useWatch({ control, name: "category_ids" });
   const collectionId = useWatch({ control, name: "collection_id" });
+  const glazeId = useWatch({ control, name: "glaze_id" });
   const isCustomizable = useWatch({ control, name: "is_customizable" });
+  const isSecond = useWatch({ control, name: "is_second" });
+  const isCommission = useWatch({ control, name: "is_commission" });
   const isFeatured = useWatch({ control, name: "is_featured" });
   const isActive = useWatch({ control, name: "is_active" });
 
@@ -133,9 +141,35 @@ export function PieceForm({
           />
         </AdminField>
         <AdminField
-          id="piece-color-name"
+          id="piece-glaze"
           label="Glaze"
-          hint={null}
+          hint="From the glaze shelf, so the piece links to it."
+          error={errors.glaze_id?.message}
+        >
+          <select
+            id="piece-glaze"
+            value={glazeId === null ? "" : String(glazeId)}
+            onChange={(event) =>
+              setValue(
+                "glaze_id",
+                event.target.value === "" ? null : Number(event.target.value),
+                { shouldDirty: true },
+              )
+            }
+            className={SELECT_CLASS}
+          >
+            <option value="">No glaze</option>
+            {glazeOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+        </AdminField>
+        <AdminField
+          id="piece-color-name"
+          label="Glaze name on the card"
+          hint="Overrides the glaze name where the card is tight."
           error={errors.color_name?.message}
         >
           <Input
@@ -175,6 +209,98 @@ export function PieceForm({
             />
           </AdminField>
         </div>
+      </section>
+
+      <section className="flex flex-col gap-3">
+        <h2 className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+          Size and weight
+        </h2>
+        <p className="text-[12px] text-muted-foreground">
+          Leave a box empty until the piece has actually been measured.
+        </p>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <AdminField
+            id="piece-capacity"
+            label="Capacity (ml)"
+            hint={null}
+            error={errors.capacity_ml?.message}
+          >
+            <Input
+              id="piece-capacity"
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className="tnum"
+              aria-invalid={Boolean(errors.capacity_ml)}
+              {...register("capacity_ml", { setValueAs: toNullableNumber })}
+            />
+          </AdminField>
+          <AdminField
+            id="piece-height"
+            label="Height (cm)"
+            hint={null}
+            error={errors.height_cm?.message}
+          >
+            <Input
+              id="piece-height"
+              type="number"
+              min={0}
+              step={0.1}
+              inputMode="decimal"
+              className="tnum"
+              aria-invalid={Boolean(errors.height_cm)}
+              {...register("height_cm", { setValueAs: toNullableNumber })}
+            />
+          </AdminField>
+          <AdminField
+            id="piece-diameter"
+            label="Diameter (cm)"
+            hint={null}
+            error={errors.diameter_cm?.message}
+          >
+            <Input
+              id="piece-diameter"
+              type="number"
+              min={0}
+              step={0.1}
+              inputMode="decimal"
+              className="tnum"
+              aria-invalid={Boolean(errors.diameter_cm)}
+              {...register("diameter_cm", { setValueAs: toNullableNumber })}
+            />
+          </AdminField>
+          <AdminField
+            id="piece-weight"
+            label="Weight (g)"
+            hint={null}
+            error={errors.weight_g?.message}
+          >
+            <Input
+              id="piece-weight"
+              type="number"
+              min={1}
+              step={1}
+              inputMode="numeric"
+              className="tnum"
+              aria-invalid={Boolean(errors.weight_g)}
+              {...register("weight_g", { setValueAs: toNullableNumber })}
+            />
+          </AdminField>
+        </div>
+        <AdminField
+          id="piece-maker-note"
+          label="Maker's note"
+          hint="One or two lines in the maker's own voice."
+          error={errors.maker_note?.message}
+        >
+          <Textarea
+            id="piece-maker-note"
+            rows={3}
+            aria-invalid={Boolean(errors.maker_note)}
+            {...register("maker_note")}
+          />
+        </AdminField>
       </section>
 
       <section className="grid gap-4 md:grid-cols-3">
@@ -287,7 +413,7 @@ export function PieceForm({
                   { shouldDirty: true },
                 )
               }
-              className="h-11 w-full border border-ash bg-transparent px-2.5 text-[13px] outline-none focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary"
+              className={SELECT_CLASS}
             >
               <option value="">No collection</option>
               {collectionOptions.map((option) => (
@@ -347,6 +473,57 @@ export function PieceForm({
             </>
           )}
         </div>
+      </section>
+
+      <section className="flex flex-col gap-3 border-t border-ash pt-6">
+        <h2 className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+          Second
+        </h2>
+        <p className="text-[12px] text-muted-foreground">
+          A piece the kiln marked. Name the flaw and the storefront shows it
+          beside the price.
+        </p>
+        <Label
+          htmlFor="piece-second"
+          className="flex items-center gap-2 text-[13px]"
+        >
+          <Checkbox
+            id="piece-second"
+            checked={isSecond}
+            onCheckedChange={(checked) =>
+              setValue("is_second", checked === true, { shouldDirty: true })
+            }
+          />
+          Sell this as a second
+        </Label>
+        {isSecond && (
+          <AdminField
+            id="piece-flaw-note"
+            label="Flaw note"
+            hint="What the kiln left, in one line."
+            error={errors.flaw_note?.message}
+          >
+            <Textarea
+              id="piece-flaw-note"
+              rows={2}
+              aria-invalid={Boolean(errors.flaw_note)}
+              {...register("flaw_note")}
+            />
+          </AdminField>
+        )}
+        <Label
+          htmlFor="piece-commission"
+          className="flex items-center gap-2 text-[13px]"
+        >
+          <Checkbox
+            id="piece-commission"
+            checked={isCommission}
+            onCheckedChange={(checked) =>
+              setValue("is_commission", checked === true, { shouldDirty: true })
+            }
+          />
+          Show as past commission
+        </Label>
       </section>
 
       <div className="flex flex-wrap gap-3 border-t border-ash pt-4">

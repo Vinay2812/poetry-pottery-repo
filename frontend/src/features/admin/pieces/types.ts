@@ -110,7 +110,33 @@ export function toProductsFilter(
     is_active: readBooleanValue(values.is_active),
     is_featured: readBooleanValue(values.is_featured),
     low_stock: values.low_stock === "1" ? true : null,
+    is_second: readBooleanValue(values.is_second),
+    glaze_id: readNumberValue(values.glaze_id),
   };
+}
+
+/** Empty is a measurement the studio has not taken, not a zero. */
+export function describeMeasurement(
+  value: number | null,
+  unit: string,
+): string {
+  return value === null ? "—" : `${value} ${unit}`;
+}
+
+/** The one line under the photos: what the piece is in the hand. */
+export function describeSizeAndWeight(size: {
+  capacityMl: number | null;
+  heightCm: number | null;
+  diameterCm: number | null;
+  weightG: number | null;
+}): string {
+  const parts = [
+    size.capacityMl === null ? null : `${size.capacityMl} ml`,
+    size.heightCm === null ? null : `${size.heightCm} cm tall`,
+    size.diameterCm === null ? null : `${size.diameterCm} cm across`,
+    size.weightG === null ? null : `${size.weightG} g`,
+  ].filter((part): part is string => part !== null);
+  return parts.length === 0 ? "Not measured yet" : parts.join(" · ");
 }
 
 export const EMPTY_PRODUCT_FORM: ProductFormValues = {
@@ -124,9 +150,18 @@ export const EMPTY_PRODUCT_FORM: ProductFormValues = {
   color_code: "",
   stock: 0,
   care_notes: "",
+  capacity_ml: null,
+  height_cm: null,
+  diameter_cm: null,
+  weight_g: null,
+  maker_note: "",
   category_ids: [],
   collection_id: null,
+  glaze_id: null,
   is_customizable: false,
+  is_second: false,
+  flaw_note: "",
+  is_commission: false,
   is_featured: false,
   is_active: true,
 };
@@ -145,9 +180,18 @@ export function toProductFormValues(
     color_code: product.color_code ?? "",
     stock: product.stock,
     care_notes: formatCareNotes(product.care_notes),
+    capacity_ml: product.capacity_ml,
+    height_cm: product.height_cm,
+    diameter_cm: product.diameter_cm,
+    weight_g: product.weight_g,
+    maker_note: product.maker_note ?? "",
     category_ids: product.categories.map((category) => category.id),
     collection_id: product.collection?.id ?? null,
+    glaze_id: product.glaze?.id ?? null,
     is_customizable: product.is_customizable,
+    is_second: product.is_second,
+    flaw_note: product.flaw_note ?? "",
+    is_commission: product.is_commission,
     is_featured: product.is_featured,
     is_active: product.is_active,
   };
@@ -173,10 +217,19 @@ export function toProductInput(
     color_code: optionalText(values.color_code),
     stock: values.stock,
     care_notes: parseCareNotes(values.care_notes),
+    capacity_ml: values.capacity_ml,
+    height_cm: values.height_cm,
+    diameter_cm: values.diameter_cm,
+    weight_g: values.weight_g,
+    maker_note: optionalText(values.maker_note),
     category_ids: values.category_ids,
     collection_id: values.collection_id,
+    glaze_id: values.glaze_id,
     image_urls: [...imageUrls],
     is_customizable: values.is_customizable,
+    is_second: values.is_second,
+    flaw_note: optionalText(values.flaw_note),
+    is_commission: values.is_commission,
     is_featured: values.is_featured,
     is_active: values.is_active,
   };
@@ -197,10 +250,19 @@ export function toProductUpdateInput(
     color_name: optionalText(values.color_name),
     color_code: optionalText(values.color_code),
     care_notes: parseCareNotes(values.care_notes),
+    capacity_ml: values.capacity_ml,
+    height_cm: values.height_cm,
+    diameter_cm: values.diameter_cm,
+    weight_g: values.weight_g,
+    maker_note: optionalText(values.maker_note),
     category_ids: values.category_ids,
     collection_id: values.collection_id,
+    glaze_id: values.glaze_id,
     image_urls: [...imageUrls],
     is_customizable: values.is_customizable,
+    is_second: values.is_second,
+    flaw_note: optionalText(values.flaw_note),
+    is_commission: values.is_commission,
   };
 }
 

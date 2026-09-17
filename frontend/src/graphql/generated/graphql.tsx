@@ -2753,25 +2753,25 @@ export type SetOrderAdminNoteMutationVariables = Exact<{
 
 export type SetOrderAdminNoteMutation = { setOrderAdminNote: { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, gift_note: string | null, hide_prices: boolean, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, care_notes: Array<string>, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }>, studio_notes: Array<{ id: number, body: string, image_url: string | null, created_at: string }> } } };
 
-export type AdminProductRowFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null };
+export type AdminProductRowFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, is_second: boolean, is_commission: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null };
 
 export type AdminOptionGroupFieldsFragment = { id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> };
 
-export type AdminProductDetailFragment = { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null };
+export type AdminProductDetailFragment = { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, flaw_note: string | null, maker_note: string | null, capacity_ml: number | null, height_cm: number | null, diameter_cm: number | null, weight_g: number | null, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, is_second: boolean, is_commission: boolean, image_urls: Array<string>, material: string, glaze: { id: number, name: string, color_code: string | null } | null, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null };
 
 export type AdminProductsQueryVariables = Exact<{
   filter?: AdminProductsFilterInput | null | undefined;
 }>;
 
 
-export type AdminProductsQuery = { adminProducts: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+export type AdminProductsQuery = { adminProducts: { items: Array<{ id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, is_second: boolean, is_commission: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
 
 export type AdminProductQueryVariables = Exact<{
   id: number;
 }>;
 
 
-export type AdminProductQuery = { adminProduct: { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+export type AdminProductQuery = { adminProduct: { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, flaw_note: string | null, maker_note: string | null, capacity_ml: number | null, height_cm: number | null, diameter_cm: number | null, weight_g: number | null, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, is_second: boolean, is_commission: boolean, image_urls: Array<string>, material: string, glaze: { id: number, name: string, color_code: string | null } | null, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
 
 export type AdminProductOptionGroupsQueryVariables = Exact<{
   product_id: number;
@@ -2785,7 +2785,7 @@ export type CreateProductMutationVariables = Exact<{
 }>;
 
 
-export type CreateProductMutation = { createProduct: { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+export type CreateProductMutation = { createProduct: { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, flaw_note: string | null, maker_note: string | null, capacity_ml: number | null, height_cm: number | null, diameter_cm: number | null, weight_g: number | null, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, is_second: boolean, is_commission: boolean, image_urls: Array<string>, material: string, glaze: { id: number, name: string, color_code: string | null } | null, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
 
 export type UpdateProductMutationVariables = Exact<{
   id: number;
@@ -2793,7 +2793,7 @@ export type UpdateProductMutationVariables = Exact<{
 }>;
 
 
-export type UpdateProductMutation = { updateProduct: { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+export type UpdateProductMutation = { updateProduct: { description: string, dimensions: string | null, color_name: string | null, color_code: string | null, care_notes: Array<string>, created_at: string, sales_count: number, flaw_note: string | null, maker_note: string | null, capacity_ml: number | null, height_cm: number | null, diameter_cm: number | null, weight_g: number | null, id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, is_second: boolean, is_commission: boolean, image_urls: Array<string>, material: string, glaze: { id: number, name: string, color_code: string | null } | null, option_groups: Array<{ id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> }>, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
 
 export type SetProductActiveMutationVariables = Exact<{
   id: number;
@@ -2801,7 +2801,7 @@ export type SetProductActiveMutationVariables = Exact<{
 }>;
 
 
-export type SetProductActiveMutation = { setProductActive: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+export type SetProductActiveMutation = { setProductActive: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, is_second: boolean, is_commission: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
 
 export type SetProductFeaturedMutationVariables = Exact<{
   id: number;
@@ -2809,7 +2809,7 @@ export type SetProductFeaturedMutationVariables = Exact<{
 }>;
 
 
-export type SetProductFeaturedMutation = { setProductFeatured: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+export type SetProductFeaturedMutation = { setProductFeatured: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, is_second: boolean, is_commission: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
 
 export type AdjustProductStockMutationVariables = Exact<{
   id: number;
@@ -2818,7 +2818,7 @@ export type AdjustProductStockMutationVariables = Exact<{
 }>;
 
 
-export type AdjustProductStockMutation = { adjustProductStock: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
+export type AdjustProductStockMutation = { adjustProductStock: { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, is_second: boolean, is_commission: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null } };
 
 export type CreateProductOptionGroupMutationVariables = Exact<{
   product_id: number;
@@ -3778,6 +3778,8 @@ export const AdminProductRowFragmentDoc = gql`
   is_featured
   is_archived
   is_customizable
+  is_second
+  is_commission
   image_urls
   material
   categories {
@@ -3820,6 +3822,17 @@ export const AdminProductDetailFragmentDoc = gql`
   care_notes
   created_at
   sales_count
+  flaw_note
+  maker_note
+  capacity_ml
+  height_cm
+  diameter_cm
+  weight_g
+  glaze {
+    id
+    name
+    color_code
+  }
   option_groups {
     ...AdminOptionGroupFields
   }

@@ -9,6 +9,8 @@ fragment AdminProductRow on Product {
   is_featured
   is_archived
   is_customizable
+  is_second
+  is_commission
   image_urls
   material
   categories {
@@ -49,6 +51,17 @@ fragment AdminProductDetail on Product {
   care_notes
   created_at
   sales_count
+  flaw_note
+  maker_note
+  capacity_ml
+  height_cm
+  diameter_cm
+  weight_g
+  glaze {
+    id
+    name
+    color_code
+  }
   option_groups {
     ...AdminOptionGroupFields
   }

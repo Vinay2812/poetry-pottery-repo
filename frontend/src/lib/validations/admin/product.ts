@@ -3,6 +3,7 @@ import { z } from "zod";
 import { OptionGroupKind } from "@/graphql/generated/graphql";
 
 const MAX_CARE_NOTES = 2000;
+const MAX_MAKER_NOTE = 500;
 const MAX_DESCRIPTION = 4000;
 
 // Money is whole rupees everywhere, so the console never accepts a decimal.
@@ -18,6 +19,24 @@ function counter(label: string) {
     .number({ error: `${label} must be a number` })
     .int(`${label} must be a whole number`)
     .min(0, `${label} cannot be negative`);
+}
+
+// A measurement is either missing or a real number; a zero-tall mug is a typo.
+function measure(label: string, max: number) {
+  return z
+    .number({ error: `${label} must be a number` })
+    .positive(`${label} must be more than zero`)
+    .max(max, `${label} must be ${max} or less`)
+    .nullable();
+}
+
+function wholeMeasure(label: string, max: number) {
+  return z
+    .number({ error: `${label} must be a number` })
+    .int(`${label} must be a whole number`)
+    .positive(`${label} must be more than zero`)
+    .max(max, `${label} must be ${max} or less`)
+    .nullable();
 }
 
 export const productSchema = z
@@ -58,9 +77,24 @@ export const productSchema = z
     care_notes: z
       .string()
       .max(MAX_CARE_NOTES, `Keep it to ${MAX_CARE_NOTES} characters or fewer`),
+    capacity_ml: wholeMeasure("Capacity", 20000),
+    height_cm: measure("Height", 999),
+    diameter_cm: measure("Diameter", 999),
+    weight_g: wholeMeasure("Weight", 50000),
+    maker_note: z
+      .string()
+      .trim()
+      .max(MAX_MAKER_NOTE, `Keep it to ${MAX_MAKER_NOTE} characters or fewer`),
     category_ids: z.array(z.number().int().positive()),
     collection_id: z.number().int().positive().nullable(),
+    glaze_id: z.number().int().positive().nullable(),
     is_customizable: z.boolean(),
+    is_second: z.boolean(),
+    flaw_note: z
+      .string()
+      .trim()
+      .max(200, "Keep the flaw note to 200 characters or fewer"),
+    is_commission: z.boolean(),
     is_featured: z.boolean(),
     is_active: z.boolean(),
   })
@@ -72,7 +106,11 @@ export const productSchema = z
       message: "Compare at price must be at least the price",
       path: ["compare_at_price"],
     },
-  );
+  )
+  .refine((values) => !values.is_second || values.flaw_note.length > 0, {
+    message: "Say what the kiln left on this piece",
+    path: ["flaw_note"],
+  });
 
 export type ProductFormValues = z.infer<typeof productSchema>;
 

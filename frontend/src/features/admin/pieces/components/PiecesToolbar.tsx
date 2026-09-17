@@ -20,20 +20,30 @@ const FEATURED_OPTIONS: AdminFilterOption[] = [
   { value: "0", label: "Not featured" },
 ];
 
+const SECOND_OPTIONS: AdminFilterOption[] = [
+  { value: "1", label: "Seconds" },
+  { value: "0", label: "Firsts" },
+];
+
 export interface PiecesToolbarProps {
   search: string;
   categoryId: string;
   collectionId: string;
   activeState: string;
   featuredState: string;
+  secondState: string;
+  glazeId: string;
   isLowStockOnly: boolean;
   categoryOptions: AdminFilterOption[];
   collectionOptions: AdminFilterOption[];
+  glazeOptions: AdminFilterOption[];
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onCollectionChange: (value: string) => void;
   onActiveChange: (value: string) => void;
   onFeaturedChange: (value: string) => void;
+  onSecondChange: (value: string) => void;
+  onGlazeChange: (value: string) => void;
   onLowStockChange: (isLowStockOnly: boolean) => void;
 }
 
@@ -43,14 +53,19 @@ export function PiecesToolbar({
   collectionId,
   activeState,
   featuredState,
+  secondState,
+  glazeId,
   isLowStockOnly,
   categoryOptions,
   collectionOptions,
+  glazeOptions,
   onSearchChange,
   onCategoryChange,
   onCollectionChange,
   onActiveChange,
   onFeaturedChange,
+  onSecondChange,
+  onGlazeChange,
   onLowStockChange,
 }: PiecesToolbarProps) {
   return (
@@ -93,6 +108,22 @@ export function PiecesToolbar({
         options={FEATURED_OPTIONS}
         value={featuredState}
         onChange={onFeaturedChange}
+      />
+      <AdminSelectFilter
+        id="pieces-glaze"
+        label="Glaze"
+        anyLabel="Any glaze"
+        options={glazeOptions}
+        value={glazeId}
+        onChange={onGlazeChange}
+      />
+      <AdminSelectFilter
+        id="pieces-second"
+        label="Kiln"
+        anyLabel="Any"
+        options={SECOND_OPTIONS}
+        value={secondState}
+        onChange={onSecondChange}
       />
       <Label
         htmlFor="pieces-low-stock"

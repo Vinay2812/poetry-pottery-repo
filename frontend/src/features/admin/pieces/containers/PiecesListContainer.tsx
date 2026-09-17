@@ -16,6 +16,7 @@ import {
   useAdjustProductStockMutation,
   useAdminCategoriesQuery,
   useAdminCollectionsQuery,
+  useAdminGlazesQuery,
   useAdminProductsQuery,
   useSetProductActiveMutation,
   useSetProductFeaturedMutation,
@@ -47,6 +48,9 @@ import {
   toProductsFilter,
 } from "@/features/admin/pieces/types";
 
+// The filter lists every glaze the studio fires; there are never many.
+const GLAZE_FILTER_LIMIT = 60;
+
 type RowPatch =
   | { kind: "active"; id: number; isActive: boolean }
   | { kind: "featured"; id: number; isFeatured: boolean }
@@ -75,6 +79,10 @@ export function PiecesListContainer() {
     fetchPolicy: "cache-first",
   });
   const { data: collectionData } = useAdminCollectionsQuery({
+    fetchPolicy: "cache-first",
+  });
+  const { data: glazeData } = useAdminGlazesQuery({
+    variables: { filter: { page: 1, limit: GLAZE_FILTER_LIMIT } },
     fetchPolicy: "cache-first",
   });
 
@@ -126,6 +134,15 @@ export function PiecesListContainer() {
         label: collection.name,
       })),
     [collectionData],
+  );
+
+  const glazeOptions = useMemo(
+    () =>
+      (glazeData?.adminGlazes.items ?? []).map((row) => ({
+        value: String(row.glaze.id),
+        label: row.glaze.name,
+      })),
+    [glazeData],
   );
 
   const handleSearchCommit = useCallback(
@@ -233,14 +250,19 @@ export function PiecesListContainer() {
         collectionId={values.collection_id ?? ""}
         activeState={values.is_active ?? ""}
         featuredState={values.is_featured ?? ""}
+        secondState={values.is_second ?? ""}
+        glazeId={values.glaze_id ?? ""}
         isLowStockOnly={values.low_stock === "1"}
         categoryOptions={categoryOptions}
         collectionOptions={collectionOptions}
+        glazeOptions={glazeOptions}
         onSearchChange={setSearchDraft}
         onCategoryChange={(value) => patch({ category_id: value || null })}
         onCollectionChange={(value) => patch({ collection_id: value || null })}
         onActiveChange={(value) => patch({ is_active: value || null })}
         onFeaturedChange={(value) => patch({ is_featured: value || null })}
+        onSecondChange={(value) => patch({ is_second: value || null })}
+        onGlazeChange={(value) => patch({ glaze_id: value || null })}
         onLowStockChange={(isOn) => patch({ low_stock: isOn ? "1" : null })}
       />
       {isFirstLoad ? (

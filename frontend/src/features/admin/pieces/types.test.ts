@@ -11,6 +11,8 @@ import {
   clampStock,
   describeCategories,
   describeMaxLength,
+  describeMeasurement,
+  describeSizeAndWeight,
   describeOptionGroup,
   EMPTY_PRODUCT_FORM,
   formatCareNotes,
@@ -48,6 +50,15 @@ const PRODUCT: AdminProductDetailFragment = {
   care_notes: ["Hand wash", "No microwave"],
   created_at: "2026-01-01T00:00:00.000Z",
   sales_count: 12,
+  is_second: false,
+  flaw_note: null,
+  is_commission: false,
+  maker_note: "Thrown on a wet Tuesday.",
+  capacity_ml: 300,
+  height_cm: 9.5,
+  diameter_cm: 8,
+  weight_g: 420,
+  glaze: { id: 4, name: "Kiln ash", color_code: "#6f7d6b" },
   option_groups: [],
   categories: [
     { id: 1, name: "Mugs", slug: "mugs" },
@@ -169,6 +180,8 @@ describe("toProductsFilter", () => {
           is_active: "0",
           is_featured: "1",
           low_stock: "1",
+          is_second: "1",
+          glaze_id: "5",
         },
         3,
       ),
@@ -181,6 +194,8 @@ describe("toProductsFilter", () => {
       is_active: false,
       is_featured: true,
       low_stock: true,
+      is_second: true,
+      glaze_id: 5,
     });
   });
 
@@ -194,6 +209,8 @@ describe("toProductsFilter", () => {
       is_active: null,
       is_featured: null,
       low_stock: null,
+      is_second: null,
+      glaze_id: null,
     });
   });
 
@@ -216,9 +233,18 @@ describe("toProductFormValues", () => {
       color_code: "#4F6F52",
       stock: 4,
       care_notes: "Hand wash\nNo microwave",
+      capacity_ml: 300,
+      height_cm: 9.5,
+      diameter_cm: 8,
+      weight_g: 420,
+      maker_note: "Thrown on a wet Tuesday.",
       category_ids: [1, 2],
       collection_id: 3,
+      glaze_id: 4,
       is_customizable: true,
+      is_second: false,
+      flaw_note: "",
+      is_commission: false,
       is_featured: false,
       is_active: true,
     });
@@ -316,5 +342,36 @@ describe("toOptionGroupFormValues", () => {
       price_modifier: 0,
       max_length: null,
     });
+  });
+});
+
+describe("describeMeasurement", () => {
+  it("shows a dash for a measurement nobody has taken", () => {
+    expect(describeMeasurement(null, "ml")).toBe("—");
+    expect(describeMeasurement(300, "ml")).toBe("300 ml");
+  });
+});
+
+describe("describeSizeAndWeight", () => {
+  it("joins only the measurements the studio has taken", () => {
+    expect(
+      describeSizeAndWeight({
+        capacityMl: 300,
+        heightCm: 9.5,
+        diameterCm: null,
+        weightG: 420,
+      }),
+    ).toBe("300 ml · 9.5 cm tall · 420 g");
+  });
+
+  it("says so when nothing has been measured", () => {
+    expect(
+      describeSizeAndWeight({
+        capacityMl: null,
+        heightCm: null,
+        diameterCm: null,
+        weightG: null,
+      }),
+    ).toBe("Not measured yet");
   });
 });

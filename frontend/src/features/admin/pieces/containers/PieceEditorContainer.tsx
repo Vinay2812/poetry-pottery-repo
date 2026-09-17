@@ -17,6 +17,7 @@ import {
   useAdjustProductStockMutation,
   useAdminCategoriesQuery,
   useAdminCollectionsQuery,
+  useAdminGlazesQuery,
   useAdminProductQuery,
   useCreateProductMutation,
   useSetProductActiveMutation,
@@ -39,12 +40,16 @@ import { StockAdjustDialog } from "@/features/admin/pieces/components/StockAdjus
 import { OptionGroupsContainer } from "@/features/admin/pieces/containers/OptionGroupsContainer";
 import {
   applyStockDelta,
+  describeSizeAndWeight,
   EMPTY_PRODUCT_FORM,
   formatStock,
   toProductFormValues,
   toProductInput,
   toProductUpdateInput,
 } from "@/features/admin/pieces/types";
+
+// The picker lists every glaze the studio fires; there are never many.
+const GLAZE_PICKER_LIMIT = 60;
 
 interface PieceState {
   stock: number;
@@ -87,6 +92,10 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     fetchPolicy: "cache-first",
   });
   const { data: collectionData } = useAdminCollectionsQuery({
+    fetchPolicy: "cache-first",
+  });
+  const { data: glazeData } = useAdminGlazesQuery({
+    variables: { filter: { page: 1, limit: GLAZE_PICKER_LIMIT } },
     fetchPolicy: "cache-first",
   });
 
@@ -136,6 +145,14 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
         name: collection.name,
       })),
     [collectionData],
+  );
+  const glazeOptions = useMemo(
+    () =>
+      (glazeData?.adminGlazes.items ?? []).map((row) => ({
+        id: row.glaze.id,
+        name: row.glaze.name,
+      })),
+    [glazeData],
   );
 
   const handleSubmit = useCallback(
@@ -326,7 +343,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       />
 
       {!isCreate && (
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <AdminStatTile
             label="Stock"
             value={formatStock(state.stock)}
@@ -342,6 +359,16 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
             value={String(product?.sales_count ?? 0)}
             hint="All time"
           />
+          <AdminStatTile
+            label="In the hand"
+            value={product?.is_second ? "Second" : "First"}
+            hint={describeSizeAndWeight({
+              capacityMl: product?.capacity_ml ?? null,
+              heightCm: product?.height_cm ?? null,
+              diameterCm: product?.diameter_cm ?? null,
+              weightG: product?.weight_g ?? null,
+            })}
+          />
         </div>
       )}
 
@@ -355,6 +382,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
         submitLabel={isCreate ? "Create piece" : "Save changes"}
         categoryOptions={categoryOptions}
         collectionOptions={collectionOptions}
+        glazeOptions={glazeOptions}
         gallery={gallery}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
