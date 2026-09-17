@@ -42,6 +42,17 @@ To reach the database from your laptop: join the same tailnet and connect to `<t
 
 Needs an SSH key on the server that can read the repo (a deploy key is fine).
 
+## Redeploy
+
+Once a server is bootstrapped, ship a new commit with:
+
+```bash
+sudo /opt/poetry-pottery/infra/deploy.sh                 # fast-forward main, build, migrate, restart api
+sudo -E PULL_ENVS=1 /opt/poetry-pottery/infra/deploy.sh  # also refresh the .env files from R2 (needs the R2 exports)
+```
+
+It fast-forwards the checkout (`BRANCH`, default `main`), rebuilds the API image, applies migrations, replaces only the API container and waits for `/health`; Postgres, Redis, RabbitMQ, nginx and Tailscale are untouched. Re-running `bootstrap.sh` also works but repeats the package installs, `tailscale up`, the ufw reset and the certificate request, so use `deploy.sh` for routine releases.
+
 ## Day to day
 
 ```bash
