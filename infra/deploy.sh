@@ -187,6 +187,9 @@ fi
 # ---------------------------------------------------------------- stack
 COMPOSE=(docker compose -f infra/docker/docker-compose.api.yml)
 
+# Postgres reads this bind mount as its unprivileged container user.
+chmod -R a+rX infra/docker/initdb
+
 log "Building the API image"
 "${COMPOSE[@]}" build api migrate
 
