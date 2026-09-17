@@ -124,7 +124,7 @@ Each app validates `process.env` with zod at boot and fails fast. `.env.example`
 
 ## Branches
 
-The rewrite is built as one PR per feature, each stacked on the previous branch. All ten PRs are open and none is merged. The graph is linear as far as `feat/workshops`; after that `feat/design-refresh` and `feat/reviews` are siblings from `208b065` rather than parent and child, even though PR #8 names design-refresh as its base. [`architecture/branches.html`](architecture/branches.html) has the measured counts and the commands that produce them.
+The rewrite is built as one PR per feature, each stacked on the previous branch. All ten PRs are open and none is merged. The commit graph is one strictly linear line from `origin/main` to `feat/admin-ui`, with the documentation branch on the end, so every pull request base is also the real parent. [`architecture/branches.html`](architecture/branches.html) has the measured counts and the commands that produce them.
 
 | Branch                     | Adds                                                                                                                                                                               | PR  |
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
