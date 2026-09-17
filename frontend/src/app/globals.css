@@ -170,6 +170,13 @@
   [data-slot="tabs-content"]:focus-visible {
     outline-offset: -2px;
   }
+
+  /* Our own Close button clears the search field; the browser's native cross would be a second one. */
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
 }
 
 @utility pb-safe {
