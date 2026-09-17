@@ -31,6 +31,7 @@
 #   export TS_HOSTNAME=poetry-pottery-api       # this machine's name on the tailnet
 #   export PULL_ENVS=1                          # redeploy: also re-pull the env files from R2
 #   export SEED=1                               # run `pnpm db:seed` (site scaffolding) after migrating
+#   export REINDEX=1                            # run `pnpm search:reindex` (rebuild every search embedding) after migrating
 #   export SKIP_TLS=1                           # nginx on port 80 only, no certbot (first smoke test)
 #   export FULL=1                               # force the full setup path even on an existing checkout
 #
@@ -204,6 +205,12 @@ log "Applying migrations"
 if [ "${SEED:-0}" = "1" ]; then
   log "Seeding site scaffolding"
   "${COMPOSE[@]}" run --rm migrate pnpm db:seed
+fi
+
+if [ "${REINDEX:-0}" = "1" ]; then
+  # Needed once after data arrives outside the API (an import or a restore); the API keeps the index current otherwise.
+  log "Rebuilding the search embeddings"
+  "${COMPOSE[@]}" run --rm migrate pnpm search:reindex
 fi
 
 log "Starting the API on the new image"
