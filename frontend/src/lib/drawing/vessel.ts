@@ -209,6 +209,8 @@ export interface HatchOptions {
   softEdge?: number;
   seed?: number;
   inset?: number;
+  /** Angle between strokes in a row; wider means fewer, for a small drawing. */
+  angleStep?: number;
 }
 
 /**
@@ -224,6 +226,7 @@ export function hatchArcs({
   softEdge = 16,
   seed = 515,
   inset = 1.6,
+  angleStep = 0.3,
 }: HatchOptions): HatchStroke[] {
   const random = seededRandom(seed);
   const strokes: HatchStroke[] = [];
@@ -238,7 +241,11 @@ export function hatchArcs({
     );
     if (fade <= 0 || radius < 4) continue;
     // Rows are offset like brickwork so the hatching never reads as a grid.
-    for (let angle = 0.07 + (row % 2) * 0.15; angle < 1.5; angle += 0.3) {
+    for (
+      let angle = 0.07 + (row % 2) * (angleStep / 2);
+      angle < 1.5;
+      angle += angleStep
+    ) {
       // Light from the upper left: the right edge is darkest, the left third bare.
       const shade = (0.6 - 0.4 * angle) * fade;
       if (shade < 0.075) continue;
@@ -293,6 +300,22 @@ export function washBand({
     top,
     band: `${top}L${pointD(points[0])}${segmentsD(catmullRom(points))}L${pointD(right)}Z`,
   };
+}
+
+/** An ellipse as two cubics, for a rim seen slightly from above. */
+export function ellipsePath(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+): string {
+  const k = (ry * 4) / 3;
+  const left: Point = [cx - rx, cy];
+  const right: Point = [cx + rx, cy];
+  return (
+    `M${pointD(left)}C${pointD([cx - rx, cy - k])} ${pointD([cx + rx, cy - k])} ${pointD(right)}` +
+    `C${pointD([cx + rx, cy + k])} ${pointD([cx - rx, cy + k])} ${pointD(left)}Z`
+  );
 }
 
 /** A point on the surface, for anchoring a label or hanging a drip. */

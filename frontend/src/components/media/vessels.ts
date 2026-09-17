@@ -8,6 +8,7 @@ import type { PotteryIconKind } from "@/components/icons/pottery";
 import {
   RING_SQUASH,
   closedBody,
+  ellipsePath,
   halfWidthReader,
   hatchArcs,
   pointD,
@@ -26,7 +27,7 @@ const AXIS = 100;
 export const PIECE_CENTRE_Y = 108;
 export const FILL_SCALE = 1.4;
 
-interface VesselSpec {
+export interface VesselSpec {
   /** Rim first, foot last, as [height, half width]. */
   profile: Array<[number, number]>;
   glaze: [number, number];
@@ -162,24 +163,14 @@ const SPECS: Record<PotteryIconKind, VesselSpec> = {
   },
 };
 
-/** An ellipse as two cubics, for a rim seen slightly from above. */
-function ellipsePath(cx: number, cy: number, rx: number, ry: number): string {
-  const k = (ry * 4) / 3;
-  const left: Point = [cx - rx, cy];
-  const right: Point = [cx + rx, cy];
-  return (
-    `M${pointD(left)}C${pointD([cx - rx, cy - k])} ${pointD([cx + rx, cy - k])} ${pointD(right)}` +
-    `C${pointD([cx + rx, cy + k])} ${pointD([cx - rx, cy + k])} ${pointD(left)}Z`
-  );
-}
-
 // The drawing is scaled about its own centre before it is rendered, so an anchor
 // has to be put through the same transform to land where the eye sees the piece.
 function toBoxPercent(value: number, centre: number): number {
   return ((centre + FILL_SCALE * (value - centre)) / VESSEL_BOX) * 100;
 }
 
-function build(spec: VesselSpec): DrawnVessel {
+/** Puts one profile through the engine: silhouette, rings, hatching, glaze. */
+export function drawVessel(spec: VesselSpec): DrawnVessel {
   const [rimY, rimHalf] = spec.profile[0];
   const [footY, footHalf] = spec.profile[spec.profile.length - 1];
   const near = wallSpline(
@@ -275,7 +266,7 @@ function build(spec: VesselSpec): DrawnVessel {
 }
 
 const VESSELS = Object.fromEntries(
-  Object.entries(SPECS).map(([kind, spec]) => [kind, build(spec)]),
+  Object.entries(SPECS).map(([kind, spec]) => [kind, drawVessel(spec)]),
 ) as Record<PotteryIconKind, DrawnVessel>;
 
 export function toDrawnVessel(kind: PotteryIconKind): DrawnVessel {
