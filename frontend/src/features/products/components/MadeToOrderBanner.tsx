@@ -15,9 +15,9 @@ export function MadeToOrderBanner({
   priceLabel,
 }: MadeToOrderBannerProps) {
   return (
-    // The square is held to a column the copy can stand beside, and both start on
-    // the same top edge, so the heading opens the section instead of floating in it.
-    <div className="grid gap-8 md:grid-cols-[minmax(0,26rem)_1fr] md:items-start md:gap-16">
+    // The square is held to a column the copy can stand beside, centred on it so
+    // the heading sits level with the piece instead of above it.
+    <div className="grid gap-8 md:grid-cols-[minmax(0,26rem)_1fr] md:items-center md:gap-16">
       <div className="relative aspect-square bg-white">
         {imageUrl ? (
           <Image
