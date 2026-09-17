@@ -15,14 +15,16 @@ export function MadeToOrderBanner({
   priceLabel,
 }: MadeToOrderBannerProps) {
   return (
-    <div className="grid items-center gap-8 md:grid-cols-2 md:gap-12">
+    // The square is held to a column the copy can stand beside, and both start on
+    // the same top edge, so the heading opens the section instead of floating in it.
+    <div className="grid gap-8 md:grid-cols-[minmax(0,26rem)_1fr] md:items-start md:gap-16">
       <div className="relative aspect-square bg-white">
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt=""
             fill
-            sizes="(min-width: 768px) 50vw, 100vw"
+            sizes="(min-width: 768px) 26rem, 100vw"
             className="object-cover"
           />
         ) : (
