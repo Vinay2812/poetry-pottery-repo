@@ -32,6 +32,13 @@ export class AdminSiteSettingsInput {
   @Field(() => Int, { nullable: true })
   free_shipping_above?: number | null;
 
+  // The "ships in 7 to 12 days" line on a product page; either end may be sent alone.
+  @Field(() => Int, { nullable: true })
+  dispatch_days_min?: number | null;
+
+  @Field(() => Int, { nullable: true })
+  dispatch_days_max?: number | null;
+
   @Field(() => String, { nullable: true })
   hero_heading?: string | null;
 

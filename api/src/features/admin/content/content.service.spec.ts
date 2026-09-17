@@ -36,7 +36,11 @@ describe("AdminContentService", () => {
     prismaMock.contentPage.findUnique.mockResolvedValue(pageRow);
     contentMock.update.mockResolvedValue(pageRow);
     contentMock.list.mockResolvedValue([]);
-    settingsMock.get.mockResolvedValue({ hero_image_url: "" });
+    settingsMock.get.mockResolvedValue({
+      hero_image_url: "",
+      dispatch_days_min: 7,
+      dispatch_days_max: 12,
+    });
     settingsMock.update.mockResolvedValue({});
     const moduleRef = await Test.createTestingModule({
       providers: [
@@ -115,6 +119,34 @@ describe("AdminContentService", () => {
     expect(settingsMock.update).toHaveBeenCalledWith({
       contact_phone: "9123456789",
     });
+  });
+
+  it("saves a dispatch window that reads forwards", async () => {
+    await service.updateSettings({
+      dispatch_days_min: 5,
+      dispatch_days_max: 9,
+    });
+
+    expect(settingsMock.update).toHaveBeenCalledWith({
+      dispatch_days_min: 5,
+      dispatch_days_max: 9,
+    });
+  });
+
+  it("refuses a dispatch window that ends before it starts", async () => {
+    await expect(
+      service.updateSettings({ dispatch_days_min: 14, dispatch_days_max: 3 }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("checks one end of the dispatch window against the stored other end", async () => {
+    await expect(
+      service.updateSettings({ dispatch_days_min: 20 }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    await expect(
+      service.updateSettings({ dispatch_days_max: 20 }),
+    ).resolves.toBeDefined();
   });
 
   it("takes the announcement bar down and drops its link", async () => {

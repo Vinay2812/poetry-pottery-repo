@@ -356,6 +356,8 @@ input AdminSiteSettingsInput {
   address: String
   contact_email: String
   contact_phone: String
+  dispatch_days_max: Int
+  dispatch_days_min: Int
   facebook_url: String
   free_shipping_above: Int
   hero_cta_href: String

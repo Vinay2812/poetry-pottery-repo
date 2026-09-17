@@ -26,6 +26,21 @@ import type {
   AdminSiteSettingsInput,
 } from "./content.type";
 
+// The dispatch window is one sentence to a customer, so it has to read forwards.
+export function assertDispatchDays(min: number, max: number): void {
+  if (!Number.isInteger(min) || !Number.isInteger(max) || min < 1 || max < 1) {
+    throw new BadRequestException("Dispatch days must be whole days");
+  }
+  if (min > max) {
+    throw new BadRequestException(
+      "The earliest dispatch day cannot be after the latest",
+    );
+  }
+  if (max > 120) {
+    throw new BadRequestException("Dispatch cannot be more than 120 days out");
+  }
+}
+
 @Injectable()
 export class AdminContentService {
   constructor(
@@ -93,8 +108,13 @@ export class AdminContentService {
       );
     }
     const hero = input.hero_image_url?.trim() || null;
+    const stored = await this.settings.get();
+    assertDispatchDays(
+      input.dispatch_days_min ?? stored.dispatch_days_min,
+      input.dispatch_days_max ?? stored.dispatch_days_max,
+    );
     if (input.hero_image_url !== undefined) {
-      const current = await this.settings.get();
+      const current = stored;
       await this.uploads.assertConfirmed(
         hero ? [hero] : [],
         current.hero_image_url ? [current.hero_image_url] : [],
@@ -130,6 +150,12 @@ export class AdminContentService {
       ...(input.free_shipping_above === undefined
         ? {}
         : { free_shipping_above: input.free_shipping_above }),
+      ...(input.dispatch_days_min == null
+        ? {}
+        : { dispatch_days_min: input.dispatch_days_min }),
+      ...(input.dispatch_days_max == null
+        ? {}
+        : { dispatch_days_max: input.dispatch_days_max }),
       ...(input.hero_heading == null
         ? {}
         : { hero_heading: input.hero_heading.trim() }),
