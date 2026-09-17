@@ -22,11 +22,18 @@ async function main(): Promise<void> {
     if (!clerkUser || matches.length !== 1) {
       throw new Error(`Expected exactly one Clerk user for ${email}`);
     }
-    const user = await prisma.user.upsert({
-      where: { auth_id: clerkUser.id },
-      create: { auth_id: clerkUser.id, email, role: UserRole.ADMIN },
-      update: { role: UserRole.ADMIN },
+    // Imported rows may carry an older Clerk id, so adopt by email as sign-in provisioning does.
+    const existing = await prisma.user.findFirst({
+      where: { OR: [{ auth_id: clerkUser.id }, { email }] },
     });
+    const user = existing
+      ? await prisma.user.update({
+          where: { id: existing.id },
+          data: { auth_id: clerkUser.id, email, role: UserRole.ADMIN },
+        })
+      : await prisma.user.create({
+          data: { auth_id: clerkUser.id, email, role: UserRole.ADMIN },
+        });
     await clerkClient.users.updateUserMetadata(user.auth_id, {
       publicMetadata: { dbUserId: user.id, role: user.role },
     });
