@@ -62,6 +62,31 @@ export type AdminAnnouncementInput = {
   text?: InputMaybe<Scalars['String']['input']>;
 };
 
+export type AdminBatchNotification = {
+  __typename?: 'AdminBatchNotification';
+  created_at: Scalars['DateTime']['output'];
+  email: Scalars['String']['output'];
+  id: Scalars['Int']['output'];
+  notified_at?: Maybe<Scalars['DateTime']['output']>;
+  product_id: Scalars['Int']['output'];
+  product_name: Scalars['String']['output'];
+  product_slug: Scalars['String']['output'];
+};
+
+export type AdminBatchNotificationsFilterInput = {
+  is_notified?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  product_id?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminBatchNotificationsResult = {
+  __typename?: 'AdminBatchNotificationsResult';
+  items: Array<AdminBatchNotification>;
+  page_info: PageInfo;
+};
+
 export type AdminCategoryInput = {
   icon?: InputMaybe<Scalars['String']['input']>;
   image_url?: InputMaybe<Scalars['String']['input']>;
@@ -126,6 +151,7 @@ export type AdminCouponsResult = {
 export type AdminDashboard = {
   __typename?: 'AdminDashboard';
   low_stock: Array<AdminLowStockPiece>;
+  new_commission_requests: Scalars['Int']['output'];
   orders_by_status: Array<AdminOrderStatusCount>;
   orders_last_30_days: Scalars['Int']['output'];
   pending_bookings: Scalars['Int']['output'];
@@ -134,6 +160,7 @@ export type AdminDashboard = {
   recent_orders: Array<AdminRecentOrder>;
   revenue_last_30_days: Scalars['Int']['output'];
   unread_messages: Scalars['Int']['output'];
+  upcoming_visits: Scalars['Int']['output'];
 };
 
 export type AdminEventInput = {
@@ -166,6 +193,32 @@ export type AdminEventsFilterInput = {
 export type AdminEventsResult = {
   __typename?: 'AdminEventsResult';
   items: Array<Event>;
+  page_info: PageInfo;
+};
+
+export type AdminGlaze = {
+  __typename?: 'AdminGlaze';
+  glaze: Glaze;
+  product_count: Scalars['Int']['output'];
+};
+
+export type AdminGlazeInput = {
+  color_code?: InputMaybe<Scalars['String']['input']>;
+  description: Scalars['String']['input'];
+  name: Scalars['String']['input'];
+  swatch_url?: InputMaybe<Scalars['String']['input']>;
+  variation_note?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminGlazesFilterInput = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminGlazesResult = {
+  __typename?: 'AdminGlazesResult';
+  items: Array<AdminGlaze>;
   page_info: PageInfo;
 };
 
@@ -223,6 +276,7 @@ export type AdminOrdersResult = {
 };
 
 export type AdminProductInput = {
+  capacity_ml?: InputMaybe<Scalars['Int']['input']>;
   care_notes?: InputMaybe<Array<Scalars['String']['input']>>;
   category_ids?: InputMaybe<Array<Scalars['Int']['input']>>;
   collection_id?: InputMaybe<Scalars['Int']['input']>;
@@ -230,18 +284,27 @@ export type AdminProductInput = {
   color_name?: InputMaybe<Scalars['String']['input']>;
   compare_at_price?: InputMaybe<Scalars['Int']['input']>;
   description: Scalars['String']['input'];
+  diameter_cm?: InputMaybe<Scalars['Float']['input']>;
   dimensions?: InputMaybe<Scalars['String']['input']>;
+  flaw_note?: InputMaybe<Scalars['String']['input']>;
+  glaze_id?: InputMaybe<Scalars['Int']['input']>;
+  height_cm?: InputMaybe<Scalars['Float']['input']>;
   image_urls?: InputMaybe<Array<Scalars['String']['input']>>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
+  is_commission?: InputMaybe<Scalars['Boolean']['input']>;
   is_customizable?: InputMaybe<Scalars['Boolean']['input']>;
   is_featured?: InputMaybe<Scalars['Boolean']['input']>;
+  is_second?: InputMaybe<Scalars['Boolean']['input']>;
+  maker_note?: InputMaybe<Scalars['String']['input']>;
   material: Scalars['String']['input'];
   name: Scalars['String']['input'];
   price: Scalars['Int']['input'];
   stock?: InputMaybe<Scalars['Int']['input']>;
+  weight_g?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type AdminProductUpdateInput = {
+  capacity_ml?: InputMaybe<Scalars['Int']['input']>;
   care_notes?: InputMaybe<Array<Scalars['String']['input']>>;
   category_ids?: InputMaybe<Array<Scalars['Int']['input']>>;
   collection_id?: InputMaybe<Scalars['Int']['input']>;
@@ -249,19 +312,29 @@ export type AdminProductUpdateInput = {
   color_name?: InputMaybe<Scalars['String']['input']>;
   compare_at_price?: InputMaybe<Scalars['Int']['input']>;
   description?: InputMaybe<Scalars['String']['input']>;
+  diameter_cm?: InputMaybe<Scalars['Float']['input']>;
   dimensions?: InputMaybe<Scalars['String']['input']>;
+  flaw_note?: InputMaybe<Scalars['String']['input']>;
+  glaze_id?: InputMaybe<Scalars['Int']['input']>;
+  height_cm?: InputMaybe<Scalars['Float']['input']>;
   image_urls?: InputMaybe<Array<Scalars['String']['input']>>;
+  is_commission?: InputMaybe<Scalars['Boolean']['input']>;
   is_customizable?: InputMaybe<Scalars['Boolean']['input']>;
+  is_second?: InputMaybe<Scalars['Boolean']['input']>;
+  maker_note?: InputMaybe<Scalars['String']['input']>;
   material?: InputMaybe<Scalars['String']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   price?: InputMaybe<Scalars['Int']['input']>;
+  weight_g?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type AdminProductsFilterInput = {
   category_id?: InputMaybe<Scalars['Int']['input']>;
   collection_id?: InputMaybe<Scalars['Int']['input']>;
+  glaze_id?: InputMaybe<Scalars['Int']['input']>;
   is_active?: InputMaybe<Scalars['Boolean']['input']>;
   is_featured?: InputMaybe<Scalars['Boolean']['input']>;
+  is_second?: InputMaybe<Scalars['Boolean']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   low_stock?: InputMaybe<Scalars['Boolean']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
@@ -344,6 +417,8 @@ export type AdminSiteSettingsInput = {
   address?: InputMaybe<Scalars['String']['input']>;
   contact_email?: InputMaybe<Scalars['String']['input']>;
   contact_phone?: InputMaybe<Scalars['String']['input']>;
+  dispatch_days_max?: InputMaybe<Scalars['Int']['input']>;
+  dispatch_days_min?: InputMaybe<Scalars['Int']['input']>;
   facebook_url?: InputMaybe<Scalars['String']['input']>;
   free_shipping_above?: InputMaybe<Scalars['Int']['input']>;
   hero_cta_href?: InputMaybe<Scalars['String']['input']>;
@@ -356,6 +431,28 @@ export type AdminSiteSettingsInput = {
   shipping_flat_fee?: InputMaybe<Scalars['Int']['input']>;
   whatsapp_number?: InputMaybe<Scalars['String']['input']>;
   youtube_url?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type AdminStudioVisit = {
+  __typename?: 'AdminStudioVisit';
+  created_at: Scalars['DateTime']['output'];
+  customer?: Maybe<AdminUserRef>;
+  visit: StudioVisit;
+};
+
+export type AdminStudioVisitsFilterInput = {
+  from?: InputMaybe<Scalars['DateTime']['input']>;
+  include_cancelled?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  to?: InputMaybe<Scalars['DateTime']['input']>;
+};
+
+export type AdminStudioVisitsResult = {
+  __typename?: 'AdminStudioVisitsResult';
+  items: Array<AdminStudioVisit>;
+  page_info: PageInfo;
 };
 
 export type AdminSubscriber = {
@@ -602,6 +699,7 @@ export type CommissionRequest = {
   piece_type: Scalars['String']['output'];
   reference_image_urls: Array<Scalars['String']['output']>;
   size: Scalars['String']['output'];
+  status: CommissionStatus;
 };
 
 export type CommissionRequestInput = {
@@ -617,8 +715,11 @@ export type CommissionRequestInput = {
 };
 
 export type CommissionRequestsFilterInput = {
+  is_read?: InputMaybe<Scalars['Boolean']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  status?: InputMaybe<CommissionStatus>;
 };
 
 export type CommissionRequestsResult = {
@@ -626,6 +727,13 @@ export type CommissionRequestsResult = {
   items: Array<CommissionRequest>;
   page_info: PageInfo;
 };
+
+export enum CommissionStatus {
+  Accepted = 'ACCEPTED',
+  Declined = 'DECLINED',
+  New = 'NEW',
+  Sketched = 'SKETCHED'
+}
 
 export type ConfirmedImage = {
   __typename?: 'ConfirmedImage';
@@ -827,6 +935,7 @@ export type Mutation = {
   cancelOrder: Order;
   cancelOrderAsAdmin: AdminOrder;
   cancelRegistration: Registration;
+  cancelStudioVisit: StudioVisit;
   cancelWorkshopBooking: WorkshopBooking;
   clearCart: Cart;
   completeEvent: Event;
@@ -840,6 +949,7 @@ export type Mutation = {
   createCustomizationUpload: UploadTicket;
   createEvent: Event;
   createEventReview: Review;
+  createGlaze: AdminGlaze;
   createProduct: Product;
   createProductOption: ProductOptionGroup;
   createProductOptionGroup: ProductOptionGroup;
@@ -852,6 +962,7 @@ export type Mutation = {
   deleteContactMessage: Scalars['Boolean']['output'];
   deleteContentPage: Scalars['Boolean']['output'];
   deleteCoupon: Scalars['Boolean']['output'];
+  deleteGlaze: Scalars['Boolean']['output'];
   deleteProductOption: Scalars['Boolean']['output'];
   deleteProductOptionGroup: Scalars['Boolean']['output'];
   deleteReview: Scalars['Boolean']['output'];
@@ -870,6 +981,7 @@ export type Mutation = {
   saveContentPage: ContentPage;
   saveWorkshopTier: WorkshopConfig;
   sendContactMessage: Scalars['Boolean']['output'];
+  setCommissionRequestStatus: CommissionRequest;
   setContactMessageRead: ContactMessage;
   setDefaultAddress: Address;
   setOrderAdminNote: AdminOrder;
@@ -893,6 +1005,7 @@ export type Mutation = {
   updateCollection: Collection;
   updateCoupon: AdminCoupon;
   updateEvent: Event;
+  updateGlaze: AdminGlaze;
   updateProduct: Product;
   updateProductOption: ProductOptionGroup;
   updateProductOptionGroup: ProductOptionGroup;
@@ -949,6 +1062,12 @@ export type MutationCancelOrderAsAdminArgs = {
 
 
 export type MutationCancelRegistrationArgs = {
+  id: Scalars['String']['input'];
+  reason?: InputMaybe<Scalars['String']['input']>;
+};
+
+
+export type MutationCancelStudioVisitArgs = {
   id: Scalars['String']['input'];
   reason?: InputMaybe<Scalars['String']['input']>;
 };
@@ -1020,6 +1139,11 @@ export type MutationCreateEventReviewArgs = {
 };
 
 
+export type MutationCreateGlazeArgs = {
+  input: AdminGlazeInput;
+};
+
+
 export type MutationCreateProductArgs = {
   input: AdminProductInput;
 };
@@ -1080,6 +1204,11 @@ export type MutationDeleteContentPageArgs = {
 
 
 export type MutationDeleteCouponArgs = {
+  id: Scalars['Int']['input'];
+};
+
+
+export type MutationDeleteGlazeArgs = {
   id: Scalars['Int']['input'];
 };
 
@@ -1175,6 +1304,12 @@ export type MutationSaveWorkshopTierArgs = {
 
 export type MutationSendContactMessageArgs = {
   input: ContactMessageInput;
+};
+
+
+export type MutationSetCommissionRequestStatusArgs = {
+  id: Scalars['String']['input'];
+  status: CommissionStatus;
 };
 
 
@@ -1309,6 +1444,12 @@ export type MutationUpdateCouponArgs = {
 export type MutationUpdateEventArgs = {
   id: Scalars['Int']['input'];
   input: AdminEventInput;
+};
+
+
+export type MutationUpdateGlazeArgs = {
+  id: Scalars['Int']['input'];
+  input: AdminGlazeInput;
 };
 
 
@@ -1473,6 +1614,7 @@ export type Product = {
   in_wishlist: Scalars['Boolean']['output'];
   is_active: Scalars['Boolean']['output'];
   is_archived: Scalars['Boolean']['output'];
+  is_commission: Scalars['Boolean']['output'];
   is_customizable: Scalars['Boolean']['output'];
   is_featured: Scalars['Boolean']['output'];
   is_second: Scalars['Boolean']['output'];
@@ -1560,6 +1702,7 @@ export type ProductsResult = {
 export type Query = {
   __typename?: 'Query';
   addresses: Array<Address>;
+  adminBatchNotifications: AdminBatchNotificationsResult;
   adminCategories: Array<Category>;
   adminCollections: Array<Collection>;
   adminContactMessages: ContactMessagesResult;
@@ -1570,6 +1713,7 @@ export type Query = {
   adminEvent: Event;
   adminEventRegistrations: AdminRegistrationsResult;
   adminEvents: AdminEventsResult;
+  adminGlazes: AdminGlazesResult;
   adminNewsletterSubscribers: AdminSubscribersResult;
   adminOrder: AdminOrder;
   adminOrders: AdminOrdersResult;
@@ -1577,6 +1721,7 @@ export type Query = {
   adminProductOptionGroups: Array<ProductOptionGroup>;
   adminProducts: AdminProductsResult;
   adminReviews: AdminReviewsResult;
+  adminStudioVisits: AdminStudioVisitsResult;
   adminUser: AdminUser;
   adminUsers: AdminUsersResult;
   adminWorkshopBlackouts: Array<AdminWorkshopBlackout>;
@@ -1595,6 +1740,7 @@ export type Query = {
   event: Event;
   eventReviews: ReviewsResult;
   events: EventsResult;
+  exportBatchNotifications: Scalars['String']['output'];
   exportNewsletterSubscribers: Scalars['String']['output'];
   featuredProducts: Array<Product>;
   glaze: Glaze;
@@ -1621,6 +1767,11 @@ export type Query = {
   workshopAvailability: Array<WorkshopDay>;
   workshopBooking: WorkshopBooking;
   workshops: Array<WorkshopConfig>;
+};
+
+
+export type QueryAdminBatchNotificationsArgs = {
+  filter?: InputMaybe<AdminBatchNotificationsFilterInput>;
 };
 
 
@@ -1651,6 +1802,11 @@ export type QueryAdminEventRegistrationsArgs = {
 
 export type QueryAdminEventsArgs = {
   filter?: InputMaybe<AdminEventsFilterInput>;
+};
+
+
+export type QueryAdminGlazesArgs = {
+  filter?: InputMaybe<AdminGlazesFilterInput>;
 };
 
 
@@ -1686,6 +1842,11 @@ export type QueryAdminProductsArgs = {
 
 export type QueryAdminReviewsArgs = {
   filter?: InputMaybe<AdminReviewsFilterInput>;
+};
+
+
+export type QueryAdminStudioVisitsArgs = {
+  filter?: InputMaybe<AdminStudioVisitsFilterInput>;
 };
 
 
@@ -1754,6 +1915,11 @@ export type QueryEventReviewsArgs = {
 
 export type QueryEventsArgs = {
   filter?: InputMaybe<EventsFilterInput>;
+};
+
+
+export type QueryExportBatchNotificationsArgs = {
+  filter?: InputMaybe<AdminBatchNotificationsFilterInput>;
 };
 
 
@@ -2005,6 +2171,7 @@ export type SiteSettings = {
 
 export type StudioVisit = {
   __typename?: 'StudioVisit';
+  cancelled_at?: Maybe<Scalars['DateTime']['output']>;
   ends_at: Scalars['DateTime']['output'];
   id: Scalars['String']['output'];
   name: Scalars['String']['output'];
@@ -2057,7 +2224,9 @@ export enum UploadPurpose {
   Collection = 'COLLECTION',
   Content = 'CONTENT',
   Event = 'EVENT',
+  Glaze = 'GLAZE',
   Hero = 'HERO',
+  OrderNote = 'ORDER_NOTE',
   Product = 'PRODUCT',
   Review = 'REVIEW'
 }
