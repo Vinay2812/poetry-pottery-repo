@@ -4,9 +4,8 @@ FROM node:24-alpine AS base
 RUN corepack enable && corepack prepare pnpm@11.4.0 --activate
 WORKDIR /app
 
-# Install everything, generate + compile, then prune to production deps in place.
-# Pruning (rather than a separate --prod install) keeps the Prisma client, which
-# pnpm generates inside the @prisma/client package in the .pnpm store.
+# Install everything, generate and compile. This stage keeps the dev dependencies
+# (Prisma CLI, ts-node) and is what the compose `migrate` service runs.
 FROM base AS build
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
@@ -14,13 +13,17 @@ RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
 COPY . .
 # prisma.config.ts resolves DATABASE_URL at generate time (no connection is made).
 RUN DATABASE_URL='postgresql://dummy:dummy@postgres:5432/dummy' pnpm prisma:generate && pnpm exec nest build
+
+# Prune to production deps in place. Pruning (rather than a separate --prod install)
+# keeps the generated Prisma client inside the @prisma/client package in the .pnpm store.
+FROM build AS pruned
 RUN pnpm prune --prod
 
 FROM node:24-alpine AS runner
 ENV NODE_ENV=production
 WORKDIR /app
-COPY --from=build --chown=node:node /app/node_modules ./node_modules
-COPY --from=build --chown=node:node /app/dist ./dist
+COPY --from=pruned --chown=node:node /app/node_modules ./node_modules
+COPY --from=pruned --chown=node:node /app/dist ./dist
 COPY --chown=node:node package.json ./
 # The embeddings model is cached here at runtime; the node user must own it.
 RUN mkdir -p /app/.cache/models && chown -R node:node /app/.cache
