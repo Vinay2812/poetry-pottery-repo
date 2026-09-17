@@ -7,6 +7,8 @@ import {
 } from "@/features/contact/contact.type";
 import { AdminInboxService } from "./inbox.service";
 import {
+  AdminBatchNotificationsFilterInput,
+  AdminBatchNotificationsResult,
   AdminContactFilterInput,
   AdminSubscriber,
   AdminSubscribersFilterInput,
@@ -65,5 +67,29 @@ export class AdminInboxResolver {
   @Mutation(() => Boolean)
   unsubscribeSubscriber(@Args("email") email: string): Promise<boolean> {
     return this.inbox.unsubscribe(email);
+  }
+
+  @AdminRequired()
+  @Query(() => AdminBatchNotificationsResult)
+  adminBatchNotifications(
+    @Args("filter", {
+      type: () => AdminBatchNotificationsFilterInput,
+      nullable: true,
+    })
+    filter: AdminBatchNotificationsFilterInput | null,
+  ): Promise<AdminBatchNotificationsResult> {
+    return this.inbox.batchNotifications(filter ?? {});
+  }
+
+  @AdminRequired()
+  @Query(() => String)
+  exportBatchNotifications(
+    @Args("filter", {
+      type: () => AdminBatchNotificationsFilterInput,
+      nullable: true,
+    })
+    filter: AdminBatchNotificationsFilterInput | null,
+  ): Promise<string> {
+    return this.inbox.exportBatchNotifications(filter ?? {});
   }
 }

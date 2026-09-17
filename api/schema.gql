@@ -45,6 +45,29 @@ input AdminAnnouncementInput {
   text: String
 }
 
+type AdminBatchNotification {
+  created_at: DateTime!
+  email: String!
+  id: Int!
+  notified_at: DateTime
+  product_id: Int!
+  product_name: String!
+  product_slug: String!
+}
+
+input AdminBatchNotificationsFilterInput {
+  is_notified: Boolean
+  limit: Int
+  page: Int
+  product_id: Int
+  search: String
+}
+
+type AdminBatchNotificationsResult {
+  items: [AdminBatchNotification!]!
+  page_info: PageInfo!
+}
+
 input AdminCategoryInput {
   icon: String
   image_url: String
@@ -1097,6 +1120,7 @@ type ProductsResult {
 
 type Query {
   addresses: [Address!]!
+  adminBatchNotifications(filter: AdminBatchNotificationsFilterInput): AdminBatchNotificationsResult!
   adminCategories: [Category!]!
   adminCollections: [Collection!]!
   adminContactMessages(filter: AdminContactFilterInput): ContactMessagesResult!
@@ -1133,6 +1157,7 @@ type Query {
   event(slug: String!): Event!
   eventReviews(event_id: Int!, limit: Int, page: Int): ReviewsResult!
   events(filter: EventsFilterInput): EventsResult!
+  exportBatchNotifications(filter: AdminBatchNotificationsFilterInput): String!
   exportNewsletterSubscribers(filter: AdminSubscribersFilterInput): String!
   featuredProducts(limit: Int = 8): [Product!]!
   glaze(slug: String!): Glaze!

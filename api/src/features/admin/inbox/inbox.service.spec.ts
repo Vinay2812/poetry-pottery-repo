@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { missingRow } from "@test/helpers/prisma-errors";
-import { AdminInboxService, toCsv } from "./inbox.service";
+import { AdminInboxService, toCsv, toWatcherCsv } from "./inbox.service";
 
 const message = {
   id: 1,
@@ -38,6 +38,16 @@ const prismaMock = {
     count: vi.fn(),
     updateMany: vi.fn(),
   },
+  batchNotification: { findMany: vi.fn(), count: vi.fn() },
+};
+
+const watcher = {
+  id: 3,
+  email: "maya@example.com",
+  product_id: 9,
+  created_at: new Date("2026-09-01T00:00:00.000Z"),
+  notified_at: null,
+  product: { name: "Slate morning mug", slug: "slate-morning-mug" },
 };
 
 describe("toCsv", () => {
@@ -76,6 +86,28 @@ describe("toCsv", () => {
   });
 });
 
+describe("toWatcherCsv", () => {
+  it("names the piece each address is waiting for", () => {
+    const csv = toWatcherCsv([
+      {
+        email: "maya@example.com",
+        product: { name: "Slate morning mug" },
+        created_at: new Date("2026-09-01T00:00:00.000Z"),
+        notified_at: new Date("2026-09-05T00:00:00.000Z"),
+      },
+    ]);
+
+    expect(csv.split("\n")).toEqual([
+      "email,piece,requested_at,notified_at",
+      "maya@example.com,Slate morning mug,2026-09-01T00:00:00.000Z,2026-09-05T00:00:00.000Z",
+    ]);
+  });
+
+  it("still writes the header for an empty list", () => {
+    expect(toWatcherCsv([])).toBe("email,piece,requested_at,notified_at");
+  });
+});
+
 describe("AdminInboxService", () => {
   let service: AdminInboxService;
 
@@ -90,6 +122,8 @@ describe("AdminInboxService", () => {
     prismaMock.contactMessage.delete.mockResolvedValue(message);
     prismaMock.newsletterSubscriber.findMany.mockResolvedValue([subscriber]);
     prismaMock.newsletterSubscriber.count.mockResolvedValue(1);
+    prismaMock.batchNotification.findMany.mockResolvedValue([watcher]);
+    prismaMock.batchNotification.count.mockResolvedValue(1);
     const moduleRef = await Test.createTestingModule({
       providers: [
         AdminInboxService,
@@ -167,5 +201,46 @@ describe("AdminInboxService", () => {
     await expect(
       service.unsubscribe("nobody@example.com"),
     ).rejects.toBeInstanceOf(NotFoundException);
+  });
+
+  it("flattens the piece onto each waiting row", async () => {
+    const result = await service.batchNotifications({});
+
+    expect(result.items[0]).toMatchObject({
+      email: "maya@example.com",
+      product_name: "Slate morning mug",
+      product_slug: "slate-morning-mug",
+    });
+  });
+
+  it("separates the addresses already mailed from the ones still waiting", async () => {
+    await service.batchNotifications({ is_notified: true });
+    expect(prismaMock.batchNotification.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { notified_at: { not: null } } }),
+    );
+
+    await service.batchNotifications({ is_notified: false });
+    expect(prismaMock.batchNotification.findMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({ where: { notified_at: null } }),
+    );
+  });
+
+  it("searches an address and the piece name together", async () => {
+    await service.batchNotifications({ search: " mug " });
+
+    const call = prismaMock.batchNotification.findMany.mock.calls.at(
+      -1,
+    )?.[0] as {
+      where: { OR: unknown[] };
+    };
+    expect(call.where.OR).toHaveLength(2);
+  });
+
+  it("exports the waiting list as a sheet", async () => {
+    prismaMock.batchNotification.findMany.mockResolvedValue([watcher]);
+
+    await expect(service.exportBatchNotifications({})).resolves.toContain(
+      "Slate morning mug",
+    );
   });
 });
