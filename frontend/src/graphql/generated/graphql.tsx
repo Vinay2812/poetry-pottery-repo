@@ -2566,7 +2566,7 @@ export type DeleteCouponMutation = { deleteCoupon: boolean };
 export type AdminDashboardQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type AdminDashboardQuery = { adminDashboard: { orders_last_30_days: number, revenue_last_30_days: number, pending_registrations: number, pending_bookings: number, unread_messages: number, orders_by_status: Array<{ status: OrderStatus, count: number }>, recent_orders: Array<{ id: string, status: OrderStatus, total: number, item_count: number, created_at: string, customer: { id: number, name: string | null, email: string, image: string | null } }>, recent_bookings: Array<{ id: string, status: RegistrationStatus, total: number, hours: number, participants: number, starts_at: string, created_at: string, customer: { id: number, name: string | null, email: string, image: string | null } }>, low_stock: Array<{ id: number, name: string, slug: string, stock: number }> } };
+export type AdminDashboardQuery = { adminDashboard: { orders_last_30_days: number, revenue_last_30_days: number, pending_registrations: number, pending_bookings: number, unread_messages: number, new_commission_requests: number, upcoming_visits: number, orders_by_status: Array<{ status: OrderStatus, count: number }>, recent_orders: Array<{ id: string, status: OrderStatus, total: number, item_count: number, created_at: string, customer: { id: number, name: string | null, email: string, image: string | null } }>, recent_bookings: Array<{ id: string, status: RegistrationStatus, total: number, hours: number, participants: number, starts_at: string, created_at: string, customer: { id: number, name: string | null, email: string, image: string | null } }>, low_stock: Array<{ id: number, name: string, slug: string, stock: number }> } };
 
 export type AdminEventRowFragment = { id: number, slug: string, title: string, event_type: EventType, status: EventStatus, level: EventLevel | null, starts_at: string, ends_at: string, location: string, price: number, total_seats: number, available_seats: number, image_url: string, is_past: boolean };
 
@@ -5145,6 +5145,8 @@ export const AdminDashboardDocument = gql`
     pending_registrations
     pending_bookings
     unread_messages
+    new_commission_requests
+    upcoming_visits
     orders_by_status {
       status
       count

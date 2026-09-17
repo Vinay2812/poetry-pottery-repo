@@ -5,6 +5,8 @@ query AdminDashboard {
     pending_registrations
     pending_bookings
     unread_messages
+    new_commission_requests
+    upcoming_visits
     orders_by_status {
       status
       count

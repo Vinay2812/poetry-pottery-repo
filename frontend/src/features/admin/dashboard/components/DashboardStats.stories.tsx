@@ -19,6 +19,8 @@ const meta = {
     pendingRegistrations: "4",
     pendingBookings: "2",
     unreadMessages: "7",
+    newCommissions: "3",
+    upcomingVisits: "2",
   },
 } satisfies Meta<typeof DashboardStats>;
 
@@ -35,6 +37,8 @@ export const QuietMonth: Story = {
     pendingRegistrations: "0",
     pendingBookings: "0",
     unreadMessages: "0",
+    newCommissions: "0",
+    upcomingVisits: "0",
   },
 };
 

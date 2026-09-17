@@ -6,6 +6,8 @@ export interface DashboardStatsProps {
   pendingRegistrations: string;
   pendingBookings: string;
   unreadMessages: string;
+  newCommissions: string;
+  upcomingVisits: string;
 }
 
 export function DashboardStats({
@@ -14,9 +16,11 @@ export function DashboardStats({
   pendingRegistrations,
   pendingBookings,
   unreadMessages,
+  newCommissions,
+  upcomingVisits,
 }: DashboardStatsProps) {
   return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
       <AdminStatTile label="Orders" value={orders} hint="Last 30 days" />
       <AdminStatTile label="Revenue" value={revenue} hint="Last 30 days" />
       <AdminStatTile
@@ -33,6 +37,16 @@ export function DashboardStats({
         label="Messages"
         value={unreadMessages}
         hint="Unread in the inbox"
+      />
+      <AdminStatTile
+        label="Briefs"
+        value={newCommissions}
+        hint="Nobody has read yet"
+      />
+      <AdminStatTile
+        label="Visits"
+        value={upcomingVisits}
+        hint="Still ahead of now"
       />
     </div>
   );

@@ -165,6 +165,8 @@ export function DashboardContainer() {
         pendingRegistrations={formatCount(dashboard.pending_registrations)}
         pendingBookings={formatCount(dashboard.pending_bookings)}
         unreadMessages={formatCount(dashboard.unread_messages)}
+        newCommissions={formatCount(dashboard.new_commission_requests)}
+        upcomingVisits={formatCount(dashboard.upcoming_visits)}
       />
       <DashboardSection
         title="Recent orders"

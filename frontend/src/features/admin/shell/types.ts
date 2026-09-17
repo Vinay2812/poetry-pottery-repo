@@ -7,14 +7,18 @@ export const ADMIN_NAV_LINKS: AdminNavLink[] = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/dashboard/pieces", label: "Pieces" },
   { href: "/dashboard/catalog", label: "Categories" },
+  { href: "/dashboard/glazes", label: "Glazes" },
   { href: "/dashboard/orders", label: "Orders" },
   { href: "/dashboard/people", label: "People" },
   { href: "/dashboard/events", label: "Events" },
   { href: "/dashboard/workshops", label: "Workshops" },
+  { href: "/dashboard/visits", label: "Visits" },
+  { href: "/dashboard/commissions", label: "Commissions" },
   { href: "/dashboard/reviews", label: "Reviews" },
   { href: "/dashboard/content", label: "Content" },
   { href: "/dashboard/coupons", label: "Coupons" },
   { href: "/dashboard/inbox", label: "Inbox" },
+  { href: "/dashboard/notifications", label: "Waiting list" },
 ];
 
 /** The dashboard root only lights up on an exact match; every other section owns its subtree. */
