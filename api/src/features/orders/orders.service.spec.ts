@@ -6,6 +6,8 @@ import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
 import { StorageService } from "@/storage/storage.service";
 import { NotificationsService } from "@/features/notifications/notifications.service";
+import { UploadsService } from "@/features/admin/uploads/uploads.service";
+import { UploadPurpose } from "@/features/admin/uploads/uploads.type";
 import { CartService } from "@/features/cart/cart.service";
 import { SettingsService } from "@/features/settings/settings.service";
 import { OrdersService } from "./orders.service";
@@ -36,6 +38,7 @@ const cartMock = { get: vi.fn() };
 const settingsMock = { get: vi.fn() };
 const mailMock = { enqueue: vi.fn() };
 const notificationsMock = { announceRestock: vi.fn() };
+const uploadsMock = { assertConfirmed: vi.fn() };
 const storageMock = {
   isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.test/")),
 };
@@ -153,6 +156,7 @@ describe("OrdersService", () => {
         { provide: MailService, useValue: mailMock },
         { provide: StorageService, useValue: storageMock },
         { provide: NotificationsService, useValue: notificationsMock },
+        { provide: UploadsService, useValue: uploadsMock },
       ],
     }).compile();
     service = moduleRef.get(OrdersService);
@@ -481,6 +485,20 @@ describe("OrdersService", () => {
       expect(mailMock.enqueue).toHaveBeenCalledTimes(1);
       expect(mailMock.enqueue).toHaveBeenCalledWith(
         containing({ to: "maya@example.com" }),
+      );
+    });
+
+    it("confirms the photo against the order note spec", async () => {
+      await service.addNote({
+        order_id: "ORD123",
+        body: "Out of the glaze firing this morning.",
+        image_url: PHOTO,
+      });
+
+      expect(uploadsMock.assertConfirmed).toHaveBeenCalledWith(
+        [PHOTO],
+        [],
+        UploadPurpose.ORDER_NOTE,
       );
     });
 

@@ -15,6 +15,7 @@ export enum UploadPurpose {
   HERO = "HERO",
   CONTENT = "CONTENT",
   REVIEW = "REVIEW",
+  ORDER_NOTE = "ORDER_NOTE",
 }
 
 registerEnumType(UploadPurpose, { name: "UploadPurpose" });

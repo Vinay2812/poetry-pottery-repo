@@ -26,6 +26,8 @@ import {
 import { NotificationsService } from "@/features/notifications/notifications.service";
 import { cameBackInStock } from "@/features/notifications/restock";
 import { SettingsService } from "@/features/settings/settings.service";
+import { UploadsService } from "@/features/admin/uploads/uploads.service";
+import { UploadPurpose } from "@/features/admin/uploads/uploads.type";
 import { toCareLines } from "./care";
 import { checkCoupon, normaliseCouponCode } from "./coupons";
 import { readGift } from "./gift";
@@ -124,6 +126,7 @@ export class OrdersService {
     private readonly mail: MailService,
     private readonly storage: StorageService,
     private readonly notifications: NotificationsService,
+    private readonly uploads: UploadsService,
   ) {}
 
   // Same maths as placeOrder, so the checkout page never shows a total the order will not match.
@@ -462,6 +465,12 @@ export class OrdersService {
     if (imageUrl !== null && !this.storage.isOwnUrl(imageUrl)) {
       throw new BadRequestException("Attach a photo uploaded to the studio");
     }
+    // The same spec check every other console image goes through.
+    await this.uploads.assertConfirmed(
+      imageUrl ? [imageUrl] : [],
+      [],
+      UploadPurpose.ORDER_NOTE,
+    );
     const order = await this.prisma.order.findUnique({
       where: { id: input.order_id },
       select: { id: true, user: { select: { email: true } } },

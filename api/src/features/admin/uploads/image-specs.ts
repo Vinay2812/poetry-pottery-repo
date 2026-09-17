@@ -91,6 +91,17 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "content page heroes",
   },
+  // A photo of the piece packed or on the wheel, sent with a note from the studio.
+  [UploadPurpose.ORDER_NOTE]: {
+    purpose: UploadPurpose.ORDER_NOTE,
+    ratio_label: "4:3",
+    ratio: 4 / 3,
+    min_width: 1200,
+    min_height: 900,
+    max_bytes: MAX_IMAGE_BYTES,
+    content_types: ALLOWED_CONTENT_TYPES,
+    renders_at: "studio notes on an order",
+  },
   [UploadPurpose.REVIEW]: {
     purpose: UploadPurpose.REVIEW,
     ratio_label: "any",
@@ -112,6 +123,7 @@ const PURPOSE_FOLDER: Record<UploadPurpose, UploadFolder> = {
   [UploadPurpose.HERO]: "hero",
   [UploadPurpose.CONTENT]: "content",
   [UploadPurpose.REVIEW]: "reviews",
+  [UploadPurpose.ORDER_NOTE]: "orders",
 };
 
 export function folderFor(purpose: UploadPurpose): UploadFolder {

@@ -1334,6 +1334,7 @@ enum UploadPurpose {
   EVENT
   GLAZE
   HERO
+  ORDER_NOTE
   PRODUCT
   REVIEW
 }

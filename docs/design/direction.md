@@ -91,5 +91,6 @@ Every surface should say "one pair of hands made this". Concretely:
 | event                 | 4:3   | 1200 × 900           | event cards and detail                     |
 | hero, about, workshop | 16:9  | 1600 × 900           | home hero, about landscape, workshop intro |
 | review                | any   | 400 px shortest side | review photos                              |
+| order_note            | 4:3   | 1200 × 900           | studio notes on an order                   |
 
 All uploads: JPEG, PNG, WebP or AVIF, at most 8 MB. The admin uploader checks these before the upload (and offers a fixed-ratio crop); the API confirms them again after the upload by reading the stored file, and only confirmed files can be saved.
