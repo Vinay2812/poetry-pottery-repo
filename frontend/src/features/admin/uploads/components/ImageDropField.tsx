@@ -48,13 +48,13 @@ export function ImageDropField({
             <span className="text-[11px] text-muted-foreground">No photo</span>
           )}
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2">
           <input
             id={id}
             type="file"
             accept={accept}
             disabled={isBusy}
-            className="max-w-full text-[13px] file:mr-3 file:border file:border-ash file:bg-transparent file:px-3 file:py-1.5 file:text-[13px]"
+            className="w-full min-w-0 text-[13px] file:mr-3 file:border file:border-ash file:bg-transparent file:px-3 file:py-1.5 file:text-[13px]"
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) onFilePick(file);
