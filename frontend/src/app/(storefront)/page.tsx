@@ -1,0 +1,157 @@
+import { formatDate, formatInr } from "@/lib/format";
+import {
+  getCategories,
+  getFeaturedProducts,
+  getRecentReviews,
+  getUpcomingEvents,
+} from "@/lib/data/catalog";
+import { getSiteSettings } from "@/lib/data/site-settings";
+
+import { Reveal } from "@/components/motion/Reveal";
+import { PageShell } from "@/components/layout/PageShell";
+
+import {
+  AboutBlock,
+  EventRow,
+  HomeHero,
+  HomeSection,
+  StudioTeaser,
+} from "@/features/home";
+import { ReviewColumn, toOneLine } from "@/features/reviews";
+import { toEventPath, toSeatsLabel } from "@/features/events";
+import {
+  CategoryTile,
+  MadeToOrderBanner,
+  ProductCardContainer,
+  ProductCarousel,
+} from "@/features/products";
+
+export default async function HomePage() {
+  const [settings, categories, featured, upcomingEvents, recentReviews] =
+    await Promise.all([
+      getSiteSettings(),
+      getCategories(),
+      getFeaturedProducts(8),
+      getUpcomingEvents(3),
+      getRecentReviews(3),
+    ]);
+  const customPiece =
+    featured.find((product) => product.is_customizable) ?? null;
+
+  return (
+    <PageShell className="flex flex-col">
+      <HomeHero
+        heading={settings.hero_heading}
+        subheading={settings.hero_subheading}
+        shopHref={settings.hero_cta_href || "/products"}
+        shopLabel={settings.hero_cta_text || "Shop the shelf"}
+        sessionHref="/workshops"
+      />
+
+      {categories.length > 0 && (
+        <HomeSection title="Shapes we throw">
+          <div className="grid grid-cols-3 gap-6 lift-and-dim sm:grid-cols-4 md:grid-cols-7">
+            {categories.map((category) => (
+              <CategoryTile
+                key={category.id}
+                href={`/products?category=${category.slug}`}
+                slug={category.slug}
+                name={category.name}
+                imageUrl={category.image_url}
+                productCount={category.product_count}
+              />
+            ))}
+          </div>
+        </HomeSection>
+      )}
+
+      {customPiece && (
+        <section className="border-t border-ash py-16 md:py-24">
+          <Reveal isScrollLinked>
+            <MadeToOrderBanner
+              href="/custom"
+              imageUrl={customPiece.image_urls[0] ?? null}
+              priceLabel={formatInr(customPiece.price)}
+            />
+          </Reveal>
+        </section>
+      )}
+
+      {featured.length > 0 && (
+        <div className="border-t border-ash py-16 md:py-24">
+          <Reveal isGroup>
+            <ProductCarousel
+              title="Pieces on the shelf"
+              viewAllHref="/products"
+            >
+              {featured.map((product, index) => (
+                <ProductCardContainer
+                  key={product.id}
+                  product={product}
+                  isPriority={index < 2}
+                />
+              ))}
+            </ProductCarousel>
+          </Reveal>
+        </div>
+      )}
+
+      <HomeSection
+        title="At the studio"
+        note="Wheel sessions run every afternoon except Monday. Book an hour or three."
+        linkHref={upcomingEvents.length > 0 ? "/events" : "/workshops"}
+        linkLabel={upcomingEvents.length > 0 ? "All dates" : "Open studio"}
+      >
+        {upcomingEvents.length > 0 ? (
+          <div className="border-t border-ash">
+            {upcomingEvents.map((event) => (
+              <EventRow
+                key={event.id}
+                href={toEventPath(event.slug)}
+                dateLabel={formatDate(event.starts_at)}
+                title={event.title}
+                seatsLabel={toSeatsLabel(
+                  event.available_seats,
+                  event.total_seats,
+                )}
+                isSoldOut={event.available_seats <= 0}
+              />
+            ))}
+          </div>
+        ) : (
+          <StudioTeaser
+            line="Nothing is on the calendar this week, but the wheels are free most afternoons. Pick an hour and we will set one up for you."
+            href="/workshops"
+            linkLabel="Book a wheel session"
+          />
+        )}
+      </HomeSection>
+
+      {recentReviews.length > 0 && (
+        <HomeSection title="From the table">
+          <div className="grid gap-6 md:grid-cols-3 md:gap-0">
+            {recentReviews.map((review) => (
+              <ReviewColumn
+                key={review.id}
+                authorName={review.author.name}
+                rating={review.rating}
+                line={toOneLine(review.body)}
+                subjectName={review.subject_name}
+                href={review.subject_href}
+              />
+            ))}
+          </div>
+        </HomeSection>
+      )}
+
+      <HomeSection title="A small studio in Sangli">
+        <AboutBlock
+          imageUrl={null}
+          firstLine="We throw stoneware and terracotta on two wheels, glaze it by hand and fire it in small batches."
+          secondLine="Because every piece is thrown one at a time, glaze and shape shift a little between them."
+          href="/about"
+        />
+      </HomeSection>
+    </PageShell>
+  );
+}

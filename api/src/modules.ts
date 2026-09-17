@@ -3,6 +3,8 @@ import { env } from "@/config/env";
 import { createWinstonOptions } from "@/common/logger/winston.config";
 import { WINSTON_MODULE_PROVIDER, WinstonModule } from "nest-winston";
 import { ThrottlerModule } from "@nestjs/throttler";
+import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
+import { RedisService } from "@/redis/redis.service";
 import {
   isStrictThrottled,
   STRICT_THROTTLER,
@@ -26,25 +28,32 @@ export const CustomWinstonModule = WinstonModule.forRoot(
   createWinstonOptions(),
 );
 
-export const CustomThrottlerModule = ThrottlerModule.forRoot({
-  throttlers: [
-    {
-      name: "default",
-      limit: env.THROTTLE_DEFAULT_LIMIT,
-      ttl: env.THROTTLE_DEFAULT_TTL_MS,
-    },
-    {
-      name: "short",
-      limit: env.THROTTLE_SHORT_LIMIT,
-      ttl: env.THROTTLE_SHORT_TTL_MS,
-    },
-    {
-      name: STRICT_THROTTLER,
-      limit: env.THROTTLE_STRICT_LIMIT,
-      ttl: env.THROTTLE_STRICT_TTL_MS,
-      skipIf: (context) => !isStrictThrottled(context),
-    },
-  ],
+export const CustomThrottlerModule = ThrottlerModule.forRootAsync({
+  inject: [RedisService],
+  useFactory: (redis: RedisService) => ({
+    // Redis-backed counters so limits hold across API replicas; tests stay in memory.
+    storage: env.isTest
+      ? undefined
+      : new ThrottlerStorageRedisService(redis.client),
+    throttlers: [
+      {
+        name: "default",
+        limit: env.THROTTLE_DEFAULT_LIMIT,
+        ttl: env.THROTTLE_DEFAULT_TTL_MS,
+      },
+      {
+        name: "short",
+        limit: env.THROTTLE_SHORT_LIMIT,
+        ttl: env.THROTTLE_SHORT_TTL_MS,
+      },
+      {
+        name: STRICT_THROTTLER,
+        limit: env.THROTTLE_STRICT_LIMIT,
+        ttl: env.THROTTLE_STRICT_TTL_MS,
+        skipIf: (context) => !isStrictThrottled(context),
+      },
+    ],
+  }),
 });
 
 export const CustomGraphQLModule =
@@ -75,8 +84,29 @@ export const CustomGraphQLModule =
 
 export { ClerkModule } from "@/common/clerk/clerk.module";
 export { PrismaModule } from "@/prisma/prisma.module";
+export { RedisModule } from "@/redis/redis.module";
+export { QueueModule } from "@/queue/queue.module";
+export { MailModule } from "@/mail/mail.module";
+export { StorageModule } from "@/storage/storage.module";
+export { EmbeddingsModule } from "@/embeddings/embeddings.module";
 export { HealthModule } from "@/health/health.module";
 
-export { CollectionsModule } from "@/features/collections/collections.module";
 export { UsersModule } from "@/features/users/users.module";
-export { CategoriesModule } from "@/features/categories/categories.module";
+export { SettingsModule } from "@/features/settings/settings.module";
+export { SearchModule } from "@/features/search/search.module";
+export { ProductsModule } from "@/features/products/products.module";
+export { CartModule } from "@/features/cart/cart.module";
+export { WishlistModule } from "@/features/wishlist/wishlist.module";
+export { AddressesModule } from "@/features/addresses/addresses.module";
+export { OrdersModule } from "@/features/orders/orders.module";
+export { EventsModule } from "@/features/events/events.module";
+export { WorkshopsModule } from "@/features/workshops/workshops.module";
+export { ContentModule } from "@/features/content/content.module";
+export { NewsletterModule } from "@/features/newsletter/newsletter.module";
+export { NotificationsModule } from "@/features/notifications/notifications.module";
+export { ContactModule } from "@/features/contact/contact.module";
+export { CommissionsModule } from "@/features/commissions/commissions.module";
+export { SuggestModule } from "@/features/suggest/suggest.module";
+export { VisitsModule } from "@/features/visits/visits.module";
+export { ReviewsModule } from "@/features/reviews/reviews.module";
+export { AdminModule } from "@/features/admin/admin.module";

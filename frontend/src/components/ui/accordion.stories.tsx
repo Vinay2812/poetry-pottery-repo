@@ -11,65 +11,46 @@ import {
 
 const gallery = (
   <Gallery>
-    <GallerySection title="Single">
-      <Specimen label="Collapsible, one open">
+    <GallerySection title="FAQ list">
+      <Specimen label="One open at a time">
         <Accordion
           type="single"
           collapsible
-          defaultValue="firing"
-          className="w-full max-w-md"
+          className="w-full border-t border-ash sm:w-80"
         >
-          <AccordionItem value="firing">
-            <AccordionTrigger>How hot does the kiln fire?</AccordionTrigger>
-            <AccordionContent>
-              Our stoneware is fired to cone 6, about 1,232°C, for a durable,
-              food-safe finish.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="glazes">
-            <AccordionTrigger>Are the glazes food safe?</AccordionTrigger>
-            <AccordionContent>
-              Every glaze is lead-free and tested in-house before a batch leaves
-              the studio.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="workshops">
-            <AccordionTrigger>
-              Do I need experience for a workshop?
+          <AccordionItem value="shipping">
+            <AccordionTrigger className="rounded-none py-4 text-[15px] font-normal hover:no-underline">
+              When will my piece ship?
             </AccordionTrigger>
-            <AccordionContent>
-              Not at all. Beginner wheel-throwing sessions include all clay,
-              tools, and a bisque firing.
+            <AccordionContent className="pb-4 text-[15px] leading-relaxed text-muted-foreground">
+              Pieces on the shelf leave the studio in three working days.
+            </AccordionContent>
+          </AccordionItem>
+          <AccordionItem value="care">
+            <AccordionTrigger className="rounded-none py-4 text-[15px] font-normal hover:no-underline">
+              Is the glaze dishwasher safe?
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 text-[15px] leading-relaxed text-muted-foreground">
+              Yes, though hand washing keeps the sage glaze bright for longer.
             </AccordionContent>
           </AccordionItem>
         </Accordion>
       </Specimen>
     </GallerySection>
-    <GallerySection title="Multiple">
-      <Specimen label="Several open at once">
+    <GallerySection title="Opened">
+      <Specimen label="Default open">
         <Accordion
-          type="multiple"
-          defaultValue={["clay", "care"]}
-          className="w-full max-w-md"
+          type="single"
+          collapsible
+          defaultValue="returns"
+          className="w-full border-t border-ash sm:w-80"
         >
-          <AccordionItem value="clay">
-            <AccordionTrigger>What clay body do you use?</AccordionTrigger>
-            <AccordionContent>
-              A speckled stoneware from the local supplier, grogged for
-              throwing.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="care">
-            <AccordionTrigger>How do I care for my pieces?</AccordionTrigger>
-            <AccordionContent>
-              Dishwasher and microwave safe, though hand washing keeps the glaze
-              bright for longer.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="shipping">
-            <AccordionTrigger>How are pieces packed?</AccordionTrigger>
-            <AccordionContent>
-              Double-boxed with recycled padding, insured door to door.
+          <AccordionItem value="returns">
+            <AccordionTrigger className="rounded-none py-4 text-[15px] font-normal hover:no-underline">
+              Can I return a piece?
+            </AccordionTrigger>
+            <AccordionContent className="pb-4 text-[15px] leading-relaxed text-muted-foreground">
+              Within seven days, as long as it comes back unused.
             </AccordionContent>
           </AccordionItem>
         </Accordion>
@@ -81,8 +62,8 @@ const gallery = (
 const meta = {
   title: "UI/Accordion",
   component: Accordion,
-  args: { type: "single", collapsible: true },
   parameters: { layout: "padded" },
+  args: { type: "single" },
   render: () => gallery,
 } satisfies Meta<typeof Accordion>;
 

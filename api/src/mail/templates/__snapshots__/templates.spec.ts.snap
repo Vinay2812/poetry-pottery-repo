@@ -1,0 +1,247 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`contact templates > renders the acknowledgement the sender gets back 1`] = `
+{
+  "html": "<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<p style="margin:0 0 24px;font-size:20px;color:#4f6f52;font-weight:700">Poetry &amp; Pottery</p>
+<div style="background:#ffffff;border-radius:16px;padding:28px">
+<h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a">We got your message</h1>
+<p style="margin:0;color:#404040;line-height:1.5">Thanks for writing in, Meera Rao. Someone from the studio will get back to you within two working days.</p>
+<p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">What you sent</p><p style="margin:0 0 4px;color:#404040">Do you make sets of six?</p><p style="margin:0 0 4px;color:#404040">I need them by Diwali.</p>
+</div>
+<p style="margin:24px 0 0;font-size:12px;color:#737373">You are receiving this because you have an account at Poetry &amp; Pottery.</p>
+</div></body></html>",
+  "subject": "We got your message · Poetry & Pottery",
+  "text": "We got your message
+Thanks for writing in, Meera Rao. Someone from the studio will get back to you within two working days.
+What you sent
+Do you make sets of six?
+I need them by Diwali.",
+}
+`;
+
+exports[`contact templates > renders the studio copy of a contact message 1`] = `
+{
+  "html": "<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<p style="margin:0 0 24px;font-size:20px;color:#4f6f52;font-weight:700">Poetry &amp; Pottery</p>
+<div style="background:#ffffff;border-radius:16px;padding:28px">
+<h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a">New message from the website</h1>
+<p style="margin:0;color:#404040;line-height:1.5">Meera Rao sent a message through the contact form. Reply to meera@example.com.</p>
+<p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Sender</p><p style="margin:0 0 4px;color:#404040">Name: Meera Rao</p><p style="margin:0 0 4px;color:#404040">Email: meera@example.com</p><p style="margin:0 0 4px;color:#404040">Phone: +91 98200 11111</p><p style="margin:0 0 4px;color:#404040">Subject: Wholesale enquiry</p><p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Message</p><p style="margin:0 0 4px;color:#404040">Do you make sets of six?</p><p style="margin:0 0 4px;color:#404040">I need them by Diwali.</p>
+</div>
+<p style="margin:24px 0 0;font-size:12px;color:#737373">You are receiving this because you have an account at Poetry &amp; Pottery.</p>
+</div></body></html>",
+  "subject": "Contact form · Wholesale enquiry",
+  "text": "New message from the website
+Meera Rao sent a message through the contact form. Reply to meera@example.com.
+Sender
+Name: Meera Rao
+Email: meera@example.com
+Phone: +91 98200 11111
+Subject: Wholesale enquiry
+
+Message
+Do you make sets of six?
+I need them by Diwali.",
+}
+`;
+
+exports[`event registration templates > renders the seat request the guest gets 1`] = `
+{
+  "html": "<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<p style="margin:0 0 24px;font-size:20px;color:#4f6f52;font-weight:700">Poetry &amp; Pottery</p>
+<div style="background:#ffffff;border-radius:16px;padding:28px">
+<h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a">Seat request received</h1>
+<p style="margin:0;color:#404040;line-height:1.5">Thanks for signing up. We will confirm your place for Wheel throwing basics on WhatsApp within a day and share how to pay.</p>
+<p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Your booking</p><p style="margin:0 0 4px;color:#404040">Wheel throwing basics</p><p style="margin:0 0 4px;color:#404040">Sun, 4 Oct, 11:00 am</p><p style="margin:0 0 4px;color:#404040">The studio, 12 Kiln Lane, Pune</p><p style="margin:0 0 4px;color:#404040">2 seats · ₹5,000</p><p style="margin:24px 0 0"><a href="https://poetryandpottery.test/registrations/regs4b1c9d7e2f3a" style="display:inline-block;background:#4f6f52;color:#fafaf9;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600">View your booking</a></p>
+</div>
+<p style="margin:24px 0 0;font-size:12px;color:#737373">You are receiving this because you have an account at Poetry &amp; Pottery.</p>
+</div></body></html>",
+  "subject": "Seat request regs4b1c9d7e2f3a · Wheel throwing basics",
+  "text": "Seat request received
+Thanks for signing up. We will confirm your place for Wheel throwing basics on WhatsApp within a day and share how to pay.
+Your booking
+Wheel throwing basics
+Sun, 4 Oct, 11:00 am
+The studio, 12 Kiln Lane, Pune
+2 seats · ₹5,000
+View your booking: https://poetryandpottery.test/registrations/regs4b1c9d7e2f3a",
+}
+`;
+
+exports[`event registration templates > renders the studio's copy of a seat request 1`] = `
+{
+  "html": "<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<p style="margin:0 0 24px;font-size:20px;color:#4f6f52;font-weight:700">Poetry &amp; Pottery</p>
+<div style="background:#ffffff;border-radius:16px;padding:28px">
+<h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a">New seat request regs4b1c9d7e2f3a</h1>
+<p style="margin:0;color:#404040;line-height:1.5">Meera Rao (meera@example.com) wants 2 seats at Wheel throwing basics.</p>
+<p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Booking</p><p style="margin:0 0 4px;color:#404040">Wheel throwing basics</p><p style="margin:0 0 4px;color:#404040">Sun, 4 Oct, 11:00 am</p><p style="margin:0 0 4px;color:#404040">The studio, 12 Kiln Lane, Pune</p><p style="margin:0 0 4px;color:#404040">2 seats · ₹5,000</p><p style="margin:24px 0 0"><a href="https://poetryandpottery.test/dashboard/events/4" style="display:inline-block;background:#4f6f52;color:#fafaf9;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600">Open in admin</a></p>
+</div>
+<p style="margin:24px 0 0;font-size:12px;color:#737373">You are receiving this because you have an account at Poetry &amp; Pottery.</p>
+</div></body></html>",
+  "subject": "New seat request · Wheel throwing basics",
+  "text": "New seat request regs4b1c9d7e2f3a
+Meera Rao (meera@example.com) wants 2 seats at Wheel throwing basics.
+Booking
+Wheel throwing basics
+Sun, 4 Oct, 11:00 am
+The studio, 12 Kiln Lane, Pune
+2 seats · ₹5,000
+Open in admin: https://poetryandpottery.test/dashboard/events/4",
+}
+`;
+
+exports[`newsletter template > renders the welcome note 1`] = `
+{
+  "html": "<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<p style="margin:0 0 24px;font-size:20px;color:#4f6f52;font-weight:700">Poetry &amp; Pottery</p>
+<div style="background:#ffffff;border-radius:16px;padding:28px">
+<h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a">You are on the list</h1>
+<p style="margin:0;color:#404040;line-height:1.5">Thanks for subscribing. We send a short note when a new batch comes out of the kiln and when workshop dates open up — no more than twice a month.</p>
+<p style="margin:24px 0 0"><a href="https://poetryandpottery.test/newsletter/unsubscribe?token=tok-123" style="display:inline-block;background:#4f6f52;color:#fafaf9;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600">Unsubscribe</a></p>
+</div>
+<p style="margin:24px 0 0;font-size:12px;color:#737373">You are receiving this because you have an account at Poetry &amp; Pottery.</p>
+</div></body></html>",
+  "subject": "Welcome to the Poetry & Pottery letter",
+  "text": "You are on the list
+Thanks for subscribing. We send a short note when a new batch comes out of the kiln and when workshop dates open up — no more than twice a month.
+Unsubscribe: https://poetryandpottery.test/newsletter/unsubscribe?token=tok-123",
+}
+`;
+
+exports[`order templates > renders a shipped order's mail the same way every time 1`] = `
+{
+  "html": "<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<p style="margin:0 0 24px;font-size:20px;color:#4f6f52;font-weight:700">Poetry &amp; Pottery</p>
+<div style="background:#ffffff;border-radius:16px;padding:28px">
+<h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a">Your pieces are on the way</h1>
+<p style="margin:0;color:#404040;line-height:1.5">Order kiln7ordr9f2a1b3c has shipped. Delhivery AWB 12345.</p>
+<p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Pieces</p><p style="margin:0 0 4px;color:#404040">2 × Chai cup, speckled — ₹900</p><p style="margin:24px 0 0"><a href="https://poetryandpottery.test/orders/kiln7ordr9f2a1b3c" style="display:inline-block;background:#4f6f52;color:#fafaf9;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600">View your order</a></p>
+</div>
+<p style="margin:24px 0 0;font-size:12px;color:#737373">You are receiving this because you have an account at Poetry &amp; Pottery.</p>
+</div></body></html>",
+  "subject": "Your pieces are on the way · kiln7ordr9f2a1b3c",
+  "text": "Your pieces are on the way
+Order kiln7ordr9f2a1b3c has shipped. Delhivery AWB 12345.
+Pieces
+2 × Chai cup, speckled — ₹900
+View your order: https://poetryandpottery.test/orders/kiln7ordr9f2a1b3c",
+}
+`;
+
+exports[`order templates > renders the customer's order confirmation 1`] = `
+{
+  "html": "<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<p style="margin:0 0 24px;font-size:20px;color:#4f6f52;font-weight:700">Poetry &amp; Pottery</p>
+<div style="background:#ffffff;border-radius:16px;padding:28px">
+<h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a">We have your order</h1>
+<p style="margin:0;color:#404040;line-height:1.5">Thanks for ordering from the studio. We will message you on WhatsApp within a day to confirm order kiln7ordr9f2a1b3c and share payment details.</p>
+<p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Pieces</p><p style="margin:0 0 4px;color:#404040">2 × Chai cup, speckled — ₹900</p><p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Totals</p><p style="margin:0 0 4px;color:#404040">Subtotal ₹900</p><p style="margin:0 0 4px;color:#404040">Shipping free</p><p style="margin:0 0 4px;color:#404040">Total ₹900</p><p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Shipping to</p><p style="margin:0 0 4px;color:#404040">Meera Rao</p><p style="margin:0 0 4px;color:#404040">12 Kiln Lane</p><p style="margin:0 0 4px;color:#404040">Pune, Maharashtra 411004</p><p style="margin:24px 0 0"><a href="https://poetryandpottery.test/orders/kiln7ordr9f2a1b3c" style="display:inline-block;background:#4f6f52;color:#fafaf9;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600">View your order</a></p>
+</div>
+<p style="margin:24px 0 0;font-size:12px;color:#737373">You are receiving this because you have an account at Poetry &amp; Pottery.</p>
+</div></body></html>",
+  "subject": "Order kiln7ordr9f2a1b3c received",
+  "text": "We have your order
+Thanks for ordering from the studio. We will message you on WhatsApp within a day to confirm order kiln7ordr9f2a1b3c and share payment details.
+Pieces
+2 × Chai cup, speckled — ₹900
+
+Totals
+Subtotal ₹900
+Shipping free
+Total ₹900
+
+Shipping to
+Meera Rao
+12 Kiln Lane
+Pune, Maharashtra 411004
+View your order: https://poetryandpottery.test/orders/kiln7ordr9f2a1b3c",
+}
+`;
+
+exports[`order templates > renders the studio's copy of a new order 1`] = `
+{
+  "html": "<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<p style="margin:0 0 24px;font-size:20px;color:#4f6f52;font-weight:700">Poetry &amp; Pottery</p>
+<div style="background:#ffffff;border-radius:16px;padding:28px">
+<h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a">New order kiln7ordr9f2a1b3c</h1>
+<p style="margin:0;color:#404040;line-height:1.5">Meera Rao (meera@example.com, +91 98200 11111) placed an order worth ₹900.</p>
+<p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Pieces</p><p style="margin:0 0 4px;color:#404040">2 × Chai cup, speckled — ₹900</p><p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Totals</p><p style="margin:0 0 4px;color:#404040">Subtotal ₹900</p><p style="margin:0 0 4px;color:#404040">Shipping free</p><p style="margin:0 0 4px;color:#404040">Total ₹900</p><p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Ship to</p><p style="margin:0 0 4px;color:#404040">12 Kiln Lane</p><p style="margin:0 0 4px;color:#404040">Off Potters Road</p><p style="margin:0 0 4px;color:#404040">Pune, Maharashtra 411004</p><p style="margin:24px 0 0"><a href="https://poetryandpottery.test/dashboard/orders/kiln7ordr9f2a1b3c" style="display:inline-block;background:#4f6f52;color:#fafaf9;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600">Open in admin</a></p>
+</div>
+<p style="margin:24px 0 0;font-size:12px;color:#737373">You are receiving this because you have an account at Poetry &amp; Pottery.</p>
+</div></body></html>",
+  "subject": "New order kiln7ordr9f2a1b3c · ₹900",
+  "text": "New order kiln7ordr9f2a1b3c
+Meera Rao (meera@example.com, +91 98200 11111) placed an order worth ₹900.
+Pieces
+2 × Chai cup, speckled — ₹900
+
+Totals
+Subtotal ₹900
+Shipping free
+Total ₹900
+
+Ship to
+12 Kiln Lane
+Off Potters Road
+Pune, Maharashtra 411004
+Open in admin: https://poetryandpottery.test/dashboard/orders/kiln7ordr9f2a1b3c",
+}
+`;
+
+exports[`workshop booking templates > renders the session request the guest gets 1`] = `
+{
+  "html": "<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<p style="margin:0 0 24px;font-size:20px;color:#4f6f52;font-weight:700">Poetry &amp; Pottery</p>
+<div style="background:#ffffff;border-radius:16px;padding:28px">
+<h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a">Wheel session requested</h1>
+<p style="margin:0;color:#404040;line-height:1.5">Thanks for booking a session. We will confirm it on WhatsApp within a day and share how to pay.</p>
+<p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Your session</p><p style="margin:0 0 4px;color:#404040">Wheel session</p><p style="margin:0 0 4px;color:#404040">Sun, 4 Oct, 11:00 am to 12:00 pm</p><p style="margin:0 0 4px;color:#404040">1 person · 1 hour · 1 piece each</p><p style="margin:0 0 4px;color:#404040">Total ₹1,800</p><p style="margin:24px 0 0"><a href="https://poetryandpottery.test/workshops/bookings/wsbk3c9a1d7e2f40" style="display:inline-block;background:#4f6f52;color:#fafaf9;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600">View your booking</a></p>
+</div>
+<p style="margin:24px 0 0;font-size:12px;color:#737373">You are receiving this because you have an account at Poetry &amp; Pottery.</p>
+</div></body></html>",
+  "subject": "Session request wsbk3c9a1d7e2f40",
+  "text": "Wheel session requested
+Thanks for booking a session. We will confirm it on WhatsApp within a day and share how to pay.
+Your session
+Wheel session
+Sun, 4 Oct, 11:00 am to 12:00 pm
+1 person · 1 hour · 1 piece each
+Total ₹1,800
+View your booking: https://poetryandpottery.test/workshops/bookings/wsbk3c9a1d7e2f40",
+}
+`;
+
+exports[`workshop booking templates > renders the studio's copy of a session request 1`] = `
+{
+  "html": "<!doctype html><html><body style="margin:0;background:#f5f0e8;font-family:Helvetica,Arial,sans-serif">
+<div style="max-width:560px;margin:0 auto;padding:32px 24px">
+<p style="margin:0 0 24px;font-size:20px;color:#4f6f52;font-weight:700">Poetry &amp; Pottery</p>
+<div style="background:#ffffff;border-radius:16px;padding:28px">
+<h1 style="margin:0 0 12px;font-size:22px;color:#1a1a1a">New session request wsbk3c9a1d7e2f40</h1>
+<p style="margin:0;color:#404040;line-height:1.5">Meera Rao (meera@example.com) wants a wheel session.</p>
+<p style="margin:16px 0 4px;font-weight:600;color:#1a1a1a">Session</p><p style="margin:0 0 4px;color:#404040">Wheel session</p><p style="margin:0 0 4px;color:#404040">Sun, 4 Oct, 11:00 am to 12:00 pm</p><p style="margin:0 0 4px;color:#404040">1 person · 1 hour · 1 piece each</p><p style="margin:0 0 4px;color:#404040">Total ₹1,800</p><p style="margin:24px 0 0"><a href="https://poetryandpottery.test/dashboard/workshops" style="display:inline-block;background:#4f6f52;color:#fafaf9;text-decoration:none;padding:12px 24px;border-radius:999px;font-weight:600">Open in admin</a></p>
+</div>
+<p style="margin:24px 0 0;font-size:12px;color:#737373">You are receiving this because you have an account at Poetry &amp; Pottery.</p>
+</div></body></html>",
+  "subject": "New wheel session · Sun, 4 Oct, 11:00 am to 12:00 pm",
+  "text": "New session request wsbk3c9a1d7e2f40
+Meera Rao (meera@example.com) wants a wheel session.
+Session
+Wheel session
+Sun, 4 Oct, 11:00 am to 12:00 pm
+1 person · 1 hour · 1 piece each
+Total ₹1,800
+Open in admin: https://poetryandpottery.test/dashboard/workshops",
+}
+`;

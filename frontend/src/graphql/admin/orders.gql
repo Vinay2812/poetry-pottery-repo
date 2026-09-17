@@ -1,0 +1,84 @@
+fragment AdminOrderRow on AdminOrder {
+  admin_note
+  next_statuses
+  customer {
+    ...AdminUserRefFields
+  }
+  order {
+    id
+    status
+    total
+    item_count
+    created_at
+    paid_at
+    coupon_code
+  }
+}
+
+fragment AdminOrderDetail on AdminOrder {
+  admin_note
+  next_statuses
+  customer {
+    ...AdminUserRefFields
+  }
+  order {
+    ...OrderFields
+  }
+}
+
+query AdminOrders($filter: AdminOrdersFilterInput) {
+  adminOrders(filter: $filter) {
+    items {
+      ...AdminOrderRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+query AdminOrder($id: String!) {
+  adminOrder(id: $id) {
+    ...AdminOrderDetail
+  }
+}
+
+mutation SetOrderStatus(
+  $id: String!
+  $status: OrderStatus!
+  $tracking_note: String
+  $cancel_reason: String
+) {
+  setOrderStatus(
+    id: $id
+    status: $status
+    tracking_note: $tracking_note
+    cancel_reason: $cancel_reason
+  ) {
+    ...AdminOrderDetail
+  }
+}
+
+mutation MarkOrderPaid($id: String!) {
+  markOrderPaid(id: $id) {
+    ...AdminOrderDetail
+  }
+}
+
+mutation CancelOrderAsAdmin($id: String!, $reason: String) {
+  cancelOrderAsAdmin(id: $id, reason: $reason) {
+    ...AdminOrderDetail
+  }
+}
+
+mutation SetOrderAdminNote($id: String!, $note: String) {
+  setOrderAdminNote(id: $id, note: $note) {
+    ...AdminOrderDetail
+  }
+}
+
+mutation AddOrderNote($input: AddOrderNoteInput!) {
+  addOrderNote(input: $input) {
+    ...OrderFields
+  }
+}

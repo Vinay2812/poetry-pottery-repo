@@ -1,0 +1,124 @@
+fragment AdminWorkshopConfigFields on WorkshopConfig {
+  id
+  slug
+  name
+  description
+  image_url
+  is_active
+  timezone
+  opening_minutes
+  closing_minutes
+  slot_minutes
+  capacity_per_slot
+  booking_window_days
+  slot_span_days
+  closed_weekdays
+  tiers {
+    id
+    hours
+    price_per_person
+    pieces_per_person
+  }
+}
+
+fragment AdminWorkshopBlackoutFields on AdminWorkshopBlackout {
+  id
+  config_id
+  starts_at
+  ends_at
+  reason
+}
+
+fragment AdminWorkshopBookingRow on AdminWorkshopBooking {
+  next_statuses
+  customer {
+    ...AdminUserRefFields
+  }
+  booking {
+    id
+    starts_at
+    ends_at
+    hours
+    participants
+    total
+    status
+    note
+    created_at
+    config {
+      id
+      name
+      slug
+    }
+  }
+}
+
+query AdminWorkshopConfigs {
+  adminWorkshopConfigs {
+    ...AdminWorkshopConfigFields
+  }
+}
+
+query AdminWorkshopBlackouts($config_id: Int!) {
+  adminWorkshopBlackouts(config_id: $config_id) {
+    ...AdminWorkshopBlackoutFields
+  }
+}
+
+query AdminWorkshopBookings($filter: AdminWorkshopBookingsFilterInput) {
+  adminWorkshopBookings(filter: $filter) {
+    items {
+      ...AdminWorkshopBookingRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+mutation UpdateWorkshopConfig($id: Int!, $input: AdminWorkshopConfigInput!) {
+  updateWorkshopConfig(id: $id, input: $input) {
+    ...AdminWorkshopConfigFields
+  }
+}
+
+mutation SaveWorkshopTier($config_id: Int!, $input: AdminWorkshopTierInput!) {
+  saveWorkshopTier(config_id: $config_id, input: $input) {
+    ...AdminWorkshopConfigFields
+  }
+}
+
+mutation DeleteWorkshopTier($id: Int!) {
+  deleteWorkshopTier(id: $id)
+}
+
+mutation CreateWorkshopBlackout(
+  $config_id: Int!
+  $input: AdminWorkshopBlackoutInput!
+) {
+  createWorkshopBlackout(config_id: $config_id, input: $input) {
+    ...AdminWorkshopBlackoutFields
+  }
+}
+
+mutation UpdateWorkshopBlackout(
+  $id: Int!
+  $input: AdminWorkshopBlackoutInput!
+) {
+  updateWorkshopBlackout(id: $id, input: $input) {
+    ...AdminWorkshopBlackoutFields
+  }
+}
+
+mutation DeleteWorkshopBlackout($id: Int!) {
+  deleteWorkshopBlackout(id: $id)
+}
+
+mutation SetWorkshopBookingStatus(
+  $id: String!
+  $status: RegistrationStatus!
+  $reason: String
+) {
+  setWorkshopBookingStatus(id: $id, status: $status, reason: $reason) {
+    ...AdminWorkshopBookingRow
+  }
+}

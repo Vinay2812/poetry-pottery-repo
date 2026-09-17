@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Back in stock notifications &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Back in stock notifications: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="wishlist.html">&larr; Wishlist</a><a rel="next" href="checkout.html">Checkout and orders &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 8 of 24</p>
+<h1>Back in stock notifications</h1>
+<p class="lede">Pottery is made in kiln loads, so a sold-out piece is not gone, it is between batches. A shopper leaves an address against the piece, and when stock crosses back above zero the API publishes one job that mails everyone still waiting. Three separate guards keep that from turning into duplicate mail: an edge test that only fires on the crossing itself, a status-predicated order transition that lets one cancellation win, and a claim-before-send that stamps every waiting row inside the same statement that selects it.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 920 470" role="img" aria-label="Back in stock notifications: the watch form, the two restock edges, the notify job and the claim-before-send batch" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="270" height="450"/><text x="18" y="26">where stock moves</text></g><g class="lane"><rect x="295" y="10" width="330" height="450"/><text x="303" y="26">api</text></g><g class="lane"><rect x="640" y="10" width="270" height="450"/><text x="648" y="26">queue, db and mail</text></g><g class="box t-client"><rect x="28" y="44" width="230" height="58"/><text x="143" y="63" text-anchor="middle" class="b">NextBatchContainer</text><text x="143" y="77" text-anchor="middle">on a listed, sold-out</text><text x="143" y="91" text-anchor="middle">product page</text></g><g class="box t-api"><rect x="28" y="130" width="230" height="58"/><text x="143" y="149" text-anchor="middle" class="b">adjustProductStock</text><text x="143" y="163" text-anchor="middle">console, conditional</text><text x="143" y="177" text-anchor="middle">updateManyAndReturn</text></g><g class="box t-api"><rect x="28" y="216" width="230" height="58"/><text x="143" y="235" text-anchor="middle" class="b">OrdersService.applyStatus</text><text x="143" y="249" text-anchor="middle">cancel or refund</text><text x="143" y="263" text-anchor="middle">restock inside the tx</text></g><g class="box t-svc"><rect x="28" y="310" width="230" height="58"/><text x="143" y="329" text-anchor="middle" class="b">cameBackInStock</text><text x="143" y="343" text-anchor="middle">before &lt;= 0 &amp;&amp; after &gt; 0</text><text x="143" y="357" text-anchor="middle">the edge, nothing else</text></g><g class="box t-client"><rect x="28" y="392" width="230" height="44"/><text x="143" y="411" text-anchor="middle" class="b">/notify/unsubscribe</text><text x="143" y="425" text-anchor="middle">token spent once</text></g><g class="box t-api"><rect x="313" y="44" width="294" height="58"/><text x="460" y="63" text-anchor="middle" class="b">notifyWhenBackInStock</text><text x="460" y="77" text-anchor="middle">no guard, StrictThrottle</text><text x="460" y="91" text-anchor="middle">upsert on (email, piece)</text></g><g class="box t-api"><rect x="313" y="130" width="294" height="58"/><text x="460" y="149" text-anchor="middle" class="b">announceRestock</text><text x="460" y="163" text-anchor="middle">publishes after commit</text><text x="460" y="177" text-anchor="middle">never inside the tx</text></g><g class="box t-svc"><rect x="313" y="216" width="294" height="72"/><text x="460" y="235" text-anchor="middle" class="b">sendBackInStock</text><text x="460" y="249" text-anchor="middle">bail if sold out or delisted</text><text x="460" y="263" text-anchor="middle">updateManyAndReturn claims</text><text x="460" y="277" text-anchor="middle">notified_at before mailing</text></g><g class="box t-api"><rect x="313" y="310" width="294" height="58"/><text x="460" y="329" text-anchor="middle" class="b">stopBatchNotification</text><text x="460" y="343" text-anchor="middle">deleteMany on the token</text><text x="460" y="357" text-anchor="middle">zero rows is a 404</text></g><g class="box t-api"><rect x="313" y="392" width="294" height="44"/><text x="460" y="411" text-anchor="middle" class="b">adminBatchNotifications</text><text x="460" y="425" text-anchor="middle">list and CSV export</text></g><g class="box t-queue"><rect x="658" y="130" width="234" height="58"/><text x="775" y="149" text-anchor="middle" class="b">notify.back-in-stock</text><text x="775" y="163" text-anchor="middle">{ productId }</text><text x="775" y="177" text-anchor="middle">durable, dead-lettered</text></g><g class="box t-queue"><rect x="658" y="216" width="234" height="58"/><text x="775" y="235" text-anchor="middle" class="b">NotificationsConsumer</text><text x="775" y="249" text-anchor="middle">re-parses the payload</text><text x="775" y="263" text-anchor="middle">one mail.send per claim</text></g><g class="box t-db"><rect x="658" y="310" width="234" height="72"/><text x="775" y="329" text-anchor="middle" class="b">batch_notifications</text><text x="775" y="343" text-anchor="middle">unique (email, product_id)</text><text x="775" y="357" text-anchor="middle">unique token nanoid(24)</text><text x="775" y="371" text-anchor="middle">notified_at is the state</text></g><g class="box t-ext"><rect x="658" y="44" width="234" height="58"/><text x="775" y="63" text-anchor="middle" class="b">backInStockMail</text><text x="775" y="77" text-anchor="middle">see the piece, plus</text><text x="775" y="91" text-anchor="middle">stop watching this piece</text></g><path class="edge" d="M 258 73 L 313 73" marker-end="url(#arrowhead)"/><path class="edge" d="M 258 159 Q 285 330 313 339" marker-start="url(#arrowhead)" marker-end="url(#arrowhead)"/><path class="edge" d="M 258 245 Q 285 300 313 330" marker-end="url(#arrowhead)"/><path class="edge" d="M 143 368 L 143 392" marker-end="url(#arrowhead)"/><path class="edge" d="M 460 102 L 460 130" marker-end="url(#arrowhead)"/><path class="edge" d="M 607 159 L 658 159" marker-end="url(#arrowhead)"/><path class="edge" d="M 775 188 L 775 216" marker-end="url(#arrowhead)"/><path class="edge" d="M 658 245 L 607 252" marker-end="url(#arrowhead)"/><path class="edge" d="M 607 340 L 658 344" marker-end="url(#arrowhead)"/><path class="edge" d="M 775 216 L 775 102" marker-end="url(#arrowhead)"/><path class="edge" d="M 607 418 L 658 370" marker-end="url(#arrowhead)"/></svg><figcaption>Stock only ever crosses upward in two places, and both call the same edge test. The job carries nothing but a product id, and the batch claims every waiting row in the statement that selects it, so a redelivered message mails nobody.</figcaption></figure></section>
+<section id="how"><h2>How it works</h2>
+<h3>The waiting list</h3><p><code>BatchNotification</code>, <code>@@map(&quot;batch_notifications&quot;)</code>, carries an <code>email</code>, a <code>product_id</code>, an optional <code>user_id</code> (<code>onDelete: SetNull</code>), a <code>token String @unique @default(nanoid(24))</code>, a nullable <code>notified_at</code> and <code>created_at</code>. The schema comment is the whole product decision: someone waiting for a sold-out piece to come out of the next kiln load.</p>
+<ul><li><strong>There is no status enum.</strong> <code>notified_at IS NULL</code> means still waiting; a stamp means already mailed.</li><li><code>@@unique([email, product_id])</code> is what makes a burst of taps one row.</li><li><code>@@index([product_id, notified_at])</code> is exactly the shape the batch claim queries on.</li><li>The <code>token</code> is a bearer capability generated by a Prisma column default, unsigned and non-expiring, the same pattern as the newsletter unsubscribe token on the <a href="content.html">content page</a>.</li></ul>
+<h3>Joining the list</h3><p><code>notifyWhenBackInStock(product_id, email)</code> carries <strong>no auth guard</strong> and <code>@StrictThrottle()</code>, and calls <code>authGuard.tryAuthenticate</code> so a signed-in watch is tied to the session rather than to whatever address was typed. <code>NotificationsService.watch</code>:</p>
+<ol><li>Normalises the address through <code>parseEmail</code>, the same trim-lowercase-validate pipe the newsletter uses.</li><li>Refuses an unknown or inactive piece with <code>That piece is no longer listed</code>, and a made-to-order one with <code>That piece is made to order</code>. A piece thrown to order has no next batch to wait for, so there is nothing the mail could ever announce.</li><li>Reads the existing row to compute <code>was_already_waiting</code>, which is true only when a row exists <strong>and</strong> its <code>notified_at</code> is still null.</li><li><code>upsert</code> on <code>email_product_id</code>, whose update branch sets <code>notified_at: null</code> and attaches the user id when there is one. An already-mailed row is deliberately put back in the queue for the next batch, so someone who missed a load can wait for the following one.</li></ol>
+<p>On the client, the form appears exactly where the service would accept it: <code>canWatchPiece(stock, isCustomizable, isActive)</code> is <code>isActive &amp;&amp; !isCustomizable &amp;&amp; stock &lt;= 0</code>. It used to short-circuit on <code>is_archived</code> and offer itself on any archived piece whatever its stock. But <code>is_archived</code> is true for a piece the studio has taken down and for a made-to-order piece whose collection window has closed, and those are the two cases the API refuses outright, so the form asked for an address only to answer with an error. The three flags it reads now are the same three the service checks.</p>
+<h3>The two places stock crosses upward</h3><p><code>api/src/features/notifications/restock.ts</code> is four lines and does the entire decision:</p>
+<p><code>cameBackInStock(before, after)</code> returns <code>before &lt;= 0 &amp;&amp; after &gt; 0</code>. A top-up of a shelf that already had pieces on it is not a restock, so <code>2 → 5</code> is silent while <code>0 → 3</code> fires. The <code>&lt;= 0</code> rather than <code>=== 0</code> covers a shelf that was somehow negative.</p>
+<div class="scroll"><table><caption>The only two callers of announceRestock. Checkout never calls it, because stock only falls there.</caption><thead><tr><th scope="col">Caller</th><th scope="col">How the edge is measured</th><th scope="col">When it publishes</th></tr></thead><tbody><tr><td><code>AdminProductsService.adjustStock</code></td><td><code>updateManyAndReturn</code> gives the post-increment <code>stock</code>, so the before value is <code>after - delta</code>: exact, never a re-read</td><td>Immediately after the conditional update</td></tr><tr><td><code>OrdersService.applyStatus</code></td><td>Per item, the restocking <code>update</code> selects <code>stock</code> back, and the before value is <code>restored.stock - item.quantity</code></td><td>Ids collect in a local array inside the transaction and are announced in a loop <strong>after it commits</strong></td></tr></tbody></table></div>
+<p>Made-to-order lines never restock and are skipped in the second case, because their stock never moved.</p>
+<h3>The job</h3><p><code>announceRestock(productId)</code> is a one-line <code>queue.publish(&quot;notify.back-in-stock&quot;, { productId })</code>. The payload schema in <code>api/src/queue/jobs.ts</code> is a single integer, and the routing key gives the durable queue <code>poetry.notify.back-in-stock</code> bound to the <code>poetry</code> topic exchange with <code>poetry.dlx</code> attached, exactly like the other four jobs on the <a href="queue-mail.html">queue page</a>. <code>QueueService.publish</code> swallows broker failures, so a restock never fails an admin edit or an order cancellation; it just loses the announcement.</p>
+<p><code>NotificationsConsumer.backInStock</code> re-parses the payload with the shared schema before acting and lets anything else throw, so a malformed message dead-letters rather than being guessed at.</p>
+<h3>Claim, then send</h3><p><code>NotificationsService.sendBackInStock(productId)</code> is where duplicate mail is actually prevented.</p>
+<ol><li>Read the piece. <code>!product?.is_active || product.stock &lt;= 0</code> returns <code>0</code> immediately, so a job that arrives after the batch sold out again mails nobody.</li><li><strong>Claim in one statement:</strong> <code>batchNotification.updateManyAndReturn({ where: { product_id, notified_at: null }, data: { notified_at: new Date() }, select: { email, token } })</code>. The rows are stamped by the same statement that returns them, so a redelivery, a double publish or two consumers finds nothing left to claim.</li><li>Enqueue one <code>mail.send</code> per claimed row and return the count.</li></ol>
+<p><code>backInStockMail(productName, productSlug, token)</code> gives each recipient their own stop link, <code>/notify/unsubscribe?token=...</code>, and a call to action back to the piece.</p>
+<h3>Leaving the list</h3><p><code>stopBatchNotification(token)</code> is also unguarded and strict-throttled. It is a <code>deleteMany</code> on the token, and a zero count is <code>NotFoundException(&quot;That link has already been used&quot;)</code> — a delete rather than a flag, so the address is gone rather than suppressed.</p>
+<p class="note">There is <strong>no <code>/notify</code> page</strong>. The directory holds only <code>unsubscribe/page.tsx</code>; the sign-up form lives on the product page. The unsubscribe route fires its mutation from an effect guarded by a <code>useRef</code>, because React StrictMode's double invoke would otherwise spend the single-use link twice and show the visitor the &quot;already used&quot; error for their own first click. A 404 from the server is mapped to <em>That link has already been used or has expired.</em></p>
+<h3>The waiting list in the console</h3><p><code>adminBatchNotifications(filter)</code> and <code>exportBatchNotifications(filter)</code> live on <code>AdminInboxResolver</code> beside contact messages and newsletter subscribers, both <code>@AdminRequired()</code>. The filter's <code>is_notified</code> maps to <code>notified_at: { not: null }</code> or <code>notified_at: null</code>, and search matches the address and the piece name together.</p>
+<p>The export is a <strong>query that performs an export</strong>, the same shape as the subscriber CSV: <code>toWatcherCsv(rows)</code> returns one RFC 4180 quoted string with the header <code>email,piece,requested_at,notified_at</code>, and the browser turns it into a file locally, building a <code>Blob</code>, clicking a synthetic <code>&lt;a download&gt;</code> and revoking the object URL. The filename is dated in studio time by <code>toWatchersCsvName</code>. The console route is <code>/dashboard/notifications</code>, labelled <strong>Waiting list</strong> in the rail.</p>
+</section>
+<section id="theory"><h2>Minimal theory: call trace</h2>
+<h3>Watching a sold-out piece, then being told</h3><ol class="trace"><li><code class="ref">frontend/src/features/notify/types.ts:canWatchPiece</code><span class="desc">Offers the form only for a listed, sold-out piece; hides it for a made-to-order or delisted one.</span></li><li><code class="ref">api/src/features/notifications/notifications.resolver.ts:NotificationsResolver.notifyWhenBackInStock</code><span class="desc">No guard, <code>@StrictThrottle()</code>, <code>tryAuthenticate</code> to attach a session.</span></li><li><code class="ref">api/src/features/notifications/notifications.service.ts:NotificationsService.watch</code><span class="desc"><code>parseEmail</code>, then <code>upsert</code> on <code>@@unique([email, product_id])</code>; an old stamp is cleared.</span></li><li><code class="ref">api/src/features/admin/products/products.service.ts:AdminProductsService.adjustStock</code><span class="desc">Conditional <code>updateManyAndReturn</code>; the returned count is the exact post-increment stock.</span></li><li><code class="ref">api/src/features/notifications/restock.ts:cameBackInStock</code><span class="desc"><code>after - delta &lt;= 0 &amp;&amp; after &gt; 0</code>. A top-up of a stocked shelf stops here.</span></li><li><code class="ref">api/src/features/notifications/notifications.service.ts:NotificationsService.announceRestock</code><span class="desc">Publishes <code>notify.back-in-stock</code> with the product id and nothing else.</span></li><li><code class="ref">api/src/features/notifications/notifications.consumer.ts:NotificationsConsumer.backInStock</code><span class="desc">Re-parses the payload with <code>jobSchemas</code> before acting.</span></li><li><code class="ref">api/src/features/notifications/notifications.service.ts:NotificationsService.sendBackInStock</code><span class="desc">Bails if the piece is sold out or delisted again, then claims the waiting rows and mails them.</span></li><li><code class="ref">api/src/mail/templates/notifications.ts:backInStockMail</code><span class="desc">Per-recipient stop link carrying the row's own token.</span></li></ol>
+<h3>A cancelled order putting the last piece back</h3><ol class="trace"><li><code class="ref">api/src/features/orders/orders.service.ts:OrdersService.applyStatus</code><span class="desc">Status-predicated <code>updateMany</code>; only one concurrent transition wins, so only one restock can happen.</span></li><li><code class="ref">api/src/features/orders/orders.service.ts:OrdersService.applyStatus</code><span class="desc">Per line, <code>product.update</code> selects <code>stock</code> back; <code>cameBackInStock</code> decides whether the id joins <code>restocked</code>.</span></li><li><code class="ref">api/src/prisma/prisma.service.ts:PrismaService.withTransaction</code><span class="desc">Commits. Ids were gathered inside; nothing was published inside.</span></li><li><code class="ref">api/src/features/notifications/notifications.service.ts:NotificationsService.announceRestock</code><span class="desc">One publish per restocked id, after the commit, so a rolled-back cancel never announces.</span></li></ol>
+</section>
+<section id="edges"><h2>Edge cases and failure handling</h2><ul>
+<li><strong>A redelivered job mails nobody.</strong> The claim and the select are one statement, so the second delivery finds no rows with <code>notified_at: null</code>.</li>
+<li><strong>A top-up is not a restock.</strong> The edge test is the reason the console can correct a stock count of three to five without waking the whole waiting list.</li>
+<li><strong>Two concurrent cancels announce once</strong>, because the status-predicated transition means only one of them releases stock at all.</li>
+<li><strong>Announcing after commit is deliberate.</strong> A publish inside the transaction would announce a restock that a rollback then undid.</li>
+<li><strong>A broker outage loses the announcement silently</strong>, since <code>publish</code> swallows its error. The waiting rows keep their null stamp, so the next restock of the same piece mails them.</li>
+<li><strong>The piece can sell out again before the consumer runs</strong>, which is why <code>sendBackInStock</code> re-reads the stock and returns zero rather than mailing about an empty shelf.</li>
+<li><strong>Re-watching clears an old stamp</strong>, so somebody who missed one load is queued for the next.</li>
+<li><strong>The token is unsigned and never expires</strong>, and appears only in the mail; the strict throttle is the only defence against guessing.</li>
+<li><strong>StrictMode would spend the stop link twice</strong> without the ref guard on the unsubscribe effect.</li>
+<li><strong>Nothing prunes the table.</strong> Mailed rows stay with their stamp until the piece is deleted, which cascades them.</li>
+</ul></section>
+<section id="tests"><h2>Tests</h2><ul>
+<li><code>api/src/features/notifications/restock.spec.ts</code> pins the edge in both directions: <code>0 → 3</code> and <code>-1 → 1</code> fire, <code>2 → 5</code>, <code>1 → 1</code>, <code>0 → 0</code> and <code>3 → 0</code> do not.</li>
+<li><code>api/src/features/notifications/notifications.service.spec.ts</code> covers lowercasing and one row per piece, <code>was_already_waiting</code>, an already-mailed row going back in the queue, refusing an unlisted piece and a bad address, the claim-before-mail order, staying quiet for a sold-out or delisted piece, one publish per restocked piece, and the stop link being spent once.</li>
+<li><code>api/src/features/notifications/notifications.consumer.spec.ts</code> covers unwrapping the payload to a bare id, refusing anything else without mailing, letting a failure escape so the broker can dead-letter it, and listening on its own durable queue.</li>
+<li><code>api/src/features/notifications/notifications.resolver.spec.ts</code> covers the anonymous watch, a signed-in watch being tied to the session rather than the typed address, stopping on the token alone, and both mutations carrying no auth guard.</li>
+<li><code>api/src/features/admin/products/products.service.spec.ts</code> asserts that a top-up announces only when the shelf was empty, and not twice.</li>
+<li><code>api/src/features/admin/inbox/inbox.service.spec.ts</code> covers <code>toWatcherCsv</code>, the header on an empty list, the notified and waiting where-clauses, and searching an address and a piece name together.</li>
+<li><code>api/test/integration/notifications.integration-spec.ts</code> runs eight cases against a real Postgres with fifteen racers: one row survives a burst of signups; a second delivery of the job returns zero and the address receives exactly one mail; nothing is sent while the piece is still sold out; a cancelled order that refills an empty shelf publishes the job; a cancellation that tops up a stocked shelf publishes nothing; a piece the studio has taken down is refused; a piece thrown to order is refused; and the stop link is spent once.</li>
+<li><code>frontend/src/features/notify/types.test.ts</code> covers <code>canWatchPiece</code> and the result reducer; <code>frontend/src/features/admin/notifications/types.test.ts</code> covers the row mapper, the notified filter, the export filter and the dated CSV name.</li>
+<li>Gap: <code>backInStockMail</code> has no direct template test. It is covered only through the service and integration specs asserting that one mail went to the right address.</li>
+</ul></section>
+
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+query AdminDashboard {
+  adminDashboard {
+    orders_last_30_days
+    revenue_last_30_days
+    pending_registrations
+    pending_bookings
+    unread_messages
+    new_commission_requests
+    upcoming_visits
+    orders_by_status {
+      status
+      count
+    }
+    recent_orders {
+      id
+      status
+      total
+      item_count
+      created_at
+      customer {
+        ...AdminUserRefFields
+      }
+    }
+    recent_bookings {
+      id
+      status
+      total
+      hours
+      participants
+      starts_at
+      created_at
+      customer {
+        ...AdminUserRefFields
+      }
+    }
+    low_stock {
+      id
+      name
+      slug
+      stock
+    }
+  }
+}

@@ -1,0 +1,23 @@
+query SiteSettings {
+  siteSettings {
+    contact_phone
+    whatsapp_number
+    contact_email
+    address
+    opening_hours
+    instagram_url
+    facebook_url
+    youtube_url
+    shipping_flat_fee
+    free_shipping_above
+    dispatch_days_min
+    dispatch_days_max
+    announcement_text
+    announcement_href
+    hero_heading
+    hero_subheading
+    hero_image_url
+    hero_cta_text
+    hero_cta_href
+  }
+}

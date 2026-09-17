@@ -5,54 +5,56 @@ import { atViewport } from "@/lib/storybook/viewports";
 import { Label } from "./label";
 import { Textarea } from "./textarea";
 
+const gallery = (
+  <Gallery>
+    <GallerySection title="Notes to the studio">
+      <Specimen label="Empty">
+        <div className="flex w-full flex-col gap-1.5 sm:w-72">
+          <Label htmlFor="order-note">Anything we should know?</Label>
+          <Textarea id="order-note" rows={3} placeholder="Optional" />
+        </div>
+      </Specimen>
+      <Specimen label="Filled">
+        <div className="flex w-full flex-col gap-1.5 sm:w-72">
+          <Label htmlFor="booking-note">Anything we should know?</Label>
+          <Textarea
+            id="booking-note"
+            rows={3}
+            defaultValue="Two of us are left handed, if that changes the wheel setup."
+          />
+        </div>
+      </Specimen>
+      <Specimen label="Disabled">
+        <div className="flex w-full flex-col gap-1.5 sm:w-72">
+          <Label htmlFor="sent-note">Anything we should know?</Label>
+          <Textarea
+            id="sent-note"
+            rows={3}
+            defaultValue="Please wrap it as a gift."
+            disabled
+          />
+        </div>
+      </Specimen>
+    </GallerySection>
+    <GallerySection title="Cancellation reason">
+      <Specimen label="Invalid">
+        <div className="flex w-full flex-col gap-1.5 sm:w-72">
+          <Label htmlFor="cancel-reason">Why are you cancelling?</Label>
+          <Textarea id="cancel-reason" rows={2} aria-invalid />
+          <p role="alert" className="text-[13px] text-destructive">
+            Tell us a little so we can free the wheel
+          </p>
+        </div>
+      </Specimen>
+    </GallerySection>
+  </Gallery>
+);
+
 const meta = {
   title: "UI/Textarea",
   component: Textarea,
   parameters: { layout: "padded" },
-  render: () => (
-    <Gallery>
-      <GallerySection title="States">
-        <Specimen label="Empty with placeholder">
-          <div className="flex w-full flex-col gap-2 sm:w-96">
-            <Label htmlFor="textarea-commission">Commission notes</Label>
-            <Textarea
-              id="textarea-commission"
-              placeholder="Tell us about the piece you dream of throwing…"
-            />
-          </div>
-        </Specimen>
-        <Specimen label="Filled">
-          <div className="flex w-full flex-col gap-2 sm:w-96">
-            <Label htmlFor="textarea-commission-filled">Commission notes</Label>
-            <Textarea
-              id="textarea-commission-filled"
-              defaultValue="A set of four dinner plates in sage glaze, with a raw clay rim."
-            />
-          </div>
-        </Specimen>
-        <Specimen label="Invalid">
-          <div className="flex w-full flex-col gap-2 sm:w-96">
-            <Label htmlFor="textarea-glaze-request">Glaze request</Label>
-            <Textarea
-              id="textarea-glaze-request"
-              aria-invalid
-              placeholder="Describe the glaze finish you need…"
-            />
-          </div>
-        </Specimen>
-        <Specimen label="Disabled">
-          <div className="flex w-full flex-col gap-2 sm:w-96">
-            <Label htmlFor="textarea-kiln-notes">Kiln notes</Label>
-            <Textarea
-              id="textarea-kiln-notes"
-              disabled
-              defaultValue="Cone 6 firing logged by the studio team."
-            />
-          </div>
-        </Specimen>
-      </GallerySection>
-    </Gallery>
-  ),
+  render: () => gallery,
 } satisfies Meta<typeof Textarea>;
 
 export default meta;

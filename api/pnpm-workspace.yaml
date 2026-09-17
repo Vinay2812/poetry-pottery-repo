@@ -6,3 +6,6 @@ allowBuilds:
   "@swc/core": true
   esbuild: true
   "@apollo/protobufjs": false
+  onnxruntime-node: true
+  protobufjs: false
+  sharp: true

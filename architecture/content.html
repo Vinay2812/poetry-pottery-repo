@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Content, settings, newsletter and contact &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Content, settings, newsletter and contact: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="reviews.html">&larr; Reviews</a><a rel="next" href="queue-mail.html">Queue and mail &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 15 of 24</p>
+<h1>Content, settings, newsletter and contact</h1>
+<p class="lede">The marketing surface - editable pages, the site settings singleton, the announcement bar, the newsletter and the contact form - shares one shape: a short-lived Redis cache in front of a database read, dropped explicitly on an admin write, with every cache read degrading to the loader when Redis is unavailable. The two public write paths, subscribing and contacting, are both strict-throttled, both persist before they send anything, and both hand the actual sending to the queue.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 900 400" role="img" aria-label="Content pages, site settings, newsletter and contact, with their Redis caches and mail jobs" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="290" height="390"/><text x="18" y="26">Browser</text></g><g class="lane"><rect x="315" y="10" width="310" height="390"/><text x="323" y="26">API</text></g><g class="lane"><rect x="640" y="10" width="250" height="390"/><text x="648" y="26">Stores and mail</text></g><g class="box t-next"><rect x="28" y="44" width="250" height="44"/><text x="153" y="63" text-anchor="middle" class="b">ContentPageContainer</text><text x="153" y="77" text-anchor="middle">about, faq, care, terms...</text></g><g class="box t-next"><rect x="28" y="108" width="250" height="40"/><text x="153" y="132" text-anchor="middle">AnnouncementBar</text></g><g class="box t-client"><rect x="28" y="164" width="250" height="40"/><text x="153" y="188" text-anchor="middle">NewsletterFormContainer</text></g><g class="box t-client"><rect x="28" y="220" width="250" height="40"/><text x="153" y="244" text-anchor="middle">ContactFormContainer</text></g><g class="box t-client"><rect x="28" y="292" width="250" height="44"/><text x="153" y="311" text-anchor="middle" class="b">UnsubscribeContainer</text><text x="153" y="325" text-anchor="middle">token from the URL</text></g><g class="box t-api"><rect x="335" y="44" width="270" height="40"/><text x="470" y="68" text-anchor="middle">ContentResolver.contentPage</text></g><g class="box t-svc"><rect x="335" y="98" width="270" height="40"/><text x="470" y="122" text-anchor="middle">SettingsService.get</text></g><g class="box t-svc"><rect x="335" y="152" width="270" height="46"/><text x="470" y="172" text-anchor="middle" class="b">NewsletterService.subscribe</text><text x="470" y="186" text-anchor="middle">@StrictThrottle</text></g><g class="box t-svc"><rect x="335" y="212" width="270" height="46"/><text x="470" y="232" text-anchor="middle" class="b">ContactService</text><text x="470" y="246" text-anchor="middle">row first, then mails</text></g><g class="box t-svc"><rect x="335" y="274" width="270" height="40"/><text x="470" y="298" text-anchor="middle">NewsletterService.unsubscribe</text></g><g class="box t-api"><rect x="335" y="328" width="270" height="40"/><text x="470" y="352" text-anchor="middle">AdminContentService, AdminInboxService</text></g><g class="box t-cache"><rect x="660" y="44" width="215" height="46"/><text x="768" y="64" text-anchor="middle" class="b">Redis content:&lt;slug&gt;</text><text x="768" y="78" text-anchor="middle">120 s</text></g><g class="box t-cache"><rect x="660" y="108" width="215" height="46"/><text x="768" y="128" text-anchor="middle" class="b">Redis settings:site</text><text x="768" y="142" text-anchor="middle">60 s</text></g><g class="box t-db"><rect x="660" y="180" width="215" height="60"/><text x="768" y="200" text-anchor="middle" class="b">newsletter_subscribers</text><text x="768" y="214" text-anchor="middle">token nanoid(24)</text><text x="768" y="228" text-anchor="middle">contact_messages</text></g><g class="box t-queue"><rect x="660" y="274" width="215" height="46"/><text x="768" y="294" text-anchor="middle" class="b">mail.send job</text><text x="768" y="308" text-anchor="middle">welcome, ack, studio</text></g><path class="edge" d="M 153 88 L 153 108" marker-end="url(#arrowhead)"/><path class="edge" d="M 153 148 L 153 164" marker-end="url(#arrowhead)"/><path class="edge" d="M 153 204 L 153 220" marker-end="url(#arrowhead)"/><path class="edge" d="M 153 260 L 153 292" marker-end="url(#arrowhead)"/><path class="edge" d="M 278 66 L 335 66" marker-end="url(#arrowhead)"/><path class="edge" d="M 278 184 L 335 172" marker-end="url(#arrowhead)"/><path class="edge" d="M 278 240 L 335 232" marker-end="url(#arrowhead)"/><path class="edge" d="M 278 314 L 335 292" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 64 L 660 64" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 118 L 660 124" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 175 L 660 200" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 235 L 660 215" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 294 L 660 294" marker-end="url(#arrowhead)"/></svg><figcaption>Everything on this page is cached briefly, thrown away on an admin write, and degrades to the database when Redis is unavailable. The unsubscribe token is a bearer capability generated by a Prisma column default.</figcaption></figure></section><section id="how"><h2>How it works</h2><h3>The cache primitive</h3><p><code>RedisService.getOrSet(key, ttlSeconds, loader)</code> catches the read, parses with <code>reviveDates</code> (an ISO string pattern turned back into a <code>Date</code>, because JSON drops them and the GraphQL <code>DateTime</code> scalar needs them back), and on a miss calls the loader and writes with an expiry, catching that too. <strong>No cache is ever authoritative</strong>: a Redis outage degrades to uncached reads, never to an error. The client is built with <code>lazyConnect</code>, <code>maxRetriesPerRequest: 2</code> and <code>enableOfflineQueue: false</code>, and a failed connect at boot is logged rather than fatal.</p><div class="scroll"><table><caption>Every Redis cache in the API. All go through RedisService.getOrSet, which degrades to the loader on any Redis failure. Redis also holds the throttler counters, the per-customer review upload set and the pending reference-photo set, none of which is a cache.</caption><thead><tr><th scope="col">Key</th><th scope="col">TTL</th><th scope="col">Written by</th><th scope="col">Invalidated by</th></tr></thead><tbody><tr><td><code>content:&lt;slug&gt;</code></td><td>120 s</td><td><code>ContentService.bySlug</code></td><td><code>ContentService.update</code> after the upsert, and <code>AdminContentService.deletePage</code></td></tr><tr><td><code>settings:site</code></td><td>60 s</td><td><code>SettingsService.get</code></td><td><code>SettingsService.update</code> after the write</td></tr><tr><td><code>catalog:categories</code>, <code>catalog:collections</code>, <code>catalog:collections:archive</code></td><td>120 s</td><td><code>ProductsService.categories</code> and <code>collections</code></td><td><code>ProductsService.invalidateCatalogCache</code>, called from the admin products, catalog and glazes services</td></tr><tr><td><code>suggest:&lt;term&gt;</code></td><td>30 s</td><td><code>SuggestService.suggest</code></td><td>Nothing. The TTL is the only thing that clears it.</td></tr></tbody></table></div><p class="note">Invalidation is delete-after-write with no versioning, so a concurrent <code>getOrSet</code> that already read the old row can write it back just after the delete and serve stale data for up to the TTL. The short TTLs bound it; nothing else prevents it. One of the four keys, <code>suggest:&lt;term&gt;</code>, has no invalidation at all and leans entirely on its TTL.</p>
+<p>A fifth key used to sit here, <code>commissions:options</code>, holding the piece types, sizes and glazes the brief form offers. It is gone: the only thing that could have cleared it was <code>invalidateOptionsCache()</code>, which nothing ever called, so an admin adding a glaze waited out the TTL. <code>CommissionsService.options</code> now reads straight through to Postgres, which is three cheap queries on a path nobody hammers. A cache whose invalidation is never wired is worse than no cache, because it looks correct.</p><h3>Content pages</h3><p><code>contentPage(slug)</code> is public, unguarded and unthrottled, and reads through the cache. The loader is a <code>findFirst</code> on slug plus <code>is_published</code>, so an unpublished or missing page caches its null for 120 seconds and raises <code>NotFoundException(&quot;Page not found&quot;)</code> on each hit.</p><p>The admin side has six operations, all <code>@AdminRequired()</code>. <code>saveContentPage</code> slugifies (an empty result raises <code>A page needs a slug</code>), grandfathers the currently saved hero image through <code>assertConfirmed</code> at <code>UploadPurpose.CONTENT</code>, and then delegates to <code>ContentService.update</code>, which owns the zod schema and the cache key. The schema allows a title of 2 to 160 characters, an optional subtitle up to 240, a hero image that is a URL or blank, at most 20 sections each with a heading and a body up to 5000 characters, and at most 20 items per section. Only the first zod issue is surfaced.</p><p class="note"><code>deletePage(slug)</code> deletes with the raw slug and invalidates <code>contentCacheKey(slug)</code>, while <code>savePage</code> writes under <code>slugify(slug)</code>. A non-normalised slug can therefore miss on delete where save would have normalised it.</p><h3>Site settings and the announcement bar</h3><p><code>SettingsService.get()</code> reads the singleton row with <code>findUniqueOrThrow({ where: { id: 1 } })</code> behind the <code>settings:site</code> key; the row is inserted by the initial migration, so a missing one is a genuine fault. <code>updateSettings</code> validates the money fields as non-negative integers, checks a changed hero image at <code>UploadPurpose.HERO</code>, and then writes field by field so only the keys that were sent are touched. Two fields, <code>free_shipping_above</code> and <code>hero_image_url</code>, treat an explicit null as a meaningful clear rather than a skip.</p><p><code>updateAnnouncement</code> trims the text to 160 characters; a blank text takes the bar down and forces the href to null, while a present text keeps an href trimmed to 300. The storefront layout renders <code>AnnouncementBar</code> only when <code>settings.announcement_text</code> is set.</p><h3>Newsletter</h3><p><code>subscribeToNewsletter</code> is public and <code>@StrictThrottle()</code>, and uses <code>tryAuthenticate</code> so a signed-in visitor&#x27;s subscription is linked to their account. Inside a transaction it reads any existing row, computes <code>linkableUserId</code> and upserts on the email. <code>linkableUserId</code> guards the unique <code>user_id</code> column: it returns the user id only when no other subscriber row owns it, so a second address for the same account subscribes unlinked instead of failing on a duplicate key. Re-subscribing an already active address is idempotent and sends no second welcome, because <code>wasActive</code> is snapshotted before the upsert and the mail is enqueued after the transaction commits.</p><p><strong>The unsubscribe token</strong> is a Prisma column default: <code>token String @unique @default(nanoid(24))</code>, generated in the database on insert. It is not signed and does not expire; it is a bearer capability that only ever appears in the mail call to action, built as <code>/newsletter/unsubscribe?token=...</code> against <code>env.FRONTEND_URL</code>. Verification is a plain <code>updateMany({ where: { token }, data: { is_active: false, unsubscribed_at: now } })</code>, whose zero count is a <code>NotFoundException</code>. Using <code>updateMany</code> rather than <code>update</code> means an unknown token is a miss rather than a Prisma throw, and unsubscribing twice still succeeds because the row matches on token regardless of its active flag. The strict throttle is the only defence against guessing the token space.</p><p>The admin unsubscribe matches on the lowercased email <strong>and</strong> <code>is_active: true</code>, so a second call raises <code>That address is not on the list</code>, unlike the token path.</p><h3>Contact</h3><p><code>sendContactMessage</code> is public and <code>@StrictThrottle()</code>. The zod input allows a name of 2 to 80, a lowercased email, an optional phone run through the shared <code>normalisePhone</code>, an optional subject up to 120 and a message of 10 to 2000 characters. The row is created <strong>first</strong>, so the studio never loses a message to a mail failure. Then the studio mail goes out when <code>env.BUSINESS_EMAIL</code> is set, and an acknowledgement always goes to the sender. The function returns true unconditionally.</p><p class="note">The acknowledgement goes to an unverified, caller-supplied address with only the strict throttle in front of it, which is a reflection vector bounded at five per minute per tracker.</p><h3>Admin inbox</h3><p><code>adminContactMessages</code> filters on a tri-state read flag and a contains search across name, email, subject and message. <code>setContactMessageRead</code> and <code>deleteContactMessage</code> are raw updates and deletes, so a missing id surfaces as a Prisma error rather than a <code>NotFoundException</code>.</p><p>The module carries <strong>two</strong> exports, both <strong>queries that perform an export</strong>, returning a whole RFC 4180 quoted CSV as one GraphQL string, capped at <code>EXPORT_LIMIT = 10000</code> with no streaming and a silent cap. <code>toCsv</code> writes <code>email,status,subscribed_at,unsubscribed_at</code> for subscribers; <code>toWatcherCsv</code> writes <code>email,piece,requested_at,notified_at</code> for the back-in-stock waiting list, which also lives in this module. The browser turns the string into a file itself. The waiting list is described on the <a href="notifications.html">notifications page</a>.</p><p class="note">The inbox module does <strong>not</strong> handle commission briefs, despite the console route being called the commission inbox; those three admin fields sit on <code>CommissionsResolver</code>. See the <a href="commissions.html">commissions page</a>.</p></section><section id="theory"><h2>Minimal theory: call trace</h2><h3>Rendering a content page</h3><ol class="trace"><li><code class="ref">frontend/src/app/(storefront)/faq/page.tsx</code><span class="desc">Server component rendering <code>ContentPageContainer slug=&quot;faq&quot; isAccordion</code>.</span></li><li><code class="ref">frontend/src/lib/data/catalog.ts:getContentPage</code><span class="desc">RSC Apollo client query with <code>errorPolicy: &quot;all&quot;</code>.</span></li><li><code class="ref">api/src/features/content/content.resolver.ts:ContentResolver.contentPage</code><span class="desc">Public, no guard, no throttle.</span></li><li><code class="ref">api/src/features/content/content.service.ts:contentCacheKey</code><span class="desc"><code>content:&lt;slug&gt;</code>.</span></li><li><code class="ref">api/src/redis/redis.service.ts:RedisService.getOrSet</code><span class="desc">Cache read, or the loader on a miss or any Redis failure.</span></li><li><code class="ref">api/src/features/content/content.service.ts:ContentService.bySlug</code><span class="desc"><code>findFirst</code> on slug and <code>is_published</code>, else <code>NotFoundException(&quot;Page not found&quot;)</code>.</span></li></ol><h3>Subscribing and then unsubscribing</h3><ol class="trace"><li><code class="ref">frontend/src/features/content/containers/NewsletterFormContainer.tsx</code><span class="desc">Form submit.</span></li><li><code class="ref">api/src/features/newsletter/newsletter.resolver.ts:NewsletterResolver.subscribeToNewsletter</code><span class="desc">Public and <code>@StrictThrottle()</code>; <code>tryAuthenticate</code> links a signed-in visitor.</span></li><li><code class="ref">api/src/features/newsletter/newsletter.service.ts:NewsletterService.subscribe</code><span class="desc"><code>parseEmail</code>, then inside a transaction read the row, compute <code>linkableUserId</code> and upsert.</span></li><li><code class="ref">api/src/mail/mail.service.ts:MailService.enqueue</code><span class="desc">After commit, and only when the address was not already active.</span></li><li><code class="ref">api/src/mail/templates/newsletter.ts:newsletterWelcomeMail</code><span class="desc">Builds the call to action path carrying the token.</span></li><li><code class="ref">frontend/src/features/content/containers/UnsubscribeContainer.tsx</code><span class="desc">Reads the token from the query string and calls the mutation.</span></li><li><code class="ref">api/src/features/newsletter/newsletter.service.ts:NewsletterService.unsubscribe</code><span class="desc"><code>updateMany</code> on the token; a zero count is a 404, and a repeat call still succeeds.</span></li></ol></section><section id="edges"><h2>Edge cases and failure handling</h2><ul><li><strong>Redis down is invisible</strong> to callers: every cache read falls through to the loader.</li><li><strong>Stale reads for up to the TTL</strong> are possible after an admin write, because invalidation is unversioned.</li><li><strong>A null page is cached too</strong>, so publishing a page can take up to 120 seconds to appear.</li><li><strong><code>deletePage</code> does not slugify</strong>, so a non-normalised slug can miss.</li><li><strong>A second address for one account subscribes unlinked</strong> rather than violating the unique <code>user_id</code>.</li><li><strong>Re-subscribing sends no second welcome</strong>, because the active flag is snapshotted before the upsert.</li><li><strong>The unsubscribe token never expires and is not signed.</strong> It must never be logged; the strict throttle is the only brute-force defence.</li><li><strong>A contact message is stored before any mail is attempted</strong>, so a mail failure never loses it.</li><li><strong>Both exports are capped silently</strong> at 10000 rows and returned as one string.</li><li><strong>The brief form offers a new glaze at once</strong>, because <code>CommissionsService.options</code> is no longer cached. The cache it had could not be invalidated, so the choice was between wiring an invalidation onto three admin services or deleting 120 seconds of caching from a page nobody hammers.</li></ul></section><section id="tests"><h2>Tests</h2><ul><li><code>api/src/features/content/content.service.spec.ts</code>, <code>api/src/features/settings/settings.service.spec.ts</code>, <code>api/src/features/newsletter/newsletter.service.spec.ts</code> and <code>api/src/features/contact/contact.service.spec.ts</code> cover the storefront services.</li><li><code>api/src/features/admin/content/content.service.spec.ts</code> and <code>api/src/features/admin/inbox/inbox.service.spec.ts</code> cover the console paths.</li><li><code>api/src/redis/redis.service.spec.ts</code> covers <code>getOrSet</code> and <code>reviveDates</code>; the pending-upload primitives it also exports are covered through the review service spec.</li><li><code>api/test/integration/newsletter.integration-spec.ts</code> and <code>contact.integration-spec.ts</code> run twelve cases between them against a real Postgres, including one row for twenty simultaneous signups, one welcome for a burst, waking a row for someone who left and came back, an unknown unsubscribe token touching nobody, and every word of twenty notes posted at once being kept.</li><li>Frontend: <code>frontend/src/features/content/types.test.ts</code>, <code>frontend/src/features/admin/content/types.test.ts</code>, <code>frontend/src/lib/validations/contact.test.ts</code> and <code>frontend/src/lib/validations/admin/content.test.ts</code>.</li></ul></section>
+<footer class="bottom">
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="reviews.html">&larr; Reviews</a><a rel="next" href="queue-mail.html">Queue and mail &rarr;</a></nav>
+<p>Verified against the working tree on branch <code>docs/architecture</code>, stacked on <code>feat/admin-ui</code>.</p>
+</footer>
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>

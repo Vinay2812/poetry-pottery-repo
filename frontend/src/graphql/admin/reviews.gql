@@ -1,0 +1,41 @@
+fragment AdminReviewRow on AdminReview {
+  is_hidden
+  subject_kind
+  customer {
+    ...AdminUserRefFields
+  }
+  review {
+    id
+    rating
+    body
+    image_urls
+    created_at
+    subject_name
+    subject_href
+    author {
+      name
+      image
+    }
+  }
+}
+
+query AdminReviews($filter: AdminReviewsFilterInput) {
+  adminReviews(filter: $filter) {
+    items {
+      ...AdminReviewRow
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+mutation SetReviewHidden($id: Int!, $is_hidden: Boolean!) {
+  setReviewHidden(id: $id, is_hidden: $is_hidden) {
+    ...AdminReviewRow
+  }
+}
+
+mutation DeleteReviewAsAdmin($id: Int!) {
+  deleteReviewAsAdmin(id: $id)
+}

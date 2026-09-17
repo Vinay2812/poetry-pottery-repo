@@ -5,28 +5,35 @@ import { atViewport } from "@/lib/storybook/viewports";
 import { Checkbox } from "./checkbox";
 import { Input } from "./input";
 import { Label } from "./label";
+import { Textarea } from "./textarea";
 
 const gallery = (
   <Gallery>
-    <GallerySection title="With input">
-      <Specimen label="Default">
-        <div className="flex w-full flex-col gap-2 sm:w-72">
-          <Label htmlFor="label-name">Your name for the workshop</Label>
-          <Input id="label-name" placeholder="e.g. Aisha Potter" />
+    <GallerySection title="Above a field">
+      <Specimen label="With an input">
+        <div className="flex w-full flex-col gap-1.5 sm:w-64">
+          <Label htmlFor="guest-name">Name</Label>
+          <Input id="guest-name" defaultValue="Maya Iyer" />
         </div>
       </Specimen>
-      <Specimen label="Disabled field">
-        <div className="flex w-full flex-col gap-2 sm:w-72">
-          <Label htmlFor="label-slot">Kiln firing slot</Label>
-          <Input id="label-slot" placeholder="Friday glaze firing" disabled />
+      <Specimen label="With a textarea">
+        <div className="flex w-full flex-col gap-1.5 sm:w-64">
+          <Label htmlFor="order-note">Note for the studio</Label>
+          <Textarea id="order-note" rows={2} />
         </div>
       </Specimen>
     </GallerySection>
-    <GallerySection title="With checkbox">
-      <Specimen label="Inline">
-        <div className="flex items-center gap-2">
-          <Checkbox id="label-newsletter" />
-          <Label htmlFor="label-newsletter">Send me glaze restock news</Label>
+    <GallerySection title="Beside a control">
+      <Specimen label="With a checkbox">
+        <div className="flex items-center gap-3">
+          <Checkbox id="in-stock" defaultChecked />
+          <Label htmlFor="in-stock">On the shelf now</Label>
+        </div>
+      </Specimen>
+      <Specimen label="Dimmed with its control">
+        <div className="group flex items-center gap-3" data-disabled="true">
+          <Checkbox id="made-to-order" disabled />
+          <Label htmlFor="made-to-order">Made to order</Label>
         </div>
       </Specimen>
     </GallerySection>

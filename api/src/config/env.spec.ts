@@ -3,8 +3,9 @@ import { describe, expect, it } from "vitest";
 import { buildEnv, env, envSchema } from "./env";
 
 const validSource = {
-  DATABASE_URL:
-    "postgresql://boilerplate:boilerplate@localhost:5433/boilerplate",
+  DATABASE_URL: "postgresql://poetry:poetry@localhost:5433/poetry_pottery",
+  REDIS_URL: "redis://localhost:6381",
+  RABBITMQ_URL: "amqp://poetry:poetry@localhost:5672",
   CLERK_PUBLISHABLE_KEY: "pk_test_key",
   CLERK_SECRET_KEY: "sk_test_key",
   SCHEMA_SYNC_KEY: "test-schema-key",

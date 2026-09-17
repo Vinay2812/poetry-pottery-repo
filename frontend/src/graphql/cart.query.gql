@@ -1,0 +1,61 @@
+fragment CartFields on Cart {
+  item_count
+  subtotal
+  shipping_fee
+  free_shipping_above
+  total
+  items {
+    id
+    quantity
+    unit_price
+    line_total
+    is_available
+    unavailable_reason
+    selections {
+      group_id
+      group_name
+      option_id
+      option_name
+      text
+      price_modifier
+    }
+    reference_image_urls
+    product {
+      ...ProductCard
+    }
+  }
+}
+
+query Cart {
+  cart {
+    ...CartFields
+  }
+}
+
+query CartCount {
+  cartCount
+}
+
+mutation AddToCart($input: AddToCartInput!) {
+  addToCart(input: $input) {
+    ...CartFields
+  }
+}
+
+mutation UpdateCartItem($id: Int!, $quantity: Int!) {
+  updateCartItem(id: $id, quantity: $quantity) {
+    ...CartFields
+  }
+}
+
+mutation RemoveCartItem($id: Int!) {
+  removeCartItem(id: $id) {
+    ...CartFields
+  }
+}
+
+mutation ClearCart {
+  clearCart {
+    ...CartFields
+  }
+}

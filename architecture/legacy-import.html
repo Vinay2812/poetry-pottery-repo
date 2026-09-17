@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Legacy import and seeding &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Legacy import and seeding: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="design.html">&larr; Design system and motion</a><a rel="next" href="testing.html">Testing and verification &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 22 of 24</p>
+<h1>Legacy import and seeding</h1>
+<p class="lede">The catalogue on this site is not seeded data, it is the old production database, imported by a script that opens the source read only and writes everything through upserts on natural keys so it can be run again whenever the schema moves. The seeds cover only the scaffolding the import does not carry: the studio configuration, the site settings singleton and the public content pages, with a separate optional demo catalogue for local play.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 880 380" role="img" aria-label="Legacy import: the ten source reads, the mapping helpers and the upserts they land in" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="270" height="370"/><text x="18" y="26">Legacy production DB</text></g><g class="lane"><rect x="295" y="10" width="290" height="370"/><text x="303" y="26">import-legacy.ts</text></g><g class="lane"><rect x="600" y="10" width="270" height="370"/><text x="608" y="26">New database</text></g><g class="box t-db"><rect x="28" y="46" width="230" height="44"/><text x="143" y="72" text-anchor="middle">users, user_addresses</text></g><g class="box t-db"><rect x="28" y="110" width="230" height="44"/><text x="143" y="129" text-anchor="middle" class="b">products, collections,</text><text x="143" y="143" text-anchor="middle">product_categories</text></g><g class="box t-db"><rect x="28" y="174" width="230" height="44"/><text x="143" y="193" text-anchor="middle" class="b">customize_categories,</text><text x="143" y="207" text-anchor="middle">customization_options</text></g><g class="box t-db"><rect x="28" y="238" width="230" height="44"/><text x="143" y="257" text-anchor="middle" class="b">daily_workshop_*</text><text x="143" y="271" text-anchor="middle">configs, tiers, registrations</text></g><g class="box t-db"><rect x="28" y="302" width="230" height="44"/><text x="143" y="321" text-anchor="middle" class="b">carts, content_pages,</text><text x="143" y="335" text-anchor="middle">site_settings</text></g><g class="box t-svc"><rect x="315" y="46" width="250" height="44"/><text x="440" y="65" text-anchor="middle" class="b">read-only session</text><text x="440" y="79" text-anchor="middle">default_transaction_read_only</text></g><g class="box t-svc"><rect x="315" y="110" width="250" height="44"/><text x="440" y="129" text-anchor="middle" class="b">readLegacy: 10 queries</text><text x="440" y="143" text-anchor="middle">ordered by id</text></g><g class="box t-svc"><rect x="315" y="174" width="250" height="44"/><text x="440" y="193" text-anchor="middle" class="b">slugify, cleanText,</text><text x="440" y="207" text-anchor="middle">toColorCode, toDescription</text></g><g class="box t-svc"><rect x="315" y="238" width="250" height="44"/><text x="440" y="257" text-anchor="middle" class="b">upsert on natural keys</text><text x="440" y="271" text-anchor="middle">idempotent</text></g><g class="box t-svc"><rect x="315" y="302" width="250" height="44"/><text x="440" y="328" text-anchor="middle">--dry-run prints and stops</text></g><g class="box t-db"><rect x="620" y="46" width="230" height="44"/><text x="735" y="72" text-anchor="middle">users + newsletter rows</text></g><g class="box t-db"><rect x="620" y="110" width="230" height="44"/><text x="735" y="129" text-anchor="middle" class="b">categories, collections,</text><text x="735" y="143" text-anchor="middle">products</text></g><g class="box t-db"><rect x="620" y="174" width="230" height="44"/><text x="735" y="193" text-anchor="middle" class="b">custom-* products</text><text x="735" y="207" text-anchor="middle">with option groups</text></g><g class="box t-db"><rect x="620" y="238" width="230" height="44"/><text x="735" y="257" text-anchor="middle" class="b">workshop config, tiers,</text><text x="735" y="271" text-anchor="middle">bookings with slot rows</text></g><g class="box t-db"><rect x="620" y="302" width="230" height="44"/><text x="735" y="321" text-anchor="middle" class="b">cart lines, about page,</text><text x="735" y="335" text-anchor="middle">site settings</text></g><path class="edge" d="M 258 68 L 315 68" marker-end="url(#arrowhead)"/><path class="edge" d="M 258 132 L 315 132" marker-end="url(#arrowhead)"/><path class="edge" d="M 258 196 L 315 196" marker-end="url(#arrowhead)"/><path class="edge" d="M 258 260 L 315 260" marker-end="url(#arrowhead)"/><path class="edge" d="M 258 324 L 315 324" marker-end="url(#arrowhead)"/><path class="edge" d="M 565 68 L 620 68" marker-end="url(#arrowhead)"/><path class="edge" d="M 565 132 L 620 132" marker-end="url(#arrowhead)"/><path class="edge" d="M 565 196 L 620 196" marker-end="url(#arrowhead)"/><path class="edge" d="M 565 260 L 620 260" marker-end="url(#arrowhead)"/><path class="edge" d="M 565 324 L 620 324" marker-end="url(#arrowhead)"/></svg><figcaption>The legacy connection sets itself read only before the first query. Every write on the other side is an upsert on a natural key, so the import can be run repeatedly.</figcaption></figure></section><section id="how"><h2>How it works</h2><h3>Connecting</h3><p><code>api/scripts/import-legacy.ts</code> reads <code>LEGACY_DATABASE_URL</code> at module scope, straight off <code>process.env</code> rather than through the zod schema, and throws <code>LEGACY_DATABASE_URL is not set</code> when it is missing. The legacy <code>pg</code> client runs <code>set default_transaction_read_only = on</code> immediately after connecting, so the source cannot be written to even by accident. The destination is a fresh Prisma client on <code>env.DATABASE_URL</code>.</p><p>A module-level <code>types.setTypeParser(types.builtins.TIMESTAMP, v =&gt; new Date(</code>${v}Z<code>))</code> is needed because the legacy <code>timestamp without time zone</code> columns hold naive UTC and must not be read as local wall time. <code>json_agg</code> output bypasses that parser, so the workshop slot strings are re-suffixed with <code>Z</code> by hand.</p><h3>Reading</h3><p><code>readLegacy()</code> issues ten queries, all ordered by id or creation time: users; user addresses; collections; products joined to their categories with an aggregated name array; customise categories left-joined to their options, filtered to active ones; the daily workshop configs and pricing tiers (<code>where c.is_active</code> and <strong><code>limit 1</code></strong>, so only one config is imported); workshop registrations with their booked slots aggregated; cart lines; the active <code>about</code> content page; and two site settings rows, <code>contact_info</code> and <code>hero_images</code>.</p><h3>Writing, in order</h3><p><code>main</code> runs <code>importUsers</code>, <code>importCatalog</code>, <code>importCustomPieces</code>, <code>importWorkshop</code>, <code>importCart</code> and <code>importContent</code>. The id maps returned by the first two feed the later steps.</p><div class="scroll"><table><caption>Every write is an upsert on a natural key, which is what makes the import idempotent.</caption><thead><tr><th scope="col">Entity</th><th scope="col">Upsert key</th></tr></thead><tbody><tr><td>User</td><td><code>auth_id</code></td></tr><tr><td>Newsletter subscriber</td><td><code>email</code></td></tr><tr><td>Category</td><td><code>slug</code></td></tr><tr><td>Collection</td><td><code>slug</code>, slugified</td></tr><tr><td>Product</td><td><code>slug</code>, derived from the name</td></tr><tr><td>Workshop config</td><td><code>slug</code>, fixed as <code>open-studio</code></td></tr><tr><td>Workshop booking</td><td><code>id</code>, the legacy id preserved</td></tr><tr><td>Cart line</td><td><code>(user_id, product_id, selection_key)</code> with an empty selection key</td></tr><tr><td>Content page</td><td><code>slug</code>, fixed as <code>about</code></td></tr><tr><td>Site settings</td><td><code>id = 1</code></td></tr></tbody></table></div><p>Two things are recreated rather than upserted: a product&#x27;s option groups are deleted and rebuilt, and a config&#x27;s pricing tiers are deleted and re-created. Addresses have no stable cross-schema key, so <code>importUsers</code> looks for a matching <code>(user_id, line1, pincode)</code> and updates it when found, so an identical line is never duplicated.</p><h3>Mapping decisions worth knowing</h3><ul><li><strong>Product slugs come from the name</strong>, not the legacy slug, because the legacy slugs were junk. A collision appends the legacy id, tracked in a used-slug set.</li><li><code>toColorCode</code> keeps only a value matching <code>/^#[0-9a-f]{6}$/i</code>, because the legacy form stored palette indexes in the hex field.</li><li><code>toDescription</code> keeps text longer than three characters and otherwise substitutes a studio fallback line.</li><li>Stock is <code>Math.max(available_quantity, 0)</code> and material defaults to Stoneware; <code>created_at</code> is preserved throughout.</li><li>A user&#x27;s <code>subscribed_to_newsletter</code> flag becomes a <code>newsletterSubscriber</code> row, dated from the legacy subscription timestamp, and an update re-activates it.</li><li>Addresses map <code>zip</code> to <code>pincode</code>, with the contact number falling back to the owning user&#x27;s phone.</li><li><strong>Each customise category becomes one made-to-order product</strong> slugged <code>custom-&lt;singular&gt;</code>, with stock zero, <code>is_customizable</code> true, a required <code>CHOICE</code> group named Size when options exist, and always an optional <code>TEXT</code> group &quot;Notes for the potter&quot; capped at 200 characters.</li><li><strong>The workshop import converts hours to minutes</strong> and maps the slot duration, capacity and booking window. On update it deliberately passes <code>name: undefined</code> and <code>description: undefined</code>, so the seeded config keeps its own copy and image and only the real hours and prices come across. Legacy bookings stored one row per booked hour, and those become the booking&#x27;s slot rows, with <code>starts_at</code> from the first and <code>ends_at</code> from the last; a legacy <code>PAID</code> status maps to <code>CONFIRMED</code>.</li><li><code>importContent</code> builds up to three sections for the about page - the story, &quot;What we believe&quot; from the values list and &quot;How a piece is made&quot; from the process steps - and writes the contact details into site settings, deriving the WhatsApp number by stripping non-digits from the phone.</li></ul><h3>What is skipped</h3><p>Addresses, bookings and cart lines without a resolvable user are skipped; bookings with no slots are skipped; only the first active workshop config is read; inactive customisation options are filtered out in SQL; non-hex colour codes are dropped. Legacy events, orders, reviews and wishlists are never read at all - the documentation records them as zero rows. <code>--dry-run</code> prints the counts and returns before any write.</p><h3>Seeds</h3><ul><li><code>pnpm db:seed</code> runs <code>api/prisma/seed/index.ts</code>, which is <strong>site scaffolding only</strong>: the workshop config with its tiers, the site settings singleton and the six public content pages. Its header comment says the catalogue comes from the legacy import.</li><li><code>api/prisma/seed/content.ts</code> holds seven events, the <code>open-studio</code> config and tiers, the site settings and the content pages, plus coupons.</li><li><code>api/prisma/seed/catalog.ts</code> holds seven categories, the collections, the products, the care notes and the custom mug options. Its photographs are Pexels stock, scoped to the demo seed by <code>docs/design/temporary-photos.md</code>.</li><li><code>pnpm db:seed:demo</code> runs <code>demo.ts</code>, an optional local catalogue that seeds products, events with <code>starts_at</code> computed from a day offset at 15:00 IST and <code>available_seats</code> derived from the booked count, and coupons.</li></ul><h3>The other scripts</h3><ul><li><code>pnpm make-admin &lt;email&gt;</code> finds exactly one Clerk user for the address, upserts the database row with the admin role and writes <code>dbUserId</code> and <code>role</code> back into Clerk&#x27;s public metadata. The upsert is needed because signing in alone does not create the row until the first authenticated API call.</li><li><code>pnpm search:reindex</code> boots an application context with consumers disabled and calls <code>SearchService.reindexAll()</code>.</li><li><code>pnpm schema:emit</code> boots only the GraphQL schema builder over <code>src/resolvers.ts</code> and writes <code>api/schema.gql</code> with a banner byte-identical to what <code>autoSchemaFile</code> writes at boot, so the two writers never diff. It needs no database.</li><li><code>api/prisma.config.ts</code> calls <code>loadDotEnv()</code> first, because Prisma 7 no longer loads <code>.env</code> itself.</li><li><code>pnpm db:reset:legacy</code> chains reset, import and reindex.</li></ul></section><section id="theory"><h2>Minimal theory: call trace</h2><ol class="trace"><li><code class="ref">api/scripts/import-legacy.ts</code><span class="desc">Module scope: reads <code>LEGACY_DATABASE_URL</code> and installs the UTC timestamp parser.</span></li><li><code class="ref">api/scripts/import-legacy.ts:main</code><span class="desc">Throws when the URL is missing; connects and sets the session read only.</span></li><li><code class="ref">api/scripts/import-legacy.ts:readLegacy</code><span class="desc">Ten ordered queries into one in-memory snapshot.</span></li><li><code class="ref">api/scripts/import-legacy.ts:importUsers</code><span class="desc">Upserts users on <code>auth_id</code> &mdash; the production Clerk one, which the auth guard later adopts by email &mdash; creates newsletter rows, and matches addresses on line and pincode.</span></li><li><code class="ref">api/scripts/import-legacy.ts:importCatalog</code><span class="desc">Categories, collections and products, slugging from the name with an id suffix on collision.</span></li><li><code class="ref">api/scripts/import-legacy.ts:importCustomPieces</code><span class="desc">One made-to-order product per customise category, with a Size choice group and a notes text group.</span></li><li><code class="ref">api/scripts/import-legacy.ts:importWorkshop</code><span class="desc">Converts hours to minutes, rebuilds tiers, and turns each legacy booked hour into a slot row.</span></li><li><code class="ref">api/scripts/import-legacy.ts:importCart</code><span class="desc">Upserts cart lines with an empty selection key.</span></li><li><code class="ref">api/scripts/import-legacy.ts:importContent</code><span class="desc">Builds the about page sections and the contact settings.</span></li><li><code class="ref">api/scripts/reindex-search.ts</code><span class="desc">Run afterwards, as the script&#x27;s own closing line instructs, to embed the imported rows.</span></li></ol></section><section id="edges"><h2>Edge cases and failure handling</h2><ul><li><strong>The source is read only by construction</strong>, set on the session rather than trusted from a role.</li><li><strong>Naive UTC timestamps</strong> would otherwise shift by the local offset; the type parser and the manual <code>Z</code> suffix on aggregated JSON handle both paths.</li><li><strong>Re-running is safe.</strong> Every write is keyed on something natural, so the import converges rather than duplicating.</li><li><strong>Option groups and pricing tiers are rebuilt</strong>, so a removed option disappears rather than lingering.</li><li><strong>Only one workshop config is imported</strong>, by an explicit <code>limit 1</code>.</li><li><strong>Rows without a resolvable owner are skipped silently</strong>, which is why the printed counts are the reliable summary.</li><li><strong>Imported <code>auth_id</code>s belong to the production Clerk instance.</strong> The user upsert copies them across verbatim, so signing the same person in against a development instance produces a Clerk id the imported row has never seen, with an email address it already holds. That is why <code>UsersService.provisionUser</code> looks the row up by <code>auth_id</code>, then by <code>email</code>, and <strong>adopts</strong> the imported row on the second hit &mdash; rewriting its <code>auth_id</code> and keeping its id, its role and every order, address and booking hanging off it. Without that, a signed-in admin's first request hits <code>users_email_key</code> and every authenticated query, the console included, answers 500. See the <a href="auth.html">auth page</a>.</li>
+<li><strong>Embeddings are not written by the import</strong>; it tells you to run the reindex, and <code>db:reset:legacy</code> chains it for you.</li><li><strong>Failures print a stack and set a non-zero exit code</strong>, and the Prisma client is always disconnected in a <code>finally</code>.</li></ul></section><section id="tests"><h2>Tests</h2><ul><li>There are no automated tests for the import or the seeds. The verification path is <code>--dry-run</code> plus the row counts recorded in <code>docs/data/legacy-import.md</code>, which documents what the real production database contained: 21 products of which 13 are active, six categories, six collections, three customise categories, eight users of whom five are admins, three addresses, one cart line, one workshop config with five tiers, two pending bookings, the about page and the contact settings, and zero events, orders, reviews and wishlists.</li><li>That document also records the design consequences of the real data: tiny stock counts, poem-style descriptions, non-hex colour codes, &quot;Wood Fired&quot; being a process rather than a form, a price span from ₹300 to ₹25,000, and the ten and thirteen hour courses being rendered as multi-day WhatsApp requests.</li><li><code>api/eslint.config.mjs</code> does lint <code>prisma/seed/**</code> and <code>scripts/**</code> under the type-checked rule set, so the scripts are at least held to the same typing standard as the application.</li><li>The import predates the glaze table, the piece facts and the seconds fields, so it leaves every one of them null or false. An imported piece has a <code>material</code> and a <code>color_name</code> but no <code>glaze_id</code>, no measurements and no maker&#x27;s note until somebody fills them in from the console.</li></ul></section>
+<footer class="bottom">
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="design.html">&larr; Design system and motion</a><a rel="next" href="testing.html">Testing and verification &rarr;</a></nav>
+<p>Verified against the working tree on branch <code>docs/architecture</code>, stacked on <code>feat/admin-ui</code>.</p>
+</footer>
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>

@@ -1,0 +1,35 @@
+fragment AdminUserFields on AdminUser {
+  role
+  phone
+  created_at
+  orders_count
+  registrations_count
+  bookings_count
+  reviews_count
+  user {
+    ...AdminUserRefFields
+  }
+}
+
+query AdminUsers($filter: AdminUsersFilterInput) {
+  adminUsers(filter: $filter) {
+    items {
+      ...AdminUserFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+query AdminUser($id: Int!) {
+  adminUser(id: $id) {
+    ...AdminUserFields
+  }
+}
+
+mutation SetUserRole($id: Int!, $role: UserRole!) {
+  setUserRole(id: $id, role: $role) {
+    ...AdminUserFields
+  }
+}

@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { Gallery, GallerySection, Specimen } from "@/lib/storybook/gallery";
 import { atViewport } from "@/lib/storybook/viewports";
-import { Label } from "./label";
 import {
   Select,
   SelectContent,
@@ -11,93 +10,66 @@ import {
   SelectValue,
 } from "./select";
 
+const SORT_OPTIONS = [
+  { value: "FEATURED", label: "Featured" },
+  { value: "NEWEST", label: "New arrivals" },
+  { value: "PRICE_LOW_TO_HIGH", label: "Price: low to high" },
+];
+
+const gallery = (
+  <Gallery>
+    <GallerySection title="Shelf toolbar">
+      <Specimen label="Closed">
+        <Select defaultValue="FEATURED">
+          <SelectTrigger aria-label="Sort by" className="h-10 bg-transparent">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Specimen>
+      <Specimen label="A longer value">
+        <Select defaultValue="PRICE_LOW_TO_HIGH">
+          <SelectTrigger aria-label="Sort by" className="h-10 bg-transparent">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Specimen>
+      <Specimen label="Disabled">
+        <Select defaultValue="FEATURED" disabled>
+          <SelectTrigger aria-label="Sort by" className="h-10 bg-transparent">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SORT_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Specimen>
+    </GallerySection>
+  </Gallery>
+);
+
 const meta = {
   title: "UI/Select",
   component: Select,
   parameters: { layout: "padded" },
-  render: () => (
-    <Gallery>
-      <GallerySection title="Sizes">
-        <Specimen label="Small">
-          <div className="flex w-full flex-col gap-2 sm:w-56">
-            <Label htmlFor="select-glaze-sm">Glaze</Label>
-            <Select defaultValue="sage">
-              <SelectTrigger id="select-glaze-sm" size="sm" className="w-full">
-                <SelectValue placeholder="Choose a glaze" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sage">Sage ash</SelectItem>
-                <SelectItem value="celadon">Celadon</SelectItem>
-                <SelectItem value="shino">Shino</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </Specimen>
-        <Specimen label="Default">
-          <div className="flex w-full flex-col gap-2 sm:w-56">
-            <Label htmlFor="select-glaze-md">Glaze</Label>
-            <Select defaultValue="celadon">
-              <SelectTrigger id="select-glaze-md" className="w-full">
-                <SelectValue placeholder="Choose a glaze" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sage">Sage ash</SelectItem>
-                <SelectItem value="celadon">Celadon</SelectItem>
-                <SelectItem value="shino">Shino</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </Specimen>
-      </GallerySection>
-      <GallerySection title="States">
-        <Specimen label="No selection">
-          <div className="flex w-full flex-col gap-2 sm:w-56">
-            <Label htmlFor="select-kiln-empty">Kiln</Label>
-            <Select>
-              <SelectTrigger id="select-kiln-empty" className="w-full">
-                <SelectValue placeholder="Choose a kiln" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gas">Gas kiln</SelectItem>
-                <SelectItem value="anagama">Wood-fired anagama</SelectItem>
-                <SelectItem value="electric">Electric kiln</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </Specimen>
-        <Specimen label="Selected">
-          <div className="flex w-full flex-col gap-2 sm:w-56">
-            <Label htmlFor="select-kiln-filled">Kiln</Label>
-            <Select defaultValue="anagama">
-              <SelectTrigger id="select-kiln-filled" className="w-full">
-                <SelectValue placeholder="Choose a kiln" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gas">Gas kiln</SelectItem>
-                <SelectItem value="anagama">Wood-fired anagama</SelectItem>
-                <SelectItem value="electric">Electric kiln</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </Specimen>
-        <Specimen label="Disabled">
-          <div className="flex w-full flex-col gap-2 sm:w-56">
-            <Label htmlFor="select-kiln-disabled">Kiln</Label>
-            <Select defaultValue="gas" disabled>
-              <SelectTrigger id="select-kiln-disabled" className="w-full">
-                <SelectValue placeholder="Choose a kiln" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gas">Gas kiln</SelectItem>
-                <SelectItem value="anagama">Wood-fired anagama</SelectItem>
-                <SelectItem value="electric">Electric kiln</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </Specimen>
-      </GallerySection>
-    </Gallery>
-  ),
+  render: () => gallery,
 } satisfies Meta<typeof Select>;
 
 export default meta;

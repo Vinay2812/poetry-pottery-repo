@@ -25,6 +25,31 @@ fails fast with a readable message when one is missing or invalid.
 | `SCHEMA_URL`                        | codegen | GraphQL endpoint or schema file path        |
 | `SCHEMA_SYNC_KEY`                   | codegen | Must match the API's `SCHEMA_SYNC_KEY`      |
 
+## Storefront
+
+All storefront routes live under `src/app/(storefront)/`, sharing one header/footer layout.
+
+| Route                                                        | Feature                                                                                                                                    |
+| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`                                                          | Home: rendered moon-jar hero, categories, made-to-order banner, featured pieces, upcoming events, about (no pinned making story — dropped) |
+| `/products`                                                  | Shop: shelf/archive tabs, one URL-driven filter sidebar, optimistic filter state                                                           |
+| `/products/[slug]`                                           | Product detail: swipeable gallery, kiln-label fact list                                                                                    |
+| `/custom`                                                    | Made-to-order pieces                                                                                                                       |
+| `/cart`, `/wishlist`                                         | Cart and wishlist                                                                                                                          |
+| `/checkout`                                                  | Address, coupon, order note, place order                                                                                                   |
+| `/orders`, `/orders/[id]`                                    | Order history and detail                                                                                                                   |
+| `/events`, `/events/[slug]`                                  | Events and seat registration                                                                                                               |
+| `/workshops`, `/workshops/[slug]`                            | Open-studio wheel sessions: per-hour slot picking within the studio's `slot_span_days`                                                     |
+| `/workshops/bookings`, `/workshops/bookings/[id]`            | Booking history and detail                                                                                                                 |
+| `/account`, `/account/addresses`                             | Account and saved addresses                                                                                                                |
+| `/about`, `/care`, `/faq`, `/privacy`, `/shipping`, `/terms` | CMS-backed content pages                                                                                                                   |
+| `/contact`                                                   | Contact form                                                                                                                               |
+| `/newsletter/unsubscribe`                                    | Newsletter unsubscribe                                                                                                                     |
+| `/search`                                                    | Global search across products (shelf + archive) and events                                                                                 |
+| `not-found.tsx`, `[...unmatched]`                            | 404, keeping the storefront header/footer                                                                                                  |
+
+The mobile bottom nav opens the rest of the link list in `MobileMenuSheet` (`src/features/layout`).
+
 ## Architecture
 
 ```
@@ -112,35 +137,103 @@ Configured in `knip.ts`; every ignore entry carries a one-line reason.
 `src/components/web-vitals-reporter.tsx` logs every metric through the shared
 logger at `debug` level — visible in dev, silent in production (default `warn`).
 
-## Design language
+## Design system
 
-Proportions measured from a reference e-commerce design and mapped onto the
-pottery theme (colors and fonts are ours; geometry, type conventions, and
-density are the reference's):
+The house style is `../docs/design/direction.md`: zero radius everywhere, one sage accent,
+DM Serif Display headings over DM Sans body text, and the hand-drawn kiln-label moon jar as the
+site's one illustration device. `--radius: 0px` in `globals.css` and `rounded-none` on the base
+button/input are the enforcement point — nothing in `components/ui` should reintroduce a radius.
+`../docs/design/animation-study.md` is the reference-page survey and gap analysis that produced
+the current motion pass; `../docs/design/temporary-photos.md` records that the Pexels stand-in
+photos are scoped to the opt-in `pnpm db:seed:demo` catalogue only — the default local data
+(`pnpm import:legacy`) uses the studio's own CDN photos, and the home hero is a drawn illustration
+that needs no photo either way.
 
-- **Soft-square geometry.** Controls (buttons, inputs, selects, icon buttons)
-  sit at 4px radius (`rounded`); cards and dialogs at 8px (`rounded-lg`);
-  fully-round is reserved for badges/pills, dots, and avatars.
-- **Border-first elevation.** 1px low-contrast borders define surfaces; resting
-  shadows are gone. Deep soft shadows (`0 8px 32px / 0.14`) appear only on
-  floating elements: dialogs, sheets, menus.
-- **Type conventions.** Headings are tight-tracked semibold; form labels and
-  eyebrows are 12px semibold UPPERCASE with wide tracking (`Label` does this by
-  default); buttons are 14px semibold with slight positive tracking; table
-  headers are uppercase 12px.
-- **Control sizes.** Primary buttons h-12 (46px from `lg:`), small buttons
-  h-10, form inputs a constant 54px tall with 16px text at every width (also
-  prevents iOS focus zoom), selects h-10, sheet/drawer 430px wide.
-- **Density.** Cards step `p-4 → md:p-6`; table cells `p-3 → md:p-4`; sections
-  breathe, cards stay tight.
+Motion lives behind a handful of shared primitives rather than being hand-rolled per component:
+`Reveal` (`src/components/motion/Reveal.tsx`) fades a section up 12px the first time it scrolls
+into view, one `IntersectionObserver` per group so a grid doesn't pay for one observer per card;
+`stagger.ts`'s `toRevealDelay` caps that stagger at 8 cards, 40ms apart, via a `--reveal-delay`
+CSS variable; and `ghost-hover`, `link-underline`, `photo-zoom` (`src/app/globals.css`) are Tailwind
+`@utility` classes for the icon-button tint, the left-growing underline and the 1.02 image scale on
+hover, so every place that needs one of those three effects reads the same class instead of
+reimplementing the transition.
 
-Verify rendered sizes with `node scripts/measure-responsive.mjs` against a
-served `storybook-static` (port 6100) — it prints computed styles per
-breakpoint.
+## Conventions and verification
+
+The no-cache-writes optimistic UI rule (React `useOptimistic` + `useTransition` in the container,
+never a hand-written Apollo cache write) is in the repo `CLAUDE.md` — see also
+`../docs/design/optimistic-audit.md` for the page-by-page audit that drove the current pass; it is
+not repeated here.
+
+For motion or layout changes, verify from a recording rather than stills: `agent-browser --session
+<s> record start /tmp/x.webm --fps 30`, exercise the change, `record stop`, then `ffmpeg -i x.webm
+-vf fps=15 frames-%03d.png` and read the frames for shift and flicker. Static changes can still use
+an `agent-browser` screenshot pass against `localhost:3030`.
+
+### Browser flows
+
+`scripts/browser-flows.sh` drives the storefront end to end through the journeys
+a visitor actually takes, against a running API and frontend. Unit tests and
+stories prove pieces; this proves the seams between them.
+
+```bash
+pnpm dev                                  # or point BASE_URL at any instance
+./scripts/browser-flows.sh doctor         # is this stack worth driving?
+./scripts/browser-flows.sh                # all ten flows
+./scripts/browser-flows.sh order wishlist # only the named ones
+```
+
+`doctor` is read-only: it reports the agent-browser version, whether the
+storefront answers, whether the API's database, Redis and queue are up, whether
+ffmpeg is present for video, and which session, evidence directory and test user
+are in play. A full run refuses to start when it fails.
+
+| Flow         | What it drives                                                                     |
+| ------------ | ---------------------------------------------------------------------------------- |
+| `home`       | Hero, categories, featured shelf, hero link into the shop                          |
+| `shop`       | Shelf heading, category filter narrows the grid, shelf/archive tabs                |
+| `order`      | Product → add to cart → cart → checkout (address) → place order → cancel the order |
+| `wishlist`   | Save a piece, see it listed, unsave it, empty state returns                        |
+| `events`     | Events heading, the empty state, the past filter                                   |
+| `workshops`  | Tier → day → hour → book → move to another day → cancel                            |
+| `contact`    | Fill and send a message                                                            |
+| `newsletter` | Footer subscribe, and the unsubscribe page without a token                         |
+| `notfound`   | 404 copy, the way back, and that the storefront chrome survives                    |
+| `signout`    | Sign out from the account page, header offers sign in again                        |
+
+Every step asserts against what the page renders — a URL, a heading, a status
+word, or a value that changed — so the run fails when a journey breaks rather
+than when a click misses. The script exits non-zero on the first failing
+assertion it records and prints them all at the end.
+
+Configuration, all environment variables:
+
+| Variable                       | Default                        |
+| ------------------------------ | ------------------------------ |
+| `BASE_URL`                     | `http://localhost:3030`        |
+| `API_HEALTH_URL`               | `http://localhost:6060/health` |
+| `OUT_DIR`                      | `/tmp/flows`                   |
+| `FLOW_SESSION`                 | `poetry-flows`                 |
+| `FLOW_EMAIL` / `FLOW_PASSWORD` | the Clerk test user            |
+| `FLOW_HEADLESS`                | `1` (set `0` to watch it run)  |
+
+Evidence lands in `$OUT_DIR/screens/*.png` and `$OUT_DIR/video/<flow>.webm`, one
+video per flow, and survives the run. A failing step screenshots itself before
+moving on. To read a video frame by frame:
+
+```bash
+ffmpeg -i /tmp/flows/video/order.webm -vf fps=4 /tmp/flows/frames/order-%03d.png
+```
+
+The suite needs a signed-in user, so it runs against a development Clerk
+instance with the `+clerk_test` address above. It writes real rows — orders,
+bookings, contact messages, newsletter subscribers — and cancels what it can, so
+point it at a disposable database rather than anything you care about.
 
 ## Storybook
 
 Four global viewports are defined in `src/lib/storybook/viewports.ts`: mobile
-375×667, tablet 768×1024, laptop 1366×768, desktop 1920×1080. Story files pin a
-breakpoint with `atViewport("mobile")`. Every presentational component has
-stories, and the a11y addon runs as an assertion inside `pnpm test`.
+375×667, tablet 768×1024, laptop 1366×768, desktop 1920×1080. Every
+presentational component has one story per viewport it needs to prove, each
+pinned with `atViewport("mobile" | "tablet" | "laptop" | "desktop")`, and the
+a11y addon runs as an assertion on every story inside `pnpm test`.

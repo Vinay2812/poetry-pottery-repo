@@ -1,0 +1,7 @@
+mutation CreateCustomizationUpload($content_type: String!, $size: Int!) {
+  createCustomizationUpload(content_type: $content_type, size: $size) {
+    upload_url
+    public_url
+    key
+  }
+}

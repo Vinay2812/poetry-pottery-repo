@@ -8,6 +8,8 @@ export type LogLevel = z.infer<typeof logLevelSchema>;
 
 const clientSchema = z.object({
   NEXT_PUBLIC_API_URL: z.url().default("http://localhost:6060/graphql"),
+  // Origin the storefront is served from; metadata resolves the OG image against it.
+  NEXT_PUBLIC_SITE_URL: z.url().default("http://localhost:3030"),
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z
     .string()
     .min(1, "must be a Clerk publishable key"),
@@ -55,6 +57,7 @@ function parse<S extends z.ZodType>(
 // Static references so Next.js can inline these into the client bundle.
 export const clientEnv: ClientEnv = parse("client", clientSchema, {
   NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+  NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   NEXT_PUBLIC_LOG_LEVEL: process.env.NEXT_PUBLIC_LOG_LEVEL,

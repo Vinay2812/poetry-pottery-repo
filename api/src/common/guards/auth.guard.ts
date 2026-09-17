@@ -29,6 +29,18 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
+  // For public resolvers that personalise when a session happens to exist.
+  async tryAuthenticate(request: AppRequest): Promise<AuthUser | null> {
+    try {
+      return await this.authenticate(request);
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        return null;
+      }
+      throw error;
+    }
+  }
+
   protected async authenticate(request: AppRequest): Promise<AuthUser> {
     const cached = request.authenticatedUser;
     if (cached) {
@@ -43,10 +55,18 @@ export class AuthGuard implements CanActivate {
     const authId = auth.userId;
     const { dbUserId, role } = auth.sessionClaims;
 
-    if (dbUserId && role) {
+    // A claim is only a hint; the row that owns this auth id decides who the caller is.
+    const owner = await this.users.findByAuth(authId);
+    if (owner) {
+      if (dbUserId !== owner.id || role !== owner.role) {
+        await this.clerk.updatePublicMetadata(authId, {
+          dbUserId: owner.id,
+          role: owner.role,
+        });
+      }
       const authUser: AuthUser = {
-        db_user_id: dbUserId,
-        role,
+        db_user_id: owner.id,
+        role: owner.role,
         auth_id: authId,
       };
       request.authenticatedUser = authUser;
@@ -63,11 +83,13 @@ export class AuthGuard implements CanActivate {
     const image = this.clerk.getImageUrl(clerkUser) ?? null;
 
     const authUser = await this.prisma.withTransaction(async () => {
-      // The database owns the role; claims only cache it, so the upsert never writes a role.
-      const user = await this.users.upsertUser({
-        where: { auth_id: authId },
-        create: { auth_id: authId, email: primaryEmail, name, image },
-        update: { email: primaryEmail, name, image },
+      // The database owns the role; claims only cache it, so provisioning never writes a role.
+      const user = await this.users.provisionUser({
+        auth_id: authId,
+        email: primaryEmail,
+        name,
+        image,
+        can_adopt: this.clerk.hasVerifiedPrimaryEmail(clerkUser),
       });
 
       await this.clerk.updatePublicMetadata(authId, {

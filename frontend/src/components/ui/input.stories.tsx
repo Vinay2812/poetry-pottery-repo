@@ -7,63 +7,54 @@ import { Label } from "./label";
 
 const gallery = (
   <Gallery>
-    <GallerySection title="States">
-      <Specimen label="Default">
-        <div className="flex w-full flex-col gap-2 sm:w-72">
-          <Label htmlFor="input-email">Email for order updates</Label>
-          <Input id="input-email" placeholder="you@example.com" />
+    <GallerySection title="Address fields">
+      <Specimen label="Empty">
+        <div className="flex w-full flex-col gap-1.5 sm:w-64">
+          <Label htmlFor="line1">Address line 1</Label>
+          <Input id="line1" autoComplete="address-line1" />
         </div>
       </Specimen>
       <Specimen label="Filled">
-        <div className="flex w-full flex-col gap-2 sm:w-72">
-          <Label htmlFor="input-name">Name for the workshop</Label>
-          <Input id="input-name" defaultValue="Aisha Potter" />
-        </div>
-      </Specimen>
-      <Specimen label="Disabled">
-        <div className="flex w-full flex-col gap-2 sm:w-72">
-          <Label htmlFor="input-slot">Kiln firing slot</Label>
-          <Input id="input-slot" placeholder="Friday glaze firing" disabled />
+        <div className="flex w-full flex-col gap-1.5 sm:w-64">
+          <Label htmlFor="city">City</Label>
+          <Input
+            id="city"
+            defaultValue="Bengaluru"
+            autoComplete="address-level2"
+          />
         </div>
       </Specimen>
       <Specimen label="Invalid">
-        <div className="flex w-full flex-col gap-2 sm:w-72">
-          <Label htmlFor="input-pin">Delivery PIN code</Label>
-          <Input
-            id="input-pin"
-            defaultValue="5600"
-            aria-invalid={true}
-            aria-describedby="input-pin-error"
-          />
-          <p id="input-pin-error" className="text-xs text-red-600">
-            PIN code must be 6 digits.
+        <div className="flex w-full flex-col gap-1.5 sm:w-64">
+          <Label htmlFor="pincode">Pincode</Label>
+          <Input id="pincode" defaultValue="5600" aria-invalid />
+          <p role="alert" className="text-[13px] text-destructive">
+            Pincode must be 6 digits
           </p>
         </div>
       </Specimen>
+      <Specimen label="Disabled">
+        <div className="flex w-full flex-col gap-1.5 sm:w-64">
+          <Label htmlFor="state">State</Label>
+          <Input id="state" defaultValue="Karnataka" disabled />
+        </div>
+      </Specimen>
     </GallerySection>
-    <GallerySection title="Types">
-      <Specimen label="Search">
-        <div className="flex w-full flex-col gap-2 sm:w-72">
-          <Label htmlFor="input-search">Search the shop</Label>
-          <Input id="input-search" type="search" placeholder="Sage mug…" />
+    <GallerySection title="Coupon and newsletter">
+      <Specimen label="Coupon code">
+        <div className="flex w-full flex-col gap-1.5 sm:w-64">
+          <Label htmlFor="coupon">Coupon code</Label>
+          <Input id="coupon" placeholder="KILN10" />
         </div>
       </Specimen>
-      <Specimen label="Number">
-        <div className="flex w-full flex-col gap-2 sm:w-72">
-          <Label htmlFor="input-seats">Workshop seats</Label>
+      <Specimen label="Email">
+        <div className="flex w-full flex-col gap-1.5 sm:w-64">
+          <Label htmlFor="newsletter-email">Email</Label>
           <Input
-            id="input-seats"
-            type="number"
-            min={1}
-            max={8}
-            defaultValue={2}
+            id="newsletter-email"
+            type="email"
+            placeholder="you@example.com"
           />
-        </div>
-      </Specimen>
-      <Specimen label="Password">
-        <div className="flex w-full flex-col gap-2 sm:w-72">
-          <Label htmlFor="input-password">Studio account password</Label>
-          <Input id="input-password" type="password" placeholder="••••••••" />
         </div>
       </Specimen>
     </GallerySection>

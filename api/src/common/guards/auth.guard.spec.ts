@@ -2,6 +2,7 @@ import { ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { getAuth, type User as ClerkUser } from "@clerk/express";
 import { UserRole, type User } from "@prisma/client";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createHttpExecutionContext } from "@test/helpers/execution-context";
@@ -37,8 +38,6 @@ function makeUser(overrides: Partial<User> = {}): User {
     name: "Potter",
     image: null,
     role: UserRole.USER,
-    subscribed_to_newsletter: false,
-    newsletter_subscribed_at: null,
     created_at: new Date("2026-01-01T00:00:00.000Z"),
     updated_at: new Date("2026-01-01T00:00:00.000Z"),
     ...overrides,
@@ -50,6 +49,7 @@ const clerkUserStub = {} as ClerkUser;
 const clerkMock = {
   getUser: vi.fn(),
   getPrimaryEmail: vi.fn(),
+  hasVerifiedPrimaryEmail: vi.fn(),
   getFullName: vi.fn(),
   getImageUrl: vi.fn(),
   updatePublicMetadata: vi.fn(),
@@ -58,8 +58,10 @@ const clerkMock = {
 const prismaMock = {
   user: {
     findUnique: vi.fn(),
-    upsert: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
   },
+  $executeRaw: vi.fn(),
   withTransaction: vi.fn(),
 };
 
@@ -78,6 +80,10 @@ async function createGuard<T extends AuthGuard>(guardClass: {
       UsersService,
       { provide: ClerkService, useValue: clerkMock },
       { provide: PrismaService, useValue: prismaMock },
+      {
+        provide: WINSTON_MODULE_PROVIDER,
+        useValue: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+      },
     ],
   }).compile();
   return moduleRef.get(guardClass);
@@ -98,15 +104,18 @@ describe("AuthGuard", () => {
     await expect(
       authGuard.canActivate(createHttpExecutionContext({ request })),
     ).rejects.toBeInstanceOf(UnauthorizedException);
-    expect(prismaMock.user.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
   });
 
-  it("trusts complete session claims without touching Clerk or the database", async () => {
+  it("accepts session claims that match the row owning the auth id", async () => {
     mockAuth({
       isAuthenticated: true,
       userId: "user_1",
       sessionClaims: { dbUserId: 42, role: UserRole.USER },
     });
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeUser({ id: 42, auth_id: "user_1" }),
+    );
 
     const request: FakeRequest = {};
     await expect(
@@ -114,7 +123,8 @@ describe("AuthGuard", () => {
     ).resolves.toBe(true);
 
     expect(clerkMock.getUser).not.toHaveBeenCalled();
-    expect(prismaMock.user.upsert).not.toHaveBeenCalled();
+    expect(clerkMock.updatePublicMetadata).not.toHaveBeenCalled();
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
     expect(request.authenticatedUser).toEqual({
       db_user_id: 42,
       role: UserRole.USER,
@@ -122,28 +132,75 @@ describe("AuthGuard", () => {
     });
   });
 
-  it("provisions on incomplete claims and caches the database role in the metadata", async () => {
-    const created = makeUser({ id: 7, auth_id: "user_7" });
-    mockAuth({ isAuthenticated: true, userId: "user_7", sessionClaims: {} });
-    clerkMock.getUser.mockResolvedValue(clerkUserStub);
-    clerkMock.getPrimaryEmail.mockReturnValue("potter@example.com");
-    clerkMock.getFullName.mockReturnValue("Potter");
-    clerkMock.getImageUrl.mockReturnValue(undefined);
-    prismaMock.user.upsert.mockResolvedValue(created);
+  it("ignores a stale dbUserId claim pointing at another account", async () => {
+    // The claim survived a database reset and now names someone else's row.
+    mockAuth({
+      isAuthenticated: true,
+      userId: "user_1",
+      sessionClaims: { dbUserId: 42, role: UserRole.USER },
+    });
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeUser({ id: 3, auth_id: "user_1" }),
+    );
 
     const request: FakeRequest = {};
     await authGuard.canActivate(createHttpExecutionContext({ request }));
 
-    // The role never comes from the claims: create leaves it to the schema default, update omits it.
-    expect(prismaMock.user.upsert).toHaveBeenCalledWith({
-      where: { auth_id: "user_7" },
-      create: {
+    expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+      where: { auth_id: "user_1" },
+    });
+    expect(request.authenticatedUser).toEqual({
+      db_user_id: 3,
+      role: UserRole.USER,
+      auth_id: "user_1",
+    });
+    expect(clerkMock.updatePublicMetadata).toHaveBeenCalledWith("user_1", {
+      dbUserId: 3,
+      role: UserRole.USER,
+    });
+  });
+
+  it("ignores an admin role claim the database does not back", async () => {
+    mockAuth({
+      isAuthenticated: true,
+      userId: "user_1",
+      sessionClaims: { dbUserId: 1, role: UserRole.ADMIN },
+    });
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeUser({ id: 1, auth_id: "user_1", role: UserRole.USER }),
+    );
+
+    const request: FakeRequest = {};
+    await authGuard.canActivate(createHttpExecutionContext({ request }));
+
+    expect(request.authenticatedUser?.role).toBe(UserRole.USER);
+    expect(clerkMock.updatePublicMetadata).toHaveBeenCalledWith("user_1", {
+      dbUserId: 1,
+      role: UserRole.USER,
+    });
+  });
+
+  it("provisions on incomplete claims and caches the database role in the metadata", async () => {
+    const created = makeUser({ id: 7, auth_id: "user_7" });
+    mockAuth({ isAuthenticated: true, userId: "user_7", sessionClaims: {} });
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    clerkMock.getUser.mockResolvedValue(clerkUserStub);
+    clerkMock.getPrimaryEmail.mockReturnValue("potter@example.com");
+    clerkMock.getFullName.mockReturnValue("Potter");
+    clerkMock.getImageUrl.mockReturnValue(undefined);
+    prismaMock.user.create.mockResolvedValue(created);
+
+    const request: FakeRequest = {};
+    await authGuard.canActivate(createHttpExecutionContext({ request }));
+
+    // The role never comes from the claims: the insert leaves it to the schema default.
+    expect(prismaMock.user.create).toHaveBeenCalledWith({
+      data: {
         auth_id: "user_7",
         email: "potter@example.com",
         name: "Potter",
         image: null,
       },
-      update: { email: "potter@example.com", name: "Potter", image: null },
     });
     expect(clerkMock.updatePublicMetadata).toHaveBeenCalledWith("user_7", {
       dbUserId: created.id,
@@ -156,15 +213,74 @@ describe("AuthGuard", () => {
     });
   });
 
+  it("adopts an imported row whose auth id came from another Clerk instance", async () => {
+    const imported = makeUser({ id: 4, auth_id: "user_prod" });
+    mockAuth({ isAuthenticated: true, userId: "user_dev", sessionClaims: {} });
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(imported);
+    clerkMock.getUser.mockResolvedValue(clerkUserStub);
+    clerkMock.getPrimaryEmail.mockReturnValue("potter@example.com");
+    clerkMock.hasVerifiedPrimaryEmail.mockReturnValue(true);
+    clerkMock.getFullName.mockReturnValue("Potter");
+    clerkMock.getImageUrl.mockReturnValue(undefined);
+    prismaMock.user.update.mockResolvedValue({
+      ...imported,
+      auth_id: "user_dev",
+    });
+
+    const request: FakeRequest = {};
+    await authGuard.canActivate(createHttpExecutionContext({ request }));
+
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: 4 },
+      data: { auth_id: "user_dev", name: "Potter", image: null },
+    });
+    expect(request.authenticatedUser).toEqual({
+      db_user_id: 4,
+      role: UserRole.USER,
+      auth_id: "user_dev",
+    });
+  });
+
+  it("refuses to hand over an existing row to an unverified address", async () => {
+    // The email is someone else's and this account has not proved it owns it.
+    const owner = makeUser({
+      id: 4,
+      auth_id: "user_prod",
+      role: UserRole.ADMIN,
+    });
+    mockAuth({ isAuthenticated: true, userId: "user_evil", sessionClaims: {} });
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(owner);
+    clerkMock.getUser.mockResolvedValue(clerkUserStub);
+    clerkMock.getPrimaryEmail.mockReturnValue("potter@example.com");
+    clerkMock.hasVerifiedPrimaryEmail.mockReturnValue(false);
+    clerkMock.getFullName.mockReturnValue("Potter");
+    clerkMock.getImageUrl.mockReturnValue(undefined);
+
+    await expect(
+      authGuard.canActivate(createHttpExecutionContext({ request: {} })),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+    expect(clerkMock.updatePublicMetadata).not.toHaveBeenCalled();
+  });
+
   it("rejects when the Clerk profile has no email address", async () => {
     mockAuth({ isAuthenticated: true, userId: "user_9", sessionClaims: {} });
+    prismaMock.user.findUnique.mockResolvedValue(null);
     clerkMock.getUser.mockResolvedValue(clerkUserStub);
     clerkMock.getPrimaryEmail.mockReturnValue(undefined);
 
     await expect(
       authGuard.canActivate(createHttpExecutionContext({ request: {} })),
     ).rejects.toBeInstanceOf(UnauthorizedException);
-    expect(prismaMock.user.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
   });
 
   it("caches the authentication for the lifetime of a single request", async () => {
@@ -173,12 +289,16 @@ describe("AuthGuard", () => {
       userId: "user_1",
       sessionClaims: { dbUserId: 1, role: UserRole.USER },
     });
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeUser({ id: 1, auth_id: "user_1" }),
+    );
 
     const context = createHttpExecutionContext({ request: {} });
     await authGuard.canActivate(context);
     await authGuard.canActivate(context);
 
     expect(getAuthMock).toHaveBeenCalledTimes(1);
+    expect(prismaMock.user.findUnique).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -196,6 +316,9 @@ describe("AdminGuard", () => {
       userId: "user_1",
       sessionClaims: { dbUserId: 1, role: UserRole.ADMIN },
     });
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeUser({ id: 1, auth_id: "user_1", role: UserRole.ADMIN }),
+    );
 
     await expect(
       adminGuard.canActivate(createHttpExecutionContext({ request: {} })),
@@ -208,6 +331,9 @@ describe("AdminGuard", () => {
       userId: "user_1",
       sessionClaims: { dbUserId: 1, role: UserRole.USER },
     });
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeUser({ id: 1, auth_id: "user_1" }),
+    );
 
     await expect(
       adminGuard.canActivate(createHttpExecutionContext({ request: {} })),

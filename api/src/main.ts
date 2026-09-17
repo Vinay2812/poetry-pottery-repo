@@ -3,18 +3,18 @@ import "./instrument";
 import { NestFactory } from "@nestjs/core";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import helmet from "helmet";
-import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
+import { WinstonModule } from "nest-winston";
 
 import { AppModule } from "./app.module";
 import { clerkAuthMiddleware } from "@/common/clerk/clerk.util";
+import { createWinstonOptions } from "@/common/logger/winston.config";
 import { env } from "@/config/env";
 
 async function bootstrap(): Promise<void> {
+  // A live logger from the first line: boot problems (like an unreachable broker) must not sit in a buffer.
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    bufferLogs: true,
+    logger: WinstonModule.createLogger(createWinstonOptions()),
   });
-
-  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   app.use(
     env.isProduction
@@ -25,6 +25,7 @@ async function bootstrap(): Promise<void> {
           crossOriginEmbedderPolicy: false,
         }),
   );
+  app.set("trust proxy", env.TRUSTED_PROXY_HOPS);
   app.enableCors({ origin: env.CORS_ORIGINS, credentials: true });
   app.use(clerkAuthMiddleware());
   app.enableShutdownHooks();

@@ -6,8 +6,10 @@ import {
   ApolloNextAppProvider,
   InMemoryCache,
 } from "@apollo/client-integration-nextjs";
+import { useApolloClient } from "@apollo/client/react";
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useRef, type PropsWithChildren } from "react";
+import { toast } from "sonner";
 
 import { createAuthLink, createHttpLink, type TokenGetter } from "./links";
 
@@ -16,6 +18,35 @@ function makeClient(getToken: TokenGetter): ApolloClient {
     cache: new InMemoryCache(),
     link: ApolloLink.from([createAuthLink(getToken), createHttpLink()]),
   });
+}
+
+// Sign-out and account switches must not leave the previous person's data behind. Resetting
+// the whole store beats keeping a list of user-scoped fields in step by hand, and unlike
+// clearStore it restarts the queries it cancels instead of leaving them empty.
+function ResetStoreOnUserChange() {
+  const { isLoaded, userId } = useAuth();
+  const client = useApolloClient();
+  // Clerk reports no user until it loads; that first settle is not an account change.
+  const lastUserId = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (lastUserId.current === undefined) {
+      lastUserId.current = userId;
+      return;
+    }
+    if (lastUserId.current === userId) return;
+    lastUserId.current = userId;
+    void client.resetStore().catch((error: unknown) => {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not reload your account",
+      );
+    });
+  }, [client, isLoaded, userId]);
+
+  return null;
 }
 
 export function ApolloProvider({ children }: PropsWithChildren) {
@@ -33,6 +64,7 @@ export function ApolloProvider({ children }: PropsWithChildren) {
 
   return (
     <ApolloNextAppProvider makeClient={createClient}>
+      <ResetStoreOnUserChange />
       {children}
     </ApolloNextAppProvider>
   );

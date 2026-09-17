@@ -1,0 +1,38 @@
+fragment AdminCommissionFields on CommissionRequest {
+  id
+  piece_type
+  size
+  glaze
+  carved_words
+  notes
+  name
+  email
+  phone
+  reference_image_urls
+  is_read
+  status
+  created_at
+}
+
+query CommissionRequests($filter: CommissionRequestsFilterInput) {
+  commissionRequests(filter: $filter) {
+    items {
+      ...AdminCommissionFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+mutation MarkCommissionRequestRead($id: String!) {
+  markCommissionRequestRead(id: $id) {
+    ...AdminCommissionFields
+  }
+}
+
+mutation SetCommissionRequestStatus($id: String!, $status: CommissionStatus!) {
+  setCommissionRequestStatus(id: $id, status: $status) {
+    ...AdminCommissionFields
+  }
+}

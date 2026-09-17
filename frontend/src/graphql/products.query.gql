@@ -1,0 +1,184 @@
+fragment GlazeCard on Glaze {
+  id
+  slug
+  name
+  color_code
+  swatch_url
+}
+
+fragment ProductCard on Product {
+  id
+  slug
+  name
+  price
+  compare_at_price
+  material
+  color_name
+  color_code
+  glaze {
+    ...GlazeCard
+  }
+  image_urls
+  stock
+  is_active
+  is_archived
+  is_featured
+  is_customizable
+  is_second
+  rating_avg
+  rating_count
+  collection {
+    id
+    slug
+    name
+    starts_at
+    ends_at
+  }
+}
+
+query Products($filter: ProductsFilterInput) {
+  products(filter: $filter) {
+    items {
+      ...ProductCard
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+    facets {
+      categories {
+        value
+        label
+        count
+      }
+      collections {
+        value
+        label
+        count
+      }
+      materials {
+        value
+        label
+        count
+      }
+      glazes {
+        value
+        label
+        count
+      }
+      price_min
+      price_max
+      active_count
+      archive_count
+      seconds_count
+    }
+  }
+}
+
+query Product($slug: String!) {
+  product(slug: $slug) {
+    ...ProductCard
+    description
+    created_at
+    flaw_note
+    dimensions
+    capacity_ml
+    height_cm
+    diameter_cm
+    weight_g
+    maker_note
+    care_notes
+    glaze {
+      ...GlazeCard
+      description
+      variation_note
+    }
+    sales_count
+    categories {
+      id
+      slug
+      name
+    }
+    option_groups {
+      id
+      name
+      kind
+      is_required
+      price_modifier
+      max_length
+      options {
+        id
+        name
+        price_modifier
+      }
+    }
+  }
+}
+
+query RelatedProducts($slug: String!, $limit: Int) {
+  relatedProducts(slug: $slug, limit: $limit) {
+    ...ProductCard
+  }
+}
+
+query FeaturedProducts($limit: Int) {
+  featuredProducts(limit: $limit) {
+    ...ProductCard
+  }
+}
+
+query Categories {
+  categories {
+    id
+    slug
+    name
+    icon
+    image_url
+    product_count
+  }
+}
+
+query Collections($archive: Boolean) {
+  collections(archive: $archive) {
+    id
+    slug
+    name
+    description
+    image_url
+    ends_at
+    product_count
+  }
+}
+
+query Collection($slug: String!, $archive: Boolean) {
+  collection(slug: $slug, archive: $archive) {
+    id
+    slug
+    name
+    description
+    image_url
+    ends_at
+    product_count
+  }
+}
+
+query Glazes {
+  glazes {
+    ...GlazeCard
+    description
+    variation_note
+  }
+}
+
+query Glaze($slug: String!) {
+  glaze(slug: $slug) {
+    ...GlazeCard
+    description
+    variation_note
+    pieces {
+      ...ProductCard
+    }
+  }
+}

@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Branch stack and PRs &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Branch stack and PRs: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="testing.html">&larr; Testing and verification</a><span class="off">end &rarr;</span></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 24 of 24</p>
+<h1>Branch stack and PRs</h1>
+<p class="lede">The rewrite ships as ten stacked branches, one per feature, each cut from the previous one and each open as its own pull request, numbered one to ten in that order. The commit graph underneath now agrees with that in full: it is one strictly linear line from <code>origin/main</code> to <code>feat/admin-ui</code>, with the documentation branch on the end. It has not always been &mdash; <code>feat/design-refresh</code> and <code>feat/reviews</code> were siblings from a common commit for a while, and that fork is the reason several of these pages once carried a &quot;not in this branch&#x27;s ancestry&quot; caveat. The restack removed it. This page records the shape and the numbers, measured rather than assumed.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 920 520" role="img" aria-label="The branch stack from origin/main through feat/admin-ui and the docs branch, one line with no fork" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="440" height="500"/><text x="18" y="26">PRs 1 to 6</text></g><g class="lane"><rect x="465" y="10" width="445" height="500"/><text x="473" y="26">PRs 7 to 10, and the docs</text></g><g class="box t-ext"><rect x="30" y="44" width="400" height="38"/><text x="230" y="68" text-anchor="middle" class="b">origin/main &middot; 0 &middot; tip dd4d39c</text></g><g class="box t-next"><rect x="30" y="102" width="400" height="38"/><text x="230" y="126" text-anchor="middle">feat/platform-foundation &middot; 4 &middot; PR #1</text></g><g class="box t-next"><rect x="30" y="160" width="400" height="38"/><text x="230" y="184" text-anchor="middle">feat/catalog &middot; 6 &middot; PR #2</text></g><g class="box t-next"><rect x="30" y="218" width="400" height="38"/><text x="230" y="242" text-anchor="middle">feat/cart-wishlist &middot; 8 &middot; PR #3</text></g><g class="box t-next"><rect x="30" y="276" width="400" height="38"/><text x="230" y="300" text-anchor="middle">feat/checkout &middot; 10 &middot; PR #4</text></g><g class="box t-next"><rect x="30" y="334" width="400" height="38"/><text x="230" y="358" text-anchor="middle">feat/events &middot; 11 &middot; PR #5</text></g><g class="box t-next"><rect x="30" y="392" width="400" height="38"/><text x="230" y="416" text-anchor="middle">feat/workshops &middot; 12 &middot; PR #6</text></g><g class="box t-svc"><rect x="30" y="450" width="400" height="44"/><text x="230" y="469" text-anchor="middle" class="b">one line from here on</text><text x="230" y="483" text-anchor="middle">the old fork at 208b065 is gone</text></g><g class="box t-api"><rect x="490" y="80" width="395" height="52"/><text x="687" y="99" text-anchor="middle" class="b">feat/design-refresh &middot; 225 &middot; PR #7</text><text x="687" y="113" text-anchor="middle">+213 over workshops: the direction, the legacy import,</text><text x="687" y="127" text-anchor="middle">the archive, the brand, the pending-upload sweep</text></g><g class="box t-api"><rect x="490" y="164" width="395" height="52"/><text x="687" y="183" text-anchor="middle" class="b">feat/reviews &middot; 239 &middot; PR #8</text><text x="687" y="197" text-anchor="middle">+14 over design-refresh: reviews with photos,</text><text x="687" y="211" text-anchor="middle">the subject lock and the eligibility-gated presign</text></g><g class="box t-api"><rect x="490" y="248" width="395" height="52"/><text x="687" y="267" text-anchor="middle" class="b">feat/admin &middot; 277 &middot; PR #9</text><text x="687" y="281" text-anchor="middle">+38 over reviews: the admin API, glazes,</text><text x="687" y="295" text-anchor="middle">visits, commissions, notifications</text></g><g class="box t-api"><rect x="490" y="332" width="395" height="52"/><text x="687" y="351" text-anchor="middle" class="b">feat/admin-ui &middot; 317 &middot; PR #10</text><text x="687" y="365" text-anchor="middle">+40 over admin: the console shell,</text><text x="687" y="379" text-anchor="middle">tables, forms and the packing slip</text></g><g class="box t-client"><rect x="490" y="416" width="395" height="52"/><text x="687" y="435" text-anchor="middle" class="b">docs/architecture &middot; 335</text><text x="687" y="449" text-anchor="middle">+18 over admin-ui: these pages, cut from</text><text x="687" y="463" text-anchor="middle">the local tip, not from origin</text></g><path class="edge" d="M 230 82 L 230 102" marker-end="url(#arrowhead)"/><path class="edge" d="M 230 140 L 230 160" marker-end="url(#arrowhead)"/><path class="edge" d="M 230 198 L 230 218" marker-end="url(#arrowhead)"/><path class="edge" d="M 230 256 L 230 276" marker-end="url(#arrowhead)"/><path class="edge" d="M 230 314 L 230 334" marker-end="url(#arrowhead)"/><path class="edge" d="M 230 372 L 230 392" marker-end="url(#arrowhead)"/><path class="edge dashed" d="M 230 430 L 230 450" marker-end="url(#arrowhead)"/><path class="edge" d="M 430 411 Q 470 260 490 106" marker-end="url(#arrowhead)"/><path class="edge" d="M 687 132 L 687 164" marker-end="url(#arrowhead)"/><path class="edge" d="M 687 216 L 687 248" marker-end="url(#arrowhead)"/><path class="edge" d="M 687 300 L 687 332" marker-end="url(#arrowhead)"/><path class="edge" d="M 687 384 L 687 416" marker-end="url(#arrowhead)"/></svg><figcaption>One arrow leaves <code>feat/workshops</code> now, not two. <code>feat/reviews</code> was replayed onto <code>feat/design-refresh</code> and the rest of the stack followed, so every pull request base is also the real parent in the commit graph. Counts are commits ahead of <code>origin/main</code>.</figcaption></figure></section>
+<section id="how"><h2>How the stack is built</h2>
+<p>One pull request per feature, each branch stacked on the previous one, all ten open and none merged. The owner opens them from the pushed branches, so a branch here is ready for a review rather than already in <code>main</code>.</p>
+<div class="scroll"><table><caption>The ten pull requests and their bases, read from GitHub, with commit counts measured from origin/main.</caption><thead><tr><th scope="col">PR</th><th scope="col">Branch</th><th scope="col">Base</th><th scope="col">Ahead of <code>origin/main</code></th><th scope="col">Adds</th></tr></thead><tbody>
+<tr><td>&mdash;</td><td><code>origin/main</code></td><td>&mdash;</td><td>0</td><td>The starting point, tip <code>dd4d39c feat: add collections query</code></td></tr>
+<tr><td>#1</td><td><code>feat/platform-foundation</code></td><td><code>main</code></td><td>4</td><td>Schema, queue, throttling, the storefront shell</td></tr>
+<tr><td>#2</td><td><code>feat/catalog</code></td><td><code>feat/platform-foundation</code></td><td>6</td><td>Products, categories, collections, hybrid keyword and semantic search</td></tr>
+<tr><td>#3</td><td><code>feat/cart-wishlist</code></td><td><code>feat/catalog</code></td><td>8</td><td>Cart and wishlist, server-priced made-to-order options, optimistic updates</td></tr>
+<tr><td>#4</td><td><code>feat/checkout</code></td><td><code>feat/cart-wishlist</code></td><td>10</td><td>Checkout, orders, saved addresses, coupons, the account page</td></tr>
+<tr><td>#5</td><td><code>feat/events</code></td><td><code>feat/checkout</code></td><td>11</td><td>Events with seat-guarded registrations</td></tr>
+<tr><td>#6</td><td><code>feat/workshops</code></td><td><code>feat/events</code></td><td>12</td><td>Open studio session booking, capacity-aware availability</td></tr>
+<tr><td>#7</td><td><code>feat/design-refresh</code></td><td><code>feat/workshops</code></td><td>225</td><td>The sharp-edged direction, the legacy import, the archive wall and gallery, made-to-order photos, the motion pass, the concurrency hardening, the drawn brand, the pending-upload sweep and the words-only seconds block</td></tr>
+<tr><td>#8</td><td><code>feat/reviews</code></td><td><code>feat/design-refresh</code></td><td>239</td><td>Product and event reviews with photos, the subject lock, eligibility-gated presigns and the upload cap</td></tr>
+<tr><td>#9</td><td><code>feat/admin</code></td><td><code>feat/reviews</code></td><td>277</td><td>The admin API: catalogue, glazes, orders, events, workshops, visits, commissions, coupons, content, users, the waiting list</td></tr>
+<tr><td>#10</td><td><code>feat/admin-ui</code></td><td><code>feat/admin</code></td><td>317</td><td>The console shell, tables and forms for every module, and the printable packing slip</td></tr>
+</tbody></table></div>
+<h3>The fork, and the restack that closed it</h3>
+<p>The graph used to stop being linear after <code>feat/workshops</code>. <code>git merge-base</code> of design-refresh and reviews resolved to <code>208b065 fix: keep the products query the 404 shelf reads from</code>, and both branches sat fifteen commits past it as siblings, so <strong>design-refresh&#x27;s last fifteen commits were not in the admin branches</strong> even though pull request 8 named design-refresh as its base. That was not cosmetic: the archive and unsubscribe routes moving onto <code>PageShell</code>, the words-only seconds block, the pending-upload sweep, the glaze table behind the commission form and the whole brand lived on one side of the fork only.</p>
+<p>The stack has since been replayed so that every pull request base is also the real parent:</p>
+<ol><li><code>feat/reviews</code> onto <code>feat/design-refresh</code> with a plain <code>git rebase</code>, because the old base was still an ancestor of both.</li>
+<li><code>feat/admin</code> onto the new <code>feat/reviews</code> with <code>git rebase --onto</code>, because the reviews commits had been rewritten and their patch ids no longer matched.</li>
+<li><code>feat/admin-ui</code> onto the new <code>feat/admin</code>, replayed on a scratch branch and then moved with <code>git update-ref</code>, because the branch is checked out in another worktree and cannot be checked out twice.</li>
+<li><code>docs/architecture</code> onto the finished <code>feat/admin-ui</code>, again with <code>--onto</code> from the commit it was originally cut at.</li></ol>
+<p>Three kinds of conflict came out of it, all of them the two sides having done the same work differently: the storage service (design-refresh had renamed <code>keyFromUrl</code> to <code>keyFor</code> and added <code>PendingUploadsService</code>, while reviews and admin still called the old name), the integration harness (both sides had added providers to the same array), and the generated artefacts. <code>api/schema.gql</code> and <code>frontend/src/graphql/generated/graphql.tsx</code> were never merged by hand: <code>pnpm schema:emit</code> and <code>pnpm codegen</code> regenerated them at each stop. One reviews commit disappeared entirely, because design-refresh had already made the same change to the queue topology test.</p>
+<h3>Local branches</h3>
+<p>The remote is not the newest work, and after a restack the local branches are not simply ahead of it. Measured at the time this page was last verified:</p>
+<ul><li><code>feat/design-refresh</code> is <strong>1</strong> ahead of its remote and nothing behind, because the infra commit that replaced <code>bootstrap.sh</code> with a single <code>deploy.sh</code> was folded onto its end after the last force-push. Replaying that commit through the branches above it put them out of step again: <code>feat/reviews</code> is <strong>15</strong> ahead and <strong>14</strong> behind, <code>feat/admin</code> <strong>53</strong> ahead and <strong>52</strong> behind.</li>
+<li><code>feat/admin-ui</code> is <strong>94</strong> ahead of and <strong>92</strong> behind its remote, and <code>docs/architecture</code> <strong>112</strong> ahead and <strong>108</strong> behind. The behind counts are the pre-restack commits the remote still holds, not work that is missing locally; both branches are waiting to be pushed.</li>
+<li><code>docs/architecture</code> is these pages, cut from the local <code>feat/admin-ui</code> tip and rebased onto it again after the restack. Everything here was read out of that working tree.</li>
+<li><code>main</code> is one unpushed commit ahead of <code>origin/main</code>.</li>
+<li>The <code>backup/*</code> refs that held the pre-restack tips have been deleted; a <code>worktree-agent-*</code> branch remains as scaffolding for an isolated agent worktree, and it is not part of the stack.</li></ul>
+<p class="note">A branch called <code>feat/logo</code> held the brand work while these pages were first being written and was folded into <code>feat/design-refresh</code>; a one-commit <code>chore/gitignore-env-prod</code> was folded in the same way during the restack. Both are gone. That is the ordinary shape of this stack, and it is why every number on this page is a snapshot with the command that produced it rather than a fact to be trusted later.</p>
+<h3>Commit conventions</h3>
+<ul><li>Conventional commits, enforced by commitlint in the <code>commit-msg</code> hook.</li>
+<li>A single subject line per commit, with no body and no attribution trailers.</li>
+<li><code>pre-commit</code> runs lint-staged so every commit is already formatted.</li>
+<li><code>pre-push</code> runs the schema sync check, so a branch cannot be pushed with a stale <code>api/schema.gql</code> or stale generated frontend hooks.</li></ul>
+</section>
+<section id="theory"><h2>Minimal theory: how to reproduce these numbers</h2>
+<ol class="trace">
+<li><code class="ref">git fetch origin</code><span class="desc">Refresh the remote refs before measuring anything; this stack is rebased often.</span></li>
+<li><code class="ref">gh pr list --state all --json number,headRefName,baseRefName</code><span class="desc">The ten pull requests and the base each one names.</span></li>
+<li><code class="ref">git rev-list --count origin/main..origin/&lt;branch&gt;</code><span class="desc">The commit count for each row of the table above.</span></li>
+<li><code class="ref">git merge-base feat/design-refresh feat/reviews</code><span class="desc">Now resolves to the <code>feat/design-refresh</code> tip itself, which is what shows the fork is closed. The same command against the <code>origin/</code> refs resolves to the pushed <code>feat/design-refresh</code> tip, so the remote is linear too.</span></li>
+<li><code class="ref">git rev-list --count feat/design-refresh..feat/reviews</code><span class="desc">Returns 14, the reviews commits alone; the mirror returns 0, because design-refresh is now a strict ancestor.</span></li>
+<li><code class="ref">git rev-list --count feat/reviews..feat/admin</code><span class="desc">Returns 38, and <code>feat/admin..feat/admin-ui</code> returns 40; both confirm a strict ancestor rather than a sibling.</span></li>
+<li><code class="ref">git for-each-ref --format='%(refname:short) %(upstream:track)' refs/heads/</code><span class="desc">Where each local branch stands against its remote, including the ahead-and-behind pairs.</span></li>
+<li><code class="ref">scripts/check-schema-sync.sh</code><span class="desc">What the pre-push hook runs before any of these branches can be published.</span></li>
+</ol>
+</section>
+<section id="edges"><h2>Things to watch when working on the stack</h2><ul>
+<li><strong>Rebasing a lower branch rewrites every branch above it.</strong> The stack is ten deep, so a change to <code>feat/catalog</code> propagates through eight rebases and invalidates every number on this page.</li>
+<li><strong>A restack is the only way to move a fix down the stack.</strong> When design-refresh was a sibling rather than an ancestor, a storefront fix made there could not be seen from the admin branches at all; replaying the stack was what fixed that, and cherry-picking would only have duplicated the commits.</li>
+<li><strong>Regenerate, never hand-merge, the generated files.</strong> <code>api/schema.gql</code> and <code>frontend/src/graphql/generated/graphql.tsx</code> conflict on almost every restack and a hand-resolved version is wrong the moment a resolver moves. <code>pnpm schema:emit</code> then <code>SCHEMA_URL=../api/schema.gql pnpm codegen</code> is the resolution.</li>
+<li><strong>The remote tip is not the newest work.</strong> Every branch above design-refresh reads as both ahead of and behind its remote, because the restack rewrote commits the remote still holds. Publishing the stack means force-pushing it from the bottom up, in order.</li>
+<li><strong>These pages are verified against a working tree, not a remote.</strong> Anything read here reflects the local <code>feat/admin-ui</code> tip.</li>
+<li><strong>The schema sync hook can fail a push for a reason that is not in your diff</strong>, if <code>api/schema.gql</code> was committed stale earlier in the stack. It regenerates in place, so the fix is to commit what it wrote.</li>
+<li><strong>A new resolver must be exported from <code>api/src/resolvers.ts</code></strong> or <code>schema:emit</code> drops it silently and the frontend never sees the field, which is the failure the hook will report as a codegen diff rather than as a missing resolver.</li>
+<li><strong>A branch checked out in another worktree cannot be rebased in this one.</strong> Replay it on a scratch branch and move the real ref with <code>git update-ref refs/heads/&lt;branch&gt; &lt;new&gt; &lt;old&gt;</code>, which fails rather than clobbers if the branch moved underneath you.</li>
+</ul></section>
+<section id="tests"><h2>Gates that run per branch</h2><ul>
+<li><code>commitlint</code> on every commit message, conventional commits.</li>
+<li><code>lint-staged</code> Prettier on every commit.</li>
+<li><code>scripts/check-schema-sync.sh</code> on every push: schema freshness, generated hook freshness, and a frontend typecheck against the schema.</li>
+<li>Per branch, before a pull request: <code>pnpm build</code>, <code>pnpm test</code>, <code>pnpm lint</code> and <code>pnpm schema:emit</code> in <code>api/</code>, and <code>pnpm tsc</code>, <code>pnpm test</code>, <code>pnpm lint</code>, <code>pnpm knip</code> and <code>pnpm codegen</code> in <code>frontend/</code>.</li>
+<li>For anything that touches a race, <code>pnpm -C api test:integration</code> three times, because the verification skill counts one failure in three as a finding rather than a flake.</li>
+</ul></section>
+
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>

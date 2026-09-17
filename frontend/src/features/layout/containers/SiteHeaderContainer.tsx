@@ -1,0 +1,128 @@
+"use client";
+
+import { useClerk, useUser } from "@clerk/nextjs";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+
+import { UserRole } from "@/graphql/generated/graphql";
+
+import { useCartCount } from "@/features/cart/hooks";
+import { SiteHeader } from "@/features/layout/components/SiteHeader";
+import { MobileMenuContainer } from "@/features/layout/containers/MobileMenuContainer";
+import {
+  isActivePath,
+  NAV_LINKS,
+  toCartAnnouncement,
+  toFocusedHeader,
+  toWishlistAnnouncement,
+} from "@/features/layout/types";
+import { SearchMenuContainer } from "@/features/search";
+import { useWishlistIds } from "@/features/wishlist/hooks";
+
+export interface SiteHeaderContainerProps {
+  contactPhone: string;
+  whatsappUrl: string | null;
+}
+
+export function SiteHeaderContainer({
+  contactPhone,
+  whatsappUrl,
+}: SiteHeaderContainerProps) {
+  const cartCount = useCartCount();
+  const { count: wishlistCount } = useWishlistIds();
+  const pathname = usePathname();
+  const router = useRouter();
+  const { isSignedIn, user } = useUser();
+  const { openSignIn, signOut } = useClerk();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [countAnnouncement, setCountAnnouncement] = useState("");
+  const lastCounts = useRef({ cart: cartCount, wishlist: wishlistCount });
+
+  // Only the count that moved is spoken, so adding to the cart does not also
+  // read the wishlist back.
+  useEffect(() => {
+    const last = lastCounts.current;
+    lastCounts.current = { cart: cartCount, wishlist: wishlistCount };
+    if (last.cart !== cartCount) {
+      setCountAnnouncement(toCartAnnouncement(cartCount));
+      return;
+    }
+    if (last.wishlist !== wishlistCount) {
+      setCountAnnouncement(toWishlistAnnouncement(wishlistCount));
+    }
+  }, [cartCount, wishlistCount]);
+
+  const activeHref = useMemo(
+    () =>
+      NAV_LINKS.find((link) => isActivePath(pathname, link.href))?.href ?? null,
+    [pathname],
+  );
+  // Buying pages keep the wordmark and one way back, nothing else to wander into.
+  const focused = toFocusedHeader(pathname);
+  const handleSearchClick = useCallback(() => {
+    setIsMenuOpen(false);
+    setIsSearchOpen(true);
+  }, []);
+  const handleCloseSearch = useCallback(() => setIsSearchOpen(false), []);
+
+  const handleAccountClick = useCallback(() => {
+    setIsMenuOpen(false);
+    if (isSignedIn) {
+      router.push("/account");
+    } else {
+      openSignIn();
+    }
+  }, [isSignedIn, openSignIn, router]);
+
+  const handleSignOut = useCallback(() => {
+    setIsMenuOpen(false);
+    void signOut();
+  }, [signOut]);
+
+  const handleCloseMenu = useCallback(() => setIsMenuOpen(false), []);
+
+  return (
+    <>
+      <SiteHeader
+        navLinks={NAV_LINKS}
+        activeHref={activeHref}
+        cartCount={cartCount}
+        wishlistCount={wishlistCount}
+        countAnnouncement={countAnnouncement}
+        isSignedIn={Boolean(isSignedIn)}
+        isAdmin={user?.publicMetadata.role === UserRole.Admin}
+        userImageUrl={user?.hasImage ? user.imageUrl : null}
+        isHome={pathname === "/"}
+        variant={focused ? "focused" : "full"}
+        backHref={focused?.href ?? null}
+        backLabel={focused?.label ?? null}
+        isSearchOpen={isSearchOpen}
+        onSearchClick={handleSearchClick}
+        onAccountClick={handleAccountClick}
+        onMenuClick={() => setIsMenuOpen(true)}
+      />
+      <SearchMenuContainer isOpen={isSearchOpen} onClose={handleCloseSearch} />
+      <Suspense>
+        <MobileMenuContainer
+          isOpen={isMenuOpen}
+          isSignedIn={Boolean(isSignedIn)}
+          wishlistCount={wishlistCount}
+          contactPhone={contactPhone}
+          whatsappUrl={whatsappUrl}
+          onOpenChange={setIsMenuOpen}
+          onNavigate={handleCloseMenu}
+          onAccountClick={handleAccountClick}
+          onSignOut={handleSignOut}
+        />
+      </Suspense>
+    </>
+  );
+}

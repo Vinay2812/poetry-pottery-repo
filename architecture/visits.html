@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Studio visits &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Studio visits: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="workshops.html">&larr; Workshops</a><a rel="next" href="reviews.html">Reviews &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 13 of 24</p>
+<h1>Studio visits</h1>
+<p class="lede">A studio visit is half an hour of someone's time, not a wheel and not a seat. There is no counter and no lock: the calendar is advisory, the booking writes first and asks questions afterwards, and the one thing standing between two people reaching for the same window is a partial unique index on <code>starts_at WHERE cancelled_at IS NULL</code>. That predicate is the whole design. It is also the one constraint in the schema that Prisma cannot express, so it exists only in migration SQL.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 920 460" role="img" aria-label="Studio visits: the availability grid borrowed from workshops, the write-and-catch booking, the partial unique index and the admin day sheet" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="280" height="440"/><text x="18" y="26">browser</text></g><g class="lane"><rect x="305" y="10" width="340" height="440"/><text x="313" y="26">api</text></g><g class="lane"><rect x="660" y="10" width="250" height="440"/><text x="668" y="26">postgres and mail</text></g><g class="box t-client"><rect x="28" y="44" width="244" height="58"/><text x="150" y="63" text-anchor="middle" class="b">StudioVisitContainer</text><text x="150" y="77" text-anchor="middle">on /contact, not /visit</text><text x="150" y="91" text-anchor="middle">14 days, half-hour windows</text></g><g class="box t-client"><rect x="28" y="120" width="244" height="44"/><text x="150" y="139" text-anchor="middle" class="b">VisitDayStrip</text><text x="150" y="153" text-anchor="middle">VisitWindowPicker, VisitForm</text></g><g class="box t-client"><rect x="28" y="188" width="244" height="58"/><text x="150" y="207" text-anchor="middle" class="b">lost the race</text><text x="150" y="221" text-anchor="middle">clear the pick, refetch</text><text x="150" y="235" text-anchor="middle">the new grid is the baseline</text></g><g class="box t-client"><rect x="28" y="290" width="244" height="58"/><text x="150" y="309" text-anchor="middle" class="b">dashboard/visits</text><text x="150" y="323" text-anchor="middle">day sheet, earliest first</text><text x="150" y="337" text-anchor="middle">reason dialog to cancel</text></g><g class="box t-api"><rect x="323" y="44" width="304" height="58"/><text x="475" y="63" text-anchor="middle" class="b">studioVisitAvailability</text><text x="475" y="77" text-anchor="middle">public, no lock, advisory</text><text x="475" y="91" text-anchor="middle">days clamped to 21</text></g><g class="box t-svc"><rect x="323" y="118" width="304" height="58"/><text x="475" y="137" text-anchor="middle" class="b">workshops/schedule.ts</text><text x="475" y="151" text-anchor="middle">buildAvailability, checkSlots</text><text x="475" y="165" text-anchor="middle">borrowed whole</text></g><g class="box t-api"><rect x="323" y="192" width="304" height="72"/><text x="475" y="211" text-anchor="middle" class="b">bookStudioVisit</text><text x="475" y="225" text-anchor="middle">no guard, StrictThrottle</text><text x="475" y="239" text-anchor="middle">tryAuthenticate for the owner</text><text x="475" y="253" text-anchor="middle">create, then catch P2002</text></g><g class="box t-api"><rect x="323" y="280" width="304" height="58"/><text x="475" y="299" text-anchor="middle" class="b">AdminVisitsResolver</text><text x="475" y="313" text-anchor="middle">adminStudioVisits</text><text x="475" y="327" text-anchor="middle">cancelStudioVisit</text></g><g class="box t-api"><rect x="323" y="354" width="304" height="58"/><text x="475" y="373" text-anchor="middle" class="b">VisitsService.cancel</text><text x="475" y="387" text-anchor="middle">idempotent, stamps cancelled_at</text><text x="475" y="401" text-anchor="middle">reason trimmed to 300</text></g><g class="box t-db"><rect x="678" y="44" width="214" height="72"/><text x="785" y="63" text-anchor="middle" class="b">studio_visits</text><text x="785" y="77" text-anchor="middle">nanoid(12), no status enum</text><text x="785" y="91" text-anchor="middle">cancelled_at IS NULL</text><text x="785" y="105" text-anchor="middle">means booked</text></g><g class="box t-db"><rect x="678" y="136" width="214" height="72"/><text x="785" y="155" text-anchor="middle" class="b">studio_visits_live</text><text x="785" y="169" text-anchor="middle">_starts_at_key</text><text x="785" y="183" text-anchor="middle">UNIQUE (starts_at)</text><text x="785" y="197" text-anchor="middle">WHERE cancelled_at IS NULL</text></g><g class="box t-queue"><rect x="678" y="240" width="214" height="58"/><text x="785" y="259" text-anchor="middle" class="b">studioVisitMail</text><text x="785" y="273" text-anchor="middle">studio only, on booking</text><text x="785" y="287" text-anchor="middle">with a WhatsApp link</text></g><g class="box t-queue"><rect x="678" y="320" width="214" height="58"/><text x="785" y="339" text-anchor="middle" class="b">studioVisitCancelledMail</text><text x="785" y="353" text-anchor="middle">visitor when known</text><text x="785" y="367" text-anchor="middle">plus the studio</text></g><path class="edge" d="M 272 73 L 323 73" marker-end="url(#arrowhead)"/><path class="edge" d="M 272 140 Q 300 180 323 220" marker-end="url(#arrowhead)"/><path class="edge dashed" d="M 323 230 Q 300 210 272 216" marker-end="url(#arrowhead)"/><path class="edge" d="M 272 315 L 323 309" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 102 L 475 118" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 176 L 475 192" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 338 L 475 354" marker-end="url(#arrowhead)"/><path class="edge" d="M 627 220 L 678 90" marker-end="url(#arrowhead)"/><path class="edge" d="M 627 236 L 678 172" marker-end="url(#arrowhead)"/><path class="edge" d="M 627 250 L 678 265" marker-end="url(#arrowhead)"/><path class="edge" d="M 627 380 L 678 350" marker-end="url(#arrowhead)"/></svg><figcaption>No lock, no counter, no read-then-write. The booking inserts and lets Postgres decide; the partial index keeps the race on the live rows only, so a cancelled window goes straight back on offer while its row stays for the record.</figcaption></figure></section>
+<section id="how"><h2>How it works</h2>
+<h3>The model, and the constraint that is not in it</h3><p><code>StudioVisit</code> is small: <code>id</code> as <code>nanoid(12)</code>, <code>starts_at</code>, <code>ends_at</code>, <code>name</code>, <code>phone</code>, an optional <code>note</code>, a nullable <code>cancelled_at</code>, a nullable <code>user_id</code> with <code>onDelete: SetNull</code>, and <code>created_at</code>. There is <strong>no status enum</strong>: booked means <code>cancelled_at IS NULL</code>, and the console derives its label from that. The GraphQL type deliberately omits <code>user_id</code> and <code>created_at</code>.</p>
+<p><code>schema.prisma</code> declares only two plain indexes, on <code>starts_at</code> and <code>user_id</code>, because Prisma has no syntax for a partial unique index. The real constraint is written by hand, and the migration says why:</p>
+<div class="scroll"><table><caption>api/prisma/migrations/20260917140000_studio_visit_cancellation/migration.sql, in full.</caption><thead><tr><th scope="col">Statement</th><th scope="col">Why</th></tr></thead><tbody><tr><td><code>ALTER TABLE &quot;studio_visits&quot; ADD COLUMN &quot;cancelled_at&quot; TIMESTAMP(3);</code></td><td>Cancellation becomes a stamp rather than a delete.</td></tr><tr><td><code>DROP INDEX &quot;studio_visits_starts_at_key&quot;;</code></td><td>The original total unique, created by <code>20260917120000_studio_visits</code>, held a cancelled window closed forever.</td></tr><tr><td><code>CREATE UNIQUE INDEX &quot;studio_visits_live_starts_at_key&quot; ON &quot;studio_visits&quot;(&quot;starts_at&quot;) WHERE &quot;cancelled_at&quot; IS NULL;</code></td><td>Keeps the race on the live rows only, so a cancelled window goes back on offer.</td></tr></tbody></table></div>
+<p class="note">This is the only database constraint in the system that the Prisma schema does not describe. A <code>prisma db push</code>, or a <code>migrate diff</code> taken from the schema rather than the migration history, would drop it and silently take the guard off the whole feature.</p>
+<h3>The grid, borrowed whole</h3><p><code>VisitsService.config()</code> does not have a configuration table of its own. It reads the first active <code>WorkshopConfig</code> and borrows its timezone and opening hours, falling back to <code>FALLBACK_HOURS</code> (<code>Asia/Kolkata</code>, 720 to 1140 minutes, so noon to seven) when there is none. It then overrides the rest with visit values: <code>slot_minutes: VISIT_SLOT_MINUTES = 30</code>, <code>capacity_per_slot: 1</code>, <code>booking_window_days: 14</code>, <code>slot_span_days: 1</code>.</p>
+<p>With that shape in hand, availability and validation are the <strong>pure workshop schedule module</strong>: <code>buildAvailability</code> for the calendar and <code>checkSlots</code> for the booking, both from <code>api/src/features/workshops/schedule.ts</code>. A capacity of one turns the workshop occupancy sum into a simple taken-or-free test, which is why the same code serves both. <code>availability(from, days)</code> clamps the span to <code>MAX_DAYS = 21</code>, fetches blackouts and occupants in parallel, and renames <code>slots</code> to <code>windows</code> on the way out. Occupants are <code>studioVisit.findMany</code> rows overlapping the range <strong>with <code>cancelled_at: null</code></strong>, which is what puts a cancelled window straight back on the calendar.</p>
+<h3>Booking is a write, not a check</h3><p><code>bookStudioVisit</code> carries <strong>no guard</strong> and <code>@StrictThrottle()</code>. Like the commission brief, it injects <code>AuthGuard</code> as a plain provider and calls <code>tryAuthenticate</code>, passing <code>user?.db_user_id ?? null</code>, so anyone can come by and a signed-in visitor gets the row filed against their account. The resolver spec asserts the <em>absence</em> of guard metadata, so being public is a tested invariant rather than an oversight.</p>
+<ol><li><code>parseVisitInput</code>: name 2 to 80, phone through the shared <code>normalisePhone</code>, note trimmed to 500 with blank becoming null.</li><li><code>endsAt = startsAt + 30 minutes</code>.</li><li><code>checkSlots</code> validates the hours, the half-hour grid alignment, the two-hour lead time and any blackout overlap.</li><li><strong>It never asks whether the window is free.</strong> The source says so outright: whether the window is free is left to the unique start, so a taken window always comes back with the same sentence.</li><li><code>studioVisit.create</code> inside a <code>try</code>. The catch narrows on <code>Prisma.PrismaClientKnownRequestError</code> with <code>error.code === &quot;P2002&quot;</code> and throws <code>BadRequestException(&quot;Someone just took that window, pick another&quot;)</code>; anything else is rethrown.</li></ol>
+<p>Because there is no read before the write, there is no window in which two callers can both see a free slot. Postgres serialises the two inserts on the index and one of them raises. This is the cheapest correct guard in the codebase: no advisory lock like <a href="workshops.html">workshops</a>, no conditional update like <a href="events.html">event seats</a>, no row lock like <a href="checkout.html">checkout</a>.</p>
+<h3>Cancelling</h3><p>The mutation <code>cancelStudioVisit(id, reason)</code> is <strong>admin only</strong>, on <code>AdminVisitsResolver</code>, but the behaviour lives in the storefront <code>VisitsService.cancel</code>, which the admin service calls in one line. The admin module owns the authorisation, the storefront module owns the mail.</p>
+<ul><li><code>findUnique</code> including <code>user.email</code>; a miss is <code>NotFoundException(&quot;Visit not found&quot;)</code>.</li><li><strong>Idempotent:</strong> an already-cancelled visit returns early, writes nothing and mails nothing.</li><li>Otherwise it stamps <code>cancelled_at</code>. The row is never deleted, so the window's history survives while the partial index stops counting it.</li><li>The reason is trimmed and cut to 300 characters, or null.</li></ul>
+<h3>Mail</h3><div class="scroll"><table><caption>api/src/mail/templates/visits.ts. Both go through MailService.enqueue.</caption><thead><tr><th scope="col">Template</th><th scope="col">Sent when</th><th scope="col">To</th></tr></thead><tbody><tr><td><code>studioVisitMail</code></td><td>After a successful booking, only when <code>env.BUSINESS_EMAIL</code> is set</td><td>The studio only</td></tr><tr><td><code>studioVisitCancelledMail</code></td><td>On a cancellation that actually moved the row</td><td>The visitor when <code>visit.user?.email</code> exists, and the studio when configured</td></tr></tbody></table></div>
+<p><strong>The visitor is never mailed on booking.</strong> An anonymous visit captures a name and a phone number but no email address, so there is nothing to write to; the confirmation is on screen, through <code>toConfirmationLine</code>. The studio copy compensates with a prebuilt <code>https://wa.me/91&lt;phone&gt;?text=...</code> link labelled &quot;Send them a WhatsApp confirmation&quot;.</p>
+<p class="note"><code>studioVisitCancelledMail</code> sets its call to action to <code>{ label: &quot;Pick another window&quot;, path: &quot;/contact&quot; }</code>. It read <code>/visit</code> until recently, and <strong>there has never been a <code>/visit</code> route</strong>: the picker has always lived beside the contact form. <code>api/src/mail/templates/templates.spec.ts</code> now asserts the rendered <code>href</code> and the text link, so the dead end cannot come back unnoticed.</p>
+<h3>The storefront UI</h3><p>There is no dedicated route: <code>app/(storefront)/contact/page.tsx</code> renders <code>StudioVisitContainer</code> beside the contact form. The feature is <code>VisitDayStrip</code>, <code>VisitWindowPicker</code> and <code>VisitForm</code> over pure helpers in <code>frontend/src/features/visits/types.ts</code> (<code>VISIT_DAYS = 14</code>, <code>toDateKey</code>, <code>toWindowLabel</code>, <code>firstOpenDate</code>, <code>windowsFor</code>, <code>countOpen</code>, <code>toConfirmationLine</code>), with the form schema in <code>frontend/src/lib/validations/visit.ts</code>. Everything renders in a hard-coded <code>Asia/Kolkata</code>.</p>
+<p>The container's catch block is the client half of the race protocol, and it is two lines: clear the picked window, then <code>await refetch()</code>. A lost race means the calendar on screen is stale, so the refetched grid becomes the new baseline rather than the client trying to reason about what changed.</p>
+<h3>The day sheet</h3><p><code>AdminVisitsService.list(filter)</code> orders by <code>starts_at: &quot;asc&quot;</code> rather than the usual <code>created_at: &quot;desc&quot;</code>, because the studio reads it as a day sheet. <code>MAX_LIMIT = 60</code>. Cancelled rows are hidden unless <code>include_cancelled</code> is set; <code>from</code> and <code>to</code> build a <code>starts_at</code> range; <code>search</code> matches the name case-insensitively or the phone exactly. Each row carries the visit, the customer reference when the booking was signed in, and <code>created_at</code>.</p>
+<p>The console converts its date filters to IST-anchored ISO with a hard-coded <code>IST_OFFSET = &quot;+05:30&quot;</code>, making the <code>to</code> day inclusive to its last millisecond. Cancelling goes through the shared <code>AdminReasonDialog</code> with the reason optional, an optimistic <code>applyVisitPatch</code>, an awaited refetch, and the toast &quot;Visit cancelled and the window is free again&quot;.</p>
+</section>
+<section id="theory"><h2>Minimal theory: call trace</h2>
+<h3>Booking a window</h3><ol class="trace"><li><code class="ref">frontend/src/features/visits/containers/StudioVisitContainer.tsx</code><span class="desc"><code>useStudioVisitAvailabilityQuery</code> for fourteen days, then a picked window and the form.</span></li><li><code class="ref">api/src/features/visits/visits.resolver.ts:VisitsResolver.bookStudioVisit</code><span class="desc">No guard, <code>@StrictThrottle()</code>, <code>authGuard.tryAuthenticate</code> for an optional owner.</span></li><li><code class="ref">api/src/features/visits/visits.service.ts:parseVisitInput</code><span class="desc">zod over name, phone and note; <code>normalisePhone</code> is shared with addresses.</span></li><li><code class="ref">api/src/features/visits/visits.service.ts:VisitsService.config</code><span class="desc">Borrows the wheel session's hours and timezone, then overrides slot, capacity and window.</span></li><li><code class="ref">api/src/features/workshops/schedule.ts:checkSlots</code><span class="desc">Grid alignment, lead time, opening hours and blackouts. Occupancy is not consulted.</span></li><li><code class="ref">api/src/features/visits/visits.service.ts:VisitsService.book</code><span class="desc"><code>studioVisit.create</code>; <code>P2002</code> becomes <code>Someone just took that window, pick another</code>.</span></li><li><code class="ref">api/src/mail/templates/visits.ts:studioVisitMail</code><span class="desc">Studio copy with the WhatsApp deep link, only when <code>BUSINESS_EMAIL</code> is configured.</span></li><li><code class="ref">frontend/src/features/visits/containers/StudioVisitContainer.tsx:handleSubmit</code><span class="desc">On a lost race: clear the pick, await the availability refetch, show the server's sentence.</span></li></ol>
+<h3>Cancelling from the day sheet</h3><ol class="trace"><li><code class="ref">frontend/src/features/admin/visits/containers/VisitsContainer.tsx</code><span class="desc"><code>AdminReasonDialog</code> with an optional reason, then an optimistic <code>applyVisitPatch</code>.</span></li><li><code class="ref">api/src/features/admin/visits/visits.resolver.ts:AdminVisitsResolver.cancelStudioVisit</code><span class="desc"><code>@AdminRequired()</code>; the only authorisation in the path.</span></li><li><code class="ref">api/src/features/admin/visits/visits.service.ts:AdminVisitsService.cancel</code><span class="desc">One line: delegates to the storefront service.</span></li><li><code class="ref">api/src/features/visits/visits.service.ts:VisitsService.cancel</code><span class="desc">Early return when already cancelled, else stamp <code>cancelled_at</code> and trim the reason to 300.</span></li><li><code class="ref">api/src/mail/templates/visits.ts:studioVisitCancelledMail</code><span class="desc">To the visitor when the booking carried an account, and to the studio; its call to action points at <code>/contact</code>.</span></li><li><code class="ref">api/src/features/visits/visits.service.ts:VisitsService.occupants</code><span class="desc">Next availability read filters <code>cancelled_at: null</code>, so the window is on offer again.</span></li></ol>
+</section>
+<section id="edges"><h2>Edge cases and failure handling</h2><ul>
+<li><strong>Two people reaching at once:</strong> one insert wins, the other gets <code>P2002</code> and the same sentence a stale calendar would have produced. There is no lock to forget to take.</li>
+<li><strong>A cancelled window is bookable again immediately</strong>, because the unique index ignores rows with a <code>cancelled_at</code>, and the cancelled row stays for the record.</li>
+<li><strong>Cancelling twice is a no-op</strong> and sends no second mail.</li>
+<li><strong>The partial index is invisible to Prisma.</strong> Nothing in <code>schema.prisma</code> would recreate it; only the migration history carries it.</li>
+<li><strong>Availability is advisory.</strong> It takes no lock and no transaction, and the booking is the authority; the container answers a refusal with a refetch rather than a guess.</li>
+<li><strong>An anonymous booking gets no email</strong>, on booking or on cancellation, because no address was collected.</li>
+<li><strong>The cancellation mail sends the visitor to <code>/contact</code></strong>, where the picker is, rather than to a <code>/visit</code> route that has never existed.</li>
+<li><strong>Visit hours follow the wheel sessions.</strong> Changing the workshop config's opening hours silently moves the visit grid, and there is no separate setting to stop that.</li>
+<li><strong>Existing visits are not revalidated</strong> when the hours narrow or a blackout is added; only new bookings are refused.</li>
+</ul></section>
+<section id="tests"><h2>Tests</h2><ul>
+<li><code>api/src/features/visits/visits.service.spec.ts</code> covers the input parsing, the borrowed configuration and its fallback hours, the grid and lead-time refusals, and the idempotent cancel.</li>
+<li><code>api/src/features/visits/visits.resolver.spec.ts</code> asserts that neither field carries guard metadata, so the public booking path cannot be closed by accident.</li>
+<li><code>api/src/mail/templates/templates.spec.ts</code> renders <code>studioVisitCancelledMail</code> and asserts it links to <code>/contact</code> and never to <code>/visit</code>, and that a reason given by the studio reaches the body.</li>
+<li><code>api/src/features/admin/visits/visits.service.spec.ts</code> covers the day-sheet ordering, the cancelled filter and the date range.</li>
+<li><code>api/test/integration/visits.integration-spec.ts</code> is the real evidence, with twenty racers against a live Postgres: one window goes to exactly one of twenty; a queue of people take one window each; a taken window stops being offered; <strong>a cancelled window goes back on offer and is raced again</strong>, asserting one <em>live</em> row and two rows in total at that start, which is precisely what the partial index promises; and an off-grid window is refused however hard it is pushed.</li>
+<li><code>frontend/src/features/visits/types.test.ts</code> and <code>frontend/src/features/admin/visits/types.test.ts</code> cover the pure day, window and filter helpers; <code>VisitDayStrip</code>, <code>VisitWindowPicker</code>, <code>VisitForm</code> and the console table have stories.</li>
+<li><code>frontend/scripts/browser-flows.sh:flow_visit</code> now drives the picker in a real browser: the grid renders, a half hour is picked, the form is checked for repeating the window it was given, a name is typed and the visit is booked, and the studio's confirmation line is read back. <code>flow_contact</code> still drives the contact form on the same page separately.</li>
+</ul></section>
+
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>

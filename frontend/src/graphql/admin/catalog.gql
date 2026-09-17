@@ -1,0 +1,64 @@
+fragment AdminCategoryFields on Category {
+  id
+  slug
+  name
+  icon
+  image_url
+  sort_order
+  product_count
+}
+
+fragment AdminCollectionFields on Collection {
+  id
+  slug
+  name
+  description
+  image_url
+  starts_at
+  ends_at
+  product_count
+}
+
+query AdminCategories {
+  adminCategories {
+    ...AdminCategoryFields
+  }
+}
+
+query AdminCollections {
+  adminCollections {
+    ...AdminCollectionFields
+  }
+}
+
+mutation CreateCategory($input: AdminCategoryInput!) {
+  createCategory(input: $input) {
+    ...AdminCategoryFields
+  }
+}
+
+mutation UpdateCategory($id: Int!, $input: AdminCategoryInput!) {
+  updateCategory(id: $id, input: $input) {
+    ...AdminCategoryFields
+  }
+}
+
+mutation DeleteCategory($id: Int!) {
+  deleteCategory(id: $id)
+}
+
+mutation CreateCollection($input: AdminCollectionInput!) {
+  createCollection(input: $input) {
+    ...AdminCollectionFields
+  }
+}
+
+mutation UpdateCollection($id: Int!, $input: AdminCollectionInput!) {
+  updateCollection(id: $id, input: $input) {
+    ...AdminCollectionFields
+  }
+}
+
+mutation DeleteCollection($id: Int!) {
+  deleteCollection(id: $id)
+}

@@ -14,13 +14,22 @@ export class ClerkService {
     );
   }
 
+  // Only a verified primary address proves the caller owns that mailbox, so a secondary or
+  // unverified one is never allowed to claim an account that already holds the email.
+  hasVerifiedPrimaryEmail(user: ClerkUser): boolean {
+    const primary = user.emailAddresses.find(
+      (address) => address.id === user.primaryEmailAddressId,
+    );
+    return primary?.verification?.status === "verified";
+  }
+
   getFullName(user: ClerkUser): string | undefined {
     if (user.fullName) {
       return user.fullName;
     }
     const composed = [user.firstName, user.lastName]
-      .filter((part): part is string => part !== null && part.length > 0)
-      .map((part) => part.trim())
+      .map((part) => part?.trim() ?? "")
+      .filter((part) => part.length > 0)
       .join(" ");
     return composed.length > 0 ? composed : undefined;
   }

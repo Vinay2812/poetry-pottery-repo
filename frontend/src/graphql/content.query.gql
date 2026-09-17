@@ -1,0 +1,34 @@
+query ContentPage($slug: String!) {
+  contentPage(slug: $slug) {
+    slug
+    title
+    subtitle
+    hero_image_url
+    is_published
+    updated_at
+    sections {
+      heading
+      body
+      items {
+        title
+        body
+      }
+    }
+  }
+}
+
+mutation SendContactMessage($input: ContactMessageInput!) {
+  sendContactMessage(input: $input)
+}
+
+mutation SubscribeToNewsletter($email: String!) {
+  subscribeToNewsletter(email: $email) {
+    email
+    is_active
+    was_already_subscribed
+  }
+}
+
+mutation UnsubscribeFromNewsletter($token: String!) {
+  unsubscribeFromNewsletter(token: $token)
+}

@@ -2,10 +2,762 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type CollectionsWithProductsCount {
+input AddOrderNoteInput {
+  body: String!
+  image_url: String
+  order_id: String!
+}
+
+input AddToCartInput {
+  product_id: Int!
+  quantity: Int = 1
+  reference_image_urls: [String!]
+  selections: [SelectionInputType!]
+}
+
+type Address {
+  city: String!
+  id: Int!
+  is_default: Boolean!
+  landmark: String
+  line1: String!
+  line2: String
+  name: String!
+  phone: String!
+  pincode: String!
+  state: String!
+}
+
+input AddressInput {
+  city: String!
+  is_default: Boolean
+  landmark: String
+  line1: String!
+  line2: String
+  name: String!
+  phone: String!
+  pincode: String!
+  state: String!
+}
+
+input AdminAnnouncementInput {
+  href: String
+  text: String
+}
+
+type AdminBatchNotification {
+  created_at: DateTime!
+  email: String!
+  id: Int!
+  notified_at: DateTime
+  product_id: Int!
+  product_name: String!
+  product_slug: String!
+}
+
+input AdminBatchNotificationsFilterInput {
+  is_notified: Boolean
+  limit: Int
+  page: Int
+  product_id: Int
+  search: String
+}
+
+type AdminBatchNotificationsResult {
+  items: [AdminBatchNotification!]!
+  page_info: PageInfo!
+}
+
+input AdminCategoryInput {
+  icon: String
   image_url: String
   name: String!
-  products_count: Int!
+  sort_order: Int
+}
+
+input AdminCollectionInput {
+  description: String
+  ends_at: DateTime
+  image_url: String
+  name: String!
+  starts_at: DateTime
+}
+
+input AdminContactFilterInput {
+  is_read: Boolean
+  limit: Int
+  page: Int
+  search: String
+}
+
+type AdminCoupon {
+  code: String!
+  created_at: DateTime!
+  expires_at: DateTime
+  id: Int!
+  is_active: Boolean!
+  kind: CouponKind!
+  max_uses: Int
+  min_order: Int!
+  starts_at: DateTime
+  uses_count: Int!
+  value: Int!
+}
+
+input AdminCouponInput {
+  code: String!
+  expires_at: DateTime
+  is_active: Boolean
+  kind: CouponKind!
+  max_uses: Int
+  min_order: Int
+  starts_at: DateTime
+  value: Int!
+}
+
+input AdminCouponsFilterInput {
+  is_active: Boolean
+  limit: Int
+  page: Int
+  search: String
+}
+
+type AdminCouponsResult {
+  items: [AdminCoupon!]!
+  page_info: PageInfo!
+}
+
+type AdminDashboard {
+  low_stock: [AdminLowStockPiece!]!
+  new_commission_requests: Int!
+  orders_by_status: [AdminOrderStatusCount!]!
+  orders_last_30_days: Int!
+  pending_bookings: Int!
+  pending_registrations: Int!
+  recent_bookings: [AdminRecentBooking!]!
+  recent_orders: [AdminRecentOrder!]!
+  revenue_last_30_days: Int!
+  unread_messages: Int!
+  upcoming_visits: Int!
+}
+
+input AdminEventInput {
+  address: String!
+  description: String!
+  ends_at: DateTime!
+  event_type: EventType
+  gallery: [String!]
+  highlights: [String!]
+  image_url: String!
+  includes: [String!]
+  instructor: String
+  level: EventLevel
+  location: String!
+  performers: [String!]
+  price: Int!
+  starts_at: DateTime!
+  title: String!
+  total_seats: Int!
+}
+
+input AdminEventsFilterInput {
+  event_type: EventType
+  limit: Int
+  page: Int
+  search: String
+  status: EventStatus
+}
+
+type AdminEventsResult {
+  items: [Event!]!
+  page_info: PageInfo!
+}
+
+type AdminGlaze {
+  glaze: Glaze!
+  product_count: Int!
+}
+
+input AdminGlazeInput {
+  color_code: String
+  description: String!
+  name: String!
+  swatch_url: String
+  variation_note: String
+}
+
+input AdminGlazesFilterInput {
+  limit: Int
+  page: Int
+  search: String
+}
+
+type AdminGlazesResult {
+  items: [AdminGlaze!]!
+  page_info: PageInfo!
+}
+
+type AdminLowStockPiece {
+  id: Int!
+  name: String!
+  slug: String!
+  stock: Int!
+}
+
+input AdminOptionGroupInput {
+  is_required: Boolean
+  kind: OptionGroupKind
+  max_length: Int
+  name: String!
+  price_modifier: Int
+  sort_order: Int
+}
+
+input AdminOptionInput {
+  is_active: Boolean
+  name: String!
+  price_modifier: Int
+  sort_order: Int
+}
+
+type AdminOrder {
+  admin_note: String
+  customer: AdminUserRef!
+  next_statuses: [OrderStatus!]!
+  order: Order!
+}
+
+type AdminOrderStatusCount {
+  count: Int!
+  status: OrderStatus!
+}
+
+input AdminOrdersFilterInput {
+  from: DateTime
+  limit: Int
+  page: Int
+  search: String
+  status: OrderStatus
+  to: DateTime
+}
+
+type AdminOrdersResult {
+  items: [AdminOrder!]!
+  page_info: PageInfo!
+}
+
+input AdminProductInput {
+  capacity_ml: Int
+  care_notes: [String!]
+  category_ids: [Int!]
+  collection_id: Int
+  color_code: String
+  color_name: String
+  compare_at_price: Int
+  description: String!
+  diameter_cm: Float
+  dimensions: String
+  flaw_note: String
+  glaze_id: Int
+  height_cm: Float
+  image_urls: [String!]
+  is_active: Boolean
+  is_commission: Boolean
+  is_customizable: Boolean
+  is_featured: Boolean
+  is_second: Boolean
+  maker_note: String
+  material: String!
+  name: String!
+  price: Int!
+  stock: Int
+  weight_g: Int
+}
+
+input AdminProductUpdateInput {
+  capacity_ml: Int
+  care_notes: [String!]
+  category_ids: [Int!]
+  collection_id: Int
+  color_code: String
+  color_name: String
+  compare_at_price: Int
+  description: String
+  diameter_cm: Float
+  dimensions: String
+  flaw_note: String
+  glaze_id: Int
+  height_cm: Float
+  image_urls: [String!]
+  is_commission: Boolean
+  is_customizable: Boolean
+  is_second: Boolean
+  maker_note: String
+  material: String
+  name: String
+  price: Int
+  weight_g: Int
+}
+
+input AdminProductsFilterInput {
+  category_id: Int
+  collection_id: Int
+  glaze_id: Int
+  is_active: Boolean
+  is_featured: Boolean
+  is_second: Boolean
+  limit: Int
+  low_stock: Boolean
+  page: Int
+  search: String
+}
+
+type AdminProductsResult {
+  items: [Product!]!
+  page_info: PageInfo!
+}
+
+type AdminRecentBooking {
+  created_at: DateTime!
+  customer: AdminUserRef!
+  hours: Int!
+  id: String!
+  participants: Int!
+  starts_at: DateTime!
+  status: RegistrationStatus!
+  total: Int!
+}
+
+type AdminRecentOrder {
+  created_at: DateTime!
+  customer: AdminUserRef!
+  id: String!
+  item_count: Int!
+  status: OrderStatus!
+  total: Int!
+}
+
+type AdminRegistration {
+  customer: AdminUserRef!
+  next_statuses: [RegistrationStatus!]!
+  registration: Registration!
+}
+
+input AdminRegistrationsFilterInput {
+  event_id: Int
+  limit: Int
+  page: Int
+  search: String
+  status: RegistrationStatus
+}
+
+type AdminRegistrationsResult {
+  items: [AdminRegistration!]!
+  page_info: PageInfo!
+}
+
+type AdminReview {
+  customer: AdminUserRef!
+  is_hidden: Boolean!
+  review: Review!
+  subject_kind: ReviewSubjectKind!
+}
+
+input AdminReviewsFilterInput {
+  is_hidden: Boolean
+  limit: Int
+  page: Int
+  rating: Int
+  search: String
+  subject_kind: ReviewSubjectKind
+}
+
+type AdminReviewsResult {
+  items: [AdminReview!]!
+  page_info: PageInfo!
+}
+
+input AdminSiteSettingsInput {
+  address: String
+  contact_email: String
+  contact_phone: String
+  dispatch_days_max: Int
+  dispatch_days_min: Int
+  facebook_url: String
+  free_shipping_above: Int
+  hero_cta_href: String
+  hero_cta_text: String
+  hero_heading: String
+  hero_image_url: String
+  hero_subheading: String
+  instagram_url: String
+  opening_hours: String
+  shipping_flat_fee: Int
+  whatsapp_number: String
+  youtube_url: String
+}
+
+type AdminStudioVisit {
+  created_at: DateTime!
+  customer: AdminUserRef
+  visit: StudioVisit!
+}
+
+input AdminStudioVisitsFilterInput {
+  from: DateTime
+  include_cancelled: Boolean
+  limit: Int
+  page: Int
+  search: String
+  to: DateTime
+}
+
+type AdminStudioVisitsResult {
+  items: [AdminStudioVisit!]!
+  page_info: PageInfo!
+}
+
+type AdminSubscriber {
+  created_at: DateTime!
+  email: String!
+  id: Int!
+  is_active: Boolean!
+  unsubscribed_at: DateTime
+  user_id: Int
+}
+
+input AdminSubscribersFilterInput {
+  is_active: Boolean
+  limit: Int
+  page: Int
+  search: String
+}
+
+type AdminSubscribersResult {
+  items: [AdminSubscriber!]!
+  page_info: PageInfo!
+}
+
+type AdminUser {
+  bookings_count: Int!
+  created_at: DateTime!
+  orders_count: Int!
+  phone: String
+  registrations_count: Int!
+  reviews_count: Int!
+  role: UserRole!
+  user: AdminUserRef!
+}
+
+type AdminUserRef {
+  email: String!
+  id: Int!
+  image: String
+  name: String
+}
+
+input AdminUsersFilterInput {
+  limit: Int
+  page: Int
+  role: UserRole
+  search: String
+}
+
+type AdminUsersResult {
+  items: [AdminUser!]!
+  page_info: PageInfo!
+}
+
+type AdminWorkshopBlackout {
+  config_id: Int!
+  ends_at: DateTime!
+  id: Int!
+  reason: String
+  starts_at: DateTime!
+}
+
+input AdminWorkshopBlackoutInput {
+  ends_at: DateTime!
+  reason: String
+  starts_at: DateTime!
+}
+
+type AdminWorkshopBooking {
+  booking: WorkshopBooking!
+  customer: AdminUserRef!
+  next_statuses: [RegistrationStatus!]!
+}
+
+input AdminWorkshopBookingsFilterInput {
+  config_id: Int
+  from: DateTime
+  limit: Int
+  page: Int
+  search: String
+  status: RegistrationStatus
+  to: DateTime
+}
+
+type AdminWorkshopBookingsResult {
+  items: [AdminWorkshopBooking!]!
+  page_info: PageInfo!
+}
+
+input AdminWorkshopConfigInput {
+  booking_window_days: Int
+  capacity_per_slot: Int
+  closed_weekdays: [Int!]
+  closing_minutes: Int
+  description: String
+  image_url: String
+  is_active: Boolean
+  name: String
+  opening_minutes: Int
+  slot_minutes: Int
+  slot_span_days: Int
+  timezone: String
+}
+
+input AdminWorkshopTierInput {
+  hours: Int!
+  pieces_per_person: Int!
+  price_per_person: Int!
+}
+
+type BatchNotificationResult {
+  email: String!
+  was_already_waiting: Boolean!
+}
+
+input BookWorkshopInput {
+  config_slug: String!
+  hours: Int!
+  note: String
+  participants: Int!
+  slot_starts: [DateTime!]!
+}
+
+type Cart {
+  free_shipping_above: Int
+  item_count: Int!
+  items: [CartItem!]!
+  shipping_fee: Int!
+  subtotal: Int!
+  total: Int!
+}
+
+type CartItem {
+  id: Int!
+  is_available: Boolean!
+  line_total: Int!
+  product: Product!
+  quantity: Int!
+  reference_image_urls: [String!]!
+  selections: [CartSelection!]!
+  unavailable_reason: String
+  unit_price: Int!
+}
+
+type CartSelection {
+  group_id: Int!
+  group_name: String!
+  option_id: Int
+  option_name: String
+  price_modifier: Int!
+  text: String
+}
+
+type Category {
+  icon: String
+  id: Int!
+  image_url: String
+  name: String!
+  product_count: Int!
+  slug: String!
+  sort_order: Int!
+}
+
+type CategoryRef {
+  id: Int!
+  name: String!
+  slug: String!
+}
+
+type CheckoutQuote {
+  coupon_code: String
+  coupon_message: String
+  discount: Int!
+  item_count: Int!
+  problems: [String!]!
+  shipping_fee: Int!
+  subtotal: Int!
+  total: Int!
+}
+
+input CheckoutQuoteInput {
+  coupon_code: String
+}
+
+type Collection {
+  description: String
+  ends_at: DateTime
+  id: Int!
+  image_url: String
+  name: String!
+  product_count: Int!
+  slug: String!
+  starts_at: DateTime
+}
+
+type CollectionRef {
+  ends_at: DateTime
+  id: Int!
+  name: String!
+  slug: String!
+  starts_at: DateTime
+}
+
+type CommissionGlaze {
+  color_code: String
+  name: String!
+  slug: String!
+}
+
+type CommissionOptions {
+  glazes: [CommissionGlaze!]!
+  piece_types: [String!]!
+  sizes: [String!]!
+}
+
+type CommissionRequest {
+  carved_words: String
+  created_at: DateTime!
+  email: String!
+  glaze: String!
+  id: String!
+  is_read: Boolean!
+  name: String!
+  notes: String
+  phone: String
+  piece_type: String!
+  reference_image_urls: [String!]!
+  size: String!
+  status: CommissionStatus!
+}
+
+input CommissionRequestInput {
+  carved_words: String
+  email: String!
+  glaze: String!
+  name: String!
+  notes: String
+  phone: String
+  piece_type: String!
+  reference_image_urls: [String!]
+  size: String!
+}
+
+input CommissionRequestsFilterInput {
+  is_read: Boolean
+  limit: Int
+  page: Int
+  search: String
+  status: CommissionStatus
+}
+
+type CommissionRequestsResult {
+  items: [CommissionRequest!]!
+  page_info: PageInfo!
+}
+
+enum CommissionStatus {
+  ACCEPTED
+  DECLINED
+  NEW
+  SKETCHED
+}
+
+type ConfirmedImage {
+  bytes: Int!
+  height: Int!
+  key: String!
+  public_url: String!
+  width: Int!
+}
+
+type ContactMessage {
+  created_at: DateTime!
+  email: String!
+  id: Int!
+  is_read: Boolean!
+  message: String!
+  name: String!
+  phone: String
+  subject: String
+}
+
+input ContactMessageInput {
+  email: String!
+  message: String!
+  name: String!
+  phone: String
+  subject: String
+}
+
+type ContactMessagesResult {
+  items: [ContactMessage!]!
+  page_info: PageInfo!
+}
+
+type ContentPage {
+  hero_image_url: String
+  is_published: Boolean!
+  sections: [ContentSection!]!
+  slug: String!
+  subtitle: String
+  title: String!
+  updated_at: DateTime!
+}
+
+input ContentPageInput {
+  hero_image_url: String
+  is_published: Boolean
+  sections: [ContentSectionInput!]!
+  subtitle: String
+  title: String!
+}
+
+type ContentPageSummary {
+  is_published: Boolean!
+  slug: String!
+  title: String!
+}
+
+type ContentSection {
+  body: String!
+  heading: String!
+  items: [ContentSectionItem!]!
+}
+
+input ContentSectionInput {
+  body: String!
+  heading: String!
+  items: [ContentSectionItemInput!]
+}
+
+type ContentSectionItem {
+  body: String!
+  title: String!
+}
+
+input ContentSectionItemInput {
+  body: String!
+  title: String!
+}
+
+enum CouponKind {
+  FIXED
+  PERCENT
 }
 
 """
@@ -13,24 +765,656 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
-type Query {
-  categories: [String!]!
-  collectionsWithProductsCount(limit: Int!, offset: Int!): [CollectionsWithProductsCount!]!
-  users(limit: Int = 20, page: Int = 1): UsersResponse!
+type Event {
+  address: String!
+  available_seats: Int!
+  description: String!
+  ends_at: DateTime!
+  event_type: EventType!
+  gallery: [String!]!
+  highlights: [String!]!
+  id: Int!
+  image_url: String!
+  includes: [String!]!
+  instructor: String
+  is_past: Boolean!
+  level: EventLevel
+  location: String!
+  my_registration: Registration
+  performers: [String!]!
+  price: Int!
+  rating_avg: Float!
+  rating_count: Int!
+  review_eligibility: ReviewEligibility!
+  slug: String!
+  starts_at: DateTime!
+  status: EventStatus!
+  title: String!
+  total_seats: Int!
 }
 
-type User {
-  auth_id: String!
-  created_at: DateTime!
-  email: String!
+enum EventLevel {
+  ADVANCED
+  ALL_LEVELS
+  BEGINNER
+  INTERMEDIATE
+}
+
+enum EventStatus {
+  CANCELLED
+  COMPLETED
+  DRAFT
+  PUBLISHED
+}
+
+enum EventType {
+  OPEN_MIC
+  POTTERY_WORKSHOP
+}
+
+enum EventWhen {
+  PAST
+  UPCOMING
+}
+
+input EventsFilterInput {
+  event_type: EventType
+  level: EventLevel
+  limit: Int
+  page: Int
+  search: String
+  when: EventWhen
+}
+
+type EventsResult {
+  items: [Event!]!
+  page_info: PageInfo!
+}
+
+type FacetCount {
+  count: Int!
+  label: String!
+  value: String!
+}
+
+type Glaze {
+  color_code: String
+  description: String!
   id: Int!
+  name: String!
+  pieces: [Product!]!
+  slug: String!
+  swatch_url: String
+  variation_note: String
+}
+
+type ImageSpec {
+  content_types: [String!]!
+  max_bytes: Int!
+  min_height: Int!
+  min_width: Int!
+  purpose: UploadPurpose!
+  ratio: Float
+  ratio_label: String!
+  renders_at: String!
+}
+
+type Mutation {
+  addOrderNote(input: AddOrderNoteInput!): Order!
+  addToCart(input: AddToCartInput!): Cart!
+  adjustProductStock(delta: Int!, id: Int!, reason: String!): Product!
+  bookStudioVisit(input: StudioVisitInput!): StudioVisit!
+  bookWorkshop(input: BookWorkshopInput!): WorkshopBooking!
+  cancelEvent(id: Int!, reason: String): Event!
+  cancelOrder(id: String!, reason: String): Order!
+  cancelOrderAsAdmin(id: String!, reason: String): AdminOrder!
+  cancelRegistration(id: String!, reason: String): Registration!
+  cancelStudioVisit(id: String!, reason: String): StudioVisit!
+  cancelWorkshopBooking(id: String!, reason: String): WorkshopBooking!
+  clearCart: Cart!
+  completeEvent(id: Int!): Event!
+  confirmUpload(key: String!, purpose: UploadPurpose!): ConfirmedImage!
+  createAddress(input: AddressInput!): Address!
+  createAdminUpload(content_type: String!, purpose: UploadPurpose!, size: Int!): UploadTarget!
+  createCategory(input: AdminCategoryInput!): Category!
+  createCollection(input: AdminCollectionInput!): Collection!
+  createCommissionRequest(input: CommissionRequestInput!): CommissionRequest!
+  createCoupon(input: AdminCouponInput!): AdminCoupon!
+  createCustomizationUpload(content_type: String!, size: Int!): UploadTicket!
+  createEvent(input: AdminEventInput!): Event!
+  createEventReview(event_id: Int!, input: ReviewInput!): Review!
+  createGlaze(input: AdminGlazeInput!): AdminGlaze!
+  createProduct(input: AdminProductInput!): Product!
+  createProductOption(group_id: Int!, input: AdminOptionInput!): ProductOptionGroup!
+  createProductOptionGroup(input: AdminOptionGroupInput!, product_id: Int!): ProductOptionGroup!
+  createProductReview(input: ReviewInput!, product_id: Int!): Review!
+  createReviewImageUpload(input: ReviewUploadInput!): UploadTarget!
+  createWorkshopBlackout(config_id: Int!, input: AdminWorkshopBlackoutInput!): AdminWorkshopBlackout!
+  deleteAddress(id: Int!): Boolean!
+  deleteCategory(id: Int!): Boolean!
+  deleteCollection(id: Int!): Boolean!
+  deleteContactMessage(id: Int!): Boolean!
+  deleteContentPage(slug: String!): Boolean!
+  deleteCoupon(id: Int!): Boolean!
+  deleteGlaze(id: Int!): Boolean!
+  deleteProductOption(id: Int!): Boolean!
+  deleteProductOptionGroup(id: Int!): Boolean!
+  deleteReview(id: Int!): Boolean!
+  deleteReviewAsAdmin(id: Int!): Boolean!
+  deleteWorkshopBlackout(id: Int!): Boolean!
+  deleteWorkshopTier(id: Int!): Boolean!
+  markCommissionRequestRead(id: String!): CommissionRequest!
+  markOrderPaid(id: String!): AdminOrder!
+  notifyWhenBackInStock(email: String!, product_id: Int!): BatchNotificationResult!
+  placeOrder(input: PlaceOrderInput!): Order!
+  publishEvent(id: Int!): Event!
+  registerForEvent(input: RegisterForEventInput!): Registration!
+  removeCartItem(id: Int!): Cart!
+  reorderProductImages(id: Int!, image_urls: [String!]!): Product!
+  rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
+  saveContentPage(input: ContentPageInput!, slug: String!): ContentPage!
+  saveWorkshopTier(config_id: Int!, input: AdminWorkshopTierInput!): WorkshopConfig!
+  sendContactMessage(input: ContactMessageInput!): Boolean!
+  setCommissionRequestStatus(id: String!, status: CommissionStatus!): CommissionRequest!
+  setContactMessageRead(id: Int!, is_read: Boolean!): ContactMessage!
+  setDefaultAddress(id: Int!): Address!
+  setOrderAdminNote(id: String!, note: String): AdminOrder!
+  setOrderStatus(cancel_reason: String, id: String!, status: OrderStatus!, tracking_note: String): AdminOrder!
+  setProductActive(id: Int!, is_active: Boolean!): Product!
+  setProductFeatured(id: Int!, is_featured: Boolean!): Product!
+  setRegistrationStatus(id: String!, reason: String, status: RegistrationStatus!): AdminRegistration!
+  setReviewHidden(id: Int!, is_hidden: Boolean!): AdminReview!
+  setUserRole(id: Int!, role: UserRole!): AdminUser!
+  setWorkshopBookingStatus(id: String!, reason: String, status: RegistrationStatus!): AdminWorkshopBooking!
+  stopBatchNotification(token: String!): Boolean!
+  subscribeToNewsletter(email: String!): NewsletterResult!
+  toggleWishlist(product_id: Int!): WishlistToggleResult!
+  unpublishEvent(id: Int!): Event!
+  unsubscribeFromNewsletter(token: String!): Boolean!
+  unsubscribeSubscriber(email: String!): Boolean!
+  updateAddress(id: Int!, input: AddressInput!): Address!
+  updateAnnouncement(input: AdminAnnouncementInput!): SiteSettings!
+  updateCartItem(id: Int!, quantity: Int!): Cart!
+  updateCategory(id: Int!, input: AdminCategoryInput!): Category!
+  updateCollection(id: Int!, input: AdminCollectionInput!): Collection!
+  updateCoupon(id: Int!, input: AdminCouponInput!): AdminCoupon!
+  updateEvent(id: Int!, input: AdminEventInput!): Event!
+  updateGlaze(id: Int!, input: AdminGlazeInput!): AdminGlaze!
+  updateProduct(id: Int!, input: AdminProductUpdateInput!): Product!
+  updateProductOption(id: Int!, input: AdminOptionInput!): ProductOptionGroup!
+  updateProductOptionGroup(id: Int!, input: AdminOptionGroupInput!): ProductOptionGroup!
+  updateReview(id: Int!, input: ReviewInput!): Review!
+  updateSiteSettings(input: AdminSiteSettingsInput!): SiteSettings!
+  updateWorkshopBlackout(id: Int!, input: AdminWorkshopBlackoutInput!): AdminWorkshopBlackout!
+  updateWorkshopConfig(id: Int!, input: AdminWorkshopConfigInput!): WorkshopConfig!
+}
+
+type NewsletterResult {
+  email: String!
+  is_active: Boolean!
+  was_already_subscribed: Boolean!
+}
+
+type NewsletterStatus {
+  email: String
+  is_subscribed: Boolean!
+}
+
+enum OptionGroupKind {
+  CHOICE
+  TEXT
+}
+
+type Order {
+  can_cancel: Boolean!
+  cancel_reason: String
+  cancelled_at: DateTime
+  care_notes: [String!]!
+  confirmed_at: DateTime
+  coupon_code: String
+  created_at: DateTime!
+  customer_note: String
+  delivered_at: DateTime
+  discount: Int!
+  gift_note: String
+  hide_prices: Boolean!
+  id: String!
+  item_count: Int!
+  items: [OrderItem!]!
+  paid_at: DateTime
+  refunded_at: DateTime
+  shipped_at: DateTime
+  shipping_address: ShippingAddress!
+  shipping_fee: Int!
+  status: OrderStatus!
+  studio_notes: [OrderNote!]!
+  subtotal: Int!
+  total: Int!
+  tracking_note: String
+}
+
+type OrderItem {
+  id: Int!
+  line_total: Int!
+  product: Product
+  product_image: String
+  product_name: String!
+  quantity: Int!
+  reference_image_urls: [String!]!
+  selections: [CartSelection!]!
+  unit_price: Int!
+}
+
+type OrderNote {
+  body: String!
+  created_at: DateTime!
+  id: Int!
+  image_url: String
+}
+
+enum OrderStatus {
+  CANCELLED
+  CONFIRMED
+  DELIVERED
+  PAID
+  PENDING
+  REFUNDED
+  SHIPPED
+}
+
+type OrdersResult {
+  items: [Order!]!
+  page_info: PageInfo!
+}
+
+type PageInfo {
+  has_more: Boolean!
+  limit: Int!
+  page: Int!
+  total: Int!
+}
+
+input PlaceOrderInput {
+  address_id: Int!
+  coupon_code: String
+  customer_note: String
+  gift_note: String
+  hide_prices: Boolean
+}
+
+type Product {
+  capacity_ml: Int
+  care_notes: [String!]!
+  categories: [CategoryRef!]!
+  collection: CollectionRef
+  color_code: String
+  color_name: String
+  compare_at_price: Int
+  created_at: DateTime!
+  description: String!
+  diameter_cm: Float
+  dimensions: String
+  flaw_note: String
+  glaze: Glaze
+  height_cm: Float
+  id: Int!
+  image_urls: [String!]!
+  in_wishlist: Boolean!
+  is_active: Boolean!
+  is_archived: Boolean!
+  is_commission: Boolean!
+  is_customizable: Boolean!
+  is_featured: Boolean!
+  is_second: Boolean!
+  maker_note: String
+  material: String!
+  name: String!
+  option_groups: [ProductOptionGroup!]!
+  price: Int!
+  rating_avg: Float!
+  rating_count: Int!
+  review_eligibility: ReviewEligibility!
+  sales_count: Int!
+  slug: String!
+  stock: Int!
+  weight_g: Int
+}
+
+type ProductFacets {
+  active_count: Int!
+  archive_count: Int!
+  categories: [FacetCount!]!
+  collections: [FacetCount!]!
+  glazes: [FacetCount!]!
+  materials: [FacetCount!]!
+  price_max: Int!
+  price_min: Int!
+  seconds_count: Int!
+}
+
+type ProductOption {
+  id: Int!
+  is_active: Boolean!
+  name: String!
+  price_modifier: Int!
+  sort_order: Int!
+}
+
+type ProductOptionGroup {
+  id: Int!
+  is_required: Boolean!
+  kind: OptionGroupKind!
+  max_length: Int
+  name: String!
+  options: [ProductOption!]!
+  price_modifier: Int!
+  sort_order: Int!
+}
+
+enum ProductSort {
+  BEST_SELLING
+  FEATURED
+  NEWEST
+  PRICE_HIGH_TO_LOW
+  PRICE_LOW_TO_HIGH
+  TOP_RATED
+}
+
+input ProductsFilterInput {
+  archive: Boolean = false
+  category_slugs: [String!]
+  collection_slug: String
+  customizable_only: Boolean
+  glaze_slugs: [String!]
+  in_stock_only: Boolean
+  limit: Int
+  materials: [String!]
+  max_price: Int
+  min_price: Int
+  page: Int
+  search: String
+  seconds_only: Boolean
+  sort: ProductSort
+}
+
+type ProductsResult {
+  facets: ProductFacets!
+  items: [Product!]!
+  page_info: PageInfo!
+}
+
+type Query {
+  addresses: [Address!]!
+  adminBatchNotifications(filter: AdminBatchNotificationsFilterInput): AdminBatchNotificationsResult!
+  adminCategories: [Category!]!
+  adminCollections: [Collection!]!
+  adminContactMessages(filter: AdminContactFilterInput): ContactMessagesResult!
+  adminContentPage(slug: String!): ContentPage!
+  adminContentPages: [ContentPageSummary!]!
+  adminCoupons(filter: AdminCouponsFilterInput): AdminCouponsResult!
+  adminDashboard: AdminDashboard!
+  adminEvent(id: Int!): Event!
+  adminEventRegistrations(filter: AdminRegistrationsFilterInput): AdminRegistrationsResult!
+  adminEvents(filter: AdminEventsFilterInput): AdminEventsResult!
+  adminGlazes(filter: AdminGlazesFilterInput): AdminGlazesResult!
+  adminNewsletterSubscribers(filter: AdminSubscribersFilterInput): AdminSubscribersResult!
+  adminOrder(id: String!): AdminOrder!
+  adminOrders(filter: AdminOrdersFilterInput): AdminOrdersResult!
+  adminProduct(id: Int!): Product!
+  adminProductOptionGroups(product_id: Int!): [ProductOptionGroup!]!
+  adminProducts(filter: AdminProductsFilterInput): AdminProductsResult!
+  adminReviews(filter: AdminReviewsFilterInput): AdminReviewsResult!
+  adminStudioVisits(filter: AdminStudioVisitsFilterInput): AdminStudioVisitsResult!
+  adminUser(id: Int!): AdminUser!
+  adminUsers(filter: AdminUsersFilterInput): AdminUsersResult!
+  adminWorkshopBlackouts(config_id: Int!): [AdminWorkshopBlackout!]!
+  adminWorkshopBookings(filter: AdminWorkshopBookingsFilterInput): AdminWorkshopBookingsResult!
+  adminWorkshopConfigs: [WorkshopConfig!]!
+  cart: Cart!
+  cartCount: Int!
+  categories: [Category!]!
+  checkoutQuote(input: CheckoutQuoteInput): CheckoutQuote!
+  collection(archive: Boolean = false, slug: String!): Collection!
+  collections(archive: Boolean = false): [Collection!]!
+  commissionOptions: CommissionOptions!
+  commissionPieces(limit: Int = 6): [Product!]!
+  commissionRequests(filter: CommissionRequestsFilterInput): CommissionRequestsResult!
+  contentPage(slug: String!): ContentPage!
+  event(slug: String!): Event!
+  eventReviews(event_id: Int!, limit: Int, page: Int): ReviewsResult!
+  events(filter: EventsFilterInput): EventsResult!
+  exportBatchNotifications(filter: AdminBatchNotificationsFilterInput): String!
+  exportNewsletterSubscribers(filter: AdminSubscribersFilterInput): String!
+  featuredProducts(limit: Int = 8): [Product!]!
+  glaze(slug: String!): Glaze!
+  glazes: [Glaze!]!
+  imageSpecs: [ImageSpec!]!
+  myRegistrations(limit: Int, page: Int): RegistrationsResult!
+  myWorkshopBookings(limit: Int, page: Int): WorkshopBookingsResult!
+  newsletterStatus: NewsletterStatus!
+  order(id: String!): Order!
+  orders(limit: Int, page: Int): OrdersResult!
+  product(slug: String!): Product!
+  productReviews(limit: Int, page: Int, product_id: Int!): ReviewsResult!
+  products(filter: ProductsFilterInput): ProductsResult!
+  recentReviews(limit: Int = 6): [Review!]!
+  registration(id: String!): Registration!
+  relatedProducts(limit: Int = 8, slug: String!): [Product!]!
+  siteSettings: SiteSettings!
+  studioVisitAvailability(days: Int, from: String): [VisitDay!]!
+  suggest(q: String!): Suggestions!
+  upcomingEvents(limit: Int = 3): [Event!]!
+  wishlist: [Product!]!
+  wishlistIds: [Int!]!
+  workshop(slug: String!): WorkshopConfig!
+  workshopAvailability(input: WorkshopAvailabilityInput!): [WorkshopDay!]!
+  workshopBooking(id: String!): WorkshopBooking!
+  workshops: [WorkshopConfig!]!
+}
+
+type RatingSummary {
+  average: Float!
+  count: Int!
+  distribution: [Int!]!
+}
+
+input RegisterForEventInput {
+  event_id: Int!
+  note: String
+  seats: Int = 1
+}
+
+type Registration {
+  approved_at: DateTime
+  can_cancel: Boolean!
+  cancel_reason: String
+  cancelled_at: DateTime
+  confirmed_at: DateTime
+  created_at: DateTime!
+  discount: Int!
+  event: Event!
+  id: String!
+  note: String
+  rejected_at: DateTime
+  seats: Int!
+  status: RegistrationStatus!
+  total: Int!
+  unit_price: Int!
+}
+
+enum RegistrationStatus {
+  APPROVED
+  CANCELLED
+  CONFIRMED
+  PENDING
+  REJECTED
+}
+
+type RegistrationsResult {
+  items: [Registration!]!
+  page_info: PageInfo!
+}
+
+input RescheduleWorkshopInput {
+  booking_id: String!
+  slot_starts: [DateTime!]!
+}
+
+type Review {
+  author: ReviewAuthor!
+  body: String
+  created_at: DateTime!
+  id: Int!
+  image_urls: [String!]!
+  is_mine: Boolean!
+  rating: Int!
+  subject_href: String
+  subject_name: String
+}
+
+type ReviewAuthor {
   image: String
-  name: String
-  newsletter_subscribed_at: DateTime
-  phone: String
-  role: UserRole!
-  subscribed_to_newsletter: Boolean!
+  name: String!
+}
+
+type ReviewEligibility {
+  can_review: Boolean!
+  my_review: Review
+  reason: String
+}
+
+input ReviewInput {
+  body: String
+  image_urls: [String!]
+  rating: Int!
+}
+
+enum ReviewSubjectKind {
+  EVENT
+  PRODUCT
+}
+
+input ReviewUploadInput {
+  content_type: String!
+  event_id: Int
+  filename: String!
+  product_id: Int
+  size: Int!
+}
+
+type ReviewsResult {
+  items: [Review!]!
+  page_info: PageInfo!
+  summary: RatingSummary!
+}
+
+input SelectionInputType {
+  group_id: Int!
+  option_id: Int
+  text: String
+}
+
+type ShippingAddress {
+  city: String!
+  landmark: String
+  line1: String!
+  line2: String
+  name: String!
+  phone: String!
+  pincode: String!
+  state: String!
+}
+
+type SiteSettings {
+  address: String!
+  announcement_href: String
+  announcement_text: String
+  contact_email: String!
+  contact_phone: String!
+  dispatch_days_max: Int!
+  dispatch_days_min: Int!
+  facebook_url: String!
+  free_shipping_above: Int
+  hero_cta_href: String!
+  hero_cta_text: String!
+  hero_heading: String!
+  hero_image_url: String!
+  hero_subheading: String!
+  instagram_url: String!
+  opening_hours: String!
+  shipping_flat_fee: Int!
   updated_at: DateTime!
+  whatsapp_number: String!
+  youtube_url: String!
+}
+
+type StudioVisit {
+  cancelled_at: DateTime
+  ends_at: DateTime!
+  id: String!
+  name: String!
+  note: String
+  phone: String!
+  starts_at: DateTime!
+}
+
+input StudioVisitInput {
+  name: String!
+  note: String
+  phone: String!
+  starts_at: DateTime!
+}
+
+type SuggestedEvent {
+  id: Int!
+  slug: String!
+  starts_at: DateTime!
+  title: String!
+}
+
+type SuggestedPiece {
+  id: Int!
+  image_url: String
+  is_archived: Boolean!
+  name: String!
+  price: Int!
+  slug: String!
+}
+
+type SuggestedWorkshop {
+  id: Int!
+  name: String!
+  slug: String!
+}
+
+type Suggestions {
+  events: [SuggestedEvent!]!
+  pieces: [SuggestedPiece!]!
+  workshops: [SuggestedWorkshop!]!
+}
+
+enum UploadPurpose {
+  CATEGORY
+  COLLECTION
+  CONTENT
+  EVENT
+  GLAZE
+  HERO
+  ORDER_NOTE
+  PRODUCT
+  REVIEW
+}
+
+type UploadTarget {
+  key: String!
+  public_url: String!
+  upload_url: String!
+}
+
+type UploadTicket {
+  key: String!
+  public_url: String!
+  upload_url: String!
 }
 
 enum UserRole {
@@ -38,9 +1422,105 @@ enum UserRole {
   USER
 }
 
-type UsersResponse {
-  items: [User!]!
-  limit: Int!
-  page: Int!
+type VisitDay {
+  date: String!
+  is_closed: Boolean!
+  reason: String
+  weekday: Int!
+  windows: [VisitWindow!]!
+}
+
+type VisitWindow {
+  ends_at: DateTime!
+  is_available: Boolean!
+  reason: String
+  starts_at: DateTime!
+}
+
+type WishlistToggleResult {
+  is_wishlisted: Boolean!
+  product_id: Int!
+  wishlist_count: Int!
+}
+
+input WorkshopAvailabilityInput {
+  config_slug: String!
+  days: Int = 14
+  from: String!
+}
+
+type WorkshopBooking {
+  approved_at: DateTime
+  can_cancel: Boolean!
+  can_reschedule: Boolean!
+  cancel_reason: String
+  cancelled_at: DateTime
+  config: WorkshopConfig!
+  confirmed_at: DateTime
+  created_at: DateTime!
+  discount: Int!
+  ends_at: DateTime!
+  hours: Int!
+  id: String!
+  note: String
+  participants: Int!
+  pieces_per_person: Int!
+  price_per_person: Int!
+  rejected_at: DateTime
+  slots: [WorkshopBookingSlot!]!
+  starts_at: DateTime!
+  status: RegistrationStatus!
+  subtotal: Int!
   total: Int!
+}
+
+type WorkshopBookingSlot {
+  ends_at: DateTime!
+  starts_at: DateTime!
+}
+
+type WorkshopBookingsResult {
+  items: [WorkshopBooking!]!
+  page_info: PageInfo!
+}
+
+type WorkshopConfig {
+  booking_window_days: Int!
+  capacity_per_slot: Int!
+  closed_weekdays: [Int!]!
+  closing_minutes: Int!
+  description: String
+  id: Int!
+  image_url: String
+  is_active: Boolean!
+  name: String!
+  opening_minutes: Int!
+  slot_minutes: Int!
+  slot_span_days: Int!
+  slug: String!
+  tiers: [WorkshopTier!]!
+  timezone: String!
+}
+
+type WorkshopDay {
+  date: String!
+  is_closed: Boolean!
+  reason: String
+  slots: [WorkshopSlot!]!
+  weekday: Int!
+}
+
+type WorkshopSlot {
+  ends_at: DateTime!
+  is_available: Boolean!
+  reason: String
+  remaining: Int!
+  starts_at: DateTime!
+}
+
+type WorkshopTier {
+  hours: Int!
+  id: Int!
+  pieces_per_person: Int!
+  price_per_person: Int!
 }

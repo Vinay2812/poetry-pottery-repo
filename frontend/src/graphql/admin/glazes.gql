@@ -1,0 +1,39 @@
+fragment AdminGlazeFields on AdminGlaze {
+  glaze {
+    id
+    slug
+    name
+    description
+    variation_note
+    swatch_url
+    color_code
+  }
+  product_count
+}
+
+query AdminGlazes($filter: AdminGlazesFilterInput) {
+  adminGlazes(filter: $filter) {
+    items {
+      ...AdminGlazeFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+mutation CreateGlaze($input: AdminGlazeInput!) {
+  createGlaze(input: $input) {
+    ...AdminGlazeFields
+  }
+}
+
+mutation UpdateGlaze($id: Int!, $input: AdminGlazeInput!) {
+  updateGlaze(id: $id, input: $input) {
+    ...AdminGlazeFields
+  }
+}
+
+mutation DeleteGlaze($id: Int!) {
+  deleteGlaze(id: $id)
+}

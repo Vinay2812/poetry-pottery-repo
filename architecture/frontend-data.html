@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frontend data layer &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Frontend data layer: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="shell.html">&larr; Storefront shell and navigation</a><a rel="next" href="design.html">Design system and motion &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 20 of 24</p>
+<h1>Frontend data layer</h1>
+<p class="lede">The frontend has one rule that shapes everything else: Apollo is for fetching, and nothing hand-edits its cache. Optimism is React 19&#x27;s <code>useOptimistic</code> and <code>useTransition</code> in a container, over a pure reducer that lives in the feature&#x27;s <code>types.ts</code> and is unit tested there; the new baseline is either the mutation payload or an awaited refetch; and a failure rolls back by itself and shows a toast. URL-driven state - filters, sorting, tabs, pagination - uses the same pattern and keeps previous results on screen rather than flashing skeletons.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 900 420" role="img" aria-label="Frontend data layer: RSC and browser Apollo clients, the auth link, the optimistic container pattern and codegen" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="300" height="410"/><text x="18" y="26">Server (RSC)</text></g><g class="lane"><rect x="325" y="10" width="300" height="410"/><text x="333" y="26">Client</text></g><g class="lane"><rect x="640" y="10" width="250" height="410"/><text x="648" y="26">API</text></g><g class="box t-next"><rect x="28" y="46" width="260" height="44"/><text x="158" y="65" text-anchor="middle" class="b">app/layout.tsx</text><text x="158" y="79" text-anchor="middle">ClerkProvider, ApolloProvider</text></g><g class="box t-next"><rect x="28" y="110" width="260" height="44"/><text x="158" y="129" text-anchor="middle" class="b">lib/apollo/rsc-client.ts</text><text x="158" y="143" text-anchor="middle">registerApolloClient, per request</text></g><g class="box t-next"><rect x="28" y="174" width="260" height="44"/><text x="158" y="193" text-anchor="middle" class="b">forwardVisitorIp</text><text x="158" y="207" text-anchor="middle">x-forwarded-for</text></g><g class="box t-next"><rect x="28" y="238" width="260" height="44"/><text x="158" y="257" text-anchor="middle" class="b">lib/data/catalog.ts</text><text x="158" y="271" text-anchor="middle">getProduct, getEvent, ...</text></g><g class="box t-next"><rect x="28" y="312" width="260" height="44"/><text x="158" y="331" text-anchor="middle" class="b">page.tsx</text><text x="158" y="345" text-anchor="middle">initial data only</text></g><g class="box t-client"><rect x="345" y="46" width="260" height="44"/><text x="475" y="65" text-anchor="middle" class="b">makeClient</text><text x="475" y="79" text-anchor="middle">useCallback with empty deps</text></g><g class="box t-client"><rect x="345" y="110" width="260" height="44"/><text x="475" y="129" text-anchor="middle" class="b">createAuthLink</text><text x="475" y="143" text-anchor="middle">tokenRef keeps it fresh</text></g><g class="box t-client"><rect x="345" y="174" width="260" height="44"/><text x="475" y="193" text-anchor="middle" class="b">Container</text><text x="475" y="207" text-anchor="middle">useOptimistic + useTransition</text></g><g class="box t-client"><rect x="345" y="238" width="260" height="44"/><text x="475" y="257" text-anchor="middle" class="b">Generated hooks</text><text x="475" y="271" text-anchor="middle">data ?? previousData</text></g><g class="box t-client"><rect x="345" y="312" width="260" height="44"/><text x="475" y="331" text-anchor="middle" class="b">ResetStoreOnUserChange</text><text x="475" y="345" text-anchor="middle">resetStore on account change</text></g><g class="box t-api"><rect x="660" y="110" width="215" height="44"/><text x="768" y="129" text-anchor="middle" class="b">GraphQL /graphql</text><text x="768" y="143" text-anchor="middle">bearer token</text></g><g class="box t-api"><rect x="660" y="200" width="215" height="44"/><text x="768" y="219" text-anchor="middle" class="b">codegen introspection</text><text x="768" y="233" text-anchor="middle">x-schema-key</text></g><g class="box t-api"><rect x="660" y="300" width="215" height="44"/><text x="768" y="319" text-anchor="middle" class="b">schema.gql</text><text x="768" y="333" text-anchor="middle">offline codegen source</text></g><path class="edge" d="M 158 90 L 158 110" marker-end="url(#arrowhead)"/><path class="edge" d="M 158 154 L 158 174" marker-end="url(#arrowhead)"/><path class="edge" d="M 158 218 L 158 238" marker-end="url(#arrowhead)"/><path class="edge" d="M 158 282 L 158 312" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 90 L 475 110" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 154 L 475 174" marker-end="url(#arrowhead)"/><path class="edge" d="M 475 218 L 475 238" marker-end="url(#arrowhead)"/><path class="edge" d="M 288 196 Q 470 60 660 126" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 132 L 660 132" marker-end="url(#arrowhead)"/><path class="edge" d="M 605 260 L 660 222" marker-end="url(#arrowhead)"/><path class="edge" d="M 660 322 L 605 330" marker-end="url(#arrowhead)"/></svg><figcaption>Two Apollo clients share one link factory. The browser client is built exactly once and reads the Clerk token through a ref; the RSC client is built per request and forwards the visitor&#x27;s IP so server-side calls are not all throttled as the Next server.</figcaption></figure></section><section id="how"><h2>How it works</h2><h3>Two clients, one link factory</h3><p><code>frontend/src/lib/apollo/links.ts</code> exports <code>createHttpLink()</code> (pointing at <code>clientEnv.NEXT_PUBLIC_API_URL</code> with <code>credentials: &quot;include&quot;</code>) and <code>createAuthLink(getToken: TokenGetter)</code>, which awaits the getter and sets the bearer header only when a token exists. That <code>TokenGetter</code> type is the only seam between browser Clerk and server Clerk.</p><ul><li><strong>Browser.</strong> <code>apollo-provider.tsx:ApolloProvider</code> holds <code>getToken</code> from <code>useAuth()</code> in a ref that an effect keeps fresh, and builds the client through <code>useCallback(..., [])</code>. The empty dependency array is deliberate: a token rotation must ride the ref, never rebuild the client, or the cache would be dropped on every refresh. <code>makeClient</code> composes the auth link and the http link over an <code>InMemoryCache</code>, using <code>@apollo/client-integration-nextjs</code> rather than <code>@apollo/client</code> directly.</li><li><strong>Server.</strong> <code>rsc-client.ts</code> uses <code>auth().getToken()</code>, adds <code>forwardVisitorIp</code> to copy the incoming <code>x-forwarded-for</code> or <code>x-real-ip</code> onto the outbound request, and exports <code>getClient</code>, <code>query</code> and <code>PreloadQuery</code> from <code>registerApolloClient</code>, which gives one client per request so repeated server calls dedupe. Only <code>getClient</code> is actually used, by <code>lib/data/site-settings.ts</code> and the eleven readers in <code>lib/data/catalog.ts</code>.</li></ul><p><code>frontend/src/lib/apollo/index.ts</code> exports exactly one symbol, <code>ApolloProvider</code>; the RSC client is imported by full path so server-only code never reaches the client barrel.</p><h3>There is no error link</h3><p>No <code>ErrorLink</code> or <code>onError</code> exists anywhere. Errors surface in three places instead: containers read <code>error</code> off the generated hook and render a component such as <code>LoadFailed</code>; mutation handlers catch and raise <code>toast.error(toErrorMessage(error))</code>; and server reads in <code>catalog.ts</code> inspect <code>CombinedGraphQLErrors</code> and call <code>notFound()</code> only for a genuine 404, rethrowing anything else so it becomes an error page. One consequence is that an expired token surfaces per call as a toast, with no global handler.</p><h3>Fetch only, never hand-edit the cache</h3><p>The rule in the root <code>CLAUDE.md</code>, elaborated in <code>docs/design/optimistic-audit.md</code>, has four beats: the baseline is <code>data ?? previousData</code>; the optimistic layer is a pure reducer living in the feature&#x27;s <code>types.ts</code> and unit tested there; <code>useTransition</code> drives <code>aria-busy</code> and dimmed opacity rather than a skeleton once content has shown; and the settle comes from the mutation payload or from <code>refetchQueries</code> with <code>awaitRefetchQueries</code>, with a sonner toast as the only rollback signal.</p>
+<p class="note"><code>refetchQueries</code> named by string only reaches queries that are <strong>mounted right now</strong>. Apollo answers anything else with a <code>Unknown query named &quot;X&quot;</code> warning and refetches nothing, which reads as a fix that quietly is not one. Checkout hit exactly that: it asked for <code>Orders</code> alongside the two cart queries, and <code>/orders</code> is not on the page a customer places an order from. It now names <code>Cart</code> and <code>CartCount</code> only, and the orders list picks the new row up on its own, because <code>useOrders</code> reads <code>cache-and-network</code> so navigating to <code>/orders</code> refetches it anyway.</p><div class="scroll"><table><caption>Grep results across the frontend, excluding generated files.</caption><thead><tr><th scope="col">Apollo cache API</th><th scope="col">Occurrences in <code>frontend/src</code></th></tr></thead><tbody><tr><td><code>optimisticResponse</code></td><td>none</td></tr><tr><td><code>cache.writeQuery</code>, <code>writeFragment</code>, <code>readQuery</code></td><td>none</td></tr><tr><td><code>cache.modify</code>, <code>cache.evict</code></td><td>none</td></tr><tr><td><code>clearStore</code></td><td>none</td></tr><tr><td><code>resetStore</code></td><td>one, in <code>apollo-provider.tsx</code></td></tr><tr><td><code>updateQuery</code></td><td>six, all inside <code>fetchMore</code> for pagination</td></tr></tbody></table></div><p>The six <code>updateQuery</code> calls - one in products, one in events and four in reviews - are the documented carve-out: pagination is fetching, not optimistic state. Four concatenate pages with <code>page_info</code> and facets taken from the new result; the two eligibility refetches in reviews simply return <code>fetchMoreResult</code>. <code>docs/design/optimistic-audit.md</code> is stale on the count, and stale in a second way described below.</p><h3>Resetting the store on an account change</h3><p><code>ResetStoreOnUserChange</code> renders null and sits inside the provider. It bails while Clerk has not settled, treats the first settle as &quot;not a change&quot; using an <code>undefined</code> sentinel in the ref, and otherwise calls <code>client.resetStore()</code>, toasting on failure. That covers sign-out and account switching in one place, and it replaced a hand maintained list of user-scoped root fields to evict. The source comment records the choice over <code>clearStore</code>: resetting <strong>restarts</strong> the queries it cancels instead of leaving them empty, which matters because the header&#x27;s badge queries are live at that moment.</p><p class="note"><code>docs/design/optimistic-audit.md</code> still names <code>client.clearStore()</code> in three places. The repo rule in <code>CLAUDE.md</code> and the code both say <code>resetStore</code>; <code>clearStore</code> appears nowhere in <code>frontend/src</code>.</p><h3>URL-driven state</h3><p>Three implementations share one shape: the URL is the source of truth, <code>useOptimistic</code> covers only the navigation latency, and the navigation is <code>router.replace(..., { scroll: false })</code>.</p><ul><li><code>ProductListContainer</code> is the reference implementation, with a reducer, a <code>pendingRef</code> so rapid clicks stack, a 300 ms search debounce, a local search draft so the field never snaps back mid-navigation, and <code>useDeferredValue</code> so the input paints per keystroke while results follow.</li><li><code>EventListContainer</code> uses the reducer-free form, passing whole filter objects.</li><li><code>useAdminQueryState</code> in the admin shell is the shared console version; see the <a href="admin.html">admin page</a>.</li></ul><h3>Keeping previous results visible</h3><p>The idiom is <code>data?.x ?? previousData?.x</code>, which needs <code>notifyOnNetworkStatusChange: true</code>. Skeletons render only when <code>loading &amp;&amp; !result</code>. Everything else is <code>isBusy</code> driving <code>aria-busy</code> and a dimmed opacity. Appending is excluded from <code>isBusy</code> so the load-more control owns that state. Infinite scroll uses a callback ref that creates an <code>IntersectionObserver</code> with <code>rootMargin: &quot;600px 0px&quot;</code>, reading the handler through a ref so the observer is never rebuilt.</p><h3>Codegen</h3><p><code>frontend/codegen.ts</code> loads <code>.env.local</code> then <code>.env</code> itself. <code>SCHEMA_URL</code> defaults to the running API; when it starts with <code>http</code> codegen introspects with an <code>x-schema-key</code> header carrying <code>SCHEMA_SYNC_KEY</code>, and otherwise it is treated as a file path, which is how the pre-push hook regenerates offline against <code>../api/schema.gql</code>. Output is one file, <code>src/graphql/generated/graphql.tsx</code>, with <code>DateTime</code> mapped to <code>string</code>, type imports on, and descriptions disabled so URL and file introspection produce byte-identical output. A post-codegen script, <code>scripts/strip-suspense-hooks.ts</code>, removes the suspense hooks that ship a <code>@ts-ignore</code> and do not typecheck on Apollo v4, and <strong>exits 1 if it matched nothing</strong>, so a codegen upgrade fails loudly rather than shipping ignores.</p><h3>Environment and stores</h3><ul><li><code>frontend/src/config/env.ts</code> parses <code>clientEnv</code> eagerly from static <code>process.env.NEXT_PUBLIC_*</code> references so Next can inline them, and exposes <code>getServerEnv()</code>, which throws if called in the browser and memoises its result.</li><li><code>frontend/src/store/ui-store.ts</code> is the whole of Zustand in this app: one slice holding <code>isSignInPromptOpen</code> with its open and close actions, consumed only by <code>useRequireAuth</code> and <code>SignInPromptContainer</code>. Zustand is for interface state; server data never goes in it. Shared optimistic state gets a feature context provider instead, which is what <code>CartProvider</code> and <code>WishlistProvider</code> are.</li><li><code>frontend/src/components/providers/toaster.tsx</code> is a single sonner <code>Toaster</code> at bottom right, offset 24 pixels in from both edges and 80 pixels up on mobile to clear the bottom nav, with <code>containerAriaLabel=&quot;Studio notices&quot;</code> naming its live region. The shell that mounts it is described on the <a href="shell.html">shell page</a>.</li><li><code>next.config.ts</code> turns on the React Compiler, lists the remote image patterns, marks <code>winston</code> as a server external package and aliases it to a browser stub in Turbopack.</li></ul></section><section id="theory"><h2>Minimal theory: call trace</h2><h3>A server-rendered page with a client container on top</h3><ol class="trace"><li><code class="ref">frontend/src/app/layout.tsx:RootLayout</code><span class="desc"><code>ClerkProvider</code> wrapping <code>ApolloProvider</code>; the web vitals reporter sits outside the provider.</span></li><li><code class="ref">frontend/src/app/(storefront)/products/[slug]/page.tsx:ProductPage</code><span class="desc">Server component; awaits only the data the first paint and the metadata need.</span></li><li><code class="ref">frontend/src/lib/apollo/rsc-client.ts:getClient</code><span class="desc">One client per request through <code>registerApolloClient</code>, so repeated reads dedupe.</span></li><li><code class="ref">frontend/src/lib/apollo/rsc-client.ts:forwardVisitorIp</code><span class="desc">Copies the visitor&#x27;s forwarded IP so the API&#x27;s throttler does not bucket every SSR call together.</span></li><li><code class="ref">frontend/src/lib/data/catalog.ts:getProduct</code><span class="desc"><code>errorPolicy: &quot;all&quot;</code>; a genuine 404 returns null, anything else rethrows.</span></li><li><code class="ref">frontend/src/features/products/containers/ProductDetailContainer.tsx</code><span class="desc">Client container; everything non-critical is fetched after hydration.</span></li></ol><h3>An optimistic mutation</h3><ol class="trace"><li><code class="ref">frontend/src/features/*/containers/*Container.tsx</code><span class="desc"><code>const [optimistic, apply] = useOptimistic(baseline, reducer)</code> and <code>const [isPending, startTransition] = useTransition()</code>.</span></li><li><code class="ref">frontend/src/features/*/types.ts:applyXAction</code><span class="desc">Pure reducer, unit tested, applied first inside the transition.</span></li><li><code class="ref">frontend/src/lib/apollo/links.ts:createAuthLink</code><span class="desc">Attaches the current Clerk token, read through the ref.</span></li><li><code class="ref">frontend/src/features/*/hooks.ts</code><span class="desc">Awaits the generated mutation, with <code>refetchQueries</code> and <code>awaitRefetchQueries</code> when the payload is not a usable baseline.</span></li><li><code class="ref">frontend/src/features/*/containers/*Container.tsx</code><span class="desc">When the transition ends React discards the optimistic value; the payload or the awaited refetch is the new baseline, and a failure is a sonner toast.</span></li></ol></section><section id="edges"><h2>Edge cases and failure handling</h2><ul><li><strong>No global error handling.</strong> A 401 after a token expires is a per-call thrown error and a toast.</li><li><strong>The client must never be rebuilt on a token refresh</strong>, which is why <code>makeClient</code> is memoised with an empty dependency array and the getter lives in a ref.</li><li><strong><code>ResetStoreOnUserChange</code> needs its <code>undefined</code> sentinel</strong>; without it the store would be reset on every first paint, because Clerk reports a null user id before hydration.</li><li><strong><code>Suspense</code> is required wherever a container calls <code>useSearchParams</code></strong>, which is why <code>/products</code>, <code>/search</code>, <code>/events</code>, the admin workshops, reviews and inbox routes, and the header&#x27;s own mobile menu container all wrap their children and the others do not.</li><li><strong><code>query</code> and <code>PreloadQuery</code> are exported from <code>rsc-client.ts</code> but never imported</strong>; any streaming work would start there.</li><li><strong>The optimistic audit is stale</strong> on the number of sanctioned <code>updateQuery</code> calls and on the name of the lifecycle call.</li><li><strong>A GraphQL error with cached <code>previousData</code></strong> keeps stale content on screen rather than showing the failure state, which only renders when there is no result at all.</li></ul></section><section id="tests"><h2>Tests</h2><ul><li>Every optimistic reducer and pure derivation is unit tested in its feature&#x27;s <code>types.test.ts</code>: 35 such files, 17 on the storefront and 18 under <code>features/admin</code>.</li><li><code>frontend/src/store/ui-store.test.ts</code> covers the one Zustand slice; <code>frontend/src/lib/format.test.ts</code> covers the formatters.</li><li><code>frontend/vitest.config.ts</code> defines two projects: <code>unit</code> in jsdom, and <code>storybook</code>, which runs all 253 <code>.stories.tsx</code> files in a real headless Chromium with <code>a11y: { test: &quot;error&quot; }</code>, so an accessibility violation fails the run.</li><li>Containers and providers themselves have no tests; the reducers they call do.</li><li><code>pnpm knip</code> guards dead exports, with production entries declared in <code>frontend/knip.ts</code>.</li></ul></section>
+<footer class="bottom">
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="shell.html">&larr; Storefront shell and navigation</a><a rel="next" href="design.html">Design system and motion &rarr;</a></nav>
+<p>Verified against the working tree on branch <code>docs/architecture</code>, stacked on <code>feat/admin-ui</code>.</p>
+</footer>
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>

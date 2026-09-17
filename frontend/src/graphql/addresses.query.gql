@@ -1,0 +1,40 @@
+fragment AddressFields on Address {
+  id
+  name
+  phone
+  line1
+  line2
+  landmark
+  city
+  state
+  pincode
+  is_default
+}
+
+query Addresses {
+  addresses {
+    ...AddressFields
+  }
+}
+
+mutation CreateAddress($input: AddressInput!) {
+  createAddress(input: $input) {
+    ...AddressFields
+  }
+}
+
+mutation UpdateAddress($id: Int!, $input: AddressInput!) {
+  updateAddress(id: $id, input: $input) {
+    ...AddressFields
+  }
+}
+
+mutation DeleteAddress($id: Int!) {
+  deleteAddress(id: $id)
+}
+
+mutation SetDefaultAddress($id: Int!) {
+  setDefaultAddress(id: $id) {
+    ...AddressFields
+  }
+}

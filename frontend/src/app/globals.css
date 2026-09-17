@@ -4,20 +4,32 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Pottery design tokens. */
+/* Pottery design tokens: clay-white walls, ink text, one sage accent. */
 @theme {
+  --color-clay-white: #f7f4ef;
+  --color-ink: #1f1d1a;
+  --color-sage: #4f6f52;
+  --color-kiln: #c4785a;
+  /* Smoke is darkened from the brief's #8a857d so 13px text clears 4.5:1 on clay-white. */
+  --color-smoke: #6f6a62;
+  --color-ash: #e5e0d8;
+
   --color-primary-hover: #3d5640;
-  --color-primary-light: #e8ece8;
+  --color-primary-light: #e5e0d8;
   --color-terracotta: #c4785a;
-  --color-cream: #f5f0e8;
+  --color-terracotta-hover: #b06847;
+  --color-terracotta-light: #f5ebe6;
+  /* Contrast-safe terracotta for small text on light surfaces (>=4.5:1). */
+  --color-terracotta-dark: #9a5a3f;
+  --color-cream: #f2efe8;
   --color-clay: #8b7355;
   /* Contrast-safe clay for small text on cream (>=4.5:1). */
   --color-clay-dark: #6f5b44;
 
-  --shadow-soft:
-    0 1px 2px rgb(26 26 26 / 0.04), 0 4px 12px rgb(26 26 26 / 0.05);
-  --shadow-card:
-    0 2px 4px rgb(26 26 26 / 0.06), 0 12px 28px rgb(26 26 26 / 0.1);
+  /* Nothing shadows at rest; sheets and dialogs opt into --shadow-ambient. */
+  --shadow-soft: none;
+  --shadow-card: none;
+  --shadow-ambient: 0 24px 60px rgb(31 29 26 / 0.14);
 }
 
 @theme inline {
@@ -57,87 +69,469 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
+  --radius-sm: var(--radius);
+  --radius-md: var(--radius);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius);
+  --radius-3xl: var(--radius);
+  --radius-4xl: var(--radius);
 }
 
 :root {
-  --background: #fafaf9;
-  --foreground: #1a1a1a;
+  --background: #f7f4ef;
+  --foreground: #1f1d1a;
   --card: #ffffff;
-  --card-foreground: #1a1a1a;
+  --card-foreground: #1f1d1a;
   --popover: #ffffff;
-  --popover-foreground: #1a1a1a;
+  --popover-foreground: #1f1d1a;
   --primary: #4f6f52;
-  --primary-foreground: #fafaf9;
-  --secondary: #f5f0e8;
-  --secondary-foreground: #3d5640;
-  --muted: #e8ece8;
-  --muted-foreground: #737373;
-  --accent: #e8ece8;
-  --accent-foreground: #3d5640;
-  --destructive: #b91c1c;
-  --border: #e8ece8;
-  --input: #e5e5e4;
+  --primary-foreground: #ffffff;
+  --secondary: #f2efe8;
+  --secondary-foreground: #1f1d1a;
+  --muted: #f2efe8;
+  --muted-foreground: #6f6a62;
+  --accent: #f2efe8;
+  --accent-foreground: #1f1d1a;
+  --destructive: #a33a2c;
+  --border: #e5e0d8;
+  --input: #e5e0d8;
   --ring: #4f6f52;
   --chart-1: #4f6f52;
   --chart-2: #c4785a;
   --chart-3: #8b7355;
   --chart-4: #3d5640;
-  --chart-5: #737373;
-  --radius: 1rem;
-  --sidebar: #f5f0e8;
-  --sidebar-foreground: #1a1a1a;
+  --chart-5: #6f6a62;
+  /* Square everywhere. Circles are opt-in per element (avatars only). */
+  --radius: 0px;
+  --sidebar: #f2efe8;
+  --sidebar-foreground: #1f1d1a;
   --sidebar-primary: #4f6f52;
-  --sidebar-primary-foreground: #fafaf9;
-  --sidebar-accent: #e8ece8;
-  --sidebar-accent-foreground: #3d5640;
-  --sidebar-border: #e8ece8;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f2efe8;
+  --sidebar-accent-foreground: #1f1d1a;
+  --sidebar-border: #e5e0d8;
   --sidebar-ring: #4f6f52;
 }
 
 .dark {
-  --background: #1a1a1a;
-  --foreground: #fafaf9;
-  --card: #232323;
-  --card-foreground: #fafaf9;
-  --popover: #232323;
-  --popover-foreground: #fafaf9;
+  --background: #1f1d1a;
+  --foreground: #f7f4ef;
+  --card: #262320;
+  --card-foreground: #f7f4ef;
+  --popover: #262320;
+  --popover-foreground: #f7f4ef;
   --primary: #8fae91;
-  --primary-foreground: #1a1a1a;
-  --secondary: #2c2c2b;
-  --secondary-foreground: #fafaf9;
-  --muted: #2c2c2b;
-  --muted-foreground: #a3a3a3;
-  --accent: #2c2c2b;
-  --accent-foreground: #fafaf9;
-  --destructive: #f87171;
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --primary-foreground: #1f1d1a;
+  --secondary: #2c2925;
+  --secondary-foreground: #f7f4ef;
+  --muted: #2c2925;
+  --muted-foreground: #a9a39a;
+  --accent: #2c2925;
+  --accent-foreground: #f7f4ef;
+  --destructive: #e07a6c;
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
   --ring: #8fae91;
-  --sidebar: #232323;
-  --sidebar-foreground: #fafaf9;
+  --sidebar: #262320;
+  --sidebar-foreground: #f7f4ef;
   --sidebar-primary: #8fae91;
-  --sidebar-primary-foreground: #1a1a1a;
-  --sidebar-accent: #2c2c2b;
-  --sidebar-accent-foreground: #fafaf9;
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-primary-foreground: #1f1d1a;
+  --sidebar-accent: #2c2925;
+  --sidebar-accent-foreground: #f7f4ef;
+  --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: #8fae91;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
   }
   html {
     @apply font-sans;
+  }
+
+  /* One focus treatment for the whole site: a 2px ink outline held 2px clear of
+     the control, so it reads on clay-white, on white and on an ink button. */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  /* Items that fill their container take the outline inside their own edge. */
+  [data-slot="dropdown-menu-item"]:focus-visible,
+  [data-slot="dropdown-menu-checkbox-item"]:focus-visible,
+  [data-slot="dropdown-menu-radio-item"]:focus-visible,
+  [data-slot="dropdown-menu-sub-trigger"]:focus-visible,
+  [data-slot="select-item"]:focus-visible,
+  [data-slot="tabs-content"]:focus-visible {
+    outline-offset: -2px;
+  }
+
+  /* Our own Close button clears the search field; the browser's native cross would be a second one. */
+  input[type="search"]::-webkit-search-cancel-button,
+  input[type="search"]::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility hide-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Prices and counts stay on a fixed width so columns do not jitter. */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Icon buttons take a square of tint on hover, never a pill and never a fill.
+   Buttons sitting on their own backdrop set --ghost-base so it survives. */
+@utility ghost-hover {
+  --ghost-base: transparent;
+  transition:
+    background-color 160ms ease-out,
+    border-color 160ms ease-out,
+    color 160ms ease-out,
+    opacity 200ms ease-out;
+
+  &:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--color-ink) 3.5%,
+      var(--ghost-base)
+    );
+  }
+}
+
+/* A row of siblings dims so the one under the cursor stays lit. No lift and no
+   scale: on a flat, shadowless page the dim alone carries the focus. */
+@utility lift-and-dim {
+  & > * {
+    transition: opacity 140ms ease;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    & > * {
+      transition: opacity 350ms ease;
+    }
+  }
+
+  &:hover > * {
+    opacity: 0.55;
+  }
+
+  & > *:hover,
+  & > *:focus-within {
+    opacity: 1;
+  }
+}
+
+/* Drawn icons hang slightly crooked and straighten when you reach for them.
+   Only ink drawings, never a photograph or a control. */
+@utility tilt-straighten {
+  --tilt: -1.5deg;
+  transition: color 200ms ease-out;
+
+  /* The wobble and the straightening are transforms, so reduced motion gets
+     neither: the drawing simply hangs level. */
+  @media (prefers-reduced-motion: no-preference) {
+    transform: rotate(var(--tilt));
+    transition:
+      transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+      color 200ms ease-out;
+
+    .group:hover &,
+    .group:focus-visible & {
+      transform: rotate(0deg) translateY(-4px);
+    }
+  }
+}
+
+/* Alternate the hang so the row reads as pinned by hand. */
+.lift-and-dim > *:nth-child(even) .tilt-straighten {
+  --tilt: 1.5deg;
+}
+
+/* A hairline that draws in from the left on hover. Never an active-state marker. */
+@utility link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 0% 1px;
+
+  &:hover,
+  &:focus-visible {
+    background-size: 100% 1px;
+  }
+}
+
+/* A dialog rises 6px and fades. No zoom: scaling a sharp-edged sheet reads as an app.
+   Centring lives on the element's own translate property, so transform only offsets. */
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dialog-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes dialog-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialog-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* The reduced-motion swap lives inside the utility because these are only ever
+   used through a data-state variant, which a plain .dialog-enter rule misses. */
+@utility dialog-enter {
+  animation: dialog-in 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: dialog-fade-in 150ms ease-out both;
+  }
+}
+
+@utility dialog-exit {
+  animation: dialog-out 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: dialog-fade-out 150ms ease-out both;
+  }
+}
+
+/* Skeletons breathe rather than blink: ash never drops far enough to vanish. */
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+@keyframes clip-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dash length comes from the line's own user-unit length, so one dash spans it exactly. */
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: var(--draw-length, 100);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The glaze band arrives as a wipe from the shoulder down, never clipping its stroke. */
+@keyframes glaze-wipe {
+  from {
+    clip-path: inset(-20% -20% 100% -20%);
+  }
+  to {
+    clip-path: inset(-20% -20% -20% -20%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .link-underline {
+    transition: background-size 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .animate-skeleton {
+    animation: skeleton-pulse 1.8s ease-in-out infinite;
+  }
+
+  .animate-clip-reveal {
+    animation: clip-reveal 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-fade-up {
+    animation: fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+
+  /* Where the browser can drive a section fade from scroll position it does so on
+     its own, and Reveal leaves its observer switched off. */
+  @supports (animation-timeline: view()) {
+    .reveal-section {
+      animation: fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      animation-timeline: view();
+      animation-range: entry 5% entry 60%;
+    }
+  }
+
+  /* One observer per grid: the wrapper flips data-revealed, cards carry the delay. */
+  [data-revealed] .reveal-item {
+    animation: fade-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+
+  /* Slower than anything else on the page: the camera breathing, not a control.
+     Scales the photo inside the slide, so a card carousel keeps its own transform. */
+  .photo-zoom {
+    transition:
+      opacity 500ms ease-out,
+      transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .group:hover .photo-zoom,
+  .group:focus-within .photo-zoom {
+    transform: scale(1.02);
+    will-change: transform;
+  }
+
+  .animate-draw-line {
+    stroke-dasharray: var(--draw-length, 100);
+    stroke-dashoffset: var(--draw-length, 100);
+    animation: draw-line 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation-delay: var(--draw-delay, 0ms);
+  }
+
+  .animate-label-fade {
+    animation: fade-up 300ms ease-out both;
+    animation-delay: var(--label-delay, 0ms);
+  }
+
+  /* Story strokes wait for their step: the container marks the layer drawn. */
+}
+
+/* Kiln labels: the drawing and the fact list light each other, colour only. */
+.kiln-leader {
+  stroke: currentColor;
+  transition: stroke 200ms ease-out;
+}
+
+.kiln-leader[data-on] {
+  stroke: var(--color-sage);
+}
+
+.kiln-dot {
+  fill: currentColor;
+  transition: fill 200ms ease-out;
+}
+
+.kiln-dot[data-on] {
+  fill: var(--color-sage);
+}
+
+.kiln-label {
+  transition: color 200ms ease-out;
+}
+
+.kiln-label[data-on] {
+  color: var(--color-sage);
+}
+
+/* The overlay stays click-through; only the dots take a pointer. */
+.kiln-hit {
+  fill: transparent;
+  pointer-events: auto;
+  cursor: pointer;
+  outline: none;
+}
+
+/* An SVG hit area cannot take an outline, so the dot's own ring is the marker. */
+.kiln-hit:focus-visible {
+  stroke: var(--color-ink);
+  stroke-width: 0.5;
+  stroke-dasharray: 1.5 1;
+  outline: none;
+}
+
+.fact-row {
+  transition: background-color 160ms ease-out;
+}
+
+.fact-row[data-on] {
+  background-color: color-mix(in srgb, var(--color-sage) 8%, transparent);
+}
+
+/* Smoke on the tint drops under 4.5:1, so the lit row's label goes to ink. */
+.fact-row[data-on] dt {
+  color: var(--color-ink);
+}
+
+.fact-row:focus-visible {
+  outline-offset: -2px;
+}
+
+/* A packing slip goes in the box, so print drops the console chrome around it. */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  header[data-admin-chrome],
+  nav[aria-label="Studio sections"],
+  nav[aria-label="Studio sections, compact"],
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  a[href]::after {
+    content: none !important;
   }
 }

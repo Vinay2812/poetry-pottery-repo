@@ -2,13 +2,13 @@
 
 E-commerce platform for handcrafted pottery with workshop/event management — the `poetry-and-pottery-workspace` projects combined into this repo. Next.js frontend, NestJS GraphQL API, and local infra — three independent apps in one repo (no workspace, nothing shared; each folder has its own `package.json` and lockfile).
 
-| Folder      | What                                             | Port        |
-| ----------- | ------------------------------------------------ | ----------- |
-| `frontend/` | Next.js 16 (App Router, React 19, Tailwind 4)    | 3030        |
-| `api/`      | NestJS 11 GraphQL API (Apollo, Prisma, Postgres) | 6060        |
-| `infra/`    | docker (Postgres 17 + pgvector, Redis 8) + k8s   | 5433 / 6381 |
+| Folder      | What                                                 | Port               |
+| ----------- | ---------------------------------------------------- | ------------------ |
+| `frontend/` | Next.js 16 (App Router, React 19, Tailwind 4)        | 3030               |
+| `api/`      | NestJS 11 GraphQL API (Apollo, Prisma, Postgres)     | 6060               |
+| `infra/`    | docker (Postgres 17 + pgvector, Redis 8, RabbitMQ 4) | 5433 / 6381 / 5672 |
 
-> Local dev currently uses the `poetry-and-pottery-infra` Postgres from the parent workspace (`localhost:5435`, db `poetry-and-pottery`) via `api/.env` `DATABASE_URL` — not this repo's `infra/` compose on 5433.
+Local dev uses this repo's own compose stack: Postgres `poetry_pottery` on 5433, Redis on 6381, RabbitMQ on 5672 (management UI on 15672, user/password `poetry`).
 
 ## Prerequisites
 
@@ -18,14 +18,18 @@ E-commerce platform for handcrafted pottery with workshop/event management — t
 ## First run
 
 ```bash
-# 1. Database + Redis
+# 1. Database + Redis + RabbitMQ
+cp infra/docker/.env.example infra/docker/.env
 docker compose -f infra/docker/docker-compose.db.yml up -d
 
 # 2. API
 cd api
-cp .env.example .env            # fill in Clerk keys
+cp .env.example .env            # fill in Clerk keys (SMTP and R2 are optional)
 pnpm install
 pnpm migration:apply
+pnpm db:seed                    # site settings, public pages, studio config
+pnpm import:legacy              # real catalogue from the old production DB (LEGACY_DATABASE_URL in .env)
+pnpm search:reindex             # embeddings for search (downloads the model on first run)
 pnpm dev                        # http://localhost:6060/graphql
 
 # 3. Frontend (new terminal)
@@ -41,23 +45,29 @@ pnpm install
 
 ## Daily commands
 
-| Where       | Command                                                         | What                                                       |
-| ----------- | --------------------------------------------------------------- | ---------------------------------------------------------- |
-| `api/`      | `pnpm dev`                                                      | API with watch mode                                        |
-| `api/`      | `pnpm schema:emit`                                              | Regenerate `schema.gql` (no DB needed)                     |
-| `api/`      | `pnpm migration:create`                                         | Create a migration from schema changes                     |
-| `api/`      | `pnpm db:studio`                                                | Prisma Studio                                              |
-| `api/`      | `pnpm test` / `pnpm build`                                      | Vitest / production build                                  |
-| `frontend/` | `pnpm dev`                                                      | Next dev server on 3030                                    |
-| `frontend/` | `pnpm codegen`                                                  | Regenerate typed hooks (running API or schema file)        |
-| `frontend/` | `pnpm storybook`                                                | Storybook on 6006                                          |
-| `frontend/` | `pnpm test` / `pnpm tsc`                                        | Vitest / typecheck                                         |
-| `frontend/` | `pnpm analyze`                                                  | Bundle-size treemap report                                 |
-| `frontend/` | `pnpm lighthouse`                                               | Lighthouse CI audit → `.lighthouse/`                       |
-| `frontend/` | `pnpm knip`                                                     | Find unused files/exports/deps                             |
-| `infra/`    | `docker compose -f docker/docker-compose.db.yml up -d`          | Postgres + Redis only                                      |
-| `infra/`    | `docker compose -f docker/docker-compose.api.yml up -d --build` | Full backend stack (API container included)                |
-| root        | commits                                                         | husky runs lint-staged + commitlint (conventional commits) |
+| Where       | Command                                                         | What                                                                    |
+| ----------- | --------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `api/`      | `pnpm dev`                                                      | API with watch mode                                                     |
+| `api/`      | `pnpm schema:emit`                                              | Regenerate `schema.gql` (no DB needed)                                  |
+| `api/`      | `pnpm migration:create`                                         | Create a migration from schema changes                                  |
+| `api/`      | `pnpm db:seed` / `pnpm db:reset`                                | Seed site scaffolding / drop, migrate and reseed                        |
+| `api/`      | `pnpm import:legacy` / `pnpm db:reset:legacy`                   | Import the old production data (see docs/data/legacy-import.md)         |
+| `api/`      | `pnpm db:seed:demo`                                             | Optional demo catalogue for local play                                  |
+| `api/`      | `pnpm search:reindex`                                           | Recompute product and event embeddings                                  |
+| `api/`      | `pnpm make-admin you@example.com`                               | Promote a signed-in user to admin                                       |
+| `api/`      | `pnpm db:studio`                                                | Prisma Studio                                                           |
+| `api/`      | `pnpm test` / `pnpm build`                                      | Vitest / production build                                               |
+| `api/`      | `pnpm test:integration`                                         | Concurrency races against a throwaway database (needs compose stack up) |
+| `frontend/` | `pnpm dev`                                                      | Next dev server on 3030                                                 |
+| `frontend/` | `pnpm codegen`                                                  | Regenerate typed hooks (running API or schema file)                     |
+| `frontend/` | `pnpm storybook`                                                | Storybook on 6006                                                       |
+| `frontend/` | `pnpm test` / `pnpm tsc`                                        | Vitest / typecheck                                                      |
+| `frontend/` | `pnpm analyze`                                                  | Bundle-size treemap report                                              |
+| `frontend/` | `pnpm lighthouse`                                               | Lighthouse CI audit → `.lighthouse/`                                    |
+| `frontend/` | `pnpm knip`                                                     | Find unused files/exports/deps                                          |
+| `infra/`    | `docker compose -f docker/docker-compose.db.yml up -d`          | Postgres + Redis only                                                   |
+| `infra/`    | `docker compose -f docker/docker-compose.api.yml up -d --build` | Full backend stack (API container included)                             |
+| root        | commits                                                         | husky runs lint-staged + commitlint (conventional commits)              |
 
 ## Schema workflow
 
@@ -73,9 +83,17 @@ A husky pre-push hook (`scripts/check-schema-sync.sh`) enforces sync: it re-emit
 
 Clerk on both sides. The API JIT-provisions a `User` row on the first authenticated request (no webhook, no seed needed). User identity always comes from the Clerk context, never from GraphQL inputs.
 
+## Background jobs
+
+Slow work leaves the request path through RabbitMQ (`api/src/queue`): search embeddings for products and events, and transactional email. Consumers run inside the API process; set `QUEUE_CONSUMERS_ENABLED=false` on replicas that should only serve GraphQL. Failed messages are dead-lettered to `poetry.dead-letters`.
+
+## Search
+
+Postgres keeps a weighted `tsvector` per product and event (maintained by triggers in the initial migration). A pgvector column holds a 384-dimension embedding from `Xenova/all-MiniLM-L6-v2`, computed locally with `@huggingface/transformers` (the model downloads once into `api/.cache/models`). Search ranks keyword and semantic matches together.
+
 ## Rate limiting
 
-Three named throttler profiles (env-tunable): `default` 100/60s (global), `short` 10/1s, `strict` 5/60s — applied per resolver with `@Throttle(...)`, keyed by user id (falls back to IP).
+Three named throttler profiles (env-tunable): `default` 100/60s (global), `short` 10/1s, `strict` 5/60s — applied per resolver with `@Throttle(...)`, keyed by user id (falls back to IP). Counters live in Redis so limits hold across replicas.
 
 ## Infra
 
@@ -92,10 +110,31 @@ Three separate mechanisms, in play at different moments:
    POSTGRES_PORT=5544 docker compose -f infra/docker/docker-compose.db.yml up -d   # shell wins
    ```
 
-2. **Container runtime env** — the API service loads `env_file: ../../api/.env` for app-level values (Clerk keys, `SCHEMA_SYNC_KEY`, log level, throttles), so those are maintained in one place whether you run `pnpm dev` or the container. The `environment:` block then overrides the values that must differ inside the network — `DATABASE_URL` rebuilt from the `POSTGRES_*` interpolation values pointing at `postgres:5432`, `NODE_ENV` pinned to `production`, `PORT` fixed. Precedence: `environment` > `env_file` > image `ENV`.
+2. **Container runtime env** — the API service loads `env_file: ../../api/.env` for app-level values (Clerk keys, `SCHEMA_SYNC_KEY`, log level, throttles), so those are maintained in one place whether you run `pnpm dev` or the container. The `environment:` block then overrides only the values that must differ inside the network: `DATABASE_URL` rebuilt from the `POSTGRES_*` interpolation values pointing at `postgres:5432`, `REDIS_URL`, `RABBITMQ_URL` and `EMBEDDINGS_CACHE_DIR`. `NODE_ENV=production` comes from the image, and `PORT` from `api/.env`. Precedence: `environment` > `env_file` > image `ENV`.
 
 3. **Build-time env** — none. The one value the build touches is a dummy `DATABASE_URL` baked into `Dockerfile.api`, because `prisma.config.ts` resolves the variable eagerly at `prisma generate` while never connecting. The image contains no real config; everything real arrives at runtime. If a genuine build-time input is ever needed, use `build.args:` + `ARG` for non-sensitive values (args are inspectable via `docker history`) or a BuildKit secret mount for sensitive ones.
 
 ## Environment
 
 Each app validates `process.env` with zod at boot and fails fast. `.env.example` in each folder lists every variable the code actually reads — they are the reference.
+
+## Architecture
+
+[`architecture/index.html`](architecture/index.html) — 24 pages, one per system (auth, catalogue and search, commissions, cart, notifications, checkout, events, workshops, studio visits, reviews, queue, uploads, admin, the storefront shell, frontend data, …), each with a diagram, the algorithm and its guards, a call trace through the real files, edge cases and the specs that cover it. Self-contained HTML; open it from disk.
+
+## Branches
+
+The rewrite is built as one PR per feature, each stacked on the previous branch. All ten PRs are open and none is merged. The commit graph is one strictly linear line from `origin/main` to `feat/admin-ui`, with the documentation branch on the end, so every pull request base is also the real parent. [`architecture/branches.html`](architecture/branches.html) has the measured counts and the commands that produce them.
+
+| Branch                     | Adds                                                                                                                                                                               | PR  |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| `feat/platform-foundation` | Schema, queue, throttling, storefront shell                                                                                                                                        | #1  |
+| `feat/catalog`             | Products, hybrid keyword + semantic search, filters, product pages                                                                                                                 | #2  |
+| `feat/cart-wishlist`       | Cart and wishlist, server-priced customisations, optimistic updates                                                                                                                | #3  |
+| `feat/checkout`            | Checkout, orders, saved addresses, coupons, account page                                                                                                                           | #4  |
+| `feat/events`              | Events with seat-guarded registrations and bookings pages                                                                                                                          | #5  |
+| `feat/workshops`           | Open-studio session booking, capacity-aware availability                                                                                                                           | #6  |
+| `feat/design-refresh`      | Sharp/zero-radius direction, legacy catalogue import, archive gallery, made-to-order reference photos, seconds, glazes, piece facts, motion pass, concurrency hardening, the brand | #7  |
+| `feat/reviews`             | Product and event reviews with photos, the subject lock, gated presigns, the upload cap, the cleanup job                                                                           | #8  |
+| `feat/admin`               | Admin API: catalogue, glazes, orders, events, workshops, visits, commissions, coupons, content, users, waiting list                                                                | #9  |
+| `feat/admin-ui`            | Admin console shell, tables and forms for every module, the printable packing slip                                                                                                 | #10 |

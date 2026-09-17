@@ -1,0 +1,28 @@
+fragment ArchivePiece on Product {
+  id
+  slug
+  name
+  image_urls
+  material
+  color_name
+  created_at
+  collection {
+    id
+    slug
+    name
+  }
+}
+
+query ArchiveWall($filter: ProductsFilterInput) {
+  products(filter: $filter) {
+    items {
+      ...ArchivePiece
+    }
+    page_info {
+      total
+      page
+      limit
+      has_more
+    }
+  }
+}

@@ -7,6 +7,8 @@ declare global {
     interface Request {
       requestId?: string;
       authenticatedUser?: AuthUser;
+      // Per-request memo so list resolvers look wishlist membership up once.
+      wishlistIds?: Promise<Set<number>>;
     }
   }
 }

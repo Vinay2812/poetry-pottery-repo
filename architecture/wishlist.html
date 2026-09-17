@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wishlist &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Wishlist: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="cart.html">&larr; Cart</a><a rel="next" href="notifications.html">Back in stock notifications &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 7 of 24</p>
+<h1>Wishlist</h1>
+<p class="lede">The wishlist is the smallest feature in the system and the clearest example of the house pattern: a cheap id-only query feeds every heart on the site, one idempotent toggle mutation flips membership inside a transaction, and the browser holds an optimistic id set that it settles from two awaited refetches because the mutation deliberately answers with a count rather than a list.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 880 330" role="img" aria-label="Wishlist: optimistic id set in the provider, toggle service and the unique constraint that absorbs a double tap" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="330" height="320"/><text x="18" y="26">Browser</text></g><g class="lane"><rect x="355" y="10" width="280" height="320"/><text x="363" y="26">API</text></g><g class="lane"><rect x="650" y="10" width="220" height="320"/><text x="658" y="26">Postgres</text></g><g class="box t-client"><rect x="30" y="44" width="290" height="44"/><text x="175" y="63" text-anchor="middle" class="b">WishlistProvider</text><text x="175" y="77" text-anchor="middle">useOptimistic(ids, applyWishlistToggle)</text></g><g class="box t-client"><rect x="30" y="108" width="290" height="40"/><text x="175" y="132" text-anchor="middle">useWishlistIdsQuery</text></g><g class="box t-client"><rect x="30" y="164" width="290" height="44"/><text x="175" y="183" text-anchor="middle" class="b">useWishlist</text><text x="175" y="197" text-anchor="middle">filters cards by optimistic ids</text></g><g class="box t-client"><rect x="30" y="228" width="290" height="44"/><text x="175" y="247" text-anchor="middle" class="b">refetch WishlistIds + Wishlist</text><text x="175" y="261" text-anchor="middle">awaitRefetchQueries</text></g><g class="box t-api"><rect x="375" y="44" width="240" height="40"/><text x="495" y="68" text-anchor="middle">WishlistResolver</text></g><g class="box t-svc"><rect x="375" y="100" width="240" height="40"/><text x="495" y="124" text-anchor="middle">WishlistService.ids</text></g><g class="box t-svc"><rect x="375" y="156" width="240" height="40"/><text x="495" y="180" text-anchor="middle">WishlistService.list</text></g><g class="box t-svc"><rect x="375" y="212" width="240" height="46"/><text x="495" y="232" text-anchor="middle" class="b">WishlistService.toggle</text><text x="495" y="246" text-anchor="middle">delete then createMany</text></g><g class="box t-api"><rect x="375" y="272" width="240" height="40"/><text x="495" y="296" text-anchor="middle">Product.in_wishlist resolver</text></g><g class="box t-db"><rect x="670" y="100" width="185" height="46"/><text x="762" y="120" text-anchor="middle" class="b">wishlist_items</text><text x="762" y="134" text-anchor="middle">@@unique(user, product)</text></g><g class="box t-db"><rect x="670" y="212" width="185" height="46"/><text x="762" y="232" text-anchor="middle" class="b">skipDuplicates</text><text x="762" y="246" text-anchor="middle">swallows the race</text></g><path class="edge" d="M 175 88 L 175 108" marker-end="url(#arrowhead)"/><path class="edge" d="M 175 148 L 175 164" marker-end="url(#arrowhead)"/><path class="edge" d="M 175 208 L 175 228" marker-end="url(#arrowhead)"/><path class="edge" d="M 320 250 Q 355 160 375 64" marker-end="url(#arrowhead)"/><path class="edge" d="M 495 84 L 495 100" marker-end="url(#arrowhead)"/><path class="edge" d="M 495 140 L 495 156" marker-end="url(#arrowhead)"/><path class="edge" d="M 495 196 L 495 212" marker-end="url(#arrowhead)"/><path class="edge" d="M 615 123 L 670 123" marker-end="url(#arrowhead)"/><path class="edge" d="M 615 235 L 670 235" marker-end="url(#arrowhead)"/></svg><figcaption>The toggle mutation answers with a count, not a list, which is exactly why the provider settles on two awaited refetches rather than on the mutation payload.</figcaption></figure></section><section id="how"><h2>How it works</h2><h3>Three operations, one of them cheap on purpose</h3><ul><li><code>wishlist</code> returns the full cards, including the product with its list include.</li><li><code>wishlistIds</code> returns just the product ids. This is the query every heart on the site reads, so that a grid of cards costs one small array rather than a page of products.</li><li><code>toggleWishlist(product_id)</code> returns <code>WishlistToggleResult { product_id, is_wishlisted, wishlist_count }</code>.</li></ul><p>All three are <code>@AuthRequired()</code>. <code>WishlistService.remove</code> exists but no resolver exposes it; the toggle covers both directions.</p><h3>Saved pieces are not filtered</h3><p><code>list</code> deliberately does not apply <code>sellableProductWhere</code>, so an archived piece stays on the list; the card simply stops offering the cart. <code>toggle</code> likewise looks the product up without the sellable predicate, so an archived piece can still be saved and unsaved.</p><h3>The toggle</h3><p>Inside a transaction, <code>toggle</code> first runs <code>wishlistItem.deleteMany({ user_id, product_id })</code>. A non-zero count means it was on and is now off, and the function returns false. Otherwise it runs <code>createMany({ data, skipDuplicates: true })</code> and returns true. <code>skipDuplicates</code> together with the <code>@@unique([user_id, product_id])</code> constraint is the double-tap guard: a racing insert is swallowed rather than raising <code>P2002</code>. The count is read after the transaction.</p><h3>Product.in_wishlist</h3><p>The field resolver on <code>Product</code> memoises a promise on the request object: <code>req.wishlistIds ??= authGuard.tryAuthenticate(req).then(...)</code>. One optional authentication and at most one wishlist query serve a whole page of products, and an anonymous visitor resolves to an empty set.</p><h3>The optimistic layer</h3><p><code>WishlistProvider</code> is mounted once in the storefront layout, inside <code>CartProvider</code>, and holds <code>useOptimistic(ids, applyWishlistToggle)</code> and <code>useTransition</code>, exposing the pending flag as <code>isSaving</code>. The next state is computed <strong>from the optimistic list</strong>, not from the server list, so rapid double taps alternate correctly. Because the reply carries only a count, the provider settles with <code>refetchQueries: [&quot;WishlistIds&quot;, &quot;Wishlist&quot;]</code> and <code>awaitRefetchQueries: true</code>; both refetched lists are the new baseline.</p><p><code>useWishlist</code> runs the full <code>Wishlist</code> query for the cards but filters it by the optimistic id list, so un-hearting drops the card immediately while the <code>Wishlist</code> refetch is still in flight. It also <strong>lends</strong> those ids to the provider through <code>adoptIds</code> in an effect, returning them on unmount; while they are lent the provider skips its own <code>WishlistIds</code> query rather than fetching the same set twice. <code>applyWishlistToggle</code> appends when absent (keeping order), filters on removal, never duplicates and always returns a new array.</p></section><section id="theory"><h2>Minimal theory: call trace</h2><ol class="trace"><li><code class="ref">frontend/src/features/products/containers/ProductCardContainer.tsx</code><span class="desc">Heart click calls the provider&#x27;s <code>toggle(productId, productName)</code>.</span></li><li><code class="ref">frontend/src/features/wishlist/containers/WishlistProvider.tsx:toggle</code><span class="desc"><code>requireAuth</code> first; computes <code>isWishlisted = !optimisticIds.includes(productId)</code> from the optimistic list.</span></li><li><code class="ref">frontend/src/features/wishlist/types.ts:applyWishlistToggle</code><span class="desc">Pure reducer: append or filter, always a new array.</span></li><li><code class="ref">api/src/features/wishlist/wishlist.resolver.ts:WishlistResolver.toggleWishlist</code><span class="desc"><code>@AuthRequired()</code>; the product id is the only input.</span></li><li><code class="ref">api/src/features/wishlist/wishlist.service.ts:WishlistService.toggle</code><span class="desc">Product existence check, then inside a transaction <code>deleteMany</code> and, when nothing was deleted, <code>createMany</code> with <code>skipDuplicates</code>.</span></li><li><code class="ref">api/src/features/wishlist/wishlist.service.ts:WishlistService.toggle</code><span class="desc">After the transaction, counts the user&#x27;s rows for the badge.</span></li><li><code class="ref">frontend/src/features/wishlist/containers/WishlistProvider.tsx</code><span class="desc">Awaits the <code>WishlistIds</code> and <code>Wishlist</code> refetches, which become the baseline; failure toasts and the optimistic id snaps back.</span></li></ol></section><section id="edges"><h2>Edge cases and failure handling</h2><ul><li><strong>Double tap.</strong> The unique constraint plus <code>skipDuplicates</code> absorbs a racing insert. Two interleaved toggles can settle in either state, which is accepted: the awaited refetch decides.</li><li><strong>Unknown product</strong> raises <code>NotFoundException(&quot;Product not found&quot;)</code>.</li><li><strong>Archived pieces stay saved</strong>, which is deliberate; the card hides the cart button instead.</li><li><strong>Signed-out visitors</strong> never fire the query (<code>skip: !isSignedIn</code>) and the heart routes through <code>useRequireAuth</code> into the sign-in prompt.</li><li><strong>A failed toggle</strong> surfaces as <code>toast.error(message ?? &quot;Could not update your wishlist&quot;)</code> and the optimistic id reverts when the transition ends.</li><li><code>WishlistService.remove</code> is unreferenced dead surface in the service.</li></ul></section><section id="tests"><h2>Tests</h2><ul><li><code>api/src/features/wishlist/wishlist.service.spec.ts</code> covers adding when absent and removing when present, rejecting unknown products, and keeping archived pieces on the list.</li><li><code>api/test/integration/wishlist.integration-spec.ts</code> runs four cases with 20 concurrent callers: twenty taps on one heart leave at most one saved piece, the reported count matches a plain count of the rows, twenty different pieces tapped at once all save, and a piece pulled from the shelf mid-tap answers not found.</li><li><code>frontend/src/features/wishlist/types.test.ts</code> covers the reducer, including its immutability.</li><li>The provider has no test; <code>EmptyWishlist.stories.tsx</code> covers the empty state.</li></ul></section>
+<footer class="bottom">
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="cart.html">&larr; Cart</a><a rel="next" href="notifications.html">Back in stock notifications &rarr;</a></nav>
+<p>Verified against the working tree on branch <code>docs/architecture</code>, stacked on <code>feat/admin-ui</code>.</p>
+</footer>
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>

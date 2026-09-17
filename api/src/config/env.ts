@@ -31,6 +31,21 @@ const port = (fallback: number) =>
 const count = (fallback: number) =>
   z.coerce.number().int().positive().default(fallback);
 
+// Empty values in .env mean "not configured" rather than "invalid".
+const optionalString = z
+  .string()
+  .optional()
+  .transform((value) =>
+    value === undefined || value === "" ? undefined : value,
+  );
+
+const optionalUrl = z
+  .union([z.url(), z.literal("")])
+  .optional()
+  .transform((value) =>
+    value === undefined || value === "" ? undefined : value,
+  );
+
 export const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
@@ -49,12 +64,31 @@ export const envSchema = z.object({
   THROTTLE_STRICT_LIMIT: count(5),
   THROTTLE_STRICT_TTL_MS: count(60_000),
   // An empty value in .env means "disabled" rather than "invalid url".
-  SENTRY_DSN: z
-    .union([z.url(), z.literal("")])
-    .optional()
-    .transform((value) =>
-      value === undefined || value === "" ? undefined : value,
-    ),
+  SENTRY_DSN: optionalUrl,
+  REDIS_URL: z.url(),
+  RABBITMQ_URL: z.url(),
+  QUEUE_CONSUMERS_ENABLED: z
+    .enum(["true", "false"])
+    .default("true")
+    .transform((value) => value === "true"),
+  EMBEDDINGS_MODEL: z.string().default("Xenova/all-MiniLM-L6-v2"),
+  EMBEDDINGS_CACHE_DIR: z.string().default(".cache/models"),
+  SMTP_HOST: optionalString,
+  SMTP_PORT: port(587),
+  SMTP_USER: optionalString,
+  SMTP_PASSWORD: optionalString,
+  MAIL_FROM: z
+    .string()
+    .default("Poetry & Pottery <no-reply@poetryandpottery.in>"),
+  BUSINESS_EMAIL: optionalString,
+  R2_ACCOUNT_ID: optionalString,
+  R2_ACCESS_KEY_ID: optionalString,
+  R2_SECRET_ACCESS_KEY: optionalString,
+  R2_BUCKET: optionalString,
+  R2_PUBLIC_URL: optionalUrl,
+  FRONTEND_URL: z.url().default("http://localhost:3030"),
+  // Reverse proxies (and the Next server) in front of the API whose X-Forwarded-For is trusted.
+  TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
 });
 
 export type RawEnv = z.infer<typeof envSchema>;
