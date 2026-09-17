@@ -22,6 +22,14 @@ export const VISIT_SLOT_MINUTES = 30;
 const VISIT_WINDOW_DAYS = 14;
 const MAX_DAYS = 21;
 const MINUTE = 60_000;
+const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
+
+// A calendar day the rest of the schedule can work from: shaped right and a real date.
+function isDateKey(value: string): boolean {
+  if (!DATE_KEY.test(value)) return false;
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(parsed.getTime());
+}
 
 // Used when the studio has no wheel-session config to take its hours from.
 const FALLBACK_HOURS = {
@@ -107,6 +115,10 @@ export class VisitsService {
     from: string | null,
     days: number | null,
   ): Promise<VisitDay[]> {
+    // The calendar is a public query, so a hand-written date has to be turned away, not parsed.
+    if (from !== null && !isDateKey(from)) {
+      throw new BadRequestException("from must be a YYYY-MM-DD date");
+    }
     const config = await this.config();
     const now = new Date();
     const start = from ?? toWallClock(now, config.timezone).date;

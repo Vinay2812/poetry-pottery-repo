@@ -103,6 +103,15 @@ describe("VisitsService", () => {
     expect(days[0]?.windows).toHaveLength(14);
   });
 
+  it("turns away a date it cannot read instead of failing on it", async () => {
+    await expect(service.availability("today", 1)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    await expect(service.availability("2026-13-40", 1)).rejects.toThrow(
+      "from must be a YYYY-MM-DD date",
+    );
+  });
+
   it("closes a window someone has already taken", async () => {
     const taken = window(1, 0);
     prismaMock.studioVisit.findMany.mockResolvedValue([
