@@ -30,3 +30,26 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+
+  # One-off tools container on the build stage (has the Prisma CLI and ts-node):
+  #   docker compose -f infra/docker/docker-compose.api.yml run --rm migrate
+  #   docker compose -f infra/docker/docker-compose.api.yml run --rm migrate pnpm db:seed
+  migrate:
+    profiles: ["tools"]
+    build:
+      context: ../../api
+      dockerfile: ../infra/docker/Dockerfile.api
+      target: build
+    env_file: ../../api/.env
+    environment:
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-poetry}:${POSTGRES_PASSWORD:-poetry}@postgres:5432/${POSTGRES_DB:-poetry_pottery}"
+      REDIS_URL: "redis://redis:6379"
+      RABBITMQ_URL: "amqp://${RABBITMQ_USER:-poetry}:${RABBITMQ_PASSWORD:-poetry}@rabbitmq:5672"
+      QUEUE_CONSUMERS_ENABLED: "false"
+    command: ["pnpm", "exec", "prisma", "migrate", "deploy"]
+    networks:
+      - backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+
