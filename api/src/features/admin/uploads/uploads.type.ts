@@ -9,6 +9,7 @@ import {
 export enum UploadPurpose {
   PRODUCT = "PRODUCT",
   CATEGORY = "CATEGORY",
+  GLAZE = "GLAZE",
   COLLECTION = "COLLECTION",
   EVENT = "EVENT",
   HERO = "HERO",

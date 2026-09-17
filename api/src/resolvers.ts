@@ -27,6 +27,7 @@ export { AdminUploadsResolver } from "@/features/admin/uploads/uploads.resolver"
 export { AdminDashboardResolver } from "@/features/admin/dashboard/dashboard.resolver";
 export { AdminProductsResolver } from "@/features/admin/products/products.resolver";
 export { AdminCatalogResolver } from "@/features/admin/catalog/catalog.resolver";
+export { AdminGlazesResolver } from "@/features/admin/glazes/glazes.resolver";
 export { AdminOrdersResolver } from "@/features/admin/orders/orders.resolver";
 export { AdminUsersResolver } from "@/features/admin/users/users.resolver";
 export { AdminEventsResolver } from "@/features/admin/events/events.resolver";

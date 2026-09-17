@@ -148,6 +148,30 @@ type AdminEventsResult {
   page_info: PageInfo!
 }
 
+type AdminGlaze {
+  glaze: Glaze!
+  product_count: Int!
+}
+
+input AdminGlazeInput {
+  color_code: String
+  description: String!
+  name: String!
+  swatch_url: String
+  variation_note: String
+}
+
+input AdminGlazesFilterInput {
+  limit: Int
+  page: Int
+  search: String
+}
+
+type AdminGlazesResult {
+  items: [AdminGlaze!]!
+  page_info: PageInfo!
+}
+
 type AdminLowStockPiece {
   id: Int!
   name: String!
@@ -799,6 +823,7 @@ type Mutation {
   createCustomizationUpload(content_type: String!, size: Int!): UploadTicket!
   createEvent(input: AdminEventInput!): Event!
   createEventReview(event_id: Int!, input: ReviewInput!): Review!
+  createGlaze(input: AdminGlazeInput!): AdminGlaze!
   createProduct(input: AdminProductInput!): Product!
   createProductOption(group_id: Int!, input: AdminOptionInput!): ProductOptionGroup!
   createProductOptionGroup(input: AdminOptionGroupInput!, product_id: Int!): ProductOptionGroup!
@@ -811,6 +836,7 @@ type Mutation {
   deleteContactMessage(id: Int!): Boolean!
   deleteContentPage(slug: String!): Boolean!
   deleteCoupon(id: Int!): Boolean!
+  deleteGlaze(id: Int!): Boolean!
   deleteProductOption(id: Int!): Boolean!
   deleteProductOptionGroup(id: Int!): Boolean!
   deleteReview(id: Int!): Boolean!
@@ -852,6 +878,7 @@ type Mutation {
   updateCollection(id: Int!, input: AdminCollectionInput!): Collection!
   updateCoupon(id: Int!, input: AdminCouponInput!): AdminCoupon!
   updateEvent(id: Int!, input: AdminEventInput!): Event!
+  updateGlaze(id: Int!, input: AdminGlazeInput!): AdminGlaze!
   updateProduct(id: Int!, input: AdminProductUpdateInput!): Product!
   updateProductOption(id: Int!, input: AdminOptionInput!): ProductOptionGroup!
   updateProductOptionGroup(id: Int!, input: AdminOptionGroupInput!): ProductOptionGroup!
@@ -1066,6 +1093,7 @@ type Query {
   adminEvent(id: Int!): Event!
   adminEventRegistrations(filter: AdminRegistrationsFilterInput): AdminRegistrationsResult!
   adminEvents(filter: AdminEventsFilterInput): AdminEventsResult!
+  adminGlazes(filter: AdminGlazesFilterInput): AdminGlazesResult!
   adminNewsletterSubscribers(filter: AdminSubscribersFilterInput): AdminSubscribersResult!
   adminOrder(id: String!): AdminOrder!
   adminOrders(filter: AdminOrdersFilterInput): AdminOrdersResult!
@@ -1304,6 +1332,7 @@ enum UploadPurpose {
   COLLECTION
   CONTENT
   EVENT
+  GLAZE
   HERO
   PRODUCT
   REVIEW

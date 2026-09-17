@@ -7,6 +7,7 @@ import { AdminContentResolver } from "./content/content.resolver";
 import { AdminCouponsResolver } from "./coupons/coupons.resolver";
 import { AdminDashboardResolver } from "./dashboard/dashboard.resolver";
 import { AdminEventsResolver } from "./events/events.resolver";
+import { AdminGlazesResolver } from "./glazes/glazes.resolver";
 import { AdminInboxResolver } from "./inbox/inbox.resolver";
 import { AdminOrdersResolver } from "./orders/orders.resolver";
 import { AdminProductsResolver } from "./products/products.resolver";
@@ -21,6 +22,7 @@ const RESOLVERS = {
   AdminCouponsResolver,
   AdminDashboardResolver,
   AdminEventsResolver,
+  AdminGlazesResolver,
   AdminInboxResolver,
   AdminOrdersResolver,
   AdminProductsResolver,

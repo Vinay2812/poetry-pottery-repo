@@ -16,6 +16,7 @@ export const UPLOAD_FOLDERS = [
   "events",
   "collections",
   "categories",
+  "glazes",
   "content",
   "hero",
   "reviews",

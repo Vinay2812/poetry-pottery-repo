@@ -40,6 +40,16 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "category tiles",
   },
+  [UploadPurpose.GLAZE]: {
+    purpose: UploadPurpose.GLAZE,
+    ratio_label: "1:1",
+    ratio: 1,
+    min_width: 600,
+    min_height: 600,
+    max_bytes: MAX_IMAGE_BYTES,
+    content_types: ALLOWED_CONTENT_TYPES,
+    renders_at: "glaze swatches",
+  },
   [UploadPurpose.COLLECTION]: {
     purpose: UploadPurpose.COLLECTION,
     ratio_label: "3:2",
@@ -96,6 +106,7 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
 const PURPOSE_FOLDER: Record<UploadPurpose, UploadFolder> = {
   [UploadPurpose.PRODUCT]: "products",
   [UploadPurpose.CATEGORY]: "categories",
+  [UploadPurpose.GLAZE]: "glazes",
   [UploadPurpose.COLLECTION]: "collections",
   [UploadPurpose.EVENT]: "events",
   [UploadPurpose.HERO]: "hero",

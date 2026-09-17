@@ -86,6 +86,7 @@ Every surface should say "one pair of hands made this". Concretely:
 | --------------------- | ----- | -------------------- | ------------------------------------------ |
 | product               | 1:1   | 1000 × 1000          | cards, gallery, cart lines                 |
 | category              | 1:1   | 600 × 600            | category tiles                             |
+| glaze                 | 1:1   | 600 × 600            | glaze swatches                             |
 | collection            | 3:2   | 1200 × 800           | collection rows                            |
 | event                 | 4:3   | 1200 × 900           | event cards and detail                     |
 | hero, about, workshop | 16:9  | 1600 × 900           | home hero, about landscape, workshop intro |
