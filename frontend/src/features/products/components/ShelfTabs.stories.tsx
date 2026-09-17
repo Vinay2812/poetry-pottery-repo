@@ -17,11 +17,11 @@ const meta = {
   ],
   args: {
     shelfHref: "/products",
-    archiveHref: "/products?view=archive",
+    archiveHref: "/archive",
     shelfCount: 9,
     archiveCount: 15,
     isArchive: false,
-    onSelect: fn(),
+    onSelectShelf: fn(),
   },
 } satisfies Meta<typeof ShelfTabs>;
 

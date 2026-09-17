@@ -9,7 +9,7 @@ export interface ShelfTabsProps {
   shelfCount: number;
   archiveCount: number;
   isArchive: boolean;
-  onSelect?: (isArchive: boolean) => void;
+  onSelectShelf?: () => void;
 }
 
 // Plain left clicks are handled in the app so the switch is instant; modified clicks stay real links.
@@ -33,12 +33,14 @@ export function ShelfTabs({
   shelfCount,
   archiveCount,
   isArchive,
-  onSelect,
+  onSelectShelf,
 }: ShelfTabsProps) {
-  const handleClick = (event: React.MouseEvent, value: boolean) => {
-    if (!onSelect || !isPlainClick(event)) return;
+  // Only the shelf tab is a filter change this page can make itself; the archive
+  // tab is a route, so its click is left alone to navigate.
+  const handleShelfClick = (event: React.MouseEvent) => {
+    if (!onSelectShelf || !isPlainClick(event)) return;
     event.preventDefault();
-    onSelect(value);
+    onSelectShelf();
   };
 
   return (
@@ -47,7 +49,7 @@ export function ShelfTabs({
         <li>
           <Link
             href={shelfHref}
-            onClick={(event) => handleClick(event, false)}
+            onClick={handleShelfClick}
             aria-current={isArchive ? undefined : "page"}
             className={cn(
               TAB_CLASS,
@@ -64,7 +66,6 @@ export function ShelfTabs({
         <li>
           <Link
             href={archiveHref}
-            onClick={(event) => handleClick(event, true)}
             aria-current={isArchive ? "page" : undefined}
             className={cn(
               TAB_CLASS,

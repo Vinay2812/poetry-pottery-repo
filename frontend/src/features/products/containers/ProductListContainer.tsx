@@ -171,10 +171,8 @@ export function ProductListContainer({
     [dispatch],
   );
   // The archive tab is a real link to its own gallery, so only the shelf tab is intercepted.
-  const handleSelectView = useCallback(
-    (isArchive: boolean) => {
-      if (!isArchive) dispatch({ type: "view", isArchive });
-    },
+  const handleSelectShelf = useCallback(
+    () => dispatch({ type: "view", isArchive: false }),
     [dispatch],
   );
   const handlePriceCommit = useCallback(
@@ -314,7 +312,7 @@ export function ProductListContainer({
           shelfCount={facets?.active_count ?? 0}
           archiveCount={facets?.archive_count ?? 0}
           isArchive={filters.isArchive}
-          onSelect={handleSelectView}
+          onSelectShelf={handleSelectShelf}
         />
       )}
 
