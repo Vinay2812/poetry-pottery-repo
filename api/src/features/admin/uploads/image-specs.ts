@@ -3,7 +3,10 @@ import { ImageSpec, UploadPurpose } from "./uploads.type";
 
 export const RATIO_TOLERANCE = 0.02;
 export const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
-export const ALLOWED_FORMATS = ["jpeg", "png", "webp", "avif"] as const;
+// sharp reads an AVIF through the heif loader, so the format it reports is "heif".
+export const ALLOWED_FORMATS = ["jpeg", "png", "webp", "heif"] as const;
+// The other heif compressions are HEIC, which browsers outside Safari will not render.
+export const AVIF_COMPRESSION = "av1";
 export const ALLOWED_CONTENT_TYPES = [
   "image/jpeg",
   "image/png",
@@ -138,7 +141,15 @@ export interface ImageMeta {
   width: number | undefined;
   height: number | undefined;
   format: string | undefined;
+  compression?: string | undefined;
   bytes: number;
+}
+
+function isAllowedFormat(meta: ImageMeta): boolean {
+  if (!meta.format || !ALLOWED_FORMATS.some((f) => f === meta.format)) {
+    return false;
+  }
+  return meta.format !== "heif" || meta.compression === AVIF_COMPRESSION;
 }
 
 // EXIF orientations 5 to 8 store the photo a quarter turn from how it is shown, so the
@@ -160,7 +171,7 @@ export function checkImage(
   meta: ImageMeta,
 ): string | null {
   const spec = IMAGE_SPECS[purpose];
-  if (!meta.format || !ALLOWED_FORMATS.some((f) => f === meta.format)) {
+  if (!isAllowedFormat(meta)) {
     return "Images must be JPEG, PNG, WebP or AVIF";
   }
   if (meta.bytes <= 0 || meta.bytes > spec.max_bytes) {

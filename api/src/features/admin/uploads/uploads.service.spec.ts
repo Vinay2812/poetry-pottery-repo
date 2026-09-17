@@ -22,6 +22,19 @@ function png(width: number, height: number): Promise<Buffer> {
     .toBuffer();
 }
 
+function avif(width: number, height: number): Promise<Buffer> {
+  return sharp({
+    create: {
+      width,
+      height,
+      channels: 3,
+      background: { r: 200, g: 190, b: 175 },
+    },
+  })
+    .avif({ quality: 40 })
+    .toBuffer();
+}
+
 // A phone photo: the pixels sit one way round and the EXIF tag says to show them the other.
 function turnedJpeg(width: number, height: number): Promise<Buffer> {
   return sharp({
@@ -133,6 +146,30 @@ describe("checkImage", () => {
     });
   });
 
+  it("accepts an avif, which sharp reports as heif compressed with av1", () => {
+    expect(
+      checkImage(UploadPurpose.HERO, {
+        width: 1600,
+        height: 900,
+        format: "heif",
+        compression: "av1",
+        bytes: 1000,
+      }),
+    ).toBeNull();
+  });
+
+  it("rejects a heic, which is heif without the av1 compression", () => {
+    expect(
+      checkImage(UploadPurpose.HERO, {
+        width: 1600,
+        height: 900,
+        format: "heif",
+        compression: "hevc",
+        bytes: 1000,
+      }),
+    ).toMatch(/JPEG, PNG, WebP or AVIF/);
+  });
+
   it("rejects an unsupported format and an oversized file", () => {
     expect(
       checkImage(UploadPurpose.HERO, {
@@ -208,6 +245,19 @@ describe("UploadsService", () => {
     expect(result.width).toBe(1000);
     expect(prismaMock.confirmedUpload.upsert).toHaveBeenCalled();
     expect(storageMock.deleteObject).not.toHaveBeenCalled();
+  });
+
+  it("confirms an avif instead of deleting it", async () => {
+    storageMock.readObject.mockResolvedValue(await avif(1000, 1000));
+
+    const result = await service.confirm(
+      "products/one.avif",
+      UploadPurpose.PRODUCT,
+    );
+
+    expect(result.width).toBe(1000);
+    expect(storageMock.deleteObject).not.toHaveBeenCalled();
+    expect(prismaMock.confirmedUpload.upsert).toHaveBeenCalled();
   });
 
   it("measures a rotated phone photo the way a browser will show it", async () => {

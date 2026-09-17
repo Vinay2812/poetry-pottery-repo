@@ -64,6 +64,7 @@ export class UploadsService {
           width: size.width,
           height: size.height,
           format: meta.format,
+          compression: meta.compression,
           bytes: body.byteLength,
         })
       : "That file does not read as an image";
