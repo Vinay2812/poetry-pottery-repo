@@ -31,6 +31,8 @@ export interface RegistrationTableRow {
 export interface EventRegistrationsTableProps {
   rows: RegistrationTableRow[];
   isBusy: boolean;
+  // A cancelled event has no live seats left, so nothing on a row can move.
+  isLocked: boolean;
   busyId: string | null;
   onAction: (id: string, status: RegistrationStatus) => void;
 }
@@ -38,6 +40,7 @@ export interface EventRegistrationsTableProps {
 export function EventRegistrationsTable({
   rows,
   isBusy,
+  isLocked,
   busyId,
   onAction,
 }: EventRegistrationsTableProps) {
@@ -92,7 +95,7 @@ export function EventRegistrationsTable({
                     type="button"
                     size="sm"
                     variant="secondary"
-                    disabled={busyId !== null}
+                    disabled={isLocked || busyId !== null}
                     onClick={() => onAction(row.id, status)}
                   >
                     {registrationActionLabel(status)}

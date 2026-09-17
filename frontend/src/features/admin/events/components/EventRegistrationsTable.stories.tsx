@@ -54,6 +54,7 @@ const meta = {
   args: {
     rows: ROWS,
     isBusy: false,
+    isLocked: false,
     busyId: null,
     onAction: () => {},
   },
@@ -68,6 +69,9 @@ export const Default: Story = {};
 export const Working: Story = { args: { busyId: "reg_a1", isBusy: true } };
 
 export const Empty: Story = { args: { rows: [] } };
+
+// The event was called off: the rows stay readable but nothing on them can move.
+export const EventCancelled: Story = { args: { isLocked: true } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

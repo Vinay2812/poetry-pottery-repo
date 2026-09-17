@@ -73,10 +73,12 @@ function applyStatusPatch(
 
 export interface EventRegistrationsContainerProps {
   eventId: number;
+  isEventCancelled: boolean;
 }
 
 export function EventRegistrationsContainer({
   eventId,
+  isEventCancelled,
 }: EventRegistrationsContainerProps) {
   const { values, isPending, patch } = useAdminQueryState();
   const search = values.reg_search ?? "";
@@ -206,6 +208,7 @@ export function EventRegistrationsContainer({
       <EventRegistrationsTable
         rows={optimisticRows}
         isBusy={isPending || loading}
+        isLocked={isEventCancelled}
         busyId={busyId}
         onAction={handleAction}
       />

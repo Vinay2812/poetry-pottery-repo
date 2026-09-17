@@ -71,8 +71,11 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
           } else if (action === "complete") {
             await completeEvent({ variables: { id: eventId } });
           } else {
+            // Cancelling closes every live registration, so the table below is read back too.
             await cancelEvent({
               variables: { id: eventId, reason: note || null },
+              refetchQueries: ["AdminEventRegistrations"],
+              awaitRefetchQueries: true,
             });
           }
           await refetch();
@@ -154,7 +157,10 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
         defaultValues={toEventFormValues(event)}
         submitLabel="Save changes"
       />
-      <EventRegistrationsContainer eventId={event.id} />
+      <EventRegistrationsContainer
+        eventId={event.id}
+        isEventCancelled={status === EventStatus.Cancelled}
+      />
       <AdminReasonDialog
         isOpen={pendingAction !== null}
         title="Cancel this event?"
