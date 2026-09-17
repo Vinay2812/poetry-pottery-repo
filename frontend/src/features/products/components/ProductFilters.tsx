@@ -118,6 +118,8 @@ export function ProductFilters({
   const hasPriceRange = priceCeiling > priceFloor;
   return (
     <div className="flex flex-col gap-8">
+      {/* The group titles are h3s; this is the h2 they hang from. */}
+      <h2 className="sr-only">Filters</h2>
       <CheckGroup
         title="Category"
         idPrefix="category"
