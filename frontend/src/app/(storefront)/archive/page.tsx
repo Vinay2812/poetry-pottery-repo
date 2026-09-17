@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PageShell } from "@/components/layout/PageShell";
 import { Reveal } from "@/components/motion/Reveal";
 import { getArchiveWall } from "@/lib/data/catalog";
 import { pluralize } from "@/lib/format";
@@ -17,7 +18,7 @@ export default async function ArchivePage() {
   const wall = await getArchiveWall();
 
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-8 md:gap-16 md:px-8 md:py-12">
+    <PageShell className="flex flex-col gap-12 py-8 md:gap-16 md:py-12">
       <Reveal>
         <header className="flex flex-col gap-3">
           <h1 className="font-heading text-3xl md:text-5xl">The archive</h1>
@@ -36,6 +37,6 @@ export default async function ArchivePage() {
       </Reveal>
 
       <ArchiveWallContainer pieces={wall.items} />
-    </div>
+    </PageShell>
   );
 }
