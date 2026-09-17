@@ -23,6 +23,8 @@ const prismaMock = {
   eventRegistration: { count: vi.fn() },
   contactMessage: { count: vi.fn() },
   product: { findMany: vi.fn() },
+  commissionRequest: { count: vi.fn() },
+  studioVisit: { count: vi.fn() },
 };
 
 function stubEmpty(): void {
@@ -37,6 +39,8 @@ function stubEmpty(): void {
   prismaMock.eventRegistration.count.mockResolvedValue(0);
   prismaMock.contactMessage.count.mockResolvedValue(0);
   prismaMock.product.findMany.mockResolvedValue([]);
+  prismaMock.commissionRequest.count.mockResolvedValue(0);
+  prismaMock.studioVisit.count.mockResolvedValue(0);
 }
 
 describe("fillStatusCounts", () => {
@@ -173,6 +177,21 @@ describe("AdminDashboardService", () => {
       id: "WS-ABC",
       participants: 3,
       customer: { id: 7 },
+    });
+  });
+
+  it("counts the briefs nobody has read and the windows still ahead", async () => {
+    stubEmpty();
+    prismaMock.commissionRequest.count.mockResolvedValue(3);
+    prismaMock.studioVisit.count.mockResolvedValue(2);
+    const now = new Date("2026-09-17T00:00:00.000Z");
+
+    const summary = await service.summary(now);
+
+    expect(summary.new_commission_requests).toBe(3);
+    expect(summary.upcoming_visits).toBe(2);
+    expect(prismaMock.studioVisit.count).toHaveBeenCalledWith({
+      where: { starts_at: { gte: now }, cancelled_at: null },
     });
   });
 });

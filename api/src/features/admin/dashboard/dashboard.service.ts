@@ -1,5 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { OrderStatus, RegistrationStatus } from "@prisma/client";
+import {
+  CommissionStatus,
+  OrderStatus,
+  RegistrationStatus,
+} from "@prisma/client";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { toUserRef } from "../admin.type";
@@ -50,6 +54,8 @@ export class AdminDashboardService {
       pendingBookings,
       pendingRegistrations,
       unreadMessages,
+      newCommissions,
+      upcomingVisits,
       lowStock,
       recentOrders,
       recentBookings,
@@ -70,6 +76,12 @@ export class AdminDashboardService {
         where: { status: RegistrationStatus.PENDING },
       }),
       this.prisma.contactMessage.count({ where: { is_read: false } }),
+      this.prisma.commissionRequest.count({
+        where: { status: CommissionStatus.NEW },
+      }),
+      this.prisma.studioVisit.count({
+        where: { starts_at: { gte: now }, cancelled_at: null },
+      }),
       this.prisma.product.findMany({
         where: {
           is_active: true,
@@ -120,6 +132,8 @@ export class AdminDashboardService {
       pending_bookings: pendingBookings,
       pending_registrations: pendingRegistrations,
       unread_messages: unreadMessages,
+      new_commission_requests: newCommissions,
+      upcoming_visits: upcomingVisits,
       low_stock: lowStock,
       recent_orders: recentOrders.map((order) => ({
         id: order.id,

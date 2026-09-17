@@ -129,6 +129,7 @@ type AdminCouponsResult {
 
 type AdminDashboard {
   low_stock: [AdminLowStockPiece!]!
+  new_commission_requests: Int!
   orders_by_status: [AdminOrderStatusCount!]!
   orders_last_30_days: Int!
   pending_bookings: Int!
@@ -137,6 +138,7 @@ type AdminDashboard {
   recent_orders: [AdminRecentOrder!]!
   revenue_last_30_days: Int!
   unread_messages: Int!
+  upcoming_visits: Int!
 }
 
 input AdminEventInput {

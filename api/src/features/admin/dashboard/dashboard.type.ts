@@ -96,6 +96,14 @@ export class AdminDashboard {
   @Field(() => Int)
   unread_messages!: number;
 
+  // Briefs nobody has looked at yet.
+  @Field(() => Int)
+  new_commission_requests!: number;
+
+  // Live windows still ahead of now.
+  @Field(() => Int)
+  upcoming_visits!: number;
+
   @Field(() => [AdminLowStockPiece])
   low_stock!: AdminLowStockPiece[];
 
