@@ -57,6 +57,8 @@ export const clerkAppearance: ClerkAppearance = {
     formButtonReset: "rounded-none text-ink hover:bg-ash",
     formResendCodeLink: "!text-sage",
     footer: "rounded-none border-t border-ash bg-clay-white shadow-none",
+    // The "Secured by" row is the only thing left that names another product.
+    footerItem: "hidden",
     footerAction: "bg-transparent",
     footerActionText: "text-[13px] text-smoke",
     footerActionLink: "text-[13px] !text-sage",
