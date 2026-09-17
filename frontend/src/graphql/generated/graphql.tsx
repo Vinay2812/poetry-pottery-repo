@@ -2726,6 +2726,22 @@ export type UnsubscribeSubscriberMutationVariables = Exact<{
 
 export type UnsubscribeSubscriberMutation = { unsubscribeSubscriber: boolean };
 
+export type AdminBatchNotificationFieldsFragment = { id: number, email: string, product_id: number, product_name: string, product_slug: string, created_at: string, notified_at: string | null };
+
+export type AdminBatchNotificationsQueryVariables = Exact<{
+  filter?: AdminBatchNotificationsFilterInput | null | undefined;
+}>;
+
+
+export type AdminBatchNotificationsQuery = { adminBatchNotifications: { items: Array<{ id: number, email: string, product_id: number, product_name: string, product_slug: string, created_at: string, notified_at: string | null }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type ExportBatchNotificationsQueryVariables = Exact<{
+  filter?: AdminBatchNotificationsFilterInput | null | undefined;
+}>;
+
+
+export type ExportBatchNotificationsQuery = { exportBatchNotifications: string };
+
 export type AdminOrderRowFragment = { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, total: number, item_count: number, created_at: string, paid_at: string | null, coupon_code: string | null } };
 
 export type AdminOrderDetailFragment = { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, gift_note: string | null, hide_prices: boolean, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, care_notes: Array<string>, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }>, studio_notes: Array<{ id: number, body: string, image_url: string | null, created_at: string }> } };
@@ -3720,6 +3736,17 @@ export const AdminSubscriberFieldsFragmentDoc = gql`
   is_active
   created_at
   unsubscribed_at
+}
+    `;
+export const AdminBatchNotificationFieldsFragmentDoc = gql`
+    fragment AdminBatchNotificationFields on AdminBatchNotification {
+  id
+  email
+  product_id
+  product_name
+  product_slug
+  created_at
+  notified_at
 }
     `;
 export const AdminOrderRowFragmentDoc = gql`
@@ -5827,6 +5854,80 @@ export function useUnsubscribeSubscriberMutation(baseOptions?: ApolloReactHooks.
       }
 export type UnsubscribeSubscriberMutationHookResult = ReturnType<typeof useUnsubscribeSubscriberMutation>;
 export type UnsubscribeSubscriberMutationResult = ApolloReactCommon.MutationResult<UnsubscribeSubscriberMutation>;
+export const AdminBatchNotificationsDocument = gql`
+    query AdminBatchNotifications($filter: AdminBatchNotificationsFilterInput) {
+  adminBatchNotifications(filter: $filter) {
+    items {
+      ...AdminBatchNotificationFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminBatchNotificationFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminBatchNotificationsQuery__
+ *
+ * To run a query within a React component, call `useAdminBatchNotificationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminBatchNotificationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminBatchNotificationsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminBatchNotificationsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminBatchNotificationsQuery, AdminBatchNotificationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminBatchNotificationsQuery, AdminBatchNotificationsQueryVariables>(AdminBatchNotificationsDocument, options);
+      }
+export function useAdminBatchNotificationsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminBatchNotificationsQuery, AdminBatchNotificationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminBatchNotificationsQuery, AdminBatchNotificationsQueryVariables>(AdminBatchNotificationsDocument, options);
+        }
+export type AdminBatchNotificationsQueryHookResult = ReturnType<typeof useAdminBatchNotificationsQuery>;
+export type AdminBatchNotificationsLazyQueryHookResult = ReturnType<typeof useAdminBatchNotificationsLazyQuery>;
+export type AdminBatchNotificationsQueryResult = ApolloReactCommon.QueryResult<AdminBatchNotificationsQuery, AdminBatchNotificationsQueryVariables>;
+export const ExportBatchNotificationsDocument = gql`
+    query ExportBatchNotifications($filter: AdminBatchNotificationsFilterInput) {
+  exportBatchNotifications(filter: $filter)
+}
+    `;
+
+/**
+ * __useExportBatchNotificationsQuery__
+ *
+ * To run a query within a React component, call `useExportBatchNotificationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useExportBatchNotificationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useExportBatchNotificationsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useExportBatchNotificationsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<ExportBatchNotificationsQuery, ExportBatchNotificationsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<ExportBatchNotificationsQuery, ExportBatchNotificationsQueryVariables>(ExportBatchNotificationsDocument, options);
+      }
+export function useExportBatchNotificationsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<ExportBatchNotificationsQuery, ExportBatchNotificationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<ExportBatchNotificationsQuery, ExportBatchNotificationsQueryVariables>(ExportBatchNotificationsDocument, options);
+        }
+export type ExportBatchNotificationsQueryHookResult = ReturnType<typeof useExportBatchNotificationsQuery>;
+export type ExportBatchNotificationsLazyQueryHookResult = ReturnType<typeof useExportBatchNotificationsLazyQuery>;
+export type ExportBatchNotificationsQueryResult = ApolloReactCommon.QueryResult<ExportBatchNotificationsQuery, ExportBatchNotificationsQueryVariables>;
 export const AdminOrdersDocument = gql`
     query AdminOrders($filter: AdminOrdersFilterInput) {
   adminOrders(filter: $filter) {

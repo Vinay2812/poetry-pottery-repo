@@ -1,0 +1,24 @@
+fragment AdminBatchNotificationFields on AdminBatchNotification {
+  id
+  email
+  product_id
+  product_name
+  product_slug
+  created_at
+  notified_at
+}
+
+query AdminBatchNotifications($filter: AdminBatchNotificationsFilterInput) {
+  adminBatchNotifications(filter: $filter) {
+    items {
+      ...AdminBatchNotificationFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+query ExportBatchNotifications($filter: AdminBatchNotificationsFilterInput) {
+  exportBatchNotifications(filter: $filter)
+}
