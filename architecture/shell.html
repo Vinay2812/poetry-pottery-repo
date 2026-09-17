@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Storefront shell and navigation &middot; Poetry &amp; Pottery architecture</title>
+<meta name="description" content="Storefront shell and navigation: diagram, algorithm, call trace, edge cases and tests.">
+<script>(function(){try{var t=localStorage.getItem('arch-theme');if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+<style>
+:root{
+  --bg:#f7f4ef; --fg:#1f1d1a; --muted:#6f6a62; --line:#e5e0d8; --card:#fffdfa;
+  --accent:#41603f; --code-bg:#efece5; --box-fg:#1f1d1a;
+  --c-client:#e9edf3; --c-client-s:#5b6b80;
+  --c-next:#e7efe8; --c-next-s:#4f6f52;
+  --c-api:#f2efe8; --c-api-s:#8b7355;
+  --c-svc:#faf6ef; --c-svc-s:#b08a5a;
+  --c-db:#eae6f2; --c-db-s:#6b5b8b;
+  --c-cache:#f7ece6; --c-cache-s:#c4785a;
+  --c-queue:#f0ece2; --c-queue-s:#8a7a4f;
+  --c-ext:#eceae6; --c-ext-s:#6f6a62;
+  --lane:#f2efe8;
+}
+:root[data-theme=dark]{
+  --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+  --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+  --c-client:#232b36; --c-client-s:#8ea4bf;
+  --c-next:#22302a; --c-next-s:#8fb193;
+  --c-api:#2c2a25; --c-api-s:#c2a785;
+  --c-svc:#332e26; --c-svc-s:#d3ab74;
+  --c-db:#292536; --c-db-s:#a596c9;
+  --c-cache:#33261f; --c-cache-s:#e0a084;
+  --c-queue:#2e2a20; --c-queue-s:#c6b277;
+  --c-ext:#2a2826; --c-ext-s:#a9a49b;
+  --lane:#22201e;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme]){
+    --bg:#1a1917; --fg:#f2efe8; --muted:#a9a49b; --line:#33302b; --card:#232120;
+    --accent:#8fb193; --code-bg:#2b2926; --box-fg:#f2efe8;
+    --c-client:#232b36; --c-client-s:#8ea4bf;
+    --c-next:#22302a; --c-next-s:#8fb193;
+    --c-api:#2c2a25; --c-api-s:#c2a785;
+    --c-svc:#332e26; --c-svc-s:#d3ab74;
+    --c-db:#292536; --c-db-s:#a596c9;
+    --c-cache:#33261f; --c-cache-s:#e0a084;
+    --c-queue:#2e2a20; --c-queue-s:#c6b277;
+    --c-ext:#2a2826; --c-ext-s:#a9a49b;
+    --lane:#22201e;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--fg);
+  font:16px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+code,pre,.ref{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:8px;top:8px;background:var(--card);padding:8px;z-index:9;border:1px solid var(--fg)}
+header.top{border-bottom:1px solid var(--line); background:var(--card); position:sticky; top:0; z-index:5}
+.bar{max-width:1000px; margin:0 auto; padding:10px 20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+.bar .home{font-weight:600; text-decoration:none; color:var(--fg)}
+.bar a.home:hover{color:var(--accent)}
+.bar .spacer{flex:1}
+.pager{display:flex; gap:10px; align-items:center; font-size:13px; flex-wrap:wrap}
+.pager a{color:var(--muted); text-decoration:none; border-bottom:1px solid transparent}
+.pager a:hover{color:var(--accent); border-bottom-color:var(--accent)}
+.pager span.off{color:var(--line)}
+button#theme{font:inherit; font-size:13px; padding:4px 10px; cursor:pointer; background:transparent; color:var(--muted); border:1px solid var(--line)}
+button#theme:hover{color:var(--fg); border-color:var(--muted)}
+main{max-width:1000px; margin:0 auto; padding:28px 20px 64px}
+h1{font-size:30px; line-height:1.2; margin:8px 0 4px; font-weight:600; letter-spacing:-.01em}
+.kicker{font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:0}
+h2{font-size:18px; margin:40px 0 10px; padding-bottom:6px; border-bottom:1px solid var(--line); font-weight:600}
+h3{font-size:15px; margin:22px 0 6px; font-weight:600}
+p{margin:10px 0}
+.lede{font-size:17px}
+.note{color:var(--muted); font-size:14px}
+ul,ol{margin:10px 0; padding-left:22px}
+li{margin:4px 0}
+a{color:var(--accent)}
+code{background:var(--code-bg); padding:1px 5px; font-size:13px; overflow-wrap:anywhere}
+.scroll{overflow-x:auto; margin:14px 0}
+table{border-collapse:collapse; width:100%; font-size:14px}
+caption{text-align:left; color:var(--muted); font-size:13px; padding-bottom:6px}
+th,td{border:1px solid var(--line); padding:6px 9px; text-align:left; vertical-align:top}
+th{background:var(--lane); font-weight:600}
+ol.trace{list-style:none; padding:0; counter-reset:tr; margin:14px 0}
+ol.trace li{counter-increment:tr; display:grid; grid-template-columns:24px minmax(0,1fr); gap:4px 10px; padding:8px 0; border-top:1px solid var(--line); margin:0}
+ol.trace li::before{content:counter(tr); color:var(--muted); font-size:12px; font-family:ui-monospace,monospace; padding-top:2px}
+ol.trace .ref{grid-column:2; font-size:13px; color:var(--fg); background:var(--code-bg); padding:2px 6px; justify-self:start; max-width:100%; overflow-wrap:anywhere}
+ol.trace .desc{grid-column:2; font-size:14px}
+figure.diagram{margin:16px 0 8px; padding:0}
+figure.diagram svg{width:100%; height:auto; display:block; background:var(--card); border:1px solid var(--line)}
+figcaption{color:var(--muted); font-size:13px; margin-top:8px}
+svg text{font:12px ui-sans-serif,system-ui,sans-serif; fill:var(--box-fg)}
+svg text.b{font-weight:600}
+svg .box rect{stroke-width:1.25}
+svg .t-client rect{fill:var(--c-client); stroke:var(--c-client-s)}
+svg .t-next rect{fill:var(--c-next); stroke:var(--c-next-s)}
+svg .t-api rect{fill:var(--c-api); stroke:var(--c-api-s)}
+svg .t-svc rect{fill:var(--c-svc); stroke:var(--c-svc-s)}
+svg .t-db rect{fill:var(--c-db); stroke:var(--c-db-s)}
+svg .t-cache rect{fill:var(--c-cache); stroke:var(--c-cache-s)}
+svg .t-queue rect{fill:var(--c-queue); stroke:var(--c-queue-s)}
+svg .t-ext rect{fill:var(--c-ext); stroke:var(--c-ext-s)}
+svg .lane rect{fill:var(--lane); stroke:var(--line); stroke-dasharray:3 3}
+svg .lane text{fill:var(--muted); font-size:11px; letter-spacing:.08em}
+svg .edge{fill:none; stroke:var(--muted); stroke-width:1.25}
+svg .edge.dashed{stroke-dasharray:5 4}
+svg marker path{fill:var(--muted)}
+svg text.edge-label{fill:var(--muted); font-size:11px}
+.cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; margin:16px 0}
+.card{border:1px solid var(--line); background:var(--card); padding:12px 14px}
+.card h3{margin:0 0 4px; font-size:14px}
+.card h3 a{text-decoration:none}
+.card p{margin:0; font-size:13px; color:var(--muted)}
+footer.bottom{border-top:1px solid var(--line); margin-top:48px; padding-top:14px; font-size:13px; color:var(--muted)}
+footer.bottom .pager{justify-content:space-between}
+@media (max-width:640px){
+  h1{font-size:25px}
+  main{padding:20px 14px 48px}
+  ol.trace li{grid-template-columns:20px minmax(0,1fr)}
+}
+@media print{
+  header.top{position:static}
+  button#theme,.skip{display:none}
+  body{background:#fff; color:#000}
+  main{max-width:none}
+  figure.diagram svg{border:1px solid #999}
+  h2{page-break-after:avoid}
+  figure.diagram,ol.trace li,table{page-break-inside:avoid}
+  a{color:#000; text-decoration:underline}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top">
+<div class="bar">
+<a class="home" href="index.html">Poetry &amp; Pottery architecture</a>
+<span class="spacer"></span>
+<nav class="pager" aria-label="Page navigation"><a rel="prev" href="admin.html">&larr; Admin API and console</a><a rel="next" href="frontend-data.html">Frontend data layer &rarr;</a></nav>
+<button id="theme" type="button">Dark mode</button>
+</div>
+</header>
+<main id="main">
+<p class="kicker">Page 19 of 24</p>
+<h1>Storefront shell and navigation</h1>
+<p class="lede">Every storefront page renders inside one server layout that fetches the site settings once, mounts the cart and wishlist providers above the router, and hands the rest of the tree a focusable <code>main</code>. The header is the only stateful part of that shell: it reads a badge-sized cart query rather than the whole cart, announces a changed count through a polite live region, collapses to a single back link on cart and checkout, and opens the search panel and the mobile sheet from the same container. Underneath, the RSC Apollo client only calls Clerk when the proxy actually stamped the request, and a Clerk account change resets the whole store rather than evicting fields by hand.</p>
+<section id="diagram"><h2>Architecture</h2><figure class="diagram"><svg viewBox="0 0 920 520" role="img" aria-label="Storefront shell: root layout, providers, the storefront layout with header, main and footer, and the queries the header reads" preserveAspectRatio="xMidYMid meet"><defs><marker id="arrowhead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z"/></marker></defs><g class="lane"><rect x="10" y="10" width="300" height="500"/><text x="18" y="26">app/layout.tsx</text></g><g class="lane"><rect x="325" y="10" width="330" height="500"/><text x="333" y="26">app/(storefront)/layout.tsx</text></g><g class="lane"><rect x="670" y="10" width="240" height="500"/><text x="678" y="26">data it reads</text></g><g class="box t-ext"><rect x="28" y="44" width="264" height="44"/><text x="160" y="63" text-anchor="middle" class="b">ClerkProvider</text><text x="160" y="77" text-anchor="middle">appearance and localisation</text></g><g class="box t-client"><rect x="28" y="108" width="264" height="58"/><text x="160" y="127" text-anchor="middle" class="b">ApolloProvider</text><text x="160" y="141" text-anchor="middle">token in a ref, client built once</text><text x="160" y="155" text-anchor="middle">ResetStoreOnUserChange</text></g><g class="box t-client"><rect x="28" y="186" width="264" height="44"/><text x="160" y="205" text-anchor="middle" class="b">Toaster (sonner)</text><text x="160" y="219" text-anchor="middle">bottom right, named live region</text></g><g class="box t-client"><rect x="28" y="250" width="264" height="44"/><text x="160" y="269" text-anchor="middle" class="b">WebVitalsReporter</text><text x="160" y="283" text-anchor="middle">outside the Apollo provider</text></g><g class="box t-next"><rect x="28" y="330" width="264" height="58"/><text x="160" y="349" text-anchor="middle" class="b">proxy.ts</text><text x="160" y="363" text-anchor="middle">clerkMiddleware() only</text><text x="160" y="377" text-anchor="middle">stamps x-clerk-auth-status</text></g><g class="box t-next"><rect x="28" y="408" width="264" height="58"/><text x="160" y="427" text-anchor="middle" class="b">lib/apollo/rsc-client.ts</text><text x="160" y="441" text-anchor="middle">calls Clerk only when stamped</text><text x="160" y="455" text-anchor="middle">forwards the visitor IP</text></g><g class="box t-client"><rect x="343" y="44" width="294" height="44"/><text x="490" y="63" text-anchor="middle" class="b">CartProvider</text><text x="490" y="77" text-anchor="middle">badge count, add to cart</text></g><g class="box t-client"><rect x="343" y="102" width="294" height="44"/><text x="490" y="121" text-anchor="middle" class="b">WishlistProvider</text><text x="490" y="135" text-anchor="middle">optimistic id set, adoptIds</text></g><g class="box t-next"><rect x="343" y="160" width="294" height="34"/><text x="490" y="181" text-anchor="middle">SkipLink targetId=&quot;main&quot;</text></g><g class="box t-next"><rect x="343" y="204" width="294" height="34"/><text x="490" y="225" text-anchor="middle">AnnouncementBar, when set</text></g><g class="box t-client"><rect x="343" y="248" width="294" height="72"/><text x="490" y="267" text-anchor="middle" class="b">SiteHeaderContainer</text><text x="490" y="281" text-anchor="middle">focused variant on cart and checkout</text><text x="490" y="295" text-anchor="middle">search panel, mobile sheet</text><text x="490" y="309" text-anchor="middle">polite count announcer</text></g><g class="box t-next"><rect x="343" y="330" width="294" height="44"/><text x="490" y="349" text-anchor="middle" class="b">main id=&quot;main&quot; tabIndex=-1</text><text x="490" y="363" text-anchor="middle">loading.tsx, error.tsx, not-found.tsx</text></g><g class="box t-next"><rect x="343" y="384" width="294" height="34"/><text x="490" y="405" text-anchor="middle">SiteFooter with the newsletter form</text></g><g class="box t-next"><rect x="343" y="428" width="294" height="34"/><text x="490" y="449" text-anchor="middle">MobileNavContainer, SignInPromptContainer</text></g><g class="box t-api"><rect x="688" y="44" width="204" height="44"/><text x="790" y="63" text-anchor="middle" class="b">siteSettings</text><text x="790" y="77" text-anchor="middle">server, once per render</text></g><g class="box t-api"><rect x="688" y="108" width="204" height="44"/><text x="790" y="127" text-anchor="middle" class="b">cartCount</text><text x="790" y="141" text-anchor="middle">one scalar, every page</text></g><g class="box t-api"><rect x="688" y="172" width="204" height="44"/><text x="790" y="191" text-anchor="middle" class="b">wishlistIds</text><text x="790" y="205" text-anchor="middle">id array, every heart</text></g><g class="box t-api"><rect x="688" y="248" width="204" height="44"/><text x="790" y="267" text-anchor="middle" class="b">suggest(q)</text><text x="790" y="281" text-anchor="middle">typeahead, Redis cached</text></g><g class="box t-cache"><rect x="688" y="330" width="204" height="44"/><text x="790" y="349" text-anchor="middle" class="b">localStorage</text><text x="790" y="363" text-anchor="middle">poetry.recent-searches</text></g><path class="edge" d="M 160 88 L 160 108" marker-end="url(#arrowhead)"/><path class="edge" d="M 292 137 L 343 66" marker-end="url(#arrowhead)"/><path class="edge" d="M 160 466 Q 200 480 330 470" marker-end="url(#arrowhead)"/><path class="edge" d="M 490 88 L 490 102" marker-end="url(#arrowhead)"/><path class="edge" d="M 490 146 L 490 160" marker-end="url(#arrowhead)"/><path class="edge" d="M 490 320 L 490 330" marker-end="url(#arrowhead)"/><path class="edge" d="M 490 374 L 490 384" marker-end="url(#arrowhead)"/><path class="edge dashed" d="M 637 180 L 688 66" marker-end="url(#arrowhead)"/><path class="edge" d="M 637 270 L 688 130" marker-end="url(#arrowhead)"/><path class="edge" d="M 637 278 L 688 194" marker-end="url(#arrowhead)"/><path class="edge" d="M 637 290 L 688 270" marker-end="url(#arrowhead)"/><path class="edge" d="M 637 300 L 688 348" marker-end="url(#arrowhead)"/></svg><figcaption>The providers sit above the router, so the badge count and the wishlist id set survive a navigation. The header is the only part of the shell that holds state, and everything it reads is deliberately small: a scalar, an id array and a typeahead.</figcaption></figure></section>
+<section id="how"><h2>How it works</h2>
+<h3>The two layouts</h3><p><code>frontend/src/app/layout.tsx</code> is the only place <code>globals.css</code> is imported. It wraps the tree in <code>ClerkProvider</code> (with <code>clerkAppearance</code> and <code>clerkLocalization</code> from <code>components/providers/clerk-appearance.tsx</code>), then <code>ApolloProvider</code>, and renders the <code>Toaster</code> as a sibling <strong>after</strong> <code>children</code> but still inside the Apollo provider, so a toast raised on one route survives the navigation to the next. <code>WebVitalsReporter</code> sits outside Apollo entirely. Static <code>metadata</code> gives the title template <code>%s &middot; Poetry &amp; Pottery</code>; <code>viewport</code> sets <code>themeColor: &quot;#f7f4ef&quot;</code> and <code>viewportFit: &quot;cover&quot;</code> for the safe-area padding the mobile nav relies on.</p>
+<p><code>app/(storefront)/layout.tsx</code> is a server component. It awaits <code>getSiteSettings()</code> once, derives <code>whatsappUrl</code> through <code>buildWhatsAppUrl(number, &quot;Hi, I have a question about Poetry &amp; Pottery.&quot;)</code>, and then mounts, in order: <code>CartProvider</code>, <code>WishlistProvider</code>, the skip link, the announcement bar when <code>announcement_text</code> is set, <code>SiteHeaderContainer</code>, <code>main</code>, <code>SiteFooter</code>, <code>MobileNavContainer</code> and <code>SignInPromptContainer</code>. Both providers are above the router, which is why the badge number does not refetch on every navigation.</p>
+<h3>PageShell</h3><p><code>components/layout/PageShell.tsx</code> is the width primitive rather than a chrome wrapper: it never renders the header or the footer. Props are <code>children</code>, <code>className</code>, <code>column</code> (<code>&quot;full&quot;</code>, <code>&quot;wide&quot;</code> or <code>&quot;narrow&quot;</code>, default full) and <code>isBusy</code>. <code>SHELL</code> is <code>mx-auto w-full max-w-7xl px-4 md:px-8</code> and <code>COLUMN</code> maps wide to <code>max-w-5xl</code> and narrow to <code>max-w-3xl</code>; <code>column=&quot;full&quot;</code> renders a single bare <code>div</code> so a page can run its own full-bleed sections. <code>aria-busy</code> is emitted as <code>&quot;true&quot;</code> or omitted, never as the string <code>&quot;false&quot;</code>.</p>
+<p>Every <code>loading.tsx</code>, the storefront <code>error.tsx</code> and <code>not-found.tsx</code> use it, as do <code>SiteHeader</code> and <code>SiteFooter</code> for their own inner bar, and roughly two dozen feature containers.</p>
+<p class="note">Two routes bypass it and hand-inline the same classes: <code>app/(storefront)/archive/page.tsx</code> writes out the <code>max-w-7xl</code> wrapper itself, and <code>app/(storefront)/notify/unsubscribe/page.tsx</code> writes out a <code>max-w-3xl</code> one, which is what <code>column=&quot;narrow&quot;</code> would have given it. <code>newsletter/unsubscribe</code>, its twin, does use <code>PageShell</code>. Those two are fixed on <code>feat/design-refresh</code>, which is not in this branch's ancestry; see the <a href="branches.html">branch page</a>.</p>
+<h3>Focus and the skip link</h3><p><code>SkipLink</code> takes one prop, <code>targetId</code>, and renders an <code>sr-only</code> anchor that becomes <code>focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50</code> on focus. Its target is <code>&lt;main id=&quot;main&quot; tabIndex={-1} className=&quot;... focus:outline-none&quot;&gt;</code>: the negative tab index is what lets the hash move focus at all, and the suppressed outline is deliberate, because the element is only ever focused programmatically.</p>
+<p class="note"><strong>There is no route-change focus rule.</strong> Nothing watches <code>usePathname()</code> to move focus or announce the new page. The two <code>.focus()</code> calls in <code>frontend/src</code> are the roving arrow keys in <code>OptionGroupPicker</code> and the opener restore in <code>MobileMenuSheet</code>. A keyboard visitor who follows a link lands wherever the browser leaves them and has the skip link as the recovery.</p>
+<h3>Loading, error and not-found</h3><ul><li><strong>Nineteen <code>loading.tsx</code> files</strong>, all under <code>(storefront)</code>, all built from <code>PageShell</code> plus the primitives in <code>components/layout/PageSkeleton.tsx</code>: <code>SkeletonBlock</code> (always <code>aria-hidden</code>, <code>animate-skeleton bg-ash</code>), <code>SkeletonHeading</code>, <code>SkeletonGrid</code> and <code>SkeletonRows</code>. Each one mirrors the real page's column and grid, so the swap does not reflow: <code>products/loading.tsx</code> and <code>search/loading.tsx</code> are identical filter-rail-plus-grid shapes, and the three detail skeletons under <code>orders</code>, <code>registrations</code> and <code>workshops/bookings</code> share one layout.</li><li><strong>One <code>error.tsx</code></strong>, at <code>(storefront)/error.tsx</code>. It logs through the frontend logger in an effect, and <code>handleRetry</code> wraps <code>router.refresh()</code> <em>and then</em> <code>reset()</code> in <code>startTransition</code>, because <code>reset()</code> on its own replays the same failed payload. It renders <code>PageError</code>, whose retry label flips to &quot;Trying again&quot; while the transition is pending. There is no admin <code>error.tsx</code>.</li><li><strong><code>not-found.tsx</code></strong> is an async server component: it awaits <code>getArchiveProducts(4)</code> and offers four archive pieces as the way back, rather than a bare 404.</li></ul>
+<h3>The toaster</h3><p>One sonner <code>Toaster</code> in <code>components/providers/toaster.tsx</code>: <code>position=&quot;bottom-right&quot;</code>, <code>offset={{ bottom: 24, right: 24 }}</code>, <code>mobileOffset={{ bottom: 80 }}</code> to clear the 64 pixel mobile nav and its safe-area inset, <code>duration={3500}</code>. The live region is sonner's own; the application only names it, with <code>containerAriaLabel=&quot;Studio notices&quot;</code>, and labels the dismiss control with <code>closeButtonAriaLabel=&quot;Dismiss this notice&quot;</code>. A toast is the only rollback signal for every optimistic mutation in the app.</p>
+<h3>The header</h3><p><code>SiteHeaderContainer</code> takes <code>contactPhone</code> and <code>whatsappUrl</code> from the layout and owns <code>isMenuOpen</code>, <code>isSearchOpen</code>, <code>countAnnouncement</code> and a <code>lastCounts</code> ref. It reads <code>useCartCount()</code>, <code>useWishlistIds()</code>, <code>useUser()</code> and <code>useClerk()</code>, and passes flat props down to the presentational <code>SiteHeader</code>.</p>
+<div class="scroll"><table><caption>frontend/src/features/layout/types.ts:toFocusedHeader, the whole rule.</caption><thead><tr><th scope="col">Pathname</th><th scope="col">Back link</th></tr></thead><tbody><tr><td><code>/checkout</code></td><td><code>/cart</code>, &quot;Back to cart&quot;</td></tr><tr><td><code>/cart</code></td><td><code>/products</code>, &quot;Back to the shop&quot;</td></tr><tr><td>anything else</td><td><code>null</code>, so the header stays full</td></tr></tbody></table></div>
+<p>The focused variant drops the divider, the desktop <code>&lt;nav aria-label=&quot;Main&quot;&gt;</code>, the search button, the wishlist and cart icon links, the admin link, the mobile menu button and the account button. It keeps the sticky bar, the wordmark, the live region and one <code>ArrowLeft</code> link. The point is that a shopper in the middle of paying is not offered a way to wander off.</p>
+<p><strong>The count announcer.</strong> An effect compares the <code>lastCounts</code> ref against the current cart and wishlist numbers and sets <code>countAnnouncement</code> from whichever moved, through <code>toCartAnnouncement</code> or <code>toWishlistAnnouncement</code>; the cart wins when both changed in one render. The header renders it as <code>&lt;p aria-live=&quot;polite&quot; aria-atomic=&quot;true&quot; class=&quot;sr-only&quot;&gt;</code>. The badges themselves are <code>aria-hidden</code> and the number lives in the icon link's <code>aria-label</code>, so a screen reader hears the count once rather than twice. <code>formatBadgeCount</code> caps the visible number at <code>9+</code>.</p>
+<h3>The search panel</h3><ul><li>The header button carries <code>aria-expanded={isSearchOpen}</code>; opening it closes the mobile menu first. <code>SearchMenuContainer</code> returns <code>null</code> when closed rather than hiding a mounted panel, so each open starts with a clean draft and re-reads the recent searches.</li><li>The typeahead is the <code>Suggest</code> operation in <code>frontend/src/graphql/suggest.query.gql</code>, selecting pieces, events and workshops in one round trip. The term is passed through <code>useDeferredValue</code> rather than a timer, gated at <code>MIN_SUGGEST_LENGTH = 2</code>, and <code>previousData</code> keeps the old rows on screen so the list never blinks empty between keystrokes.</li><li>The input is a <code>role=&quot;combobox&quot;</code> inside a <code>&lt;form role=&quot;search&quot;&gt;</code>, with <code>aria-controls</code>, <code>aria-autocomplete=&quot;list&quot;</code> and <code>aria-activedescendant</code> driven by <code>toOptionId(panelId, activeIndex)</code> over ids from <code>useId()</code>. Arrow keys move through <code>nextActiveIndex</code>, Escape closes from the input and from a document-level listener, and Enter follows the active option or falls back to <code>toSearchHref</code>.</li><li>Recent searches live in <code>localStorage</code> under <code>poetry.recent-searches</code>, capped at <code>MAX_RECENT_SEARCHES = 5</code>.</li><li>It is <strong>not</strong> a Radix dialog: dismissal is a full-screen <code>aria-hidden</code> button behind the panel, and there is no focus trap. The input is <code>autoFocus</code>.</li></ul>
+<h3>The mobile menu sheet</h3><p><code>MobileMenuContainer</code> is wrapped in <code>Suspense</code> by the header, because it calls <code>useSearchParams()</code>: the shelf and the archive are the same path and differ only by <code>?view=</code>, so <code>isActiveLink(pathname, view, href)</code> needs the query to mark the right row. <code>MobileMenuSheet</code> is built on the Radix <code>Dialog</code> behind <code>components/ui/sheet.tsx</code>, so the focus trap is Radix's. Focus restore is not, because the sheet is opened from the header button rather than a Radix <code>Trigger</code>: the container captures <code>document.activeElement</code> in <code>onOpenAutoFocus</code> and restores it in <code>onCloseAutoFocus</code> with <code>event.preventDefault()</code>, guarded on <code>isConnected</code> so a removed opener does not throw. Rows are <code>min-h-11</code>, a 44 pixel target.</p>
+<p><code>MobileNav</code> is the separate bottom bar: <code>&lt;nav aria-label=&quot;Primary&quot;&gt;</code>, <code>fixed inset-x-0 bottom-0</code> with <code>pb-safe lg:hidden</code>, four destinations, and the same cart count.</p>
+<h3>CartCount and the two providers</h3><p><code>frontend/src/graphql/cart.query.gql</code> holds two operations. <code>CartCount</code> asks for the bare scalar <code>cartCount</code>; <code>Cart</code> pulls the whole basket through the <code>CartFields</code> fragment, including every line's selections, reference photos and product card. The provider is mounted in the layout, so without the split every route would fetch a full cart just to draw a badge. Both are refetched together by <code>CART_REFETCH = { refetchQueries: [&quot;Cart&quot;, &quot;CartCount&quot;], awaitRefetchQueries: true }</code>.</p>
+<ul><li><code>CartProvider</code> exposes <code>{ count, isSignedIn, isAdding, addToCart }</code> and holds <strong>no</strong> optimistic state. Adding waits for the server, because stock is the server's call; success toasts with a &quot;View cart&quot; action. The count query is skipped entirely when signed out.</li><li>The optimistic cart lives one level down, in <code>features/cart/hooks.ts:useCart()</code>, which the cart page mounts: <code>useOptimistic(cart, applyCartAction)</code> plus <code>useTransition</code> over the quantity, remove and clear actions.</li><li><code>WishlistProvider</code> exposes <code>{ ids, isSignedIn, isSaving, toggle, adoptIds }</code> and does hold <code>useOptimistic(ids, applyWishlistToggle)</code>. <code>adoptIds</code> is the lending hatch: the wishlist page already fetches the full list, so it lends those ids to the provider in an effect and returns them on unmount, and while they are lent the <code>WishlistIds</code> query is skipped rather than run twice.</li><li>Both context hooks throw a named error when used outside their provider.</li></ul>
+<h3>resetStore on an account change</h3><p><code>ResetStoreOnUserChange</code> is an unexported component rendered first inside the Apollo provider. It bails while Clerk has not loaded, treats the first settle as &quot;not a change&quot; with an <code>undefined</code> sentinel in the ref, and otherwise calls <code>client.resetStore()</code> with a toast on failure. The trigger is the Clerk <code>userId</code> changing, so sign-in, sign-out and account switching are one code path. The source comment records the choice of <code>resetStore</code> over <code>clearStore</code>: it restarts the queries it cancels instead of leaving them empty, which matters because the header's own queries are live at that moment.</p>
+<p class="note">This is the only Apollo cache lifecycle call in the frontend, and the repo rule in <code>CLAUDE.md</code> names it exactly. <code>docs/design/optimistic-audit.md</code> is the stale one: it still says <code>client.clearStore()</code> in three places, and <code>clearStore</code> appears nowhere in <code>frontend/src</code>.</p>
+<h3>The RSC client and the proxy stamp</h3><p><code>frontend/src/proxy.ts</code> is Next 16's renamed middleware and is a bare <code>clerkMiddleware()</code>: it establishes the session and protects no route. Its matcher excludes static assets, so a render triggered for one of those paths arrives <strong>unstamped</strong>, and <code>auth()</code> throws when the stamp is missing.</p>
+<p><code>lib/apollo/rsc-client.ts</code> therefore checks before it asks:</p>
+<ul><li><code>const token = incoming.has(&quot;x-clerk-auth-status&quot;) ? await auth().then((s) =&gt; s.getToken()) : null;</code>, where <code>incoming</code> is <code>await headers()</code>.</li><li>The authorization header is set only when a token came back, so an unattributed render is served signed out rather than crashing. Every query this client makes is public, which is what makes that acceptable.</li><li>It also copies <code>x-forwarded-for</code>, falling back to <code>x-real-ip</code>, so the API's throttler does not bucket every server-side call under the Next server's own address.</li><li>Exports are <code>getClient</code>, <code>query</code> and <code>PreloadQuery</code> from <code>registerApolloClient</code>, one client per request.</li></ul>
+<h3>The wordmark</h3><p><code>features/layout/components/Wordmark.tsx</code> is the whole brand surface on this branch: a <code>next/link</code> to <code>/</code> with <code>aria-label=&quot;Poetry &amp; Pottery home&quot;</code>, setting the name in the heading face with the ampersand alone in the script face. It is text, not an image.</p>
+<p class="note">There is <strong>no drawn mark, no <code>/brand</code> route and no asset folder</strong>: <code>frontend/public/</code> holds only a <code>.gitkeep</code>. There is also no <code>NEXT_PUBLIC_SITE_URL</code>; the frontend validates exactly three public variables (<code>NEXT_PUBLIC_API_URL</code>, <code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code>, <code>NEXT_PUBLIC_LOG_LEVEL</code>). What fills that role is <code>lib/site-url.ts:toAbsoluteUrl(path)</code>, which rebuilds the origin per request from <code>x-forwarded-host</code> and <code>x-forwarded-proto</code>, defaulting to <code>localhost:3030</code> over http; its only consumer is the prefilled WhatsApp message. There is no <code>metadataBase</code>, no <code>sitemap.ts</code>, no <code>robots.ts</code> and no icon or manifest route. The drawn wordmark and the site icons exist on the unmerged <code>feat/logo</code> branch.</p>
+</section>
+<section id="theory"><h2>Minimal theory: call trace</h2>
+<h3>A signed-in visitor opening a storefront page</h3><ol class="trace"><li><code class="ref">frontend/src/proxy.ts:proxy</code><span class="desc"><code>clerkMiddleware()</code> establishes the session and stamps <code>x-clerk-auth-status</code> on the request.</span></li><li><code class="ref">frontend/src/app/layout.tsx:RootLayout</code><span class="desc"><code>ClerkProvider</code>, then <code>ApolloProvider</code>, then the route, then the <code>Toaster</code>.</span></li><li><code class="ref">frontend/src/lib/apollo/apollo-provider.tsx:ResetStoreOnUserChange</code><span class="desc">First settle records the user id and does nothing.</span></li><li><code class="ref">frontend/src/app/(storefront)/layout.tsx:StorefrontLayout</code><span class="desc">Server component; one <code>getSiteSettings()</code> await feeds the announcement bar, the header and the footer.</span></li><li><code class="ref">frontend/src/lib/apollo/rsc-client.ts:getClient</code><span class="desc">Sees the stamp, so it calls <code>auth().getToken()</code> and forwards the visitor's IP.</span></li><li><code class="ref">frontend/src/features/cart/containers/CartProvider.tsx:CartProvider</code><span class="desc">Client; runs <code>CartCount</code> with <code>cache-and-network</code> then <code>cache-first</code>, skipped when signed out.</span></li><li><code class="ref">frontend/src/features/wishlist/containers/WishlistProvider.tsx:WishlistProvider</code><span class="desc">Runs <code>WishlistIds</code> unless the wishlist page has lent it a list.</span></li><li><code class="ref">frontend/src/features/layout/containers/SiteHeaderContainer.tsx:SiteHeaderContainer</code><span class="desc"><code>toFocusedHeader(pathname)</code> picks the variant; the counts effect fills the live region when either number moves.</span></li></ol>
+<h3>Opening the search panel and picking a suggestion</h3><ol class="trace"><li><code class="ref">frontend/src/features/layout/components/SiteHeader.tsx</code><span class="desc">Search button with <code>aria-expanded</code>; the container closes the mobile menu and opens the panel.</span></li><li><code class="ref">frontend/src/features/search/containers/SearchMenuContainer.tsx:SearchMenuContainer</code><span class="desc">Returns <code>null</code> while closed, so state and recents are rebuilt on each open.</span></li><li><code class="ref">frontend/src/features/search/types.ts:MIN_SUGGEST_LENGTH</code><span class="desc">Two characters, over a <code>useDeferredValue</code> of the trimmed term.</span></li><li><code class="ref">api/src/features/suggest/suggest.resolver.ts:SuggestResolver.suggest</code><span class="desc">Public typeahead; see the <a href="catalogue.html">catalogue page</a> for its cache.</span></li><li><code class="ref">frontend/src/features/search/components/SearchPanel.tsx:SearchPanel</code><span class="desc">Combobox wiring: <code>aria-activedescendant</code> from <code>toOptionId</code>, rows rendered by <code>SuggestionRow</code>.</span></li><li><code class="ref">frontend/src/features/search/types.ts:addRecentSearch</code><span class="desc">Writes the term to <code>poetry.recent-searches</code>, capped at five.</span></li></ol>
+</section>
+<section id="edges"><h2>Edge cases and failure handling</h2><ul>
+<li><strong>An unstamped render is served signed out.</strong> The proxy matcher excludes static-asset paths, and <code>auth()</code> throws without the stamp, so the RSC client checks the header first rather than catching.</li><li><strong>The first Clerk settle is not an account change.</strong> Without the <code>undefined</code> sentinel the store would reset on every first paint, because Clerk reports no user before it loads.</li><li><strong><code>reset()</code> alone does not clear a failed route.</strong> The error boundary refreshes the router first, otherwise React replays the same failed payload.</li><li><strong>Nothing moves focus on navigation.</strong> The skip link is the only keyboard recovery, and no route change is announced.</li><li><strong>The search panel has no focus trap</strong>, so Tab can walk out of it into the page behind; Escape from anywhere closes it, which is the mitigation.</li><li><strong>The mobile sheet's opener can be gone by the time it closes</strong>, which is why the restore is guarded on <code>isConnected</code>.</li><li><strong>Signed-out visitors fire neither shell query.</strong> Both providers pass <code>skip</code> and fall back to zero and an empty array.</li><li><strong>The wishlist page and the provider would otherwise fetch the same ids twice</strong>; <code>adoptIds</code> exists to stop that, and returns the provider to its own query on unmount.</li><li><strong>Two routes bypass <code>PageShell</code></strong> and repeat its classes by hand, so a change to the shell's padding would miss them.</li><li><strong>The badge number can lag its page.</strong> <code>CartCount</code> and <code>Cart</code> are separate documents refetched together, but a mutation that fails between them leaves the badge to the next awaited refetch.</li></ul></section>
+<section id="tests"><h2>Tests</h2><ul>
+<li><code>frontend/src/features/layout/types.test.ts</code> covers <code>isActivePath</code>, <code>isActiveLink</code>, <code>buildWhatsAppUrl</code>, <code>formatBadgeCount</code>, <code>toFocusedHeader</code> (both routes plus the rule that everything else stays full), <code>toCartAnnouncement</code> and <code>toWishlistAnnouncement</code>.</li>
+<li><code>frontend/src/features/search/types.test.ts</code> covers <code>toSearchHref</code>, the recent-search reader and writer, <code>toOptionOrder</code>, <code>nextActiveIndex</code> and <code>toOptionId</code>.</li>
+<li><code>frontend/src/lib/site-url.test.ts</code> covers the forwarded-host and forwarded-proto rules; <code>frontend/src/store/ui-store.test.ts</code> covers the sign-in prompt slice.</li>
+<li>Stories at four viewports: <code>PageShell</code> (full, wide, narrow, stacked), <code>PageError</code>, <code>PageSkeleton</code>, <code>SkipLink</code>, <code>SiteHeader</code>, <code>MobileMenuSheet</code>, <code>MobileNav</code>, <code>AnnouncementBar</code>, <code>SiteFooter</code>, <code>Wordmark</code>, <code>SearchPanel</code> and <code>SuggestionRow</code>.</li>
+<li>Nothing renders the providers themselves: there is no test for <code>PageShell</code>, <code>SkipLink</code>, <code>CartProvider</code>, <code>WishlistProvider</code>, <code>ApolloProvider</code>, <code>rsc-client.ts</code> or the <code>Toaster</code>, no Storybook <code>play</code> functions and no browser end to end suite under <code>frontend/</code>.</li></ul></section>
+
+</main>
+<script>(function(){var b=document.getElementById('theme');var r=document.documentElement;function cur(){var a=r.getAttribute('data-theme');if(a)return a;return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}function paint(){var m=cur();b.textContent=m==='dark'?'Light mode':'Dark mode';b.setAttribute('aria-label','Switch to '+(m==='dark'?'light':'dark')+' mode');}b.addEventListener('click',function(){var n=cur()==='dark'?'light':'dark';r.setAttribute('data-theme',n);try{localStorage.setItem('arch-theme',n);}catch(e){}paint();});paint();})();</script>
+</body>
+</html>
