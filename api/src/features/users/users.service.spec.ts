@@ -26,7 +26,8 @@ const prismaMock = {
     findMany: vi.fn(),
     count: vi.fn(),
     findUnique: vi.fn(),
-    upsert: vi.fn(),
+    create: vi.fn(),
+    update: vi.fn(),
   },
 };
 
@@ -97,18 +98,77 @@ describe("UsersService", () => {
     });
   });
 
-  describe("upsertUser", () => {
-    it("passes the upsert through to prisma", async () => {
-      const user = makeUser();
-      prismaMock.user.upsert.mockResolvedValue(user);
-      const input = {
-        where: { auth_id: "user_1" },
-        create: { auth_id: "user_1", email: user.email, name: user.name },
-        update: { email: user.email, name: user.name },
-      };
+  describe("provisionUser", () => {
+    const input = {
+      auth_id: "user_dev",
+      email: "potter@example.com",
+      name: "Potter",
+      image: null,
+    };
 
-      await expect(service.upsertUser(input)).resolves.toEqual(user);
-      expect(prismaMock.user.upsert).toHaveBeenCalledWith(input);
+    it("creates a row when neither the auth id nor the email is known", async () => {
+      const created = makeUser({ id: 9, auth_id: "user_dev" });
+      prismaMock.user.findUnique.mockResolvedValue(null);
+      prismaMock.user.create.mockResolvedValue(created);
+
+      await expect(service.provisionUser(input)).resolves.toEqual(created);
+      expect(prismaMock.user.create).toHaveBeenCalledWith({
+        data: {
+          auth_id: "user_dev",
+          email: "potter@example.com",
+          name: "Potter",
+          image: null,
+        },
+      });
+      expect(prismaMock.user.update).not.toHaveBeenCalled();
+    });
+
+    it("adopts the imported row when only the email matches, keeping its role", async () => {
+      // The imported row carries the production Clerk id; this sign-in is a dev instance one.
+      const imported = makeUser({
+        id: 4,
+        auth_id: "user_prod",
+        role: UserRole.ADMIN,
+      });
+      prismaMock.user.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(imported);
+      prismaMock.user.update.mockResolvedValue({
+        ...imported,
+        auth_id: "user_dev",
+      });
+
+      const result = await service.provisionUser(input);
+
+      expect(prismaMock.user.findUnique).toHaveBeenNthCalledWith(1, {
+        where: { auth_id: "user_dev" },
+      });
+      expect(prismaMock.user.findUnique).toHaveBeenNthCalledWith(2, {
+        where: { email: "potter@example.com" },
+      });
+      expect(prismaMock.user.update).toHaveBeenCalledWith({
+        where: { id: 4 },
+        data: { auth_id: "user_dev", name: "Potter", image: null },
+      });
+      expect(prismaMock.user.create).not.toHaveBeenCalled();
+      expect(result.role).toBe(UserRole.ADMIN);
+    });
+
+    it("refreshes the profile when the auth id is already known", async () => {
+      const existing = makeUser({ id: 2, auth_id: "user_dev" });
+      prismaMock.user.findUnique.mockResolvedValueOnce(existing);
+      prismaMock.user.update.mockResolvedValue(existing);
+
+      await expect(service.provisionUser(input)).resolves.toEqual(existing);
+      expect(prismaMock.user.update).toHaveBeenCalledWith({
+        where: { id: 2 },
+        data: {
+          email: "potter@example.com",
+          name: "Potter",
+          image: null,
+        },
+      });
+      expect(prismaMock.user.findUnique).toHaveBeenCalledTimes(1);
     });
   });
 });

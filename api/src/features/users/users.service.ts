@@ -1,9 +1,16 @@
 import { Injectable } from "@nestjs/common";
-import { Prisma, type User } from "@prisma/client";
+import { type User } from "@prisma/client";
 
 import { clampPage } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
 import type { UsersResponse } from "./users.type";
+
+export interface ProvisionUserInput {
+  auth_id: string;
+  email: string;
+  name: string | null;
+  image: string | null;
+}
 
 @Injectable()
 export class UsersService {
@@ -30,8 +37,41 @@ export class UsersService {
     });
   }
 
-  // Not async on purpose: the lazy PrismaPromise stays composable with $transaction([...]).
-  upsertUser(input: Prisma.UserUpsertArgs): Prisma.PrismaPromise<User> {
-    return this.prisma.user.upsert(input);
+  // Email is unique, so an imported row carrying a production Clerk auth id has to be adopted
+  // rather than inserted again when the same person signs in from another Clerk instance.
+  // The role is never written here: the database owns it.
+  async provisionUser(input: ProvisionUserInput): Promise<User> {
+    const byAuth = await this.prisma.user.findUnique({
+      where: { auth_id: input.auth_id },
+    });
+    if (byAuth) {
+      return this.prisma.user.update({
+        where: { id: byAuth.id },
+        data: { email: input.email, name: input.name, image: input.image },
+      });
+    }
+
+    const byEmail = await this.prisma.user.findUnique({
+      where: { email: input.email },
+    });
+    if (byEmail) {
+      return this.prisma.user.update({
+        where: { id: byEmail.id },
+        data: {
+          auth_id: input.auth_id,
+          name: input.name,
+          image: input.image,
+        },
+      });
+    }
+
+    return this.prisma.user.create({
+      data: {
+        auth_id: input.auth_id,
+        email: input.email,
+        name: input.name,
+        image: input.image,
+      },
+    });
   }
 }

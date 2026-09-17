@@ -15,6 +15,10 @@ pnpm dev                  # http://localhost:6060/graphql
 
 The compose stack in `../infra/docker` provides Postgres (5433), Redis (6381) and RabbitMQ (5672).
 
+`pnpm import:legacy` brings user rows across with the `auth_id` of the **production** Clerk
+instance, so the first sign-in from any other instance finds no row by auth id and adopts the
+imported one by email instead, rewriting its `auth_id` and keeping its role.
+
 ## Layout
 
 ```

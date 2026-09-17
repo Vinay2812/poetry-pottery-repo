@@ -83,11 +83,12 @@ export class AuthGuard implements CanActivate {
     const image = this.clerk.getImageUrl(clerkUser) ?? null;
 
     const authUser = await this.prisma.withTransaction(async () => {
-      // The database owns the role; claims only cache it, so the upsert never writes a role.
-      const user = await this.users.upsertUser({
-        where: { auth_id: authId },
-        create: { auth_id: authId, email: primaryEmail, name, image },
-        update: { email: primaryEmail, name, image },
+      // The database owns the role; claims only cache it, so provisioning never writes a role.
+      const user = await this.users.provisionUser({
+        auth_id: authId,
+        email: primaryEmail,
+        name,
+        image,
       });
 
       await this.clerk.updatePublicMetadata(authId, {
