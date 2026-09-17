@@ -1,4 +1,4 @@
-import type { ContactMessage } from "@prisma/client";
+import type { ContactMessage, StudioVisit } from "@prisma/client";
 import {
   EventLevel,
   EventStatus,
@@ -35,6 +35,7 @@ import {
   orderPlacedStudioMail,
   orderStatusMail,
 } from "./orders";
+import { studioVisitCancelledMail } from "./visits";
 import {
   bookingPlacedCustomerMail,
   bookingPlacedStudioMail,
@@ -922,5 +923,37 @@ describe("mail layout", () => {
     expect(mail.text).toContain(
       `Track it: ${SITE}/orders/a"><script>alert(1)</script>`,
     );
+  });
+});
+
+describe("studio visit templates", () => {
+  function visit(overrides: Partial<StudioVisit> = {}): StudioVisit {
+    return {
+      id: "visit_1",
+      starts_at: new Date("2026-10-04T05:30:00.000Z"),
+      ends_at: new Date("2026-10-04T06:00:00.000Z"),
+      name: "Meera",
+      phone: "9876543210",
+      note: null,
+      cancelled_at: null,
+      user_id: null,
+      created_at: new Date("2026-09-01T00:00:00.000Z"),
+      ...overrides,
+    };
+  }
+
+  // The visit form sits on the contact page; a /visit route has never existed.
+  it("sends the guest back to the contact page to pick another window", () => {
+    const mail = studioVisitCancelledMail(visit(), "UTC", null);
+
+    expect(mail.html).toContain(`href="${SITE}/contact"`);
+    expect(mail.html).not.toContain(`${SITE}/visit`);
+    expect(mail.text).toContain(`Pick another window: ${SITE}/contact`);
+  });
+
+  it("names the reason when the studio gave one", () => {
+    const mail = studioVisitCancelledMail(visit(), "UTC", "The kiln is firing");
+
+    expect(mail.html).toContain("The kiln is firing");
   });
 });

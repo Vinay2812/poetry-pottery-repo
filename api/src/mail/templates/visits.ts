@@ -31,7 +31,8 @@ export function studioVisitCancelledMail(
       },
       ...(reason ? [{ heading: "Why", lines: reason.split("\n") }] : []),
     ],
-    cta: { label: "Pick another window", path: "/visit" },
+    // The visit form lives on the contact page; there is no /visit route.
+    cta: { label: "Pick another window", path: "/contact" },
   });
   return { subject: `Studio visit cancelled · ${when}`, ...body };
 }
