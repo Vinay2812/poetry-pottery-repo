@@ -37,7 +37,11 @@ const prismaMock = {
   },
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
 };
-const reviewsMock = { refreshRating: vi.fn(), remove: vi.fn() };
+const reviewsMock = {
+  lockSubject: vi.fn(),
+  refreshRating: vi.fn(),
+  remove: vi.fn(),
+};
 
 describe("toAdminReview", () => {
   it("labels the subject and never marks a review as the admin's own", () => {
@@ -99,6 +103,27 @@ describe("AdminReviewsService", () => {
 
     expect(result.is_hidden).toBe(true);
     expect(reviewsMock.refreshRating).toHaveBeenCalledWith({ product_id: 3 });
+  });
+
+  it("locks the piece before it recounts the average", async () => {
+    const order: string[] = [];
+    reviewsMock.lockSubject.mockImplementation(() => {
+      order.push("lock");
+      return Promise.resolve();
+    });
+    prismaMock.review.update.mockImplementation(() => {
+      order.push("update");
+      return Promise.resolve({ ...row, is_hidden: true });
+    });
+    reviewsMock.refreshRating.mockImplementation(() => {
+      order.push("refresh");
+      return Promise.resolve();
+    });
+
+    await service.setHidden(11, true);
+
+    expect(reviewsMock.lockSubject).toHaveBeenCalledWith({ product_id: 3 });
+    expect(order).toEqual(["lock", "update", "refresh"]);
   });
 
   it("unhides a review and refreshes again", async () => {

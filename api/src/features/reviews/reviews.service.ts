@@ -429,7 +429,7 @@ export class ReviewsService {
   // overlapping review writes cannot each aggregate without seeing the other. It has to come
   // before the insert: writing a review takes a share lock on the same row, and upgrading that
   // to an exclusive lock afterwards deadlocks a crowd posting at once.
-  private async lockSubject(subject: ReviewSubject): Promise<void> {
+  async lockSubject(subject: ReviewSubject): Promise<void> {
     if ("product_id" in subject) {
       await this.prisma
         .$executeRaw`SELECT id FROM products WHERE id = ${subject.product_id} FOR UPDATE`;

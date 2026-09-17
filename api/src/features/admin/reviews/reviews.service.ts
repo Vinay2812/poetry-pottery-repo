@@ -92,12 +92,15 @@ export class AdminReviewsService {
       if (!current) {
         throw new NotFoundException("Review not found");
       }
+      const subject = subjectOf(current);
+      // Moderation recounts the same average the customer paths do, so it takes the same row lock.
+      await this.reviews.lockSubject(subject);
       const updated = await this.prisma.review.update({
         where: { id },
         data: { is_hidden: isHidden },
         include: adminReviewInclude,
       });
-      await this.reviews.refreshRating(subjectOf(current));
+      await this.reviews.refreshRating(subject);
       return updated;
     });
     return toAdminReview(row);
