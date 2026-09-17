@@ -1,4 +1,5 @@
 import { Args, Context, Int, Mutation, Query, Resolver } from "@nestjs/graphql";
+import { CommissionStatus } from "@prisma/client";
 
 import { AdminRequired } from "@/common/decorators/auth.decorators";
 import { StrictThrottle } from "@/common/decorators/throttle.decorators";
@@ -64,5 +65,14 @@ export class CommissionsResolver {
     @Args("id") id: string,
   ): Promise<CommissionRequest> {
     return this.commissions.markRead(id);
+  }
+
+  @AdminRequired()
+  @Mutation(() => CommissionRequest)
+  setCommissionRequestStatus(
+    @Args("id") id: string,
+    @Args("status", { type: () => CommissionStatus }) status: CommissionStatus,
+  ): Promise<CommissionRequest> {
+    return this.commissions.setStatus(id, status);
   }
 }

@@ -147,7 +147,11 @@ describe("CommissionsResolver", () => {
   });
 
   it("keeps the brief inbox behind the administrator guard", () => {
-    for (const field of ["commissionRequests", "markCommissionRequestRead"]) {
+    for (const field of [
+      "commissionRequests",
+      "markCommissionRequestRead",
+      "setCommissionRequestStatus",
+    ]) {
       expect(guardsOn(CommissionsResolver.prototype, field)).toEqual([
         AdminGuard,
       ]);

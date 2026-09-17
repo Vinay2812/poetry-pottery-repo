@@ -1,6 +1,15 @@
-import { Field, InputType, Int, ObjectType } from "@nestjs/graphql";
+import {
+  Field,
+  InputType,
+  Int,
+  ObjectType,
+  registerEnumType,
+} from "@nestjs/graphql";
+import { CommissionStatus } from "@prisma/client";
 
 import { PageInfo } from "@/common/pagination/pagination";
+
+registerEnumType(CommissionStatus, { name: "CommissionStatus" });
 
 @ObjectType()
 export class CommissionRequest {
@@ -36,6 +45,9 @@ export class CommissionRequest {
 
   @Field()
   is_read!: boolean;
+
+  @Field(() => CommissionStatus)
+  status!: CommissionStatus;
 
   @Field()
   created_at!: Date;
@@ -108,6 +120,15 @@ export class CommissionRequestInput {
 
 @InputType()
 export class CommissionRequestsFilterInput {
+  @Field(() => CommissionStatus, { nullable: true })
+  status?: CommissionStatus | null;
+
+  @Field(() => Boolean, { nullable: true })
+  is_read?: boolean | null;
+
+  @Field(() => String, { nullable: true })
+  search?: string | null;
+
   @Field(() => Int, { nullable: true })
   page?: number | null;
 

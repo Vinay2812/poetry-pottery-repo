@@ -596,6 +596,7 @@ type CommissionRequest {
   piece_type: String!
   reference_image_urls: [String!]!
   size: String!
+  status: CommissionStatus!
 }
 
 input CommissionRequestInput {
@@ -611,13 +612,23 @@ input CommissionRequestInput {
 }
 
 input CommissionRequestsFilterInput {
+  is_read: Boolean
   limit: Int
   page: Int
+  search: String
+  status: CommissionStatus
 }
 
 type CommissionRequestsResult {
   items: [CommissionRequest!]!
   page_info: PageInfo!
+}
+
+enum CommissionStatus {
+  ACCEPTED
+  DECLINED
+  NEW
+  SKETCHED
 }
 
 type ConfirmedImage {
@@ -857,6 +868,7 @@ type Mutation {
   saveContentPage(input: ContentPageInput!, slug: String!): ContentPage!
   saveWorkshopTier(config_id: Int!, input: AdminWorkshopTierInput!): WorkshopConfig!
   sendContactMessage(input: ContactMessageInput!): Boolean!
+  setCommissionRequestStatus(id: String!, status: CommissionStatus!): CommissionRequest!
   setContactMessageRead(id: Int!, is_read: Boolean!): ContactMessage!
   setDefaultAddress(id: Int!): Address!
   setOrderAdminNote(id: String!, note: String): AdminOrder!

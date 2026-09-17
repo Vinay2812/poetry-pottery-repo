@@ -1,5 +1,6 @@
 import { BadRequestException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { CommissionStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { env } from "@/config/env";
@@ -262,6 +263,7 @@ describe("CommissionsService", () => {
     const result = await service.list({ page: 1, limit: 20 });
 
     expect(prismaMock.commissionRequest.findMany).toHaveBeenCalledWith({
+      where: {},
       orderBy: { created_at: "desc" },
       skip: 0,
       take: 20,
@@ -271,6 +273,41 @@ describe("CommissionsService", () => {
       page: 1,
       limit: 20,
       has_more: false,
+    });
+  });
+
+  it("narrows the inbox by status and by the words in a brief", async () => {
+    prismaMock.commissionRequest.findMany.mockResolvedValue([]);
+    prismaMock.commissionRequest.count.mockResolvedValue(0);
+
+    await service.list({ status: CommissionStatus.SKETCHED, search: " maya " });
+
+    expect(prismaMock.commissionRequest.findMany).toHaveBeenCalledWith(
+      containing({
+        where: containing({ status: CommissionStatus.SKETCHED }),
+      }),
+    );
+    const call = prismaMock.commissionRequest.findMany.mock.calls.at(
+      -1,
+    )?.[0] as {
+      where: { OR: unknown[] };
+    };
+    expect(call.where.OR).toHaveLength(3);
+  });
+
+  it("counts a brief as read once it leaves NEW", async () => {
+    prismaMock.commissionRequest.update.mockResolvedValue(row);
+
+    await service.setStatus(row.id, CommissionStatus.ACCEPTED);
+    expect(prismaMock.commissionRequest.update).toHaveBeenCalledWith({
+      where: { id: row.id },
+      data: { status: CommissionStatus.ACCEPTED, is_read: true },
+    });
+
+    await service.setStatus(row.id, CommissionStatus.NEW);
+    expect(prismaMock.commissionRequest.update).toHaveBeenLastCalledWith({
+      where: { id: row.id },
+      data: { status: CommissionStatus.NEW },
     });
   });
 

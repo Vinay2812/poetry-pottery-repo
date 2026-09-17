@@ -1,4 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
+import { CommissionStatus, Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
@@ -11,6 +12,7 @@ import {
 import { PrismaService } from "@/prisma/prisma.service";
 import { PendingUploadsService } from "@/storage/pending-uploads.service";
 import { StorageService } from "@/storage/storage.service";
+import { rethrowMissing } from "@/features/admin/missing-row";
 import { normalisePhone } from "@/features/addresses/address-validation";
 import { type Product } from "@/features/products/products.type";
 import {
@@ -208,22 +210,49 @@ export class CommissionsService {
     filter: CommissionRequestsFilterInput,
   ): Promise<CommissionRequestsResult> {
     const bounds = clampPage(filter.page, filter.limit);
+    const term = filter.search?.trim() || null;
+    const where: Prisma.CommissionRequestWhereInput = {
+      ...(filter.status ? { status: filter.status } : {}),
+      ...(filter.is_read == null ? {} : { is_read: filter.is_read }),
+      ...(term
+        ? {
+            OR: [
+              { name: { contains: term, mode: "insensitive" } },
+              { email: { contains: term, mode: "insensitive" } },
+              { piece_type: { contains: term, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    };
     const [items, total] = await Promise.all([
       this.prisma.commissionRequest.findMany({
+        where,
         orderBy: { created_at: "desc" },
         skip: bounds.skip,
         take: bounds.limit,
       }),
-      this.prisma.commissionRequest.count(),
+      this.prisma.commissionRequest.count({ where }),
     ]);
     return { items, page_info: toPageInfo(bounds, total) };
   }
 
   markRead(id: string): Promise<CommissionRequest> {
-    return this.prisma.commissionRequest.update({
-      where: { id },
-      data: { is_read: true },
-    });
+    return this.prisma.commissionRequest
+      .update({ where: { id }, data: { is_read: true } })
+      .catch(rethrowMissing("Commission request not found"));
+  }
+
+  // Moving a brief off NEW means someone has looked at it, so it counts as read too.
+  setStatus(id: string, status: CommissionStatus): Promise<CommissionRequest> {
+    return this.prisma.commissionRequest
+      .update({
+        where: { id },
+        data: {
+          status,
+          ...(status === CommissionStatus.NEW ? {} : { is_read: true }),
+        },
+      })
+      .catch(rethrowMissing("Commission request not found"));
   }
 }
 

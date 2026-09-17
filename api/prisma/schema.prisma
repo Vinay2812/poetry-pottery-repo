@@ -676,6 +676,14 @@ model StudioVisit {
   @@map("studio_visits")
 }
 
+// How far the studio has taken a brief: read, drawn, agreed or turned down.
+enum CommissionStatus {
+  NEW
+  SKETCHED
+  ACCEPTED
+  DECLINED
+}
+
 // A brief for a piece that does not exist yet: what it is, how big, which glaze, what to carve.
 model CommissionRequest {
   id                   String   @id @default(nanoid(12))
@@ -687,8 +695,9 @@ model CommissionRequest {
   name                 String
   email                String
   phone                String?
-  reference_image_urls String[] @default([])
-  is_read              Boolean  @default(false)
+  reference_image_urls String[]         @default([])
+  is_read              Boolean          @default(false)
+  status               CommissionStatus @default(NEW)
   user_id              Int?
 
   created_at DateTime @default(now())
@@ -696,6 +705,7 @@ model CommissionRequest {
   user User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
 
   @@index([is_read, created_at])
+  @@index([status, created_at])
   @@index([user_id])
   @@map("commission_requests")
 }
