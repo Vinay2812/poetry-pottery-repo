@@ -19,8 +19,9 @@ sudo -E ./infra/deploy.sh
 Later releases:
 
 ```bash
-sudo -E GITHUB_ACCESS_TOKEN=ghp_... /opt/poetry-pottery/infra/deploy.sh                # ship main
-sudo -E GITHUB_ACCESS_TOKEN=ghp_... PULL_ENVS=1 ... /opt/poetry-pottery/infra/deploy.sh  # also refresh the envs
+export GITHUB_ACCESS_TOKEN=ghp_...
+export R2_ENV_BUCKET=<bucket> R2_ACCOUNT_ID=<id> R2_ACCESS_KEY_ID=<key> R2_SECRET_ACCESS_KEY=<secret>
+sudo -E /opt/poetry-pottery/infra/deploy.sh   # ship main; the env files are re-pulled from R2 every time
 ```
 
 Setup does, in order:
@@ -43,7 +44,7 @@ Setup does, in order:
 
 Every run ends by opening a TCP connection to Postgres, Redis and RabbitMQ on the Tailscale address and fails if one does not answer.
 
-A redeploy runs only steps 3 and 6: fast-forward, rebuild the image, migrate, swap the API container, wait for `/health`. Databases, nginx, the firewall and Tailscale are untouched, and `PULL_ENVS=1` adds the env refresh.
+A redeploy runs only steps 3, 4 and 6: fast-forward, refresh the env files, rebuild the image, migrate, swap the API container, wait for `/health`. Databases, nginx, the firewall and Tailscale are untouched. The env files are pulled from R2 on every run, so edit them in the bucket, never on the box.
 
 Network layout afterwards:
 

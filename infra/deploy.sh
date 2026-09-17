@@ -4,21 +4,21 @@
 #   first run  (nothing installed yet) -> installs tools, joins Tailscale, clones the repo,
 #                                         pulls the env files from R2, starts the stack,
 #                                         puts nginx + Let's Encrypt in front of the API
-#   later runs (already set up)        -> fast-forwards the checkout, rebuilds the API image,
-#                                         applies migrations and swaps the API container
+#   later runs (already set up)        -> fast-forwards the checkout, re-pulls the env files
+#                                         from R2, rebuilds the API image, applies migrations
+#                                         and swaps the API container
 #
 # A marker inside .git records completed setup. Interrupted setup runs resume the setup
 # path on retry. Use `--full` to repeat setup on an existing installation.
 #
-# Export before running (required on the first run):
+# Export before running (required on every run):
 #   export GITHUB_ACCESS_TOKEN=ghp_...   # repo-scoped token; used for the HTTPS clone and never written to disk
 #   export R2_ACCOUNT_ID=...             # Cloudflare account id (forms the S3 endpoint)
 #   export R2_ACCESS_KEY_ID=...          # R2 API token key with read access to the env bucket
 #   export R2_SECRET_ACCESS_KEY=...      # its secret
-#   export LETSENCRYPT_EMAIL=...         # contact address for the certificate (any address you own)
+#   export LETSENCRYPT_EMAIL=...         # contact address for the certificate (first run only)
 #
-# On a redeploy only GITHUB_ACCESS_TOKEN is needed, and only if the remote is HTTPS.
-# Add PULL_ENVS=1 plus the three R2 credential variables to refresh the env files as well.
+# The env files are pulled fresh from R2 on every run, so the bucket is the only place to edit them.
 #
 # Optional (defaults shown):
 #   export API_DOMAIN=api-pnp-v2.prodapp.club   # DNS A record must already point at this server
@@ -29,13 +29,12 @@
 #   export ENV_PREFIX=poetry-pottery-v2          # objects: <prefix>/{api,frontend,docker}/.env.prod
 #   export TS_AUTHKEY=tskey-auth-...            # Tailscale auth key; without it `tailscale up` prints a login URL
 #   export TS_HOSTNAME=poetry-pottery-api       # this machine's name on the tailnet
-#   export PULL_ENVS=1                          # redeploy: also re-pull the env files from R2
 #   export SEED=1                               # run `pnpm db:seed` (site scaffolding) after migrating
 #   export REINDEX=1                            # run `pnpm search:reindex` (rebuild every search embedding) after migrating
 #   export SKIP_TLS=1                           # nginx on port 80 only, no certbot (first smoke test)
 #   export FULL=1                               # force the full setup path even on an existing checkout
 #
-# Files written on the setup path (each chmod 600):
+# Files written on every run (each chmod 600):
 #   <prefix>/api/.env.prod       -> api/.env
 #   <prefix>/frontend/.env.prod  -> frontend/.env
 #   <prefix>/docker/.env.prod    -> infra/docker/.env   (+ BIND_HOST=<tailscale ip> appended)
@@ -145,32 +144,30 @@ AFTER="$(git rev-parse --short HEAD)"
 [ -n "$BEFORE" ] && log "At $AFTER (was $BEFORE)" || log "At $AFTER"
 
 # ---------------------------------------------------------------- env files
-if [ "$MODE" = setup ] || [ "${PULL_ENVS:-0}" = "1" ]; then
-  require R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_ENV_BUCKET
-  # R2 speaks the S3 API; the AWS CLI needs only the account endpoint and the key pair.
-  export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
-  export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
-  export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
-  R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-  ENV_STAGE="$(mktemp -d)"
-  trap 'rm -rf "$ENV_STAGE"' EXIT
-  for pair in "api:api/.env" "frontend:frontend/.env" "docker:infra/docker/.env"; do
-    name="${pair%%:*}"; dest="${pair#*:}"
-    log "Pulling s3://${R2_ENV_BUCKET}/${ENV_PREFIX}/${name}/.env.prod -> ${dest}"
-    aws s3 cp "s3://${R2_ENV_BUCKET}/${ENV_PREFIX}/${name}/.env.prod" "$ENV_STAGE/$name" \
-      --endpoint-url "$R2_ENDPOINT" --only-show-errors
-    chmod 600 "$ENV_STAGE/$name"
-  done
-  mv "$ENV_STAGE/api" api/.env
-  mv "$ENV_STAGE/frontend" frontend/.env
-  mv "$ENV_STAGE/docker" infra/docker/.env
-  rmdir "$ENV_STAGE"
-  trap - EXIT
-fi
+# Always refreshed so the bucket stays the single source of truth for the env files.
+require R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_ENV_BUCKET
+# R2 speaks the S3 API; the AWS CLI needs only the account endpoint and the key pair.
+export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
+export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-auto}"
+R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+ENV_STAGE="$(mktemp -d)"
+trap 'rm -rf "$ENV_STAGE"' EXIT
+for pair in "api:api/.env" "frontend:frontend/.env" "docker:infra/docker/.env"; do
+  name="${pair%%:*}"; dest="${pair#*:}"
+  log "Pulling s3://${R2_ENV_BUCKET}/${ENV_PREFIX}/${name}/.env.prod -> ${dest}"
+  aws s3 cp "s3://${R2_ENV_BUCKET}/${ENV_PREFIX}/${name}/.env.prod" "$ENV_STAGE/$name" \
+    --endpoint-url "$R2_ENDPOINT" --only-show-errors
+  chmod 600 "$ENV_STAGE/$name"
+done
+mv "$ENV_STAGE/api" api/.env
+mv "$ENV_STAGE/frontend" frontend/.env
+mv "$ENV_STAGE/docker" infra/docker/.env
+rmdir "$ENV_STAGE"
+trap - EXIT
 
 # Data services listen on the tailnet address only; the API stays on loopback behind nginx.
 # Written on every run so a refreshed env file or a changed tailnet address never leaves them on loopback.
-[ -f infra/docker/.env ] || { echo "infra/docker/.env is missing; run with PULL_ENVS=1" >&2; exit 1; }
 sed -i '/^BIND_HOST=/d;/^API_BIND_HOST=/d' infra/docker/.env
 printf 'BIND_HOST=%s\nAPI_BIND_HOST=127.0.0.1\n' "$TS_IP" >> infra/docker/.env
 log "Data services bind to ${TS_IP}; the API binds to 127.0.0.1"
