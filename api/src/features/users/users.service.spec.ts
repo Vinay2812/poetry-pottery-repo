@@ -29,9 +29,15 @@ const prismaMock = {
     create: vi.fn(),
     update: vi.fn(),
   },
+  $executeRaw: vi.fn(),
+  withTransaction: vi.fn(),
 };
 
 async function createService(): Promise<UsersService> {
+  // resetAllMocks drops implementations, so the transaction passthrough is restored here.
+  prismaMock.withTransaction.mockImplementation((fn: () => Promise<unknown>) =>
+    fn(),
+  );
   const moduleRef = await Test.createTestingModule({
     providers: [UsersService, { provide: PrismaService, useValue: prismaMock }],
   }).compile();
@@ -105,6 +111,21 @@ describe("UsersService", () => {
       name: "Potter",
       image: null,
     };
+
+    it("takes a lock on the auth id before it looks anything up", async () => {
+      prismaMock.user.findUnique.mockResolvedValue(null);
+      prismaMock.user.create.mockResolvedValue(makeUser());
+
+      await service.provisionUser(input);
+
+      expect(prismaMock.withTransaction).toHaveBeenCalled();
+      expect(prismaMock.$executeRaw).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.stringContaining("pg_advisory_xact_lock"),
+        ]),
+        "user_dev",
+      );
+    });
 
     it("creates a row when neither the auth id nor the email is known", async () => {
       const created = makeUser({ id: 9, auth_id: "user_dev" });

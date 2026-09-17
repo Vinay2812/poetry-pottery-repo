@@ -59,6 +59,7 @@ const prismaMock = {
     create: vi.fn(),
     update: vi.fn(),
   },
+  $executeRaw: vi.fn(),
   withTransaction: vi.fn(),
 };
 

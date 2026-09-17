@@ -41,37 +41,44 @@ export class UsersService {
   // rather than inserted again when the same person signs in from another Clerk instance.
   // The role is never written here: the database owns it.
   async provisionUser(input: ProvisionUserInput): Promise<User> {
-    const byAuth = await this.prisma.user.findUnique({
-      where: { auth_id: input.auth_id },
-    });
-    if (byAuth) {
-      return this.prisma.user.update({
-        where: { id: byAuth.id },
-        data: { email: input.email, name: input.name, image: input.image },
-      });
-    }
+    // A first sign-in fires several queries at once. The lock holds everyone but the first
+    // behind the insert, so the rest read the row back instead of racing it into P2002.
+    return this.prisma.withTransaction(async () => {
+      await this.prisma
+        .$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${input.auth_id}))`;
 
-    const byEmail = await this.prisma.user.findUnique({
-      where: { email: input.email },
-    });
-    if (byEmail) {
-      return this.prisma.user.update({
-        where: { id: byEmail.id },
+      const byAuth = await this.prisma.user.findUnique({
+        where: { auth_id: input.auth_id },
+      });
+      if (byAuth) {
+        return this.prisma.user.update({
+          where: { id: byAuth.id },
+          data: { email: input.email, name: input.name, image: input.image },
+        });
+      }
+
+      const byEmail = await this.prisma.user.findUnique({
+        where: { email: input.email },
+      });
+      if (byEmail) {
+        return this.prisma.user.update({
+          where: { id: byEmail.id },
+          data: {
+            auth_id: input.auth_id,
+            name: input.name,
+            image: input.image,
+          },
+        });
+      }
+
+      return this.prisma.user.create({
         data: {
           auth_id: input.auth_id,
+          email: input.email,
           name: input.name,
           image: input.image,
         },
       });
-    }
-
-    return this.prisma.user.create({
-      data: {
-        auth_id: input.auth_id,
-        email: input.email,
-        name: input.name,
-        image: input.image,
-      },
     });
   }
 }

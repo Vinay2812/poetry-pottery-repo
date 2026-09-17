@@ -15,6 +15,7 @@ import {
   fromWallClock,
   toWallClock,
 } from "@/features/workshops/schedule";
+import { UsersService } from "@/features/users/users.service";
 import { VisitsService } from "@/features/visits/visits.service";
 import { WishlistService } from "@/features/wishlist/wishlist.service";
 import { WorkshopsService } from "@/features/workshops/workshops.service";
@@ -135,6 +136,7 @@ export interface Harness {
   notifications: NotificationsService;
   contact: ContactService;
   visits: VisitsService;
+  users: UsersService;
   close: () => Promise<void>;
 }
 
@@ -177,6 +179,7 @@ export async function createHarness(
       NewsletterService,
       ContactService,
       VisitsService,
+      UsersService,
     ],
   }).compile();
   await moduleRef.init();
@@ -191,6 +194,7 @@ export async function createHarness(
     notifications: moduleRef.get(NotificationsService),
     contact: moduleRef.get(ContactService),
     visits: moduleRef.get(VisitsService),
+    users: moduleRef.get(UsersService),
     close: () => moduleRef.close(),
   };
 }
