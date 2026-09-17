@@ -4,6 +4,9 @@ import { OrderStatus } from "@/graphql/generated/graphql";
 
 import {
   applyAdminOrderPatch,
+  describeGiftHandling,
+  hidesPrices,
+  toPackingSlipHref,
   buildOrderTimeline,
   describeItems,
   type AdminOrderDetailData,
@@ -251,5 +254,39 @@ describe("toAdminNoteValue", () => {
   it("sends null when the note is emptied", () => {
     expect(toAdminNoteValue("  ")).toBeNull();
     expect(toAdminNoteValue(" Wrap twice ")).toBe("Wrap twice");
+  });
+});
+
+describe("describeGiftHandling", () => {
+  it("names both jobs when a gift carries a note and hidden prices", () => {
+    expect(describeGiftHandling("For Anjali", true)).toBe(
+      "Gift: note to write out, prices off the slip",
+    );
+  });
+
+  it("names whichever job there is", () => {
+    expect(describeGiftHandling(null, true)).toBe("Gift: prices off the slip");
+    expect(describeGiftHandling("For Anjali", false)).toBe(
+      "Gift: note to write out",
+    );
+  });
+
+  it("says plainly when it is not a gift", () => {
+    expect(describeGiftHandling(null, false)).toBe("Not a gift");
+  });
+});
+
+describe("hidesPrices", () => {
+  it("reads the flag off the order", () => {
+    expect(hidesPrices({ hide_prices: true })).toBe(true);
+    expect(hidesPrices({ hide_prices: false })).toBe(false);
+  });
+});
+
+describe("toPackingSlipHref", () => {
+  it("points at the printable slip for the order", () => {
+    expect(toPackingSlipHref("ORD123")).toBe(
+      "/dashboard/orders/ORD123/packing-slip",
+    );
   });
 });

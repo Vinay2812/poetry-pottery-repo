@@ -76,3 +76,9 @@ mutation SetOrderAdminNote($id: String!, $note: String) {
     ...AdminOrderDetail
   }
 }
+
+mutation AddOrderNote($input: AddOrderNoteInput!) {
+  addOrderNote(input: $input) {
+    ...OrderFields
+  }
+}

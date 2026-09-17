@@ -16,7 +16,10 @@ export function AdminTopBar({
   shopHref,
 }: AdminTopBarProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-ash bg-background px-4 md:px-6">
+    <header
+      data-admin-chrome
+      className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-ash bg-background px-4 md:px-6"
+    >
       <Link
         href="/dashboard"
         className="font-display text-lg leading-none tracking-tight"

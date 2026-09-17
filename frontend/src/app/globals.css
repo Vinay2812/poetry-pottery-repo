@@ -509,3 +509,29 @@
 .fact-row:focus-visible {
   outline-offset: -2px;
 }
+
+/* A packing slip goes in the box, so print drops the console chrome around it. */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  header[data-admin-chrome],
+  nav[aria-label="Studio sections"],
+  nav[aria-label="Studio sections, compact"],
+  [data-sonner-toaster] {
+    display: none !important;
+  }
+
+  main {
+    padding: 0 !important;
+  }
+
+  a[href]::after {
+    content: none !important;
+  }
+}

@@ -2753,6 +2753,13 @@ export type SetOrderAdminNoteMutationVariables = Exact<{
 
 export type SetOrderAdminNoteMutation = { setOrderAdminNote: { admin_note: string | null, next_statuses: Array<OrderStatus>, customer: { id: number, name: string | null, email: string, image: string | null }, order: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, gift_note: string | null, hide_prices: boolean, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, care_notes: Array<string>, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }>, studio_notes: Array<{ id: number, body: string, image_url: string | null, created_at: string }> } } };
 
+export type AddOrderNoteMutationVariables = Exact<{
+  input: AddOrderNoteInput;
+}>;
+
+
+export type AddOrderNoteMutation = { addOrderNote: { id: string, status: OrderStatus, subtotal: number, discount: number, shipping_fee: number, total: number, coupon_code: string | null, customer_note: string | null, gift_note: string | null, hide_prices: boolean, tracking_note: string | null, cancel_reason: string | null, can_cancel: boolean, care_notes: Array<string>, item_count: number, created_at: string, confirmed_at: string | null, paid_at: string | null, shipped_at: string | null, delivered_at: string | null, cancelled_at: string | null, refunded_at: string | null, shipping_address: { name: string, phone: string, line1: string, line2: string | null, landmark: string | null, city: string, state: string, pincode: string }, items: Array<{ id: number, product_name: string, product_image: string | null, unit_price: number, quantity: number, line_total: number, reference_image_urls: Array<string>, selections: Array<{ group_id: number, group_name: string, option_id: number | null, option_name: string | null, text: string | null, price_modifier: number }>, product: { id: number, slug: string, is_customizable: boolean } | null }>, studio_notes: Array<{ id: number, body: string, image_url: string | null, created_at: string }> } };
+
 export type AdminProductRowFragment = { id: number, slug: string, name: string, price: number, compare_at_price: number | null, stock: number, is_active: boolean, is_featured: boolean, is_archived: boolean, is_customizable: boolean, is_second: boolean, is_commission: boolean, image_urls: Array<string>, material: string, categories: Array<{ id: number, name: string, slug: string }>, collection: { id: number, name: string, slug: string } | null };
 
 export type AdminOptionGroupFieldsFragment = { id: number, name: string, kind: OptionGroupKind, is_required: boolean, max_length: number | null, price_modifier: number, sort_order: number, options: Array<{ id: number, name: string, price_modifier: number, sort_order: number, is_active: boolean }> };
@@ -5894,6 +5901,37 @@ export function useSetOrderAdminNoteMutation(baseOptions?: ApolloReactHooks.Muta
       }
 export type SetOrderAdminNoteMutationHookResult = ReturnType<typeof useSetOrderAdminNoteMutation>;
 export type SetOrderAdminNoteMutationResult = ApolloReactCommon.MutationResult<SetOrderAdminNoteMutation>;
+export const AddOrderNoteDocument = gql`
+    mutation AddOrderNote($input: AddOrderNoteInput!) {
+  addOrderNote(input: $input) {
+    ...OrderFields
+  }
+}
+    ${OrderFieldsFragmentDoc}`;
+
+/**
+ * __useAddOrderNoteMutation__
+ *
+ * To run a mutation, you first call `useAddOrderNoteMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useAddOrderNoteMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [addOrderNoteMutation, { data, loading, error }] = useAddOrderNoteMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useAddOrderNoteMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<AddOrderNoteMutation, AddOrderNoteMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<AddOrderNoteMutation, AddOrderNoteMutationVariables>(AddOrderNoteDocument, options);
+      }
+export type AddOrderNoteMutationHookResult = ReturnType<typeof useAddOrderNoteMutation>;
+export type AddOrderNoteMutationResult = ApolloReactCommon.MutationResult<AddOrderNoteMutation>;
 export const AdminProductsDocument = gql`
     query AdminProducts($filter: AdminProductsFilterInput) {
   adminProducts(filter: $filter) {

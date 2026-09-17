@@ -37,6 +37,28 @@ export function describeItems(count: number): string {
   return pluralize(count, "piece");
 }
 
+/** A gift slip carries no money at all, not even a struck-out total. */
+export function hidesPrices(order: { hide_prices: boolean }): boolean {
+  return order.hide_prices;
+}
+
+/** One line for the header of the order page when the buyer asked for a gift. */
+export function describeGiftHandling(
+  giftNote: string | null,
+  isPricesHidden: boolean,
+): string {
+  if (giftNote !== null && isPricesHidden) {
+    return "Gift: note to write out, prices off the slip";
+  }
+  if (isPricesHidden) return "Gift: prices off the slip";
+  if (giftNote !== null) return "Gift: note to write out";
+  return "Not a gift";
+}
+
+export function toPackingSlipHref(orderId: string): string {
+  return `/dashboard/orders/${orderId}/packing-slip`;
+}
+
 export interface OrderSelectionLike {
   group_name: string;
   option_name: string | null;

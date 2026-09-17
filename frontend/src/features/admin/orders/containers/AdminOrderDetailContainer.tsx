@@ -11,6 +11,8 @@ import { toast } from "sonner";
 
 import {
   OrderStatus,
+  UploadPurpose,
+  useAddOrderNoteMutation,
   useAdminOrderQuery,
   useCancelOrderAsAdminMutation,
   useMarkOrderPaidMutation,
@@ -19,6 +21,12 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatDateTime, formatInr } from "@/lib/format";
+
+import type { StudioNoteFormValues } from "@/lib/validations/admin/order";
+
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
 
 import { toProductPath } from "@/features/products/types";
 
@@ -37,17 +45,27 @@ import {
   AdminOrderItems,
   type AdminOrderItemRow,
 } from "@/features/admin/orders/components/AdminOrderItems";
+import { AdminOrderGift } from "@/features/admin/orders/components/AdminOrderGift";
 import { AdminOrderNote } from "@/features/admin/orders/components/AdminOrderNote";
 import { AdminOrderTimeline } from "@/features/admin/orders/components/AdminOrderTimeline";
 import { AdminOrderTotals } from "@/features/admin/orders/components/AdminOrderTotals";
+import { StudioNoteForm } from "@/features/admin/orders/components/StudioNoteForm";
+import {
+  type StudioNoteRow,
+  StudioNotesList,
+} from "@/features/admin/orders/components/StudioNotesList";
 import {
   applyAdminOrderPatch,
   buildOrderTimeline,
   describeItems,
+  describeGiftHandling,
   toAdminNoteValue,
+  toPackingSlipHref,
   toSelectionLabel,
   toStatusActions,
 } from "@/features/admin/orders/types";
+
+import { ImageUploaderContainer } from "@/features/admin/uploads";
 
 export interface AdminOrderDetailContainerProps {
   orderId: string;
@@ -67,6 +85,7 @@ export function AdminOrderDetailContainer({
   const [markOrderPaid] = useMarkOrderPaidMutation();
   const [cancelOrderAsAdmin] = useCancelOrderAsAdminMutation();
   const [setOrderAdminNote] = useSetOrderAdminNoteMutation();
+  const [addOrderNote] = useAddOrderNoteMutation();
 
   const detail = data?.adminOrder ?? previousData?.adminOrder ?? null;
   const [optimisticDetail, applyPatch] = useOptimistic(
@@ -82,10 +101,24 @@ export function AdminOrderDetailContainer({
   const [noteDraft, setNoteDraft] = useState<string | null>(null);
   const [isNoteSaving, setIsNoteSaving] = useState(false);
   const [isNoteSaved, setIsNoteSaved] = useState(false);
+  const [studioPhotoUrl, setStudioPhotoUrl] = useState<string | null>(null);
+  const [isStudioNoteSending, setIsStudioNoteSending] = useState(false);
+  const [studioFormKey, setStudioFormKey] = useState(0);
 
   const order = optimisticDetail?.order ?? null;
   const savedNote = optimisticDetail?.admin_note ?? "";
   const noteValue = noteDraft ?? savedNote;
+
+  const studioNoteRows = useMemo<StudioNoteRow[]>(
+    () =>
+      (order?.studio_notes ?? []).map((note) => ({
+        id: note.id,
+        body: note.body,
+        imageUrl: note.image_url,
+        sentLabel: formatDateTime(note.created_at),
+      })),
+    [order],
+  );
 
   const itemRows = useMemo<AdminOrderItemRow[]>(
     () =>
@@ -224,6 +257,35 @@ export function AdminOrderDetailContainer({
     setIsNoteSaved(false);
   }, []);
 
+  // A studio note is mailed the moment it is sent, so there is nothing to roll back.
+  const handleStudioNoteSubmit = useCallback(
+    (values: StudioNoteFormValues) => {
+      setIsStudioNoteSending(true);
+      void (async () => {
+        try {
+          await addOrderNote({
+            variables: {
+              input: {
+                order_id: orderId,
+                body: values.body,
+                image_url: studioPhotoUrl,
+              },
+            },
+          });
+          await refetch();
+          setStudioPhotoUrl(null);
+          setStudioFormKey((key) => key + 1);
+          toast.success("Note sent to the customer");
+        } catch (sendError) {
+          toast.error(toErrorMessage(sendError));
+        } finally {
+          setIsStudioNoteSending(false);
+        }
+      })();
+    },
+    [addOrderNote, orderId, refetch, studioPhotoUrl],
+  );
+
   if (!optimisticDetail && loading) {
     return (
       <div aria-busy="true" className="flex flex-col gap-3">
@@ -262,10 +324,15 @@ export function AdminOrderDetailContainer({
         title={order.id}
         description={`${formatDate(order.created_at)} · ${describeItems(order.item_count)} · ${formatInr(order.total)}`}
         actions={
-          <AdminStatusPill
-            label={formatEnumLabel(order.status)}
-            tone={orderStatusTone(order.status)}
-          />
+          <>
+            <AdminStatusPill
+              label={formatEnumLabel(order.status)}
+              tone={orderStatusTone(order.status)}
+            />
+            <Button asChild type="button" variant="secondary" size="sm">
+              <Link href={toPackingSlipHref(order.id)}>Packing slip</Link>
+            </Button>
+          </>
         }
       />
 
@@ -297,6 +364,24 @@ export function AdminOrderDetailContainer({
               onAction={handleAction}
             />
           </section>
+          <section className="flex flex-col gap-3 border-t border-ash pt-6">
+            <h2 className={SECTION_TITLE}>Notes from the studio</h2>
+            <StudioNotesList rows={studioNoteRows} />
+            <StudioNoteForm
+              key={studioFormKey}
+              isSending={isStudioNoteSending}
+              photoField={
+                <ImageUploaderContainer
+                  id="studio-note-photo"
+                  label="Photo"
+                  purpose={UploadPurpose.OrderNote}
+                  value={studioPhotoUrl}
+                  onChange={setStudioPhotoUrl}
+                />
+              }
+              onSubmit={handleStudioNoteSubmit}
+            />
+          </section>
           <section className="border-t border-ash pt-6">
             <AdminOrderNote
               value={noteValue}
@@ -317,6 +402,15 @@ export function AdminOrderDetailContainer({
             addressLines={addressLines}
             customerNote={order.customer_note}
           />
+          <section className="flex flex-col gap-3 border-t border-ash pt-6">
+            <h2 className={SECTION_TITLE}>
+              {describeGiftHandling(order.gift_note, order.hide_prices)}
+            </h2>
+            <AdminOrderGift
+              giftNote={order.gift_note}
+              isPricesHidden={order.hide_prices}
+            />
+          </section>
           <section className="flex flex-col gap-3 border-t border-ash pt-6">
             <h2 className={SECTION_TITLE}>Timeline</h2>
             <AdminOrderTimeline steps={timelineSteps} />
