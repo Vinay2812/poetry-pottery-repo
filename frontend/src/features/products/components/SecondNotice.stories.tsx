@@ -7,11 +7,8 @@ const meta = {
   title: "Features/Products/SecondNotice",
   component: SecondNotice,
   args: {
-    name: "Slate morning mug",
     flawNote:
       "The glaze crawled away from the handle on one side and left a bare patch the size of a thumbnail. It holds tea exactly as well.",
-    flawPhotoUrl:
-      "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
   },
 } satisfies Meta<typeof SecondNotice>;
 
@@ -19,9 +16,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const WithPhoto: Story = {};
-
-export const WithoutPhoto: Story = { args: { flawPhotoUrl: null } };
+export const Default: Story = {};
 
 export const ShortNote: Story = {
   args: {

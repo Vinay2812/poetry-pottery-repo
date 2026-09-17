@@ -406,11 +406,7 @@ export function ProductDetailContainer({
             </button>
           )}
           {product.is_second && (
-            <SecondNotice
-              name={product.name}
-              flawNote={toFlawNote(product.flaw_note)}
-              flawPhotoUrl={product.image_urls[0] ?? null}
-            />
+            <SecondNotice flawNote={toFlawNote(product.flaw_note)} />
           )}
           {product.care_notes.length > 0 && (
             <div className="flex flex-col gap-2 pt-4">
