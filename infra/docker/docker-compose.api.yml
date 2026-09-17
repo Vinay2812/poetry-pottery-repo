@@ -20,7 +20,8 @@ services:
       RABBITMQ_URL: "amqp://${RABBITMQ_USER:-poetry}:${RABBITMQ_PASSWORD:-poetry}@rabbitmq:5672"
       EMBEDDINGS_CACHE_DIR: "/app/.cache/models"
     ports:
-      - "6060:6060"
+      # Bound to loopback; nginx terminates TLS and proxies to it. Set API_BIND_HOST to expose it elsewhere.
+      - "${API_BIND_HOST:-127.0.0.1}:6060:6060"
     networks:
       - backend
     depends_on:

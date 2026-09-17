@@ -13,7 +13,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-poetry}
       POSTGRES_DB: ${POSTGRES_DB:-poetry_pottery}
     ports:
-      - "${POSTGRES_PORT:-5433}:5432"
+      - "${BIND_HOST:-127.0.0.1}:${POSTGRES_PORT:-5433}:5432"
     networks:
       - backend
     volumes:
@@ -35,7 +35,7 @@ services:
     restart: unless-stopped
     command: ["redis-server", "--appendonly", "yes"]
     ports:
-      - "${REDIS_PORT:-6381}:6379"
+      - "${BIND_HOST:-127.0.0.1}:${REDIS_PORT:-6381}:6379"
     networks:
       - backend
     volumes:
@@ -54,8 +54,8 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-poetry}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-poetry}
     ports:
-      - "${RABBITMQ_PORT:-5672}:5672"
-      - "${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+      - "${BIND_HOST:-127.0.0.1}:${RABBITMQ_PORT:-5672}:5672"
+      - "${BIND_HOST:-127.0.0.1}:${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
     networks:
       - backend
     volumes:
