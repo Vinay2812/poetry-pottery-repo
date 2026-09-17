@@ -19,7 +19,7 @@ export function AboutBlock({
   href,
 }: AboutBlockProps) {
   return (
-    <div className="grid items-center gap-8 md:grid-cols-[1.15fr_1fr] md:gap-12">
+    <div className="grid gap-8 md:grid-cols-[1.15fr_1fr] md:items-start md:gap-12">
       <div className="relative aspect-16/9 overflow-hidden bg-white">
         {imageUrl ? (
           <Image
