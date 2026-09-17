@@ -161,7 +161,7 @@ export function SiteSettingsForm({
         <ContentTextField
           id="settings-dispatch-min"
           label="Earliest, in days"
-          hint="The first number in \u201cships in 7 to 12 days\u201d."
+          hint="The first number in “ships in 7 to 12 days”."
           error={errors.dispatch_days_min?.message}
           isMultiline={false}
           registration={register("dispatch_days_min")}
