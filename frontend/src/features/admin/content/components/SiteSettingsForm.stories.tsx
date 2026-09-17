@@ -24,6 +24,8 @@ const meta = {
       facebook_url: "",
       youtube_url: "",
       shipping_flat_fee: "80",
+      dispatch_days_min: "7",
+      dispatch_days_max: "12",
       free_shipping_above: "1500",
       hero_heading: "Pottery made slowly.",
       hero_subheading: "Stoneware and terracotta from a small wheel studio.",

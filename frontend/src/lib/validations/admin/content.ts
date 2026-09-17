@@ -100,36 +100,60 @@ export const contentPageSchema = z.object({
 
 export type ContentPageFormValues = z.infer<typeof contentPageSchema>;
 
-export const siteSettingsSchema = z.object({
-  contact_email: z
+function dayCount(label: string) {
+  return z
     .string()
     .trim()
-    .max(120, "Email must be 120 characters or fewer")
-    .pipe(z.email("Enter a valid email address")),
-  contact_phone: phoneField("Phone"),
-  whatsapp_number: phoneField("WhatsApp number"),
-  address: requiredText("Address", 240),
-  opening_hours: requiredText("Opening hours", 160),
-  instagram_url: optionalUrl("Instagram"),
-  facebook_url: optionalUrl("Facebook"),
-  youtube_url: optionalUrl("YouTube"),
-  shipping_flat_fee: rupeeField("Flat shipping"),
-  free_shipping_above: z
-    .string()
-    .trim()
+    .regex(/^\d+$/, `${label} must be a whole number of days`)
+    .refine((value) => Number(value) >= 1, `${label} must be at least 1 day`)
     .refine(
-      (value) => value.length === 0 || WHOLE_RUPEES.test(value),
-      "Free shipping above must be a whole number of rupees",
-    ),
-  hero_heading: requiredText("Hero heading", 120),
-  hero_subheading: requiredText("Hero subheading", 240),
-  hero_cta_text: requiredText("Hero button text", 60),
-  hero_cta_href: z
-    .string()
-    .trim()
-    .min(1, "Hero button link is required")
-    .refine(isHref, "Use a path like /products or a full URL"),
-});
+      (value) => Number(value) <= 120,
+      `${label} must be 120 days or fewer`,
+    );
+}
+
+export const siteSettingsSchema = z
+  .object({
+    contact_email: z
+      .string()
+      .trim()
+      .max(120, "Email must be 120 characters or fewer")
+      .pipe(z.email("Enter a valid email address")),
+    contact_phone: phoneField("Phone"),
+    whatsapp_number: phoneField("WhatsApp number"),
+    address: requiredText("Address", 240),
+    opening_hours: requiredText("Opening hours", 160),
+    instagram_url: optionalUrl("Instagram"),
+    facebook_url: optionalUrl("Facebook"),
+    youtube_url: optionalUrl("YouTube"),
+    shipping_flat_fee: rupeeField("Flat shipping"),
+    free_shipping_above: z
+      .string()
+      .trim()
+      .refine(
+        (value) => value.length === 0 || WHOLE_RUPEES.test(value),
+        "Free shipping above must be a whole number of rupees",
+      ),
+    dispatch_days_min: dayCount("Earliest dispatch"),
+    dispatch_days_max: dayCount("Latest dispatch"),
+    hero_heading: requiredText("Hero heading", 120),
+    hero_subheading: requiredText("Hero subheading", 240),
+    hero_cta_text: requiredText("Hero button text", 60),
+    hero_cta_href: z
+      .string()
+      .trim()
+      .min(1, "Hero button link is required")
+      .refine(isHref, "Use a path like /products or a full URL"),
+  })
+  // A window that ends before it starts is not a sentence anyone can read.
+  .refine(
+    (values) =>
+      Number(values.dispatch_days_min) <= Number(values.dispatch_days_max),
+    {
+      message: "The latest day cannot come before the earliest",
+      path: ["dispatch_days_max"],
+    },
+  );
 
 export type SiteSettingsFormValues = z.infer<typeof siteSettingsSchema>;
 

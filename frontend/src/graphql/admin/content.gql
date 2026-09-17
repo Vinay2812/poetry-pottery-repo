@@ -26,6 +26,8 @@ fragment AdminSiteSettingsFields on SiteSettings {
   youtube_url
   shipping_flat_fee
   free_shipping_above
+  dispatch_days_min
+  dispatch_days_max
   hero_heading
   hero_subheading
   hero_cta_text

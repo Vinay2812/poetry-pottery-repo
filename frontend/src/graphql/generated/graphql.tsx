@@ -2460,7 +2460,7 @@ export type DeleteCollectionMutation = { deleteCollection: boolean };
 
 export type AdminContentPageFieldsFragment = { slug: string, title: string, subtitle: string | null, hero_image_url: string | null, is_published: boolean, updated_at: string, sections: Array<{ heading: string, body: string, items: Array<{ title: string, body: string }> }> };
 
-export type AdminSiteSettingsFieldsFragment = { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string };
+export type AdminSiteSettingsFieldsFragment = { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, dispatch_days_min: number, dispatch_days_max: number, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string };
 
 export type AdminContentPagesQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -2477,7 +2477,7 @@ export type AdminContentPageQuery = { adminContentPage: { slug: string, title: s
 export type AdminSiteSettingsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type AdminSiteSettingsQuery = { siteSettings: { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string } };
+export type AdminSiteSettingsQuery = { siteSettings: { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, dispatch_days_min: number, dispatch_days_max: number, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string } };
 
 export type SaveContentPageMutationVariables = Exact<{
   slug: string;
@@ -2499,14 +2499,14 @@ export type UpdateSiteSettingsMutationVariables = Exact<{
 }>;
 
 
-export type UpdateSiteSettingsMutation = { updateSiteSettings: { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string } };
+export type UpdateSiteSettingsMutation = { updateSiteSettings: { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, dispatch_days_min: number, dispatch_days_max: number, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string } };
 
 export type UpdateAnnouncementMutationVariables = Exact<{
   input: AdminAnnouncementInput;
 }>;
 
 
-export type UpdateAnnouncementMutation = { updateAnnouncement: { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string } };
+export type UpdateAnnouncementMutation = { updateAnnouncement: { contact_email: string, contact_phone: string, whatsapp_number: string, address: string, opening_hours: string, instagram_url: string, facebook_url: string, youtube_url: string, shipping_flat_fee: number, free_shipping_above: number | null, dispatch_days_min: number, dispatch_days_max: number, hero_heading: string, hero_subheading: string, hero_cta_text: string, hero_cta_href: string, hero_image_url: string, announcement_text: string | null, announcement_href: string | null, updated_at: string } };
 
 export type AdminCouponFieldsFragment = { id: number, code: string, kind: CouponKind, value: number, min_order: number, max_uses: number | null, uses_count: number, starts_at: string | null, expires_at: string | null, is_active: boolean, created_at: string };
 
@@ -3558,6 +3558,8 @@ export const AdminSiteSettingsFieldsFragmentDoc = gql`
   youtube_url
   shipping_flat_fee
   free_shipping_above
+  dispatch_days_min
+  dispatch_days_max
   hero_heading
   hero_subheading
   hero_cta_text

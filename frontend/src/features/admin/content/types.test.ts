@@ -19,6 +19,8 @@ import {
   toSettingsInput,
 } from "./types";
 
+import { describeDispatchWindow } from "./types";
+
 const settings: AdminSiteSettingsFieldsFragment = {
   contact_email: "studio@poetryandpottery.in",
   contact_phone: "9876543210",
@@ -29,6 +31,8 @@ const settings: AdminSiteSettingsFieldsFragment = {
   facebook_url: "",
   youtube_url: "",
   shipping_flat_fee: 80,
+  dispatch_days_min: 7,
+  dispatch_days_max: 12,
   free_shipping_above: null,
   hero_heading: "Pottery made slowly.",
   hero_subheading: "Stoneware from a small wheel studio.",
@@ -174,5 +178,15 @@ describe("isMissingPage", () => {
   it("only treats a not-found message as a new page", () => {
     expect(isMissingPage("Page not found")).toBe(true);
     expect(isMissingPage("Failed to fetch")).toBe(false);
+  });
+});
+
+describe("describeDispatchWindow", () => {
+  it("reads as a range when the ends differ", () => {
+    expect(describeDispatchWindow(7, 12)).toBe("Ships in 7 to 12 days");
+  });
+
+  it("reads as one number when both ends match", () => {
+    expect(describeDispatchWindow(9, 9)).toBe("Ships in about 9 days");
   });
 });

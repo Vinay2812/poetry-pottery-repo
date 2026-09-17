@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +11,8 @@ import {
   siteSettingsSchema,
   type SiteSettingsFormValues,
 } from "@/lib/validations/admin/content";
+
+import { describeDispatchWindow } from "@/features/admin/content/types";
 
 import { ContentTextField } from "./ContentTextField";
 
@@ -44,6 +46,7 @@ export function SiteSettingsForm({
   onSubmit,
 }: SiteSettingsFormProps) {
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
@@ -51,6 +54,13 @@ export function SiteSettingsForm({
     resolver: zodResolver(siteSettingsSchema),
     defaultValues,
   });
+
+  const dispatchMin = useWatch({ control, name: "dispatch_days_min" });
+  const dispatchMax = useWatch({ control, name: "dispatch_days_max" });
+  const dispatchLine = describeDispatchWindow(
+    Number(dispatchMin),
+    Number(dispatchMax),
+  );
 
   return (
     <form
@@ -145,6 +155,28 @@ export function SiteSettingsForm({
           isMultiline={false}
           registration={register("free_shipping_above")}
         />
+      </SettingsGroup>
+
+      <SettingsGroup title="Dispatch">
+        <ContentTextField
+          id="settings-dispatch-min"
+          label="Earliest, in days"
+          hint="The first number in \u201cships in 7 to 12 days\u201d."
+          error={errors.dispatch_days_min?.message}
+          isMultiline={false}
+          registration={register("dispatch_days_min")}
+        />
+        <ContentTextField
+          id="settings-dispatch-max"
+          label="Latest, in days"
+          hint="Never earlier than the first number."
+          error={errors.dispatch_days_max?.message}
+          isMultiline={false}
+          registration={register("dispatch_days_max")}
+        />
+        <p className="text-[12px] text-muted-foreground md:col-span-2">
+          The shelf will read: {dispatchLine}
+        </p>
       </SettingsGroup>
 
       <SettingsGroup title="Hero">

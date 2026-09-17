@@ -108,6 +108,8 @@ export function toSettingsFormValues(
     youtube_url: settings.youtube_url,
     shipping_flat_fee: formatRupeeField(settings.shipping_flat_fee),
     free_shipping_above: formatRupeeField(settings.free_shipping_above),
+    dispatch_days_min: String(settings.dispatch_days_min),
+    dispatch_days_max: String(settings.dispatch_days_max),
     hero_heading: settings.hero_heading,
     hero_subheading: settings.hero_subheading,
     hero_cta_text: settings.hero_cta_text,
@@ -136,6 +138,8 @@ export function toSettingsPatch(
     youtube_url: values.youtube_url,
     shipping_flat_fee: toRupees(values.shipping_flat_fee) ?? 0,
     free_shipping_above: toRupees(values.free_shipping_above),
+    dispatch_days_min: Number(values.dispatch_days_min),
+    dispatch_days_max: Number(values.dispatch_days_max),
     hero_heading: values.hero_heading,
     hero_subheading: values.hero_subheading,
     hero_cta_text: values.hero_cta_text,
@@ -197,4 +201,11 @@ export function nextIndex(
 /** The editor doubles as the "new page" form, so a missing page is not an error to show. */
 export function isMissingPage(message: string): boolean {
   return /not found/i.test(message);
+}
+
+/** The sentence a product page shows: "ships in 7 to 12 days". */
+export function describeDispatchWindow(min: number, max: number): string {
+  return min === max
+    ? `Ships in about ${min} days`
+    : `Ships in ${min} to ${max} days`;
 }

@@ -38,6 +38,8 @@ function settingsValues(overrides: Record<string, unknown> = {}) {
     youtube_url: "",
     shipping_flat_fee: "80",
     free_shipping_above: "1500",
+    dispatch_days_min: "7",
+    dispatch_days_max: "12",
     hero_heading: "Pottery made slowly.",
     hero_subheading: "Stoneware and terracotta from a small wheel studio.",
     hero_cta_text: "Shop the shelf",
@@ -239,5 +241,66 @@ describe("announcementSchema", () => {
         announcementSchema.safeParse({ text: "Open studio", href: "events" }),
       ),
     ).toBe("Use a path like /events or a full URL");
+  });
+});
+
+describe("siteSettingsSchema dispatch window", () => {
+  function settings(overrides: Record<string, string> = {}) {
+    return {
+      contact_email: "studio@example.com",
+      contact_phone: "9123456789",
+      whatsapp_number: "9123456789",
+      address: "12 Nandi Lane, Bengaluru",
+      opening_hours: "Tue to Sun, 11am to 7pm",
+      instagram_url: "",
+      facebook_url: "",
+      youtube_url: "",
+      shipping_flat_fee: "150",
+      free_shipping_above: "",
+      dispatch_days_min: "7",
+      dispatch_days_max: "12",
+      hero_heading: "Thrown by hand",
+      hero_subheading: "One kiln, one shelf",
+      hero_cta_text: "See the shelf",
+      hero_cta_href: "/products",
+      ...overrides,
+    };
+  }
+
+  it("takes a window that reads forwards", () => {
+    expect(siteSettingsSchema.safeParse(settings()).success).toBe(true);
+  });
+
+  it("takes a window with both ends the same", () => {
+    expect(
+      siteSettingsSchema.safeParse(
+        settings({ dispatch_days_min: "9", dispatch_days_max: "9" }),
+      ).success,
+    ).toBe(true);
+  });
+
+  it("refuses a window that ends before it starts", () => {
+    const result = siteSettingsSchema.safeParse(
+      settings({ dispatch_days_min: "14", dispatch_days_max: "3" }),
+    );
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(
+        result.error.issues.some(
+          (issue) => issue.path[0] === "dispatch_days_max",
+        ),
+      ).toBe(true);
+    }
+  });
+
+  it("refuses a dispatch day that is not a whole number", () => {
+    expect(
+      siteSettingsSchema.safeParse(settings({ dispatch_days_min: "soon" }))
+        .success,
+    ).toBe(false);
+    expect(
+      siteSettingsSchema.safeParse(settings({ dispatch_days_min: "0" }))
+        .success,
+    ).toBe(false);
   });
 });
