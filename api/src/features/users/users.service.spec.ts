@@ -1,10 +1,12 @@
+import { UnauthorizedException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { UserRole, type User } from "@prisma/client";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { MAX_PAGE_SIZE } from "@/common/pagination/pagination";
-import { UsersService } from "./users.service";
+import { EMAIL_TAKEN_MESSAGE, UsersService } from "./users.service";
 
 function makeUser(overrides: Partial<User> = {}): User {
   return {
@@ -33,13 +35,19 @@ const prismaMock = {
   withTransaction: vi.fn(),
 };
 
+const loggerMock = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
+
 async function createService(): Promise<UsersService> {
   // resetAllMocks drops implementations, so the transaction passthrough is restored here.
   prismaMock.withTransaction.mockImplementation((fn: () => Promise<unknown>) =>
     fn(),
   );
   const moduleRef = await Test.createTestingModule({
-    providers: [UsersService, { provide: PrismaService, useValue: prismaMock }],
+    providers: [
+      UsersService,
+      { provide: PrismaService, useValue: prismaMock },
+      { provide: WINSTON_MODULE_PROVIDER, useValue: loggerMock },
+    ],
   }).compile();
   return moduleRef.get(UsersService);
 }
@@ -110,6 +118,7 @@ describe("UsersService", () => {
       email: "potter@example.com",
       name: "Potter",
       image: null,
+      can_adopt: true,
     };
 
     it("takes a lock on the auth id before it looks anything up", async () => {
@@ -173,6 +182,28 @@ describe("UsersService", () => {
       });
       expect(prismaMock.user.create).not.toHaveBeenCalled();
       expect(result.role).toBe(UserRole.ADMIN);
+      expect(loggerMock.info).toHaveBeenCalledWith(
+        "adopted a user row by verified email",
+        expect.objectContaining({ user_id: 4, previous_auth_id: "user_prod" }),
+      );
+    });
+
+    it("refuses to adopt a row when the email is not a verified primary one", async () => {
+      // Signing up with someone else's address must never hand over their account.
+      const owner = makeUser({ id: 4, role: UserRole.ADMIN });
+      prismaMock.user.findUnique
+        .mockResolvedValueOnce(null)
+        .mockResolvedValueOnce(owner);
+
+      const failure: unknown = await service
+        .provisionUser({ ...input, can_adopt: false })
+        .catch((error: unknown) => error);
+
+      expect(failure).toBeInstanceOf(UnauthorizedException);
+      expect(failure).toHaveProperty("message", EMAIL_TAKEN_MESSAGE);
+      expect(prismaMock.user.update).not.toHaveBeenCalled();
+      expect(prismaMock.user.create).not.toHaveBeenCalled();
+      expect(loggerMock.warn).toHaveBeenCalled();
     });
 
     it("refreshes the profile when the auth id is already known", async () => {

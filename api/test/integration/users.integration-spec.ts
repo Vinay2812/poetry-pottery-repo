@@ -32,6 +32,7 @@ describe("user provisioning under concurrency", () => {
             email: "race@example.test",
             name: "Race",
             image: null,
+            can_adopt: true,
           }),
       ),
     );
@@ -67,6 +68,7 @@ describe("user provisioning under concurrency", () => {
             email: "meera@example.test",
             name: "Meera",
             image: null,
+            can_adopt: true,
           }),
       ),
     );

@@ -2,6 +2,7 @@ import { ForbiddenException, UnauthorizedException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { getAuth, type User as ClerkUser } from "@clerk/express";
 import { UserRole, type User } from "@prisma/client";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createHttpExecutionContext } from "@test/helpers/execution-context";
@@ -48,6 +49,7 @@ const clerkUserStub = {} as ClerkUser;
 const clerkMock = {
   getUser: vi.fn(),
   getPrimaryEmail: vi.fn(),
+  hasVerifiedPrimaryEmail: vi.fn(),
   getFullName: vi.fn(),
   getImageUrl: vi.fn(),
   updatePublicMetadata: vi.fn(),
@@ -78,6 +80,10 @@ async function createGuard<T extends AuthGuard>(guardClass: {
       UsersService,
       { provide: ClerkService, useValue: clerkMock },
       { provide: PrismaService, useValue: prismaMock },
+      {
+        provide: WINSTON_MODULE_PROVIDER,
+        useValue: { info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+      },
     ],
   }).compile();
   return moduleRef.get(guardClass);
@@ -216,6 +222,7 @@ describe("AuthGuard", () => {
       .mockResolvedValueOnce(imported);
     clerkMock.getUser.mockResolvedValue(clerkUserStub);
     clerkMock.getPrimaryEmail.mockReturnValue("potter@example.com");
+    clerkMock.hasVerifiedPrimaryEmail.mockReturnValue(true);
     clerkMock.getFullName.mockReturnValue("Potter");
     clerkMock.getImageUrl.mockReturnValue(undefined);
     prismaMock.user.update.mockResolvedValue({
@@ -236,6 +243,32 @@ describe("AuthGuard", () => {
       role: UserRole.USER,
       auth_id: "user_dev",
     });
+  });
+
+  it("refuses to hand over an existing row to an unverified address", async () => {
+    // The email is someone else's and this account has not proved it owns it.
+    const owner = makeUser({
+      id: 4,
+      auth_id: "user_prod",
+      role: UserRole.ADMIN,
+    });
+    mockAuth({ isAuthenticated: true, userId: "user_evil", sessionClaims: {} });
+    prismaMock.user.findUnique
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(owner);
+    clerkMock.getUser.mockResolvedValue(clerkUserStub);
+    clerkMock.getPrimaryEmail.mockReturnValue("potter@example.com");
+    clerkMock.hasVerifiedPrimaryEmail.mockReturnValue(false);
+    clerkMock.getFullName.mockReturnValue("Potter");
+    clerkMock.getImageUrl.mockReturnValue(undefined);
+
+    await expect(
+      authGuard.canActivate(createHttpExecutionContext({ request: {} })),
+    ).rejects.toBeInstanceOf(UnauthorizedException);
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+    expect(prismaMock.user.create).not.toHaveBeenCalled();
+    expect(clerkMock.updatePublicMetadata).not.toHaveBeenCalled();
   });
 
   it("rejects when the Clerk profile has no email address", async () => {

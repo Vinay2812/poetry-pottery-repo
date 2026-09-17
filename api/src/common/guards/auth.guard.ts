@@ -89,6 +89,7 @@ export class AuthGuard implements CanActivate {
         email: primaryEmail,
         name,
         image,
+        can_adopt: this.clerk.hasVerifiedPrimaryEmail(clerkUser),
       });
 
       await this.clerk.updatePublicMetadata(authId, {

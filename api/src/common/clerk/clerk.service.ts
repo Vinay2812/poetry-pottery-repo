@@ -14,6 +14,15 @@ export class ClerkService {
     );
   }
 
+  // Only a verified primary address proves the caller owns that mailbox, so a secondary or
+  // unverified one is never allowed to claim an account that already holds the email.
+  hasVerifiedPrimaryEmail(user: ClerkUser): boolean {
+    const primary = user.emailAddresses.find(
+      (address) => address.id === user.primaryEmailAddressId,
+    );
+    return primary?.verification?.status === "verified";
+  }
+
   getFullName(user: ClerkUser): string | undefined {
     if (user.fullName) {
       return user.fullName;

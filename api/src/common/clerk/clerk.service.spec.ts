@@ -32,8 +32,13 @@ type ClerkUserFields = Pick<
 function address(
   id: string,
   emailAddress: string,
+  status: "verified" | "unverified" | null = null,
 ): ClerkUser["emailAddresses"][number] {
-  return { id, emailAddress, verification: null, linkedTo: [] };
+  const verification =
+    status === null
+      ? null
+      : ({ status } as ClerkUser["emailAddresses"][number]["verification"]);
+  return { id, emailAddress, verification, linkedTo: [] };
 }
 
 // ClerkService only reads these fields; the rest of Clerk's User is never touched.
@@ -98,6 +103,45 @@ describe("ClerkService", () => {
     });
 
     expect(service.getPrimaryEmail(user)).toBeUndefined();
+  });
+
+  it("trusts only a verified primary address", () => {
+    const user = makeClerkUser({
+      emailAddresses: [address("idn_1", "meera@example.com", "verified")],
+      primaryEmailAddressId: "idn_1",
+    });
+
+    expect(service.hasVerifiedPrimaryEmail(user)).toBe(true);
+  });
+
+  it("does not trust a primary address that is still unverified", () => {
+    const user = makeClerkUser({
+      emailAddresses: [address("idn_1", "meera@example.com", "unverified")],
+      primaryEmailAddressId: "idn_1",
+    });
+
+    expect(service.hasVerifiedPrimaryEmail(user)).toBe(false);
+  });
+
+  it("does not trust a verified address that is not the primary one", () => {
+    const user = makeClerkUser({
+      emailAddresses: [
+        address("idn_1", "meera@studio.test", "verified"),
+        address("idn_2", "someone@example.com", "unverified"),
+      ],
+      primaryEmailAddressId: "idn_2",
+    });
+
+    expect(service.hasVerifiedPrimaryEmail(user)).toBe(false);
+  });
+
+  it("does not trust an account with nothing marked primary", () => {
+    const user = makeClerkUser({
+      emailAddresses: [address("idn_1", "meera@example.com", "verified")],
+      primaryEmailAddressId: null,
+    });
+
+    expect(service.hasVerifiedPrimaryEmail(user)).toBe(false);
   });
 
   it("uses the full name Clerk already assembled", () => {

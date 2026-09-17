@@ -1,5 +1,6 @@
 import { Test, type TestingModule } from "@nestjs/testing";
 import { EventStatus, type Prisma } from "@prisma/client";
+import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { Client } from "pg";
 
 import { CartService } from "@/features/cart/cart.service";
@@ -41,6 +42,14 @@ class RedisStub {
   del(): Promise<void> {
     return Promise.resolve();
   }
+}
+
+class LoggerStub {
+  info(): void {}
+
+  warn(): void {}
+
+  error(): void {}
 }
 
 class MailStub {
@@ -160,6 +169,7 @@ export async function createHarness(
         useFactory: (): PrismaService =>
           withAmbientTransactions(new PrismaService()),
       },
+      { provide: WINSTON_MODULE_PROVIDER, useClass: LoggerStub },
       { provide: RedisService, useClass: RedisStub },
       { provide: MailService, useValue: options.mail ?? new MailStub() },
       { provide: SearchService, useClass: SearchStub },
