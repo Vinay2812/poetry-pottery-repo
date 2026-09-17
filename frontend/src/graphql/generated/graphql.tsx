@@ -2987,6 +2987,23 @@ export type SetUserRoleMutationVariables = Exact<{
 
 export type SetUserRoleMutation = { setUserRole: { role: UserRole, phone: string | null, created_at: string, orders_count: number, registrations_count: number, bookings_count: number, reviews_count: number, user: { id: number, name: string | null, email: string, image: string | null } } };
 
+export type AdminStudioVisitFieldsFragment = { created_at: string, visit: { id: string, starts_at: string, ends_at: string, name: string, phone: string, note: string | null, cancelled_at: string | null }, customer: { id: number, name: string | null, email: string, image: string | null } | null };
+
+export type AdminStudioVisitsQueryVariables = Exact<{
+  filter?: AdminStudioVisitsFilterInput | null | undefined;
+}>;
+
+
+export type AdminStudioVisitsQuery = { adminStudioVisits: { items: Array<{ created_at: string, visit: { id: string, starts_at: string, ends_at: string, name: string, phone: string, note: string | null, cancelled_at: string | null }, customer: { id: number, name: string | null, email: string, image: string | null } | null }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type CancelStudioVisitMutationVariables = Exact<{
+  id: string;
+  reason?: string | null | undefined;
+}>;
+
+
+export type CancelStudioVisitMutation = { cancelStudioVisit: { id: string, starts_at: string, ends_at: string, name: string, phone: string, note: string | null, cancelled_at: string | null } };
+
 export type AdminWorkshopConfigFieldsFragment = { id: number, slug: string, name: string, description: string | null, image_url: string | null, is_active: boolean, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ id: number, hours: number, price_per_person: number, pieces_per_person: number }> };
 
 export type AdminWorkshopBlackoutFieldsFragment = { id: number, config_id: number, starts_at: string, ends_at: string, reason: string | null };
@@ -3957,6 +3974,23 @@ export const AdminUserFieldsFragmentDoc = gql`
   user {
     ...AdminUserRefFields
   }
+}
+    `;
+export const AdminStudioVisitFieldsFragmentDoc = gql`
+    fragment AdminStudioVisitFields on AdminStudioVisit {
+  visit {
+    id
+    starts_at
+    ends_at
+    name
+    phone
+    note
+    cancelled_at
+  }
+  customer {
+    ...AdminUserRefFields
+  }
+  created_at
 }
     `;
 export const AdminWorkshopConfigFieldsFragmentDoc = gql`
@@ -6970,6 +7004,86 @@ export function useSetUserRoleMutation(baseOptions?: ApolloReactHooks.MutationHo
       }
 export type SetUserRoleMutationHookResult = ReturnType<typeof useSetUserRoleMutation>;
 export type SetUserRoleMutationResult = ApolloReactCommon.MutationResult<SetUserRoleMutation>;
+export const AdminStudioVisitsDocument = gql`
+    query AdminStudioVisits($filter: AdminStudioVisitsFilterInput) {
+  adminStudioVisits(filter: $filter) {
+    items {
+      ...AdminStudioVisitFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminStudioVisitFieldsFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminStudioVisitsQuery__
+ *
+ * To run a query within a React component, call `useAdminStudioVisitsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminStudioVisitsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminStudioVisitsQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminStudioVisitsQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminStudioVisitsQuery, AdminStudioVisitsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminStudioVisitsQuery, AdminStudioVisitsQueryVariables>(AdminStudioVisitsDocument, options);
+      }
+export function useAdminStudioVisitsLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminStudioVisitsQuery, AdminStudioVisitsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminStudioVisitsQuery, AdminStudioVisitsQueryVariables>(AdminStudioVisitsDocument, options);
+        }
+export type AdminStudioVisitsQueryHookResult = ReturnType<typeof useAdminStudioVisitsQuery>;
+export type AdminStudioVisitsLazyQueryHookResult = ReturnType<typeof useAdminStudioVisitsLazyQuery>;
+export type AdminStudioVisitsQueryResult = ApolloReactCommon.QueryResult<AdminStudioVisitsQuery, AdminStudioVisitsQueryVariables>;
+export const CancelStudioVisitDocument = gql`
+    mutation CancelStudioVisit($id: String!, $reason: String) {
+  cancelStudioVisit(id: $id, reason: $reason) {
+    id
+    starts_at
+    ends_at
+    name
+    phone
+    note
+    cancelled_at
+  }
+}
+    `;
+
+/**
+ * __useCancelStudioVisitMutation__
+ *
+ * To run a mutation, you first call `useCancelStudioVisitMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCancelStudioVisitMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [cancelStudioVisitMutation, { data, loading, error }] = useCancelStudioVisitMutation({
+ *   variables: {
+ *      id: // value for 'id'
+ *      reason: // value for 'reason'
+ *   },
+ * });
+ */
+export function useCancelStudioVisitMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<CancelStudioVisitMutation, CancelStudioVisitMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<CancelStudioVisitMutation, CancelStudioVisitMutationVariables>(CancelStudioVisitDocument, options);
+      }
+export type CancelStudioVisitMutationHookResult = ReturnType<typeof useCancelStudioVisitMutation>;
+export type CancelStudioVisitMutationResult = ApolloReactCommon.MutationResult<CancelStudioVisitMutation>;
 export const AdminWorkshopConfigsDocument = gql`
     query AdminWorkshopConfigs {
   adminWorkshopConfigs {

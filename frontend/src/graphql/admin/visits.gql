@@ -1,0 +1,38 @@
+fragment AdminStudioVisitFields on AdminStudioVisit {
+  visit {
+    id
+    starts_at
+    ends_at
+    name
+    phone
+    note
+    cancelled_at
+  }
+  customer {
+    ...AdminUserRefFields
+  }
+  created_at
+}
+
+query AdminStudioVisits($filter: AdminStudioVisitsFilterInput) {
+  adminStudioVisits(filter: $filter) {
+    items {
+      ...AdminStudioVisitFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+mutation CancelStudioVisit($id: String!, $reason: String) {
+  cancelStudioVisit(id: $id, reason: $reason) {
+    id
+    starts_at
+    ends_at
+    name
+    phone
+    note
+    cancelled_at
+  }
+}
