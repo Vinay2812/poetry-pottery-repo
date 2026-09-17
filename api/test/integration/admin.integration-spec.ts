@@ -186,6 +186,93 @@ describe("admin writes against the storefront", () => {
     expect(registrations[0]?.status).toBe(RegistrationStatus.PENDING);
   });
 
+  it("leaves no live registration behind when guests book into a cancellation", async () => {
+    const event = await makeEvent(harness.prisma, 20);
+    const users = await makeUsers(harness.prisma, RACERS);
+    const early = users.slice(0, 4);
+    const late = users.slice(4);
+    for (const guest of early) {
+      await harness.events.register(guest.id, { event_id: event.id, seats: 1 });
+    }
+
+    await race<unknown>([
+      () => harness.adminEvents.cancel(event.id, "Kiln repair"),
+      ...late.map(
+        (user) => () =>
+          harness.events.register(user.id, { event_id: event.id, seats: 1 }),
+      ),
+    ]);
+
+    const after = await harness.prisma.event.findUniqueOrThrow({
+      where: { id: event.id },
+    });
+    expect(after.status).toBe(EventStatus.CANCELLED);
+    // A cancelled evening holds no seats: every guest was either refused or cancelled.
+    expect(await seatsHeld(event.id)).toBe(0);
+    expect(after.available_seats).toBe(after.total_seats);
+  });
+
+  it("lets only one of two concurrent cancellations land and finishes the sweep", async () => {
+    const event = await makeEvent(harness.prisma, 10);
+    const guests = await makeUsers(harness.prisma, 3);
+    for (const guest of guests) {
+      await harness.events.register(guest.id, { event_id: event.id, seats: 2 });
+    }
+
+    const outcome = await race<unknown>([
+      () => harness.adminEvents.cancel(event.id, "Kiln repair"),
+      () => harness.adminEvents.cancel(event.id, "Instructor ill"),
+    ]);
+
+    expect(outcome.wins).toHaveLength(1);
+    const after = await harness.prisma.event.findUniqueOrThrow({
+      where: { id: event.id },
+    });
+    expect(after.status).toBe(EventStatus.CANCELLED);
+    expect(after.available_seats).toBe(after.total_seats);
+    const rows = await harness.prisma.eventRegistration.findMany({
+      where: { event_id: event.id },
+    });
+    expect(rows).toHaveLength(3);
+    expect(
+      rows.every((row) => row.status === RegistrationStatus.CANCELLED),
+    ).toBe(true);
+  });
+
+  it("never leaves an evening half cancelled when another console move lands mid-sweep", async () => {
+    const event = await makeEvent(harness.prisma, 12);
+    const guests = await makeUsers(harness.prisma, 4);
+    const placed = [];
+    for (const guest of guests) {
+      placed.push(
+        await harness.events.register(guest.id, {
+          event_id: event.id,
+          seats: 1,
+        }),
+      );
+    }
+    const target = placed[2];
+    if (!target) throw new Error("no registration");
+
+    await race<unknown>([
+      () => harness.adminEvents.cancel(event.id, "Kiln repair"),
+      () =>
+        harness.adminEvents.setRegistrationStatus(
+          target.id,
+          RegistrationStatus.APPROVED,
+          null,
+        ),
+    ]);
+
+    const after = await harness.prisma.event.findUniqueOrThrow({
+      where: { id: event.id },
+    });
+    const live = await seatsHeld(event.id);
+    // Either the cancellation took the whole evening or none of it, never a mix.
+    expect(live).toBe(after.status === EventStatus.CANCELLED ? 0 : 4);
+    expect(after.available_seats).toBe(after.total_seats - live);
+  });
+
   it("lets only one of two concurrent status moves land", async () => {
     const event = await makeEvent(harness.prisma, 10);
 

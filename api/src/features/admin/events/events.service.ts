@@ -15,8 +15,11 @@ import {
   toRegistration,
 } from "@/features/events/events.service";
 import { canTransition as canEventTransition } from "@/features/events/event-status";
-import { canTransition } from "@/features/events/registration-status";
-import type { Event } from "@/features/events/events.type";
+import {
+  canTransition,
+  SEAT_HOLDING,
+} from "@/features/events/registration-status";
+import type { Event, Registration } from "@/features/events/events.type";
 import { SearchService } from "@/features/search/search.service";
 import { searchTerm, toUserRef, trimmed } from "../admin.type";
 import { slugify, uniqueSlug } from "../slug";
@@ -239,35 +242,52 @@ export class AdminEventsService {
     return toEvent(row);
   }
 
-  // Calling off an evening gives every held seat back and mails the guests, through the shared transitions.
+  // Calling off an evening gives every held seat back and mails the guests, through the shared
+  // transitions. The whole sweep is one transaction that pins the event and flips it first, so a
+  // guest reaching for a seat is refused rather than left holding one on a cancelled evening, and
+  // a second admin waits on the lock and is then told there is nothing left to call off.
   async cancel(id: number, reason: string | null): Promise<Event> {
-    await this.requireStatus(id, EventStatus.CANCELLED);
     const note = trimmed(reason, 300) ?? "The studio called this one off";
-    const live = await this.prisma.eventRegistration.findMany({
-      where: {
-        event_id: id,
-        status: {
-          in: [
-            RegistrationStatus.PENDING,
-            RegistrationStatus.APPROVED,
-            RegistrationStatus.CONFIRMED,
-          ],
-        },
-      },
-      include: adminRegistrationInclude,
+    const { row, mails } = await this.prisma.withTransaction(async () => {
+      await this.prisma
+        .$executeRaw`SELECT id FROM events WHERE id = ${id} FOR UPDATE`;
+      const current = await this.requireStatus(id, EventStatus.CANCELLED);
+      const moved = await this.prisma.event.updateMany({
+        where: { id, status: current },
+        data: { status: EventStatus.CANCELLED },
+      });
+      if (moved.count === 0) {
+        throw new ConflictException(
+          "This event was just updated, refresh and try again",
+        );
+      }
+      const live = await this.prisma.eventRegistration.findMany({
+        where: { event_id: id, status: { in: [...SEAT_HOLDING] } },
+        include: adminRegistrationInclude,
+      });
+      const mails: { user_id: number; registration: Registration }[] = [];
+      for (const registration of live) {
+        const updated = await this.events.applyStatus(
+          registration,
+          RegistrationStatus.CANCELLED,
+          note,
+        );
+        mails.push({
+          user_id: registration.user_id,
+          registration: toRegistration(updated),
+        });
+      }
+      return {
+        row: await this.prisma.event.findUniqueOrThrow({ where: { id } }),
+        mails,
+      };
     });
-    for (const registration of live) {
-      const updated = await this.events.applyStatus(
-        registration,
-        RegistrationStatus.CANCELLED,
-        note,
-      );
-      await this.events.notifyStatus(
-        registration.user_id,
-        toRegistration(updated),
-      );
+    // Only once the cancellation has committed, so a rolled back sweep mails nobody.
+    for (const mail of mails) {
+      await this.events.notifyStatus(mail.user_id, mail.registration);
     }
-    return this.setStatus(id, EventStatus.CANCELLED);
+    await this.search.requestEventIndex(id);
+    return toEvent(row);
   }
 
   async registrations(

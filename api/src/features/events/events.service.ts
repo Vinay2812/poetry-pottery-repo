@@ -212,14 +212,29 @@ export class EventsService {
       }
 
       // Conditional decrement is the overbooking guard: the last seat cannot be taken twice.
+      // The status is part of the condition too, so a guest waiting behind a cancellation
+      // cannot take a seat on an evening that has just been called off.
       const held = await this.prisma.event.updateMany({
-        where: { id: event.id, available_seats: { gte: seats } },
+        where: {
+          id: event.id,
+          status: EventStatus.PUBLISHED,
+          available_seats: { gte: seats },
+        },
         data: { available_seats: { decrement: seats } },
       });
       if (held.count === 0) {
+        const fresh = await this.prisma.event.findUnique({
+          where: { id: event.id },
+          select: { status: true, available_seats: true },
+        });
+        if (!fresh || fresh.status !== EventStatus.PUBLISHED) {
+          throw new BadRequestException(
+            "Registrations for this event have closed",
+          );
+        }
         throw new BadRequestException(
-          event.available_seats > 0
-            ? `Only ${event.available_seats} seats left`
+          fresh.available_seats > 0
+            ? `Only ${fresh.available_seats} seats left`
             : "This event is full",
         );
       }

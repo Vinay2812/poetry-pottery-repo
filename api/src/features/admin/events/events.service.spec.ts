@@ -69,6 +69,7 @@ const registrationRow = {
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  $executeRaw: vi.fn(),
   event: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
@@ -142,6 +143,11 @@ describe("AdminEventsService", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    prismaMock.withTransaction.mockImplementation(
+      (fn: () => Promise<unknown>) => fn(),
+    );
+    prismaMock.$executeRaw.mockResolvedValue(1);
+    eventsMock.notifyStatus.mockResolvedValue(undefined);
     prismaMock.event.findMany.mockResolvedValue([]);
     prismaMock.event.count.mockResolvedValue(0);
     prismaMock.event.findUnique.mockResolvedValue(eventRow);
@@ -303,6 +309,40 @@ describe("AdminEventsService", () => {
       where: { id: 3, status: EventStatus.PUBLISHED },
       data: { status: EventStatus.CANCELLED },
     });
+    // Pin the row, close the event, then walk the seats: no guest can slip in between.
+    expect(prismaMock.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      prismaMock.event.updateMany.mock.invocationCallOrder[0] ?? 0,
+    );
+    expect(
+      prismaMock.event.updateMany.mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      prismaMock.eventRegistration.findMany.mock.invocationCallOrder[0] ?? 0,
+    );
+  });
+
+  it("mails the guests only after the cancellation has committed", async () => {
+    prismaMock.event.findUnique.mockResolvedValue({
+      ...eventRow,
+      status: EventStatus.PUBLISHED,
+    });
+    prismaMock.eventRegistration.findMany.mockResolvedValue([registrationRow]);
+    let inTransaction = false;
+    prismaMock.withTransaction.mockImplementation(
+      async (fn: () => Promise<unknown>) => {
+        inTransaction = true;
+        const result = await fn();
+        inTransaction = false;
+        return result;
+      },
+    );
+    eventsMock.notifyStatus.mockImplementation(() => {
+      expect(inTransaction).toBe(false);
+      return Promise.resolve();
+    });
+
+    await service.cancel(3, "Kiln repair");
+
+    expect(eventsMock.notifyStatus).toHaveBeenCalledTimes(1);
   });
 
   it("refunds nothing and mails nobody when the event has already run", async () => {

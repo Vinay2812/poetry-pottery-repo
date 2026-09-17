@@ -183,7 +183,11 @@ describe("EventsService", () => {
     const registration = await service.register(1, { event_id: 1, seats: 2 });
 
     expect(prismaMock.event.updateMany).toHaveBeenCalledWith({
-      where: { id: 1, available_seats: { gte: 2 } },
+      where: {
+        id: 1,
+        status: EventStatus.PUBLISHED,
+        available_seats: { gte: 2 },
+      },
       data: { available_seats: { decrement: 2 } },
     });
     expect(prismaMock.eventRegistration.create).toHaveBeenCalledWith(
@@ -258,6 +262,18 @@ describe("EventsService", () => {
     await expect(
       service.register(1, { event_id: 1, seats: 9 }),
     ).rejects.toThrow("between 1 and 4");
+  });
+
+  it("says registrations have closed when the evening was called off mid-hold", async () => {
+    prismaMock.eventRegistration.findUnique.mockResolvedValue(null);
+    prismaMock.event.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.event.findUnique
+      .mockResolvedValueOnce(eventRow())
+      .mockResolvedValueOnce(eventRow({ status: EventStatus.CANCELLED }));
+
+    await expect(
+      service.register(1, { event_id: 1, seats: 1 }),
+    ).rejects.toThrow("Registrations for this event have closed");
   });
 
   it("returns seats on customer cancellation before confirmation", async () => {
