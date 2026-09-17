@@ -12,6 +12,17 @@ export function toSelectionSummary(selections: CartSelection[]): string | null {
     .join(" · ");
 }
 
+const LOW_STOCK_THRESHOLD = 3;
+
+// Said only when it changes a decision: a batch nearly gone is worth knowing before checkout.
+export function toStockNotice(
+  stock: number,
+  isCustomizable: boolean,
+): string | null {
+  if (isCustomizable || stock <= 0 || stock > LOW_STOCK_THRESHOLD) return null;
+  return stock === 1 ? "Only 1 left" : `Only ${stock} left`;
+}
+
 export function toMaxQuantity(
   stock: number,
   isCustomizable: boolean,

@@ -10,7 +10,11 @@ import { CartSummary } from "@/features/cart/components/CartSummary";
 import { EmptyCart } from "@/features/cart/components/EmptyCart";
 import { FreeShippingNudge } from "@/features/cart/components/FreeShippingNudge";
 import { useCart } from "@/features/cart/hooks";
-import { toMaxQuantity, toSelectionSummary } from "@/features/cart/types";
+import {
+  toMaxQuantity,
+  toSelectionSummary,
+  toStockNotice,
+} from "@/features/cart/types";
 import { toProductPath } from "@/features/products/types";
 import { useToggleWishlist, useWishlistIds } from "@/features/wishlist/hooks";
 
@@ -66,6 +70,10 @@ export function CartContainer() {
                   item.product.is_customizable,
                 )}
                 selectionSummary={toSelectionSummary(item.selections)}
+                stockNotice={toStockNotice(
+                  item.product.stock,
+                  item.product.is_customizable,
+                )}
                 referenceImageUrls={item.reference_image_urls}
                 isAvailable={item.is_available}
                 canAdjustQuantity={

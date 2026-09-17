@@ -27,6 +27,18 @@ export const Default: Story = {};
 
 export const LongSession: Story = { args: { hours: 3 } };
 
+export const FiveTiers: Story = {
+  args: {
+    tiers: [
+      { hours: 1, price_per_person: 1100, pieces_per_person: 1 },
+      { hours: 2, price_per_person: 2000, pieces_per_person: 2 },
+      { hours: 3, price_per_person: 2700, pieces_per_person: 3 },
+      { hours: 10, price_per_person: 7500, pieces_per_person: 6 },
+      { hours: 13, price_per_person: 12000, pieces_per_person: 8 },
+    ],
+  },
+};
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };

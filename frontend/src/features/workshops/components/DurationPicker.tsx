@@ -15,7 +15,11 @@ export function DurationPicker({
   onChange,
 }: DurationPickerProps) {
   return (
-    <div role="group" aria-label="How long" className="flex flex-wrap gap-2">
+    <div
+      role="group"
+      aria-label="How long"
+      className="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-2"
+    >
       {tiers.map((tier) => (
         <button
           key={tier.hours}

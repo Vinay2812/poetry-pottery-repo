@@ -18,6 +18,7 @@ export interface CartLineItemProps {
   quantity: number;
   maxQuantity: number;
   selectionSummary: string | null;
+  stockNotice: string | null;
   referenceImageUrls: string[];
   isAvailable: boolean;
   canAdjustQuantity: boolean;
@@ -39,6 +40,7 @@ export function CartLineItem({
   quantity,
   maxQuantity,
   selectionSummary,
+  stockNotice,
   referenceImageUrls,
   isAvailable,
   canAdjustQuantity,
@@ -78,6 +80,11 @@ export function CartLineItem({
             {selectionSummary && (
               <p className="mt-1 truncate text-[13px] text-muted-foreground">
                 {selectionSummary}
+              </p>
+            )}
+            {isAvailable && stockNotice && (
+              <p className="mt-1 text-[13px] text-terracotta-dark">
+                {stockNotice}
               </p>
             )}
             {/* One of one costs what the line costs; "each" only means something above that. */}
