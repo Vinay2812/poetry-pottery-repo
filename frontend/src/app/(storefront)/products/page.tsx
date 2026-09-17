@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { getCollection } from "@/lib/data/catalog";
 
+import { ARCHIVE_PATH } from "@/features/archive";
 import { ARCHIVE_VIEW, ProductListContainer } from "@/features/products";
 import Loading from "./loading";
 
@@ -13,31 +15,25 @@ export const metadata: Metadata = {
 };
 
 const SHELF_DESCRIPTION = "Thrown, glazed and fired by hand in small batches.";
-const ARCHIVE_DESCRIPTION =
-  "Pieces that have sold, retired or closed with their collection. Ask us for one like it.";
 
 export default async function ProductsPage({
   searchParams,
 }: PageProps<"/products">) {
   const params = await searchParams;
+  // The archive is its own dated gallery; the old shelf view of it is not a second one.
+  if (params.view === ARCHIVE_VIEW) redirect(ARCHIVE_PATH);
+
   const collectionSlug =
     typeof params.collection === "string" ? params.collection : null;
-  const isArchive = params.view === ARCHIVE_VIEW;
   const collection = collectionSlug
-    ? await getCollection(collectionSlug, isArchive)
+    ? await getCollection(collectionSlug, false)
     : null;
 
   return (
     <Suspense fallback={<Loading />}>
       <ProductListContainer
-        heading={
-          collection?.name ??
-          (isArchive ? "The archive" : "Every piece on the shelf")
-        }
-        description={
-          collection?.description ??
-          (isArchive ? ARCHIVE_DESCRIPTION : SHELF_DESCRIPTION)
-        }
+        heading={collection?.name ?? "Every piece on the shelf"}
+        description={collection?.description ?? SHELF_DESCRIPTION}
       />
     </Suspense>
   );
