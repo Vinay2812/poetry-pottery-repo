@@ -28,8 +28,9 @@ Two supporting rules:
 - **Shared optimistic state gets a context provider** in the feature, not zustand — zustand is
   for interface state, never for server data. The header cart count and the cart page read one
   provider; every heart on the site reads one wishlist provider.
-- **Sign-out is a lifecycle call, not a hand-edit.** `client.clearStore()` once on user change,
-  rather than evicting a hand-maintained list of root fields.
+- **Sign-out is a lifecycle call, not a hand-edit.** `client.resetStore()` once on user change,
+  rather than evicting a hand-maintained list of root fields. It restarts the queries it
+  cancels, where `clearStore` would leave them empty.
 - **`fetchMore` pagination is fetching, not optimistic state.** Leave it alone.
 
 Shorthands used in the fix column:
@@ -146,7 +147,7 @@ payload (or an awaited refetch) becomes the new baseline.
 | `src/features/workshops/hooks.ts`                           | 192–203 | `writeBooking` `writeQuery` after cancel and reschedule                        | opt-mutation over the booking                                   |
 | `src/features/checkout/containers/CheckoutContainer.tsx`    | 50–71   | `evict` `orders`, `readQuery`/`writeQuery` an emptied cart                     | `refetchQueries: ["Cart", "Orders"]` with `awaitRefetchQueries` |
 | `src/features/products/containers/ProductListContainer.tsx` | 191     | `fetchMore` `updateQuery` concatenating product pages                          | keep for now; pagination, not optimism                          |
-| `src/lib/apollo/apollo-provider.tsx`                        | 22–48   | `evict` of a hand-maintained list of user-scoped root fields on user change    | replace the whole list with one `client.clearStore()`           |
+| `src/lib/apollo/apollo-provider.tsx`                        | 22–48   | `evict` of a hand-maintained list of user-scoped root fields on user change    | replace the whole list with one `client.resetStore()`           |
 
 The two `fetchMore` `updateQuery` calls are the only cache writes worth keeping: that is how
 Apollo paginates, and pagination is fetching rather than optimistic state. Nobody may borrow
@@ -164,7 +165,7 @@ them to fake optimism.
 | Workshops           | Cancel and reschedule land on the click; pager is local-first                                        |
 | Checkout            | Cart and orders are fetched again after an order is placed, in place of cache surgery                |
 | Newsletter, contact | The thank-you shows on submit; both status lines keep their height so nothing jumps                  |
-| Session             | One `client.clearStore()` on an account change, in place of a hand-maintained eviction list          |
+| Session             | One `client.resetStore()` on an account change, in place of a hand-maintained eviction list          |
 
 No `optimisticResponse`, `cache.writeQuery`, `cache.modify`, `cache.evict` or `readQuery`
 remains in `frontend/src`. The two `fetchMore` `updateQuery` calls stay: that is pagination.
