@@ -1,9 +1,10 @@
 "use client";
 
-import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { useEffect, useRef, useState } from "react";
 
 import { useStopBatchNotificationMutation } from "@/graphql/generated/graphql";
+
+import { isNotFoundError } from "@/lib/apollo/errors";
 
 import { ConfirmationLine } from "@/features/content/components/ConfirmationLine";
 
@@ -14,16 +15,6 @@ export interface StopNotifyContainerProps {
 const MISSING_TOKEN =
   "That link is missing its code, so we could not find you.";
 const SPENT_LINK = "That link has already been used or has expired.";
-
-// The API answers an unknown or spent token with a 404 rather than false.
-function isUnknownToken(error: unknown): boolean {
-  if (!CombinedGraphQLErrors.is(error)) return false;
-  return error.errors.some((item) => {
-    const original = item.extensions?.originalError as
-      { statusCode?: number } | undefined;
-    return original?.statusCode === 404;
-  });
-}
 
 export function StopNotifyContainer({ token }: StopNotifyContainerProps) {
   const hasToken = token.length > 0;
@@ -47,7 +38,7 @@ export function StopNotifyContainer({ token }: StopNotifyContainerProps) {
       })
       .catch((error: unknown) => {
         setLine(
-          isUnknownToken(error)
+          isNotFoundError(error)
             ? SPENT_LINK
             : "We could not do that just now. Try the link again later.",
         );

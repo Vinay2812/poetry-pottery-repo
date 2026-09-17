@@ -40,8 +40,8 @@ import {
   type WorkshopsQuery,
   type WorkshopsQueryVariables,
 } from "@/graphql/generated/graphql";
-import { CombinedGraphQLErrors } from "@apollo/client/errors";
 
+import { isNotFoundError } from "@/lib/apollo/errors";
 import { getClient } from "@/lib/apollo/rsc-client";
 
 export async function getCategories(): Promise<CategoriesQuery["categories"]> {
@@ -50,15 +50,6 @@ export async function getCategories(): Promise<CategoriesQuery["categories"]> {
     CategoriesQueryVariables
   >({ query: CategoriesDocument });
   return data?.categories ?? [];
-}
-
-function isNotFoundError(error: unknown): boolean {
-  if (!CombinedGraphQLErrors.is(error)) return false;
-  return error.errors.some((item) => {
-    const original = item.extensions?.originalError as
-      { statusCode?: number } | undefined;
-    return original?.statusCode === 404;
-  });
 }
 
 export async function getCollection(
