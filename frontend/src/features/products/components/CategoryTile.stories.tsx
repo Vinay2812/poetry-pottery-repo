@@ -15,6 +15,7 @@ const meta = {
   ],
   args: {
     href: "/products?category=mugs",
+    slug: "mugs",
     name: "Mugs",
     imageUrl:
       "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
@@ -33,7 +34,15 @@ export const WithoutImage: Story = {
 };
 
 export const SinglePiece: Story = {
-  args: { name: "Vases", productCount: 1 },
+  args: { slug: "vases", name: "Vases", productCount: 1 },
+};
+
+export const WoodFired: Story = {
+  args: { slug: "wood-fired", name: "Wood Fired", productCount: 6 },
+};
+
+export const Accessories: Story = {
+  args: { slug: "accessories", name: "Accessories", productCount: 9 },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

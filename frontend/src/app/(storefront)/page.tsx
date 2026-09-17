@@ -51,6 +51,7 @@ export default async function HomePage() {
               <CategoryTile
                 key={category.id}
                 href={`/products?category=${category.slug}`}
+                slug={category.slug}
                 name={category.name}
                 imageUrl={category.image_url}
                 productCount={category.product_count}
