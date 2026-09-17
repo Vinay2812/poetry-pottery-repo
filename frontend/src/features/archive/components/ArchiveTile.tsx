@@ -4,11 +4,14 @@ import Link from "next/link";
 import { toPotteryIconKind } from "@/components/icons/pottery";
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 
+import { toAskLabel } from "@/features/archive/types";
+
 export interface ArchiveTileProps {
   href: string;
   name: string;
   imageUrl: string | null;
   madeLabel: string;
+  askUrl: string | null;
   isPriority?: boolean;
   isEager?: boolean;
 }
@@ -21,6 +24,7 @@ export function ArchiveTile({
   name,
   imageUrl,
   madeLabel,
+  askUrl,
   isPriority = false,
   isEager = false,
 }: ArchiveTileProps) {
@@ -52,6 +56,20 @@ export function ArchiveTile({
           {name}
         </Link>
         <p className="text-[13px] text-muted-foreground">{madeLabel}</p>
+        {/* The line is held open even without a number, so tiles across a shelf stay level. */}
+        <div className="min-h-5">
+          {askUrl && (
+            <a
+              href={askUrl}
+              target="_blank"
+              rel="noopener"
+              aria-label={toAskLabel(name)}
+              className="w-fit link-underline text-[13px] text-muted-foreground"
+            >
+              Ask for one like it
+            </a>
+          )}
+        </div>
       </div>
     </article>
   );

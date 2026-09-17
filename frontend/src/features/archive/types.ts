@@ -26,6 +26,11 @@ export function toYear(createdAt: string): string {
   return YEAR.format(new Date(createdAt));
 }
 
+// Every tile repeats the same words, so the accessible name says which piece is meant.
+export function toAskLabel(name: string): string {
+  return `Ask for one like the ${name}`;
+}
+
 interface ArchiveShelf {
   collection: string;
   // Where this shelf starts on the wall, so the first tiles can be the eager ones.

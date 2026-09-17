@@ -4,7 +4,9 @@ import Link from "next/link";
 import { PageShell } from "@/components/layout/PageShell";
 import { Reveal } from "@/components/motion/Reveal";
 import { getArchiveWall } from "@/lib/data/catalog";
+import { getSiteSettings } from "@/lib/data/site-settings";
 import { pluralize } from "@/lib/format";
+import { toAbsoluteUrl } from "@/lib/site-url";
 
 import { ArchiveWallContainer } from "@/features/archive";
 
@@ -15,7 +17,11 @@ export const metadata: Metadata = {
 };
 
 export default async function ArchivePage() {
-  const wall = await getArchiveWall();
+  const [wall, settings, siteOrigin] = await Promise.all([
+    getArchiveWall(),
+    getSiteSettings(),
+    toAbsoluteUrl(""),
+  ]);
 
   return (
     <PageShell className="flex flex-col gap-12 py-8 md:gap-16 md:py-12">
@@ -24,8 +30,7 @@ export default async function ArchivePage() {
           <h1 className="font-heading text-3xl md:text-5xl">The archive</h1>
           <p className="max-w-2xl text-muted-foreground">
             {pluralize(wall.page_info.total, "piece")} that have sold, retired
-            or closed with their run. Open any of them and ask us for one like
-            it.
+            or closed with their run. Ask us for one like any of them.
           </p>
           <Link
             href="/products"
@@ -36,7 +41,11 @@ export default async function ArchivePage() {
         </header>
       </Reveal>
 
-      <ArchiveWallContainer pieces={wall.items} />
+      <ArchiveWallContainer
+        pieces={wall.items}
+        whatsappNumber={settings.whatsapp_number ?? ""}
+        siteOrigin={siteOrigin}
+      />
     </PageShell>
   );
 }

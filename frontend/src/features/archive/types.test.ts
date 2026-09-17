@@ -4,6 +4,7 @@ import type { ArchivePieceData } from "./types";
 import {
   LOOSE_COLLECTION,
   toArchiveYears,
+  toAskLabel,
   toMadeLabel,
   toProvenance,
   toYear,
@@ -61,6 +62,14 @@ describe("toArchiveYears", () => {
 
   it("has nothing to show for an empty archive", () => {
     expect(toArchiveYears([])).toEqual([]);
+  });
+});
+
+describe("toAskLabel", () => {
+  it("names the piece so every tile's ask link reads differently", () => {
+    expect(toAskLabel("Drip sip mug")).toBe(
+      "Ask for one like the Drip sip mug",
+    );
   });
 });
 

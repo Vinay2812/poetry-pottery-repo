@@ -5,6 +5,8 @@ import { ArchiveShelfRow } from "./ArchiveShelfRow";
 import { ArchiveTile } from "./ArchiveTile";
 import { ArchiveYearBlock } from "./ArchiveYearBlock";
 
+const ASK_URL = "https://wa.me/919876543210?text=Hi";
+
 const PHOTOS = [
   "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
   "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
@@ -20,6 +22,7 @@ const shelf = (
         name={`Reduction piece ${index + 1}`}
         imageUrl={url}
         madeLabel="Made March 2026"
+        askUrl={ASK_URL}
       />
     ))}
   </ArchiveShelfRow>
@@ -59,6 +62,7 @@ export const TwoShelves: Story = {
               name={`Odd piece ${index + 1}`}
               imageUrl={index === 1 ? null : url}
               madeLabel="Made August 2026"
+              askUrl={index === 2 ? null : ASK_URL}
             />
           ))}
         </ArchiveShelfRow>

@@ -9,14 +9,24 @@ import {
   toArchiveYears,
   toMadeLabel,
 } from "@/features/archive/types";
-import { toCardPhotoLoading, toProductPath } from "@/features/products";
+import {
+  toArchiveAskUrl,
+  toCardPhotoLoading,
+  toProductPath,
+} from "@/features/products";
 
 export interface ArchiveWallContainerProps {
   pieces: ArchivePieceData[];
+  whatsappNumber: string;
+  siteOrigin: string;
 }
 
 // Groups the wall by year and by the run each piece belonged to; no state, so no client bundle.
-export function ArchiveWallContainer({ pieces }: ArchiveWallContainerProps) {
+export function ArchiveWallContainer({
+  pieces,
+  whatsappNumber,
+  siteOrigin,
+}: ArchiveWallContainerProps) {
   const years = toArchiveYears(pieces);
 
   if (years.length === 0) {
@@ -43,13 +53,19 @@ export function ArchiveWallContainer({ pieces }: ArchiveWallContainerProps) {
               >
                 {shelf.pieces.map((piece, index) => {
                   const loading = toCardPhotoLoading(shelf.startIndex + index);
+                  const path = toProductPath(piece.slug);
                   return (
                     <ArchiveTile
                       key={piece.id}
-                      href={toProductPath(piece.slug)}
+                      href={path}
                       name={piece.name}
                       imageUrl={piece.image_urls[0] ?? null}
                       madeLabel={toMadeLabel(piece.created_at)}
+                      askUrl={toArchiveAskUrl(
+                        whatsappNumber,
+                        piece.name,
+                        `${siteOrigin}${path}`,
+                      )}
                       isPriority={loading.isPriority}
                       isEager={loading.isEager}
                     />

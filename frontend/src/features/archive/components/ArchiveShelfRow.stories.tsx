@@ -4,6 +4,8 @@ import { atViewport } from "@/lib/storybook/viewports";
 import { ArchiveShelfRow } from "./ArchiveShelfRow";
 import { ArchiveTile } from "./ArchiveTile";
 
+const ASK_URL = "https://wa.me/919876543210?text=Hi";
+
 const PHOTOS = [
   "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
   "https://images.pexels.com/photos/8951881/pexels-photo-8951881.jpeg",
@@ -19,6 +21,7 @@ function tiles(count: number) {
       name={`Piece ${index + 1}`}
       imageUrl={url}
       madeLabel="Made March 2026"
+      askUrl={ASK_URL}
     />
   ));
 }

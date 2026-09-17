@@ -19,6 +19,8 @@ const meta = {
     imageUrl:
       "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
     madeLabel: "Made September 2026",
+    askUrl:
+      "https://wa.me/919876543210?text=Hi%2C%20I%20saw%20the%20Drip%20sip%20mug%20in%20your%20archive.",
   },
 } satisfies Meta<typeof ArchiveTile>;
 
@@ -29,6 +31,8 @@ type Story = StoryObj<typeof meta>;
 export const WithPhoto: Story = {};
 
 export const NoPhoto: Story = { args: { imageUrl: null } };
+
+export const NoAsk: Story = { args: { askUrl: null } };
 
 export const LongName: Story = {
   args: {
