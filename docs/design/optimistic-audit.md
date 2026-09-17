@@ -132,22 +132,22 @@ Everything below reaches into the cache by hand. Each entry has to move to the R
 above, which means the container owns an optimistic copy of the query data and the mutation
 payload (or an awaited refetch) becomes the new baseline.
 
-| File                                                        | Lines   | What it does by hand                                                           | Migration                                                       |
-| ----------------------------------------------------------- | ------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| `src/features/cart/hooks.ts`                                | 53–59   | `writeQuery` of the cart after add-to-cart                                     | let the mutation payload settle; refetch `Cart` if it drifts    |
-| `src/features/cart/hooks.ts`                                | 101–125 | `optimistic()` builder for a whole predicted `Cart`                            | becomes the `useOptimistic` reducer in `CartContainer`          |
-| `src/features/cart/hooks.ts`                                | 137–186 | `optimisticResponse` + `writeQuery` for quantity, remove, clear                | opt-mutation in `CartContainer`                                 |
-| `src/features/wishlist/hooks.ts`                            | 63–101  | `optimisticResponse`, `readQuery`/`writeQuery` on `WishlistIds` and `Wishlist` | a shared `useOptimistic` id set; refetch both after settle      |
-| `src/features/addresses/hooks.ts`                           | 28–40   | `readAddresses` / `writeAddresses` helpers                                     | drop; the list lives in `useAddressBook` state                  |
-| `src/features/addresses/hooks.ts`                           | 75–174  | `update` callbacks reordering the address list after every mutation            | opt-mutation in `useAddressBook`                                |
-| `src/features/orders/hooks.ts`                              | 58–65   | `writeQuery` of the cancelled order                                            | opt-mutation over the order in `OrderDetailContainer`           |
-| `src/features/events/hooks.ts`                              | 31–34   | `evict` + `gc` of `myRegistrations` after register and cancel                  | `refetch` the list instead                                      |
-| `src/features/events/hooks.ts`                              | 49–55   | `fetchMore` `updateQuery` concatenating event pages                            | keep for now; pagination, not optimism                          |
-| `src/features/events/hooks.ts`                              | 149–158 | `writeQuery` of the cancelled registration                                     | opt-mutation over the registration                              |
-| `src/features/workshops/hooks.ts`                           | 192–203 | `writeBooking` `writeQuery` after cancel and reschedule                        | opt-mutation over the booking                                   |
-| `src/features/checkout/containers/CheckoutContainer.tsx`    | 50–71   | `evict` `orders`, `readQuery`/`writeQuery` an emptied cart                     | `refetchQueries: ["Cart", "Orders"]` with `awaitRefetchQueries` |
-| `src/features/products/containers/ProductListContainer.tsx` | 191     | `fetchMore` `updateQuery` concatenating product pages                          | keep for now; pagination, not optimism                          |
-| `src/lib/apollo/apollo-provider.tsx`                        | 22–48   | `evict` of a hand-maintained list of user-scoped root fields on user change    | replace the whole list with one `client.resetStore()`           |
+| File                                                        | Lines   | What it does by hand                                                           | Migration                                                    |
+| ----------------------------------------------------------- | ------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| `src/features/cart/hooks.ts`                                | 53–59   | `writeQuery` of the cart after add-to-cart                                     | let the mutation payload settle; refetch `Cart` if it drifts |
+| `src/features/cart/hooks.ts`                                | 101–125 | `optimistic()` builder for a whole predicted `Cart`                            | becomes the `useOptimistic` reducer in `CartContainer`       |
+| `src/features/cart/hooks.ts`                                | 137–186 | `optimisticResponse` + `writeQuery` for quantity, remove, clear                | opt-mutation in `CartContainer`                              |
+| `src/features/wishlist/hooks.ts`                            | 63–101  | `optimisticResponse`, `readQuery`/`writeQuery` on `WishlistIds` and `Wishlist` | a shared `useOptimistic` id set; refetch both after settle   |
+| `src/features/addresses/hooks.ts`                           | 28–40   | `readAddresses` / `writeAddresses` helpers                                     | drop; the list lives in `useAddressBook` state               |
+| `src/features/addresses/hooks.ts`                           | 75–174  | `update` callbacks reordering the address list after every mutation            | opt-mutation in `useAddressBook`                             |
+| `src/features/orders/hooks.ts`                              | 58–65   | `writeQuery` of the cancelled order                                            | opt-mutation over the order in `OrderDetailContainer`        |
+| `src/features/events/hooks.ts`                              | 31–34   | `evict` + `gc` of `myRegistrations` after register and cancel                  | `refetch` the list instead                                   |
+| `src/features/events/hooks.ts`                              | 49–55   | `fetchMore` `updateQuery` concatenating event pages                            | keep for now; pagination, not optimism                       |
+| `src/features/events/hooks.ts`                              | 149–158 | `writeQuery` of the cancelled registration                                     | opt-mutation over the registration                           |
+| `src/features/workshops/hooks.ts`                           | 192–203 | `writeBooking` `writeQuery` after cancel and reschedule                        | opt-mutation over the booking                                |
+| `src/features/checkout/containers/CheckoutContainer.tsx`    | 50–71   | `evict` `orders`, `readQuery`/`writeQuery` an emptied cart                     | `refetchQueries` for the mounted cart queries, awaited       |
+| `src/features/products/containers/ProductListContainer.tsx` | 191     | `fetchMore` `updateQuery` concatenating product pages                          | keep for now; pagination, not optimism                       |
+| `src/lib/apollo/apollo-provider.tsx`                        | 22–48   | `evict` of a hand-maintained list of user-scoped root fields on user change    | replace the whole list with one `client.resetStore()`        |
 
 The two `fetchMore` `updateQuery` calls are the only cache writes worth keeping: that is how
 Apollo paginates, and pagination is fetching rather than optimistic state. Nobody may borrow
@@ -163,12 +163,17 @@ them to fake optimism.
 | Orders              | Cancel turns the badge at once; the list pager reads local state and dims instead of flashing        |
 | Events              | Filters answer on the click; cancelling a seat turns the badge at once; pager is local-first         |
 | Workshops           | Cancel and reschedule land on the click; pager is local-first                                        |
-| Checkout            | Cart and orders are fetched again after an order is placed, in place of cache surgery                |
+| Checkout            | `Cart` and `CartCount` are fetched again after an order is placed, in place of cache surgery         |
 | Newsletter, contact | The thank-you shows on submit; both status lines keep their height so nothing jumps                  |
 | Session             | One `client.resetStore()` on an account change, in place of a hand-maintained eviction list          |
 
 No `optimisticResponse`, `cache.writeQuery`, `cache.modify`, `cache.evict` or `readQuery`
 remains in `frontend/src`. The two `fetchMore` `updateQuery` calls stay: that is pagination.
+
+`refetchQueries` only ever names queries that are mounted on the page doing the mutation;
+Apollo warns about the rest and refetches nothing. Checkout therefore names `Cart` and
+`CartCount` and leaves `Orders` alone: `/orders` reads cache-and-network when it opens, so
+it fetches the new row itself on the way there.
 
 Still open, because the files belong to other work in flight: the `/products` and `/search`
 toolbar (sort, tabs, facets, typed query) and the checkout coupon field.

@@ -85,10 +85,11 @@ export function CheckoutContainer() {
     quoteDiscount: quote?.discount ?? 0,
   });
 
-  // Placing an order empties the cart and adds a row to the orders list; both are fetched again.
+  // Placing an order empties the cart, so only the cart queries mounted here are fetched again.
+  // The orders list is not mounted on checkout and reads cache-and-network when it opens.
   // A refetch that fails must not swallow an order the server already saved.
   const [placeOrder, { loading: isPlacing }] = usePlaceOrderMutation({
-    refetchQueries: ["Cart", "CartCount", "Orders"],
+    refetchQueries: ["Cart", "CartCount"],
     awaitRefetchQueries: true,
     onQueryUpdated: (query) =>
       query
