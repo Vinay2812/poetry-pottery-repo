@@ -218,6 +218,10 @@ export class Product {
   @Field(() => String, { nullable: true })
   flaw_note!: string | null;
 
+  // Thrown for someone in particular; the commission page shows these as past work.
+  @Field()
+  is_commission!: boolean;
+
   @Field(() => Int)
   sales_count!: number;
 

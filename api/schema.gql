@@ -1061,6 +1061,7 @@ type Product {
   in_wishlist: Boolean!
   is_active: Boolean!
   is_archived: Boolean!
+  is_commission: Boolean!
   is_customizable: Boolean!
   is_featured: Boolean!
   is_second: Boolean!
