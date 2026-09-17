@@ -64,10 +64,9 @@ export function isActiveLink(
 }
 
 // Cart and checkout drop the nav so the only moves are finish or go back.
+// Only checkout narrows the header; the cart keeps the full nav so shopping can continue.
 export function toFocusedHeader(pathname: string): NavLink | null {
   if (pathname === "/checkout") return { href: "/cart", label: "Back to cart" };
-  if (pathname === "/cart")
-    return { href: "/products", label: "Back to the shop" };
   return null;
 }
 

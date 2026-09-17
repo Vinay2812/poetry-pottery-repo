@@ -65,7 +65,7 @@ export function SiteHeaderContainer({
       NAV_LINKS.find((link) => isActivePath(pathname, link.href))?.href ?? null,
     [pathname],
   );
-  // Buying pages keep the wordmark and one way back, nothing else to wander into.
+  // Checkout keeps the wordmark and one way back, nothing else to wander into.
   const focused = toFocusedHeader(pathname);
   const handleSearchClick = useCallback(() => {
     setIsMenuOpen(false);

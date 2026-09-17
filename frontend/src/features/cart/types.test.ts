@@ -6,6 +6,7 @@ import {
   type CartData,
   toFreeShippingProgress,
   toMaxQuantity,
+  toStockNotice,
   toSelectionSummary,
 } from "./types";
 
@@ -47,6 +48,19 @@ describe("toSelectionSummary", () => {
         },
       ]),
     ).toBe("Glaze: ");
+  });
+});
+
+describe("toStockNotice", () => {
+  it("speaks up only when a batch is nearly gone", () => {
+    expect(toStockNotice(1, false)).toBe("Only 1 left");
+    expect(toStockNotice(3, false)).toBe("Only 3 left");
+    expect(toStockNotice(4, false)).toBeNull();
+  });
+
+  it("stays quiet for sold-out and made-to-order pieces", () => {
+    expect(toStockNotice(0, false)).toBeNull();
+    expect(toStockNotice(2, true)).toBeNull();
   });
 });
 

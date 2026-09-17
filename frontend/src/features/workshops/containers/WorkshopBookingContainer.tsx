@@ -221,7 +221,7 @@ export function WorkshopBookingContainer({
 
       <div className="grid gap-10 border-t border-ash pt-8 lg:grid-cols-[1fr_340px] lg:items-start">
         <div className="flex flex-col gap-8">
-          <div className="flex flex-col gap-6 md:flex-row md:gap-10">
+          <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3">
               <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
                 How long
@@ -233,7 +233,7 @@ export function WorkshopBookingContainer({
               />
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col items-start gap-3">
               <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
                 How many people
               </h2>

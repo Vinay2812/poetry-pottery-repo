@@ -67,21 +67,18 @@ describe("formatBadgeCount", () => {
 });
 
 describe("toFocusedHeader", () => {
-  it("gives the buying pages one way back", () => {
+  it("gives checkout one way back", () => {
     expect(toFocusedHeader("/checkout")).toEqual({
       href: "/cart",
       label: "Back to cart",
     });
-    expect(toFocusedHeader("/cart")).toEqual({
-      href: "/products",
-      label: "Back to the shop",
-    });
   });
 
-  it("leaves every other route with the full header", () => {
+  it("leaves every other route, including the cart, with the full header", () => {
     expect(toFocusedHeader("/")).toBeNull();
+    expect(toFocusedHeader("/cart")).toBeNull();
     expect(toFocusedHeader("/orders")).toBeNull();
-    expect(toFocusedHeader("/cart/extra")).toBeNull();
+    expect(toFocusedHeader("/checkout/extra")).toBeNull();
   });
 });
 

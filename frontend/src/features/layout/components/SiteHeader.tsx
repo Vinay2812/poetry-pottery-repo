@@ -25,7 +25,7 @@ export interface SiteHeaderProps {
   isAdmin: boolean;
   userImageUrl: string | null;
   isHome?: boolean;
-  // "focused" strips the header to a wordmark and a way back, for cart and checkout.
+  // "focused" strips the header to a wordmark and a way back, for checkout.
   variant?: "full" | "focused";
   backHref?: string | null;
   backLabel?: string | null;

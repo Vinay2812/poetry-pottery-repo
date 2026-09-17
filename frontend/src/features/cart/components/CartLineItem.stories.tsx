@@ -24,6 +24,7 @@ const meta = {
     quantity: 1,
     maxQuantity: 10,
     selectionSummary: null,
+    stockNotice: null,
     referenceImageUrls: [],
     isAvailable: true,
     canAdjustQuantity: true,
@@ -64,7 +65,12 @@ export const Unavailable: Story = {
 };
 
 export const LowStock: Story = {
-  args: { quantity: 2, maxQuantity: 2 },
+  args: {
+    quantity: 2,
+    maxQuantity: 2,
+    lineTotal: 1700,
+    stockNotice: "Only 2 left",
+  },
 };
 
 export const MultipleOfOnePiece: Story = {
