@@ -15,18 +15,18 @@
 #   export R2_ACCOUNT_ID=...             # Cloudflare account id (forms the S3 endpoint)
 #   export R2_ACCESS_KEY_ID=...          # R2 API token key with read access to the env bucket
 #   export R2_SECRET_ACCESS_KEY=...      # its secret
-#   export R2_ENV_BUCKET=...             # bucket that holds envs/poetry-potter-v2/...
 #   export LETSENCRYPT_EMAIL=...         # contact address for the certificate (any address you own)
 #
 # On a redeploy only GITHUB_ACCESS_TOKEN is needed, and only if the remote is HTTPS.
-# Add PULL_ENVS=1 plus the four R2 variables to refresh the env files as well.
+# Add PULL_ENVS=1 plus the three R2 credential variables to refresh the env files as well.
 #
 # Optional (defaults shown):
 #   export API_DOMAIN=api-pnp-v2.prodapp.club   # DNS A record must already point at this server
 #   export GITHUB_REPO=Vinay2812/poetry-pottery-repo
 #   export BRANCH=main
 #   export TARGET_DIR=/opt/poetry-pottery
-#   export ENV_PREFIX=envs/poetry-potter-v2     # objects: <prefix>/{api,frontend,docker}/.env.prod
+#   export R2_ENV_BUCKET=envs                  # bucket containing the env objects
+#   export ENV_PREFIX=poetry-potter-v2          # objects: <prefix>/{api,frontend,docker}/.env.prod
 #   export TS_AUTHKEY=tskey-auth-...            # Tailscale auth key; without it `tailscale up` prints a login URL
 #   export TS_HOSTNAME=poetry-pottery-api       # this machine's name on the tailnet
 #   export PULL_ENVS=1                          # redeploy: also re-pull the env files from R2
@@ -51,7 +51,8 @@ umask 077
 GITHUB_REPO="${GITHUB_REPO:-Vinay2812/poetry-pottery-repo}"
 BRANCH="${BRANCH:-main}"
 TARGET_DIR="${TARGET_DIR:-/opt/poetry-pottery}"
-ENV_PREFIX="${ENV_PREFIX:-envs/poetry-potter-v2}"
+R2_ENV_BUCKET="${R2_ENV_BUCKET:-envs}"
+ENV_PREFIX="${ENV_PREFIX:-poetry-potter-v2}"
 API_DOMAIN="${API_DOMAIN:-api-pnp-v2.prodapp.club}"
 TS_HOSTNAME="${TS_HOSTNAME:-poetry-pottery-api}"
 [ "${1:-}" = "--full" ] && FULL=1
@@ -153,7 +154,7 @@ if [ "$MODE" = setup ] || [ "${PULL_ENVS:-0}" = "1" ]; then
   trap 'rm -rf "$ENV_STAGE"' EXIT
   for pair in "api:api/.env" "frontend:frontend/.env" "docker:infra/docker/.env"; do
     name="${pair%%:*}"; dest="${pair#*:}"
-    log "Pulling ${ENV_PREFIX}/${name}/.env.prod -> ${dest}"
+    log "Pulling s3://${R2_ENV_BUCKET}/${ENV_PREFIX}/${name}/.env.prod -> ${dest}"
     aws s3 cp "s3://${R2_ENV_BUCKET}/${ENV_PREFIX}/${name}/.env.prod" "$ENV_STAGE/$name" \
       --endpoint-url "$R2_ENDPOINT" --only-show-errors
     chmod 600 "$ENV_STAGE/$name"
