@@ -65,6 +65,8 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     is_active: true,
     is_featured: false,
     is_customizable: false,
+    is_second: false,
+    flaw_note: null,
     sales_count: 0,
     rating_avg: 0,
     rating_count: 0,
@@ -153,6 +155,7 @@ function makeProductsResult(
       price_max: 0,
       active_count: 1,
       archive_count: 0,
+      seconds_count: 0,
     },
     ...overrides,
   };
