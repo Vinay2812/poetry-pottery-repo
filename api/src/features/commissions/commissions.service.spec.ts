@@ -183,14 +183,30 @@ describe("CommissionsService", () => {
   });
 
   it("shows flagged commissions, and the made-to-order shelf until there are any", async () => {
-    const flagged = [{ id: 1, categories: [], collection: null }];
+    const flagged = [
+      {
+        id: 1,
+        categories: [],
+        collection: null,
+        height_cm: null,
+        diameter_cm: null,
+      },
+    ];
     prismaMock.product.findMany.mockResolvedValueOnce(flagged);
 
     await expect(service.pieces(6)).resolves.toEqual(flagged);
     expect(prismaMock.product.findMany).toHaveBeenCalledTimes(1);
 
     prismaMock.product.findMany.mockReset();
-    const madeToOrder = [{ id: 2, categories: [], collection: null }];
+    const madeToOrder = [
+      {
+        id: 2,
+        categories: [],
+        collection: null,
+        height_cm: null,
+        diameter_cm: null,
+      },
+    ];
     prismaMock.product.findMany
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce(madeToOrder);
