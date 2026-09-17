@@ -79,6 +79,22 @@ export async function cropToRatio(
   return { blob, width: rect.width, height: rect.height };
 }
 
+export const UPLOAD_NOT_STORED = "The image did not reach storage";
+
+/** A rejected PUT reads as "Failed to fetch"; all the operator needs is that it did not land. */
+export async function putToStorage(
+  uploadUrl: string,
+  blob: Blob,
+  contentType: string,
+): Promise<void> {
+  const response = await fetch(uploadUrl, {
+    method: "PUT",
+    body: blob,
+    headers: { "content-type": contentType },
+  }).catch(() => null);
+  if (!response?.ok) throw new Error(UPLOAD_NOT_STORED);
+}
+
 export function useConfirmedUpload() {
   const [createUpload] = useCreateAdminUploadMutation();
   const [confirmUpload] = useConfirmUploadMutation();
@@ -92,14 +108,7 @@ export function useConfirmedUpload() {
       const target = created.data?.createAdminUpload;
       if (!target) throw new Error("The upload could not be started");
 
-      const response = await fetch(target.upload_url, {
-        method: "PUT",
-        body: blob,
-        headers: { "content-type": contentType },
-      });
-      if (!response.ok) {
-        throw new Error("The image did not reach storage");
-      }
+      await putToStorage(target.upload_url, blob, contentType);
 
       const confirmed = await confirmUpload({
         variables: { key: target.key, purpose },
