@@ -198,6 +198,7 @@ type AdminOrdersResult {
 }
 
 input AdminProductInput {
+  capacity_ml: Int
   care_notes: [String!]
   category_ids: [Int!]
   collection_id: Int
@@ -205,18 +206,27 @@ input AdminProductInput {
   color_name: String
   compare_at_price: Int
   description: String!
+  diameter_cm: Float
   dimensions: String
+  flaw_note: String
+  glaze_id: Int
+  height_cm: Float
   image_urls: [String!]
   is_active: Boolean
+  is_commission: Boolean
   is_customizable: Boolean
   is_featured: Boolean
+  is_second: Boolean
+  maker_note: String
   material: String!
   name: String!
   price: Int!
   stock: Int
+  weight_g: Int
 }
 
 input AdminProductUpdateInput {
+  capacity_ml: Int
   care_notes: [String!]
   category_ids: [Int!]
   collection_id: Int
@@ -224,19 +234,29 @@ input AdminProductUpdateInput {
   color_name: String
   compare_at_price: Int
   description: String
+  diameter_cm: Float
   dimensions: String
+  flaw_note: String
+  glaze_id: Int
+  height_cm: Float
   image_urls: [String!]
+  is_commission: Boolean
   is_customizable: Boolean
+  is_second: Boolean
+  maker_note: String
   material: String
   name: String
   price: Int
+  weight_g: Int
 }
 
 input AdminProductsFilterInput {
   category_id: Int
   collection_id: Int
+  glaze_id: Int
   is_active: Boolean
   is_featured: Boolean
+  is_second: Boolean
   limit: Int
   low_stock: Boolean
   page: Int

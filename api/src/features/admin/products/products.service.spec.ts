@@ -8,8 +8,13 @@ import { ProductsService } from "@/features/products/products.service";
 import { SearchService } from "@/features/search/search.service";
 import { missingRow } from "@test/helpers/prisma-errors";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
+import { NotificationsService } from "@/features/notifications/notifications.service";
 import { UploadsService } from "../uploads/uploads.service";
-import { cleanList, AdminProductsService } from "./products.service";
+import {
+  assertSecond,
+  cleanList,
+  AdminProductsService,
+} from "./products.service";
 
 const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
@@ -35,6 +40,7 @@ const prismaMock = {
     create: vi.fn(),
     update: vi.fn(),
     updateMany: vi.fn(),
+    updateManyAndReturn: vi.fn(),
   },
   productOptionGroup: {
     findMany: vi.fn(),
@@ -47,10 +53,12 @@ const prismaMock = {
   productOption: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   category: { count: vi.fn() },
   collection: { count: vi.fn() },
+  glaze: { count: vi.fn() },
 };
 const productsMock = { invalidateCatalogCache: vi.fn() };
 const searchMock = { requestProductIndex: vi.fn() };
 const uploadsMock = { assertConfirmed: vi.fn() };
+const notificationsMock = { announceRestock: vi.fn() };
 const loggerMock = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 
 function input(overrides: Record<string, unknown> = {}) {
@@ -70,6 +78,14 @@ describe("cleanList", () => {
   });
 });
 
+describe("assertSecond", () => {
+  it("wants the flaw named before a piece is sold as a second", () => {
+    expect(() => assertSecond(true, "  ")).toThrow(BadRequestException);
+    expect(() => assertSecond(true, "Glaze crawl on the foot")).not.toThrow();
+    expect(() => assertSecond(false, null)).not.toThrow();
+  });
+});
+
 describe("AdminProductsService", () => {
   let service: AdminProductsService;
 
@@ -81,6 +97,8 @@ describe("AdminProductsService", () => {
     prismaMock.product.findUnique.mockResolvedValue(row);
     prismaMock.category.count.mockResolvedValue(2);
     prismaMock.collection.count.mockResolvedValue(1);
+    prismaMock.glaze.count.mockResolvedValue(1);
+    prismaMock.product.updateManyAndReturn.mockResolvedValue([{ stock: 2 }]);
     const moduleRef = await Test.createTestingModule({
       providers: [
         AdminProductsService,
@@ -88,6 +106,7 @@ describe("AdminProductsService", () => {
         { provide: ProductsService, useValue: productsMock },
         { provide: SearchService, useValue: searchMock },
         { provide: UploadsService, useValue: uploadsMock },
+        { provide: NotificationsService, useValue: notificationsMock },
         { provide: WINSTON_MODULE_PROVIDER, useValue: loggerMock },
       ],
     }).compile();
@@ -194,14 +213,16 @@ describe("AdminProductsService", () => {
   });
 
   it("adjusts stock conditionally and logs the reason", async () => {
-    prismaMock.product.updateMany.mockResolvedValue({ count: 1 });
+    prismaMock.product.updateManyAndReturn.mockResolvedValue([{ stock: 2 }]);
 
     await service.adjustStock(1, -2, "Two broke in the kiln");
 
-    expect(prismaMock.product.updateMany).toHaveBeenCalledWith({
-      where: { id: 1, stock: { gte: 2 } },
-      data: { stock: { increment: -2 } },
-    });
+    expect(prismaMock.product.updateManyAndReturn).toHaveBeenCalledWith(
+      containing({
+        where: { id: 1, stock: { gte: 2 } },
+        data: { stock: { increment: -2 } },
+      }),
+    );
     expect(loggerMock.info).toHaveBeenCalledWith(
       "stock adjusted",
       containing({ reason: "Two broke in the kiln" }),
@@ -209,16 +230,90 @@ describe("AdminProductsService", () => {
   });
 
   it("refuses a stock adjustment that would go negative", async () => {
-    prismaMock.product.updateMany.mockResolvedValue({ count: 0 });
+    prismaMock.product.updateManyAndReturn.mockResolvedValue([]);
 
     await expect(
       service.adjustStock(1, -9, "Counted the shelf"),
     ).rejects.toBeInstanceOf(BadRequestException);
   });
 
+  it("announces a restock only when the shelf was empty before the top-up", async () => {
+    prismaMock.product.updateManyAndReturn.mockResolvedValue([{ stock: 3 }]);
+    await service.adjustStock(1, 3, "Out of the kiln");
+    expect(notificationsMock.announceRestock).toHaveBeenCalledWith(1);
+
+    notificationsMock.announceRestock.mockClear();
+    prismaMock.product.updateManyAndReturn.mockResolvedValue([{ stock: 5 }]);
+    await service.adjustStock(1, 3, "Topping up a shelf that was not empty");
+    expect(notificationsMock.announceRestock).not.toHaveBeenCalled();
+
+    prismaMock.product.updateManyAndReturn.mockResolvedValue([{ stock: 1 }]);
+    await service.adjustStock(1, -2, "Two sold at the market");
+    expect(notificationsMock.announceRestock).not.toHaveBeenCalled();
+  });
+
   it("demands a reason for a stock adjustment", async () => {
     await expect(service.adjustStock(1, -1, " ")).rejects.toBeInstanceOf(
       BadRequestException,
+    );
+  });
+
+  it("saves the measurements, the maker's note and the glaze", async () => {
+    await service.create(
+      input({
+        capacity_ml: 300,
+        height_cm: 9.5,
+        diameter_cm: 8,
+        weight_g: 420,
+        maker_note: "  Thrown on a wet Tuesday  ",
+        glaze_id: 3,
+        is_commission: true,
+      }),
+    );
+
+    expect(prismaMock.product.create).toHaveBeenCalledWith(
+      containing({
+        data: containing({
+          capacity_ml: 300,
+          height_cm: 9.5,
+          diameter_cm: 8,
+          weight_g: 420,
+          maker_note: "Thrown on a wet Tuesday",
+          glaze_id: 3,
+          is_commission: true,
+        }),
+      }),
+    );
+  });
+
+  it("refuses a measurement that is zero or absurd", async () => {
+    await expect(
+      service.create(input({ height_cm: 0 })),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    await expect(
+      service.create(input({ capacity_ml: 99_999 })),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it("refuses a glaze that no longer exists", async () => {
+    prismaMock.glaze.count.mockResolvedValue(0);
+
+    await expect(service.create(input({ glaze_id: 9 }))).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+  });
+
+  it("keeps the stored flaw note when only the second flag is edited", async () => {
+    prismaMock.product.findUnique.mockResolvedValue({
+      ...row,
+      is_second: false,
+      flaw_note: "Glaze crawl on the foot",
+    });
+
+    await service.update(1, { is_second: true });
+
+    expect(prismaMock.product.update).toHaveBeenCalledWith(
+      containing({ data: containing({ is_second: true }) }),
     );
   });
 

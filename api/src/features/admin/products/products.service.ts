@@ -19,6 +19,8 @@ import type {
   Product,
   ProductOptionGroup,
 } from "@/features/products/products.type";
+import { NotificationsService } from "@/features/notifications/notifications.service";
+import { cameBackInStock } from "@/features/notifications/restock";
 import { SearchService } from "@/features/search/search.service";
 import { searchTerm } from "../admin.type";
 import { LOW_STOCK_THRESHOLD } from "../dashboard/dashboard.service";
@@ -52,6 +54,39 @@ export function assertStock(value: number | null | undefined): void {
   }
 }
 
+// A measurement is either a positive number or missing; zero is never a real piece.
+export function assertMeasure(
+  value: number | null | undefined,
+  label: string,
+  max: number,
+): void {
+  if (value != null && (!Number.isFinite(value) || value <= 0 || value > max)) {
+    throw new BadRequestException(`${label} must be between 0 and ${max}`);
+  }
+}
+
+export function assertMeasurements(input: {
+  capacity_ml?: number | null;
+  height_cm?: number | null;
+  diameter_cm?: number | null;
+  weight_g?: number | null;
+}): void {
+  assertMeasure(input.capacity_ml, "Capacity", 20_000);
+  assertMeasure(input.height_cm, "Height", 999);
+  assertMeasure(input.diameter_cm, "Diameter", 999);
+  assertMeasure(input.weight_g, "Weight", 50_000);
+}
+
+// A second is only honest if the flaw is named, so the two fields travel together.
+export function assertSecond(
+  isSecond: boolean | null | undefined,
+  flawNote: string | null | undefined,
+): void {
+  if (isSecond === true && !flawNote?.trim()) {
+    throw new BadRequestException("Say what the kiln left on this piece");
+  }
+}
+
 // Blank entries are dropped so an empty row in the console never becomes an empty care note.
 export function cleanList(
   values: readonly string[] | null | undefined,
@@ -66,6 +101,7 @@ export class AdminProductsService {
     private readonly products: ProductsService,
     private readonly search: SearchService,
     private readonly uploads: UploadsService,
+    private readonly notifications: NotificationsService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -93,6 +129,8 @@ export class AdminProductsService {
       ...(filter.low_stock
         ? { stock: { lte: LOW_STOCK_THRESHOLD }, is_customizable: false }
         : {}),
+      ...(filter.is_second == null ? {} : { is_second: filter.is_second }),
+      ...(filter.glaze_id ? { glaze_id: filter.glaze_id } : {}),
     };
     const [rows, total] = await Promise.all([
       this.prisma.product.findMany({
@@ -125,7 +163,13 @@ export class AdminProductsService {
     assertMoney(input.price, "Price");
     assertMoney(input.compare_at_price, "Compare-at price");
     assertStock(input.stock);
-    await this.assertLinks(input.category_ids, input.collection_id);
+    assertMeasurements(input);
+    assertSecond(input.is_second, input.flaw_note);
+    await this.assertLinks(
+      input.category_ids,
+      input.collection_id,
+      input.glaze_id,
+    );
     const image_urls = cleanList(input.image_urls);
     await this.uploads.assertConfirmed(image_urls, [], UploadPurpose.PRODUCT);
 
@@ -146,7 +190,16 @@ export class AdminProductsService {
         is_active: input.is_active ?? true,
         is_featured: input.is_featured ?? false,
         is_customizable: input.is_customizable ?? false,
+        is_second: input.is_second ?? false,
+        flaw_note: input.flaw_note?.trim() || null,
+        is_commission: input.is_commission ?? false,
         collection_id: input.collection_id ?? null,
+        glaze_id: input.glaze_id ?? null,
+        capacity_ml: input.capacity_ml ?? null,
+        height_cm: input.height_cm ?? null,
+        diameter_cm: input.diameter_cm ?? null,
+        weight_g: input.weight_g ?? null,
+        maker_note: input.maker_note?.trim() || null,
         ...(input.category_ids?.length
           ? {
               categories: {
@@ -164,14 +217,23 @@ export class AdminProductsService {
   async update(id: number, input: AdminProductUpdateInput): Promise<Product> {
     assertMoney(input.price, "Price");
     assertMoney(input.compare_at_price, "Compare-at price");
+    assertMeasurements(input);
     const current = await this.prisma.product.findUnique({
       where: { id },
-      select: { image_urls: true },
+      select: { image_urls: true, is_second: true, flaw_note: true },
     });
     if (!current) {
       throw new NotFoundException("Product not found");
     }
-    await this.assertLinks(input.category_ids, input.collection_id);
+    assertSecond(
+      input.is_second ?? current.is_second,
+      input.flaw_note === undefined ? current.flaw_note : input.flaw_note,
+    );
+    await this.assertLinks(
+      input.category_ids,
+      input.collection_id,
+      input.glaze_id,
+    );
     const image_urls = input.image_urls
       ? cleanList(input.image_urls)
       : undefined;
@@ -214,6 +276,27 @@ export class AdminProductsService {
         ...(input.collection_id === undefined
           ? {}
           : { collection_id: input.collection_id }),
+        ...(input.glaze_id === undefined ? {} : { glaze_id: input.glaze_id }),
+        ...(input.capacity_ml === undefined
+          ? {}
+          : { capacity_ml: input.capacity_ml }),
+        ...(input.height_cm === undefined
+          ? {}
+          : { height_cm: input.height_cm }),
+        ...(input.diameter_cm === undefined
+          ? {}
+          : { diameter_cm: input.diameter_cm }),
+        ...(input.weight_g === undefined ? {} : { weight_g: input.weight_g }),
+        ...(input.maker_note === undefined
+          ? {}
+          : { maker_note: input.maker_note?.trim() || null }),
+        ...(input.is_second == null ? {} : { is_second: input.is_second }),
+        ...(input.flaw_note === undefined
+          ? {}
+          : { flaw_note: input.flaw_note?.trim() || null }),
+        ...(input.is_commission == null
+          ? {}
+          : { is_commission: input.is_commission }),
         ...(input.category_ids
           ? {
               categories: {
@@ -265,16 +348,22 @@ export class AdminProductsService {
     if (note.length < 3) {
       throw new BadRequestException("Say why the count changed");
     }
-    const moved = await this.prisma.product.updateMany({
+    // Returning the new count makes the edge exact: the row the increment actually landed on.
+    const moved = await this.prisma.product.updateManyAndReturn({
       where: { id, ...(delta < 0 ? { stock: { gte: -delta } } : {}) },
       data: { stock: { increment: delta } },
+      select: { stock: true },
     });
-    if (moved.count === 0) {
+    const after = moved[0]?.stock;
+    if (after === undefined) {
       throw new BadRequestException(
         "There are not that many pieces on the shelf",
       );
     }
     this.logger.info("stock adjusted", { product_id: id, delta, reason: note });
+    if (cameBackInStock(after - delta, after)) {
+      await this.notifications.announceRestock(id);
+    }
     await this.afterWrite(id);
     return this.byId(id);
   }
@@ -450,6 +539,7 @@ export class AdminProductsService {
   private async assertLinks(
     categoryIds: number[] | null | undefined,
     collectionId: number | null | undefined,
+    glazeId: number | null | undefined,
   ): Promise<void> {
     const wanted = new Set(categoryIds ?? []);
     if (wanted.size > 0) {
@@ -468,6 +558,12 @@ export class AdminProductsService {
       });
       if (found === 0) {
         throw new BadRequestException("That collection no longer exists");
+      }
+    }
+    if (glazeId != null) {
+      const found = await this.prisma.glaze.count({ where: { id: glazeId } });
+      if (found === 0) {
+        throw new BadRequestException("That glaze no longer exists");
       }
     }
   }

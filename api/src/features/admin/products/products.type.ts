@@ -1,4 +1,4 @@
-import { Field, InputType, Int, ObjectType } from "@nestjs/graphql";
+import { Field, Float, InputType, Int, ObjectType } from "@nestjs/graphql";
 import { OptionGroupKind } from "@prisma/client";
 
 import { PageInfo } from "@/common/pagination/pagination";
@@ -33,6 +33,12 @@ export class AdminProductsFilterInput {
   // Pieces at or under the dashboard's low stock line.
   @Field(() => Boolean, { nullable: true })
   low_stock?: boolean | null;
+
+  @Field(() => Boolean, { nullable: true })
+  is_second?: boolean | null;
+
+  @Field(() => Int, { nullable: true })
+  glaze_id?: number | null;
 
   @Field(() => Int, { nullable: true })
   page?: number | null;
@@ -88,6 +94,35 @@ export class AdminProductInput {
   @Field(() => Int, { nullable: true })
   collection_id?: number | null;
 
+  @Field(() => Int, { nullable: true })
+  glaze_id?: number | null;
+
+  // What the piece is in the hand; left out wherever the studio has not measured it.
+  @Field(() => Int, { nullable: true })
+  capacity_ml?: number | null;
+
+  @Field(() => Float, { nullable: true })
+  height_cm?: number | null;
+
+  @Field(() => Float, { nullable: true })
+  diameter_cm?: number | null;
+
+  @Field(() => Int, { nullable: true })
+  weight_g?: number | null;
+
+  @Field(() => String, { nullable: true })
+  maker_note?: string | null;
+
+  // A piece the kiln marked: the flaw is named and the price carries the discount.
+  @Field(() => Boolean, { nullable: true })
+  is_second?: boolean | null;
+
+  @Field(() => String, { nullable: true })
+  flaw_note?: string | null;
+
+  @Field(() => Boolean, { nullable: true })
+  is_commission?: boolean | null;
+
   @Field(() => [Int], { nullable: true })
   category_ids?: number[] | null;
 }
@@ -132,6 +167,35 @@ export class AdminProductUpdateInput {
   // Null clears the collection; leave the field out to keep it.
   @Field(() => Int, { nullable: true })
   collection_id?: number | null;
+
+  @Field(() => Int, { nullable: true })
+  glaze_id?: number | null;
+
+  // What the piece is in the hand; left out wherever the studio has not measured it.
+  @Field(() => Int, { nullable: true })
+  capacity_ml?: number | null;
+
+  @Field(() => Float, { nullable: true })
+  height_cm?: number | null;
+
+  @Field(() => Float, { nullable: true })
+  diameter_cm?: number | null;
+
+  @Field(() => Int, { nullable: true })
+  weight_g?: number | null;
+
+  @Field(() => String, { nullable: true })
+  maker_note?: string | null;
+
+  // A piece the kiln marked: the flaw is named and the price carries the discount.
+  @Field(() => Boolean, { nullable: true })
+  is_second?: boolean | null;
+
+  @Field(() => String, { nullable: true })
+  flaw_note?: string | null;
+
+  @Field(() => Boolean, { nullable: true })
+  is_commission?: boolean | null;
 
   @Field(() => [Int], { nullable: true })
   category_ids?: number[] | null;
