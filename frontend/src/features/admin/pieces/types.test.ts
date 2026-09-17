@@ -304,6 +304,35 @@ describe("toProductUpdateInput", () => {
     expect(input).not.toHaveProperty("is_featured");
     expect(input).not.toHaveProperty("is_active");
   });
+
+  it("carries every measurement, the glaze and the kiln marks", () => {
+    const input = toProductUpdateInput(
+      {
+        ...EMPTY_PRODUCT_FORM,
+        capacity_ml: 320,
+        height_cm: 9.5,
+        diameter_cm: 8.2,
+        weight_g: 430,
+        maker_note: "  Thrown on a wet Tuesday.  ",
+        glaze_id: 4,
+        is_second: true,
+        flaw_note: "Glaze crawl on the foot ring.",
+        is_commission: true,
+      },
+      [],
+    );
+    expect(input).toMatchObject({
+      capacity_ml: 320,
+      height_cm: 9.5,
+      diameter_cm: 8.2,
+      weight_g: 430,
+      maker_note: "Thrown on a wet Tuesday.",
+      glaze_id: 4,
+      is_second: true,
+      flaw_note: "Glaze crawl on the foot ring.",
+      is_commission: true,
+    });
+  });
 });
 
 describe("toOptionGroupInput", () => {
