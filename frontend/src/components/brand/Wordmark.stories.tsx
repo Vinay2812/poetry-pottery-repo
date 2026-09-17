@@ -4,9 +4,9 @@ import { atViewport } from "@/lib/storybook/viewports";
 import { Wordmark } from "./Wordmark";
 
 const meta = {
-  title: "Features/Layout/Wordmark",
+  title: "Brand/Wordmark",
   component: Wordmark,
-  args: {},
+  args: { className: "h-10" },
 } satisfies Meta<typeof Wordmark>;
 
 export default meta;
@@ -25,6 +25,8 @@ export const Reverse: Story = {
     ),
   ],
 };
+
+export const HeaderSize: Story = { args: { className: "h-[22px]" } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 
