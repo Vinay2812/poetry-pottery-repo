@@ -26,7 +26,7 @@
 #   export BRANCH=main
 #   export TARGET_DIR=/opt/poetry-pottery
 #   export R2_ENV_BUCKET=envs                  # bucket containing the env objects
-#   export ENV_PREFIX=poetry-potter-v2          # objects: <prefix>/{api,frontend,docker}/.env.prod
+#   export ENV_PREFIX=poetry-pottery-v2          # objects: <prefix>/{api,frontend,docker}/.env.prod
 #   export TS_AUTHKEY=tskey-auth-...            # Tailscale auth key; without it `tailscale up` prints a login URL
 #   export TS_HOSTNAME=poetry-pottery-api       # this machine's name on the tailnet
 #   export PULL_ENVS=1                          # redeploy: also re-pull the env files from R2
@@ -52,7 +52,7 @@ GITHUB_REPO="${GITHUB_REPO:-Vinay2812/poetry-pottery-repo}"
 BRANCH="${BRANCH:-main}"
 TARGET_DIR="${TARGET_DIR:-/opt/poetry-pottery}"
 R2_ENV_BUCKET="${R2_ENV_BUCKET:-envs}"
-ENV_PREFIX="${ENV_PREFIX:-poetry-potter-v2}"
+ENV_PREFIX="${ENV_PREFIX:-poetry-pottery-v2}"
 API_DOMAIN="${API_DOMAIN:-api-pnp-v2.prodapp.club}"
 TS_HOSTNAME="${TS_HOSTNAME:-poetry-pottery-api}"
 [ "${1:-}" = "--full" ] && FULL=1
