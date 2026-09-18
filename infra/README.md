@@ -56,6 +56,42 @@ Network layout afterwards:
 
 To reach the database from your laptop: join the same tailnet and connect to `<tailscale ip>:5433` with the credentials from `infra/docker/.env`.
 
+## Deploy from GitHub
+
+`.github/workflows/deploy-api.yml` runs on every push to `main` that touches `api/` or `infra/` (and by hand from the Actions tab). It opens an SSH session to the server and runs `~/deploy.sh` there, passing the job's own GitHub token on stdin so the server needs no personal access token of its own.
+
+One-time setup:
+
+1. On the server, as the user that will deploy (root is fine; any other user needs `NOPASSWD:SETENV` sudo for `/opt/poetry-pottery/infra/deploy.sh`), create `~/deploy.sh` with mode 700:
+
+   ```bash
+   #!/usr/bin/env bash
+   set -euo pipefail
+   export R2_ENV_BUCKET=<bucket> R2_ACCOUNT_ID=<id> R2_ACCESS_KEY_ID=<key> R2_SECRET_ACCESS_KEY=<secret>
+   exec sudo -E /opt/poetry-pottery/infra/deploy.sh
+   ```
+
+   `GITHUB_ACCESS_TOKEN` arrives from the workflow; export your own in the file only if you also run it by hand.
+
+2. On your machine, make a key for the workflow and put the public half in the server user's `~/.ssh/authorized_keys`:
+
+   ```bash
+   ssh-keygen -t ed25519 -f ~/.ssh/poetry-pottery-deploy -C github-deploy -N ""
+   ssh-copy-id -i ~/.ssh/poetry-pottery-deploy.pub <user>@<server>
+   ssh-keyscan -H <server>          # this output is DEPLOY_KNOWN_HOSTS
+   ```
+
+3. In the GitHub repo, Settings → Secrets and variables → Actions, add:
+
+   | Secret | Value |
+   | --- | --- |
+   | `DEPLOY_HOST` | the server's public IP or DNS name (port 22 is open to the internet) |
+   | `DEPLOY_USER` | the server user from step 1 |
+   | `DEPLOY_SSH_KEY` | the contents of `~/.ssh/poetry-pottery-deploy` (the private key) |
+   | `DEPLOY_KNOWN_HOSTS` | the `ssh-keyscan` output from step 2 |
+
+The run's log shows the deploy script's own output, ending in the container table and the tailnet reachability check.
+
 ## Day to day
 
 ```bash
