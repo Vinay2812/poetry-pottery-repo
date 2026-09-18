@@ -6,6 +6,7 @@ import {
 
 import { formatDate, pluralize } from "@/lib/format";
 
+import { toPersonId } from "@/features/admin/people/types";
 import { formatEnumLabel, type QueryValues } from "@/features/admin/shell";
 import type { AdminFilterOption, AdminStatusTone } from "@/features/admin/ui";
 
@@ -132,5 +133,7 @@ export function toReviewsFilter(
   if (rating) filter.rating = rating;
   const isHidden = toIsHidden(values.visibility);
   if (isHidden !== undefined) filter.is_hidden = isHidden;
+  const userId = toPersonId(values.user);
+  if (userId !== null) filter.user_id = userId;
   return filter;
 }

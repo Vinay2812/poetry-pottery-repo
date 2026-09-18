@@ -18,6 +18,10 @@ import {
   orderStatusTone,
   toPersonName,
 } from "@/features/admin/ui";
+import {
+  AdminPersonFilterNotice,
+  usePersonFilter,
+} from "@/features/admin/people";
 
 import {
   AdminOrdersTable,
@@ -38,6 +42,7 @@ export function AdminOrdersContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const search = values.q ?? "";
   const status = toOrderStatus(values.status);
+  const { personId, personName } = usePersonFilter(values.user);
   const from = values.from ?? "";
   const to = values.to ?? "";
 
@@ -57,6 +62,7 @@ export function AdminOrdersContainer() {
         limit: ORDERS_PAGE_SIZE,
         search: search || null,
         status,
+        user_id: personId,
         from: toDayStartIso(from),
         to: toDayEndIso(to),
       },
@@ -115,6 +121,12 @@ export function AdminOrdersContainer() {
         onFromChange={(value) => patch({ from: value || null })}
         onToChange={(value) => patch({ to: value || null })}
       />
+      {personId !== null && (
+        <AdminPersonFilterNotice
+          line={personName ? `Orders by ${personName}` : "Orders by one person"}
+          onClear={() => patch({ user: null })}
+        />
+      )}
       <AdminOrdersTable
         rows={rows}
         isBusy={isPending || (loading && rows.length > 0)}

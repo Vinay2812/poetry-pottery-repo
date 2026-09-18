@@ -195,6 +195,11 @@ describe("toIsHidden", () => {
 describe("toReviewsFilter", () => {
   it("asks for the page and nothing else when the URL is bare", () => {
     expect(toReviewsFilter({}, 1)).toEqual({ page: 1, limit: 20 });
+    expect(toReviewsFilter({ user: "7" }, 1)).toEqual({
+      page: 1,
+      limit: 20,
+      user_id: 7,
+    });
   });
 
   it("carries every readable filter through", () => {

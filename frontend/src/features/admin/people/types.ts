@@ -7,6 +7,30 @@ import type { AdminStatusTone } from "@/features/admin/ui";
 
 export type AdminPersonData = AdminUserFieldsFragment;
 
+/** The `user` query key on the other lists; anything but a positive integer means no filter. */
+export function toPersonId(raw: string | undefined): number | null {
+  const id = Number.parseInt(raw ?? "", 10);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+export interface PersonLinks {
+  orders: string;
+  registrations: string;
+  bookings: string;
+  reviews: string;
+}
+
+/** Each count on a person leads to the list it was counted from, narrowed to them. */
+export function toPersonLinks(personId: number): PersonLinks {
+  const query = `?user=${personId}`;
+  return {
+    orders: `/dashboard/orders${query}`,
+    registrations: `/dashboard/events${query}`,
+    bookings: `/dashboard/workshops${query}`,
+    reviews: `/dashboard/reviews${query}`,
+  };
+}
+
 export const PEOPLE_PAGE_SIZE = 20;
 
 export function toUserRole(value: string | undefined): UserRole | null {

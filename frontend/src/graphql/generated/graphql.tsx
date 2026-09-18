@@ -188,6 +188,7 @@ export type AdminEventsFilterInput = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<EventStatus>;
+  user_id?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type AdminEventsResult = {
@@ -267,6 +268,7 @@ export type AdminOrdersFilterInput = {
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<OrderStatus>;
   to?: InputMaybe<Scalars['DateTime']['input']>;
+  user_id?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type AdminOrdersResult = {
@@ -382,6 +384,7 @@ export type AdminRegistrationsFilterInput = {
   page?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<RegistrationStatus>;
+  user_id?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type AdminRegistrationsResult = {
@@ -405,6 +408,7 @@ export type AdminReviewsFilterInput = {
   rating?: InputMaybe<Scalars['Int']['input']>;
   search?: InputMaybe<Scalars['String']['input']>;
   subject_kind?: InputMaybe<ReviewSubjectKind>;
+  user_id?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type AdminReviewsResult = {
@@ -541,6 +545,7 @@ export type AdminWorkshopBookingsFilterInput = {
   search?: InputMaybe<Scalars['String']['input']>;
   status?: InputMaybe<RegistrationStatus>;
   to?: InputMaybe<Scalars['DateTime']['input']>;
+  user_id?: InputMaybe<Scalars['Int']['input']>;
 };
 
 export type AdminWorkshopBookingsResult = {

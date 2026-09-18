@@ -48,6 +48,9 @@ export class AdminEventsFilterInput {
   @Field(() => EventType, { nullable: true })
   event_type?: EventType | null;
 
+  @Field(() => Int, { nullable: true })
+  user_id?: number | null;
+
   @Field(() => String, { nullable: true })
   search?: string | null;
 
@@ -65,6 +68,9 @@ export class AdminRegistrationsFilterInput {
 
   @Field(() => RegistrationStatus, { nullable: true })
   status?: RegistrationStatus | null;
+
+  @Field(() => Int, { nullable: true })
+  user_id?: number | null;
 
   @Field(() => String, { nullable: true })
   search?: string | null;

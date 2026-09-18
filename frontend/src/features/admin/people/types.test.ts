@@ -12,6 +12,8 @@ import {
   toOppositeRole,
   toRoleConfirmLabel,
   toUserRole,
+  toPersonId,
+  toPersonLinks,
 } from "./types";
 
 const PERSON: AdminPersonData = {
@@ -29,6 +31,26 @@ const PERSON: AdminPersonData = {
     image: null,
   },
 };
+
+describe("toPersonId", () => {
+  it("reads a positive integer and nothing else", () => {
+    expect(toPersonId("12")).toBe(12);
+    expect(toPersonId("0")).toBeNull();
+    expect(toPersonId("abc")).toBeNull();
+    expect(toPersonId(undefined)).toBeNull();
+  });
+});
+
+describe("toPersonLinks", () => {
+  it("points every count at its own list, narrowed to the person", () => {
+    expect(toPersonLinks(7)).toEqual({
+      orders: "/dashboard/orders?user=7",
+      registrations: "/dashboard/events?user=7",
+      bookings: "/dashboard/workshops?user=7",
+      reviews: "/dashboard/reviews?user=7",
+    });
+  });
+});
 
 describe("toUserRole", () => {
   it("accepts a real role and drops anything else", () => {

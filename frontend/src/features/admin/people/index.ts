@@ -3,6 +3,9 @@ export { AdminPeopleToolbar } from "@/features/admin/people/components/AdminPeop
 export { AdminPersonAvatar } from "@/features/admin/people/components/AdminPersonAvatar";
 export { AdminPersonCard } from "@/features/admin/people/components/AdminPersonCard";
 export { AdminPersonRole } from "@/features/admin/people/components/AdminPersonRole";
+export { AdminPersonFilterNotice } from "@/features/admin/people/components/AdminPersonFilterNotice";
 export { AdminPersonStats } from "@/features/admin/people/components/AdminPersonStats";
+export { usePersonFilter } from "@/features/admin/people/hooks";
+export { toPersonId } from "@/features/admin/people/types";
 export { AdminPeopleContainer } from "@/features/admin/people/containers/AdminPeopleContainer";
 export { AdminPersonDetailContainer } from "@/features/admin/people/containers/AdminPersonDetailContainer";

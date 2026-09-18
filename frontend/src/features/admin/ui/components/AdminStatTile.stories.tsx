@@ -21,6 +21,10 @@ export const Default: Story = {};
 
 export const WithoutAHint: Story = { args: { hint: null } };
 
+export const AsALink: Story = {
+  args: { label: "Orders", value: "8", hint: "Placed on the shelf", href: "#" },
+};
+
 export const Zero: Story = {
   args: { label: "Messages", value: "0", hint: "Unread in the inbox" },
 };

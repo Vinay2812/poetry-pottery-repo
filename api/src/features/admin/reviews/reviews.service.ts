@@ -52,6 +52,7 @@ export class AdminReviewsService {
     const bounds = clampPage(filter.page, filter.limit, MAX_LIMIT);
     const term = searchTerm(filter.search);
     const where: Prisma.ReviewWhereInput = {
+      ...(filter.user_id ? { user_id: filter.user_id } : {}),
       ...(filter.subject_kind === ReviewSubjectKind.PRODUCT
         ? { product_id: { not: null } }
         : {}),

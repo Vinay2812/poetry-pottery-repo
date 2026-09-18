@@ -42,6 +42,9 @@ export class AdminOrdersFilterInput {
   to?: Date | null;
 
   // Matches the public order id or the customer's email.
+  @Field(() => Int, { nullable: true })
+  user_id?: number | null;
+
   @Field(() => String, { nullable: true })
   search?: string | null;
 

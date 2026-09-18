@@ -58,6 +58,9 @@ export class AdminWorkshopBookingsFilterInput {
   @Field(() => Date, { nullable: true })
   to?: Date | null;
 
+  @Field(() => Int, { nullable: true })
+  user_id?: number | null;
+
   @Field(() => String, { nullable: true })
   search?: string | null;
 

@@ -94,6 +94,10 @@ export class AdminEventsService {
     const bounds = clampPage(filter.page, filter.limit, MAX_LIMIT);
     const term = searchTerm(filter.search);
     const where: Prisma.EventWhereInput = {
+      // A person's events are the ones they hold a registration for, whatever its state.
+      ...(filter.user_id
+        ? { registrations: { some: { user_id: filter.user_id } } }
+        : {}),
       ...(filter.status ? { status: filter.status } : {}),
       ...(filter.event_type ? { event_type: filter.event_type } : {}),
       ...(term
@@ -297,6 +301,7 @@ export class AdminEventsService {
     const term = searchTerm(filter.search);
     const where: Prisma.EventRegistrationWhereInput = {
       ...(filter.event_id ? { event_id: filter.event_id } : {}),
+      ...(filter.user_id ? { user_id: filter.user_id } : {}),
       ...(filter.status ? { status: filter.status } : {}),
       ...(term
         ? {

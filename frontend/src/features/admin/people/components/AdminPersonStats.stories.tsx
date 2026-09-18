@@ -12,6 +12,10 @@ const meta = {
     registrations: "2",
     bookings: "3",
     reviews: "5",
+    ordersHref: "#",
+    registrationsHref: "#",
+    bookingsHref: "#",
+    reviewsHref: "#",
   },
 } satisfies Meta<typeof AdminPersonStats>;
 
@@ -22,7 +26,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Empty: Story = {
-  args: { orders: "0", registrations: "0", bookings: "0", reviews: "0" },
+  args: {
+    orders: "0",
+    registrations: "0",
+    bookings: "0",
+    reviews: "0",
+    ordersHref: null,
+    registrationsHref: null,
+    bookingsHref: null,
+    reviewsHref: null,
+  },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

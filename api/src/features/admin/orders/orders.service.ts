@@ -51,6 +51,7 @@ export class AdminOrdersService {
     const bounds = clampPage(filter.page, filter.limit, MAX_LIMIT);
     const term = searchTerm(filter.search);
     const where: Prisma.OrderWhereInput = {
+      ...(filter.user_id ? { user_id: filter.user_id } : {}),
       ...(filter.status ? { status: filter.status } : {}),
       ...(filter.from || filter.to
         ? {

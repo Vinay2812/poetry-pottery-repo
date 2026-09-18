@@ -166,6 +166,7 @@ input AdminEventsFilterInput {
   page: Int
   search: String
   status: EventStatus
+  user_id: Int
 }
 
 type AdminEventsResult {
@@ -239,6 +240,7 @@ input AdminOrdersFilterInput {
   search: String
   status: OrderStatus
   to: DateTime
+  user_id: Int
 }
 
 type AdminOrdersResult {
@@ -349,6 +351,7 @@ input AdminRegistrationsFilterInput {
   page: Int
   search: String
   status: RegistrationStatus
+  user_id: Int
 }
 
 type AdminRegistrationsResult {
@@ -370,6 +373,7 @@ input AdminReviewsFilterInput {
   rating: Int
   search: String
   subject_kind: ReviewSubjectKind
+  user_id: Int
 }
 
 type AdminReviewsResult {
@@ -496,6 +500,7 @@ input AdminWorkshopBookingsFilterInput {
   search: String
   status: RegistrationStatus
   to: DateTime
+  user_id: Int
 }
 
 type AdminWorkshopBookingsResult {
