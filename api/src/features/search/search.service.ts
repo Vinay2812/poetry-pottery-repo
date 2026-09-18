@@ -12,6 +12,20 @@ import { QueueService } from "@/queue/queue.service";
 
 // Cosine distance above this is noise for MiniLM; keyword hits are always kept.
 const MAX_SEMANTIC_DISTANCE = 0.55;
+// word_similarity below this is a different word, not a typo or a prefix of this one.
+const MIN_NAME_SIMILARITY = 0.4;
+
+// "chaa" becomes "chaa:*" so a half-typed word matches; "blue mug" becomes "blue & mug:*".
+export function toPrefixTsQuery(term: string): string | null {
+  const words = term
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((word) => word.length > 0);
+  if (words.length === 0) return null;
+  return words
+    .map((word, index) => (index === words.length - 1 ? `${word}:*` : word))
+    .join(" & ");
+}
 
 interface RankedRow {
   id: number;
@@ -143,25 +157,38 @@ function rankQuery(
 ): Prisma.Sql {
   const tableSql =
     table === "products" ? Prisma.sql`"products"` : Prisma.sql`"events"`;
+  const nameSql =
+    table === "products" ? Prisma.sql`"name"` : Prisma.sql`"title"`;
   // The shelf and the archive share one ranking, so products carry no scope here; the caller
   // narrows with availableProductWhere or archivedProductWhere. Draft events never surface.
   const scopeSql =
     table === "products" ? Prisma.sql`TRUE` : Prisma.sql`"status" <> 'DRAFT'`;
   const keyword = Prisma.sql`ts_rank("search_vector", websearch_to_tsquery('english', ${term}))`;
+  // Three ways in: the whole words, the words with the last one half-typed, and the name by
+  // trigram so a near spelling still lands. Similarity feeds the order as well as the filter.
+  const prefix = toPrefixTsQuery(term);
+  const prefixMatch = prefix
+    ? Prisma.sql`OR "search_vector" @@ to_tsquery('english', ${prefix})`
+    : Prisma.empty;
+  const similarity = Prisma.sql`word_similarity(${term}, ${nameSql})`;
+  const wordMatch = Prisma.sql`
+    "search_vector" @@ websearch_to_tsquery('english', ${term})
+    ${prefixMatch}
+    OR ${similarity} >= ${MIN_NAME_SIMILARITY}`;
   if (!vector) {
     return Prisma.sql`
       SELECT "id" FROM ${tableSql}
-      WHERE ${scopeSql} AND "search_vector" @@ websearch_to_tsquery('english', ${term})
-      ORDER BY ${keyword} DESC, "id" DESC
+      WHERE ${scopeSql} AND (${wordMatch})
+      ORDER BY (${keyword} * 2 + ${similarity}) DESC, "id" DESC
       LIMIT ${limit}`;
   }
   const distance = Prisma.sql`("embedding" <=> ${vector}::vector)`;
   return Prisma.sql`
     SELECT "id" FROM ${tableSql}
     WHERE ${scopeSql} AND (
-      "search_vector" @@ websearch_to_tsquery('english', ${term})
+      ${wordMatch}
       OR ("embedding" IS NOT NULL AND ${distance} < ${MAX_SEMANTIC_DISTANCE})
     )
-    ORDER BY (${keyword} * 2 + COALESCE(1 - ${distance}, 0)) DESC, "id" DESC
+    ORDER BY (${keyword} * 2 + ${similarity} + COALESCE(1 - ${distance}, 0)) DESC, "id" DESC
     LIMIT ${limit}`;
 }

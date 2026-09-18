@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EmbeddingsService } from "@/embeddings/embeddings.service";
 import { PrismaService } from "@/prisma/prisma.service";
 import { QueueService } from "@/queue/queue.service";
-import { SearchService } from "./search.service";
+import { SearchService, toPrefixTsQuery } from "./search.service";
 
 const prismaMock = {
   $queryRaw: vi.fn(),
@@ -46,7 +46,10 @@ describe("SearchService", () => {
     const sql = lastSql();
     expect(sql.sql).toContain("<=>");
     expect(sql.sql).toContain("websearch_to_tsquery");
+    expect(sql.sql).toContain("to_tsquery('english'");
+    expect(sql.sql).toContain("word_similarity");
     expect(sql.values).toContain("chai cup");
+    expect(sql.values).toContain("chai & cup:*");
     expect(sql.values).toContain("[0.100000,0.200000]");
     expect(sql.values).toContain(50);
   });
@@ -108,5 +111,17 @@ describe("SearchService", () => {
     expect(queueMock.publish).toHaveBeenCalledWith("search.index-product", {
       productId: 4,
     });
+  });
+});
+
+describe("toPrefixTsQuery", () => {
+  it("marks the last word as a prefix and joins the rest with AND", () => {
+    expect(toPrefixTsQuery("cha")).toBe("cha:*");
+    expect(toPrefixTsQuery("Blue Blood mu")).toBe("blue & blood & mu:*");
+  });
+
+  it("drops punctuation and gives up on an empty term", () => {
+    expect(toPrefixTsQuery("chaand, cups!")).toBe("chaand & cups:*");
+    expect(toPrefixTsQuery("  ...  ")).toBeNull();
   });
 });
