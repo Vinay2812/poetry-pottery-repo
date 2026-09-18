@@ -4,6 +4,7 @@ import {
   getFeaturedProducts,
   getRecentReviews,
   getUpcomingEvents,
+  getWorkshops,
 } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
 
@@ -16,6 +17,9 @@ import {
   HomeHero,
   HomeSection,
   StudioTeaser,
+  toStudioDaysLabel,
+  toStudioHoursLabel,
+  toStudioPriceLabel,
 } from "@/features/home";
 import { ReviewColumn, toOneLine } from "@/features/reviews";
 import { toEventPath, toSeatsLabel } from "@/features/events";
@@ -27,16 +31,25 @@ import {
 } from "@/features/products";
 
 export default async function HomePage() {
-  const [settings, categories, featured, upcomingEvents, recentReviews] =
-    await Promise.all([
-      getSiteSettings(),
-      getCategories(),
-      getFeaturedProducts(8),
-      getUpcomingEvents(3),
-      getRecentReviews(3),
-    ]);
+  const [
+    settings,
+    categories,
+    featured,
+    upcomingEvents,
+    recentReviews,
+    workshops,
+  ] = await Promise.all([
+    getSiteSettings(),
+    getCategories(),
+    getFeaturedProducts(8),
+    getUpcomingEvents(3),
+    getRecentReviews(3),
+    getWorkshops(),
+  ]);
   const customPiece =
     featured.find((product) => product.is_customizable) ?? null;
+  const wheel = workshops[0] ?? null;
+  const hasEvents = upcomingEvents.length > 0;
 
   return (
     <PageShell className="flex flex-col">
@@ -97,15 +110,19 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* With nothing on the calendar the teaser carries the only link, so the
-          heading row does not offer a second way to the same page. */}
+      {/* With nothing on the calendar the teaser carries the facts and the only link,
+          so the heading row offers neither a note nor a second way to the same page. */}
       <HomeSection
         title="At the studio"
-        note="Wheel sessions run every afternoon except Monday. Book an hour or three."
-        linkHref={upcomingEvents.length > 0 ? "/events" : undefined}
-        linkLabel={upcomingEvents.length > 0 ? "All dates" : undefined}
+        note={
+          hasEvents
+            ? "Wheel sessions run every afternoon except Monday. Book an hour or three."
+            : undefined
+        }
+        linkHref={hasEvents ? "/events" : undefined}
+        linkLabel={hasEvents ? "All dates" : undefined}
       >
-        {upcomingEvents.length > 0 ? (
+        {hasEvents ? (
           <div className="border-t border-ash">
             {upcomingEvents.map((event) => (
               <EventRow
@@ -123,7 +140,22 @@ export default async function HomePage() {
           </div>
         ) : (
           <StudioTeaser
+            imageUrl={wheel?.image_url ?? null}
             line="Nothing is on the calendar this week, but the wheels are free most afternoons. Pick an hour and we will set one up for you."
+            hoursLabel={
+              wheel
+                ? toStudioHoursLabel(
+                    wheel.opening_minutes,
+                    wheel.closing_minutes,
+                  )
+                : "Afternoons"
+            }
+            daysLabel={
+              wheel
+                ? toStudioDaysLabel(wheel.closed_weekdays)
+                : "Every day but Monday"
+            }
+            priceLabel={wheel ? toStudioPriceLabel(wheel.tiers) : null}
             href="/workshops"
             linkLabel="Book a wheel session"
           />
