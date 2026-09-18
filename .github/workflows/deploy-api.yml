@@ -48,3 +48,8 @@ jobs:
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ConnectTimeout=20 \
             "$USER@$HOST" '~/deploy.sh'
+
+      # The runner is discarded after the job anyway; this just leaves nothing to discard.
+      - name: Remove the SSH key from the runner
+        if: always()
+        run: shred -u ~/.ssh/deploy_key 2>/dev/null || rm -f ~/.ssh/deploy_key
