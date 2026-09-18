@@ -62,6 +62,10 @@ export const FourPhotos: Story = {
   args: { imageUrls: PHOTOS },
 };
 
+export const InsideAShelfRow: Story = {
+  args: { imageUrls: PHOTOS, hasPhotoCarousel: false },
+};
+
 export const OnSale: Story = {
   args: {
     name: "Sand ramen bowl",

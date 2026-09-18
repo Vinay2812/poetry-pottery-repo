@@ -89,6 +89,7 @@ export default async function HomePage() {
                   key={product.id}
                   product={product}
                   isPriority={index < 2}
+                  hasPhotoCarousel={false}
                 />
               ))}
             </ProductCarousel>

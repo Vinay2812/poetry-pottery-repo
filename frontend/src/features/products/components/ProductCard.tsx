@@ -35,6 +35,8 @@ export interface ProductCardProps {
   isAddingToCart?: boolean;
   isPriority?: boolean;
   isEager?: boolean;
+  // Off inside a row that already scrolls sideways, so one swipe never fights another.
+  hasPhotoCarousel?: boolean;
   onToggleWishlist?: () => void;
   onAddToCart?: () => void;
 }
@@ -60,6 +62,7 @@ export function ProductCard({
   isAddingToCart = false,
   isPriority = false,
   isEager = false,
+  hasPhotoCarousel = true,
   onToggleWishlist,
   onAddToCart,
 }: ProductCardProps) {
@@ -73,7 +76,8 @@ export function ProductCard({
     [scrollTo],
   );
   const isSoldOut = stockTone === "sold_out";
-  const hasMany = imageUrls.length > 1;
+  const photos = hasPhotoCarousel ? imageUrls : imageUrls.slice(0, 1);
+  const hasMany = photos.length > 1;
   const hoverImageUrl = imageUrls[1] ?? null;
   // The old hover crossfade still reads on desktop, but only from the first photo and
   // only until someone picks a photo by hand — after that the choice wins over the hover.
@@ -97,7 +101,7 @@ export function ProductCard({
             aria-label={hasMany ? `${name} photos` : undefined}
           >
             <div className="flex h-full">
-              {imageUrls.map((url, index) => (
+              {photos.map((url, index) => (
                 <div
                   key={`${url}-${index}`}
                   className="relative h-full min-w-0 flex-[0_0_100%]"
@@ -145,12 +149,12 @@ export function ProductCard({
 
         {hasMany && (
           <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center">
-            {imageUrls.map((url, index) => (
+            {photos.map((url, index) => (
               <button
                 key={`${url}-${index}`}
                 type="button"
                 onClick={() => handlePickPhoto(index)}
-                aria-label={toPhotoLabel(index, imageUrls.length)}
+                aria-label={toPhotoLabel(index, photos.length)}
                 aria-current={index === selectedIndex}
                 className="pointer-events-auto p-1.5"
               >
