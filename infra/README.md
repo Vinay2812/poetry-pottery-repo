@@ -58,7 +58,7 @@ To reach the database from your laptop: join the same tailnet and connect to `<t
 
 ## Deploy from GitHub
 
-`.github/workflows/deploy-api.yml` runs on every push to `main` that touches `api/` or `infra/` (and by hand from the Actions tab). It opens an SSH session to the server and runs `~/deploy.sh` there, passing the job's own GitHub token on stdin so the server needs no personal access token of its own.
+`.github/workflows/deploy-api.yml` runs on every push to `main` that touches `api/` or `infra/` (and by hand from the Actions tab). It opens an SSH session to the server and runs `~/deploy.sh` there; that script holds every credential the deploy needs.
 
 One-time setup:
 
@@ -67,11 +67,10 @@ One-time setup:
    ```bash
    #!/usr/bin/env bash
    set -euo pipefail
+   export GITHUB_ACCESS_TOKEN=ghp_...
    export R2_ENV_BUCKET=<bucket> R2_ACCOUNT_ID=<id> R2_ACCESS_KEY_ID=<key> R2_SECRET_ACCESS_KEY=<secret>
    exec sudo -E /opt/poetry-pottery/infra/deploy.sh
    ```
-
-   `GITHUB_ACCESS_TOKEN` arrives from the workflow; export your own in the file only if you also run it by hand.
 
 2. On your machine, make a key for the workflow, put the public half on the server, and upload the private half and the server's host key to the env bucket:
 
