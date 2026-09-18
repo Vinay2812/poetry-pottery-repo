@@ -56,6 +56,46 @@ Network layout afterwards:
 
 To reach the database from your laptop: join the same tailnet and connect to `<tailscale ip>:5433` with the credentials from `infra/docker/.env`.
 
+## Deploy from GitHub
+
+`.github/workflows/deploy-api.yml` runs on every push to `main` that touches `api/` or `infra/` (and by hand from the Actions tab). It opens an SSH session to the server and runs `~/deploy.sh` there, passing the job's own GitHub token on stdin so the server needs no personal access token of its own.
+
+One-time setup:
+
+1. On the server, as the user that will deploy (root is fine; any other user needs `NOPASSWD:SETENV` sudo for `/opt/poetry-pottery/infra/deploy.sh`), create `~/deploy.sh` with mode 700:
+
+   ```bash
+   #!/usr/bin/env bash
+   set -euo pipefail
+   export R2_ENV_BUCKET=<bucket> R2_ACCOUNT_ID=<id> R2_ACCESS_KEY_ID=<key> R2_SECRET_ACCESS_KEY=<secret>
+   exec sudo -E /opt/poetry-pottery/infra/deploy.sh
+   ```
+
+   `GITHUB_ACCESS_TOKEN` arrives from the workflow; export your own in the file only if you also run it by hand.
+
+2. On your machine, make a key for the workflow, put the public half on the server, and upload the private half and the server's host key to the env bucket:
+
+   ```bash
+   ssh-keygen -t ed25519 -f ./deploy_key -C github-deploy -N ""
+   ssh-copy-id -i ./deploy_key.pub <user>@<server>
+   ssh-keyscan -H <server> > known_hosts
+   aws s3 cp deploy_key   s3://<bucket>/poetry-pottery-v2/ssh/deploy_key   --endpoint-url https://<account-id>.r2.cloudflarestorage.com
+   aws s3 cp known_hosts  s3://<bucket>/poetry-pottery-v2/ssh/known_hosts  --endpoint-url https://<account-id>.r2.cloudflarestorage.com
+   rm deploy_key deploy_key.pub known_hosts
+   ```
+
+   A different object prefix goes in a repo variable `DEPLOY_SSH_PREFIX`.
+
+3. In the GitHub repo, Settings → Secrets and variables → Actions, add:
+
+   | Secret | Value |
+   | --- | --- |
+   | `DEPLOY_HOST` | the server's public IP or DNS name (port 22 is open to the internet) |
+   | `DEPLOY_USER` | the server user from step 1 |
+   | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENV_BUCKET` | the same R2 values the deploy script uses; the token only needs read access |
+
+The run's log shows the deploy script's own output, ending in the container table and the tailnet reachability check.
+
 ## Day to day
 
 ```bash

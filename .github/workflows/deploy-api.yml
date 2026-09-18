@@ -1,0 +1,51 @@
+name: Deploy API
+
+# Ships main to the server whenever the API or the infra changes; the storefront ships from Vercel.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - "infra/**"
+      - ".github/workflows/deploy-api.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-api
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      # The key pair lives in the env bucket beside the env files, so the only secrets here are the R2 ones.
+      - name: Fetch the SSH key and the server's host key from R2
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+          BUCKET: ${{ secrets.R2_ENV_BUCKET }}
+          PREFIX: ${{ vars.DEPLOY_SSH_PREFIX || 'poetry-pottery-v2/ssh' }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          aws s3 cp "s3://$BUCKET/$PREFIX/deploy_key" ~/.ssh/deploy_key --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          aws s3 cp "s3://$BUCKET/$PREFIX/known_hosts" ~/.ssh/known_hosts --endpoint-url "$R2_ENDPOINT" --only-show-errors
+          chmod 600 ~/.ssh/deploy_key ~/.ssh/known_hosts
+
+      # The job's own token clones the repo on the server, so no long-lived PAT has to live there.
+      # It arrives on stdin rather than the command line, so it never shows in the process list.
+      - name: Run ~/deploy.sh on the server
+        env:
+          HOST: ${{ secrets.DEPLOY_HOST }}
+          USER: ${{ secrets.DEPLOY_USER }}
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s\n' "$TOKEN" | ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ConnectTimeout=20 \
+            "$USER@$HOST" \
+            'IFS= read -r GITHUB_ACCESS_TOKEN; export GITHUB_ACCESS_TOKEN; exec ~/deploy.sh'
