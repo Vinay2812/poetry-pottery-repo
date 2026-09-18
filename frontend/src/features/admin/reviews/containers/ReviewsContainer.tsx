@@ -25,6 +25,10 @@ import {
   AdminPageHeader,
   AdminPagination,
 } from "@/features/admin/ui";
+import {
+  AdminPersonFilterNotice,
+  usePersonFilter,
+} from "@/features/admin/people";
 
 import { ReviewsFilters } from "@/features/admin/reviews/components/ReviewsFilters";
 import { ReviewsTable } from "@/features/admin/reviews/components/ReviewsTable";
@@ -37,6 +41,7 @@ import {
 export function ReviewsContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const filter = useMemo(() => toReviewsFilter(values, page), [values, page]);
+  const { personId, personName } = usePersonFilter(values.user);
   const { data, previousData, loading, error, refetch } = useAdminReviewsQuery({
     variables: { filter },
     fetchPolicy: "cache-and-network",
@@ -149,6 +154,14 @@ export function ReviewsContainer() {
         onRatingChange={(value) => patch({ rating: value || null })}
         onVisibilityChange={(value) => patch({ visibility: value || null })}
       />
+      {personId !== null && (
+        <AdminPersonFilterNotice
+          line={
+            personName ? `Reviews by ${personName}` : "Reviews by one person"
+          }
+          onClear={() => patch({ user: null })}
+        />
+      )}
       <ReviewsTable
         rows={optimisticRows}
         isBusy={loading || isPending}

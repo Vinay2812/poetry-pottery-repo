@@ -53,6 +53,9 @@ export class AdminReviewsFilterInput {
   is_hidden?: boolean | null;
 
   // Matches the review body or the reviewer's email.
+  @Field(() => Int, { nullable: true })
+  user_id?: number | null;
+
   @Field(() => String, { nullable: true })
   search?: string | null;
 

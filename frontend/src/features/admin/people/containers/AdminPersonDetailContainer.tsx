@@ -28,6 +28,7 @@ import {
   roleTone,
   toInitials,
   toOppositeRole,
+  toPersonLinks,
   toRoleConfirmLabel,
 } from "@/features/admin/people/types";
 
@@ -102,6 +103,7 @@ export function AdminPersonDetailContainer({
     optimisticPerson.user.name,
     optimisticPerson.user.email,
   );
+  const links = toPersonLinks(personId);
 
   return (
     <div className="flex flex-col gap-8">
@@ -124,6 +126,14 @@ export function AdminPersonDetailContainer({
         registrations={String(optimisticPerson.registrations_count)}
         bookings={String(optimisticPerson.bookings_count)}
         reviews={String(optimisticPerson.reviews_count)}
+        ordersHref={optimisticPerson.orders_count > 0 ? links.orders : null}
+        registrationsHref={
+          optimisticPerson.registrations_count > 0 ? links.registrations : null
+        }
+        bookingsHref={
+          optimisticPerson.bookings_count > 0 ? links.bookings : null
+        }
+        reviewsHref={optimisticPerson.reviews_count > 0 ? links.reviews : null}
       />
       <section className="border-t border-ash pt-6">
         <AdminPersonRole

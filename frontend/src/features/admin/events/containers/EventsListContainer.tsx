@@ -26,6 +26,10 @@ import {
   enumOptions,
   eventStatusTone,
 } from "@/features/admin/ui";
+import {
+  AdminPersonFilterNotice,
+  usePersonFilter,
+} from "@/features/admin/people";
 
 import {
   EventsTable,
@@ -47,6 +51,7 @@ export function EventsListContainer() {
   const search = values.search ?? "";
   const status = values.status ?? "";
   const eventType = values.event_type ?? "";
+  const { personId, personName } = usePersonFilter(values.user);
 
   const commitSearch = useCallback(
     (value: string) => patch({ search: value || null }),
@@ -63,6 +68,7 @@ export function EventsListContainer() {
         search: search || null,
         status: toEventStatus(status),
         event_type: toEventType(eventType),
+        user_id: personId,
         page,
         limit: PAGE_SIZE,
       },
@@ -128,6 +134,16 @@ export function EventsListContainer() {
           onChange={(value) => patch({ event_type: value || null })}
         />
       </AdminToolbar>
+      {personId !== null && (
+        <AdminPersonFilterNotice
+          line={
+            personName
+              ? `Events ${personName} registered for`
+              : "Events one person registered for"
+          }
+          onClear={() => patch({ user: null })}
+        />
+      )}
       <EventsTable rows={rows} isBusy={isPending || loading} />
       <AdminPagination
         page={pageInfo?.page ?? page}

@@ -37,6 +37,10 @@ import {
   toPersonName,
   toRegistrationStatus,
 } from "@/features/admin/ui";
+import {
+  AdminPersonFilterNotice,
+  usePersonFilter,
+} from "@/features/admin/people";
 
 import {
   WorkshopBookingsTable,
@@ -73,11 +77,13 @@ export function WorkshopBookingsContainer({
   const status = values.status ?? "";
   const from = values.from ?? "";
   const to = values.to ?? "";
+  const { personId, personName } = usePersonFilter(values.user);
 
   const { data, previousData, refetch } = useAdminWorkshopBookingsQuery({
     variables: {
       filter: {
         config_id: configId,
+        user_id: personId,
         status: toRegistrationStatus(status),
         search: search || null,
         from: toRangeStart(from, timezone) || null,
@@ -210,6 +216,14 @@ export function WorkshopBookingsContainer({
           onChange={(value) => patch({ to: value || null })}
         />
       </AdminToolbar>
+      {personId !== null && (
+        <AdminPersonFilterNotice
+          line={
+            personName ? `Bookings by ${personName}` : "Bookings by one person"
+          }
+          onClear={() => patch({ user: null })}
+        />
+      )}
       <WorkshopBookingsTable
         rows={rows}
         isBusy={isNavigating || isSaving}

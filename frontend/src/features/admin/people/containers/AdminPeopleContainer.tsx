@@ -27,10 +27,21 @@ import {
   PEOPLE_PAGE_SIZE,
   roleTone,
   toInitials,
+  toPersonLinks,
   toUserRole,
 } from "@/features/admin/people/types";
 
 const ROLE_OPTIONS = enumOptions(UserRole);
+
+function toPersonHrefs(personId: number) {
+  const links = toPersonLinks(personId);
+  return {
+    ordersHref: links.orders,
+    registrationsHref: links.registrations,
+    bookingsHref: links.bookings,
+    reviewsHref: links.reviews,
+  };
+}
 
 export function AdminPeopleContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
@@ -64,6 +75,7 @@ export function AdminPeopleContainer() {
     () =>
       (result?.items ?? []).map((person) => ({
         id: person.user.id,
+        ...toPersonHrefs(person.user.id),
         name: toPersonName(person.user.name, person.user.email),
         email: person.user.email,
         imageUrl: person.user.image,
