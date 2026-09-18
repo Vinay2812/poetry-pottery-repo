@@ -89,7 +89,7 @@ Slow work leaves the request path through RabbitMQ (`api/src/queue`): search emb
 
 ## Search
 
-Postgres keeps a weighted `tsvector` per product and event (maintained by triggers in the initial migration). A pgvector column holds a 384-dimension embedding from `Xenova/all-MiniLM-L6-v2`, computed locally with `@huggingface/transformers` (the model downloads once into `api/.cache/models`). Search ranks keyword and semantic matches together.
+Postgres keeps a weighted `tsvector` per product and event (maintained by triggers in the initial migration). A pgvector column holds a 384-dimension embedding from `Xenova/all-MiniLM-L6-v2`, computed locally with `@huggingface/transformers` (the model downloads once into `api/.cache/models`). Names and titles also carry a `pg_trgm` trigram index. Search ranks whole-word, prefix (last word half-typed), trigram-similarity (typos) and semantic matches together, so `cha` and `chand` both find _Chaand Cups_.
 
 ## Rate limiting
 
