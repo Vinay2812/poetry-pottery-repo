@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useId } from "react";
+import { useState } from "react";
 import {
   Controller,
   useForm,
@@ -27,8 +27,12 @@ import {
   MAX_CARVED_WORDS,
 } from "@/lib/validations/commission";
 
-import type { GlazeChoice } from "@/features/commissions/types";
+import type { GlazeChoice, PieceChoice } from "@/features/commissions/types";
+import { toSizesForPiece } from "@/features/commissions/types";
 import { GlazeSwatch } from "@/features/products/components/GlazeSwatch";
+
+// The last entry in the piece list; picking it opens a box to describe the piece instead.
+const OTHER_PIECE = "__other__";
 
 interface FieldProps {
   id: string;
@@ -36,7 +40,7 @@ interface FieldProps {
   autoComplete: string;
   error: string | undefined;
   registration: UseFormRegisterReturn;
-  listId?: string;
+  placeholder?: string;
 }
 
 function TextField({
@@ -45,15 +49,15 @@ function TextField({
   autoComplete,
   error,
   registration,
-  listId,
+  placeholder,
 }: FieldProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       <Input
         id={id}
-        list={listId}
         autoComplete={autoComplete}
+        placeholder={placeholder}
         aria-invalid={Boolean(error)}
         {...registration}
       />
@@ -67,8 +71,7 @@ function TextField({
 }
 
 export interface CommissionBriefFormProps {
-  pieceTypes: string[];
-  sizes: string[];
+  pieces: PieceChoice[];
   glazes: GlazeChoice[];
   isSubmitting: boolean;
   errorMessage: string | null;
@@ -79,8 +82,7 @@ export interface CommissionBriefFormProps {
 }
 
 export function CommissionBriefForm({
-  pieceTypes,
-  sizes,
+  pieces,
   glazes,
   isSubmitting,
   errorMessage,
@@ -88,11 +90,12 @@ export function CommissionBriefForm({
   toAskUrl,
   onSubmit,
 }: CommissionBriefFormProps) {
-  const pieceListId = useId();
+  const [isOtherPiece, setIsOtherPiece] = useState(false);
   const {
     register,
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<CommissionFormValues>({
     resolver: zodResolver(commissionSchema),
@@ -103,6 +106,24 @@ export function CommissionBriefForm({
   const draft = { ...EMPTY_COMMISSION_FORM, ...values };
   const carvedLength = draft.carvedWords.length;
   const askUrl = toAskUrl(draft);
+  const isListedPiece = pieces.some((piece) => piece.name === draft.pieceType);
+  const pieceChoice = isListedPiece
+    ? draft.pieceType
+    : isOtherPiece
+      ? OTHER_PIECE
+      : "";
+  const sizes = toSizesForPiece(pieces, draft.pieceType);
+  const hasPiece = draft.pieceType.length > 0 || isOtherPiece;
+
+  // Sizes belong to a piece, so changing the piece clears the size chosen for the last one.
+  const handlePieceChange = (
+    value: string,
+    onChange: (next: string) => void,
+  ) => {
+    setIsOtherPiece(value === OTHER_PIECE);
+    onChange(value === OTHER_PIECE ? "" : value);
+    setValue("size", "");
+  };
 
   return (
     <form
@@ -114,51 +135,104 @@ export function CommissionBriefForm({
         <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
           The piece
         </h3>
-        <TextField
-          id="commission-piece"
-          label="What should we make?"
-          autoComplete="off"
-          listId={pieceListId}
-          error={errors.pieceType?.message}
-          registration={register("pieceType")}
-        />
-        <datalist id={pieceListId}>
-          {pieceTypes.map((pieceType) => (
-            <option key={pieceType} value={pieceType} />
-          ))}
-        </datalist>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="commission-piece">What should we make?</Label>
+          <Controller
+            control={control}
+            name="pieceType"
+            render={({ field }) => (
+              <Select
+                value={pieceChoice}
+                onValueChange={(value) =>
+                  handlePieceChange(value, field.onChange)
+                }
+              >
+                <SelectTrigger
+                  id="commission-piece"
+                  className="w-full"
+                  aria-invalid={Boolean(errors.pieceType) && !isOtherPiece}
+                >
+                  <SelectValue placeholder="Pick a piece" />
+                </SelectTrigger>
+                <SelectContent>
+                  {pieces.map((piece) => (
+                    <SelectItem key={piece.name} value={piece.name}>
+                      {piece.name}
+                    </SelectItem>
+                  ))}
+                  <SelectItem value={OTHER_PIECE}>Something else</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          />
+          {errors.pieceType?.message && !isOtherPiece && (
+            <p role="alert" className="text-xs text-destructive">
+              {errors.pieceType.message}
+            </p>
+          )}
+        </div>
+        {isOtherPiece && (
+          <TextField
+            id="commission-piece-other"
+            label="Describe the piece"
+            autoComplete="off"
+            placeholder="A lidded jar, a set of four cups…"
+            error={errors.pieceType?.message}
+            registration={register("pieceType")}
+          />
+        )}
 
         <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="commission-size">Size</Label>
-            <Controller
-              control={control}
-              name="size"
-              render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger
-                    id="commission-size"
-                    className="w-full"
-                    aria-invalid={Boolean(errors.size)}
+          {/* A listed piece offers the sizes its pages carry; anything else is described in words. */}
+          {sizes.length > 0 || !hasPiece ? (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="commission-size">Size</Label>
+              <Controller
+                control={control}
+                name="size"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    disabled={!hasPiece}
                   >
-                    <SelectValue placeholder="Pick a size" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {sizes.map((size) => (
-                      <SelectItem key={size} value={size}>
-                        {size}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <SelectTrigger
+                      id="commission-size"
+                      className="w-full"
+                      aria-invalid={Boolean(errors.size)}
+                    >
+                      <SelectValue
+                        placeholder={
+                          hasPiece ? "Pick a size" : "Pick the piece first"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {sizes.map((size) => (
+                        <SelectItem key={size} value={size}>
+                          {size}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+              {errors.size?.message && (
+                <p role="alert" className="text-xs text-destructive">
+                  {errors.size.message}
+                </p>
               )}
+            </div>
+          ) : (
+            <TextField
+              id="commission-size"
+              label="Size"
+              autoComplete="off"
+              placeholder="About 20 cm across, holds 300 ml…"
+              error={errors.size?.message}
+              registration={register("size")}
             />
-            {errors.size?.message && (
-              <p role="alert" className="text-xs text-destructive">
-                {errors.size.message}
-              </p>
-            )}
-          </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="commission-glaze">Glaze</Label>

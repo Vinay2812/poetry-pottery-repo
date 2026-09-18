@@ -625,7 +625,11 @@ type CommissionGlaze {
 
 type CommissionOptions {
   glazes: [CommissionGlaze!]!
-  piece_types: [String!]!
+  piece_types: [CommissionPiece!]!
+}
+
+type CommissionPiece {
+  name: String!
   sizes: [String!]!
 }
 

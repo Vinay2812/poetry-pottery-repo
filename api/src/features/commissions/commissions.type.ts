@@ -75,14 +75,21 @@ export class CommissionGlaze {
   color_code!: string | null;
 }
 
-// The three lists the brief form offers, taken from what the studio actually fires.
+// A piece the studio throws to order, with the sizes its product pages carry; none means free text.
 @ObjectType()
-export class CommissionOptions {
-  @Field(() => [String])
-  piece_types!: string[];
+export class CommissionPiece {
+  @Field()
+  name!: string;
 
   @Field(() => [String])
   sizes!: string[];
+}
+
+// The lists the brief form offers, taken from what the studio actually fires.
+@ObjectType()
+export class CommissionOptions {
+  @Field(() => [CommissionPiece])
+  piece_types!: CommissionPiece[];
 
   @Field(() => [CommissionGlaze])
   glazes!: CommissionGlaze[];

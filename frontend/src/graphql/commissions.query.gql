@@ -1,7 +1,9 @@
 query CommissionOptions {
   commissionOptions {
-    piece_types
-    sizes
+    piece_types {
+      name
+      sizes
+    }
     glazes {
       slug
       name

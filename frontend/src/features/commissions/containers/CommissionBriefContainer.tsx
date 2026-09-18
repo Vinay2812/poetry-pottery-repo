@@ -8,7 +8,7 @@ import type { CommissionFormValues } from "@/lib/validations/commission";
 
 import { CommissionBriefForm } from "@/features/commissions/components/CommissionBriefForm";
 import { CommissionSent } from "@/features/commissions/components/CommissionSent";
-import type { GlazeChoice } from "@/features/commissions/types";
+import type { GlazeChoice, PieceChoice } from "@/features/commissions/types";
 import {
   toBriefSummary,
   toCommissionAskUrl,
@@ -25,8 +25,7 @@ import {
 } from "@/features/products/types";
 
 export interface CommissionBriefContainerProps {
-  pieceTypes: string[];
-  sizes: string[];
+  pieces: PieceChoice[];
   glazes: GlazeChoice[];
   whatsappNumber: string;
 }
@@ -38,8 +37,7 @@ interface SentBrief {
 }
 
 export function CommissionBriefContainer({
-  pieceTypes,
-  sizes,
+  pieces,
   glazes,
   whatsappNumber,
 }: CommissionBriefContainerProps) {
@@ -114,8 +112,7 @@ export function CommissionBriefContainer({
 
   return (
     <CommissionBriefForm
-      pieceTypes={pieceTypes}
-      sizes={sizes}
+      pieces={pieces}
       glazes={glazes}
       isSubmitting={loading}
       errorMessage={errorMessage}

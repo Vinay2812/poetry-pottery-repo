@@ -147,7 +147,7 @@ export async function getCommissionOptions(): Promise<
     CommissionOptionsQuery,
     CommissionOptionsQueryVariables
   >({ query: CommissionOptionsDocument });
-  return data?.commissionOptions ?? { piece_types: [], sizes: [], glazes: [] };
+  return data?.commissionOptions ?? { piece_types: [], glazes: [] };
 }
 
 export async function getCommissionPieces(
