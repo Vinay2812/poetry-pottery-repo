@@ -30,7 +30,7 @@ jobs:
           AWS_DEFAULT_REGION: auto
           R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
           BUCKET: ${{ secrets.R2_ENV_BUCKET }}
-          KEY_OBJECT: ${{ vars.DEPLOY_SSH_KEY_OBJECT || 'vinay-personal-project.pem' }}
+          KEY_OBJECT: ${{ secrets.DEPLOY_SSH_KEY_OBJECT }}
           HOST: ${{ secrets.DEPLOY_HOST }}
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh

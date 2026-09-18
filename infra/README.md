@@ -72,7 +72,7 @@ One-time setup:
    exec sudo -E /opt/poetry-pottery/infra/deploy.sh
    ```
 
-2. Put the private key that opens that account in the env bucket. The workflow reads `vinay-personal-project.pem` from the `R2_ENV_BUCKET` bucket; another object name goes in a repo variable `DEPLOY_SSH_KEY_OBJECT`. The server's host key is read with `ssh-keyscan` at run time.
+2. Put the private key that opens that account in the env bucket. The workflow reads it from the object named by the `DEPLOY_SSH_KEY_OBJECT` secret. The server's host key is read with `ssh-keyscan` at run time.
 
 3. In the GitHub repo, Settings → Secrets and variables → Actions, add:
 
@@ -80,6 +80,7 @@ One-time setup:
    | --- | --- |
    | `DEPLOY_HOST` | the server's public IP or DNS name (port 22 is open to the internet) |
    | `DEPLOY_USER` | the server user from step 1 |
+   | `DEPLOY_SSH_KEY_OBJECT` | the key's object name inside the bucket |
    | `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_ENV_BUCKET` | the same R2 values the deploy script uses; the token only needs read access |
 
 The run's log shows the deploy script's own output, ending in the container table and the tailnet reachability check.
