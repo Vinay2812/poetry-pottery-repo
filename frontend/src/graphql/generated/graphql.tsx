@@ -682,7 +682,12 @@ export type CommissionGlaze = {
 export type CommissionOptions = {
   __typename?: 'CommissionOptions';
   glazes: Array<CommissionGlaze>;
-  piece_types: Array<Scalars['String']['output']>;
+  piece_types: Array<CommissionPiece>;
+};
+
+export type CommissionPiece = {
+  __typename?: 'CommissionPiece';
+  name: Scalars['String']['output'];
   sizes: Array<Scalars['String']['output']>;
 };
 
@@ -3135,7 +3140,7 @@ export type ClearCartMutation = { clearCart: { item_count: number, subtotal: num
 export type CommissionOptionsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type CommissionOptionsQuery = { commissionOptions: { piece_types: Array<string>, sizes: Array<string>, glazes: Array<{ slug: string, name: string, color_code: string | null }> } };
+export type CommissionOptionsQuery = { commissionOptions: { piece_types: Array<{ name: string, sizes: Array<string> }>, glazes: Array<{ slug: string, name: string, color_code: string | null }> } };
 
 export type CommissionPiecesQueryVariables = Exact<{
   limit?: number | null | undefined;
@@ -7663,8 +7668,10 @@ export type ClearCartMutationResult = ApolloReactCommon.MutationResult<ClearCart
 export const CommissionOptionsDocument = gql`
     query CommissionOptions {
   commissionOptions {
-    piece_types
-    sizes
+    piece_types {
+      name
+      sizes
+    }
     glazes {
       slug
       name

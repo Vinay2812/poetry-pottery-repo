@@ -119,33 +119,52 @@ export class CommissionsService {
     private readonly pendingUploads: PendingUploadsService,
   ) {}
 
-  // The form never invents a size or a glaze; it offers the glazes the studio fires and the
-  // sizes and pieces the product pages already carry.
+  // The form never invents a size or a glaze: it offers the glazes the studio fires and, per
+  // piece, the sizes the made-to-order product pages in that category already carry.
   // Read straight through: nothing in the API writes glazes, categories or options, so a
   // cache here could only ever be invalidated by a TTL guessing when the seed last ran.
   async options(): Promise<CommissionOptions> {
-    const [categories, sizes, glazes] = await Promise.all([
+    const [categories, glazes] = await Promise.all([
       this.prisma.category.findMany({
         where: { products: { some: sellableProductWhere() } },
         orderBy: [{ sort_order: "asc" }, { name: "asc" }],
-        select: { name: true },
-      }),
-      this.prisma.productOption.findMany({
-        where: {
-          is_active: true,
-          group: { name: { in: SIZE_GROUP_NAMES, mode: "insensitive" } },
+        select: {
+          name: true,
+          products: {
+            where: { AND: [sellableProductWhere(), { is_customizable: true }] },
+            select: {
+              option_groups: {
+                where: { name: { in: SIZE_GROUP_NAMES, mode: "insensitive" } },
+                select: {
+                  options: {
+                    where: { is_active: true },
+                    orderBy: [{ sort_order: "asc" }, { name: "asc" }],
+                    select: { name: true },
+                  },
+                },
+              },
+            },
+          },
         },
-        orderBy: [{ sort_order: "asc" }, { name: "asc" }],
-        select: { name: true },
       }),
       this.prisma.glaze.findMany({
         orderBy: { name: "asc" },
         select: { slug: true, name: true, color_code: true },
       }),
     ]);
+    const pieces = new Map<string, string[]>();
+    for (const category of categories) {
+      const name = category.name.trim();
+      if (!name) continue;
+      const sizes = category.products.flatMap((product) =>
+        product.option_groups.flatMap((group) =>
+          group.options.map((option) => option.name),
+        ),
+      );
+      pieces.set(name, unique([...(pieces.get(name) ?? []), ...sizes]));
+    }
     return {
-      piece_types: unique(categories.map((row) => row.name)),
-      sizes: unique(sizes.map((row) => row.name)),
+      piece_types: [...pieces].map(([name, sizes]) => ({ name, sizes })),
       glazes,
     };
   }

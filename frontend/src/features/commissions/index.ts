@@ -9,4 +9,5 @@ export {
   toCommissionInput,
   toCommissionMessage,
   toGlazeChoices,
+  toPieceChoices,
 } from "@/features/commissions/types";

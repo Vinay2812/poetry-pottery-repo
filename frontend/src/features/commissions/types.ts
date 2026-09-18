@@ -16,6 +16,25 @@ export interface GlazeChoice {
   colorCode: string | null;
 }
 
+// A piece the studio throws to order and the sizes its pages carry; none means the size is typed.
+export interface PieceChoice {
+  name: string;
+  sizes: string[];
+}
+
+export function toPieceChoices(
+  pieces: readonly { name: string; sizes: readonly string[] }[],
+): PieceChoice[] {
+  return pieces.map((piece) => ({ name: piece.name, sizes: [...piece.sizes] }));
+}
+
+export function toSizesForPiece(
+  pieces: readonly PieceChoice[],
+  pieceType: string,
+): string[] {
+  return pieces.find((piece) => piece.name === pieceType)?.sizes ?? [];
+}
+
 export function toGlazeChoices(
   glazes: readonly { slug: string; name: string; color_code: string | null }[],
 ): GlazeChoice[] {

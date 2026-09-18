@@ -177,15 +177,25 @@ describe("CommissionsService", () => {
     });
   });
 
-  it("offers the pieces and sizes the shelf carries and the glazes the studio fires", async () => {
+  it("offers the pieces the shelf carries, each with its own sizes, and the glazes the studio fires", async () => {
     prismaMock.category.findMany.mockResolvedValue([
-      { name: "Mugs" },
-      { name: "Bowls" },
-    ]);
-    prismaMock.productOption.findMany.mockResolvedValue([
-      { name: "Espresso (30 ml)" },
-      { name: "Short (150 ml)" },
-      { name: "Short (150 ml)" },
+      {
+        name: "Mugs",
+        products: [
+          {
+            option_groups: [
+              {
+                options: [
+                  { name: "Espresso (30 ml)" },
+                  { name: "Short (150 ml)" },
+                ],
+              },
+            ],
+          },
+          { option_groups: [{ options: [{ name: "Short (150 ml)" }] }] },
+        ],
+      },
+      { name: "Bowls", products: [{ option_groups: [] }] },
     ]);
     prismaMock.glaze.findMany.mockResolvedValue([
       { slug: "ocean-blue", name: "Ocean Blue", color_code: "#2f5d7c" },
@@ -193,8 +203,10 @@ describe("CommissionsService", () => {
     ]);
 
     await expect(service.options()).resolves.toEqual({
-      piece_types: ["Mugs", "Bowls"],
-      sizes: ["Espresso (30 ml)", "Short (150 ml)"],
+      piece_types: [
+        { name: "Mugs", sizes: ["Espresso (30 ml)", "Short (150 ml)"] },
+        { name: "Bowls", sizes: [] },
+      ],
       glazes: [
         { slug: "ocean-blue", name: "Ocean Blue", color_code: "#2f5d7c" },
         { slug: "wood-fired", name: "Wood Fired", color_code: null },
@@ -208,8 +220,9 @@ describe("CommissionsService", () => {
   });
 
   it("reads the options straight from the tables, with nothing cached in between", async () => {
-    prismaMock.category.findMany.mockResolvedValue([{ name: "Mugs" }]);
-    prismaMock.productOption.findMany.mockResolvedValue([{ name: "Short" }]);
+    prismaMock.category.findMany.mockResolvedValue([
+      { name: "Mugs", products: [] },
+    ]);
     prismaMock.glaze.findMany.mockResolvedValue([]);
 
     await service.options();
@@ -218,7 +231,7 @@ describe("CommissionsService", () => {
     // Nothing in the API writes glazes, categories or options, so a cache could never be
     // told to drop; both calls have to go to the database.
     expect(prismaMock.category.findMany).toHaveBeenCalledTimes(2);
-    expect(prismaMock.productOption.findMany).toHaveBeenCalledTimes(2);
+    expect(prismaMock.glaze.findMany).toHaveBeenCalledTimes(2);
   });
 
   it("shows flagged commissions, and the made-to-order shelf until there are any", async () => {

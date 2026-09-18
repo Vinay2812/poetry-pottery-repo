@@ -15,8 +15,15 @@ const meta = {
     ),
   ],
   args: {
-    pieceTypes: ["Mugs", "Bowls", "Plates", "Vases"],
-    sizes: ["Espresso (30 ml)", "Short (150 ml)", "Tall (300 ml)"],
+    pieces: [
+      {
+        name: "Mugs",
+        sizes: ["Espresso (30 ml)", "Short (150 ml)", "Tall (300 ml)"],
+      },
+      { name: "Bowls", sizes: [] },
+      { name: "Plates", sizes: ["Side (18 cm)", "Dinner (26 cm)"] },
+      { name: "Vases", sizes: [] },
+    ],
     glazes: [
       { slug: "ocean-blue", name: "Ocean Blue", colorCode: "#2F5D7C" },
       { slug: "wood-fired", name: "Wood Fired", colorCode: "#7A5C3E" },

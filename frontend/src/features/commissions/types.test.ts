@@ -12,6 +12,8 @@ import {
   toCommissionInput,
   toCommissionMessage,
   toGlazeChoices,
+  toPieceChoices,
+  toSizesForPiece,
 } from "./types";
 
 function values(
@@ -124,5 +126,39 @@ describe("toGlazeChoices", () => {
 
   it("has nothing to offer when the studio lists no glazes", () => {
     expect(toGlazeChoices([])).toEqual([]);
+  });
+});
+
+describe("toPieceChoices", () => {
+  it("copies each piece with its own sizes", () => {
+    expect(
+      toPieceChoices([
+        { name: "Mugs", sizes: ["Short (150 ml)"] },
+        { name: "Bowls", sizes: [] },
+      ]),
+    ).toEqual([
+      { name: "Mugs", sizes: ["Short (150 ml)"] },
+      { name: "Bowls", sizes: [] },
+    ]);
+  });
+});
+
+describe("toSizesForPiece", () => {
+  const pieces = [
+    { name: "Mugs", sizes: ["Espresso (30 ml)", "Short (150 ml)"] },
+    { name: "Bowls", sizes: [] },
+  ];
+
+  it("offers the sizes of the chosen piece only", () => {
+    expect(toSizesForPiece(pieces, "Mugs")).toEqual([
+      "Espresso (30 ml)",
+      "Short (150 ml)",
+    ]);
+    expect(toSizesForPiece(pieces, "Bowls")).toEqual([]);
+  });
+
+  it("has no sizes for a piece the studio does not list", () => {
+    expect(toSizesForPiece(pieces, "Lamp")).toEqual([]);
+    expect(toSizesForPiece(pieces, "")).toEqual([]);
   });
 });
