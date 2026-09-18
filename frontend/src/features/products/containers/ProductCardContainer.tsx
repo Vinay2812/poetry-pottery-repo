@@ -17,6 +17,7 @@ export interface ProductCardContainerProps {
   product: ProductCardData;
   isPriority?: boolean;
   isEager?: boolean;
+  hasPhotoCarousel?: boolean;
 }
 
 // One place that turns a product record into a card with live cart and wishlist behaviour.
@@ -24,6 +25,7 @@ export function ProductCardContainer({
   product,
   isPriority = false,
   isEager = false,
+  hasPhotoCarousel = true,
 }: ProductCardContainerProps) {
   const { isWishlisted } = useWishlistIds();
   const { toggle } = useToggleWishlist();
@@ -64,6 +66,7 @@ export function ProductCardContainer({
       href={href}
       name={product.name}
       imageUrls={product.image_urls}
+      hasPhotoCarousel={hasPhotoCarousel}
       price={product.price}
       compareAtPrice={product.compare_at_price}
       stockTone={stock.tone}

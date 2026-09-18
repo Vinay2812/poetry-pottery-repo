@@ -467,7 +467,11 @@ export function ProductDetailContainer({
         <Reveal isGroup>
           <ProductCarousel title="From the same shelf" viewAllHref="/products">
             {related.map((item) => (
-              <ProductCardContainer key={item.id} product={item} />
+              <ProductCardContainer
+                key={item.id}
+                product={item}
+                hasPhotoCarousel={false}
+              />
             ))}
           </ProductCarousel>
         </Reveal>
