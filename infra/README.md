@@ -67,10 +67,10 @@ One-time setup:
    ```bash
    #!/usr/bin/env bash
    set -euo pipefail
-   export GITHUB_ACCESS_TOKEN=ghp_...
-   export R2_ENV_BUCKET=<bucket> R2_ACCOUNT_ID=<id> R2_ACCESS_KEY_ID=<key> R2_SECRET_ACCESS_KEY=<secret>
    exec sudo -E /opt/poetry-pottery/infra/deploy.sh
    ```
+
+   The workflow sources the user's `~/.zshrc` first, so `GITHUB_ACCESS_TOKEN`, `R2_ENV_BUCKET`, `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY` can be exported there (zsh must be installed) or in the script itself.
 
 2. Put the private key that opens that account in the env bucket. The workflow reads it from the object named by the `DEPLOY_SSH_KEY_OBJECT` secret. The server's host key is read with `ssh-keyscan` at run time.
 

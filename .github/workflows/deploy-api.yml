@@ -39,7 +39,7 @@ jobs:
           ssh-keyscan -H "$HOST" > ~/.ssh/known_hosts 2>/dev/null
           test -s ~/.ssh/known_hosts
 
-      # ~/deploy.sh on the server exports its own credentials, GITHUB_ACCESS_TOKEN among them.
+      # The server's ~/.zshrc exports the deploy credentials; a plain SSH command would not read it.
       - name: Run ~/deploy.sh on the server
         env:
           HOST: ${{ secrets.DEPLOY_HOST }}
@@ -47,7 +47,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/deploy_key \
             -o StrictHostKeyChecking=yes -o ServerAliveInterval=30 -o ConnectTimeout=20 \
-            "$USER@$HOST" '~/deploy.sh'
+            "$USER@$HOST" 'zsh -c "source ~/.zshrc; exec ~/deploy.sh"'
 
       # The runner is discarded after the job anyway; this just leaves nothing to discard.
       - name: Remove the SSH key from the runner
