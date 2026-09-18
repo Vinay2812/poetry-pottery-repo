@@ -158,6 +158,9 @@ for pair in "api:api/.env" "frontend:frontend/.env" "docker:infra/docker/.env"; 
   log "Pulling s3://${R2_ENV_BUCKET}/${ENV_PREFIX}/${name}/.env.prod -> ${dest}"
   aws s3 cp "s3://${R2_ENV_BUCKET}/${ENV_PREFIX}/${name}/.env.prod" "$ENV_STAGE/$name" \
     --endpoint-url "$R2_ENDPOINT" --only-show-errors
+  # Files edited elsewhere can carry CRLF or stop without a final newline; both break the lines added below.
+  sed -i 's/\r$//' "$ENV_STAGE/$name"
+  sed -i -e '$a\' "$ENV_STAGE/$name"
   chmod 600 "$ENV_STAGE/$name"
 done
 mv "$ENV_STAGE/api" api/.env
@@ -170,6 +173,7 @@ trap - EXIT
 # Written on every run so a refreshed env file or a changed tailnet address never leaves them on loopback.
 sed -i '/^BIND_HOST=/d;/^API_BIND_HOST=/d' infra/docker/.env
 printf 'BIND_HOST=%s\nAPI_BIND_HOST=127.0.0.1\n' "$TS_IP" >> infra/docker/.env
+grep -qx "BIND_HOST=${TS_IP}" infra/docker/.env || { echo "infra/docker/.env did not take BIND_HOST=${TS_IP}; check the file for CRLF or a glued last line" >&2; exit 1; }
 log "Data services bind to ${TS_IP}; the API binds to 127.0.0.1"
 
 # ---------------------------------------------------------------- firewall (setup only)
