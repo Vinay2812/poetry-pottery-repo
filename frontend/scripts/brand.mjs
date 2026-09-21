@@ -10,11 +10,11 @@ const OUT = "public/brand";
 
 // The circle the old bowl occupied: x 571..1131, y -511..15, so the letters beside it stay put.
 const O = { cx: 851, cy: -248, outer: 263 };
-const STROKE = 84;
+const STROKE = 40;
 const SWEEP_DEG = 400;
 const START_DEG = -60; // one o'clock, clockwise on screen from there
 const END_RADIUS = 45;
-const CAP_RADIUS = 30;
+const CAP_RADIUS = 16;
 
 function spiralPath(cx, cy) {
   const outer = O.outer - STROKE / 2;
