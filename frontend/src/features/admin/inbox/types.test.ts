@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import type {
-  AdminContactMessageFieldsFragment,
-  AdminSubscriberFieldsFragment,
+import {
+  type AdminContactMessageFieldsFragment,
+  type AdminSubscriberFieldsFragment,
+  type AdminWhatsAppMessageFieldsFragment,
+  WhatsAppDirection,
 } from "@/graphql/generated/graphql";
 
 import {
@@ -25,6 +27,10 @@ import {
   toSubscribersExportFilter,
   toSubscribersFilter,
   toUnsubscribedLabel,
+  toWhatsAppDirection,
+  toWhatsAppFilter,
+  toWhatsAppRow,
+  toPageLabel,
 } from "./types";
 
 function buildMessage(
@@ -90,6 +96,95 @@ describe("toInboxTab", () => {
     expect(toInboxTab(undefined)).toBe("messages");
     expect(toInboxTab("nonsense")).toBe("messages");
     expect(toInboxTab("subscribers")).toBe("subscribers");
+    expect(toInboxTab("whatsapp")).toBe("whatsapp");
+  });
+});
+
+function buildWhatsApp(
+  overrides: Partial<AdminWhatsAppMessageFieldsFragment> = {},
+): AdminWhatsAppMessageFieldsFragment {
+  return {
+    id: 31,
+    direction: WhatsAppDirection.ToStudio,
+    kind: "order",
+    body: "Hi, about my order.",
+    page_url: "http://localhost:3030/orders/abc?tab=items",
+    name: "Ira Menon",
+    email: "ira@example.com",
+    phone: null,
+    reference: "abc",
+    created_at: "2026-09-01T10:00:00.000Z",
+    user: { id: 12, name: "Ira Menon", email: "ira@example.com", image: null },
+    ...overrides,
+  };
+}
+
+describe("toWhatsAppRow", () => {
+  it("links an inbound message to the person and shows the page path", () => {
+    const row = toWhatsAppRow(buildWhatsApp());
+    expect(row.directionLabel).toBe("To studio");
+    expect(row.directionTone).toBe("live");
+    expect(row.who).toBe("Ira Menon");
+    expect(row.whoDetail).toBe("ira@example.com");
+    expect(row.personHref).toBe("/dashboard/people/12");
+    expect(row.pageLabel).toBe("/orders/abc?tab=items");
+    expect(row.reference).toBe("abc");
+  });
+
+  it("names a visitor without an account", () => {
+    const row = toWhatsAppRow(
+      buildWhatsApp({ name: null, email: null, user: null, reference: null }),
+    );
+    expect(row.who).toBe("Visitor");
+    expect(row.whoDetail).toBeNull();
+    expect(row.personHref).toBeNull();
+    expect(row.reference).toBe("—");
+  });
+
+  it("shows a reply under the customer's address with the admin who sent it", () => {
+    const row = toWhatsAppRow(
+      buildWhatsApp({
+        direction: WhatsAppDirection.ToCustomer,
+        name: null,
+        email: "anjali@example.com",
+        page_url: null,
+        user: { id: 1, name: "Maya", email: "maya@example.com", image: null },
+      }),
+    );
+    expect(row.directionLabel).toBe("To customer");
+    expect(row.who).toBe("anjali@example.com");
+    expect(row.whoDetail).toBe("Sent by Maya");
+    expect(row.personHref).toBeNull();
+    expect(row.pageLabel).toBe("—");
+  });
+});
+
+describe("toPageLabel", () => {
+  it("falls back to the raw value when it is not a URL", () => {
+    expect(toPageLabel("not a url")).toBe("not a url");
+    expect(toPageLabel("http://localhost:3030/")).toBe("/");
+  });
+});
+
+describe("toWhatsAppFilter", () => {
+  it("reads its own search key and the direction", () => {
+    expect(
+      toWhatsAppFilter(
+        { whatsapp_search: " mug ", direction: "to-customer", search: "x" },
+        2,
+      ),
+    ).toEqual({
+      page: 2,
+      limit: 20,
+      search: "mug",
+      direction: WhatsAppDirection.ToCustomer,
+    });
+    expect(toWhatsAppFilter({}, 1)).toEqual({ page: 1, limit: 20 });
+  });
+
+  it("ignores an unknown direction", () => {
+    expect(toWhatsAppDirection("sideways")).toBeUndefined();
+    expect(toWhatsAppDirection("to-studio")).toBe(WhatsAppDirection.ToStudio);
   });
 });
 

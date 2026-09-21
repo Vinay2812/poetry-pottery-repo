@@ -1,0 +1,30 @@
+fragment AdminWhatsAppMessageFields on WhatsAppMessage {
+  id
+  direction
+  kind
+  body
+  page_url
+  name
+  email
+  phone
+  reference
+  created_at
+  user {
+    ...AdminUserRefFields
+  }
+}
+
+query AdminWhatsAppMessages($filter: AdminWhatsAppFilterInput) {
+  adminWhatsAppMessages(filter: $filter) {
+    items {
+      ...AdminWhatsAppMessageFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+
+mutation SendWhatsAppReply($input: SendWhatsAppReplyInput!) {
+  sendWhatsAppReply(input: $input)
+}

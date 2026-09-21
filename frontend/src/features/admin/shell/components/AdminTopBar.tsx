@@ -1,7 +1,8 @@
 import Link from "next/link";
 
+import { Wordmark } from "@/components/brand/Wordmark";
+
 export interface AdminTopBarProps {
-  studioName: string;
   adminName: string;
   adminEmail: string;
   adminImageUrl: string | null;
@@ -9,7 +10,6 @@ export interface AdminTopBarProps {
 }
 
 export function AdminTopBar({
-  studioName,
   adminName,
   adminEmail,
   adminImageUrl,
@@ -20,11 +20,8 @@ export function AdminTopBar({
       data-admin-chrome
       className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-ash bg-background px-4 md:px-6"
     >
-      <Link
-        href="/dashboard"
-        className="font-display text-lg leading-none tracking-tight"
-      >
-        {studioName}
+      <Link href="/dashboard" className="inline-flex shrink-0 items-center">
+        <Wordmark className="h-[18px]" />
       </Link>
       <span className="hidden h-5 w-px bg-ash md:block" />
       <span className="hidden text-[11px] tracking-[0.18em] text-muted-foreground uppercase md:block">

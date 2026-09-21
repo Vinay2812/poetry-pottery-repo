@@ -515,6 +515,20 @@ export type AdminUsersResult = {
   page_info: PageInfo;
 };
 
+export type AdminWhatsAppFilterInput = {
+  direction?: InputMaybe<WhatsAppDirection>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  page?: InputMaybe<Scalars['Int']['input']>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  user_id?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type AdminWhatsAppMessagesResult = {
+  __typename?: 'AdminWhatsAppMessagesResult';
+  items: Array<WhatsAppMessage>;
+  page_info: PageInfo;
+};
+
 export type AdminWorkshopBlackout = {
   __typename?: 'AdminWorkshopBlackout';
   config_id: Scalars['Int']['output'];
@@ -985,6 +999,7 @@ export type Mutation = {
   notifyWhenBackInStock: BatchNotificationResult;
   placeOrder: Order;
   publishEvent: Event;
+  recordWhatsAppMessage: Scalars['Boolean']['output'];
   registerForEvent: Registration;
   removeCartItem: Cart;
   reorderProductImages: Product;
@@ -992,6 +1007,7 @@ export type Mutation = {
   saveContentPage: ContentPage;
   saveWorkshopTier: WorkshopConfig;
   sendContactMessage: Scalars['Boolean']['output'];
+  sendWhatsAppReply: Scalars['Boolean']['output'];
   setCommissionRequestStatus: CommissionRequest;
   setContactMessageRead: ContactMessage;
   setDefaultAddress: Address;
@@ -1280,6 +1296,11 @@ export type MutationPublishEventArgs = {
 };
 
 
+export type MutationRecordWhatsAppMessageArgs = {
+  input: RecordWhatsAppMessageInput;
+};
+
+
 export type MutationRegisterForEventArgs = {
   input: RegisterForEventInput;
 };
@@ -1315,6 +1336,11 @@ export type MutationSaveWorkshopTierArgs = {
 
 export type MutationSendContactMessageArgs = {
   input: ContactMessageInput;
+};
+
+
+export type MutationSendWhatsAppReplyArgs = {
+  input: SendWhatsAppReplyInput;
 };
 
 
@@ -1735,6 +1761,7 @@ export type Query = {
   adminStudioVisits: AdminStudioVisitsResult;
   adminUser: AdminUser;
   adminUsers: AdminUsersResult;
+  adminWhatsAppMessages: AdminWhatsAppMessagesResult;
   adminWorkshopBlackouts: Array<AdminWorkshopBlackout>;
   adminWorkshopBookings: AdminWorkshopBookingsResult;
   adminWorkshopConfigs: Array<WorkshopConfig>;
@@ -1868,6 +1895,11 @@ export type QueryAdminUserArgs = {
 
 export type QueryAdminUsersArgs = {
   filter?: InputMaybe<AdminUsersFilterInput>;
+};
+
+
+export type QueryAdminWhatsAppMessagesArgs = {
+  filter?: InputMaybe<AdminWhatsAppFilterInput>;
 };
 
 
@@ -2042,6 +2074,13 @@ export type RatingSummary = {
   distribution: Array<Scalars['Int']['output']>;
 };
 
+export type RecordWhatsAppMessageInput = {
+  body: Scalars['String']['input'];
+  kind: Scalars['String']['input'];
+  page_url?: InputMaybe<Scalars['String']['input']>;
+  reference?: InputMaybe<Scalars['String']['input']>;
+};
+
 export type RegisterForEventInput = {
   event_id: Scalars['Int']['input'];
   note?: InputMaybe<Scalars['String']['input']>;
@@ -2142,6 +2181,14 @@ export type SelectionInputType = {
   group_id: Scalars['Int']['input'];
   option_id?: InputMaybe<Scalars['Int']['input']>;
   text?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type SendWhatsAppReplyInput = {
+  body: Scalars['String']['input'];
+  kind: Scalars['String']['input'];
+  reference?: InputMaybe<Scalars['String']['input']>;
+  to_email: Scalars['String']['input'];
+  to_phone?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ShippingAddress = {
@@ -2276,6 +2323,26 @@ export type VisitWindow = {
   is_available: Scalars['Boolean']['output'];
   reason?: Maybe<Scalars['String']['output']>;
   starts_at: Scalars['DateTime']['output'];
+};
+
+export enum WhatsAppDirection {
+  ToCustomer = 'TO_CUSTOMER',
+  ToStudio = 'TO_STUDIO'
+}
+
+export type WhatsAppMessage = {
+  __typename?: 'WhatsAppMessage';
+  body: Scalars['String']['output'];
+  created_at: Scalars['DateTime']['output'];
+  direction: WhatsAppDirection;
+  email?: Maybe<Scalars['String']['output']>;
+  id: Scalars['Int']['output'];
+  kind: Scalars['String']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  page_url?: Maybe<Scalars['String']['output']>;
+  phone?: Maybe<Scalars['String']['output']>;
+  reference?: Maybe<Scalars['String']['output']>;
+  user?: Maybe<AdminUserRef>;
 };
 
 export type WishlistToggleResult = {
@@ -3014,6 +3081,22 @@ export type CancelStudioVisitMutationVariables = Exact<{
 
 export type CancelStudioVisitMutation = { cancelStudioVisit: { id: string, starts_at: string, ends_at: string, name: string, phone: string, note: string | null, cancelled_at: string | null } };
 
+export type AdminWhatsAppMessageFieldsFragment = { id: number, direction: WhatsAppDirection, kind: string, body: string, page_url: string | null, name: string | null, email: string | null, phone: string | null, reference: string | null, created_at: string, user: { id: number, name: string | null, email: string, image: string | null } | null };
+
+export type AdminWhatsAppMessagesQueryVariables = Exact<{
+  filter?: AdminWhatsAppFilterInput | null | undefined;
+}>;
+
+
+export type AdminWhatsAppMessagesQuery = { adminWhatsAppMessages: { items: Array<{ id: number, direction: WhatsAppDirection, kind: string, body: string, page_url: string | null, name: string | null, email: string | null, phone: string | null, reference: string | null, created_at: string, user: { id: number, name: string | null, email: string, image: string | null } | null }>, page_info: { page: number, limit: number, total: number, has_more: boolean } } };
+
+export type SendWhatsAppReplyMutationVariables = Exact<{
+  input: SendWhatsAppReplyInput;
+}>;
+
+
+export type SendWhatsAppReplyMutation = { sendWhatsAppReply: boolean };
+
 export type AdminWorkshopConfigFieldsFragment = { id: number, slug: string, name: string, description: string | null, image_url: string | null, is_active: boolean, timezone: string, opening_minutes: number, closing_minutes: number, slot_minutes: number, capacity_per_slot: number, booking_window_days: number, slot_span_days: number, closed_weekdays: Array<number>, tiers: Array<{ id: number, hours: number, price_per_person: number, pieces_per_person: number }> };
 
 export type AdminWorkshopBlackoutFieldsFragment = { id: number, config_id: number, starts_at: string, ends_at: string, reason: string | null };
@@ -3480,6 +3563,13 @@ export type BookStudioVisitMutationVariables = Exact<{
 
 
 export type BookStudioVisitMutation = { bookStudioVisit: { id: string, starts_at: string, ends_at: string, name: string } };
+
+export type RecordWhatsAppMessageMutationVariables = Exact<{
+  input: RecordWhatsAppMessageInput;
+}>;
+
+
+export type RecordWhatsAppMessageMutation = { recordWhatsAppMessage: boolean };
 
 export type WishlistQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -4001,6 +4091,23 @@ export const AdminStudioVisitFieldsFragmentDoc = gql`
     ...AdminUserRefFields
   }
   created_at
+}
+    `;
+export const AdminWhatsAppMessageFieldsFragmentDoc = gql`
+    fragment AdminWhatsAppMessageFields on WhatsAppMessage {
+  id
+  direction
+  kind
+  body
+  page_url
+  name
+  email
+  phone
+  reference
+  created_at
+  user {
+    ...AdminUserRefFields
+  }
 }
     `;
 export const AdminWorkshopConfigFieldsFragmentDoc = gql`
@@ -7096,6 +7203,77 @@ export function useCancelStudioVisitMutation(baseOptions?: ApolloReactHooks.Muta
       }
 export type CancelStudioVisitMutationHookResult = ReturnType<typeof useCancelStudioVisitMutation>;
 export type CancelStudioVisitMutationResult = ApolloReactCommon.MutationResult<CancelStudioVisitMutation>;
+export const AdminWhatsAppMessagesDocument = gql`
+    query AdminWhatsAppMessages($filter: AdminWhatsAppFilterInput) {
+  adminWhatsAppMessages(filter: $filter) {
+    items {
+      ...AdminWhatsAppMessageFields
+    }
+    page_info {
+      ...AdminPageInfoFields
+    }
+  }
+}
+    ${AdminWhatsAppMessageFieldsFragmentDoc}
+${AdminUserRefFieldsFragmentDoc}
+${AdminPageInfoFieldsFragmentDoc}`;
+
+/**
+ * __useAdminWhatsAppMessagesQuery__
+ *
+ * To run a query within a React component, call `useAdminWhatsAppMessagesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useAdminWhatsAppMessagesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useAdminWhatsAppMessagesQuery({
+ *   variables: {
+ *      filter: // value for 'filter'
+ *   },
+ * });
+ */
+export function useAdminWhatsAppMessagesQuery(baseOptions?: ApolloReactHooks.QueryHookOptions<AdminWhatsAppMessagesQuery, AdminWhatsAppMessagesQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useQuery<AdminWhatsAppMessagesQuery, AdminWhatsAppMessagesQueryVariables>(AdminWhatsAppMessagesDocument, options);
+      }
+export function useAdminWhatsAppMessagesLazyQuery(baseOptions?: ApolloReactHooks.LazyQueryHookOptions<AdminWhatsAppMessagesQuery, AdminWhatsAppMessagesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return ApolloReactHooks.useLazyQuery<AdminWhatsAppMessagesQuery, AdminWhatsAppMessagesQueryVariables>(AdminWhatsAppMessagesDocument, options);
+        }
+export type AdminWhatsAppMessagesQueryHookResult = ReturnType<typeof useAdminWhatsAppMessagesQuery>;
+export type AdminWhatsAppMessagesLazyQueryHookResult = ReturnType<typeof useAdminWhatsAppMessagesLazyQuery>;
+export type AdminWhatsAppMessagesQueryResult = ApolloReactCommon.QueryResult<AdminWhatsAppMessagesQuery, AdminWhatsAppMessagesQueryVariables>;
+export const SendWhatsAppReplyDocument = gql`
+    mutation SendWhatsAppReply($input: SendWhatsAppReplyInput!) {
+  sendWhatsAppReply(input: $input)
+}
+    `;
+
+/**
+ * __useSendWhatsAppReplyMutation__
+ *
+ * To run a mutation, you first call `useSendWhatsAppReplyMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useSendWhatsAppReplyMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [sendWhatsAppReplyMutation, { data, loading, error }] = useSendWhatsAppReplyMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useSendWhatsAppReplyMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<SendWhatsAppReplyMutation, SendWhatsAppReplyMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<SendWhatsAppReplyMutation, SendWhatsAppReplyMutationVariables>(SendWhatsAppReplyDocument, options);
+      }
+export type SendWhatsAppReplyMutationHookResult = ReturnType<typeof useSendWhatsAppReplyMutation>;
+export type SendWhatsAppReplyMutationResult = ApolloReactCommon.MutationResult<SendWhatsAppReplyMutation>;
 export const AdminWorkshopConfigsDocument = gql`
     query AdminWorkshopConfigs {
   adminWorkshopConfigs {
@@ -9437,6 +9615,35 @@ export function useBookStudioVisitMutation(baseOptions?: ApolloReactHooks.Mutati
       }
 export type BookStudioVisitMutationHookResult = ReturnType<typeof useBookStudioVisitMutation>;
 export type BookStudioVisitMutationResult = ApolloReactCommon.MutationResult<BookStudioVisitMutation>;
+export const RecordWhatsAppMessageDocument = gql`
+    mutation RecordWhatsAppMessage($input: RecordWhatsAppMessageInput!) {
+  recordWhatsAppMessage(input: $input)
+}
+    `;
+
+/**
+ * __useRecordWhatsAppMessageMutation__
+ *
+ * To run a mutation, you first call `useRecordWhatsAppMessageMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useRecordWhatsAppMessageMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [recordWhatsAppMessageMutation, { data, loading, error }] = useRecordWhatsAppMessageMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useRecordWhatsAppMessageMutation(baseOptions?: ApolloReactHooks.MutationHookOptions<RecordWhatsAppMessageMutation, RecordWhatsAppMessageMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return ApolloReactHooks.useMutation<RecordWhatsAppMessageMutation, RecordWhatsAppMessageMutationVariables>(RecordWhatsAppMessageDocument, options);
+      }
+export type RecordWhatsAppMessageMutationHookResult = ReturnType<typeof useRecordWhatsAppMessageMutation>;
+export type RecordWhatsAppMessageMutationResult = ApolloReactCommon.MutationResult<RecordWhatsAppMessageMutation>;
 export const WishlistDocument = gql`
     query Wishlist {
   wishlist {

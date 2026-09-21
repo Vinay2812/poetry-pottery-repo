@@ -12,6 +12,7 @@ import {
   type OrderTimelineStep,
 } from "@/features/orders/components/OrderTimeline";
 import type { StatusTone } from "@/features/orders/types";
+import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface RegistrationDetailProps {
   registrationId: string;
@@ -75,10 +76,14 @@ export function RegistrationDetail({
           </p>
           {whatsappUrl && (
             <Button className="w-fit" asChild>
-              <a href={whatsappUrl} target="_blank" rel="noreferrer">
+              <WhatsAppLink
+                href={whatsappUrl}
+                kind="event"
+                reference={registrationId}
+              >
                 <MessageCircle className="size-4" strokeWidth={1.5} />
                 Confirm on WhatsApp
-              </a>
+              </WhatsAppLink>
             </Button>
           )}
         </section>
@@ -162,14 +167,14 @@ export function RegistrationDetail({
 
           <div className="flex flex-col items-start gap-3">
             {whatsappUrl && !isJustPlaced && (
-              <a
+              <WhatsAppLink
                 href={whatsappUrl}
-                target="_blank"
-                rel="noreferrer"
+                kind="event"
+                reference={registrationId}
                 className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
               >
                 Message us about this booking
-              </a>
+              </WhatsAppLink>
             )}
             {canCancel && (
               <button

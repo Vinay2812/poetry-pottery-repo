@@ -15,6 +15,7 @@ const meta = {
     ),
   ],
   args: {
+    eventId: 42,
     price: 1800,
     seats: 1,
     maxSeats: 4,
