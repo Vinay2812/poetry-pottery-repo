@@ -31,11 +31,8 @@ import {
   shiftMonth,
   slotsNeeded,
   spanNotice,
-  SUGGESTED_NOTE,
-  suggestSlots,
   toDateKey,
   toPickingGuide,
-  toUnavailableMessage,
   toMonthGrid,
   type SlotInterval,
   toMonthKey,
@@ -54,38 +51,16 @@ export function WorkshopBookingContainer({
   const todayKey = toDateKey(new Date(), workshop.timezone);
   const firstMonth = toMonthKey(todayKey);
   const [month, setMonth] = useState(firstMonth);
-  const [chosenDate, setChosenDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [hours, setHours] = useState(workshop.tiers[0]?.hours ?? 1);
   const [participants, setParticipants] = useState(1);
-  const [manualPicked, setManualPicked] = useState<SlotInterval[]>([]);
+  const [picked, setPicked] = useState<SlotInterval[]>([]);
   const [note, setNote] = useState("");
 
   const { days, isLoading, refetch } = useAvailability(workshop.slug, month);
   const { book, isBooking } = useBookWorkshop(() => void refetch());
 
   const needed = slotsNeeded(hours, workshop.slot_minutes);
-
-  // The earliest free hours are picked ahead; the first hand-made change ends that.
-  const [hasTouched, setHasTouched] = useState(false);
-  const suggestion = useMemo(
-    () =>
-      isLoading
-        ? undefined
-        : suggestSlots(
-            days,
-            needed,
-            participants,
-            workshop.slot_span_days,
-            todayKey,
-          ),
-    [days, isLoading, needed, participants, todayKey, workshop.slot_span_days],
-  );
-  // Until someone changes a pick, the suggestion is the pick; the first hour's day opens the times.
-  const picked = hasTouched ? manualPicked : (suggestion ?? []);
-  const firstPicked = picked[0];
-  const selectedDate =
-    chosenDate ??
-    (firstPicked ? toDateKey(firstPicked.starts_at, workshop.timezone) : null);
 
   const dayByKey = useMemo(
     () => new Map(days.map((day) => [day.date, day])),
@@ -172,21 +147,19 @@ export function WorkshopBookingContainer({
   const quote = quoteSession(tier, participants);
 
   const handleSelectDate = useCallback((dateKey: string) => {
-    setChosenDate(dateKey);
+    setSelectedDate(dateKey);
   }, []);
 
-  // A new length starts over, so the suggestion applies again.
   const handleHoursChange = useCallback((value: number) => {
-    setHasTouched(false);
     setHours(value);
-    setManualPicked([]);
+    setPicked([]);
   }, []);
 
   // A bigger group can outgrow an hour that was already picked, so those drop out.
   const handleParticipantsChange = useCallback(
     (value: number) => {
       setParticipants(value);
-      setManualPicked((previous) =>
+      setPicked((previous) =>
         previous.filter((picked) => {
           const slot = slotByStart.get(picked.starts_at);
           return !slot || isSlotPickable(slot, value);
@@ -200,19 +173,16 @@ export function WorkshopBookingContainer({
     (startsAt: string) => {
       const slot = slotByStart.get(startsAt);
       if (!slot) return;
-      setHasTouched(true);
-      setManualPicked(togglePicked(picked, slot, needed));
+      setPicked((previous) => togglePicked(previous, slot, needed));
     },
-    [needed, picked, slotByStart],
+    [needed, slotByStart],
   );
 
-  const handleRemoveSlot = useCallback(
-    (startsAt: string) => {
-      setHasTouched(true);
-      setManualPicked(picked.filter((slot) => slot.starts_at !== startsAt));
-    },
-    [picked],
-  );
+  const handleRemoveSlot = useCallback((startsAt: string) => {
+    setPicked((previous) =>
+      previous.filter((slot) => slot.starts_at !== startsAt),
+    );
+  }, []);
 
   const handleBook = useCallback(() => {
     if (picked.length !== needed) return;
@@ -323,12 +293,6 @@ export function WorkshopBookingContainer({
             total={quote.subtotal}
             pieces={quote.pieces}
             note={note}
-            emptyMessage={
-              suggestion === null
-                ? toUnavailableMessage(hours, participants)
-                : "Pick a day on the calendar, then an hour from the chips under it."
-            }
-            hint={!hasTouched && picked.length > 0 ? SUGGESTED_NOTE : null}
             canBook={picked.length === needed}
             isBooking={isBooking}
             onNoteChange={setNote}

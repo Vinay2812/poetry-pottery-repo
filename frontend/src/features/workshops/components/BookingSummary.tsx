@@ -18,8 +18,6 @@ export interface BookingSummaryProps {
   total: number;
   pieces: number;
   note: string;
-  emptyMessage: string;
-  hint: string | null;
   canBook: boolean;
   isBooking: boolean;
   onNoteChange: (note: string) => void;
@@ -36,8 +34,6 @@ export function BookingSummary({
   total,
   pieces,
   note,
-  emptyMessage,
-  hint,
   canBook,
   isBooking,
   onNoteChange,
@@ -57,10 +53,9 @@ export function BookingSummary({
       <PickedSlots
         slots={pickedSlots}
         needed={slotsNeeded}
-        emptyMessage={emptyMessage}
+        emptyMessage="Pick a day on the calendar, then an hour from the chips under it."
         onRemoveSlot={onRemoveSlot}
       />
-      {hint && <p className="text-[13px] text-muted-foreground">{hint}</p>}
 
       <dl className="border-t border-ash text-sm">
         {rows.map((row) => (

@@ -16,7 +16,6 @@ import { toPhoneHref } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 import type { NavLink } from "@/features/layout/types";
-import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface MobileMenuSheetProps {
   isOpen: boolean;
@@ -163,13 +162,14 @@ export function MobileMenuSheet({
               </a>
             )}
             {whatsappUrl && (
-              <WhatsAppLink
+              <a
                 href={whatsappUrl}
-                kind="general"
+                target="_blank"
+                rel="noreferrer"
                 className="w-fit link-underline text-primary"
               >
                 Message us on WhatsApp
-              </WhatsAppLink>
+              </a>
             )}
           </div>
         </SheetFooter>

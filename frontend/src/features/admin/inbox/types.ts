@@ -1,11 +1,8 @@
-import {
-  type AdminContactFilterInput,
-  type AdminContactMessageFieldsFragment,
-  type AdminSubscriberFieldsFragment,
-  type AdminSubscribersFilterInput,
-  type AdminWhatsAppFilterInput,
-  type AdminWhatsAppMessageFieldsFragment,
-  WhatsAppDirection,
+import type {
+  AdminContactFilterInput,
+  AdminContactMessageFieldsFragment,
+  AdminSubscriberFieldsFragment,
+  AdminSubscribersFilterInput,
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatDateTime } from "@/lib/format";
@@ -15,14 +12,12 @@ import type { AdminFilterOption, AdminStatusTone } from "@/features/admin/ui";
 
 const CONTACT_PAGE_SIZE = 20;
 const SUBSCRIBERS_PAGE_SIZE = 50;
-const WHATSAPP_PAGE_SIZE = 20;
 
-export type InboxTab = "messages" | "subscribers" | "whatsapp";
+export type InboxTab = "messages" | "subscribers";
 
 /** The tab lives in the URL so a reload lands where the admin left off. */
 export function toInboxTab(value: string | undefined): InboxTab {
-  if (value === "subscribers" || value === "whatsapp") return value;
-  return "messages";
+  return value === "subscribers" ? "subscribers" : "messages";
 }
 
 export interface ContactRow {
@@ -200,93 +195,4 @@ const CSV_DATE = new Intl.DateTimeFormat("en-CA", {
 /** Downloads land in the studio's own day, not the browser's. */
 export function toSubscribersCsvName(now: Date): string {
   return `subscribers-${CSV_DATE.format(now)}.csv`;
-}
-
-export interface WhatsAppRow {
-  id: number;
-  whenLabel: string;
-  directionLabel: string;
-  directionTone: AdminStatusTone;
-  who: string;
-  whoDetail: string | null;
-  personHref: string | null;
-  kind: string;
-  body: string;
-  pageUrl: string | null;
-  pageLabel: string;
-  reference: string;
-}
-
-function toDirectionLabel(direction: WhatsAppDirection): string {
-  return direction === WhatsAppDirection.ToStudio ? "To studio" : "To customer";
-}
-
-function toDirectionTone(direction: WhatsAppDirection): AdminStatusTone {
-  return direction === WhatsAppDirection.ToStudio ? "live" : "neutral";
-}
-
-/** Long links are shown as their path; the full URL stays on the anchor. */
-export function toPageLabel(url: string | null): string {
-  if (!url) return "—";
-  try {
-    const parsed = new URL(url);
-    return `${parsed.pathname}${parsed.search}` || "/";
-  } catch {
-    return url;
-  }
-}
-
-export function toWhatsAppRow(
-  item: AdminWhatsAppMessageFieldsFragment,
-): WhatsAppRow {
-  const isToStudio = item.direction === WhatsAppDirection.ToStudio;
-  const who = item.name ?? item.email ?? "Visitor";
-  // A reply is filed under the admin who sent it, so the person link only fits the inbound side.
-  const whoDetail = isToStudio
-    ? item.name && item.email
-      ? item.email
-      : null
-    : item.user
-      ? `Sent by ${item.user.name ?? item.user.email}`
-      : null;
-  return {
-    id: item.id,
-    whenLabel: formatDateTime(item.created_at),
-    directionLabel: toDirectionLabel(item.direction),
-    directionTone: toDirectionTone(item.direction),
-    who,
-    whoDetail,
-    personHref:
-      isToStudio && item.user ? `/dashboard/people/${item.user.id}` : null,
-    kind: item.kind,
-    body: item.body,
-    pageUrl: item.page_url,
-    pageLabel: toPageLabel(item.page_url),
-    reference: item.reference ?? "—",
-  };
-}
-
-export const DIRECTION_OPTIONS: AdminFilterOption[] = [
-  { value: "to-studio", label: "To studio" },
-  { value: "to-customer", label: "To customer" },
-];
-
-export function toWhatsAppDirection(
-  value: string | undefined,
-): WhatsAppDirection | undefined {
-  if (value === "to-studio") return WhatsAppDirection.ToStudio;
-  if (value === "to-customer") return WhatsAppDirection.ToCustomer;
-  return undefined;
-}
-
-export function toWhatsAppFilter(
-  values: QueryValues,
-  page: number,
-): AdminWhatsAppFilterInput {
-  const filter: AdminWhatsAppFilterInput = { page, limit: WHATSAPP_PAGE_SIZE };
-  const search = values.whatsapp_search?.trim();
-  if (search) filter.search = search;
-  const direction = toWhatsAppDirection(values.direction);
-  if (direction !== undefined) filter.direction = direction;
-  return filter;
 }

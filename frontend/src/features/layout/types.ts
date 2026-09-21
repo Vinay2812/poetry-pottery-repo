@@ -89,15 +89,3 @@ export function toWishlistAnnouncement(count: number): string {
   if (count <= 0) return "Nothing saved yet";
   return count === 1 ? "1 piece saved" : `${count} pieces saved`;
 }
-
-// The prefilled line lives in the wa.me link's text param; that is what gets recorded.
-export function toWhatsAppBody(href: string): string | null {
-  let url: URL;
-  try {
-    url = new URL(href);
-  } catch {
-    return null;
-  }
-  const text = url.searchParams.get("text")?.trim() ?? "";
-  return text === "" ? null : text;
-}

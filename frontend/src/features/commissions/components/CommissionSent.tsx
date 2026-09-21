@@ -1,5 +1,3 @@
-import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
-
 export interface CommissionSentProps {
   reference: string;
   summary: string;
@@ -34,14 +32,14 @@ export function CommissionSent({
         </div>
       </dl>
       {askUrl && (
-        <WhatsAppLink
+        <a
           href={askUrl}
-          kind="commission"
-          reference={reference}
+          target="_blank"
+          rel="noreferrer"
           className="w-fit border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
         >
           Add something on WhatsApp
-        </WhatsAppLink>
+        </a>
       )}
     </div>
   );

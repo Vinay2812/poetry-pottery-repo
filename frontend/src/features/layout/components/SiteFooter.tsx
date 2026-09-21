@@ -10,7 +10,6 @@ import { toPhoneHref } from "@/lib/format";
 
 import { Wordmark } from "@/features/layout/components/Wordmark";
 import type { NavLink } from "@/features/layout/types";
-import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface SiteFooterProps {
   shopLinks: NavLink[];
@@ -95,13 +94,14 @@ export function SiteFooter({
                 </a>
               )}
               {whatsappUrl && (
-                <WhatsAppLink
+                <a
                   href={whatsappUrl}
-                  kind="general"
+                  target="_blank"
+                  rel="noreferrer"
                   className="link-underline text-primary"
                 >
                   Message us on WhatsApp
-                </WhatsAppLink>
+                </a>
               )}
             </div>
             {socials.length > 0 && (

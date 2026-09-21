@@ -12,10 +12,14 @@ import { AdminTopBar } from "@/features/admin/shell/components/AdminTopBar";
 import { ADMIN_NAV_LINKS } from "@/features/admin/shell/types";
 
 export interface AdminChromeContainerProps {
+  studioName: string;
   children: ReactNode;
 }
 
-export function AdminChromeContainer({ children }: AdminChromeContainerProps) {
+export function AdminChromeContainer({
+  studioName,
+  children,
+}: AdminChromeContainerProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isLoaded } = useUser();
@@ -32,6 +36,7 @@ export function AdminChromeContainer({ children }: AdminChromeContainerProps) {
   return (
     <>
       <AdminTopBar
+        studioName={studioName}
         adminName={user?.fullName ?? "Studio"}
         adminEmail={user?.primaryEmailAddress?.emailAddress ?? ""}
         adminImageUrl={user?.imageUrl ?? null}

@@ -14,7 +14,6 @@ import {
   CommissionStatus,
   useCommissionRequestsQuery,
   useMarkCommissionRequestReadMutation,
-  useSendWhatsAppReplyMutation,
   useSetCommissionRequestStatusMutation,
 } from "@/graphql/generated/graphql";
 
@@ -43,7 +42,6 @@ import {
   toCommissionStatus,
   toWhatsAppHref,
 } from "@/features/admin/commissions/types";
-import { toWhatsAppBody } from "@/features/layout";
 
 const STATUS_OPTIONS = enumOptions(CommissionStatus);
 
@@ -73,7 +71,6 @@ export function CommissionsContainer() {
 
   const [markRead] = useMarkCommissionRequestReadMutation();
   const [setStatus] = useSetCommissionRequestStatusMutation();
-  const [sendWhatsAppReply] = useSendWhatsAppReplyMutation();
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -108,27 +105,6 @@ export function CommissionsContainer() {
     },
     [markRead, optimisticRows, patchRows, refetch],
   );
-
-  const whatsAppHref = openRow
-    ? toWhatsAppHref(openRow.phone, openRow.name, openRow.pieceType)
-    : null;
-
-  // The reply is copied to the customer's email in the background; the link opens regardless.
-  const handleWhatsAppClick = useCallback(() => {
-    const body = whatsAppHref === null ? null : toWhatsAppBody(whatsAppHref);
-    if (!openRow || body === null) return;
-    sendWhatsAppReply({
-      variables: {
-        input: {
-          kind: "commission-reply",
-          body,
-          to_email: openRow.email,
-          to_phone: openRow.phone,
-          reference: openRow.id,
-        },
-      },
-    }).catch(() => undefined);
-  }, [openRow, sendWhatsAppReply, whatsAppHref]);
 
   const handleStatusChange = useCallback(
     (next: CommissionStatus) => {
@@ -225,10 +201,13 @@ export function CommissionsContainer() {
           notes={openRow.notes}
           referenceImageUrls={openRow.referenceImageUrls}
           status={openRow.status}
-          whatsAppHref={whatsAppHref}
+          whatsAppHref={toWhatsAppHref(
+            openRow.phone,
+            openRow.name,
+            openRow.pieceType,
+          )}
           isBusy={busyId === openRow.id}
           onStatusChange={handleStatusChange}
-          onWhatsAppClick={handleWhatsAppClick}
           onOpenChange={(isOpen) => {
             if (!isOpen) setOpenId(null);
           }}

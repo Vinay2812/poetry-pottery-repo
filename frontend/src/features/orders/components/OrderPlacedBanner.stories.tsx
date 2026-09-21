@@ -24,7 +24,6 @@ const meta = {
   component: OrderPlacedBanner,
   parameters: { layout: "fullscreen" },
   args: {
-    orderId: "ord_9f3k2m1p7q4w",
     firstName: "Maya",
     pieces,
     arrivalLine: "Should reach you between 24 September and 29 September",
