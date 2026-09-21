@@ -5,6 +5,7 @@ import {
   type WorkshopConfigFieldsFragment,
 } from "@/graphql/generated/graphql";
 
+import { buildWhatsAppUrl } from "@/features/layout/types";
 import type { StatusTone } from "@/features/orders/types";
 
 export type WorkshopData = WorkshopConfigFieldsFragment;
@@ -342,6 +343,38 @@ export function suggestSlots(
     }
   }
   return null;
+}
+
+// A party bigger than the wheels is a special request, so the ask names the session and the size.
+export function toGroupAskUrl(
+  whatsappNumber: string,
+  workshopName: string,
+  wheels: number,
+): string | null {
+  if (whatsappNumber.replace(/\D/g, "").length === 0) return null;
+  return buildWhatsAppUrl(
+    whatsappNumber,
+    `Hi, we are a group of more than ${wheels} for ${workshopName}. Could you set up a group session for us?`,
+  );
+}
+
+export function toGroupAskLine(wheels: number): string {
+  return `More than ${wheels} of you? The studio has ${wheels} wheels, but ask us and we will work out a group session.`;
+}
+
+// When the month cannot hold the request, the studio may still arrange it by hand.
+export function toArrangementAskUrl(
+  whatsappNumber: string,
+  workshopName: string,
+  hours: number,
+  participants: number,
+): string | null {
+  if (whatsappNumber.replace(/\D/g, "").length === 0) return null;
+  const people = participants === 1 ? "one person" : `${participants} people`;
+  return buildWhatsAppUrl(
+    whatsappNumber,
+    `Hi, I am after ${formatHours(hours)} at the wheel for ${people} (${workshopName}) but nothing is free this month. Could you arrange something?`,
+  );
 }
 
 export function toUnavailableMessage(

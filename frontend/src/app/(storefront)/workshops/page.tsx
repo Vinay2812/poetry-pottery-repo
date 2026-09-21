@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { getWorkshops } from "@/lib/data/catalog";
+import { getSiteSettings } from "@/lib/data/site-settings";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -18,10 +19,20 @@ export const metadata: Metadata = {
 };
 
 export default async function WorkshopsPage() {
-  const workshops = await getWorkshops();
+  const [workshops, settings] = await Promise.all([
+    getWorkshops(),
+    getSiteSettings(),
+  ]);
   const only = workshops.length === 1 ? workshops[0] : null;
 
-  if (only) return <WorkshopBookingContainer workshop={only} />;
+  if (only) {
+    return (
+      <WorkshopBookingContainer
+        workshop={only}
+        whatsappNumber={settings.whatsapp_number}
+      />
+    );
+  }
 
   return (
     <PageShell className="flex flex-col gap-16 py-8 md:py-12">

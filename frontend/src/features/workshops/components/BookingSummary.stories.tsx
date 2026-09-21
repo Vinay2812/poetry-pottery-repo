@@ -23,6 +23,7 @@ const meta = {
     hours: 2,
     emptyMessage:
       "Pick a day on the calendar, then an hour from the chips under it.",
+    arrangementAskUrl: null,
     hint: "Picked for you: the earliest free hours. Change any of them.",
     participants: 2,
     pricePerPerson: 1700,
@@ -50,6 +51,7 @@ export const NothingPicked: Story = {
     hours: 1,
     emptyMessage:
       "Pick a day on the calendar, then an hour from the chips under it.",
+    arrangementAskUrl: null,
     hint: null,
     participants: 1,
     pricePerPerson: 950,
@@ -87,6 +89,7 @@ export const NothingFree: Story = {
     hours: 3,
     emptyMessage:
       "Nothing free for 3 hours for one person this month. Try another month, fewer hours or fewer people.",
+    arrangementAskUrl: "https://wa.me/919876543210?text=Hi",
     hint: null,
   },
 };
