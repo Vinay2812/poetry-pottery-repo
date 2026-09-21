@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -54,10 +54,10 @@ export function WorkshopBookingContainer({
   const todayKey = toDateKey(new Date(), workshop.timezone);
   const firstMonth = toMonthKey(todayKey);
   const [month, setMonth] = useState(firstMonth);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [chosenDate, setChosenDate] = useState<string | null>(null);
   const [hours, setHours] = useState(workshop.tiers[0]?.hours ?? 1);
   const [participants, setParticipants] = useState(1);
-  const [picked, setPicked] = useState<SlotInterval[]>([]);
+  const [manualPicked, setManualPicked] = useState<SlotInterval[]>([]);
   const [note, setNote] = useState("");
 
   const { days, isLoading, refetch } = useAvailability(workshop.slug, month);
@@ -80,12 +80,12 @@ export function WorkshopBookingContainer({
           ),
     [days, isLoading, needed, participants, todayKey, workshop.slot_span_days],
   );
-  useEffect(() => {
-    if (hasTouched || suggestion === undefined) return;
-    setPicked(suggestion ?? []);
-    const first = suggestion?.[0];
-    if (first) setSelectedDate(toDateKey(first.starts_at, workshop.timezone));
-  }, [hasTouched, suggestion, workshop.timezone]);
+  // Until someone changes a pick, the suggestion is the pick; the first hour's day opens the times.
+  const picked = hasTouched ? manualPicked : (suggestion ?? []);
+  const firstPicked = picked[0];
+  const selectedDate =
+    chosenDate ??
+    (firstPicked ? toDateKey(firstPicked.starts_at, workshop.timezone) : null);
 
   const dayByKey = useMemo(
     () => new Map(days.map((day) => [day.date, day])),
@@ -172,21 +172,21 @@ export function WorkshopBookingContainer({
   const quote = quoteSession(tier, participants);
 
   const handleSelectDate = useCallback((dateKey: string) => {
-    setSelectedDate(dateKey);
+    setChosenDate(dateKey);
   }, []);
 
   // A new length starts over, so the suggestion applies again.
   const handleHoursChange = useCallback((value: number) => {
     setHasTouched(false);
     setHours(value);
-    setPicked([]);
+    setManualPicked([]);
   }, []);
 
   // A bigger group can outgrow an hour that was already picked, so those drop out.
   const handleParticipantsChange = useCallback(
     (value: number) => {
       setParticipants(value);
-      setPicked((previous) =>
+      setManualPicked((previous) =>
         previous.filter((picked) => {
           const slot = slotByStart.get(picked.starts_at);
           return !slot || isSlotPickable(slot, value);
@@ -201,17 +201,18 @@ export function WorkshopBookingContainer({
       const slot = slotByStart.get(startsAt);
       if (!slot) return;
       setHasTouched(true);
-      setPicked((previous) => togglePicked(previous, slot, needed));
+      setManualPicked(togglePicked(picked, slot, needed));
     },
-    [needed, slotByStart],
+    [needed, picked, slotByStart],
   );
 
-  const handleRemoveSlot = useCallback((startsAt: string) => {
-    setHasTouched(true);
-    setPicked((previous) =>
-      previous.filter((slot) => slot.starts_at !== startsAt),
-    );
-  }, []);
+  const handleRemoveSlot = useCallback(
+    (startsAt: string) => {
+      setHasTouched(true);
+      setManualPicked(picked.filter((slot) => slot.starts_at !== startsAt));
+    },
+    [picked],
+  );
 
   const handleBook = useCallback(() => {
     if (picked.length !== needed) return;
