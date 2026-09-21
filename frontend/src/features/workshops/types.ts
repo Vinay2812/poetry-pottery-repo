@@ -301,6 +301,60 @@ export function toPickedSlots(
 }
 
 // Tapping an hour adds or drops it; once the tier is filled, further hours are ignored.
+// The earliest way to fill a session: one hour a day on separate days when the span allows,
+// otherwise hours stacked onto as few days as it takes. Null when the loaded days cannot hold it.
+export function suggestSlots(
+  days: readonly WorkshopDayData[],
+  needed: number,
+  participants: number,
+  allowedSpanDays: number,
+  todayKey: string,
+): SlotInterval[] | null {
+  if (needed <= 0) return [];
+  const open = days
+    .filter((day) => day.date >= todayKey)
+    .map((day) => ({
+      date: day.date,
+      slots: [...pickableSlots(day, participants)].sort((a, b) =>
+        a.starts_at.localeCompare(b.starts_at),
+      ),
+    }))
+    .filter((day) => day.slots.length > 0)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const toInterval = (slot: WorkshopSlotData): SlotInterval => ({
+    starts_at: slot.starts_at,
+    ends_at: slot.ends_at,
+  });
+  const attempt = (perDay: number): SlotInterval[] | null => {
+    for (let start = 0; start < open.length; start += 1) {
+      const picks: SlotInterval[] = [];
+      for (let index = start; index < open.length; index += 1) {
+        const day = open[index];
+        if (!day) break;
+        if (spanDays([open[start]?.date ?? "", day.date]) > allowedSpanDays)
+          break;
+        for (const slot of day.slots.slice(0, perDay)) {
+          picks.push(toInterval(slot));
+          if (picks.length === needed) return picks;
+        }
+      }
+    }
+    return null;
+  };
+  return attempt(1) ?? attempt(Number.POSITIVE_INFINITY);
+}
+
+export function toUnavailableMessage(
+  hours: number,
+  participants: number,
+): string {
+  const people = participants === 1 ? "one person" : `${participants} people`;
+  return `Nothing free for ${formatHours(hours)} for ${people} this month. Try another month, fewer hours or fewer people.`;
+}
+
+export const SUGGESTED_NOTE =
+  "Picked for you: the earliest free hours. Change any of them.";
+
 export function togglePicked(
   picked: SlotInterval[],
   slot: SlotInterval,

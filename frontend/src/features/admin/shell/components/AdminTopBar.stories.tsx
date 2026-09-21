@@ -8,7 +8,6 @@ const meta = {
   component: AdminTopBar,
   parameters: { layout: "fullscreen" },
   args: {
-    studioName: "Poetry & Pottery",
     adminName: "Maya Iyer",
     adminEmail: "maya@poetryandpottery.in",
     adminImageUrl: null,
