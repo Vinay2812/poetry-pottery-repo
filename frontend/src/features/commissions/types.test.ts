@@ -13,6 +13,8 @@ import {
   toCommissionMessage,
   toGlazeChoices,
   toPieceChoices,
+  toReferenceBrief,
+  toReferenceLine,
   toSizesForPiece,
 } from "./types";
 
@@ -160,5 +162,40 @@ describe("toSizesForPiece", () => {
   it("has no sizes for a piece the studio does not list", () => {
     expect(toSizesForPiece(pieces, "Lamp")).toEqual([]);
     expect(toSizesForPiece(pieces, "")).toEqual([]);
+  });
+});
+
+describe("toReferenceBrief", () => {
+  const pieces = [{ name: "Mugs", sizes: ["Short (150 ml)"] }];
+  const piece = {
+    name: "Drip sip mug",
+    url: "https://studio.test/products/drip-sip-mug",
+    categoryName: "Mugs",
+  };
+
+  it("picks the piece's kind when the studio lists it and names it in the notes", () => {
+    expect(toReferenceBrief(piece, pieces)).toEqual({
+      pieceType: "Mugs",
+      notes:
+        "Like the Drip sip mug from your archive: https://studio.test/products/drip-sip-mug",
+    });
+  });
+
+  it("leaves the kind open when it is not one the studio throws to order", () => {
+    expect(
+      toReferenceBrief({ ...piece, categoryName: "Wall pieces" }, pieces)
+        .pieceType,
+    ).toBe("");
+    expect(
+      toReferenceBrief({ ...piece, categoryName: null }, pieces).pieceType,
+    ).toBe("");
+  });
+});
+
+describe("toReferenceLine", () => {
+  it("says which piece the brief is measured against", () => {
+    expect(
+      toReferenceLine({ name: "Drip sip mug", url: "", categoryName: null }),
+    ).toBe("Asking for one like the Drip sip mug.");
   });
 });

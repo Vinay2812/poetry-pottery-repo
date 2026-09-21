@@ -18,6 +18,7 @@ import {
   EMPTY_FILTERS,
   parseFilters,
   toArchiveAskUrl,
+  toArchiveCommissionPath,
   toArchiveLabel,
   toArchiveNote,
   toFilterInput,
@@ -665,5 +666,13 @@ describe("toFlawNote", () => {
   it("still admits the piece is a second when no note was written", () => {
     expect(toFlawNote(null)).toContain("lower price");
     expect(toFlawNote("   ")).toBe(toFlawNote(null));
+  });
+});
+
+describe("toArchiveCommissionPath", () => {
+  it("points at the commission form with the piece as the reference", () => {
+    expect(toArchiveCommissionPath("drip-sip-mug")).toBe(
+      "/custom?like=drip-sip-mug",
+    );
   });
 });

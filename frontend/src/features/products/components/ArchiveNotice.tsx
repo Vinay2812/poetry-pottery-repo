@@ -1,9 +1,12 @@
+import Link from "next/link";
+
 export interface ArchiveNoticeProps {
   name: string;
   priceLabel: string;
   collectionName: string | null;
   provenance: string;
   note: string;
+  commissionHref: string;
   askUrl: string | null;
 }
 
@@ -14,6 +17,7 @@ export function ArchiveNotice({
   collectionName,
   provenance,
   note,
+  commissionHref,
   askUrl,
 }: ArchiveNoticeProps) {
   return (
@@ -30,16 +34,25 @@ export function ArchiveNotice({
       <p className="text-[13px] text-muted-foreground">{provenance}</p>
       <div className="flex flex-col gap-3 border-y border-ash py-6">
         <p className="text-[15px]">{note}</p>
-        {askUrl && (
-          <a
-            href={askUrl}
-            target="_blank"
-            rel="noreferrer"
+        {/* The form files the request where the studio reads it; WhatsApp stays for those who prefer it. */}
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+          <Link
+            href={commissionHref}
             className="w-fit border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
           >
             Ask for one like it
-          </a>
-        )}
+          </Link>
+          {askUrl && (
+            <a
+              href={askUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              or ask on WhatsApp
+            </a>
+          )}
+        </div>
       </div>
     </div>
   );
