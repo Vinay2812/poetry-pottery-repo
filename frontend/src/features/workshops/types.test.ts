@@ -27,6 +27,9 @@ import {
   spanDays,
   spanNotice,
   suggestSlots,
+  toArrangementAskUrl,
+  toGroupAskLine,
+  toGroupAskUrl,
   toPickingGuide,
   toUnavailableMessage,
   toBookingPath,
@@ -635,5 +638,32 @@ describe("toUnavailableMessage", () => {
       "Nothing free for 3 hours for one person this month. Try another month, fewer hours or fewer people.",
     );
     expect(toUnavailableMessage(1, 2)).toContain("1 hour for 2 people");
+  });
+});
+
+describe("studio asks", () => {
+  it("names the session and the wheel count for a bigger party", () => {
+    const url = toGroupAskUrl("+91 98765 43210", "Open Studio Sessions", 6);
+    expect(url).toContain("https://wa.me/919876543210?text=");
+    expect(decodeURIComponent(url ?? "")).toContain(
+      "group of more than 6 for Open Studio Sessions",
+    );
+    expect(toGroupAskUrl("", "Open Studio Sessions", 6)).toBeNull();
+    expect(toGroupAskLine(6)).toBe(
+      "More than 6 of you? The studio has 6 wheels, but ask us and we will work out a group session.",
+    );
+  });
+
+  it("carries the hours and the group when nothing is free", () => {
+    const url = toArrangementAskUrl(
+      "+91 98765 43210",
+      "Open Studio Sessions",
+      3,
+      2,
+    );
+    expect(decodeURIComponent(url ?? "")).toContain(
+      "3 hours at the wheel for 2 people (Open Studio Sessions)",
+    );
+    expect(toArrangementAskUrl("", "Open Studio Sessions", 3, 2)).toBeNull();
   });
 });

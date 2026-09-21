@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { getWorkshop } from "@/lib/data/catalog";
+import { getSiteSettings } from "@/lib/data/site-settings";
 
 import { WorkshopBookingContainer } from "@/features/workshops";
 
@@ -21,8 +22,16 @@ export default async function WorkshopPage({
   params,
 }: PageProps<"/workshops/[slug]">) {
   const { slug } = await params;
-  const workshop = await getWorkshop(slug);
+  const [workshop, settings] = await Promise.all([
+    getWorkshop(slug),
+    getSiteSettings(),
+  ]);
   if (!workshop) notFound();
 
-  return <WorkshopBookingContainer workshop={workshop} />;
+  return (
+    <WorkshopBookingContainer
+      workshop={workshop}
+      whatsappNumber={settings.whatsapp_number}
+    />
+  );
 }

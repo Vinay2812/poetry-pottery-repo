@@ -3,6 +3,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatInr, pluralize } from "@/lib/format";
 
+import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
+
 import {
   PickedSlots,
   type PickedSlot,
@@ -19,6 +21,8 @@ export interface BookingSummaryProps {
   pieces: number;
   note: string;
   emptyMessage: string;
+  // A way to the studio when the month cannot hold the request.
+  arrangementAskUrl: string | null;
   hint: string | null;
   canBook: boolean;
   isBooking: boolean;
@@ -37,6 +41,7 @@ export function BookingSummary({
   pieces,
   note,
   emptyMessage,
+  arrangementAskUrl,
   hint,
   canBook,
   isBooking,
@@ -61,6 +66,15 @@ export function BookingSummary({
         onRemoveSlot={onRemoveSlot}
       />
       {hint && <p className="text-[13px] text-muted-foreground">{hint}</p>}
+      {pickedSlots.length === 0 && arrangementAskUrl && (
+        <WhatsAppLink
+          href={arrangementAskUrl}
+          kind="custom-session"
+          className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
+        >
+          Ask us to arrange it on WhatsApp
+        </WhatsAppLink>
+      )}
 
       <dl className="border-t border-ash text-sm">
         {rows.map((row) => (

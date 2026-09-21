@@ -11,6 +11,7 @@ import {
 } from "@/features/workshops/components/BookingCalendar";
 import { BookingSummary } from "@/features/workshops/components/BookingSummary";
 import { DurationPicker } from "@/features/workshops/components/DurationPicker";
+import { GroupAskLine } from "@/features/workshops/components/GroupAskLine";
 import { ParticipantsStepper } from "@/features/workshops/components/ParticipantsStepper";
 import type { PickedSlot } from "@/features/workshops/components/PickedSlots";
 import {
@@ -33,7 +34,10 @@ import {
   spanNotice,
   SUGGESTED_NOTE,
   suggestSlots,
+  toArrangementAskUrl,
   toDateKey,
+  toGroupAskLine,
+  toGroupAskUrl,
   toPickingGuide,
   toUnavailableMessage,
   toMonthGrid,
@@ -46,10 +50,12 @@ import {
 
 export interface WorkshopBookingContainerProps {
   workshop: WorkshopData;
+  whatsappNumber: string;
 }
 
 export function WorkshopBookingContainer({
   workshop,
+  whatsappNumber,
 }: WorkshopBookingContainerProps) {
   const todayKey = toDateKey(new Date(), workshop.timezone);
   const firstMonth = toMonthKey(todayKey);
@@ -279,6 +285,17 @@ export function WorkshopBookingContainer({
                 max={workshop.capacity_per_slot}
                 onChange={handleParticipantsChange}
               />
+              {participants >= workshop.capacity_per_slot && (
+                <GroupAskLine
+                  line={toGroupAskLine(workshop.capacity_per_slot)}
+                  askUrl={toGroupAskUrl(
+                    whatsappNumber,
+                    workshop.name,
+                    workshop.capacity_per_slot,
+                  )}
+                  contactHref="/contact"
+                />
+              )}
             </div>
           </div>
 
@@ -330,6 +347,16 @@ export function WorkshopBookingContainer({
               suggestion === null
                 ? toUnavailableMessage(hours, participants)
                 : "Pick a day on the calendar, then an hour from the chips under it."
+            }
+            arrangementAskUrl={
+              suggestion === null
+                ? toArrangementAskUrl(
+                    whatsappNumber,
+                    workshop.name,
+                    hours,
+                    participants,
+                  )
+                : null
             }
             hint={!hasTouched && picked.length > 0 ? SUGGESTED_NOTE : null}
             canBook={picked.length === needed}
