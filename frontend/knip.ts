@@ -4,6 +4,8 @@ const config: KnipConfig = {
   entry: [
     // Standalone CLI tool: measures rendered component sizes across breakpoints.
     "scripts/measure-responsive.mjs!",
+    // Standalone CLI tool: regenerates the brand SVGs and the wordmark component.
+    "scripts/brand.mjs!",
     // Public RSC Apollo client for server-side data fetching in new pages.
     "src/lib/apollo/rsc-client.ts!",
     // Feature barrels are each feature's public API.
