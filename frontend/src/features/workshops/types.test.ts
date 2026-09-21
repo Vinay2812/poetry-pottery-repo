@@ -601,7 +601,29 @@ describe("suggestSlots", () => {
     ).toBeNull();
   });
 
+  it("spreads hours thin before it stacks them", () => {
+    const week = [
+      dayOn("2026-09-21", [13, 14, 15, 16, 17, 18]),
+      dayOn("2026-09-22", [13, 14, 15, 16, 17, 18]),
+      dayOn("2026-09-23", [13, 14, 15, 16, 17, 18]),
+      dayOn("2026-09-24", [13, 14, 15, 16, 17, 18]),
+    ];
+    const picks = suggestSlots(week, 6, 1, 30, "2026-09-21") ?? [];
+    const perDay = new Map<string, number>();
+    for (const slot of picks) {
+      const day = slot.starts_at.slice(0, 10);
+      perDay.set(day, (perDay.get(day) ?? 0) + 1);
+    }
+    expect([...perDay.entries()]).toEqual([
+      ["2026-09-21", 2],
+      ["2026-09-22", 2],
+      ["2026-09-23", 1],
+      ["2026-09-24", 1],
+    ]);
+  });
+
   it("gives up when the month cannot hold the hours", () => {
+    expect(suggestSlots(days, 6, 1, 30, "2026-09-18")?.length).toBe(6);
     expect(suggestSlots(days, 7, 1, 30, "2026-09-18")).toBeNull();
     expect(suggestSlots(days, 0, 1, 30, "2026-09-18")).toEqual([]);
   });
