@@ -28,6 +28,33 @@ export function toPieceChoices(
   return pieces.map((piece) => ({ name: piece.name, sizes: [...piece.sizes] }));
 }
 
+// A piece from the archive that the brief should be measured against.
+export interface ReferencePiece {
+  name: string;
+  url: string;
+  categoryName: string | null;
+}
+
+// Prefills what the piece already tells us: its kind when the studio lists it, and a note naming it.
+export function toReferenceBrief(
+  piece: ReferencePiece,
+  pieces: readonly PieceChoice[],
+): Partial<CommissionFormValues> {
+  const pieceType =
+    piece.categoryName &&
+    pieces.some((choice) => choice.name === piece.categoryName)
+      ? piece.categoryName
+      : "";
+  return {
+    pieceType,
+    notes: `Like the ${piece.name} from your archive: ${piece.url}`,
+  };
+}
+
+export function toReferenceLine(piece: ReferencePiece): string {
+  return `Asking for one like the ${piece.name}.`;
+}
+
 export function toSizesForPiece(
   pieces: readonly PieceChoice[],
   pieceType: string,

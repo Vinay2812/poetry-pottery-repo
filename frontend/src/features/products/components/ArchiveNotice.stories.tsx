@@ -20,6 +20,7 @@ const meta = {
     provenance:
       "Made September 2026 \u00b7 Ocean Blue \u00b7 Stoneware \u00b7 has found a home",
     note: "This piece has found a home.",
+    commissionHref: "/custom?like=drip-sip-mug",
     askUrl: "https://wa.me/919876543210?text=Hi",
   },
 } satisfies Meta<typeof ArchiveNotice>;

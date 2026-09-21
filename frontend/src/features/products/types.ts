@@ -291,7 +291,12 @@ export function toArchiveNote(stock: number): string {
     : "This piece is no longer on the shelf.";
 }
 
-// "Ask for one like it" carries the piece name and its page so the studio knows what is meant.
+// An archived piece sends its admirer to the commission form with itself as the reference.
+export function toArchiveCommissionPath(productSlug: string): string {
+  return `/custom?like=${encodeURIComponent(productSlug)}`;
+}
+
+// The WhatsApp way to ask carries the piece name and its page so the studio knows what is meant.
 export function toArchiveAskUrl(
   whatsappNumber: string,
   productName: string,

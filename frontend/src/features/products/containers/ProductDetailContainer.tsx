@@ -39,6 +39,7 @@ import {
   REFERENCE_PHOTO_ACCEPT,
   toConfirmedPhotoUrls,
   toArchiveAskUrl,
+  toArchiveCommissionPath,
   toArchiveNote,
   type Selections,
   toBatchLabel,
@@ -277,6 +278,7 @@ export function ProductDetailContainer({
                 product.stock,
               )}
               note={toArchiveNote(product.stock)}
+              commissionHref={toArchiveCommissionPath(product.slug)}
               askUrl={archiveAskUrl}
             />
           ) : (

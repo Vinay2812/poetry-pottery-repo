@@ -8,11 +8,17 @@ import type { CommissionFormValues } from "@/lib/validations/commission";
 
 import { CommissionBriefForm } from "@/features/commissions/components/CommissionBriefForm";
 import { CommissionSent } from "@/features/commissions/components/CommissionSent";
-import type { GlazeChoice, PieceChoice } from "@/features/commissions/types";
+import type {
+  GlazeChoice,
+  PieceChoice,
+  ReferencePiece,
+} from "@/features/commissions/types";
 import {
   toBriefSummary,
   toCommissionAskUrl,
   toCommissionInput,
+  toReferenceBrief,
+  toReferenceLine,
 } from "@/features/commissions/types";
 import { toServerMessage } from "@/features/content/types";
 import { ReferencePhotoPicker } from "@/features/products/components/ReferencePhotoPicker";
@@ -28,6 +34,7 @@ export interface CommissionBriefContainerProps {
   pieces: PieceChoice[];
   glazes: GlazeChoice[];
   whatsappNumber: string;
+  referencePiece: ReferencePiece | null;
 }
 
 interface SentBrief {
@@ -40,6 +47,7 @@ export function CommissionBriefContainer({
   pieces,
   glazes,
   whatsappNumber,
+  referencePiece,
 }: CommissionBriefContainerProps) {
   const { isSignedIn } = useAuth();
   const [sent, setSent] = useState<SentBrief | null>(null);
@@ -114,6 +122,10 @@ export function CommissionBriefContainer({
     <CommissionBriefForm
       pieces={pieces}
       glazes={glazes}
+      initialValues={
+        referencePiece ? toReferenceBrief(referencePiece, pieces) : undefined
+      }
+      referenceLine={referencePiece ? toReferenceLine(referencePiece) : null}
       isSubmitting={loading}
       errorMessage={errorMessage}
       toAskUrl={toAskUrl}

@@ -73,6 +73,9 @@ function TextField({
 export interface CommissionBriefFormProps {
   pieces: PieceChoice[];
   glazes: GlazeChoice[];
+  // Filled in ahead when the brief starts from a piece in the archive.
+  initialValues?: Partial<CommissionFormValues>;
+  referenceLine?: string | null;
   isSubmitting: boolean;
   errorMessage: string | null;
   photoPicker?: React.ReactNode;
@@ -84,6 +87,8 @@ export interface CommissionBriefFormProps {
 export function CommissionBriefForm({
   pieces,
   glazes,
+  initialValues,
+  referenceLine = null,
   isSubmitting,
   errorMessage,
   photoPicker,
@@ -91,6 +96,7 @@ export function CommissionBriefForm({
   onSubmit,
 }: CommissionBriefFormProps) {
   const [isOtherPiece, setIsOtherPiece] = useState(false);
+  const defaultValues = { ...EMPTY_COMMISSION_FORM, ...initialValues };
   const {
     register,
     control,
@@ -99,10 +105,10 @@ export function CommissionBriefForm({
     formState: { errors },
   } = useForm<CommissionFormValues>({
     resolver: zodResolver(commissionSchema),
-    defaultValues: EMPTY_COMMISSION_FORM,
+    defaultValues,
   });
   // The WhatsApp line carries whatever is typed so far, so it follows the fields live.
-  const values = useWatch({ control, defaultValue: EMPTY_COMMISSION_FORM });
+  const values = useWatch({ control, defaultValue: defaultValues });
   const draft = { ...EMPTY_COMMISSION_FORM, ...values };
   const carvedLength = draft.carvedWords.length;
   const askUrl = toAskUrl(draft);
@@ -132,6 +138,11 @@ export function CommissionBriefForm({
       className="flex flex-col gap-6"
     >
       <div className="flex flex-col gap-4">
+        {referenceLine && (
+          <p className="border-l-2 border-primary pl-3 text-[15px]">
+            {referenceLine}
+          </p>
+        )}
         <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
           The piece
         </h3>

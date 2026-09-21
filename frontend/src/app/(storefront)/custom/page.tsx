@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 
 import { PageShell } from "@/components/layout/PageShell";
 import { Reveal } from "@/components/motion/Reveal";
-import { getCommissionOptions, getCommissionPieces } from "@/lib/data/catalog";
+import {
+  getCommissionOptions,
+  getCommissionPieces,
+  getProduct,
+} from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { toAbsoluteUrl } from "@/lib/site-url";
 
 import {
   COMMISSION_STEPS,
@@ -16,6 +21,7 @@ import {
   ProductCardContainer,
   ProductGrid,
   toCardPhotoLoading,
+  toProductPath,
 } from "@/features/products";
 
 export const metadata: Metadata = {
@@ -24,12 +30,25 @@ export const metadata: Metadata = {
     "Tell us the piece, the size, the glaze and the words. A sketch comes back in two days and the piece ships in about ten.",
 };
 
-export default async function CustomPage() {
-  const [options, pieces, settings] = await Promise.all([
+export default async function CustomPage({
+  searchParams,
+}: PageProps<"/custom">) {
+  const { like } = await searchParams;
+  const likeSlug = typeof like === "string" && like.length > 0 ? like : null;
+  const [options, pieces, settings, liked] = await Promise.all([
     getCommissionOptions(),
     getCommissionPieces(6),
     getSiteSettings(),
+    likeSlug ? getProduct(likeSlug) : Promise.resolve(null),
   ]);
+  // A piece from the archive comes along as the reference; an unknown slug is simply ignored.
+  const referencePiece = liked
+    ? {
+        name: liked.name,
+        url: await toAbsoluteUrl(toProductPath(liked.slug)),
+        categoryName: liked.categories[0]?.name ?? null,
+      }
+    : null;
 
   return (
     <PageShell className="flex flex-col gap-12 py-8 md:gap-16 md:py-12">
@@ -89,6 +108,7 @@ export default async function CustomPage() {
               pieces={toPieceChoices(options.piece_types)}
               glazes={toGlazeChoices(options.glazes)}
               whatsappNumber={settings.whatsapp_number}
+              referencePiece={referencePiece}
             />
           </div>
         </section>

@@ -45,6 +45,17 @@ export const Empty: Story = {};
 
 export const Submitting: Story = { args: { isSubmitting: true } };
 
+export const FromTheArchive: Story = {
+  args: {
+    referenceLine: "Asking for one like the Drip sip mug.",
+    initialValues: {
+      pieceType: "Mugs",
+      notes:
+        "Like the Drip sip mug from your archive: https://studio.test/products/drip-sip-mug",
+    },
+  },
+};
+
 export const ServerRefused: Story = {
   args: { errorMessage: "We could not send that just now. Try again." },
 };
