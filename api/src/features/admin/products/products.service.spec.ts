@@ -67,6 +67,7 @@ function input(overrides: Record<string, unknown> = {}) {
     description: "Thrown in stoneware.",
     price: 1200,
     material: "Stoneware",
+    stock: 3,
     ...overrides,
   };
 }
@@ -210,6 +211,50 @@ describe("AdminProductsService", () => {
     expect(prismaMock.product.update).toHaveBeenCalledWith(
       containing({ data: { is_active: false } }),
     );
+  });
+
+  it("refuses to put an empty batch on the shelf", async () => {
+    await expect(
+      service.create(input({ stock: 0, is_customizable: false })),
+    ).rejects.toBeInstanceOf(BadRequestException);
+
+    prismaMock.product.findUnique.mockResolvedValue({
+      stock: 0,
+      is_customizable: false,
+    });
+    await expect(service.setActive(1, true)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(prismaMock.product.update).not.toHaveBeenCalled();
+  });
+
+  it("lets a made-to-order piece go live with nothing in stock", async () => {
+    await service.create(input({ stock: 0, is_customizable: true }));
+
+    prismaMock.product.findUnique.mockResolvedValue({
+      stock: 0,
+      is_customizable: true,
+    });
+    await service.setActive(1, true);
+
+    expect(prismaMock.product.create).toHaveBeenCalled();
+    expect(prismaMock.product.update).toHaveBeenCalledWith(
+      containing({ data: { is_active: true } }),
+    );
+  });
+
+  it("keeps a live piece editable after it sells out", async () => {
+    prismaMock.product.findUnique.mockResolvedValue({
+      stock: 0,
+      is_customizable: false,
+      image_urls: [],
+      is_second: false,
+      flaw_note: null,
+    });
+
+    await service.update(1, { name: "Slate mug" });
+
+    expect(prismaMock.product.update).toHaveBeenCalled();
   });
 
   it("adjusts stock conditionally and logs the reason", async () => {

@@ -7,6 +7,8 @@ export interface AdminPersonRoleProps {
   explanation: string;
   actionLabel: string;
   isBusy: boolean;
+  isDisabled?: boolean;
+  disabledReason?: string | null;
   onChange: () => void;
 }
 
@@ -15,6 +17,8 @@ export function AdminPersonRole({
   explanation,
   actionLabel,
   isBusy,
+  isDisabled = false,
+  disabledReason = null,
   onChange,
 }: AdminPersonRoleProps) {
   return (
@@ -23,14 +27,15 @@ export function AdminPersonRole({
         Access
       </span>
       <p className="text-[13px]">
-        {currentRoleSentence} {explanation}
+        {currentRoleSentence}{" "}
+        {isDisabled && disabledReason ? disabledReason : explanation}
       </p>
       <div>
         <Button
           type="button"
           size="sm"
           variant="secondary"
-          disabled={isBusy}
+          disabled={isBusy || isDisabled}
           onClick={onChange}
         >
           {isBusy ? "Working…" : actionLabel}

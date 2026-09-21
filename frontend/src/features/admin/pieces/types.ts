@@ -33,6 +33,13 @@ export function formatCareNotes(notes: readonly string[]): string {
 }
 
 /** A count on a shelf is never negative, whatever a pending adjustment says. */
+// Only stock or a made-to-order flag can put a piece on the shelf; the API refuses otherwise.
+export function canGoLive(stock: number, isCustomizable: boolean): boolean {
+  return isCustomizable || stock > 0;
+}
+
+export const LIVE_BLOCKED_NOTE = "Add stock first, or mark it made to order";
+
 export function clampStock(stock: number): number {
   return Math.max(0, Math.round(stock));
 }

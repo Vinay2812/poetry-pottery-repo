@@ -54,6 +54,15 @@ export function assertStock(value: number | null | undefined): void {
   }
 }
 
+// Only stock or a made-to-order flag can put a piece on the shelf; an empty batch stays archived.
+export function assertCanBeLive(stock: number, isCustomizable: boolean): void {
+  if (!isCustomizable && stock <= 0) {
+    throw new BadRequestException(
+      "A piece with nothing in stock cannot go live; add stock first or make it to order",
+    );
+  }
+}
+
 // A measurement is either a positive number or missing; zero is never a real piece.
 export function assertMeasure(
   value: number | null | undefined,
@@ -165,6 +174,9 @@ export class AdminProductsService {
     assertStock(input.stock);
     assertMeasurements(input);
     assertSecond(input.is_second, input.flaw_note);
+    if (input.is_active ?? true) {
+      assertCanBeLive(input.stock ?? 0, input.is_customizable ?? false);
+    }
     await this.assertLinks(
       input.category_ids,
       input.collection_id,
@@ -312,6 +324,16 @@ export class AdminProductsService {
   }
 
   async setActive(id: number, isActive: boolean): Promise<Product> {
+    if (isActive) {
+      const current = await this.prisma.product.findUnique({
+        where: { id },
+        select: { stock: true, is_customizable: true },
+      });
+      if (!current) {
+        throw new NotFoundException("Product not found");
+      }
+      assertCanBeLive(current.stock, current.is_customizable);
+    }
     const row = await this.prisma.product
       .update({
         where: { id },

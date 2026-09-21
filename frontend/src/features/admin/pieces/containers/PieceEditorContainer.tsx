@@ -46,6 +46,8 @@ import {
   toProductFormValues,
   toProductInput,
   toProductUpdateInput,
+  canGoLive,
+  LIVE_BLOCKED_NOTE,
 } from "@/features/admin/pieces/types";
 
 // The picker lists every glaze the studio fires; there are never many.
@@ -123,6 +125,10 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     [product],
   );
   const [state, patchState] = useOptimistic(baseState, applyPieceStatePatch);
+  const isLiveAllowed = canGoLive(
+    state.stock,
+    product?.is_customizable ?? false,
+  );
 
   // The draft wins until a save clears it; before that the saved gallery is the truth.
   const imageUrls = useMemo(
@@ -326,7 +332,12 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
                 type="button"
                 variant="secondary"
                 size="sm"
-                disabled={isBusy}
+                disabled={isBusy || (!state.isActive && !isLiveAllowed)}
+                title={
+                  !state.isActive && !isLiveAllowed
+                    ? LIVE_BLOCKED_NOTE
+                    : undefined
+                }
                 onClick={() => {
                   if (state.isActive) {
                     setIsArchiveOpen(true);
@@ -352,7 +363,13 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
           <AdminStatTile
             label="State"
             value={state.isActive ? "Live" : "Archived"}
-            hint={state.isFeatured ? "Featured on the home page" : null}
+            hint={
+              !state.isActive && !isLiveAllowed
+                ? LIVE_BLOCKED_NOTE
+                : state.isFeatured
+                  ? "Featured on the home page"
+                  : null
+            }
           />
           <AdminStatTile
             label="Sold"

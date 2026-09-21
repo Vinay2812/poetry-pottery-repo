@@ -98,6 +98,17 @@ export class AdminUsersService {
       throw new BadRequestException("You cannot take away your own access");
     }
     await this.byId(id);
+    // The studio must always have a way in, so the last admin cannot step down.
+    if (role !== UserRole.ADMIN) {
+      const others = await this.prisma.user.count({
+        where: { role: UserRole.ADMIN, id: { not: id } },
+      });
+      if (others === 0) {
+        throw new BadRequestException(
+          "Make someone else an admin before this one steps down",
+        );
+      }
+    }
     const row = await this.prisma.user.update({
       where: { id },
       data: { role },

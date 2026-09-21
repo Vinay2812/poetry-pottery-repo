@@ -68,6 +68,14 @@ export function toRoleConfirmLabel(role: UserRole): string {
   return role === UserRole.Admin ? "Make an admin" : "Make a customer";
 }
 
+/** The studio must keep a way in: the only admin cannot be turned back into a customer. */
+export function isOnlyAdmin(role: UserRole, adminCount: number): boolean {
+  return role === UserRole.Admin && adminCount <= 1;
+}
+
+export const ONLY_ADMIN_NOTE =
+  "They are the only admin, so someone else must be made an admin first.";
+
 export function toOppositeRole(role: UserRole): UserRole {
   return role === UserRole.Admin ? UserRole.User : UserRole.Admin;
 }
