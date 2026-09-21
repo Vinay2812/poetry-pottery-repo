@@ -32,6 +32,7 @@ import {
   slotsNeeded,
   spanNotice,
   toDateKey,
+  toPickingGuide,
   toMonthGrid,
   type SlotInterval,
   toMonthKey,
@@ -207,7 +208,7 @@ export function WorkshopBookingContainer({
 
   return (
     <PageShell className="flex flex-col gap-10 py-8 md:py-12">
-      {/* The calendar is the page. The title and one sentence are all that sit above it. */}
+      {/* The calendar is the page. The title, one sentence and the way to pick sit above it. */}
       <header className="flex flex-col gap-3">
         <h1 className="max-w-3xl font-heading text-3xl leading-tight tracking-tight text-balance md:text-5xl">
           {workshop.name}
@@ -217,6 +218,9 @@ export function WorkshopBookingContainer({
             {workshop.description}
           </p>
         )}
+        <p className="max-w-xl text-[15px]">
+          {toPickingGuide(needed, workshop.slot_span_days)}
+        </p>
       </header>
 
       <div className="grid gap-10 border-t border-ash pt-8 lg:grid-cols-[1fr_340px] lg:items-start">
@@ -277,12 +281,6 @@ export function WorkshopBookingContainer({
               onSelectDate={handleSelectDate}
             />
           )}
-
-          <p className="text-[13px] text-muted-foreground">
-            Pick {needed} {needed === 1 ? "hour" : "hours"} from a day on the
-            calendar. They can sit on different days,{" "}
-            {spanNotice(workshop.slot_span_days).toLowerCase()}.
-          </p>
         </div>
 
         <aside className="lg:sticky lg:top-24">

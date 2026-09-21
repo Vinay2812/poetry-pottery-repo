@@ -262,6 +262,20 @@ export function isDayWithinSpan(
   return spanDays([...pickedDateKeys, dateKey]) <= allowedSpanDays;
 }
 
+// One sentence above the pickers that says how the hours are chosen, before anyone scrolls.
+export function toPickingGuide(
+  needed: number,
+  allowedSpanDays: number,
+): string {
+  const hours = needed === 1 ? "1 hour" : `${needed} hours`;
+  if (needed === 1) {
+    return `Pick a day on the calendar, then ${hours} from the times under it.`;
+  }
+  return allowedSpanDays === 1
+    ? `Pick a day on the calendar, then ${hours} from the times under it; they all sit on that one day.`
+    : `Pick a day on the calendar, then ${hours} from the times under it. They can sit on different days, within ${allowedSpanDays} days of your first one.`;
+}
+
 export function spanNotice(allowedSpanDays: number): string {
   return allowedSpanDays === 1
     ? "Pick every hour on the same day"
