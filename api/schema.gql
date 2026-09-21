@@ -472,6 +472,19 @@ type AdminUsersResult {
   page_info: PageInfo!
 }
 
+input AdminWhatsAppFilterInput {
+  direction: WhatsAppDirection
+  limit: Int
+  page: Int
+  search: String
+  user_id: Int
+}
+
+type AdminWhatsAppMessagesResult {
+  items: [WhatsAppMessage!]!
+  page_info: PageInfo!
+}
+
 type AdminWorkshopBlackout {
   config_id: Int!
   ends_at: DateTime!
@@ -917,6 +930,7 @@ type Mutation {
   notifyWhenBackInStock(email: String!, product_id: Int!): BatchNotificationResult!
   placeOrder(input: PlaceOrderInput!): Order!
   publishEvent(id: Int!): Event!
+  recordWhatsAppMessage(input: RecordWhatsAppMessageInput!): Boolean!
   registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
   reorderProductImages(id: Int!, image_urls: [String!]!): Product!
@@ -924,6 +938,7 @@ type Mutation {
   saveContentPage(input: ContentPageInput!, slug: String!): ContentPage!
   saveWorkshopTier(config_id: Int!, input: AdminWorkshopTierInput!): WorkshopConfig!
   sendContactMessage(input: ContactMessageInput!): Boolean!
+  sendWhatsAppReply(input: SendWhatsAppReplyInput!): Boolean!
   setCommissionRequestStatus(id: String!, status: CommissionStatus!): CommissionRequest!
   setContactMessageRead(id: Int!, is_read: Boolean!): ContactMessage!
   setDefaultAddress(id: Int!): Address!
@@ -1176,6 +1191,7 @@ type Query {
   adminStudioVisits(filter: AdminStudioVisitsFilterInput): AdminStudioVisitsResult!
   adminUser(id: Int!): AdminUser!
   adminUsers(filter: AdminUsersFilterInput): AdminUsersResult!
+  adminWhatsAppMessages(filter: AdminWhatsAppFilterInput): AdminWhatsAppMessagesResult!
   adminWorkshopBlackouts(config_id: Int!): [AdminWorkshopBlackout!]!
   adminWorkshopBookings(filter: AdminWorkshopBookingsFilterInput): AdminWorkshopBookingsResult!
   adminWorkshopConfigs: [WorkshopConfig!]!
@@ -1225,6 +1241,13 @@ type RatingSummary {
   average: Float!
   count: Int!
   distribution: [Int!]!
+}
+
+input RecordWhatsAppMessageInput {
+  body: String!
+  kind: String!
+  page_url: String
+  reference: String
 }
 
 input RegisterForEventInput {
@@ -1321,6 +1344,14 @@ input SelectionInputType {
   group_id: Int!
   option_id: Int
   text: String
+}
+
+input SendWhatsAppReplyInput {
+  body: String!
+  kind: String!
+  reference: String
+  to_email: String!
+  to_phone: String
 }
 
 type ShippingAddress {
@@ -1444,6 +1475,25 @@ type VisitWindow {
   is_available: Boolean!
   reason: String
   starts_at: DateTime!
+}
+
+enum WhatsAppDirection {
+  TO_CUSTOMER
+  TO_STUDIO
+}
+
+type WhatsAppMessage {
+  body: String!
+  created_at: DateTime!
+  direction: WhatsAppDirection!
+  email: String
+  id: Int!
+  kind: String!
+  name: String
+  page_url: String
+  phone: String
+  reference: String
+  user: AdminUserRef
 }
 
 type WishlistToggleResult {

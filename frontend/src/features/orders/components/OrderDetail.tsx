@@ -20,6 +20,7 @@ import {
   type StudioNoteProps,
 } from "@/features/orders/components/StudioNote";
 import type { StatusTone } from "@/features/orders/types";
+import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface OrderDetailProps {
   orderId: string;
@@ -93,6 +94,7 @@ export function OrderDetail({
     <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
       {isJustPlaced && (
         <OrderPlacedBanner
+          orderId={orderId}
           firstName={firstName}
           pieces={items.map((item) => ({
             id: item.id,
@@ -216,10 +218,14 @@ export function OrderDetail({
           <div className="flex flex-col items-start gap-3">
             {whatsappUrl && !isJustPlaced && (
               <Button variant="outline" asChild>
-                <a href={whatsappUrl} target="_blank" rel="noreferrer">
+                <WhatsAppLink
+                  href={whatsappUrl}
+                  kind="order"
+                  reference={orderId}
+                >
                   <MessageCircle className="size-4" strokeWidth={1.5} />
                   Message us about this order
-                </a>
+                </WhatsAppLink>
               </Button>
             )}
             {canCancel && (

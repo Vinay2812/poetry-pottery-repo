@@ -5,8 +5,10 @@ import Link from "next/link";
 import { toPotteryIconKind } from "@/components/icons/pottery";
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 import { Button } from "@/components/ui/button";
+import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface OrderPlacedBannerProps {
+  orderId: string;
   firstName: string;
   pieces: { id: number; name: string; imageUrl: string | null }[];
   arrivalLine: string;
@@ -16,6 +18,7 @@ export interface OrderPlacedBannerProps {
 }
 
 export function OrderPlacedBanner({
+  orderId,
   firstName,
   pieces,
   arrivalLine,
@@ -71,10 +74,10 @@ export function OrderPlacedBanner({
       <div className="flex flex-wrap items-center gap-5">
         {whatsappUrl && (
           <Button size="lg" asChild>
-            <a href={whatsappUrl} target="_blank" rel="noreferrer">
+            <WhatsAppLink href={whatsappUrl} kind="order" reference={orderId}>
               <MessageCircle className="size-4" strokeWidth={1.5} />
               Confirm on WhatsApp
-            </a>
+            </WhatsAppLink>
           </Button>
         )}
         <Link

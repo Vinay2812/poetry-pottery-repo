@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface ArchiveNoticeProps {
   name: string;
@@ -43,14 +44,13 @@ export function ArchiveNotice({
             Ask for one like it
           </Link>
           {askUrl && (
-            <a
+            <WhatsAppLink
               href={askUrl}
-              target="_blank"
-              rel="noreferrer"
+              kind="archive-ask"
               className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
               or ask on WhatsApp
-            </a>
+            </WhatsAppLink>
           )}
         </div>
       </div>
