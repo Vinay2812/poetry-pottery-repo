@@ -26,6 +26,7 @@ import {
   slotsNeeded,
   spanDays,
   spanNotice,
+  toPickingGuide,
   toBookingPath,
   toBookingGroup,
   toBookingStatusLabel,
@@ -179,6 +180,18 @@ describe("session helpers", () => {
     expect(isDayWithinSpan("2026-09-20", ["2026-09-13"], 7)).toBe(false);
     expect(spanNotice(7)).toBe("Pick within 7 days of your first slot");
     expect(spanNotice(1)).toBe("Pick every hour on the same day");
+  });
+
+  it("explains the choice before the pickers, matching the span rule", () => {
+    expect(toPickingGuide(1, 1)).toBe(
+      "Pick a day on the calendar, then 1 hour from the times under it.",
+    );
+    expect(toPickingGuide(3, 1)).toBe(
+      "Pick a day on the calendar, then 3 hours from the times under it; they all sit on that one day.",
+    );
+    expect(toPickingGuide(3, 30)).toBe(
+      "Pick a day on the calendar, then 3 hours from the times under it. They can sit on different days, within 30 days of your first one.",
+    );
   });
 
   it("adds and drops hours up to the tier's count", () => {
