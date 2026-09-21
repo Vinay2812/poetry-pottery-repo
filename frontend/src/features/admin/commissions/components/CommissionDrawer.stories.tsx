@@ -27,7 +27,6 @@ const meta = {
     whatsAppHref: "https://wa.me/919123456789",
     isBusy: false,
     onStatusChange: fn(),
-    onWhatsAppClick: fn(),
     onOpenChange: fn(),
   },
 } satisfies Meta<typeof CommissionDrawer>;

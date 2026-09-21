@@ -14,7 +14,6 @@ const GALLERY_THIRD =
 
 const reserveBox = (
   <ReserveBox
-    eventId={42}
     price={1800}
     seats={1}
     maxSeats={4}
@@ -35,7 +34,6 @@ const reserveBox = (
 
 const pastReserveBox = (
   <ReserveBox
-    eventId={42}
     price={400}
     seats={1}
     maxSeats={4}

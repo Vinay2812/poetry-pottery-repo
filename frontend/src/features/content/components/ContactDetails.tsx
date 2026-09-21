@@ -1,5 +1,4 @@
 import { toPhoneHref } from "@/lib/format";
-import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface ContactDetailsProps {
   address: string;
@@ -65,13 +64,14 @@ export function ContactDetails({
           {contactEmail}
         </a>
         {whatsappUrl && (
-          <WhatsAppLink
+          <a
             href={whatsappUrl}
-            kind="general"
+            target="_blank"
+            rel="noreferrer"
             className="text-[15px] text-primary underline-offset-4 hover:underline"
           >
             Message us on WhatsApp
-          </WhatsAppLink>
+          </a>
         )}
       </DetailRow>
       {(instagramUrl.length > 0 || facebookUrl.length > 0) && (

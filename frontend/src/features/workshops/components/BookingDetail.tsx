@@ -11,7 +11,6 @@ import {
 } from "@/features/orders/components/OrderTimeline";
 import type { StatusTone } from "@/features/orders/types";
 import type { SessionFact } from "@/features/workshops/types";
-import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface BookingDetailProps {
   bookingId: string;
@@ -76,14 +75,10 @@ export function BookingDetail({
           </p>
           {whatsappUrl && (
             <Button className="w-fit" asChild>
-              <WhatsAppLink
-                href={whatsappUrl}
-                kind="booking"
-                reference={bookingId}
-              >
+              <a href={whatsappUrl} target="_blank" rel="noreferrer">
                 <MessageCircle className="size-4" strokeWidth={1.5} />
                 Confirm on WhatsApp
-              </WhatsAppLink>
+              </a>
             </Button>
           )}
         </section>
@@ -166,14 +161,14 @@ export function BookingDetail({
 
           <div className="flex flex-col items-start gap-3">
             {whatsappUrl && !isJustPlaced && (
-              <WhatsAppLink
+              <a
                 href={whatsappUrl}
-                kind="booking"
-                reference={bookingId}
+                target="_blank"
+                rel="noreferrer"
                 className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
               >
                 Message us about this session
-              </WhatsAppLink>
+              </a>
             )}
             {canReschedule && (
               <button

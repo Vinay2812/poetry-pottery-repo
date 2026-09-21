@@ -20,5 +20,9 @@ export default async function AdminLayout({
     redirect("/");
   }
 
-  return <AdminChromeContainer>{children}</AdminChromeContainer>;
+  return (
+    <AdminChromeContainer studioName="Poetry & Pottery">
+      {children}
+    </AdminChromeContainer>
+  );
 }

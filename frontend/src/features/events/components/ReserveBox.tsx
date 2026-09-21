@@ -7,10 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatInr, pluralize } from "@/lib/format";
 
 import { SEAT_NOTE } from "@/features/events/types";
-import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface ReserveBoxProps {
-  eventId: number;
   price: number;
   seats: number;
   maxSeats: number;
@@ -34,7 +32,6 @@ const TEXT_LINK =
   "w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary";
 
 export function ReserveBox({
-  eventId,
   price,
   seats,
   maxSeats,
@@ -89,14 +86,14 @@ export function ReserveBox({
             up.
           </p>
           {whatsappUrl && (
-            <WhatsAppLink
+            <a
               href={whatsappUrl}
-              kind="event"
-              reference={String(eventId)}
+              target="_blank"
+              rel="noreferrer"
               className={TEXT_LINK}
             >
               Ask about a waiting seat
-            </WhatsAppLink>
+            </a>
           )}
         </div>
       ) : (

@@ -1,5 +1,3 @@
-import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
-
 export interface StudioAskLineProps {
   text: string;
   linkLabel: string;
@@ -12,13 +10,14 @@ export function StudioAskLine({ text, linkLabel, askUrl }: StudioAskLineProps) {
     <p className="text-[15px] text-muted-foreground">
       {text}{" "}
       {askUrl ? (
-        <WhatsAppLink
+        <a
           href={askUrl}
-          kind="glaze-ask"
+          target="_blank"
+          rel="noreferrer"
           className="border-b border-ink pb-0.5 text-foreground hover:border-primary hover:text-primary"
         >
           {linkLabel}
-        </WhatsAppLink>
+        </a>
       ) : (
         <span className="text-foreground">{linkLabel}</span>
       )}

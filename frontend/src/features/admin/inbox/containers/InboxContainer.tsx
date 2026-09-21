@@ -9,7 +9,6 @@ import { AdminPageHeader } from "@/features/admin/ui";
 
 import { ContactMessagesContainer } from "@/features/admin/inbox/containers/ContactMessagesContainer";
 import { SubscribersContainer } from "@/features/admin/inbox/containers/SubscribersContainer";
-import { WhatsAppMessagesContainer } from "@/features/admin/inbox/containers/WhatsAppMessagesContainer";
 import { toInboxTab } from "@/features/admin/inbox/types";
 
 export function InboxContainer() {
@@ -29,22 +28,18 @@ export function InboxContainer() {
       <AdminPageHeader
         eyebrow="Studio"
         title="Inbox"
-        description="Messages from the contact form, the newsletter list and every WhatsApp hand-off."
+        description="Messages from the contact form and the newsletter list."
       />
       <Tabs value={tab} onValueChange={handleTabChange}>
         <TabsList variant="line">
           <TabsTrigger value="messages">Messages</TabsTrigger>
           <TabsTrigger value="subscribers">Subscribers</TabsTrigger>
-          <TabsTrigger value="whatsapp">WhatsApp</TabsTrigger>
         </TabsList>
         <TabsContent value="messages">
           <ContactMessagesContainer />
         </TabsContent>
         <TabsContent value="subscribers">
           <SubscribersContainer />
-        </TabsContent>
-        <TabsContent value="whatsapp">
-          <WhatsAppMessagesContainer />
         </TabsContent>
       </Tabs>
     </div>

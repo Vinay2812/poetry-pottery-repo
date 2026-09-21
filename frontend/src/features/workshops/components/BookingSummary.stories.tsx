@@ -21,9 +21,6 @@ const meta = {
     ],
     slotsNeeded: 2,
     hours: 2,
-    emptyMessage:
-      "Pick a day on the calendar, then an hour from the chips under it.",
-    hint: "Picked for you: the earliest free hours. Change any of them.",
     participants: 2,
     pricePerPerson: 1700,
     total: 3400,
@@ -48,9 +45,6 @@ export const NothingPicked: Story = {
     pickedSlots: [],
     slotsNeeded: 1,
     hours: 1,
-    emptyMessage:
-      "Pick a day on the calendar, then an hour from the chips under it.",
-    hint: null,
     participants: 1,
     pricePerPerson: 950,
     total: 950,
@@ -79,14 +73,3 @@ export const Tablet: Story = { ...atViewport("tablet") };
 export const Laptop: Story = { ...atViewport("laptop") };
 
 export const Desktop: Story = { ...atViewport("desktop") };
-
-export const NothingFree: Story = {
-  args: {
-    pickedSlots: [],
-    slotsNeeded: 3,
-    hours: 3,
-    emptyMessage:
-      "Nothing free for 3 hours for one person this month. Try another month, fewer hours or fewer people.",
-    hint: null,
-  },
-};
