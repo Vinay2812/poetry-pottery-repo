@@ -301,8 +301,9 @@ export function toPickedSlots(
 }
 
 // Tapping an hour adds or drops it; once the tier is filled, further hours are ignored.
-// The earliest way to fill a session: one hour a day on separate days when the span allows,
-// otherwise hours stacked onto as few days as it takes. Null when the loaded days cannot hold it.
+// Fills the session in layers: one hour on every free day in the window first, then a second
+// hour on the earliest of them, and so on. Hours spread as thin as the window allows and only
+// stack when they must. Null when the loaded days cannot hold them.
 export function suggestSlots(
   days: readonly WorkshopDayData[],
   needed: number,
@@ -321,27 +322,26 @@ export function suggestSlots(
     }))
     .filter((day) => day.slots.length > 0)
     .sort((a, b) => a.date.localeCompare(b.date));
-  const toInterval = (slot: WorkshopSlotData): SlotInterval => ({
-    starts_at: slot.starts_at,
-    ends_at: slot.ends_at,
-  });
-  const attempt = (perDay: number): SlotInterval[] | null => {
-    for (let start = 0; start < open.length; start += 1) {
-      const picks: SlotInterval[] = [];
-      for (let index = start; index < open.length; index += 1) {
-        const day = open[index];
-        if (!day) break;
-        if (spanDays([open[start]?.date ?? "", day.date]) > allowedSpanDays)
-          break;
-        for (const slot of day.slots.slice(0, perDay)) {
-          picks.push(toInterval(slot));
-          if (picks.length === needed) return picks;
+  for (let start = 0; start < open.length; start += 1) {
+    const first = open[start];
+    if (!first) break;
+    const window = open
+      .slice(start)
+      .filter((day) => spanDays([first.date, day.date]) <= allowedSpanDays);
+    const deepest = Math.max(...window.map((day) => day.slots.length));
+    const picks: SlotInterval[] = [];
+    for (let layer = 0; layer < deepest; layer += 1) {
+      for (const day of window) {
+        const slot = day.slots[layer];
+        if (!slot) continue;
+        picks.push({ starts_at: slot.starts_at, ends_at: slot.ends_at });
+        if (picks.length === needed) {
+          return picks.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
         }
       }
     }
-    return null;
-  };
-  return attempt(1) ?? attempt(Number.POSITIVE_INFINITY);
+  }
+  return null;
 }
 
 export function toUnavailableMessage(
