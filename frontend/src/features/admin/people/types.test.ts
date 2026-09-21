@@ -12,6 +12,7 @@ import {
   toOppositeRole,
   toRoleConfirmLabel,
   toUserRole,
+  isOnlyAdmin,
   toPersonId,
   toPersonLinks,
 } from "./types";
@@ -119,5 +120,13 @@ describe("applyPersonRolePatch", () => {
 
   it("leaves a person it does not have alone", () => {
     expect(applyPersonRolePatch(null, { role: UserRole.Admin })).toBeNull();
+  });
+});
+
+describe("isOnlyAdmin", () => {
+  it("is true only for an admin when no other admin exists", () => {
+    expect(isOnlyAdmin(UserRole.Admin, 1)).toBe(true);
+    expect(isOnlyAdmin(UserRole.Admin, 2)).toBe(false);
+    expect(isOnlyAdmin(UserRole.User, 1)).toBe(false);
   });
 });

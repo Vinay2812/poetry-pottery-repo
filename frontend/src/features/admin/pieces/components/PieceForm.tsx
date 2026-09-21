@@ -16,6 +16,7 @@ import {
 } from "@/lib/validations/admin/product";
 
 import { AdminField, toNullableNumber } from "@/features/admin/ui";
+import { canGoLive, LIVE_BLOCKED_NOTE } from "@/features/admin/pieces/types";
 
 interface PieceTaxonomyOption {
   id: number;
@@ -65,6 +66,8 @@ export function PieceForm({
   const collectionId = useWatch({ control, name: "collection_id" });
   const glazeId = useWatch({ control, name: "glaze_id" });
   const isCustomizable = useWatch({ control, name: "is_customizable" });
+  const stockValue = useWatch({ control, name: "stock" });
+  const isLiveAllowed = canGoLive(Number(stockValue) || 0, isCustomizable);
   const isSecond = useWatch({ control, name: "is_second" });
   const isCommission = useWatch({ control, name: "is_commission" });
   const isFeatured = useWatch({ control, name: "is_featured" });
@@ -461,7 +464,8 @@ export function PieceForm({
               >
                 <Checkbox
                   id="piece-active"
-                  checked={isActive}
+                  checked={isActive && isLiveAllowed}
+                  disabled={!isLiveAllowed}
                   onCheckedChange={(checked) =>
                     setValue("is_active", checked === true, {
                       shouldDirty: true,
@@ -470,6 +474,11 @@ export function PieceForm({
                 />
                 Live on the shelf
               </Label>
+              {!isLiveAllowed && (
+                <p className="text-[13px] text-muted-foreground">
+                  {LIVE_BLOCKED_NOTE}
+                </p>
+              )}
             </>
           )}
         </div>

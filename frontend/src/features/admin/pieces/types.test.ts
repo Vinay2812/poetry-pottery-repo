@@ -8,6 +8,7 @@ import {
 
 import {
   applyStockDelta,
+  canGoLive,
   clampStock,
   describeCategories,
   describeMaxLength,
@@ -402,5 +403,13 @@ describe("describeSizeAndWeight", () => {
         weightG: null,
       }),
     ).toBe("Not measured yet");
+  });
+});
+
+describe("canGoLive", () => {
+  it("needs stock unless the piece is thrown to order", () => {
+    expect(canGoLive(0, false)).toBe(false);
+    expect(canGoLive(1, false)).toBe(true);
+    expect(canGoLive(0, true)).toBe(true);
   });
 });

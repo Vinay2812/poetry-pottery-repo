@@ -13,6 +13,8 @@ import {
   AdminTableFrame,
 } from "@/features/admin/ui";
 
+import { LIVE_BLOCKED_NOTE } from "@/features/admin/pieces/types";
+
 export interface PieceRow {
   id: number;
   name: string;
@@ -21,6 +23,7 @@ export interface PieceRow {
   stock: number;
   stockLabel: string;
   isActive: boolean;
+  canGoLive: boolean;
   isFeatured: boolean;
   categoriesLabel: string;
   collectionLabel: string;
@@ -90,7 +93,14 @@ export function PiecesTable({
             <td className={ADMIN_TD}>
               <Checkbox
                 checked={row.isActive}
-                disabled={busyId === row.id}
+                disabled={
+                  busyId === row.id || (!row.isActive && !row.canGoLive)
+                }
+                title={
+                  !row.isActive && !row.canGoLive
+                    ? LIVE_BLOCKED_NOTE
+                    : undefined
+                }
                 aria-label={`Keep ${row.name} active`}
                 onCheckedChange={(checked) =>
                   onActiveChange(row.id, checked === true)

@@ -96,6 +96,28 @@ describe("AdminUsersService", () => {
     expect(prismaMock.user.update).not.toHaveBeenCalled();
   });
 
+  it("refuses to demote the only admin", async () => {
+    prismaMock.user.count.mockResolvedValue(0);
+
+    await expect(service.setRole(7, UserRole.USER, 1)).rejects.toBeInstanceOf(
+      BadRequestException,
+    );
+    expect(prismaMock.user.count).toHaveBeenCalledWith({
+      where: { role: UserRole.ADMIN, id: { not: 7 } },
+    });
+    expect(prismaMock.user.update).not.toHaveBeenCalled();
+  });
+
+  it("demotes an admin while another remains", async () => {
+    prismaMock.user.count.mockResolvedValue(1);
+
+    await service.setRole(7, UserRole.USER, 1);
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { role: UserRole.USER } }),
+    );
+  });
+
   it("still allows an admin to reassert their own admin role", async () => {
     await expect(service.setRole(7, UserRole.ADMIN, 7)).resolves.toMatchObject({
       role: UserRole.ADMIN,

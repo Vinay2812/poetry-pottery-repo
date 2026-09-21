@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import {
   useAdminUserQuery,
+  useAdminUsersQuery,
   UserRole,
   useSetUserRoleMutation,
 } from "@/graphql/generated/graphql";
@@ -25,6 +26,8 @@ import {
   applyPersonRolePatch,
   describeCurrentRole,
   describeRoleChange,
+  isOnlyAdmin,
+  ONLY_ADMIN_NOTE,
   roleTone,
   toInitials,
   toOppositeRole,
@@ -44,6 +47,12 @@ export function AdminPersonDetailContainer({
     fetchPolicy: "cache-and-network",
   });
   const [setUserRole] = useSetUserRoleMutation();
+  // How many admins there are decides whether this one may step down.
+  const { data: adminsData } = useAdminUsersQuery({
+    variables: { filter: { role: UserRole.Admin, page: 1, limit: 1 } },
+    fetchPolicy: "cache-and-network",
+  });
+  const adminCount = adminsData?.adminUsers.page_info.total ?? 2;
 
   const person = data?.adminUser ?? previousData?.adminUser ?? null;
   const [optimisticPerson, applyRole] = useOptimistic(
@@ -59,8 +68,12 @@ export function AdminPersonDetailContainer({
     : null;
 
   // The server owns the rule about not demoting yourself; it just has to be heard.
+  const isLastAdmin = optimisticPerson
+    ? isOnlyAdmin(optimisticPerson.role, adminCount)
+    : false;
+
   const handleConfirm = useCallback(() => {
-    if (!nextRole) return;
+    if (!nextRole || isLastAdmin) return;
     setIsConfirmOpen(false);
     setIsSaving(true);
     startTransition(async () => {
@@ -75,7 +88,7 @@ export function AdminPersonDetailContainer({
         setIsSaving(false);
       }
     });
-  }, [applyRole, nextRole, personId, refetch, setUserRole]);
+  }, [applyRole, isLastAdmin, nextRole, personId, refetch, setUserRole]);
 
   if (!optimisticPerson && loading) {
     return (
@@ -141,6 +154,8 @@ export function AdminPersonDetailContainer({
           explanation={describeRoleChange(nextRole)}
           actionLabel={toRoleConfirmLabel(nextRole)}
           isBusy={isSaving}
+          isDisabled={isLastAdmin}
+          disabledReason={ONLY_ADMIN_NOTE}
           onChange={() => setIsConfirmOpen(true)}
         />
       </section>

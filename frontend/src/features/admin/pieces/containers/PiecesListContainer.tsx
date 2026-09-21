@@ -46,6 +46,7 @@ import {
   describeCategories,
   formatStock,
   toProductsFilter,
+  canGoLive,
 } from "@/features/admin/pieces/types";
 
 // The filter lists every glaze the studio fires; there are never many.
@@ -107,6 +108,7 @@ export function PiecesListContainer() {
         stock: piece.stock,
         stockLabel: formatStock(piece.stock),
         isActive: piece.is_active,
+        canGoLive: canGoLive(piece.stock, piece.is_customizable),
         isFeatured: piece.is_featured,
         categoriesLabel: describeCategories(
           piece.categories.map((category) => category.name),

@@ -33,6 +33,17 @@ export const Admin: Story = {
 
 export const Working: Story = { args: { isBusy: true } };
 
+export const OnlyAdmin: Story = {
+  args: {
+    currentRoleSentence: "They are an admin today.",
+    explanation: "They will lose access to the studio admin.",
+    actionLabel: "Make a customer",
+    isDisabled: true,
+    disabledReason:
+      "They are the only admin, so someone else must be made an admin first.",
+  },
+};
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };
