@@ -116,7 +116,7 @@ export function NotificationsContainer() {
     <div className="flex flex-col gap-6">
       <AdminPageHeader
         eyebrow="Studio"
-        title="Batch notifications"
+        title="Waiting list"
         description="Who is waiting for a sold-out piece to come back."
         actions={
           <Button
