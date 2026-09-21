@@ -14,7 +14,7 @@ DM Serif Display's "o" is a high-contrast Didone; the logo drops it for a monoli
 inside reads as one drawing rather than a decoration in a bowl. The ring is a circle of **526
 units** on a 1000-unit em, centred where the font's "o" sat (x 851, y −248), so it keeps the
 overshoot above the x-height and below the baseline and every letter beside it stays put. It is
-stroked at **56 units** with round caps: heavier than the serif's 20-unit hairlines, lighter than
+stroked at **40 units** with round caps: heavier than the serif's 20-unit hairlines, lighter than
 its 130-unit stems, so it sits between the two weights of the letters around it instead of reading
 as a wire or a slab.
 
