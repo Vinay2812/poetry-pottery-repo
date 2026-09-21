@@ -30,6 +30,7 @@ import {
 import type { GlazeChoice, PieceChoice } from "@/features/commissions/types";
 import { toSizesForPiece } from "@/features/commissions/types";
 import { GlazeSwatch } from "@/features/products/components/GlazeSwatch";
+import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 // The last entry in the piece list; picking it opens a box to describe the piece instead.
 const OTHER_PIECE = "__other__";
@@ -364,14 +365,13 @@ export function CommissionBriefForm({
           {isSubmitting ? "Sending…" : "Send the brief"}
         </Button>
         {askUrl && (
-          <a
+          <WhatsAppLink
             href={askUrl}
-            target="_blank"
-            rel="noreferrer"
+            kind="commission"
             className="border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
           >
             Send it on WhatsApp instead
-          </a>
+          </WhatsAppLink>
         )}
       </div>
     </form>

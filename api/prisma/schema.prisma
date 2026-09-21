@@ -40,6 +40,7 @@ model User {
   studio_visits       StudioVisit[]
   newsletter          NewsletterSubscriber?
   batch_notifications BatchNotification[]
+  whatsapp_messages   WhatsAppMessage[]
 
   @@map("users")
 }
@@ -655,6 +656,33 @@ model ContactMessage {
 
   @@index([is_read, created_at])
   @@map("contact_messages")
+}
+
+enum WhatsAppDirection {
+  TO_STUDIO
+  TO_CUSTOMER
+}
+
+// A copy of every prefilled WhatsApp message the site hands off, in either direction.
+model WhatsAppMessage {
+  id        Int               @id @default(autoincrement())
+  direction WhatsAppDirection
+  kind      String
+  body      String
+  page_url  String?
+  user_id   Int?
+  name      String?
+  email     String?
+  phone     String?
+  reference String?
+
+  created_at DateTime @default(now())
+
+  user User? @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([created_at])
+  @@index([user_id])
+  @@map("whatsapp_messages")
 }
 
 // Someone coming by the studio for half an hour. One live visit per window, held by a

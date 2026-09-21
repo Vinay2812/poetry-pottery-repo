@@ -10,6 +10,7 @@ import { PriceTag } from "@/features/products/components/PriceTag";
 import { QuantityStepper } from "@/features/products/components/QuantityStepper";
 import { StockBadge } from "@/features/products/components/StockBadge";
 import { STUDIO_NOTE, type StockTone } from "@/features/products/types";
+import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface ProductBuyBoxProps {
   name: string;
@@ -140,14 +141,13 @@ export function ProductBuyBox({
         <p className="text-[13px] text-muted-foreground">{STUDIO_NOTE}</p>
 
         {askUrl && (
-          <a
+          <WhatsAppLink
             href={askUrl}
-            target="_blank"
-            rel="noreferrer"
+            kind="glaze-ask"
             className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
           >
             Want it in another glaze or size? Ask us
-          </a>
+          </WhatsAppLink>
         )}
 
         <p className="text-[13px] text-muted-foreground">

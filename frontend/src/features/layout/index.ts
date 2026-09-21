@@ -17,4 +17,5 @@ export {
   isActivePath,
   MOBILE_MENU_LINKS,
   NAV_LINKS,
+  toWhatsAppBody,
 } from "@/features/layout/types";

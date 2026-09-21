@@ -1,0 +1,3 @@
+mutation RecordWhatsAppMessage($input: RecordWhatsAppMessageInput!) {
+  recordWhatsAppMessage(input: $input)
+}

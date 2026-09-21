@@ -14,6 +14,7 @@ export { ContentResolver } from "@/features/content/content.resolver";
 export { NewsletterResolver } from "@/features/newsletter/newsletter.resolver";
 export { NotificationsResolver } from "@/features/notifications/notifications.resolver";
 export { ContactResolver } from "@/features/contact/contact.resolver";
+export { WhatsAppResolver } from "@/features/whatsapp/whatsapp.resolver";
 export { CommissionsResolver } from "@/features/commissions/commissions.resolver";
 export { SuggestResolver } from "@/features/suggest/suggest.resolver";
 export { VisitsResolver } from "@/features/visits/visits.resolver";

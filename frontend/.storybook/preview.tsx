@@ -1,3 +1,4 @@
+import { MockedProvider } from "@apollo/client/testing/react";
 import React from "react";
 import type { Preview } from "@storybook/nextjs-vite";
 
@@ -8,10 +9,13 @@ import "../src/app/globals.css";
 
 const preview: Preview = {
   decorators: [
+    // Presentational components may render WhatsAppLink, whose record mutation needs a client.
     (Story) => (
-      <div className={`${fontVariables} font-sans antialiased`}>
-        <Story />
-      </div>
+      <MockedProvider>
+        <div className={`${fontVariables} font-sans antialiased`}>
+          <Story />
+        </div>
+      </MockedProvider>
     ),
   ],
   parameters: {
