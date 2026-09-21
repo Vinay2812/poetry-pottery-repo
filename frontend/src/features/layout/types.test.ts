@@ -7,6 +7,7 @@ import {
   isActivePath,
   toCartAnnouncement,
   toFocusedHeader,
+  toWhatsAppBody,
   toWishlistAnnouncement,
 } from "./types";
 
@@ -56,6 +57,20 @@ describe("buildWhatsAppUrl", () => {
     expect(buildWhatsAppUrl("+91 91234 56789", "Hi there")).toBe(
       "https://wa.me/919123456789?text=Hi%20there",
     );
+  });
+});
+
+describe("toWhatsAppBody", () => {
+  it("reads the prefilled text back out of a wa.me link", () => {
+    expect(toWhatsAppBody(buildWhatsAppUrl("9123456789", "Hi there"))).toBe(
+      "Hi there",
+    );
+  });
+
+  it("returns null without a text param or a parseable link", () => {
+    expect(toWhatsAppBody("https://wa.me/919123456789")).toBeNull();
+    expect(toWhatsAppBody("https://wa.me/919123456789?text=%20")).toBeNull();
+    expect(toWhatsAppBody("not a url")).toBeNull();
   });
 });
 

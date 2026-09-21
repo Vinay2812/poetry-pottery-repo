@@ -1,19 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 
 import { atViewport } from "@/lib/storybook/viewports";
-import { AdminTopBar } from "./AdminTopBar";
+import { WhatsAppFilters } from "./WhatsAppFilters";
 
 const meta = {
-  title: "Features/Admin/AdminTopBar",
-  component: AdminTopBar,
+  title: "Features/Admin/Inbox/WhatsAppFilters",
+  component: WhatsAppFilters,
   parameters: { layout: "fullscreen" },
   args: {
-    adminName: "Maya Iyer",
-    adminEmail: "maya@poetryandpottery.in",
-    adminImageUrl: null,
-    shopHref: "/",
+    search: "",
+    direction: "",
+    onSearchChange: fn(),
+    onDirectionChange: fn(),
   },
-} satisfies Meta<typeof AdminTopBar>;
+} satisfies Meta<typeof WhatsAppFilters>;
 
 export default meta;
 
@@ -21,8 +22,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const WithoutAPhoto: Story = {
-  args: { adminImageUrl: null, adminName: "Studio" },
+export const Filtered: Story = {
+  args: { search: "platter", direction: "to-customer" },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

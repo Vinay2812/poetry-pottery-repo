@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -31,8 +31,11 @@ import {
   shiftMonth,
   slotsNeeded,
   spanNotice,
+  SUGGESTED_NOTE,
+  suggestSlots,
   toDateKey,
   toPickingGuide,
+  toUnavailableMessage,
   toMonthGrid,
   type SlotInterval,
   toMonthKey,
@@ -61,6 +64,28 @@ export function WorkshopBookingContainer({
   const { book, isBooking } = useBookWorkshop(() => void refetch());
 
   const needed = slotsNeeded(hours, workshop.slot_minutes);
+
+  // The earliest free hours are picked ahead; the first hand-made change ends that.
+  const [hasTouched, setHasTouched] = useState(false);
+  const suggestion = useMemo(
+    () =>
+      isLoading
+        ? undefined
+        : suggestSlots(
+            days,
+            needed,
+            participants,
+            workshop.slot_span_days,
+            todayKey,
+          ),
+    [days, isLoading, needed, participants, todayKey, workshop.slot_span_days],
+  );
+  useEffect(() => {
+    if (hasTouched || suggestion === undefined) return;
+    setPicked(suggestion ?? []);
+    const first = suggestion?.[0];
+    if (first) setSelectedDate(toDateKey(first.starts_at, workshop.timezone));
+  }, [hasTouched, suggestion, workshop.timezone]);
 
   const dayByKey = useMemo(
     () => new Map(days.map((day) => [day.date, day])),
@@ -150,7 +175,9 @@ export function WorkshopBookingContainer({
     setSelectedDate(dateKey);
   }, []);
 
+  // A new length starts over, so the suggestion applies again.
   const handleHoursChange = useCallback((value: number) => {
+    setHasTouched(false);
     setHours(value);
     setPicked([]);
   }, []);
@@ -173,12 +200,14 @@ export function WorkshopBookingContainer({
     (startsAt: string) => {
       const slot = slotByStart.get(startsAt);
       if (!slot) return;
+      setHasTouched(true);
       setPicked((previous) => togglePicked(previous, slot, needed));
     },
     [needed, slotByStart],
   );
 
   const handleRemoveSlot = useCallback((startsAt: string) => {
+    setHasTouched(true);
     setPicked((previous) =>
       previous.filter((slot) => slot.starts_at !== startsAt),
     );
@@ -293,6 +322,12 @@ export function WorkshopBookingContainer({
             total={quote.subtotal}
             pieces={quote.pieces}
             note={note}
+            emptyMessage={
+              suggestion === null
+                ? toUnavailableMessage(hours, participants)
+                : "Pick a day on the calendar, then an hour from the chips under it."
+            }
+            hint={!hasTouched && picked.length > 0 ? SUGGESTED_NOTE : null}
             canBook={picked.length === needed}
             isBooking={isBooking}
             onNoteChange={setNote}

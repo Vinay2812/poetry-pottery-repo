@@ -5,6 +5,7 @@ import { toPotteryIconKind } from "@/components/icons/pottery";
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 
 import { toAskLabel } from "@/features/archive/types";
+import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface ArchiveTileProps {
   href: string;
@@ -59,15 +60,14 @@ export function ArchiveTile({
         {/* The line is held open even without a number, so tiles across a shelf stay level. */}
         <div className="min-h-5">
           {askUrl && (
-            <a
+            <WhatsAppLink
               href={askUrl}
-              target="_blank"
-              rel="noopener"
-              aria-label={toAskLabel(name)}
+              kind="archive-ask"
+              ariaLabel={toAskLabel(name)}
               className="w-fit link-underline text-[13px] text-muted-foreground"
             >
               Ask for one like it
-            </a>
+            </WhatsAppLink>
           )}
         </div>
       </div>

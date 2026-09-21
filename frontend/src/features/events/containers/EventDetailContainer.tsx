@@ -104,6 +104,7 @@ export function EventDetailContainer({
       }
       reserveBox={
         <ReserveBox
+          eventId={event.id}
           price={event.price}
           seats={seats}
           maxSeats={Math.max(1, Math.min(MAX_SEATS, event.available_seats))}

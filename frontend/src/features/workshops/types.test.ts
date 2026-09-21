@@ -26,7 +26,9 @@ import {
   slotsNeeded,
   spanDays,
   spanNotice,
+  suggestSlots,
   toPickingGuide,
+  toUnavailableMessage,
   toBookingPath,
   toBookingGroup,
   toBookingStatusLabel,
@@ -534,5 +536,82 @@ describe("toBookingGroup", () => {
       "past",
     );
     expect(toBookingGroup([], RegistrationStatus.Pending, now)).toBe("past");
+  });
+});
+
+describe("suggestSlots", () => {
+  function dayOn(
+    date: string,
+    hours: number[],
+    remaining = 6,
+  ): WorkshopDayData {
+    const [year, month, dayOfMonth] = date.split("-").map(Number);
+    return {
+      date,
+      weekday: 0,
+      is_closed: false,
+      reason: null,
+      slots: hours.map((hour) => {
+        const starts = new Date(
+          Date.UTC(
+            year ?? 2026,
+            (month ?? 1) - 1,
+            dayOfMonth ?? 1,
+            hour - 5,
+            30,
+          ),
+        );
+        return {
+          starts_at: starts.toISOString(),
+          ends_at: new Date(starts.getTime() + 3_600_000).toISOString(),
+          remaining,
+          is_available: true,
+          reason: null,
+        };
+      }),
+    };
+  }
+  const days = [
+    dayOn("2026-09-18", [13, 14, 15]),
+    dayOn("2026-09-19", [13, 14]),
+    dayOn("2026-09-21", [14]),
+  ];
+
+  it("prefers one hour a day on the earliest separate days", () => {
+    const picks = suggestSlots(days, 2, 1, 30, "2026-09-18");
+    expect(picks?.map((slot) => slot.starts_at.slice(0, 13))).toEqual([
+      "2026-09-18T08",
+      "2026-09-19T08",
+    ]);
+  });
+
+  it("stacks hours on a day when the span rules out separate days", () => {
+    const picks = suggestSlots(days, 2, 1, 1, "2026-09-18");
+    expect(picks?.map((slot) => slot.starts_at.slice(0, 13))).toEqual([
+      "2026-09-18T08",
+      "2026-09-18T09",
+    ]);
+  });
+
+  it("skips days already gone and days without enough wheels", () => {
+    const picks = suggestSlots(days, 1, 1, 30, "2026-09-19");
+    expect(picks?.[0]?.starts_at.slice(0, 10)).toBe("2026-09-19");
+    expect(
+      suggestSlots([dayOn("2026-09-18", [13], 1)], 1, 2, 30, "2026-09-18"),
+    ).toBeNull();
+  });
+
+  it("gives up when the month cannot hold the hours", () => {
+    expect(suggestSlots(days, 7, 1, 30, "2026-09-18")).toBeNull();
+    expect(suggestSlots(days, 0, 1, 30, "2026-09-18")).toEqual([]);
+  });
+});
+
+describe("toUnavailableMessage", () => {
+  it("names the hours and the group", () => {
+    expect(toUnavailableMessage(3, 1)).toBe(
+      "Nothing free for 3 hours for one person this month. Try another month, fewer hours or fewer people.",
+    );
+    expect(toUnavailableMessage(1, 2)).toContain("1 hour for 2 people");
   });
 });

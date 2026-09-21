@@ -28,6 +28,7 @@ export interface CommissionDrawerProps {
   whatsAppHref: string | null;
   isBusy: boolean;
   onStatusChange: (status: CommissionStatus) => void;
+  onWhatsAppClick: () => void;
   onOpenChange: (isOpen: boolean) => void;
 }
 
@@ -44,6 +45,7 @@ export function CommissionDrawer({
   whatsAppHref,
   isBusy,
   onStatusChange,
+  onWhatsAppClick,
   onOpenChange,
 }: CommissionDrawerProps) {
   return (
@@ -125,7 +127,12 @@ export function CommissionDrawer({
           {whatsAppHref !== null && (
             <div>
               <Button asChild type="button" variant="secondary" size="sm">
-                <a href={whatsAppHref} target="_blank" rel="noreferrer">
+                <a
+                  href={whatsAppHref}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={onWhatsAppClick}
+                >
                   Reply on WhatsApp
                 </a>
               </Button>
