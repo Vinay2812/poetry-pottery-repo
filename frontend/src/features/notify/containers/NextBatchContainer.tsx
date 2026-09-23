@@ -3,7 +3,8 @@
 import { useUser } from "@clerk/nextjs";
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 
-import { useNotifyWhenBackInStockMutation } from "@/graphql/generated/graphql";
+import { useMutation } from "@apollo/client/react";
+import { NotifyWhenBackInStockDocument } from "@/graphql/generated/graphql";
 
 import { toServerMessage } from "@/features/content/types";
 import { NextBatchForm } from "@/features/notify/components/NextBatchForm";
@@ -30,7 +31,7 @@ export function NextBatchContainer({ productId }: NextBatchContainerProps) {
     applyNotifyResult,
   );
   const [, startTransition] = useTransition();
-  const [notify] = useNotifyWhenBackInStockMutation();
+  const [notify] = useMutation(NotifyWhenBackInStockDocument);
 
   // The confirmation shows on submit; a refusal puts the field back with the reason.
   const handleSubmit = useCallback(() => {

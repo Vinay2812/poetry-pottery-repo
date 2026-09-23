@@ -218,7 +218,8 @@ export function quoteSession(
 
 // Hours are picked one slot at a time, so a booking needs this many of them.
 export function slotsNeeded(hours: number, slotMinutes: number): number {
-  return Math.max(1, Math.round((hours * 60) / slotMinutes));
+  // Matches the API's slotsPerBooking, which rounds up so a session never runs short.
+  return Math.max(1, Math.ceil((hours * 60) / slotMinutes));
 }
 
 export function isSlotPickable(

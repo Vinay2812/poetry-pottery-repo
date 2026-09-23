@@ -58,7 +58,7 @@ describe("cart writes under concurrency", () => {
     });
     const [user] = await makeUsers(harness.prisma, 1);
     if (!user) throw new Error("no user");
-    const photo = "https://cdn.test/customization/1/a.jpg";
+    const photo = `https://cdn.test/customization/${user.id}/a.jpg`;
 
     await harness.cart.add(user.id, {
       product_id: product.id,

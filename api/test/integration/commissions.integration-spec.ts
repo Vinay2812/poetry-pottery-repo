@@ -11,7 +11,8 @@ import {
   STUDIO_CDN,
 } from "./harness";
 
-const PHOTO = `${STUDIO_CDN}/commissions/reference.jpg`;
+const photoFor = (userId: number): string =>
+  `${STUDIO_CDN}/customization/${userId}/reference.jpg`;
 
 function brief(
   overrides: Partial<CommissionRequestInput> = {},
@@ -25,7 +26,7 @@ function brief(
     name: "Maya",
     email: "  Maya@Example.test ",
     phone: "+91 91234-56789",
-    reference_image_urls: [PHOTO],
+    reference_image_urls: [],
     ...overrides,
   };
 }
@@ -53,12 +54,16 @@ describe("commission briefs", () => {
     const [sender] = await makeUsers(harness.prisma, 1);
     if (!sender) throw new Error("no user");
 
-    const request = await harness.commissions.create(brief(), sender.id);
+    const photo = photoFor(sender.id);
+    const request = await harness.commissions.create(
+      brief({ reference_image_urls: [photo] }),
+      sender.id,
+    );
 
     expect(request.email).toBe("maya@example.test");
     expect(request.phone).toBe("9123456789");
-    expect(request.reference_image_urls).toEqual([PHOTO]);
-    expect(uploads.kept).toEqual([{ userId: sender.id, urls: [PHOTO] }]);
+    expect(request.reference_image_urls).toEqual([photo]);
+    expect(uploads.kept).toEqual([{ userId: sender.id, urls: [photo] }]);
     expect(mail.to("maya@example.test")).toHaveLength(1);
   });
 
@@ -71,6 +76,20 @@ describe("commission briefs", () => {
     expect(row.user_id).toBeNull();
     // Nothing is claimed out of the sweep for a visitor with no account to claim it for.
     expect(uploads.kept).toEqual([]);
+  });
+
+  it("refuses a photo someone else uploaded, and any photo on a guest brief", async () => {
+    const [sender, other] = await makeUsers(harness.prisma, 2);
+    if (!sender || !other) throw new Error("no users");
+    const theirs = brief({ reference_image_urls: [photoFor(other.id)] });
+
+    await expect(harness.commissions.create(theirs, sender.id)).rejects.toThrow(
+      "Reference photos must be uploaded through the studio",
+    );
+    await expect(harness.commissions.create(theirs, null)).rejects.toThrow(
+      "Reference photos must be uploaded through the studio",
+    );
+    expect(await harness.prisma.commissionRequest.count()).toBe(0);
   });
 
   it("refuses a reference photo that is not in the studio bucket", async () => {

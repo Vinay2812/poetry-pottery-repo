@@ -4,10 +4,11 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { toast } from "sonner";
 
+import { useMutation } from "@apollo/client/react";
 import {
+  CreateEventDocument,
+  UpdateEventDocument,
   UploadPurpose,
-  useCreateEventMutation,
-  useUpdateEventMutation,
 } from "@/graphql/generated/graphql";
 
 import type { EventFormValues } from "@/lib/validations/admin/event";
@@ -33,8 +34,10 @@ export function EventFormContainer({
   submitLabel,
 }: EventFormContainerProps) {
   const router = useRouter();
-  const [createEvent, { loading: isCreating }] = useCreateEventMutation();
-  const [updateEvent, { loading: isUpdating }] = useUpdateEventMutation();
+  const [createEvent, { loading: isCreating }] =
+    useMutation(CreateEventDocument);
+  const [updateEvent, { loading: isUpdating }] =
+    useMutation(UpdateEventDocument);
 
   const handleSubmit = useCallback(
     (values: EventFormValues) => {

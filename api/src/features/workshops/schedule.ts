@@ -270,7 +270,8 @@ export function slotsPerBooking(
   hours: number,
   config: Pick<ScheduleConfig, "slot_minutes">,
 ): number {
-  return Math.max(1, Math.round((hours * 60) / config.slot_minutes));
+  // Rounds up so a session is never shorter than the hours paid for.
+  return Math.max(1, Math.ceil((hours * 60) / config.slot_minutes));
 }
 
 // Calendar days covered by a set of instants, counting both ends.

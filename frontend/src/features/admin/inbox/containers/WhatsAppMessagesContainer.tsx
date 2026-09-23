@@ -2,7 +2,8 @@
 
 import { useCallback, useMemo } from "react";
 
-import { useAdminWhatsAppMessagesQuery } from "@/graphql/generated/graphql";
+import { useQuery } from "@apollo/client/react";
+import { AdminWhatsAppMessagesDocument } from "@/graphql/generated/graphql";
 
 import {
   toErrorMessage,
@@ -18,10 +19,13 @@ import { toWhatsAppFilter, toWhatsAppRow } from "@/features/admin/inbox/types";
 export function WhatsAppMessagesContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const filter = useMemo(() => toWhatsAppFilter(values, page), [values, page]);
-  const { data, previousData, loading, error } = useAdminWhatsAppMessagesQuery({
-    variables: { filter },
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, previousData, loading, error } = useQuery(
+    AdminWhatsAppMessagesDocument,
+    {
+      variables: { filter },
+      fetchPolicy: "cache-and-network",
+    },
+  );
 
   const result =
     data?.adminWhatsAppMessages ?? previousData?.adminWhatsAppMessages;

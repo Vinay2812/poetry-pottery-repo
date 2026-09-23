@@ -30,6 +30,9 @@ const prismaMock = {
 const mailMock = { enqueue: vi.fn() };
 const storageMock = {
   isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.studio/")),
+  isUploadedUnder: vi.fn((url: string, prefix: string) =>
+    url.startsWith(`https://cdn.studio/${prefix}`),
+  ),
 };
 const pendingUploadsMock = { keep: vi.fn(), track: vi.fn(), sweep: vi.fn() };
 
@@ -103,13 +106,28 @@ describe("CommissionsService", () => {
     prismaMock.commissionRequest.create.mockResolvedValue(row);
 
     await service.create(
-      input({ reference_image_urls: ["https://cdn.studio/1.jpg"] }),
+      input({
+        reference_image_urls: ["https://cdn.studio/customization/7/1.jpg"],
+      }),
       7,
     );
 
     expect(pendingUploadsMock.keep).toHaveBeenCalledWith(7, [
-      "https://cdn.studio/1.jpg",
+      "https://cdn.studio/customization/7/1.jpg",
     ]);
+  });
+
+  it("refuses photos the sender did not upload, including any on a guest brief", async () => {
+    const theirs = input({
+      reference_image_urls: ["https://cdn.studio/customization/8/1.jpg"],
+    });
+    await expect(service.create(theirs, 7)).rejects.toThrow(
+      "uploaded through the studio",
+    );
+    await expect(service.create(theirs, null)).rejects.toThrow(
+      "uploaded through the studio",
+    );
+    expect(prismaMock.commissionRequest.create).not.toHaveBeenCalled();
   });
 
   it("has nothing to untrack for a brief sent by a stranger", async () => {

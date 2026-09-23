@@ -11,10 +11,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  AddToCartDocument,
   type AddToCartInput,
-  useAddToCartMutation,
-  useCartCountQuery,
+  CartCountDocument,
 } from "@/graphql/generated/graphql";
 
 import { useRequireAuth } from "@/features/auth";
@@ -34,12 +35,12 @@ export function CartProvider({ children }: PropsWithChildren) {
   const { isSignedIn } = useAuth();
   const router = useRouter();
   const requireAuth = useRequireAuth();
-  const { data, previousData } = useCartCountQuery({
+  const { data, previousData } = useQuery(CartCountDocument, {
     skip: !isSignedIn,
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
   });
-  const [add, { loading: isAdding }] = useAddToCartMutation();
+  const [add, { loading: isAdding }] = useMutation(AddToCartDocument);
 
   const addToCart = useCallback(
     (input: AddToCartInput, productName: string) => {

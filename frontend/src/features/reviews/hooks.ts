@@ -4,16 +4,17 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { useCallback, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useCreateEventReviewMutation,
-  useCreateProductReviewMutation,
-  useCreateReviewImageUploadMutation,
-  useDeleteReviewMutation,
-  useEventReviewEligibilityQuery,
-  useEventReviewsQuery,
-  useProductReviewEligibilityQuery,
-  useProductReviewsQuery,
-  useUpdateReviewMutation,
+  CreateEventReviewDocument,
+  CreateProductReviewDocument,
+  CreateReviewImageUploadDocument,
+  DeleteReviewDocument,
+  EventReviewEligibilityDocument,
+  EventReviewsDocument,
+  ProductReviewEligibilityDocument,
+  ProductReviewsDocument,
+  UpdateReviewDocument,
 } from "@/graphql/generated/graphql";
 
 import type { ReviewFormValues } from "@/lib/validations/review";
@@ -48,7 +49,7 @@ async function readDimensions(file: File): Promise<string | null> {
 
 // Photos are checked here, signed for, then pushed straight to storage.
 function useReviewPhotoUpload(subject: ReviewSubject) {
-  const [createUpload] = useCreateReviewImageUploadMutation();
+  const [createUpload] = useMutation(CreateReviewImageUploadDocument);
   const [isUploading, setIsUploading] = useState(false);
 
   const upload = useCallback(
@@ -105,12 +106,12 @@ function useReviewPhotoUpload(subject: ReviewSubject) {
 // One page of reviews at a time, with the rest appended onto the same query.
 export function useReviewList(subject: ReviewSubject) {
   const isProduct = subject.kind === "product";
-  const productQuery = useProductReviewsQuery({
+  const productQuery = useQuery(ProductReviewsDocument, {
     variables: { product_id: subject.id, page: 1, limit: REVIEWS_PAGE_SIZE },
     skip: !isProduct,
     notifyOnNetworkStatusChange: true,
   });
-  const eventQuery = useEventReviewsQuery({
+  const eventQuery = useQuery(EventReviewsDocument, {
     variables: { event_id: subject.id, page: 1, limit: REVIEWS_PAGE_SIZE },
     skip: isProduct,
     notifyOnNetworkStatusChange: true,
@@ -188,13 +189,13 @@ export function useReviewList(subject: ReviewSubject) {
 function useReviewEligibility(subject: ReviewSubject) {
   const { isSignedIn } = useAuth();
   const isProduct = subject.kind === "product";
-  const productQuery = useProductReviewEligibilityQuery({
+  const productQuery = useQuery(ProductReviewEligibilityDocument, {
     variables: { slug: subject.slug },
     skip: !isSignedIn || !isProduct,
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
   });
-  const eventQuery = useEventReviewEligibilityQuery({
+  const eventQuery = useQuery(EventReviewEligibilityDocument, {
     variables: { slug: subject.slug },
     skip: !isSignedIn || isProduct,
     fetchPolicy: "cache-and-network",
@@ -231,10 +232,10 @@ function useReviewMutations(
   subject: ReviewSubject,
   list: ReviewListSync | undefined,
 ) {
-  const [createProduct] = useCreateProductReviewMutation();
-  const [createEvent] = useCreateEventReviewMutation();
-  const [updateMutation] = useUpdateReviewMutation();
-  const [removeMutation] = useDeleteReviewMutation();
+  const [createProduct] = useMutation(CreateProductReviewDocument);
+  const [createEvent] = useMutation(CreateEventReviewDocument);
+  const [updateMutation] = useMutation(UpdateReviewDocument);
+  const [removeMutation] = useMutation(DeleteReviewDocument);
 
   const save = useCallback(
     async (values: ReviewFormValues, id: number | null): Promise<void> => {

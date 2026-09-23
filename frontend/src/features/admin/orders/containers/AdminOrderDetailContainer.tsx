@@ -9,15 +9,16 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  AddOrderNoteDocument,
+  AdminOrderDocument,
+  CancelOrderAsAdminDocument,
+  MarkOrderPaidDocument,
   OrderStatus,
+  SetOrderAdminNoteDocument,
+  SetOrderStatusDocument,
   UploadPurpose,
-  useAddOrderNoteMutation,
-  useAdminOrderQuery,
-  useCancelOrderAsAdminMutation,
-  useMarkOrderPaidMutation,
-  useSetOrderAdminNoteMutation,
-  useSetOrderStatusMutation,
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatDateTime, formatInr } from "@/lib/format";
@@ -77,15 +78,18 @@ const SECTION_TITLE =
 export function AdminOrderDetailContainer({
   orderId,
 }: AdminOrderDetailContainerProps) {
-  const { data, previousData, loading, error, refetch } = useAdminOrderQuery({
-    variables: { id: orderId },
-    fetchPolicy: "cache-and-network",
-  });
-  const [setOrderStatus] = useSetOrderStatusMutation();
-  const [markOrderPaid] = useMarkOrderPaidMutation();
-  const [cancelOrderAsAdmin] = useCancelOrderAsAdminMutation();
-  const [setOrderAdminNote] = useSetOrderAdminNoteMutation();
-  const [addOrderNote] = useAddOrderNoteMutation();
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AdminOrderDocument,
+    {
+      variables: { id: orderId },
+      fetchPolicy: "cache-and-network",
+    },
+  );
+  const [setOrderStatus] = useMutation(SetOrderStatusDocument);
+  const [markOrderPaid] = useMutation(MarkOrderPaidDocument);
+  const [cancelOrderAsAdmin] = useMutation(CancelOrderAsAdminDocument);
+  const [setOrderAdminNote] = useMutation(SetOrderAdminNoteDocument);
+  const [addOrderNote] = useMutation(AddOrderNoteDocument);
 
   const detail = data?.adminOrder ?? previousData?.adminOrder ?? null;
   const [optimisticDetail, applyPatch] = useOptimistic(

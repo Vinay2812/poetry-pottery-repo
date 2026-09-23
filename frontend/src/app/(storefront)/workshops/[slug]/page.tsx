@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 
 import { getWorkshop } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { pageMetadata } from "@/lib/seo";
 
-import { WorkshopBookingContainer } from "@/features/workshops";
+import { toWorkshopPath, WorkshopBookingContainer } from "@/features/workshops";
 
 export async function generateMetadata({
   params,
@@ -12,10 +13,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const workshop = await getWorkshop(slug);
   if (!workshop) return { title: "Session not found" };
-  return {
+  return pageMetadata({
     title: workshop.name,
-    description: workshop.description?.slice(0, 160),
-  };
+    path: toWorkshopPath(slug),
+    description: workshop.description,
+    imageUrl: workshop.image_url,
+  });
 }
 
 export default async function WorkshopPage({

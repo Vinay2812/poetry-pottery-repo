@@ -38,7 +38,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const clientMessage = this.toClientMessage(exception);
     const meta = {
       requestId: request?.requestId,
-      path: request?.originalUrl,
+      path: request?.originalUrl.split("?")[0],
+      op: request?.graphqlOperation,
+      userId: request?.authenticatedUser?.db_user_id,
       status,
     };
 

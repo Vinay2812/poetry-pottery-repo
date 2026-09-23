@@ -161,6 +161,8 @@ describe("session helpers", () => {
     expect(slotsNeeded(2, 30)).toBe(4);
     expect(slotsNeeded(1.5, 60)).toBe(2);
     expect(slotsNeeded(0, 60)).toBe(1);
+    // Never fewer slots than the hours bought.
+    expect(slotsNeeded(2, 90)).toBe(2);
   });
 
   it("offers only the hours with room for the whole group", () => {

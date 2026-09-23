@@ -3,11 +3,12 @@
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useAdminUserQuery,
-  useAdminUsersQuery,
+  AdminUserDocument,
+  AdminUsersDocument,
+  SetUserRoleDocument,
   UserRole,
-  useSetUserRoleMutation,
 } from "@/graphql/generated/graphql";
 
 import { formatDate } from "@/lib/format";
@@ -42,13 +43,16 @@ export interface AdminPersonDetailContainerProps {
 export function AdminPersonDetailContainer({
   personId,
 }: AdminPersonDetailContainerProps) {
-  const { data, previousData, loading, error, refetch } = useAdminUserQuery({
-    variables: { id: personId },
-    fetchPolicy: "cache-and-network",
-  });
-  const [setUserRole] = useSetUserRoleMutation();
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AdminUserDocument,
+    {
+      variables: { id: personId },
+      fetchPolicy: "cache-and-network",
+    },
+  );
+  const [setUserRole] = useMutation(SetUserRoleDocument);
   // How many admins there are decides whether this one may step down.
-  const { data: adminsData } = useAdminUsersQuery({
+  const { data: adminsData } = useQuery(AdminUsersDocument, {
     variables: { filter: { role: UserRole.Admin, page: 1, limit: 1 } },
     fetchPolicy: "cache-and-network",
   });

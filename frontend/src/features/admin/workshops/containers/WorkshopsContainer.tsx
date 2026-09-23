@@ -9,10 +9,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  AdminWorkshopConfigsDocument,
+  UpdateWorkshopConfigDocument,
   UploadPurpose,
-  useAdminWorkshopConfigsQuery,
-  useUpdateWorkshopConfigMutation,
 } from "@/graphql/generated/graphql";
 
 import { DEFAULT_TIME_ZONE, safeTimeZone } from "@/lib/timezones";
@@ -41,10 +42,11 @@ interface PickedImage {
 
 export function WorkshopsContainer() {
   const { values, patch } = useAdminQueryState();
-  const { data, previousData, loading, refetch } = useAdminWorkshopConfigsQuery(
+  const { data, previousData, loading, refetch } = useQuery(
+    AdminWorkshopConfigsDocument,
     { fetchPolicy: "cache-and-network" },
   );
-  const [updateConfig] = useUpdateWorkshopConfigMutation();
+  const [updateConfig] = useMutation(UpdateWorkshopConfigDocument);
 
   const configs = useMemo(
     () =>

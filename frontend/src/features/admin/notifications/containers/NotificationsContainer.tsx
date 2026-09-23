@@ -4,9 +4,10 @@ import { useCallback, useMemo, useState } from "react";
 
 import { toast } from "sonner";
 
+import { useLazyQuery, useQuery } from "@apollo/client/react";
 import {
-  useAdminBatchNotificationsQuery,
-  useExportBatchNotificationsLazyQuery,
+  AdminBatchNotificationsDocument,
+  ExportBatchNotificationsDocument,
 } from "@/graphql/generated/graphql";
 
 import { Button } from "@/components/ui/button";
@@ -65,12 +66,15 @@ export function NotificationsContainer() {
   );
   const [searchDraft, setSearchDraft] = useSearchDraft(search, commitSearch);
 
-  const { data, previousData, loading } = useAdminBatchNotificationsQuery({
-    variables: { filter },
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, previousData, loading } = useQuery(
+    AdminBatchNotificationsDocument,
+    {
+      variables: { filter },
+      fetchPolicy: "cache-and-network",
+    },
+  );
 
-  const [exportWatchers] = useExportBatchNotificationsLazyQuery({
+  const [exportWatchers] = useLazyQuery(ExportBatchNotificationsDocument, {
     fetchPolicy: "network-only",
   });
   const [isExporting, setIsExporting] = useState(false);

@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useCreateCustomizationUploadMutation } from "@/graphql/generated/graphql";
+import { useMutation } from "@apollo/client/react";
+import { CreateCustomizationUploadDocument } from "@/graphql/generated/graphql";
 
 import {
   MAX_REFERENCE_PHOTOS,
@@ -42,7 +43,7 @@ function putWithProgress(
 export function useReferencePhotos() {
   const [photos, setPhotos] = useState<ReferencePhoto[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [createUpload] = useCreateCustomizationUploadMutation();
+  const [createUpload] = useMutation(CreateCustomizationUploadDocument);
   const previewUrls = useRef(new Set<string>());
 
   useEffect(() => {

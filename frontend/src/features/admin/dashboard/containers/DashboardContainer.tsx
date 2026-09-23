@@ -9,9 +9,10 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useAdjustProductStockMutation,
-  useAdminDashboardQuery,
+  AdjustProductStockDocument,
+  AdminDashboardDocument,
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatDateTime, formatInr } from "@/lib/format";
@@ -59,10 +60,13 @@ function applyStockPatch(
 }
 
 export function DashboardContainer() {
-  const { data, previousData, loading, refetch } = useAdminDashboardQuery({
-    fetchPolicy: "cache-and-network",
-  });
-  const [adjustStock] = useAdjustProductStockMutation();
+  const { data, previousData, loading, refetch } = useQuery(
+    AdminDashboardDocument,
+    {
+      fetchPolicy: "cache-and-network",
+    },
+  );
+  const [adjustStock] = useMutation(AdjustProductStockDocument);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [, startTransition] = useTransition();
 

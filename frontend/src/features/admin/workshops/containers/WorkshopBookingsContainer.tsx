@@ -9,10 +9,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  AdminWorkshopBookingsDocument,
   RegistrationStatus,
-  useAdminWorkshopBookingsQuery,
-  useSetWorkshopBookingStatusMutation,
+  SetWorkshopBookingStatusDocument,
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatInr } from "@/lib/format";
@@ -79,23 +80,26 @@ export function WorkshopBookingsContainer({
   const to = values.to ?? "";
   const { personId, personName } = usePersonFilter(values.user);
 
-  const { data, previousData, refetch } = useAdminWorkshopBookingsQuery({
-    variables: {
-      filter: {
-        config_id: configId,
-        user_id: personId,
-        status: toRegistrationStatus(status),
-        search: search || null,
-        from: toRangeStart(from, timezone) || null,
-        to: toRangeEnd(to, timezone) || null,
-        page,
-        limit: BOOKINGS_PAGE_SIZE,
+  const { data, previousData, refetch } = useQuery(
+    AdminWorkshopBookingsDocument,
+    {
+      variables: {
+        filter: {
+          config_id: configId,
+          user_id: personId,
+          status: toRegistrationStatus(status),
+          search: search || null,
+          from: toRangeStart(from, timezone) || null,
+          to: toRangeEnd(to, timezone) || null,
+          page,
+          limit: BOOKINGS_PAGE_SIZE,
+        },
       },
+      fetchPolicy: "cache-and-network",
     },
-    fetchPolicy: "cache-and-network",
-  });
+  );
 
-  const [setStatus] = useSetWorkshopBookingStatusMutation();
+  const [setStatus] = useMutation(SetWorkshopBookingStatusDocument);
   const result =
     data?.adminWorkshopBookings ?? previousData?.adminWorkshopBookings;
   const items = useMemo(() => result?.items ?? [], [result]);

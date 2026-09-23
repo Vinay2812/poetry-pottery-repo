@@ -10,16 +10,17 @@ import {
 
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  AdminCategoriesDocument,
+  AdminCollectionsDocument,
+  CreateCategoryDocument,
+  CreateCollectionDocument,
+  DeleteCategoryDocument,
+  DeleteCollectionDocument,
+  UpdateCategoryDocument,
+  UpdateCollectionDocument,
   UploadPurpose,
-  useAdminCategoriesQuery,
-  useAdminCollectionsQuery,
-  useCreateCategoryMutation,
-  useCreateCollectionMutation,
-  useDeleteCategoryMutation,
-  useDeleteCollectionMutation,
-  useUpdateCategoryMutation,
-  useUpdateCollectionMutation,
 } from "@/graphql/generated/graphql";
 
 import type {
@@ -66,19 +67,19 @@ interface DeleteTarget {
 }
 
 export function CatalogContainer() {
-  const categoriesQuery = useAdminCategoriesQuery({
+  const categoriesQuery = useQuery(AdminCategoriesDocument, {
     fetchPolicy: "cache-and-network",
   });
-  const collectionsQuery = useAdminCollectionsQuery({
+  const collectionsQuery = useQuery(AdminCollectionsDocument, {
     fetchPolicy: "cache-and-network",
   });
 
-  const [createCategory] = useCreateCategoryMutation();
-  const [updateCategory] = useUpdateCategoryMutation();
-  const [deleteCategory] = useDeleteCategoryMutation();
-  const [createCollection] = useCreateCollectionMutation();
-  const [updateCollection] = useUpdateCollectionMutation();
-  const [deleteCollection] = useDeleteCollectionMutation();
+  const [createCategory] = useMutation(CreateCategoryDocument);
+  const [updateCategory] = useMutation(UpdateCategoryDocument);
+  const [deleteCategory] = useMutation(DeleteCategoryDocument);
+  const [createCollection] = useMutation(CreateCollectionDocument);
+  const [updateCollection] = useMutation(UpdateCollectionDocument);
+  const [deleteCollection] = useMutation(DeleteCollectionDocument);
 
   const [editor, setEditor] = useState<EditorTarget | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);

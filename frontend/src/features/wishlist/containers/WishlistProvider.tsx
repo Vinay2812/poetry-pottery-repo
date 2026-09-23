@@ -13,9 +13,10 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useToggleWishlistMutation,
-  useWishlistIdsQuery,
+  ToggleWishlistDocument,
+  WishlistIdsDocument,
 } from "@/graphql/generated/graphql";
 
 import { useRequireAuth } from "@/features/auth";
@@ -36,7 +37,7 @@ const WishlistContext = createContext<WishlistValue | null>(null);
 export function WishlistProvider({ children }: PropsWithChildren) {
   const { isSignedIn } = useAuth();
   const [lentIds, setLentIds] = useState<readonly number[] | null>(null);
-  const { data, previousData } = useWishlistIdsQuery({
+  const { data, previousData } = useQuery(WishlistIdsDocument, {
     skip: !isSignedIn || lentIds !== null,
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
@@ -48,7 +49,7 @@ export function WishlistProvider({ children }: PropsWithChildren) {
 
   const [optimisticIds, applyToggle] = useOptimistic(ids, applyWishlistToggle);
   const [isSaving, startTransition] = useTransition();
-  const [mutate] = useToggleWishlistMutation();
+  const [mutate] = useMutation(ToggleWishlistDocument);
   const requireAuth = useRequireAuth();
 
   const toggle = useCallback(

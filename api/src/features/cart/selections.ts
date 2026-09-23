@@ -132,6 +132,45 @@ export function resolveSelections(
   return resolved;
 }
 
+// Re-prices a stored snapshot against the live option rows, so a surcharge the studio changed after
+// carting is what checkout charges. Null when a choice was retired or a new required group appeared.
+export function repriceSelections(
+  groups: OptionGroupRow[],
+  stored: Selection[],
+): Selection[] | null {
+  const byId = new Map(groups.map((group) => [group.id, group]));
+  const chosen = new Set(stored.map((selection) => selection.group_id));
+  if (groups.some((group) => group.is_required && !chosen.has(group.id))) {
+    return null;
+  }
+  const repriced: Selection[] = [];
+  for (const selection of stored) {
+    const group = byId.get(selection.group_id);
+    if (!group) return null;
+    if (group.kind === OptionGroupKind.TEXT) {
+      if (selection.text === null) return null;
+      repriced.push({
+        ...selection,
+        group_name: group.name,
+        price_modifier: group.price_modifier,
+      });
+      continue;
+    }
+    const option = group.options.find(
+      (candidate) =>
+        candidate.id === selection.option_id && candidate.is_active,
+    );
+    if (!option) return null;
+    repriced.push({
+      ...selection,
+      group_name: group.name,
+      option_name: option.name,
+      price_modifier: option.price_modifier,
+    });
+  }
+  return repriced;
+}
+
 // Same choices and photos in any order produce the same key, so they merge into one cart line.
 export function selectionKey(
   selections: Selection[],

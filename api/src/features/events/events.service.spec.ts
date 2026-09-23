@@ -1,6 +1,6 @@
 import { ConflictException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { EventStatus, RegistrationStatus } from "@prisma/client";
+import { EventStatus, Prisma, RegistrationStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MailService } from "@/mail/mail.service";
@@ -177,6 +177,19 @@ describe("EventsService", () => {
       ],
     }).compile();
     service = moduleRef.get(EventsService);
+  });
+
+  it("answers a double-submitted first request as a conflict, not a server error", async () => {
+    prismaMock.eventRegistration.create.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "test",
+      }),
+    );
+
+    await expect(
+      service.register(1, { event_id: 1, seats: 1 }),
+    ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it("holds seats with a conditional decrement and emails both sides", async () => {

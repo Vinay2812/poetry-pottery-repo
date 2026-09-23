@@ -575,11 +575,20 @@ flow_commission() {
   goto "/custom"
   expect_text "Commission a piece" "the commission page renders"
   expect_text "Send us the brief" "the brief form renders"
-  act "say what to make" fill "#commission-piece" "A chai mug with a wide belly"
-  pick_first_option "#commission-size" "pick a size the studio throws" || {
+  # The piece is picked from what the studio throws; its sizes follow from it.
+  pick_first_option "#commission-piece" "pick a piece the studio makes" || {
     end_flow
     return
   }
+  # A piece with preset sizes offers a picker; one without asks for the size in words.
+  if [ "$(ab eval "document.querySelector('#commission-size')?.getAttribute('role') ?? ''" 2>/dev/null | tr -dc 'a-z')" = "combobox" ]; then
+    pick_first_option "#commission-size" "pick a size the studio throws" || {
+      end_flow
+      return
+    }
+  else
+    act "describe the size" fill "#commission-size" "About 20 cm across"
+  fi
   pick_first_option "#commission-glaze" "pick a glaze the studio fires" || {
     end_flow
     return

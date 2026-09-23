@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 
 import { getProduct } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
-import { toAbsoluteUrl } from "@/lib/site-url";
+import { pageMetadata, toSiteUrl } from "@/lib/seo";
+import { serializeJsonLd, toProductJsonLd } from "@/lib/structured-data";
+
+import { JsonLd } from "@/components/seo/JsonLd";
 
 import { ProductDetailContainer, toProductPath } from "@/features/products";
 
@@ -13,11 +16,12 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) return { title: "Piece not found" };
-  return {
+  return pageMetadata({
     title: product.name,
-    description: product.description.slice(0, 160),
-    openGraph: { images: product.image_urls.slice(0, 1) },
-  };
+    path: toProductPath(slug),
+    description: product.description,
+    imageUrl: product.image_urls[0],
+  });
 }
 
 export default async function ProductPage({
@@ -29,13 +33,17 @@ export default async function ProductPage({
     getSiteSettings(),
   ]);
   if (!product) notFound();
+  const path = toProductPath(slug);
 
   return (
-    <ProductDetailContainer
-      product={product}
-      freeShippingAbove={settings.free_shipping_above}
-      whatsappNumber={settings.whatsapp_number}
-      pageUrl={await toAbsoluteUrl(toProductPath(slug))}
-    />
+    <>
+      <JsonLd json={serializeJsonLd(toProductJsonLd(product, path))} />
+      <ProductDetailContainer
+        product={product}
+        freeShippingAbove={settings.free_shipping_above}
+        whatsappNumber={settings.whatsapp_number}
+        pageUrl={toSiteUrl(path)}
+      />
+    </>
   );
 }

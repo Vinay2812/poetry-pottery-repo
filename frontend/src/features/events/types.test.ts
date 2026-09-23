@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { toUrlSearchParams } from "@/lib/search-params";
+
 import {
   EventLevel,
   EventStatus,
@@ -9,6 +11,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import {
+  toEventsFilterKey,
   applyRegistrationCancellation,
   DEFAULT_EVENT_FILTERS,
   type RegistrationData,
@@ -270,5 +273,19 @@ describe("applyRegistrationCancellation", () => {
         at: "2026-09-12T09:00:00.000Z",
       }),
     ).toBeNull();
+  });
+});
+
+describe("toEventsFilterKey", () => {
+  it("gives the server's page params and the browser's query string the same key", () => {
+    const server = toEventsFilterInput(
+      parseEventFilters(toUrlSearchParams({ when: "past" })),
+      1,
+    );
+    const browser = toEventsFilterInput(
+      parseEventFilters(new URLSearchParams("when=past")),
+      1,
+    );
+    expect(toEventsFilterKey(server)).toBe(toEventsFilterKey(browser));
   });
 });

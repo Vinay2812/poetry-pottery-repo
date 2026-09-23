@@ -11,16 +11,17 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
   type AdminOptionGroupFieldsFragment,
+  AdminProductOptionGroupsDocument,
+  CreateProductOptionDocument,
+  CreateProductOptionGroupDocument,
+  DeleteProductOptionDocument,
+  DeleteProductOptionGroupDocument,
   OptionGroupKind,
-  useAdminProductOptionGroupsQuery,
-  useCreateProductOptionGroupMutation,
-  useCreateProductOptionMutation,
-  useDeleteProductOptionGroupMutation,
-  useDeleteProductOptionMutation,
-  useUpdateProductOptionGroupMutation,
-  useUpdateProductOptionMutation,
+  UpdateProductOptionDocument,
+  UpdateProductOptionGroupDocument,
 } from "@/graphql/generated/graphql";
 
 import type {
@@ -85,17 +86,20 @@ export interface OptionGroupsContainerProps {
 export function OptionGroupsContainer({
   productId,
 }: OptionGroupsContainerProps) {
-  const { data, previousData, refetch } = useAdminProductOptionGroupsQuery({
-    variables: { product_id: productId },
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, previousData, refetch } = useQuery(
+    AdminProductOptionGroupsDocument,
+    {
+      variables: { product_id: productId },
+      fetchPolicy: "cache-and-network",
+    },
+  );
 
-  const [createGroup] = useCreateProductOptionGroupMutation();
-  const [updateGroup] = useUpdateProductOptionGroupMutation();
-  const [deleteGroup] = useDeleteProductOptionGroupMutation();
-  const [createOption] = useCreateProductOptionMutation();
-  const [updateOption] = useUpdateProductOptionMutation();
-  const [deleteOption] = useDeleteProductOptionMutation();
+  const [createGroup] = useMutation(CreateProductOptionGroupDocument);
+  const [updateGroup] = useMutation(UpdateProductOptionGroupDocument);
+  const [deleteGroup] = useMutation(DeleteProductOptionGroupDocument);
+  const [createOption] = useMutation(CreateProductOptionDocument);
+  const [updateOption] = useMutation(UpdateProductOptionDocument);
+  const [deleteOption] = useMutation(DeleteProductOptionDocument);
 
   const [editor, setEditor] = useState<Editor>({ kind: "none" });
   const [doomed, setDoomed] = useState<Doomed | null>(null);

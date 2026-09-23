@@ -1,0 +1,16 @@
+query Sitemap {
+  sitemap {
+    products {
+      slug
+      updated_at
+    }
+    events {
+      slug
+      updated_at
+    }
+    workshops {
+      slug
+      updated_at
+    }
+  }
+}

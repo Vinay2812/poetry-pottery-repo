@@ -14,7 +14,10 @@ export { EventListContainer } from "@/features/events/containers/EventListContai
 export { RegistrationDetailContainer } from "@/features/events/containers/RegistrationDetailContainer";
 export { RegistrationsListContainer } from "@/features/events/containers/RegistrationsListContainer";
 export {
+  parseEventFilters,
   toEventPath,
+  toEventsFilterInput,
+  toEventsFilterKey,
   toEventTypeLabel,
   toEventWhenLabel,
   toSeatsLabel,

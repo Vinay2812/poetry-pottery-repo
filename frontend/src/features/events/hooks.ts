@@ -5,18 +5,21 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useCancelRegistrationMutation,
-  useEventsQuery,
-  useMyRegistrationsQuery,
-  useRegisterForEventMutation,
-  useRegistrationQuery,
+  CancelRegistrationDocument,
+  EventsDocument,
+  type EventsQuery,
+  MyRegistrationsDocument,
+  RegisterForEventDocument,
+  RegistrationDocument,
 } from "@/graphql/generated/graphql";
 
 import { useRequireAuth } from "@/features/auth";
 import {
   type EventFilters,
   toEventsFilterInput,
+  toEventsFilterKey,
   toRegistrationPath,
 } from "@/features/events/types";
 
@@ -24,13 +27,27 @@ function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong";
 }
 
-export function useEvents(filters: EventFilters) {
-  const { data, previousData, loading, error, fetchMore, refetch } =
-    useEventsQuery({
-      variables: { filter: toEventsFilterInput(filters, 1) },
+export function useEvents(
+  filters: EventFilters,
+  initialEvents: EventsQuery["events"] | null = null,
+  initialFilterKey: string | null = null,
+) {
+  const filterInput = toEventsFilterInput(filters, 1);
+  const { data, previousData, loading, error, fetchMore, refetch } = useQuery(
+    EventsDocument,
+    {
+      variables: { filter: filterInput },
       notifyOnNetworkStatusChange: true,
-    });
-  const result = data?.events ?? previousData?.events;
+    },
+  );
+  // The server's first page covers the first load, but only while the filters still match it.
+  const serverPage =
+    initialEvents && initialFilterKey === toEventsFilterKey(filterInput)
+      ? initialEvents
+      : undefined;
+  // Old results bridge a load, not a failure: they would sit under filters they do not match.
+  const result =
+    data?.events ?? (error ? undefined : (previousData?.events ?? serverPage));
   const pageInfo = result?.page_info ?? null;
 
   const loadMore = useCallback(() => {
@@ -60,7 +77,7 @@ export function useEvents(filters: EventFilters) {
 export function useRegisterForEvent() {
   const router = useRouter();
   const requireAuth = useRequireAuth();
-  const [mutate, { loading }] = useRegisterForEventMutation();
+  const [mutate, { loading }] = useMutation(RegisterForEventDocument);
 
   const reserve = useCallback(
     (eventId: number, seats: number, note: string) => {
@@ -91,15 +108,17 @@ export function useRegisterForEvent() {
 // Signed-out visitors get a sign-in prompt instead of an auth error from the API.
 export function useMyRegistrations(page: number) {
   const { isSignedIn, isLoaded } = useAuth();
-  const { data, previousData, loading, error, refetch } =
-    useMyRegistrationsQuery({
+  const { data, previousData, loading, error, refetch } = useQuery(
+    MyRegistrationsDocument,
+    {
       variables: { page, limit: 12 },
       skip: !isSignedIn,
       // A seat reserved or cancelled elsewhere must not leave a stale list behind.
       fetchPolicy: "cache-and-network",
       nextFetchPolicy: "cache-first",
       notifyOnNetworkStatusChange: true,
-    });
+    },
+  );
   const result = isSignedIn
     ? (data?.myRegistrations ?? previousData?.myRegistrations)
     : undefined;
@@ -116,7 +135,7 @@ export function useMyRegistrations(page: number) {
 
 export function useRegistration(id: string) {
   const { isSignedIn, isLoaded } = useAuth();
-  const { data, loading, error, refetch } = useRegistrationQuery({
+  const { data, loading, error, refetch } = useQuery(RegistrationDocument, {
     variables: { id },
     skip: !isSignedIn,
     fetchPolicy: "cache-and-network",
@@ -133,7 +152,7 @@ export function useRegistration(id: string) {
 
 export function useCancelRegistration() {
   const router = useRouter();
-  const [mutate, { loading }] = useCancelRegistrationMutation();
+  const [mutate, { loading }] = useMutation(CancelRegistrationDocument);
 
   const cancel = useCallback(
     async (id: string, reason: string): Promise<boolean> => {

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { OptionGroupKind, ProductSort } from "@/graphql/generated/graphql";
+import { toUrlSearchParams } from "@/lib/search-params";
 
 import {
   applyFilterAction,
@@ -22,6 +23,7 @@ import {
   toArchiveLabel,
   toArchiveNote,
   toFilterInput,
+  toFilterKey,
   toSearchParams,
   toBatchLabel,
   toCardStatusLine,
@@ -673,6 +675,27 @@ describe("toArchiveCommissionPath", () => {
   it("points at the commission form with the piece as the reference", () => {
     expect(toArchiveCommissionPath("drip-sip-mug")).toBe(
       "/custom?like=drip-sip-mug",
+    );
+  });
+});
+
+describe("toFilterKey", () => {
+  it("gives the server's page params and the browser's query string the same key", () => {
+    const server = toFilterInput(
+      parseFilters(
+        toUrlSearchParams({ category: ["mugs", "bowls"], sort: "newest" }),
+      ),
+      1,
+    );
+    const browser = toFilterInput(
+      parseFilters(
+        new URLSearchParams("category=mugs&category=bowls&sort=newest"),
+      ),
+      1,
+    );
+    expect(toFilterKey(server)).toBe(toFilterKey(browser));
+    expect(toFilterKey(server)).not.toBe(
+      toFilterKey(toFilterInput(parseFilters(new URLSearchParams()), 1)),
     );
   });
 });

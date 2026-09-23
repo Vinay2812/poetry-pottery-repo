@@ -10,9 +10,10 @@ import {
 
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useAdminStudioVisitsQuery,
-  useCancelStudioVisitMutation,
+  AdminStudioVisitsDocument,
+  CancelStudioVisitDocument,
 } from "@/graphql/generated/graphql";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -53,12 +54,15 @@ export function VisitsContainer() {
   );
   const [searchDraft, setSearchDraft] = useSearchDraft(search, commitSearch);
 
-  const { data, previousData, loading, refetch } = useAdminStudioVisitsQuery({
-    variables: { filter },
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, previousData, loading, refetch } = useQuery(
+    AdminStudioVisitsDocument,
+    {
+      variables: { filter },
+      fetchPolicy: "cache-and-network",
+    },
+  );
 
-  const [cancelVisit] = useCancelStudioVisitMutation();
+  const [cancelVisit] = useMutation(CancelStudioVisitDocument);
 
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [reason, setReason] = useState("");

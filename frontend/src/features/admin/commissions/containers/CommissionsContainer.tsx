@@ -10,12 +10,13 @@ import {
 
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  CommissionRequestsDocument,
   CommissionStatus,
-  useCommissionRequestsQuery,
-  useMarkCommissionRequestReadMutation,
-  useSendWhatsAppReplyMutation,
-  useSetCommissionRequestStatusMutation,
+  MarkCommissionRequestReadDocument,
+  SendWhatsAppReplyDocument,
+  SetCommissionRequestStatusDocument,
 } from "@/graphql/generated/graphql";
 
 import {
@@ -59,21 +60,24 @@ export function CommissionsContainer() {
   );
   const [searchDraft, setSearchDraft] = useSearchDraft(search, commitSearch);
 
-  const { data, previousData, loading, refetch } = useCommissionRequestsQuery({
-    variables: {
-      filter: {
-        search: search === "" ? null : search,
-        status,
-        page,
-        limit: COMMISSIONS_PAGE_SIZE,
+  const { data, previousData, loading, refetch } = useQuery(
+    CommissionRequestsDocument,
+    {
+      variables: {
+        filter: {
+          search: search === "" ? null : search,
+          status,
+          page,
+          limit: COMMISSIONS_PAGE_SIZE,
+        },
       },
+      fetchPolicy: "cache-and-network",
     },
-    fetchPolicy: "cache-and-network",
-  });
+  );
 
-  const [markRead] = useMarkCommissionRequestReadMutation();
-  const [setStatus] = useSetCommissionRequestStatusMutation();
-  const [sendWhatsAppReply] = useSendWhatsAppReplyMutation();
+  const [markRead] = useMutation(MarkCommissionRequestReadDocument);
+  const [setStatus] = useMutation(SetCommissionRequestStatusDocument);
+  const [sendWhatsAppReply] = useMutation(SendWhatsAppReplyDocument);
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);

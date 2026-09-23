@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Reveal } from "@/components/motion/Reveal";
 import { PageShell } from "@/components/layout/PageShell";
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { pageMetadata } from "@/lib/seo";
 
 import {
   ContactDetails,
@@ -12,11 +13,12 @@ import {
 import { buildWhatsAppUrl } from "@/features/layout";
 import { StudioVisitContainer } from "@/features/visits";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Contact the studio",
+  path: "/contact",
   description:
     "Studio address, opening hours and a note to us about an order, a piece or a session.",
-};
+});
 
 export default async function ContactPage() {
   const settings = await getSiteSettings();

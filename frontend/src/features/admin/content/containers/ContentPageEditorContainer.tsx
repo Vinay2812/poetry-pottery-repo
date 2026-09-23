@@ -4,11 +4,12 @@ import Link from "next/link";
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  UploadPurpose,
-  useAdminContentPageQuery,
-  useSaveContentPageMutation,
+  AdminContentPageDocument,
   type AdminContentPageFieldsFragment,
+  SaveContentPageDocument,
+  UploadPurpose,
 } from "@/graphql/generated/graphql";
 
 import type { ContentPageFormValues } from "@/lib/validations/admin/content";
@@ -46,11 +47,11 @@ export interface ContentPageEditorContainerProps {
 export function ContentPageEditorContainer({
   slug,
 }: ContentPageEditorContainerProps) {
-  const { data, loading, error } = useAdminContentPageQuery({
+  const { data, loading, error } = useQuery(AdminContentPageDocument, {
     variables: { slug },
     fetchPolicy: "cache-and-network",
   });
-  const [savePage] = useSaveContentPageMutation();
+  const [savePage] = useMutation(SaveContentPageDocument);
   const [, startTransition] = useTransition();
   // The mutation returns the saved page, so the payload becomes the baseline.
   const [saved, setSaved] = useState<Page | null>(null);

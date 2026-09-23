@@ -10,6 +10,7 @@ import { UploadsService } from "../uploads/uploads.service";
 import {
   AdminWorkshopsService,
   assertHours,
+  assertTiersFit,
   assertWeekdays,
   assertTimezone,
 } from "./workshops.service";
@@ -84,6 +85,19 @@ const prismaMock = {
 };
 const workshopsMock = { applyStatus: vi.fn(), notifyStatus: vi.fn() };
 const uploadsMock = { assertConfirmed: vi.fn() };
+
+describe("assertTiersFit", () => {
+  it("accepts tiers that are whole numbers of slots", () => {
+    expect(() => assertTiersFit(30, [1, 2, 3])).not.toThrow();
+    expect(() => assertTiersFit(90, [3])).not.toThrow();
+  });
+
+  it("refuses a tier that would run short or long of its hours", () => {
+    expect(() => assertTiersFit(90, [2])).toThrow(
+      "A 2-hour session does not divide into 90-minute slots",
+    );
+  });
+});
 
 describe("assertHours", () => {
   it("accepts a normal studio day", () => {

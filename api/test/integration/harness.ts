@@ -81,6 +81,10 @@ class StorageStub {
   keyFor(): string | null {
     return null;
   }
+
+  isUploadedUnder(url: string, prefix: string): boolean {
+    return url.startsWith(`${STUDIO_CDN}/${prefix}`);
+  }
 }
 
 class MailStub {
@@ -189,6 +193,7 @@ export interface Harness {
   users: UsersService;
   adminEvents: AdminEventsService;
   adminProducts: AdminProductsService;
+  products: ProductsService;
   close: () => Promise<void>;
 }
 
@@ -258,6 +263,7 @@ export async function createHarness(
     users: moduleRef.get(UsersService),
     adminEvents: moduleRef.get(AdminEventsService),
     adminProducts: moduleRef.get(AdminProductsService),
+    products: moduleRef.get(ProductsService),
     close: () => moduleRef.close(),
   };
 }

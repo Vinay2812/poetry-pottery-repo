@@ -2,7 +2,8 @@
 
 import { useCallback, useMemo } from "react";
 
-import { OrderStatus, useAdminOrdersQuery } from "@/graphql/generated/graphql";
+import { useQuery } from "@apollo/client/react";
+import { AdminOrdersDocument, OrderStatus } from "@/graphql/generated/graphql";
 
 import { formatDate, formatInr } from "@/lib/format";
 
@@ -55,7 +56,7 @@ export function AdminOrdersContainer() {
     handleSearchCommit,
   );
 
-  const { data, previousData, loading, error } = useAdminOrdersQuery({
+  const { data, previousData, loading, error } = useQuery(AdminOrdersDocument, {
     variables: {
       filter: {
         page,

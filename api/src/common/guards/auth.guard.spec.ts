@@ -52,7 +52,7 @@ const clerkMock = {
   hasVerifiedPrimaryEmail: vi.fn(),
   getFullName: vi.fn(),
   getImageUrl: vi.fn(),
-  updatePublicMetadata: vi.fn(),
+  updatePublicMetadata: vi.fn(() => Promise.resolve()),
 };
 
 const prismaMock = {
@@ -160,6 +160,24 @@ describe("AuthGuard", () => {
     });
   });
 
+  it("still authenticates when refreshing the Clerk metadata fails", async () => {
+    mockAuth({
+      isAuthenticated: true,
+      userId: "user_1",
+      sessionClaims: {},
+    });
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeUser({ id: 3, auth_id: "user_1" }),
+    );
+    clerkMock.updatePublicMetadata.mockRejectedValueOnce(new Error("429"));
+
+    const request: FakeRequest = {};
+    await expect(
+      authGuard.canActivate(createHttpExecutionContext({ request })),
+    ).resolves.toBe(true);
+    expect(request.authenticatedUser?.db_user_id).toBe(3);
+  });
+
   it("ignores an admin role claim the database does not back", async () => {
     mockAuth({
       isAuthenticated: true,
@@ -178,6 +196,22 @@ describe("AuthGuard", () => {
       dbUserId: 1,
       role: UserRole.USER,
     });
+  });
+
+  it("keeps a first sign-in when Clerk cannot take the metadata", async () => {
+    const created = makeUser({ id: 7, auth_id: "user_7" });
+    mockAuth({ isAuthenticated: true, userId: "user_7", sessionClaims: {} });
+    prismaMock.user.findUnique.mockResolvedValue(null);
+    clerkMock.getUser.mockResolvedValue(clerkUserStub);
+    clerkMock.getPrimaryEmail.mockReturnValue("potter@example.com");
+    prismaMock.user.create.mockResolvedValue(created);
+    clerkMock.updatePublicMetadata.mockRejectedValueOnce(new Error("503"));
+
+    const request: FakeRequest = {};
+    await expect(
+      authGuard.canActivate(createHttpExecutionContext({ request })),
+    ).resolves.toBe(true);
+    expect(request.authenticatedUser?.db_user_id).toBe(7);
   });
 
   it("provisions on incomplete claims and caches the database role in the metadata", async () => {

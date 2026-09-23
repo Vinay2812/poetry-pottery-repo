@@ -4,7 +4,10 @@ import { EventStatus } from "@prisma/client";
 import { PrismaService } from "@/prisma/prisma.service";
 import { RedisService } from "@/redis/redis.service";
 import { SearchService } from "@/features/search/search.service";
-import { isProductArchived } from "@/features/products/products.service";
+import {
+  isProductArchived,
+  releasedProductWhere,
+} from "@/features/products/products.service";
 import type { Suggestions } from "./suggest.type";
 
 export const MAX_PIECES = 4;
@@ -50,7 +53,7 @@ export class SuggestService {
     const [pieces, events, workshops] = await Promise.all([
       pieceIds.length > 0
         ? this.prisma.product.findMany({
-            where: { id: { in: pieceIds } },
+            where: { id: { in: pieceIds }, ...releasedProductWhere() },
             select: {
               id: true,
               slug: true,

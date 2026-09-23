@@ -4,11 +4,12 @@ import { useAuth } from "@clerk/nextjs";
 import { useCallback, useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useCartQuery,
-  useClearCartMutation,
-  useRemoveCartItemMutation,
-  useUpdateCartItemMutation,
+  CartDocument,
+  ClearCartDocument,
+  RemoveCartItemDocument,
+  UpdateCartItemDocument,
 } from "@/graphql/generated/graphql";
 
 import { useCartContext } from "@/features/cart/containers/CartProvider";
@@ -33,7 +34,7 @@ interface CartDetail {
 // no id of its own, so the refetched cart is the baseline.
 export function useCart(): CartDetail {
   const { isSignedIn, isLoaded } = useAuth();
-  const { data, previousData, loading, error } = useCartQuery({
+  const { data, previousData, loading, error } = useQuery(CartDocument, {
     skip: !isSignedIn,
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
@@ -42,9 +43,9 @@ export function useCart(): CartDetail {
 
   const [optimisticCart, applyAction] = useOptimistic(cart, applyCartAction);
   const [, startTransition] = useTransition();
-  const [updateItem] = useUpdateCartItemMutation();
-  const [removeItem] = useRemoveCartItemMutation();
-  const [clear] = useClearCartMutation();
+  const [updateItem] = useMutation(UpdateCartItemDocument);
+  const [removeItem] = useMutation(RemoveCartItemDocument);
+  const [clear] = useMutation(ClearCartDocument);
 
   const setQuantity = useCallback(
     (id: number, quantity: number) => {

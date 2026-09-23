@@ -2,7 +2,8 @@
 
 import { useCallback, useMemo } from "react";
 
-import { useAdminUsersQuery, UserRole } from "@/graphql/generated/graphql";
+import { useQuery } from "@apollo/client/react";
+import { AdminUsersDocument, UserRole } from "@/graphql/generated/graphql";
 
 import { formatDate } from "@/lib/format";
 
@@ -57,7 +58,7 @@ export function AdminPeopleContainer() {
     handleSearchCommit,
   );
 
-  const { data, previousData, loading, error } = useAdminUsersQuery({
+  const { data, previousData, loading, error } = useQuery(AdminUsersDocument, {
     variables: {
       filter: {
         page,

@@ -2,11 +2,12 @@
 
 import { useCallback, useMemo } from "react";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  ConfirmUploadDocument,
+  CreateAdminUploadDocument,
+  ImageSpecsDocument,
   type UploadPurpose,
-  useConfirmUploadMutation,
-  useCreateAdminUploadMutation,
-  useImageSpecsQuery,
 } from "@/graphql/generated/graphql";
 
 import { centreCrop, type ImageRequirement } from "./types";
@@ -14,7 +15,7 @@ import { centreCrop, type ImageRequirement } from "./types";
 export function useImageRequirement(
   purpose: UploadPurpose,
 ): ImageRequirement | null {
-  const { data } = useImageSpecsQuery({ fetchPolicy: "cache-first" });
+  const { data } = useQuery(ImageSpecsDocument, { fetchPolicy: "cache-first" });
   return useMemo(() => {
     const spec = data?.imageSpecs.find((item) => item.purpose === purpose);
     if (!spec) return null;
@@ -96,8 +97,8 @@ export async function putToStorage(
 }
 
 export function useConfirmedUpload() {
-  const [createUpload] = useCreateAdminUploadMutation();
-  const [confirmUpload] = useConfirmUploadMutation();
+  const [createUpload] = useMutation(CreateAdminUploadDocument);
+  const [confirmUpload] = useMutation(ConfirmUploadDocument);
 
   return useCallback(
     async (purpose: UploadPurpose, blob: Blob): Promise<string> => {

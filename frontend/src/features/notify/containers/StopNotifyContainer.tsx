@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { useStopBatchNotificationMutation } from "@/graphql/generated/graphql";
+import { useMutation } from "@apollo/client/react";
+import { StopBatchNotificationDocument } from "@/graphql/generated/graphql";
 
 import { isNotFoundError } from "@/lib/apollo/errors";
 
@@ -21,7 +22,7 @@ export function StopNotifyContainer({ token }: StopNotifyContainerProps) {
   const [line, setLine] = useState(
     hasToken ? "Taking you off this piece…" : MISSING_TOKEN,
   );
-  const [stop] = useStopBatchNotificationMutation();
+  const [stop] = useMutation(StopBatchNotificationDocument);
   // React runs effects twice in development; the link should only be spent once.
   const hasRun = useRef(false);
 

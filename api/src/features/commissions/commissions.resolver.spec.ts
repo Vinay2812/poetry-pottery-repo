@@ -113,7 +113,10 @@ describe("CommissionsResolver", () => {
   });
 
   it("asks the service for the shelf's own sizes and glazes", async () => {
-    const options = { piece_types: ["Mugs"], sizes: [], glazes: [] };
+    const options = {
+      piece_types: [{ name: "Mugs", sizes: ["Small"] }],
+      glazes: [],
+    };
     commissionsMock.options.mockResolvedValue(options);
 
     await expect(resolver.commissionOptions()).resolves.toBe(options);

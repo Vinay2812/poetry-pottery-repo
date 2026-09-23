@@ -28,6 +28,7 @@ import type {
 
 const MAX_BODY = 1000;
 const MAX_IMAGES = 3;
+const REVIEW_FOLDER = "reviews";
 // A photo waits a day for the review it belongs to; after that it is an orphan in the bucket.
 const PENDING_UPLOAD_SECONDS = 24 * 60 * 60;
 const MAX_PENDING_UPLOADS = 12;
@@ -203,6 +204,7 @@ export class ReviewsService {
     input: ReviewInput,
   ): Promise<Review> {
     const data = this.validate(input);
+    this.assertOwnPhotos(userId, data.image_urls, []);
     const row = await this.prisma
       .withTransaction(async () => {
         await this.lockSubject(subject);
@@ -251,6 +253,7 @@ export class ReviewsService {
         if (!current) {
           throw new NotFoundException("Review not found");
         }
+        this.assertOwnPhotos(userId, data.image_urls, current.image_urls);
         await this.lockSubject(subjectOf(current));
         const updated = await this.prisma.review.update({
           where: { id },
@@ -319,7 +322,8 @@ export class ReviewsService {
       );
     }
     const target = await this.storage.createImageUpload({
-      folder: "reviews",
+      folder: REVIEW_FOLDER,
+      subfolder: String(userId),
       filename: input.filename,
       content_type: input.content_type,
       size: input.size,
@@ -346,8 +350,29 @@ export class ReviewsService {
     return this.deleteObjects(this.toKeys(urls));
   }
 
+  // Only review photos are ever reclaimed here, whatever URL a review row ended up holding.
   private toKeys(urls: string[]): string[] {
-    return urls.flatMap((url) => this.storage.keyFor(url) ?? []);
+    return urls.flatMap((url) => {
+      const key = this.storage.keyFor(url);
+      return key?.startsWith(`${REVIEW_FOLDER}/`) ? [key] : [];
+    });
+  }
+
+  // A review may carry photos this reviewer uploaded, or ones it already had; never someone else's object.
+  private assertOwnPhotos(
+    userId: number,
+    urls: string[],
+    attached: string[],
+  ): void {
+    const ownPrefix = `${REVIEW_FOLDER}/${userId}/`;
+    for (const url of urls) {
+      if (attached.includes(url)) continue;
+      if (!this.storage.keyFor(url)?.startsWith(ownPrefix)) {
+        throw new BadRequestException(
+          "Review photos must be uploaded through the site",
+        );
+      }
+    }
   }
 
   private async deleteObjects(keys: string[]): Promise<void> {
@@ -414,13 +439,6 @@ export class ReviewsService {
       throw new BadRequestException(
         `A review can carry up to ${MAX_IMAGES} photos`,
       );
-    }
-    for (const url of image_urls) {
-      if (!this.storage.isOwnUrl(url)) {
-        throw new BadRequestException(
-          "Review photos must be uploaded through the site",
-        );
-      }
     }
     return { rating, body, image_urls };
   }

@@ -9,9 +9,10 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation } from "@apollo/client/react";
 import {
-  useDeleteWorkshopTierMutation,
-  useSaveWorkshopTierMutation,
+  DeleteWorkshopTierDocument,
+  SaveWorkshopTierDocument,
 } from "@/graphql/generated/graphql";
 
 import { formatInr } from "@/lib/format";
@@ -49,8 +50,8 @@ export function WorkshopTiersContainer({
   tiers,
   onRefetch,
 }: WorkshopTiersContainerProps) {
-  const [saveTier] = useSaveWorkshopTierMutation();
-  const [deleteTier] = useDeleteWorkshopTierMutation();
+  const [saveTier] = useMutation(SaveWorkshopTierDocument);
+  const [deleteTier] = useMutation(DeleteWorkshopTierDocument);
   const [optimisticTiers, patchTiers] = useOptimistic(tiers, applyTierPatch);
   const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<number | null>(null);

@@ -3,13 +3,14 @@
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  AdminEventDocument,
+  CancelEventDocument,
+  CompleteEventDocument,
   EventStatus,
-  useAdminEventQuery,
-  useCancelEventMutation,
-  useCompleteEventMutation,
-  usePublishEventMutation,
-  useUnpublishEventMutation,
+  PublishEventDocument,
+  UnpublishEventDocument,
 } from "@/graphql/generated/graphql";
 
 import { formatEnumLabel, toErrorMessage } from "@/features/admin/shell";
@@ -38,14 +39,17 @@ export interface EventDetailContainerProps {
 }
 
 export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
-  const { data, previousData, loading, error, refetch } = useAdminEventQuery({
-    variables: { id: eventId },
-    fetchPolicy: "cache-and-network",
-  });
-  const [publishEvent] = usePublishEventMutation();
-  const [unpublishEvent] = useUnpublishEventMutation();
-  const [completeEvent] = useCompleteEventMutation();
-  const [cancelEvent] = useCancelEventMutation();
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AdminEventDocument,
+    {
+      variables: { id: eventId },
+      fetchPolicy: "cache-and-network",
+    },
+  );
+  const [publishEvent] = useMutation(PublishEventDocument);
+  const [unpublishEvent] = useMutation(UnpublishEventDocument);
+  const [completeEvent] = useMutation(CompleteEventDocument);
+  const [cancelEvent] = useMutation(CancelEventDocument);
 
   const [busyAction, setBusyAction] = useState<EventAction | null>(null);
   const [pendingAction, setPendingAction] = useState<EventAction | null>(null);

@@ -1,3 +1,5 @@
+import type { Metadata } from "next";
+
 import { formatDate, formatInr } from "@/lib/format";
 import {
   getCategories,
@@ -7,9 +9,12 @@ import {
   getWorkshops,
 } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { pageMetadata, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo";
+import { serializeJsonLd, toStudioJsonLd } from "@/lib/structured-data";
 
 import { Reveal } from "@/components/motion/Reveal";
 import { PageShell } from "@/components/layout/PageShell";
+import { JsonLd } from "@/components/seo/JsonLd";
 
 import {
   AboutBlock,
@@ -29,6 +34,13 @@ import {
   ProductCardContainer,
   ProductCarousel,
 } from "@/features/products";
+
+export const metadata: Metadata = pageMetadata({
+  title: SITE_NAME,
+  path: "/",
+  description: SITE_DESCRIPTION,
+  isTitleAbsolute: true,
+});
 
 export default async function HomePage() {
   const [
@@ -53,6 +65,7 @@ export default async function HomePage() {
 
   return (
     <PageShell className="flex flex-col">
+      <JsonLd json={serializeJsonLd(toStudioJsonLd(settings))} />
       <HomeHero
         heading={settings.hero_heading}
         subheading={settings.hero_subheading}

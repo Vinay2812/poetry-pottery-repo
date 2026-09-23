@@ -8,6 +8,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { cn } from "@/lib/utils";
 import {
   type EventLevel,
+  type EventsQuery,
   EventType,
   EventWhen,
 } from "@/graphql/generated/graphql";
@@ -32,11 +33,15 @@ import {
 export interface EventListContainerProps {
   heading: string;
   description: string;
+  initialEvents?: EventsQuery["events"] | null;
+  initialFilterKey?: string | null;
 }
 
 export function EventListContainer({
   heading,
   description,
+  initialEvents = null,
+  initialFilterKey = null,
 }: EventListContainerProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -56,7 +61,7 @@ export function EventListContainer({
     hasError,
     loadMore,
     refetch,
-  } = useEvents(filters);
+  } = useEvents(filters, initialEvents, initialFilterKey);
 
   const applyFilters = useCallback(
     (next: Filters) => {
