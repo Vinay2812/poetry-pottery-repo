@@ -15,7 +15,8 @@ export async function generateMetadata({
 }: PageProps<"/products/[slug]">): Promise<Metadata> {
   const { slug } = await params;
   const product = await getProduct(slug);
-  if (!product) return { title: "Piece not found" };
+  // Thrown here, before anything streams, so a missing piece answers 404 rather than a soft 404.
+  if (!product) notFound();
   return pageMetadata({
     title: product.name,
     path: toProductPath(slug),

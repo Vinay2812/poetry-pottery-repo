@@ -119,11 +119,12 @@ export class VisitsService {
   }
 
   async availability(
-    from: string | null,
-    days: number | null,
+    from: string | null | undefined,
+    days: number | null | undefined,
   ): Promise<VisitDay[]> {
     // The calendar is a public query, so a hand-written date has to be turned away, not parsed.
-    if (from !== null && !isDateKey(from)) {
+    // An omitted argument arrives as undefined, which means "from today" like null does.
+    if (from != null && !isDateKey(from)) {
       throw new BadRequestException("from must be a YYYY-MM-DD date");
     }
     const config = await this.config();

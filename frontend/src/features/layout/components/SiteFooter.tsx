@@ -73,7 +73,10 @@ export function SiteFooter({
   const phoneHref = toPhoneHref(contactPhone);
 
   return (
-    <footer className="mt-20 border-t border-ash bg-background pb-20 lg:pb-0">
+    <footer
+      data-print="hide"
+      className="mt-20 border-t border-ash bg-background pb-20 lg:pb-0"
+    >
       <PageShell className="py-12 md:py-16">
         {/* The column headings are h3s; this is the h2 they hang from. */}
         <h2 className="sr-only">More from the studio</h2>

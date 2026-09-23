@@ -49,6 +49,12 @@ export class AdminEventsResolver {
 
   @AdminRequired()
   @Mutation(() => Event)
+  duplicateEvent(@Args("id", { type: () => Int }) id: number): Promise<Event> {
+    return this.events.duplicate(id);
+  }
+
+  @AdminRequired()
+  @Mutation(() => Event)
   publishEvent(@Args("id", { type: () => Int }) id: number): Promise<Event> {
     return this.events.setStatus(id, EventStatus.PUBLISHED);
   }

@@ -40,6 +40,21 @@ input AddressInput {
   state: String!
 }
 
+type AdminAgendaItem {
+  detail: String!
+  ends_at: DateTime!
+  id: String!
+  kind: AdminAgendaKind!
+  starts_at: DateTime!
+  title: String!
+}
+
+enum AdminAgendaKind {
+  BOOKING
+  EVENT
+  VISIT
+}
+
 input AdminAnnouncementInput {
   href: String
   text: String
@@ -137,6 +152,7 @@ type AdminDashboard {
   recent_bookings: [AdminRecentBooking!]!
   recent_orders: [AdminRecentOrder!]!
   revenue_last_30_days: Int!
+  today: [AdminAgendaItem!]!
   unread_messages: Int!
   upcoming_visits: Int!
 }
@@ -787,6 +803,14 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+enum DayClosedKind {
+  FULLY_BOOKED
+  NOT_YET_OPEN
+  NO_SESSIONS_LEFT
+  PAST
+  STUDIO_CLOSED
+}
+
 type Event {
   address: String!
   available_seats: Int!
@@ -925,6 +949,7 @@ type Mutation {
   deleteReviewAsAdmin(id: Int!): Boolean!
   deleteWorkshopBlackout(id: Int!): Boolean!
   deleteWorkshopTier(id: Int!): Boolean!
+  duplicateEvent(id: Int!): Event!
   markCommissionRequestRead(id: String!): CommissionRequest!
   markOrderPaid(id: String!): AdminOrder!
   notifyWhenBackInStock(email: String!, product_id: Int!): BatchNotificationResult!
@@ -933,6 +958,7 @@ type Mutation {
   recordWhatsAppMessage(input: RecordWhatsAppMessageInput!): Boolean!
   registerForEvent(input: RegisterForEventInput!): Registration!
   removeCartItem(id: Int!): Cart!
+  reorder(order_id: String!): ReorderResult!
   reorderProductImages(id: Int!, image_urls: [String!]!): Product!
   rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
   saveContentPage(input: ContentPageInput!, slug: String!): ContentPage!
@@ -952,7 +978,7 @@ type Mutation {
   setWorkshopBookingStatus(id: String!, reason: String, status: RegistrationStatus!): AdminWorkshopBooking!
   stopBatchNotification(token: String!): Boolean!
   subscribeToNewsletter(email: String!): NewsletterResult!
-  toggleWishlist(product_id: Int!): WishlistToggleResult!
+  toggleWishlist(product_id: Int!, wishlisted: Boolean): WishlistToggleResult!
   unpublishEvent(id: Int!): Event!
   unsubscribeFromNewsletter(token: String!): Boolean!
   unsubscribeSubscriber(email: String!): Boolean!
@@ -1062,6 +1088,7 @@ input PlaceOrderInput {
   address_id: Int!
   coupon_code: String
   customer_note: String
+  expected_total: Int
   gift_note: String
   hide_prices: Boolean
 }
@@ -1210,6 +1237,7 @@ type Query {
   events(filter: EventsFilterInput): EventsResult!
   exportBatchNotifications(filter: AdminBatchNotificationsFilterInput): String!
   exportNewsletterSubscribers(filter: AdminSubscribersFilterInput): String!
+  exportOrders(filter: AdminOrdersFilterInput): String!
   featuredProducts(limit: Int = 8): [Product!]!
   glaze(slug: String!): Glaze!
   glazes: [Glaze!]!
@@ -1286,6 +1314,11 @@ enum RegistrationStatus {
 type RegistrationsResult {
   items: [Registration!]!
   page_info: PageInfo!
+}
+
+type ReorderResult {
+  cart: Cart!
+  skipped: [String!]!
 }
 
 input RescheduleWorkshopInput {
@@ -1574,6 +1607,7 @@ type WorkshopConfig {
 }
 
 type WorkshopDay {
+  closed_kind: DayClosedKind
   date: String!
   is_closed: Boolean!
   reason: String

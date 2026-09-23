@@ -384,4 +384,29 @@ describe("AdminEventsService", () => {
       ),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
+
+  describe("duplicate", () => {
+    it("makes a draft copy under a fresh slug with every seat free", async () => {
+      prismaMock.event.findUnique.mockResolvedValue({
+        ...eventRow,
+        title: "Open mic",
+        slug: "open-mic",
+        total_seats: 20,
+        available_seats: 3,
+      });
+      prismaMock.event.findMany.mockResolvedValue([{ slug: "open-mic-copy" }]);
+      prismaMock.event.create.mockResolvedValue(eventRow);
+
+      await service.duplicate(eventRow.id);
+
+      expect(prismaMock.event.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          title: "Open mic (copy)",
+          slug: "open-mic-copy-2",
+          total_seats: 20,
+          available_seats: 20,
+        }) as unknown,
+      });
+    });
+  });
 });

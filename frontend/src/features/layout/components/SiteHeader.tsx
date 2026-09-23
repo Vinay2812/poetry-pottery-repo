@@ -82,6 +82,7 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   return (
     <header
+      data-print="hide"
       className={cn(
         "sticky top-0 z-40 border-b bg-background",
         isHome ? "border-kiln" : "border-ash",

@@ -8,7 +8,7 @@ import {
 import { OrderStatus } from "@prisma/client";
 
 import { PageInfo } from "@/common/pagination/pagination";
-import { CartSelection } from "@/features/cart/cart.type";
+import { Cart, CartSelection } from "@/features/cart/cart.type";
 import { Product } from "@/features/products/products.type";
 
 registerEnumType(OrderStatus, { name: "OrderStatus" });
@@ -221,6 +221,20 @@ export class PlaceOrderInput {
 
   @Field(() => Boolean, { nullable: true })
   hide_prices?: boolean | null;
+
+  // The total the shopper was shown; a cart changed in another tab must not be billed unseen.
+  @Field(() => Int, { nullable: true })
+  expected_total?: number | null;
+}
+
+// Everything from a past order that could go back in the cart, and what could not.
+@ObjectType()
+export class ReorderResult {
+  @Field(() => Cart)
+  cart!: Cart;
+
+  @Field(() => [String])
+  skipped!: string[];
 }
 
 @InputType()

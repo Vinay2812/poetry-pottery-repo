@@ -58,6 +58,8 @@ export default async function HomePage() {
     getRecentReviews(3),
     getWorkshops(),
   ]);
+  // A shape with nothing on the shelf would only lead to an empty page.
+  const shapes = categories.filter((category) => category.product_count > 0);
   const customPiece =
     featured.find((product) => product.is_customizable) ?? null;
   const wheel = workshops[0] ?? null;
@@ -74,10 +76,10 @@ export default async function HomePage() {
         sessionHref="/workshops"
       />
 
-      {categories.length > 0 && (
+      {shapes.length > 0 && (
         <HomeSection title="Shapes we throw">
           <div className="grid grid-cols-3 gap-6 lift-and-dim sm:grid-cols-4 md:grid-cols-7">
-            {categories.map((category) => (
+            {shapes.map((category) => (
               <CategoryTile
                 key={category.id}
                 href={`/products?category=${category.slug}`}

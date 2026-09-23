@@ -9,6 +9,8 @@ import {
   splitParagraphs,
   toAnchorId,
   toSectionViews,
+  OFFLINE_MESSAGE,
+  THROTTLED_MESSAGE,
   toServerMessage,
 } from "./types";
 
@@ -120,8 +122,24 @@ describe("sectionAt", () => {
 describe("toServerMessage", () => {
   it("drops the exception prefix the API puts in front of its message", () => {
     expect(
-      toServerMessage(new Error("ThrottlerException: Too many requests"), "no"),
-    ).toBe("Too many requests");
+      toServerMessage(
+        new Error("BadRequestException: Enter a valid email"),
+        "no",
+      ),
+    ).toBe("Enter a valid email");
+  });
+
+  it("puts a dropped connection and a rate limit in plain words", () => {
+    for (const raw of [
+      "Failed to fetch",
+      "NetworkError when attempting to fetch resource.",
+      "Load failed",
+    ]) {
+      expect(toServerMessage(new TypeError(raw), "no")).toBe(OFFLINE_MESSAGE);
+    }
+    expect(
+      toServerMessage(new Error("ThrottlerException: Too Many Requests"), "no"),
+    ).toBe(THROTTLED_MESSAGE);
   });
 
   it("keeps a plain message as it is", () => {

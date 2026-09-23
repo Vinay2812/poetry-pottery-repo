@@ -1,6 +1,9 @@
+"use client";
+
 import Image from "next/image";
 
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { useRestoreFocus } from "@/lib/use-restore-focus";
 
 export interface ReviewPhotoDialogProps {
   isOpen: boolean;
@@ -15,9 +18,14 @@ export function ReviewPhotoDialog({
   alt,
   onOpenChange,
 }: ReviewPhotoDialogProps) {
+  const restoreFocus = useRestoreFocus();
   return (
     <Dialog open={isOpen && url !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-0 md:p-0">
+      <DialogContent
+        onOpenAutoFocus={restoreFocus.onOpenAutoFocus}
+        onCloseAutoFocus={restoreFocus.onCloseAutoFocus}
+        className="max-w-2xl p-0 md:p-0"
+      >
         <DialogTitle className="sr-only">{alt}</DialogTitle>
         {url && (
           <span className="relative block aspect-square w-full bg-white">

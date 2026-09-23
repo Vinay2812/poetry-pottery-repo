@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import {
   type AdminFilterOption,
   AdminDateFilter,
@@ -18,6 +19,8 @@ export interface AdminOrdersToolbarProps {
   onStatusChange: (value: string) => void;
   onFromChange: (value: string) => void;
   onToChange: (value: string) => void;
+  isExporting: boolean;
+  onExport: () => void;
 }
 
 export function AdminOrdersToolbar({
@@ -30,6 +33,8 @@ export function AdminOrdersToolbar({
   onStatusChange,
   onFromChange,
   onToChange,
+  isExporting,
+  onExport,
 }: AdminOrdersToolbarProps) {
   return (
     <AdminToolbar>
@@ -60,6 +65,16 @@ export function AdminOrdersToolbar({
         value={to}
         onChange={onToChange}
       />
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        className="self-end"
+        disabled={isExporting}
+        onClick={onExport}
+      >
+        {isExporting ? "Preparing…" : "Export CSV"}
+      </Button>
     </AdminToolbar>
   );
 }

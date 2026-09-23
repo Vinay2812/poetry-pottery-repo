@@ -82,3 +82,7 @@ mutation AddOrderNote($input: AddOrderNoteInput!) {
     ...OrderFields
   }
 }
+
+query ExportOrders($filter: AdminOrdersFilterInput) {
+  exportOrders(filter: $filter)
+}

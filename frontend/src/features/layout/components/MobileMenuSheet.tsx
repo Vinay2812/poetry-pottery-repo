@@ -60,7 +60,8 @@ export function MobileMenuSheet({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="flex h-dvh w-full flex-col"
+        // The whole sheet scrolls, so a landscape phone reaches every link instead of a sliver of them.
+        className="flex h-dvh w-full flex-col overflow-y-auto"
         onOpenAutoFocus={() => {
           const opener = document.activeElement;
           openerRef.current = opener instanceof HTMLElement ? opener : null;
@@ -77,7 +78,7 @@ export function MobileMenuSheet({
           </SheetTitle>
         </SheetHeader>
 
-        <nav aria-label="Menu" className="flex-1 overflow-y-auto px-6">
+        <nav aria-label="Menu" className="flex-1 px-6">
           <ul className="flex flex-col">
             {links.map((link) => {
               const isActive = link.href === activeHref;

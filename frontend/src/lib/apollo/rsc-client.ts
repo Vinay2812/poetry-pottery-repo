@@ -34,7 +34,8 @@ const forwardVisitor = new SetContextLink(async (prevContext) => {
 export const { getClient, query, PreloadQuery } = registerApolloClient(
   () =>
     new ApolloClient({
-      cache: new InMemoryCache(),
+      // A cache lives for one request and answers a few reads, so memoising results only costs memory.
+      cache: new InMemoryCache({ resultCaching: false }),
       link: ApolloLink.from([forwardVisitor, createHttpLink()]),
     }),
 );

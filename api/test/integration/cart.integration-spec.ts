@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { MAX_LINE_QUANTITY } from "@/features/cart/cart.service";
+import { LINE_FULL, MAX_LINE_QUANTITY } from "@/features/cart/cart.service";
 import {
   createHarness,
   type Harness,
@@ -30,7 +30,7 @@ describe("cart writes under concurrency", () => {
     uploads.reset();
   });
 
-  it("merges twenty simultaneous adds into one line capped at the limit", async () => {
+  it("merges twenty simultaneous adds into one line and refuses the ones past the limit", async () => {
     const product = await makeProduct(harness.prisma, { stock: 50 });
     const [user] = await makeUsers(harness.prisma, 1);
     if (!user) throw new Error("no user");
@@ -43,7 +43,9 @@ describe("cart writes under concurrency", () => {
       ),
     );
 
-    expect(outcome.errors).toHaveLength(0);
+    // The lock queues the adds, so exactly the first ten land and the rest are told the line is full.
+    expect(outcome.errors).toHaveLength(RACERS - MAX_LINE_QUANTITY);
+    expect(new Set(outcome.errors)).toEqual(new Set([LINE_FULL]));
     const rows = await harness.prisma.cartItem.findMany({
       where: { user_id: user.id },
     });

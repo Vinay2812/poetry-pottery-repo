@@ -28,7 +28,14 @@ export class WishlistResolver {
   toggleWishlist(
     @CurrentUser() user: AuthUser,
     @Args("product_id", { type: () => Int }) productId: number,
+    // The state the shopper asked for; without it the call flips whatever the server holds.
+    @Args("wishlisted", { type: () => Boolean, nullable: true })
+    wishlisted: boolean | null,
   ): Promise<WishlistToggleResult> {
-    return this.wishlistService.toggle(user.db_user_id, productId);
+    return this.wishlistService.toggle(
+      user.db_user_id,
+      productId,
+      wishlisted ?? undefined,
+    );
   }
 }

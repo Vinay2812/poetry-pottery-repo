@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Dialog,
   DialogContent,
@@ -5,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useRestoreFocus } from "@/lib/use-restore-focus";
 
 export interface ReviewDialogProps {
   isOpen: boolean;
@@ -21,9 +24,14 @@ export function ReviewDialog({
   onOpenChange,
   children,
 }: ReviewDialogProps) {
+  const restoreFocus = useRestoreFocus();
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent
+        onOpenAutoFocus={restoreFocus.onOpenAutoFocus}
+        onCloseAutoFocus={restoreFocus.onCloseAutoFocus}
+        className="max-w-lg"
+      >
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             {title}

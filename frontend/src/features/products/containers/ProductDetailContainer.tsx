@@ -250,7 +250,8 @@ export function ProductDetailContainer({
 
   return (
     <PageShell className="flex flex-col gap-16 py-8 md:py-12">
-      <div className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+      {/* minmax(0, …) keeps a tall buy box from widening the gallery column through its square ratio. */}
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
         <ProductGallery
           images={product.image_urls}
           name={product.name}
@@ -295,7 +296,8 @@ export function ProductDetailContainer({
               compareAtPrice={product.compare_at_price}
               material={product.material}
               colorName={product.color_name}
-              colorCode={product.color_code}
+              // The glaze is what the piece is dipped in; the card shows the same swatch.
+              colorCode={product.glaze?.color_code ?? product.color_code}
               sizeLine={product.dimensions}
               stockTone={stock.tone}
               stockLabel={batchLabel}

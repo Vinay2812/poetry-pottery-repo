@@ -59,7 +59,7 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
 
   if (images.length === 0) {
     return (
-      <div className="relative aspect-square bg-white">
+      <div className="relative aspect-square min-w-0 bg-white">
         <PlaceholderImage kind={toPotteryIconKind(name)} />
         {overlay}
       </div>
@@ -139,7 +139,7 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
 
       {hasMany && (
         <>
-          <div className="flex justify-center gap-2 lg:hidden">
+          <div className="flex justify-center lg:hidden">
             {images.map((url, index) => (
               <button
                 key={`${url}-${index}`}
@@ -147,11 +147,17 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
                 aria-label={toPhotoLabel(index, images.length)}
                 aria-current={index === selectedIndex}
                 onClick={() => scrollTo(index)}
-                className={cn(
-                  "size-1.5",
-                  index === selectedIndex ? "bg-ink" : "bg-ash",
-                )}
-              />
+                // A 24px target around a 6px dot, so a thumb can hit it.
+                className="grid size-6 place-items-center"
+              >
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "size-1.5",
+                    index === selectedIndex ? "bg-ink" : "bg-ash",
+                  )}
+                />
+              </button>
             ))}
           </div>
           <div className="hidden max-h-[560px] flex-col gap-2 overflow-y-auto lg:flex">

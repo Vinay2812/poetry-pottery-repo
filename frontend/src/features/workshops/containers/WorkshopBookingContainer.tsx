@@ -73,9 +73,10 @@ export function WorkshopBookingContainer({
 
   // The earliest free hours are picked ahead; the first hand-made change ends that.
   const [hasTouched, setHasTouched] = useState(false);
+  // Only the opening month is picked ahead, so browsing forward never moves a pick nobody made.
   const suggestion = useMemo(
     () =>
-      isLoading
+      isLoading || month !== firstMonth
         ? undefined
         : suggestSlots(
             days,
@@ -84,7 +85,16 @@ export function WorkshopBookingContainer({
             workshop.slot_span_days,
             todayKey,
           ),
-    [days, isLoading, needed, participants, todayKey, workshop.slot_span_days],
+    [
+      days,
+      firstMonth,
+      isLoading,
+      month,
+      needed,
+      participants,
+      todayKey,
+      workshop.slot_span_days,
+    ],
   );
   // Until someone changes a pick, the suggestion is the pick; the first hour's day opens the times.
   const picked = useMemo(
@@ -136,6 +146,7 @@ export function WorkshopBookingContainer({
             wheelsFree,
             pickedCount: pickedDateKeys.filter((key) => key === dateKey).length,
             isClosed: day?.is_closed ?? true,
+            closedKind: day?.closed_kind ?? null,
             isPast: dateKey < todayKey,
             mutedReason: isWithinSpan
               ? null

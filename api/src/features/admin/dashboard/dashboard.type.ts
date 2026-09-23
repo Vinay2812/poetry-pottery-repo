@@ -1,4 +1,4 @@
-import { Field, Int, ObjectType } from "@nestjs/graphql";
+import { Field, Int, ObjectType, registerEnumType } from "@nestjs/graphql";
 import { OrderStatus, RegistrationStatus } from "@prisma/client";
 
 import { AdminUserRef } from "../admin.type";
@@ -75,6 +75,37 @@ export class AdminRecentBooking {
   customer!: AdminUserRef;
 }
 
+export enum AdminAgendaKind {
+  BOOKING = "BOOKING",
+  VISIT = "VISIT",
+  EVENT = "EVENT",
+}
+
+registerEnumType(AdminAgendaKind, { name: "AdminAgendaKind" });
+
+// One thing happening at the studio today: a wheel session, a visit or an evening.
+@ObjectType()
+export class AdminAgendaItem {
+  @Field(() => AdminAgendaKind)
+  kind!: AdminAgendaKind;
+
+  // The row to open: booking id, visit id or event id as a string.
+  @Field()
+  id!: string;
+
+  @Field()
+  starts_at!: Date;
+
+  @Field()
+  ends_at!: Date;
+
+  @Field()
+  title!: string;
+
+  @Field()
+  detail!: string;
+}
+
 @ObjectType()
 export class AdminDashboard {
   @Field(() => [AdminOrderStatusCount])
@@ -106,6 +137,10 @@ export class AdminDashboard {
 
   @Field(() => [AdminLowStockPiece])
   low_stock!: AdminLowStockPiece[];
+
+  // Today's sessions, visits and evenings in studio time, soonest first.
+  @Field(() => [AdminAgendaItem])
+  today!: AdminAgendaItem[];
 
   @Field(() => [AdminRecentOrder])
   recent_orders!: AdminRecentOrder[];

@@ -16,20 +16,19 @@ import {
   toStockNotice,
 } from "@/features/cart/types";
 import { toProductPath } from "@/features/products/types";
-import { useToggleWishlist, useWishlistIds } from "@/features/wishlist/hooks";
+import { useToggleWishlist } from "@/features/wishlist/hooks";
 
 export function CartContainer() {
   const { cart, isLoading, isSignedIn, setQuantity, remove } = useCart();
   const { toggle } = useToggleWishlist();
-  const { isWishlisted } = useWishlistIds();
   const { openSignIn } = useClerk();
 
   const handleSaveForLater = useCallback(
     (itemId: number, productId: number, productName: string) => {
-      if (!isWishlisted(productId)) toggle(productId, productName);
+      toggle(productId, productName, true);
       remove(itemId);
     },
-    [isWishlisted, remove, toggle],
+    [remove, toggle],
   );
 
   if (isLoading) {
@@ -83,12 +82,17 @@ export function CartContainer() {
                 unavailableReason={item.unavailable_reason}
                 onQuantityChange={(quantity) => setQuantity(item.id, quantity)}
                 onRemove={() => remove(item.id)}
-                onSaveForLater={() =>
-                  handleSaveForLater(
-                    item.id,
-                    item.product.id,
-                    item.product.name,
-                  )
+                // The wishlist holds a piece, not its choices, so a customised line would lose them.
+                onSaveForLater={
+                  item.selections.length > 0 ||
+                  item.reference_image_urls.length > 0
+                    ? null
+                    : () =>
+                        handleSaveForLater(
+                          item.id,
+                          item.product.id,
+                          item.product.name,
+                        )
                 }
               />
             ))}

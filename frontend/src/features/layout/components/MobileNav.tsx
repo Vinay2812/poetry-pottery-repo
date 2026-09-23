@@ -21,6 +21,7 @@ export function MobileNav({ activeHref, cartCount }: MobileNavProps) {
   return (
     <nav
       aria-label="Primary"
+      data-print="hide"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-ash bg-background pb-safe lg:hidden"
     >
       <ul className="flex h-16 items-stretch">

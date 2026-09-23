@@ -1,3 +1,4 @@
+import { AdminAgendaKind } from "@/graphql/generated/graphql";
 export function formatCount(value: number): string {
   return new Intl.NumberFormat("en-IN").format(value);
 }
@@ -26,4 +27,27 @@ export function describeStock(stock: number): string {
 
 export function clampDelta(value: number, stock: number): number {
   return Math.max(value, -stock);
+}
+
+// Where each thing on today's agenda is handled in the console.
+export function toAgendaHref(kind: AdminAgendaKind, id: string): string {
+  switch (kind) {
+    case AdminAgendaKind.Booking:
+      return "/dashboard/workshops";
+    case AdminAgendaKind.Visit:
+      return "/dashboard/visits";
+    case AdminAgendaKind.Event:
+      return `/dashboard/events/${id}`;
+  }
+}
+
+export function toAgendaKindLabel(kind: AdminAgendaKind): string {
+  switch (kind) {
+    case AdminAgendaKind.Booking:
+      return "Wheel";
+    case AdminAgendaKind.Visit:
+      return "Visit";
+    case AdminAgendaKind.Event:
+      return "Evening";
+  }
 }

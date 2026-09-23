@@ -83,8 +83,10 @@ const meta = {
       "Two pieces fired and glazed",
       "Chai and something to eat halfway",
     ],
+    highlights: ["Throw two pieces", "Glaze one to take home"],
     gallery: [],
     isPast: false,
+    isCancelled: false,
     reserveBox,
     reviews: null,
   },
@@ -129,6 +131,16 @@ export const PastWithGallery: Story = {
 };
 
 export const NoPhoto: Story = { args: { imageUrl: null } };
+
+export const Cancelled: Story = {
+  args: {
+    isCancelled: true,
+    facts: [
+      { label: "Date", value: "Sat, 19 Sept, 2026" },
+      { label: "Seats", value: "Cancelled" },
+    ],
+  },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

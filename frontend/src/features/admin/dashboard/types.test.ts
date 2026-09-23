@@ -1,3 +1,4 @@
+import { AdminAgendaKind } from "@/graphql/generated/graphql";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -7,6 +8,8 @@ import {
   describeStock,
   formatCount,
   stockTone,
+  toAgendaHref,
+  toAgendaKindLabel,
 } from "./types";
 
 describe("formatCount", () => {
@@ -49,5 +52,20 @@ describe("clampDelta", () => {
     expect(clampDelta(-5, 2)).toBe(-2);
     expect(clampDelta(-1, 2)).toBe(-1);
     expect(clampDelta(3, 2)).toBe(3);
+  });
+});
+
+describe("today's agenda", () => {
+  it("sends each kind to the page that handles it", () => {
+    expect(toAgendaHref(AdminAgendaKind.Booking, "WS-1")).toBe(
+      "/dashboard/workshops",
+    );
+    expect(toAgendaHref(AdminAgendaKind.Visit, "SV-1")).toBe(
+      "/dashboard/visits",
+    );
+    expect(toAgendaHref(AdminAgendaKind.Event, "3")).toBe(
+      "/dashboard/events/3",
+    );
+    expect(toAgendaKindLabel(AdminAgendaKind.Event)).toBe("Evening");
   });
 });

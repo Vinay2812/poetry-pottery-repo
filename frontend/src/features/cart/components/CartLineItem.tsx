@@ -25,7 +25,8 @@ export interface CartLineItemProps {
   unavailableReason: string | null;
   onQuantityChange: (quantity: number) => void;
   onRemove: () => void;
-  onSaveForLater: () => void;
+  // Null when the line carries choices the wishlist cannot keep.
+  onSaveForLater: (() => void) | null;
 }
 
 const TEXT_LINK =
@@ -123,16 +124,20 @@ export function CartLineItem({
           >
             Remove
           </button>
-          {/* Two actions on one line read as one sentence without something between them. */}
-          <span aria-hidden="true" className="h-3 w-px bg-ash" />
-          <button
-            type="button"
-            onClick={onSaveForLater}
-            aria-label={`Save ${name} for later`}
-            className={TEXT_LINK}
-          >
-            Save for later
-          </button>
+          {onSaveForLater && (
+            <>
+              {/* Two actions on one line read as one sentence without something between them. */}
+              <span aria-hidden="true" className="h-3 w-px bg-ash" />
+              <button
+                type="button"
+                onClick={onSaveForLater}
+                aria-label={`Save ${name} for later`}
+                className={TEXT_LINK}
+              >
+                Save for later
+              </button>
+            </>
+          )}
         </div>
       </div>
     </li>

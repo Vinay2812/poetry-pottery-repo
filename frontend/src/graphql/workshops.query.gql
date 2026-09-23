@@ -66,6 +66,7 @@ query WorkshopAvailability($input: WorkshopAvailabilityInput!) {
     date
     weekday
     is_closed
+    closed_kind
     reason
     slots {
       starts_at

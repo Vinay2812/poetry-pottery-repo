@@ -26,7 +26,12 @@ interface WishlistValue {
   ids: readonly number[];
   isSignedIn: boolean;
   isSaving: boolean;
-  toggle: (productId: number, productName: string) => void;
+  // Pass `wishlisted` to set a state rather than flip it.
+  toggle: (
+    productId: number,
+    productName: string,
+    wishlisted?: boolean,
+  ) => void;
   // The saved pieces page already holds every id, so it lends them and the second query stops.
   adoptIds: (ids: readonly number[] | null) => void;
 }
@@ -53,20 +58,22 @@ export function WishlistProvider({ children }: PropsWithChildren) {
   const requireAuth = useRequireAuth();
 
   const toggle = useCallback(
-    (productId: number, productName: string) => {
+    (productId: number, productName: string, wishlisted?: boolean) => {
       requireAuth(() => {
-        const isWishlisted = !optimisticIds.includes(productId);
+        const isWishlisted = wishlisted ?? !optimisticIds.includes(productId);
         startTransition(async () => {
           applyToggle({ productId, isWishlisted });
           try {
             // The reply only carries a count, so the refetched lists become the new baseline.
-            await mutate({
-              variables: { productId },
+            // The heart sends what it shows, so a stale tab sets that state instead of flipping the server's.
+            const { data } = await mutate({
+              variables: { productId, wishlisted: isWishlisted },
               refetchQueries: ["WishlistIds", "Wishlist"],
               awaitRefetchQueries: true,
             });
+            const isSaved = data?.toggleWishlist.is_wishlisted ?? isWishlisted;
             toast(
-              isWishlisted
+              isSaved
                 ? `${productName} saved to your wishlist`
                 : `${productName} removed from your wishlist`,
             );

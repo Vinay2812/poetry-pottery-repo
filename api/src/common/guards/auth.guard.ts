@@ -21,6 +21,8 @@ export const NO_PRIMARY_EMAIL_MESSAGE = "No primary email found";
 @Injectable()
 export class AuthGuard implements CanActivate {
   private readonly logger = new Logger(AuthGuard.name);
+  // Users whose missing name was already looked up in this process, so Clerk is asked once.
+  private readonly profileLookups = new Set<number>();
 
   constructor(
     private readonly clerk: ClerkService,
@@ -65,6 +67,11 @@ export class AuthGuard implements CanActivate {
       if (dbUserId !== owner.id || role !== owner.role) {
         this.refreshClaims(authId, owner.id, owner.role);
       }
+      // A missing name is what reviews and the dashboard show as "A customer"; a photo rides along.
+      if (owner.name === null && !this.profileLookups.has(owner.id)) {
+        this.profileLookups.add(owner.id);
+        this.fillProfile(authId, owner.id);
+      }
       const authUser: AuthUser = {
         db_user_id: owner.id,
         role: owner.role,
@@ -102,6 +109,25 @@ export class AuthGuard implements CanActivate {
     };
     request.authenticatedUser = authUser;
     return authUser;
+  }
+
+  // A name set in Clerk after the first sign-in reaches reviews and the dashboard without a webhook.
+  private fillProfile(authId: string, userId: number): void {
+    // Started from a resolved promise so even a synchronous failure lands in the catch below.
+    Promise.resolve()
+      .then(() => this.clerk.getUser(authId))
+      .then((clerkUser) =>
+        this.users.fillMissingProfile(userId, {
+          name: this.clerk.getFullName(clerkUser) ?? null,
+          image: this.clerk.getImageUrl(clerkUser) ?? null,
+        }),
+      )
+      .catch((error: unknown) => {
+        this.profileLookups.delete(userId);
+        this.logger.warn(
+          `Could not fill the profile for user ${userId}: ${String(error)}`,
+        );
+      });
   }
 
   // The metadata only caches the row for the UI, so a Clerk outage must never fail or roll back a sign-in.

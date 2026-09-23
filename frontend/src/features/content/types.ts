@@ -11,10 +11,22 @@ export interface ContentSectionView {
   items: ContentItemData[];
 }
 
-// Nest prefixes its errors ("ThrottlerException: ..."); the visitor only needs the sentence.
+// Browsers word a dropped connection differently: Chrome, Firefox and Safari in that order.
+const OFFLINE_PATTERN = /failed to fetch|networkerror|load failed/i;
+const THROTTLED_PATTERN = /too many requests/i;
+
+export const OFFLINE_MESSAGE =
+  "We could not reach the studio. Check your connection and try again.";
+export const THROTTLED_MESSAGE =
+  "That was a lot of tries in a row. Wait a minute and try again.";
+
+// Nest prefixes its errors ("ThrottlerException: ..."); the visitor only needs the sentence,
+// and transport failures get words a visitor can act on.
 export function toServerMessage(error: unknown, fallback: string): string {
   if (!(error instanceof Error)) return fallback;
   const message = error.message.replace(/^\w*(Exception|Error):\s*/, "").trim();
+  if (OFFLINE_PATTERN.test(message)) return OFFLINE_MESSAGE;
+  if (THROTTLED_PATTERN.test(message)) return THROTTLED_MESSAGE;
   return message.length > 0 ? message : fallback;
 }
 

@@ -4,6 +4,7 @@ const TEN_DIGITS = /^(?:\+?91|0)?(\d{10})$/;
 
 // The words are carved into wet clay by hand, so the rim sets the limit.
 export const MAX_CARVED_WORDS = 40;
+export const MAX_NOTES = 1000;
 
 export const commissionSchema = z.object({
   pieceType: z
@@ -17,7 +18,10 @@ export const commissionSchema = z.object({
     .string()
     .trim()
     .max(MAX_CARVED_WORDS, `Keep the words to ${MAX_CARVED_WORDS} characters`),
-  notes: z.string().trim().max(1000, "Notes must be 1000 characters or fewer"),
+  notes: z
+    .string()
+    .trim()
+    .max(MAX_NOTES, `Notes must be ${MAX_NOTES} characters or fewer`),
   name: z
     .string()
     .trim()

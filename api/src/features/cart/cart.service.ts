@@ -25,6 +25,7 @@ import {
 } from "./selections";
 
 export const MAX_LINE_QUANTITY = 10;
+export const LINE_FULL = `You already have ${MAX_LINE_QUANTITY} of this piece in your cart, the most one order can hold.`;
 
 const cartItemInclude = {
   product: {
@@ -187,11 +188,20 @@ export class CartService {
           },
         },
       });
+      // A full line is refused out loud; a partial add is topped up to the limit.
+      if (existing && existing.quantity >= MAX_LINE_QUANTITY) {
+        throw new BadRequestException(LINE_FULL);
+      }
       const nextQuantity = Math.min(
         MAX_LINE_QUANTITY,
         (existing?.quantity ?? 0) + quantity,
       );
-      this.assertStock(product.is_customizable, product.stock, nextQuantity);
+      this.assertStock(
+        product.is_customizable,
+        product.stock,
+        nextQuantity,
+        existing?.quantity ?? 0,
+      );
       await this.prisma.cartItem.upsert({
         where: {
           user_id_product_id_selection_key: {
@@ -261,14 +271,20 @@ export class CartService {
     return this.get(userId);
   }
 
+  // inCart is what the line already held, so the message explains why a small add was refused.
   private assertStock(
     isCustomizable: boolean,
     stock: number,
     quantity: number,
+    inCart = 0,
   ): void {
     if (isCustomizable) return;
     if (stock <= 0) throw new BadRequestException("This piece is sold out");
-    if (quantity > stock)
-      throw new BadRequestException(`Only ${stock} left in stock`);
+    if (quantity <= stock) return;
+    throw new BadRequestException(
+      inCart > 0
+        ? `Only ${stock} left in stock, and ${inCart} ${inCart === 1 ? "is" : "are"} already in your cart`
+        : `Only ${stock} left in stock`,
+    );
   }
 }

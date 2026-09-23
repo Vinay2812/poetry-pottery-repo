@@ -2,8 +2,16 @@
 
 import { useCallback, useMemo } from "react";
 
-import { useQuery } from "@apollo/client/react";
-import { AdminOrdersDocument, OrderStatus } from "@/graphql/generated/graphql";
+import { toast } from "sonner";
+
+import { useLazyQuery, useQuery } from "@apollo/client/react";
+import {
+  AdminOrdersDocument,
+  ExportOrdersDocument,
+  OrderStatus,
+} from "@/graphql/generated/graphql";
+import { downloadCsv } from "@/lib/download";
+import { toErrorMessage } from "@/features/admin/shell";
 
 import { formatDate, formatInr } from "@/lib/format";
 
@@ -73,6 +81,32 @@ export function AdminOrdersContainer() {
 
   const result = data?.adminOrders ?? previousData?.adminOrders;
 
+  // The same filters as the table, minus the page, so the sheet holds every matching order.
+  const [exportOrders, { loading: isExporting }] = useLazyQuery(
+    ExportOrdersDocument,
+    { fetchPolicy: "network-only" },
+  );
+  const handleExport = useCallback(async () => {
+    try {
+      const exported = await exportOrders({
+        variables: {
+          filter: {
+            search: search || null,
+            status,
+            user_id: personId,
+            from: toDayStartIso(from),
+            to: toDayEndIso(to),
+          },
+        },
+      });
+      const csv = exported.data?.exportOrders;
+      if (csv === undefined) throw new Error("The export came back empty");
+      downloadCsv(`orders-${new Date().toISOString().slice(0, 10)}.csv`, csv);
+    } catch (exportError) {
+      toast.error(toErrorMessage(exportError));
+    }
+  }, [exportOrders, from, personId, search, status, to]);
+
   const rows = useMemo<AdminOrdersTableRow[]>(
     () =>
       (result?.items ?? []).map((item) => ({
@@ -121,6 +155,8 @@ export function AdminOrdersContainer() {
         onStatusChange={(value) => patch({ status: value || null })}
         onFromChange={(value) => patch({ from: value || null })}
         onToChange={(value) => patch({ to: value || null })}
+        isExporting={isExporting}
+        onExport={() => void handleExport()}
       />
       {personId !== null && (
         <AdminPersonFilterNotice

@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -20,6 +22,7 @@ import {
   SlotList,
   type SlotOption,
 } from "@/features/workshops/components/SlotList";
+import { useRestoreFocus } from "@/lib/use-restore-focus";
 
 export interface RescheduleDialogProps {
   isOpen: boolean;
@@ -64,9 +67,14 @@ export function RescheduleDialog({
   onRemoveSlot,
   onConfirm,
 }: RescheduleDialogProps) {
+  const restoreFocus = useRestoreFocus();
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent
+        onOpenAutoFocus={restoreFocus.onOpenAutoFocus}
+        onCloseAutoFocus={restoreFocus.onCloseAutoFocus}
+        className="max-h-[90vh] max-w-lg overflow-y-auto"
+      >
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Move this session

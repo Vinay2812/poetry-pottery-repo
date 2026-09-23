@@ -4,7 +4,7 @@ import { useAuth } from "@clerk/nextjs";
 import { useCallback, useOptimistic, useTransition } from "react";
 import { toast } from "sonner";
 
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client/react";
 import {
   CartDocument,
   ClearCartDocument,
@@ -28,6 +28,7 @@ interface CartDetail {
   setQuantity: (id: number, quantity: number) => void;
   remove: (id: number) => void;
   clearAll: () => void;
+  resync: () => Promise<void>;
 }
 
 // The whole cart, only for the pages that show its lines. The cart is a computed object with
@@ -46,6 +47,16 @@ export function useCart(): CartDetail {
   const [updateItem] = useMutation(UpdateCartItemDocument);
   const [removeItem] = useMutation(RemoveCartItemDocument);
   const [clear] = useMutation(ClearCartDocument);
+  const client = useApolloClient();
+
+  // A failed change means this tab's cart is out of date, so the server's copy becomes the baseline again.
+  const resync = useCallback(async () => {
+    try {
+      await client.refetchQueries({ include: CART_REFETCH.refetchQueries });
+    } catch {
+      // The failure toast already told the shopper; a reload still recovers.
+    }
+  }, [client]);
 
   const setQuantity = useCallback(
     (id: number, quantity: number) => {
@@ -55,10 +66,11 @@ export function useCart(): CartDetail {
           await updateItem({ variables: { id, quantity }, ...CART_REFETCH });
         } catch (error) {
           toast.error(toCartErrorMessage(error));
+          await resync();
         }
       });
     },
-    [applyAction, updateItem],
+    [applyAction, resync, updateItem],
   );
 
   const remove = useCallback(
@@ -69,10 +81,11 @@ export function useCart(): CartDetail {
           await removeItem({ variables: { id }, ...CART_REFETCH });
         } catch (error) {
           toast.error(toCartErrorMessage(error));
+          await resync();
         }
       });
     },
-    [applyAction, removeItem],
+    [applyAction, removeItem, resync],
   );
 
   const clearAll = useCallback(() => {
@@ -82,9 +95,10 @@ export function useCart(): CartDetail {
         await clear({ ...CART_REFETCH });
       } catch (error) {
         toast.error(toCartErrorMessage(error));
+        await resync();
       }
     });
-  }, [applyAction, clear]);
+  }, [applyAction, clear, resync]);
 
   return {
     cart: optimisticCart,
@@ -94,6 +108,7 @@ export function useCart(): CartDetail {
     setQuantity,
     remove,
     clearAll,
+    resync,
   };
 }
 

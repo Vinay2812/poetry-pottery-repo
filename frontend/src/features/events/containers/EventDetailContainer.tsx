@@ -2,6 +2,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 
+import { EventStatus } from "@/graphql/generated/graphql";
 import { formatDate, formatInr } from "@/lib/format";
 
 import { EventDetail } from "@/features/events/components/EventDetail";
@@ -65,9 +66,12 @@ export function EventDetailContainer({
     rows.push({ label: "Price", value: `${formatInr(event.price)} a seat` });
     rows.push({
       label: "Seats",
-      value: event.is_past
-        ? "This one has wrapped up"
-        : toSeatsOfTotalLabel(event.available_seats, event.total_seats),
+      value:
+        event.status === EventStatus.Cancelled
+          ? "Cancelled"
+          : event.is_past
+            ? "This one has wrapped up"
+            : toSeatsOfTotalLabel(event.available_seats, event.total_seats),
     });
     return rows;
   }, [event]);
@@ -92,8 +96,10 @@ export function EventDetailContainer({
       facts={facts}
       paragraphs={toParagraphs(event.description)}
       includes={event.includes}
+      highlights={event.highlights}
       gallery={event.gallery}
       isPast={event.is_past}
+      isCancelled={event.status === EventStatus.Cancelled}
       reviews={
         <ReviewsPanelContainer
           kind="event"

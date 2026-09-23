@@ -120,3 +120,9 @@ mutation SetRegistrationStatus(
     ...AdminRegistrationRow
   }
 }
+
+mutation DuplicateEvent($id: Int!) {
+  duplicateEvent(id: $id) {
+    ...AdminEventRow
+  }
+}

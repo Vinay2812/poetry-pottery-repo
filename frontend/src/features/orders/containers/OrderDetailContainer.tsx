@@ -14,7 +14,7 @@ import { buildWhatsAppUrl } from "@/features/layout/types";
 import { CancelOrderDialog } from "@/features/orders/components/CancelOrderDialog";
 import { OrderDetail } from "@/features/orders/components/OrderDetail";
 import { SignInWall } from "@/features/auth/components/SignInWall";
-import { useCancelOrder, useOrder } from "@/features/orders/hooks";
+import { useCancelOrder, useOrder, useReorder } from "@/features/orders/hooks";
 import {
   applyOrderCancellation,
   isClosed,
@@ -56,6 +56,7 @@ export function OrderDetailContainer({
   const [, startTransition] = useTransition();
   const { openSignIn } = useClerk();
   const { cancel, isCancelling } = useCancelOrder();
+  const { reorder, isReordering } = useReorder();
   const { user } = useUser();
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -154,6 +155,7 @@ export function OrderDetailContainer({
           optimisticOrder.created_at,
           dispatchDaysMin,
           dispatchDaysMax,
+          optimisticOrder.items.some((item) => item.product?.is_customizable),
         )}
         transitLine={TRANSIT_LINE}
         emailedTo={user?.primaryEmailAddress?.emailAddress ?? null}
@@ -217,6 +219,10 @@ export function OrderDetailContainer({
         canCancel={optimisticOrder.can_cancel}
         isCancelling={isCancelling}
         onCancel={() => setIsCancelOpen(true)}
+        canReorder={optimisticOrder.items.length > 0}
+        isReordering={isReordering}
+        onReorder={() => void reorder(optimisticOrder.id)}
+        onPrint={() => window.print()}
       />
       <CancelOrderDialog
         isOpen={isCancelOpen}

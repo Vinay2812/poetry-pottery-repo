@@ -200,4 +200,41 @@ describe("AdminOrdersService", () => {
       NotFoundException,
     );
   });
+
+  describe("exportCsv", () => {
+    it("writes one line per order line with the customer and totals beside it", async () => {
+      prismaMock.order.findMany.mockResolvedValue([
+        {
+          id: "PP-1",
+          status: OrderStatus.PAID,
+          created_at: new Date("2026-09-20T10:00:00.000Z"),
+          subtotal: 1700,
+          discount: 100,
+          shipping_fee: 0,
+          total: 1600,
+          coupon: { code: "TEN" },
+          user: { name: "Maya, Iyer", email: "maya@example.test" },
+          shipping_address: { city: "Sangli", pincode: "416416" },
+          items: [
+            {
+              product_name: "Moss mug",
+              quantity: 2,
+              unit_price: 850,
+              line_total: 1700,
+            },
+          ],
+        },
+      ]);
+
+      const csv = await service.exportCsv({ status: OrderStatus.PAID });
+
+      expect(csv.split("\n")).toEqual([
+        "order_id,placed_at,status,customer,email,city,pincode,piece,quantity,unit_price,line_total,order_subtotal,discount,coupon,shipping_fee,order_total",
+        'PP-1,2026-09-20T10:00:00.000Z,PAID,"Maya, Iyer",maya@example.test,Sangli,416416,Moss mug,2,850,1700,1700,100,TEN,0,1600',
+      ]);
+      expect(prismaMock.order.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { status: OrderStatus.PAID } }),
+      );
+    });
+  });
 });

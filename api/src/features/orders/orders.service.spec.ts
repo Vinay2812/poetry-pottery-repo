@@ -1,3 +1,4 @@
+import { BadRequestException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { OrderStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -34,7 +35,7 @@ const prismaMock = {
   cartItem: { deleteMany: vi.fn() },
   user: { findUnique: vi.fn() },
 };
-const cartMock = { get: vi.fn() };
+const cartMock = { get: vi.fn(), add: vi.fn() };
 const settingsMock = { get: vi.fn() };
 const mailMock = { enqueue: vi.fn() };
 const notificationsMock = { announceRestock: vi.fn() };
@@ -268,6 +269,18 @@ describe("OrdersService", () => {
       expect(order.can_cancel).toBe(true);
     });
 
+    it("refuses to bill a total the shopper was not shown", async () => {
+      await expect(
+        service.place(1, { address_id: 5, expected_total: 1250 }),
+      ).rejects.toThrow("Your cart changed since you opened checkout");
+      expect(prismaMock.product.updateMany).not.toHaveBeenCalled();
+      expect(prismaMock.order.create).not.toHaveBeenCalled();
+
+      await expect(
+        service.place(1, { address_id: 5, expected_total: 1850 }),
+      ).resolves.toMatchObject({ total: 1850 });
+    });
+
     it("fails when another buyer took the last piece", async () => {
       prismaMock.product.updateMany.mockResolvedValue({ count: 0 });
 
@@ -376,6 +389,17 @@ describe("OrdersService", () => {
       );
       expect(order.status).toBe(OrderStatus.CANCELLED);
       expect(mailMock.enqueue).toHaveBeenCalledTimes(1);
+    });
+
+    it("says so plainly when the order is already cancelled", async () => {
+      prismaMock.order.findFirst.mockResolvedValue(
+        orderRow({ status: OrderStatus.CANCELLED }),
+      );
+
+      await expect(service.cancel(1, "ORD123", null)).rejects.toThrow(
+        "already cancelled",
+      );
+      expect(prismaMock.order.updateMany).not.toHaveBeenCalled();
     });
 
     it("blocks cancellation once paid", async () => {
@@ -522,6 +546,104 @@ describe("OrdersService", () => {
       await expect(
         service.addNote({ order_id: "nope", body: "Hello" }),
       ).rejects.toThrow("Order not found");
+    });
+  });
+
+  describe("reorder", () => {
+    it("puts what can still be bought back in the cart and names the rest", async () => {
+      prismaMock.order.findFirst.mockResolvedValue({
+        id: "ORD123",
+        user_id: 1,
+        items: [
+          {
+            product_name: "Moss mug",
+            quantity: 2,
+            selections: [
+              {
+                group_id: 1,
+                group_name: "Size",
+                option_id: 2,
+                option_name: "Large",
+                text: null,
+                price_modifier: 150,
+              },
+            ],
+            product: {
+              id: 10,
+              is_active: true,
+              is_customizable: true,
+              stock: 0,
+            },
+          },
+          {
+            product_name: "Retired bowl",
+            quantity: 1,
+            selections: null,
+            product: {
+              id: 11,
+              is_active: false,
+              is_customizable: false,
+              stock: 4,
+            },
+          },
+          {
+            product_name: "Last plate",
+            quantity: 3,
+            selections: null,
+            product: {
+              id: 12,
+              is_active: true,
+              is_customizable: false,
+              stock: 1,
+            },
+          },
+        ],
+      });
+      cartMock.add.mockResolvedValue({});
+      cartMock.get.mockResolvedValue({ items: [], item_count: 0 });
+
+      const result = await service.reorder(1, "ORD123");
+
+      expect(cartMock.add).toHaveBeenCalledWith(1, {
+        product_id: 10,
+        quantity: 2,
+        selections: [{ group_id: 1, option_id: 2, text: null }],
+      });
+      // Only one plate is left, so the line shrinks to it rather than failing.
+      expect(cartMock.add).toHaveBeenCalledWith(1, {
+        product_id: 12,
+        quantity: 1,
+        selections: [],
+      });
+      expect(result.skipped).toEqual(["Retired bowl"]);
+    });
+
+    it("skips a piece whose options the shelf no longer offers", async () => {
+      prismaMock.order.findFirst.mockResolvedValue({
+        id: "ORD123",
+        user_id: 1,
+        items: [
+          {
+            product_name: "Moss mug",
+            quantity: 1,
+            selections: null,
+            product: {
+              id: 10,
+              is_active: true,
+              is_customizable: true,
+              stock: 0,
+            },
+          },
+        ],
+      });
+      cartMock.add.mockRejectedValue(
+        new BadRequestException("That size is no longer available"),
+      );
+      cartMock.get.mockResolvedValue({ items: [], item_count: 0 });
+
+      await expect(service.reorder(1, "ORD123")).resolves.toMatchObject({
+        skipped: ["Moss mug"],
+      });
     });
   });
 });

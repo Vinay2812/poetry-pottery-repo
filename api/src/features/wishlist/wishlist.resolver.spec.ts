@@ -122,8 +122,10 @@ describe("WishlistResolver", () => {
     const result = makeToggleResult();
     wishlistMock.toggle.mockResolvedValue(result);
 
-    await expect(resolver.toggleWishlist(session(7), 4)).resolves.toBe(result);
-    expect(wishlistMock.toggle).toHaveBeenCalledWith(7, 4);
+    await expect(resolver.toggleWishlist(session(7), 4, null)).resolves.toBe(
+      result,
+    );
+    expect(wishlistMock.toggle).toHaveBeenCalledWith(7, 4, undefined);
     expect(wishlistMock.toggle).not.toHaveBeenCalledWith(4, 7);
   });
 

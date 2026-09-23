@@ -235,6 +235,7 @@ describe("EventsService", () => {
           status: RegistrationStatus.PENDING,
           seats: 1,
           cancelled_at: null,
+          created_at: expect.any(Date) as Date,
         }),
       }),
     );

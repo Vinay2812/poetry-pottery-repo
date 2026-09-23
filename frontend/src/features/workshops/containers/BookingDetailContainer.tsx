@@ -9,7 +9,7 @@ import {
   useTransition,
 } from "react";
 
-import { formatDateTime, formatInr } from "@/lib/format";
+import { formatDateTime, formatInr, pluralize } from "@/lib/format";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -139,6 +139,7 @@ export function BookingDetailContainer({
             wheelsFree,
             pickedCount: pickedDateKeys.filter((key) => key === dateKey).length,
             isClosed: day?.is_closed ?? true,
+            closedKind: day?.closed_kind ?? null,
             isPast: dateKey < todayKey,
             mutedReason: isWithinSpan ? null : spanNotice(spanAllowance),
           };
@@ -300,7 +301,7 @@ export function BookingDetailContainer({
     { label: "Duration", value: formatHours(optimisticBooking.hours) },
     {
       label: "You take home",
-      value: `${optimisticBooking.pieces_per_person * optimisticBooking.participants} pieces, fired and glazed`,
+      value: `${pluralize(optimisticBooking.pieces_per_person * optimisticBooking.participants, "piece")}, fired and glazed`,
     },
   ];
   const whatsappUrl = whatsappNumber

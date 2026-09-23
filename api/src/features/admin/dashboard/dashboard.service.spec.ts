@@ -24,7 +24,10 @@ const prismaMock = {
   contactMessage: { count: vi.fn() },
   product: { findMany: vi.fn() },
   commissionRequest: { count: vi.fn() },
-  studioVisit: { count: vi.fn() },
+  studioVisit: { count: vi.fn(), findMany: vi.fn() },
+  workshopConfig: { findFirst: vi.fn() },
+  workshopBookingSlot: { findMany: vi.fn() },
+  event: { findMany: vi.fn() },
 };
 
 function stubEmpty(): void {
@@ -40,6 +43,10 @@ function stubEmpty(): void {
   prismaMock.contactMessage.count.mockResolvedValue(0);
   prismaMock.product.findMany.mockResolvedValue([]);
   prismaMock.commissionRequest.count.mockResolvedValue(0);
+  prismaMock.studioVisit.findMany.mockResolvedValue([]);
+  prismaMock.workshopConfig.findFirst.mockResolvedValue(null);
+  prismaMock.workshopBookingSlot.findMany.mockResolvedValue([]);
+  prismaMock.event.findMany.mockResolvedValue([]);
   prismaMock.studioVisit.count.mockResolvedValue(0);
 }
 
@@ -192,6 +199,70 @@ describe("AdminDashboardService", () => {
     expect(summary.upcoming_visits).toBe(2);
     expect(prismaMock.studioVisit.count).toHaveBeenCalledWith({
       where: { starts_at: { gte: now }, cancelled_at: null },
+    });
+  });
+
+  describe("today", () => {
+    it("lists the studio day's sessions, visits and evenings soonest first", async () => {
+      stubEmpty();
+      // 24 Sept 2026 in Kolkata: the day runs 18:30Z the evening before to 18:30Z.
+      const now = new Date("2026-09-24T06:00:00.000Z");
+      prismaMock.workshopBookingSlot.findMany.mockResolvedValue([
+        {
+          starts_at: new Date("2026-09-24T09:30:00.000Z"),
+          ends_at: new Date("2026-09-24T10:30:00.000Z"),
+          booking: {
+            id: "WS-1",
+            participants: 2,
+            status: RegistrationStatus.CONFIRMED,
+            user: {
+              id: 1,
+              name: "Maya",
+              email: "maya@example.test",
+              image: null,
+            },
+            config: { name: "Open studio" },
+          },
+        },
+      ]);
+      prismaMock.studioVisit.findMany.mockResolvedValue([
+        {
+          id: "SV-1",
+          name: "Rohan",
+          starts_at: new Date("2026-09-24T07:00:00.000Z"),
+          ends_at: new Date("2026-09-24T07:30:00.000Z"),
+        },
+      ]);
+      prismaMock.event.findMany.mockResolvedValue([
+        {
+          id: 3,
+          title: "Open mic",
+          starts_at: new Date("2026-09-24T13:30:00.000Z"),
+          ends_at: new Date("2026-09-24T15:30:00.000Z"),
+          total_seats: 20,
+          available_seats: 5,
+        },
+      ]);
+
+      const items = await service.today(now);
+
+      expect(items.map((item) => [item.kind, item.title, item.detail])).toEqual(
+        [
+          ["VISIT", "Rohan", "Studio visit"],
+          ["BOOKING", "Maya", "Open studio · 2 at the wheel · confirmed"],
+          ["EVENT", "Open mic", "15 of 20 seats taken"],
+        ],
+      );
+      expect(prismaMock.event.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            starts_at: {
+              gte: new Date("2026-09-23T18:30:00.000Z"),
+              lt: new Date("2026-09-24T18:30:00.000Z"),
+            },
+          }) as unknown,
+        }),
+      );
     });
   });
 });

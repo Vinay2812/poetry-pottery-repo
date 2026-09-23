@@ -23,6 +23,15 @@ export class AdminOrdersResolver {
   }
 
   @AdminRequired()
+  @Query(() => String)
+  exportOrders(
+    @Args("filter", { type: () => AdminOrdersFilterInput, nullable: true })
+    filter: AdminOrdersFilterInput | null,
+  ): Promise<string> {
+    return this.orders.exportCsv(filter ?? {});
+  }
+
+  @AdminRequired()
   @Query(() => AdminOrder)
   adminOrder(@Args("id") id: string): Promise<AdminOrder> {
     return this.orders.byId(id);

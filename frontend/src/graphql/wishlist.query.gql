@@ -8,8 +8,8 @@ query WishlistIds {
   wishlistIds
 }
 
-mutation ToggleWishlist($productId: Int!) {
-  toggleWishlist(product_id: $productId) {
+mutation ToggleWishlist($productId: Int!, $wishlisted: Boolean) {
+  toggleWishlist(product_id: $productId, wishlisted: $wishlisted) {
     product_id
     is_wishlisted
     wishlist_count

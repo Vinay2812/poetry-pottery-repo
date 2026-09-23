@@ -1,5 +1,6 @@
 import { Fragment } from "react";
 
+import type { DayClosedKind } from "@/graphql/generated/graphql";
 import { cn } from "@/lib/utils";
 
 import { toDayNote, WEEKDAY_LABELS } from "@/features/workshops/types";
@@ -11,6 +12,7 @@ export interface CalendarDay {
   wheelsFree: number;
   pickedCount: number;
   isClosed: boolean;
+  closedKind: DayClosedKind | null;
   isPast: boolean;
   mutedReason: string | null;
 }

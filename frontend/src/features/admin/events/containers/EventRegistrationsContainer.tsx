@@ -147,8 +147,10 @@ export function EventRegistrationsContainer({
       startTransition(async () => {
         patchRow({ id, status });
         try {
+          // The event header counts seats, so it reads again once the row moves.
           await setRegistrationStatus({
             variables: { id, status, reason: note || null },
+            refetchQueries: ["AdminEvent"],
           });
           await refetch();
           toast.success(
@@ -231,7 +233,7 @@ export function EventRegistrationsContainer({
         }
         description="The seats go back and the person is told."
         fieldLabel="Reason"
-        hint="Optional. It goes out with the notice."
+        hint="The person reads this, so keep it kind"
         placeholder="The session is full"
         value={reason}
         error={undefined}
@@ -239,7 +241,7 @@ export function EventRegistrationsContainer({
           pending ? registrationActionLabel(pending.status) : "Confirm"
         }
         isDestructive
-        isRequired={false}
+        isRequired
         isBusy={busyId !== null}
         onValueChange={setReason}
         onConfirm={handleConfirm}

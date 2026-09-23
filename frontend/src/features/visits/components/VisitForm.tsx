@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   EMPTY_VISIT_FORM,
+  MAX_VISIT_NOTE,
   visitSchema,
   type VisitFormValues,
 } from "@/lib/validations/visit";
@@ -99,6 +100,7 @@ export function VisitForm({
         <Textarea
           id="visit-note"
           rows={3}
+          maxLength={MAX_VISIT_NOTE}
           aria-invalid={Boolean(errors.note)}
           {...register("note")}
         />

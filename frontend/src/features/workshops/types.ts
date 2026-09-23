@@ -1,4 +1,5 @@
 import {
+  DayClosedKind,
   RegistrationStatus,
   type WorkshopAvailabilityQuery,
   type WorkshopBookingFieldsFragment,
@@ -397,8 +398,14 @@ export function togglePicked(
   if (picked.some((candidate) => candidate.starts_at === slot.starts_at)) {
     return picked.filter((candidate) => candidate.starts_at !== slot.starts_at);
   }
-  if (picked.length >= needed) return picked;
-  return [...picked, { starts_at: slot.starts_at, ends_at: slot.ends_at }];
+  // A full pick swaps its earliest hour for the new one rather than ignoring the click.
+  const kept =
+    picked.length >= needed
+      ? [...picked]
+          .sort((a, b) => a.starts_at.localeCompare(b.starts_at))
+          .slice(1)
+      : picked;
+  return [...kept, { starts_at: slot.starts_at, ends_at: slot.ends_at }];
 }
 
 // The move dialog opens on the hours already held, so an untouched selection
@@ -527,6 +534,7 @@ export interface CalendarDayState {
   wheelsFree: number;
   pickedCount: number;
   isClosed: boolean;
+  closedKind: DayClosedKind | null;
   isPast: boolean;
   mutedReason: string | null;
 }
@@ -542,6 +550,27 @@ export interface DayNote {
 export function toDayNote(day: CalendarDayState): DayNote {
   if (day.isPast) {
     return { caption: "past", description: "past", isPickable: false };
+  }
+  if (day.closedKind === DayClosedKind.NotYetOpen) {
+    return {
+      caption: "not yet",
+      description: "bookings not open yet",
+      isPickable: false,
+    };
+  }
+  if (day.closedKind === DayClosedKind.FullyBooked) {
+    return {
+      caption: "full",
+      description: "no wheels free",
+      isPickable: false,
+    };
+  }
+  if (day.closedKind === DayClosedKind.NoSessionsLeft) {
+    return {
+      caption: "none left",
+      description: "no sessions left today",
+      isPickable: false,
+    };
   }
   if (day.isClosed) {
     return {

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
+import { csvCell } from "@/common/csv";
 import { PrismaService } from "@/prisma/prisma.service";
 import type {
   ContactMessage,
@@ -25,10 +26,6 @@ export interface CsvSubscriber {
   is_active: boolean;
   created_at: Date;
   unsubscribed_at: Date | null;
-}
-
-function csvCell(value: string): string {
-  return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
 export interface CsvWatcher {

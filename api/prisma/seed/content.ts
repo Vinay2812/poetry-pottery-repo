@@ -229,7 +229,7 @@ export const siteSettings = {
   youtube_url: "",
   shipping_flat_fee: 150,
   free_shipping_above: 2500,
-  announcement_text: "Free shipping on orders above ₹2,500",
+  announcement_text: "Free shipping on orders of ₹2,500 and more",
   announcement_href: "/products",
   hero_heading: "Pottery made slowly, in Sangli",
   hero_subheading:

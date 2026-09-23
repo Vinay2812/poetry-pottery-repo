@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { OrderStatus, Prisma } from "@prisma/client";
 
+import { csvCell } from "@/common/csv";
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
 import { canTransition } from "@/features/orders/order-status";
@@ -17,6 +18,8 @@ import type {
 } from "./orders.type";
 
 const MAX_LIMIT = 60;
+// Enough for years of a studio's orders in one sheet without a runaway query.
+const EXPORT_LIMIT = 20_000;
 
 export const adminOrderInclude = {
   ...orderInclude,
@@ -47,10 +50,10 @@ export class AdminOrdersService {
     private readonly orders: OrdersService,
   ) {}
 
-  async list(filter: AdminOrdersFilterInput): Promise<AdminOrdersResult> {
-    const bounds = clampPage(filter.page, filter.limit, MAX_LIMIT);
+  // The same filters the orders table uses, so an export holds exactly what is on screen.
+  private whereFor(filter: AdminOrdersFilterInput): Prisma.OrderWhereInput {
     const term = searchTerm(filter.search);
-    const where: Prisma.OrderWhereInput = {
+    return {
       ...(filter.user_id ? { user_id: filter.user_id } : {}),
       ...(filter.status ? { status: filter.status } : {}),
       ...(filter.from || filter.to
@@ -70,6 +73,67 @@ export class AdminOrdersService {
           }
         : {}),
     };
+  }
+
+  // One row per order line, in a sheet the studio's accountant can open anywhere.
+  async exportCsv(filter: AdminOrdersFilterInput): Promise<string> {
+    const rows = await this.prisma.order.findMany({
+      where: this.whereFor(filter),
+      orderBy: { created_at: "asc" },
+      take: EXPORT_LIMIT,
+      select: {
+        id: true,
+        status: true,
+        created_at: true,
+        subtotal: true,
+        discount: true,
+        shipping_fee: true,
+        total: true,
+        coupon: { select: { code: true } },
+        user: { select: { name: true, email: true } },
+        shipping_address: true,
+        items: {
+          select: {
+            product_name: true,
+            quantity: true,
+            unit_price: true,
+            line_total: true,
+          },
+          orderBy: { id: "asc" },
+        },
+      },
+    });
+    const header =
+      "order_id,placed_at,status,customer,email,city,pincode,piece,quantity,unit_price,line_total,order_subtotal,discount,coupon,shipping_fee,order_total";
+    const lines = rows.flatMap((order) => {
+      const address = order.shipping_address;
+      return order.items.map((item) =>
+        [
+          order.id,
+          order.created_at.toISOString(),
+          order.status,
+          csvCell(order.user.name ?? ""),
+          csvCell(order.user.email),
+          csvCell(address.city),
+          csvCell(address.pincode),
+          csvCell(item.product_name),
+          String(item.quantity),
+          String(item.unit_price),
+          String(item.line_total),
+          String(order.subtotal),
+          String(order.discount),
+          csvCell(order.coupon?.code ?? ""),
+          String(order.shipping_fee),
+          String(order.total),
+        ].join(","),
+      );
+    });
+    return [header, ...lines].join("\n");
+  }
+
+  async list(filter: AdminOrdersFilterInput): Promise<AdminOrdersResult> {
+    const bounds = clampPage(filter.page, filter.limit, MAX_LIMIT);
+    const where = this.whereFor(filter);
     const [rows, total] = await Promise.all([
       this.prisma.order.findMany({
         where,

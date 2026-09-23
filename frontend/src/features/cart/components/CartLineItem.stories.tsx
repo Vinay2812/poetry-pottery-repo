@@ -37,7 +37,8 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof meta>;
+// Typed from the component so a story can pass null for the customised-line case.
+type Story = StoryObj<typeof CartLineItem>;
 
 export const Default: Story = {};
 
@@ -53,6 +54,8 @@ export const WithSelections: Story = {
       "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
       "https://images.pexels.com/photos/1005058/pexels-photo-1005058.jpeg",
     ],
+    // A customised line cannot move to the wishlist without losing its choices.
+    onSaveForLater: null,
   },
 };
 
@@ -85,6 +88,8 @@ export const WithReferencePhotos: Story = {
       "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
       "https://images.pexels.com/photos/1005058/pexels-photo-1005058.jpeg",
     ],
+    // A customised line cannot move to the wishlist without losing its choices.
+    onSaveForLater: null,
   },
 };
 

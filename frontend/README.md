@@ -96,6 +96,17 @@ reaches the client bundle.
 Each command below writes machine-readable output, so an agent can run it and
 read the result without a browser.
 
+### Memory
+
+The server holds no state between requests: after a sustained load the live heap
+settles back to about 65 MB. What costs memory is each render in flight, roughly
+25 MB for the heaviest pages (home, shelf), so the heap needed grows with
+concurrency. Measured on the production build with 12 concurrent renders: the
+shelf and product pages run inside a 384 MB heap, the home page needs 512 MB.
+Give the process at least `--max-old-space-size=768` in production. The per-request
+Apollo caches skip result memoisation (`resultCaching: false`) because they answer
+a few reads and are thrown away; keep that when touching `src/lib/apollo`.
+
 ### `pnpm analyze`
 
 Runs `next build --experimental-analyze` (Turbopack's native bundle analysis).

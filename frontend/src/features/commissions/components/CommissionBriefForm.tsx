@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 import {
   Controller,
+  type FieldErrors,
   useForm,
   useWatch,
   type UseFormRegisterReturn,
@@ -25,6 +26,7 @@ import {
   commissionSchema,
   EMPTY_COMMISSION_FORM,
   MAX_CARVED_WORDS,
+  MAX_NOTES,
 } from "@/lib/validations/commission";
 
 import type { GlazeChoice, PieceChoice } from "@/features/commissions/types";
@@ -44,6 +46,18 @@ interface FieldProps {
   placeholder?: string;
 }
 
+// Top to bottom as the form reads, so an empty submit lands on the first thing to fix.
+const FIELD_ORDER: (keyof CommissionFormValues)[] = [
+  "pieceType",
+  "size",
+  "glaze",
+  "carvedWords",
+  "notes",
+  "name",
+  "email",
+  "phone",
+];
+
 function TextField({
   id,
   label,
@@ -60,10 +74,11 @@ function TextField({
         autoComplete={autoComplete}
         placeholder={placeholder}
         aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
         {...registration}
       />
       {error && (
-        <p role="alert" className="text-xs text-destructive">
+        <p id={`${id}-error`} role="alert" className="text-xs text-destructive">
           {error}
         </p>
       )}
@@ -103,11 +118,18 @@ export function CommissionBriefForm({
     control,
     handleSubmit,
     setValue,
+    setFocus,
     formState: { errors },
   } = useForm<CommissionFormValues>({
     resolver: zodResolver(commissionSchema),
     defaultValues,
+    // The pickers register after the plain inputs, so the default focus would skip past them.
+    shouldFocusError: false,
   });
+  const handleInvalid = (invalid: FieldErrors<CommissionFormValues>) => {
+    const first = FIELD_ORDER.find((name) => invalid[name]);
+    if (first) setFocus(first);
+  };
   // The WhatsApp line carries whatever is typed so far, so it follows the fields live.
   const values = useWatch({ control, defaultValue: defaultValues });
   const draft = { ...EMPTY_COMMISSION_FORM, ...values };
@@ -135,7 +157,7 @@ export function CommissionBriefForm({
   return (
     <form
       noValidate
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, handleInvalid)}
       className="flex flex-col gap-6"
     >
       <div className="flex flex-col gap-4">
@@ -160,9 +182,16 @@ export function CommissionBriefForm({
                 }
               >
                 <SelectTrigger
+                  // The ref lets the form focus this field when it is the first one wrong.
+                  ref={field.ref}
                   id="commission-piece"
                   className="w-full"
                   aria-invalid={Boolean(errors.pieceType) && !isOtherPiece}
+                  aria-describedby={
+                    errors.pieceType && !isOtherPiece
+                      ? "commission-piece-error"
+                      : undefined
+                  }
                 >
                   <SelectValue placeholder="Pick a piece" />
                 </SelectTrigger>
@@ -178,7 +207,11 @@ export function CommissionBriefForm({
             )}
           />
           {errors.pieceType?.message && !isOtherPiece && (
-            <p role="alert" className="text-xs text-destructive">
+            <p
+              id="commission-piece-error"
+              role="alert"
+              className="text-xs text-destructive"
+            >
               {errors.pieceType.message}
             </p>
           )}
@@ -209,9 +242,15 @@ export function CommissionBriefForm({
                     disabled={!hasPiece}
                   >
                     <SelectTrigger
+                      ref={field.ref}
                       id="commission-size"
                       className="w-full"
-                      aria-invalid={Boolean(errors.size)}
+                      aria-invalid={hasPiece && Boolean(errors.size)}
+                      aria-describedby={
+                        hasPiece && errors.size
+                          ? "commission-size-error"
+                          : undefined
+                      }
                     >
                       <SelectValue
                         placeholder={
@@ -229,8 +268,13 @@ export function CommissionBriefForm({
                   </Select>
                 )}
               />
-              {errors.size?.message && (
-                <p role="alert" className="text-xs text-destructive">
+              {/* A size cannot be picked before the piece, so its error waits for one. */}
+              {hasPiece && errors.size?.message && (
+                <p
+                  id="commission-size-error"
+                  role="alert"
+                  className="text-xs text-destructive"
+                >
                   {errors.size.message}
                 </p>
               )}
@@ -254,9 +298,13 @@ export function CommissionBriefForm({
               render={({ field }) => (
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger
+                    ref={field.ref}
                     id="commission-glaze"
                     className="w-full"
                     aria-invalid={Boolean(errors.glaze)}
+                    aria-describedby={
+                      errors.glaze ? "commission-glaze-error" : undefined
+                    }
                   >
                     <SelectValue placeholder="Pick a glaze" />
                   </SelectTrigger>
@@ -278,7 +326,11 @@ export function CommissionBriefForm({
               )}
             />
             {errors.glaze?.message && (
-              <p role="alert" className="text-xs text-destructive">
+              <p
+                id="commission-glaze-error"
+                role="alert"
+                className="text-xs text-destructive"
+              >
                 {errors.glaze.message}
               </p>
             )}
@@ -315,11 +367,19 @@ export function CommissionBriefForm({
           <Textarea
             id="commission-notes"
             rows={4}
+            maxLength={MAX_NOTES}
             aria-invalid={Boolean(errors.notes)}
+            aria-describedby={
+              errors.notes ? "commission-notes-error" : undefined
+            }
             {...register("notes")}
           />
           {errors.notes?.message && (
-            <p role="alert" className="text-xs text-destructive">
+            <p
+              id="commission-notes-error"
+              role="alert"
+              className="text-xs text-destructive"
+            >
               {errors.notes.message}
             </p>
           )}

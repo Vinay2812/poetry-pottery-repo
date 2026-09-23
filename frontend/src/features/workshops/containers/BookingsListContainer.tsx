@@ -23,7 +23,7 @@ import {
 
 const GROUPS: { key: ReturnType<typeof toBookingGroup>; heading: string }[] = [
   { key: "upcoming", heading: "Upcoming" },
-  { key: "past", heading: "Past" },
+  { key: "past", heading: "Past and cancelled" },
 ];
 
 export function BookingsListContainer() {
@@ -82,10 +82,13 @@ export function BookingsListContainer() {
             )}
           >
             {GROUPS.map(({ key, heading }) => {
-              const group = bookings.filter(
+              const matching = bookings.filter(
                 (booking) =>
                   toBookingGroup(booking.slots, booking.status) === key,
               );
+              // The list arrives newest first, which suits the past; what is ahead reads soonest first.
+              const group =
+                key === "upcoming" ? [...matching].reverse() : matching;
               if (group.length === 0) return null;
               return (
                 <section key={key} className="flex flex-col gap-3">

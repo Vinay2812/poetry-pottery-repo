@@ -439,7 +439,7 @@ export function AdminOrderDetailContainer({
         }
         hint={
           pendingStatus === OrderStatus.Cancelled
-            ? null
+            ? "The customer reads this, so keep it kind"
             : "Courier and tracking number"
         }
         placeholder={
@@ -455,7 +455,8 @@ export function AdminOrderDetailContainer({
             : "Mark shipped"
         }
         isDestructive={pendingStatus === OrderStatus.Cancelled}
-        isRequired={false}
+        // A cancellation always tells the customer why; a tracking note can wait.
+        isRequired={pendingStatus === OrderStatus.Cancelled}
         isBusy={busyStatus !== null}
         onValueChange={(value) => {
           setDialogNote(value);

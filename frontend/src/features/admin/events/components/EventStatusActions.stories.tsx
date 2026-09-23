@@ -12,7 +12,9 @@ const meta = {
     statusTone: "live",
     actions: ["unpublish", "complete", "cancel"],
     busyAction: null,
+    isDuplicating: false,
     onAction: () => {},
+    onDuplicate: () => {},
   },
 } satisfies Meta<typeof EventStatusActions>;
 
