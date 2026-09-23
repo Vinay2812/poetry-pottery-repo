@@ -262,13 +262,25 @@ describe("CartService", () => {
     expect(prismaMock.cartItem.findMany).not.toHaveBeenCalled();
   });
 
+  it("refuses an add to a line already at the limit", async () => {
+    prismaMock.product.findFirst.mockResolvedValue(productRow({ stock: 50 }));
+    prismaMock.cartItem.findUnique.mockResolvedValue({
+      quantity: MAX_LINE_QUANTITY,
+    });
+
+    await expect(
+      service.add(1, { product_id: 1, quantity: 1 }),
+    ).rejects.toThrow(`You already have ${MAX_LINE_QUANTITY} of this piece`);
+    expect(prismaMock.cartItem.upsert).not.toHaveBeenCalled();
+  });
+
   it("merges into an existing line and caps at the stock", async () => {
     prismaMock.product.findFirst.mockResolvedValue(productRow({ stock: 3 }));
     prismaMock.cartItem.findUnique.mockResolvedValue({ quantity: 2 });
 
     await expect(
       service.add(1, { product_id: 1, quantity: 2 }),
-    ).rejects.toThrow("Only 3 left");
+    ).rejects.toThrow("Only 3 left in stock, and 2 are already in your cart");
 
     prismaMock.cartItem.findUnique.mockResolvedValue({ quantity: 1 });
     await service.add(1, { product_id: 1, quantity: 2 });

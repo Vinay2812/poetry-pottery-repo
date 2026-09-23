@@ -53,6 +53,10 @@ export interface OrderDetailProps {
   canCancel: boolean;
   isCancelling: boolean;
   onCancel: () => void;
+  canReorder: boolean;
+  isReordering: boolean;
+  onReorder: () => void;
+  onPrint: () => void;
 }
 
 const SECTION_HEADING =
@@ -89,6 +93,10 @@ export function OrderDetail({
   canCancel,
   isCancelling,
   onCancel,
+  canReorder,
+  isReordering,
+  onReorder,
+  onPrint,
 }: OrderDetailProps) {
   return (
     <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
@@ -215,7 +223,12 @@ export function OrderDetail({
               </p>
             </section>
           )}
-          <div className="flex flex-col items-start gap-3">
+          <div data-print="hide" className="flex flex-col items-start gap-3">
+            {canReorder && (
+              <Button type="button" disabled={isReordering} onClick={onReorder}>
+                {isReordering ? "Adding to cart…" : "Buy these again"}
+              </Button>
+            )}
             {whatsappUrl && !isJustPlaced && (
               <Button variant="outline" asChild>
                 <WhatsAppLink
@@ -228,6 +241,13 @@ export function OrderDetail({
                 </WhatsAppLink>
               </Button>
             )}
+            <button
+              type="button"
+              onClick={onPrint}
+              className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Print receipt
+            </button>
             {canCancel && (
               <button
                 type="button"

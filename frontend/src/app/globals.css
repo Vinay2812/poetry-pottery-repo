@@ -152,6 +152,14 @@
   }
   html {
     @apply font-sans;
+    /* Keeps focused and scrolled-to controls clear of the sticky header and, below lg, the bottom nav. */
+    scroll-padding-top: 5rem;
+    scroll-padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+  @media (min-width: 64rem) {
+    html {
+      scroll-padding-bottom: 0;
+    }
   }
 
   /* One focus treatment for the whole site: a 2px ink outline held 2px clear of
@@ -520,6 +528,7 @@
     background: #fff;
   }
 
+  [data-print="hide"],
   header[data-admin-chrome],
   nav[aria-label="Studio sections"],
   nav[aria-label="Studio sections, compact"],

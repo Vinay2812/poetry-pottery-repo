@@ -12,8 +12,10 @@ export interface EventDetailProps {
   facts: EventFact[];
   paragraphs: string[];
   includes: string[];
+  highlights: string[];
   gallery: string[];
   isPast: boolean;
+  isCancelled: boolean;
   reserveBox: React.ReactNode;
   reviews: React.ReactNode;
 }
@@ -25,8 +27,10 @@ export function EventDetail({
   facts,
   paragraphs,
   includes,
+  highlights,
   gallery,
   isPast,
+  isCancelled,
   reserveBox,
   reviews,
 }: EventDetailProps) {
@@ -83,6 +87,24 @@ export function EventDetail({
             </section>
           )}
 
+          {highlights.length > 0 && (
+            <section className="flex flex-col gap-4">
+              <h2 className="font-heading text-2xl tracking-tight">
+                Highlights
+              </h2>
+              <ul className="border-t border-ash">
+                {highlights.map((item) => (
+                  <li
+                    key={item}
+                    className="border-b border-ash py-3 text-sm text-muted-foreground"
+                  >
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
           {includes.length > 0 && (
             <section className="flex flex-col gap-4">
               <h2 className="font-heading text-2xl tracking-tight">
@@ -129,7 +151,19 @@ export function EventDetail({
         </div>
 
         <aside className="order-first lg:sticky lg:top-24 lg:order-none">
-          {reserveBox}
+          {isCancelled ? (
+            <div className="flex flex-col gap-2 bg-clay-white p-6">
+              <p className="font-heading text-xl tracking-tight">
+                This one was called off
+              </p>
+              <p className="text-sm text-muted-foreground">
+                The studio cancelled this session. Anyone with a seat has been
+                told, and nothing is owed.
+              </p>
+            </div>
+          ) : (
+            reserveBox
+          )}
         </aside>
       </div>
     </PageShell>

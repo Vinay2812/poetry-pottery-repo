@@ -15,7 +15,12 @@ import {
   AdminDashboardDocument,
 } from "@/graphql/generated/graphql";
 
-import { formatDate, formatDateTime, formatInr } from "@/lib/format";
+import {
+  formatDate,
+  formatDateTime,
+  formatInr,
+  formatTime,
+} from "@/lib/format";
 
 import { formatEnumLabel, toErrorMessage } from "@/features/admin/shell";
 import { AdminPageHeader } from "@/features/admin/ui";
@@ -28,6 +33,7 @@ import {
   type LowStockRow,
 } from "@/features/admin/dashboard/components/LowStockList";
 import { RecentBookingsTable } from "@/features/admin/dashboard/components/RecentBookingsTable";
+import { TodayAgendaList } from "@/features/admin/dashboard/components/TodayAgendaList";
 import { RecentOrdersTable } from "@/features/admin/dashboard/components/RecentOrdersTable";
 import {
   clampDelta,
@@ -36,6 +42,8 @@ import {
   describeStock,
   formatCount,
   stockTone,
+  toAgendaHref,
+  toAgendaKindLabel,
 } from "@/features/admin/dashboard/types";
 
 interface StockPatch {
@@ -100,6 +108,19 @@ export function DashboardContainer() {
         itemsLabel: describeItems(order.item_count),
         totalLabel: formatInr(order.total),
         placedLabel: formatDate(order.created_at),
+      })),
+    [dashboard],
+  );
+
+  const agendaRows = useMemo(
+    () =>
+      (dashboard?.today ?? []).map((item) => ({
+        id: item.id,
+        href: toAgendaHref(item.kind, item.id),
+        kindLabel: toAgendaKindLabel(item.kind),
+        timeLabel: formatTime(item.starts_at),
+        title: item.title,
+        detail: item.detail,
       })),
     [dashboard],
   );
@@ -172,6 +193,13 @@ export function DashboardContainer() {
         newCommissions={formatCount(dashboard.new_commission_requests)}
         upcomingVisits={formatCount(dashboard.upcoming_visits)}
       />
+      <DashboardSection
+        title="Today at the studio"
+        moreHref={null}
+        moreLabel=""
+      >
+        <TodayAgendaList rows={agendaRows} />
+      </DashboardSection>
       <DashboardSection
         title="Recent orders"
         moreHref="/dashboard/orders"

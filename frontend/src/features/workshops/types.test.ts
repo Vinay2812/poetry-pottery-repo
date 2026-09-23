@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { RegistrationStatus } from "@/graphql/generated/graphql";
+import { DayClosedKind, RegistrationStatus } from "@/graphql/generated/graphql";
 
 import {
   addDays,
@@ -119,6 +119,7 @@ describe("session helpers", () => {
     date: "2026-09-13",
     weekday: 0,
     is_closed: false,
+    closed_kind: null,
     reason: null,
     slots: [slot(13, 6), slot(14, 2), slot(15, 0, false), slot(16, 6)],
   };
@@ -207,7 +208,8 @@ describe("session helpers", () => {
     const third = { starts_at: "e", ends_at: "f" };
     expect(togglePicked([], first, 2)).toEqual([first]);
     expect(togglePicked([first], first, 2)).toEqual([]);
-    expect(togglePicked([first, second], third, 2)).toEqual([first, second]);
+    // A full pick swaps out its earliest hour so a fresh click always lands.
+    expect(togglePicked([first, second], third, 2)).toEqual([second, third]);
     expect(formatPickedProgress(2, 3)).toBe("2 of 3 hours picked");
     expect(formatPickedProgress(0, 1)).toBe("0 of 1 hour picked");
   });
@@ -468,6 +470,7 @@ describe("toDayNote", () => {
     wheelsFree: 6,
     pickedCount: 0,
     isClosed: false,
+    closedKind: null,
     isPast: false,
     mutedReason: null as string | null,
   };
@@ -496,6 +499,20 @@ describe("toDayNote", () => {
 
   it("names the span and the empty day as their own reasons", () => {
     expect(toDayNote({ ...day, wheelsFree: 0 }).caption).toBe("full");
+    expect(
+      toDayNote({
+        ...day,
+        isClosed: true,
+        closedKind: DayClosedKind.FullyBooked,
+      }).caption,
+    ).toBe("full");
+    expect(
+      toDayNote({
+        ...day,
+        isClosed: true,
+        closedKind: DayClosedKind.NotYetOpen,
+      }).description,
+    ).toBe("bookings not open yet");
     expect(
       toDayNote({
         ...day,
@@ -555,6 +572,7 @@ describe("suggestSlots", () => {
       date,
       weekday: 0,
       is_closed: false,
+      closed_kind: null,
       reason: null,
       slots: hours.map((hour) => {
         const starts = new Date(

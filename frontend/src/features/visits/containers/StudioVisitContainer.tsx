@@ -119,8 +119,8 @@ export function StudioVisitContainer() {
         setErrorMessage(
           toServerMessage(error, "We could not take that window. Try another."),
         );
-        // A lost race means the calendar on screen is stale; the refetch is the new baseline.
-        setPickedWindow(null);
+        // A lost race means the calendar on screen is stale; the refetch is the new baseline, and a
+        // window someone else took stops matching `picked`, while one still free stays chosen.
         await refetch();
       }
     },

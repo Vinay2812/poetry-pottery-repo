@@ -24,7 +24,7 @@ export function HomeHero({
       </div>
 
       <div className="animate-fade-up flex flex-col gap-6">
-        <h1 className="font-heading text-[34px] leading-[1.05] tracking-tight text-balance md:text-6xl lg:text-7xl">
+        <h1 className="font-heading text-[34px] leading-[1.05] tracking-tight text-balance md:text-5xl lg:text-7xl">
           {heading}
         </h1>
         <p className="max-w-md text-[15px] leading-relaxed text-muted-foreground md:text-base">

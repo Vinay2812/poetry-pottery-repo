@@ -127,6 +127,7 @@ function makeDay(overrides: Partial<WorkshopDay> = {}): WorkshopDay {
     date: "2026-02-01",
     weekday: 0,
     is_closed: false,
+    closed_kind: null,
     reason: null,
     slots: [],
     ...overrides,

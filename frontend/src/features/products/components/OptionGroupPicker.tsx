@@ -84,9 +84,7 @@ export function OptionGroupPicker({
               {error}
             </span>
           ) : (
-            <span className="text-muted-foreground">
-              Letters, numbers and spaces
-            </span>
+            <span />
           )}
           {maxLength !== null && (
             <span className="text-muted-foreground">

@@ -1,18 +1,28 @@
 import { Injectable } from "@nestjs/common";
 import {
   CommissionStatus,
+  EventStatus,
   OrderStatus,
   RegistrationStatus,
 } from "@prisma/client";
 
+import { fromWallClock, toWallClock } from "@/features/workshops/schedule";
 import { PrismaService } from "@/prisma/prisma.service";
 import { toUserRef } from "../admin.type";
 import {
+  type AdminAgendaItem,
+  AdminAgendaKind,
   type AdminDashboard,
   type AdminOrderStatusCount,
 } from "./dashboard.type";
 
 export const LOW_STOCK_THRESHOLD = 2;
+const STUDIO_TIMEZONE = "Asia/Kolkata";
+const AGENDA_STATUSES: readonly RegistrationStatus[] = [
+  RegistrationStatus.PENDING,
+  RegistrationStatus.APPROVED,
+  RegistrationStatus.CONFIRMED,
+];
 export const RECENT_LIMIT = 5;
 const REVENUE_WINDOW_DAYS = 30;
 
@@ -46,6 +56,82 @@ const customerSelect = {
 export class AdminDashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Everything with a start time inside today's studio day, soonest first.
+  async today(now = new Date()): Promise<AdminAgendaItem[]> {
+    const config = await this.prisma.workshopConfig.findFirst({
+      where: { is_active: true },
+      select: { timezone: true },
+    });
+    const timezone = config?.timezone ?? STUDIO_TIMEZONE;
+    const dayKey = toWallClock(now, timezone).date;
+    const dayStart = fromWallClock(dayKey, 0, timezone);
+    const dayEnd = fromWallClock(dayKey, 24 * 60, timezone);
+    const inDay = { gte: dayStart, lt: dayEnd };
+    const [slots, visits, events] = await Promise.all([
+      this.prisma.workshopBookingSlot.findMany({
+        where: {
+          starts_at: inDay,
+          booking: { status: { in: [...AGENDA_STATUSES] } },
+        },
+        select: {
+          starts_at: true,
+          ends_at: true,
+          booking: {
+            select: {
+              id: true,
+              participants: true,
+              status: true,
+              user: customerSelect,
+              config: { select: { name: true } },
+            },
+          },
+        },
+      }),
+      this.prisma.studioVisit.findMany({
+        where: { starts_at: inDay, cancelled_at: null },
+        select: { id: true, name: true, starts_at: true, ends_at: true },
+      }),
+      this.prisma.event.findMany({
+        where: { starts_at: inDay, status: EventStatus.PUBLISHED },
+        select: {
+          id: true,
+          title: true,
+          starts_at: true,
+          ends_at: true,
+          total_seats: true,
+          available_seats: true,
+        },
+      }),
+    ]);
+    const items: AdminAgendaItem[] = [
+      ...slots.map((slot) => ({
+        kind: AdminAgendaKind.BOOKING,
+        id: slot.booking.id,
+        starts_at: slot.starts_at,
+        ends_at: slot.ends_at,
+        title: slot.booking.user.name ?? slot.booking.user.email,
+        detail: `${slot.booking.config.name} · ${slot.booking.participants} at the wheel · ${slot.booking.status.toLowerCase()}`,
+      })),
+      ...visits.map((visit) => ({
+        kind: AdminAgendaKind.VISIT,
+        id: visit.id,
+        starts_at: visit.starts_at,
+        ends_at: visit.ends_at,
+        title: visit.name,
+        detail: "Studio visit",
+      })),
+      ...events.map((event) => ({
+        kind: AdminAgendaKind.EVENT,
+        id: String(event.id),
+        starts_at: event.starts_at,
+        ends_at: event.ends_at,
+        title: event.title,
+        detail: `${event.total_seats - event.available_seats} of ${event.total_seats} seats taken`,
+      })),
+    ];
+    return items.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());
+  }
+
   async summary(now = new Date()): Promise<AdminDashboard> {
     const since = windowStart(now);
     const [
@@ -59,6 +145,7 @@ export class AdminDashboardService {
       lowStock,
       recentOrders,
       recentBookings,
+      today,
     ] = await Promise.all([
       this.prisma.order.groupBy({ by: ["status"], _count: { _all: true } }),
       this.prisma.order.aggregate({
@@ -118,6 +205,7 @@ export class AdminDashboardService {
           user: customerSelect,
         },
       }),
+      this.today(now),
     ]);
 
     return {
@@ -135,6 +223,7 @@ export class AdminDashboardService {
       new_commission_requests: newCommissions,
       upcoming_visits: upcomingVisits,
       low_stock: lowStock,
+      today,
       recent_orders: recentOrders.map((order) => ({
         id: order.id,
         status: order.status,

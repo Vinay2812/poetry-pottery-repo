@@ -32,17 +32,7 @@ import {
   toSubscribersExportFilter,
   toSubscribersFilter,
 } from "@/features/admin/inbox/types";
-
-function downloadCsv(filename: string, csv: string): void {
-  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.append(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
-}
+import { downloadCsv } from "@/lib/download";
 
 export function SubscribersContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();

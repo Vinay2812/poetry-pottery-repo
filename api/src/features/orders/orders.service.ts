@@ -45,6 +45,7 @@ import type {
   Order,
   OrdersResult,
   PlaceOrderInput,
+  ReorderResult,
 } from "./orders.type";
 
 export const STUDIO_NOTE_MAX_LENGTH = 1000;
@@ -116,6 +117,9 @@ export function toOrder(row: OrderRow, now = new Date()): Order {
     refunded_at: row.refunded_at,
   };
 }
+
+export const CART_CHANGED =
+  "Your cart changed since you opened checkout. Check the new total and place the order again.";
 
 @Injectable()
 export class OrdersService {
@@ -216,6 +220,12 @@ export class OrdersService {
       }
       if (available.length === 0) {
         throw new BadRequestException("Your cart is empty");
+      }
+      if (
+        input.expected_total != null &&
+        input.expected_total !== quote.total
+      ) {
+        throw new ConflictException(CART_CHANGED);
       }
       const code = normaliseCouponCode(input.coupon_code);
       if (code && quote.coupon_code === null) {
@@ -368,6 +378,9 @@ export class OrdersService {
       if (!current) {
         throw new NotFoundException("Order not found");
       }
+      if (current.status === OrderStatus.CANCELLED) {
+        throw new ConflictException("This order is already cancelled.");
+      }
       if (!CUSTOMER_CANCELLABLE.includes(current.status)) {
         throw new BadRequestException(
           "This order can no longer be cancelled online. Message us on WhatsApp and we will sort it out.",
@@ -381,6 +394,53 @@ export class OrdersService {
     const order = toOrder(row);
     await this.notifyStatus(userId, order);
     return order;
+  }
+
+  // Puts a past order's pieces back in the cart, one line at a time, so a piece that has since
+  // sold out or lost an option is named rather than sinking the whole request.
+  async reorder(userId: number, orderId: string): Promise<ReorderResult> {
+    const order = await this.prisma.order.findFirst({
+      where: { id: orderId, user_id: userId },
+      include: {
+        items: { include: { product: true }, orderBy: { id: "asc" } },
+      },
+    });
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+    const skipped: string[] = [];
+    for (const item of order.items) {
+      const product = item.product;
+      const quantity = product.is_customizable
+        ? item.quantity
+        : Math.min(item.quantity, product.stock);
+      if (!product.is_active || quantity < 1) {
+        skipped.push(item.product_name);
+        continue;
+      }
+      const { options } = readCustomisation(item.selections);
+      try {
+        await this.cart.add(userId, {
+          product_id: product.id,
+          quantity,
+          selections: options.map((option) => ({
+            group_id: option.group_id,
+            option_id: option.option_id,
+            text: option.text,
+          })),
+        });
+      } catch (error) {
+        if (
+          error instanceof BadRequestException ||
+          error instanceof NotFoundException
+        ) {
+          skipped.push(item.product_name);
+          continue;
+        }
+        throw error;
+      }
+    }
+    return { cart: await this.cart.get(userId), skipped };
   }
 
   // Shared by customer cancellation and the admin console; releases stock when an order leaves the holding states.

@@ -241,6 +241,8 @@ export class EventsService {
         }
 
         const data = {
+          // A rebooked row is a new request, so its clock restarts too.
+          created_at: new Date(),
           seats,
           unit_price: event.price,
           discount: 0,

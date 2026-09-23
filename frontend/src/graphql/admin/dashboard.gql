@@ -39,5 +39,13 @@ query AdminDashboard {
       slug
       stock
     }
+    today {
+      kind
+      id
+      starts_at
+      ends_at
+      title
+      detail
+    }
   }
 }

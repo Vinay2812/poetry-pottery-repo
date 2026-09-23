@@ -1,5 +1,15 @@
-import { Field, InputType, Int, ObjectType } from "@nestjs/graphql";
+import {
+  Field,
+  InputType,
+  Int,
+  ObjectType,
+  registerEnumType,
+} from "@nestjs/graphql";
 import { RegistrationStatus } from "@prisma/client";
+
+import { DayClosedKind } from "./schedule";
+
+registerEnumType(DayClosedKind, { name: "DayClosedKind" });
 
 import { PageInfo } from "@/common/pagination/pagination";
 
@@ -95,6 +105,9 @@ export class WorkshopDay {
 
   @Field()
   is_closed!: boolean;
+
+  @Field(() => DayClosedKind, { nullable: true })
+  closed_kind!: DayClosedKind | null;
 
   @Field(() => String, { nullable: true })
   reason!: string | null;

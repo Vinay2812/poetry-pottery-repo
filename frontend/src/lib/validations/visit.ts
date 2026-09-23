@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const MAX_VISIT_NOTE = 500;
+
 const TEN_DIGITS = /^(?:\+?91|0)?(\d{10})$/;
 
 export const visitSchema = z.object({
@@ -15,7 +17,10 @@ export const visitSchema = z.object({
       (value) => TEN_DIGITS.test(value.replace(/[\s-]/g, "")),
       "Enter a valid 10-digit phone number",
     ),
-  note: z.string().trim().max(500, "Note must be 500 characters or fewer"),
+  note: z
+    .string()
+    .trim()
+    .max(MAX_VISIT_NOTE, `Note must be ${MAX_VISIT_NOTE} characters or fewer`),
 });
 
 export type VisitFormValues = z.infer<typeof visitSchema>;

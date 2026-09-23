@@ -109,6 +109,8 @@ describe("VisitsService", () => {
   });
 
   it("turns away a date it cannot read instead of failing on it", async () => {
+    // An omitted argument arrives as undefined and means today, like null.
+    await expect(service.availability(undefined, 1)).resolves.toHaveLength(1);
     await expect(service.availability("today", 1)).rejects.toBeInstanceOf(
       BadRequestException,
     );

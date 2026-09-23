@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   addDays,
   buildAvailability,
+  DayClosedKind,
   checkSlots,
   fromWallClock,
   occupancy,
@@ -115,6 +116,59 @@ describe("buildAvailability", () => {
     expect(days[0]).toMatchObject({ is_closed: true, reason: "Past" });
     expect(days[1]?.slots[0]).toMatchObject({ reason: "Too soon" });
     expect(days[1]?.slots[3]?.is_available).toBe(true);
+  });
+});
+
+describe("closed_kind", () => {
+  const occupyAll = (date: string) =>
+    Array.from({ length: 6 }, (_, index) => ({
+      starts_at: fromWallClock(date, (13 + index) * 60, config.timezone),
+      ends_at: fromWallClock(date, (14 + index) * 60, config.timezone),
+      participants: config.capacity_per_slot,
+    }));
+
+  it("says full for a booked-out day and not-open-yet beyond the window", () => {
+    const days = buildAvailability({
+      config,
+      from: "2026-09-13",
+      days: 1,
+      now,
+      blackouts: [],
+      occupants: occupyAll("2026-09-13"),
+    });
+    expect(days[0]).toMatchObject({
+      is_closed: true,
+      closed_kind: DayClosedKind.FULLY_BOOKED,
+    });
+
+    const far = buildAvailability({
+      config,
+      from: "2027-06-01",
+      days: 1,
+      now,
+      blackouts: [],
+      occupants: [],
+    });
+    expect(far[0]?.closed_kind).toBe(DayClosedKind.NOT_YET_OPEN);
+  });
+
+  it("calls a fully blacked-out day a closure and an open day nothing", () => {
+    const days = buildAvailability({
+      config,
+      from: "2026-09-12",
+      days: 2,
+      now,
+      blackouts: [
+        {
+          starts_at: fromWallClock("2026-09-13", 0, config.timezone),
+          ends_at: fromWallClock("2026-09-14", 0, config.timezone),
+          reason: "Kiln firing",
+        },
+      ],
+      occupants: [],
+    });
+    expect(days[0]?.closed_kind).toBeNull();
+    expect(days[1]?.closed_kind).toBe(DayClosedKind.STUDIO_CLOSED);
   });
 });
 

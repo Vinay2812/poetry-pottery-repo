@@ -10,8 +10,8 @@ export function EmptyCart({ isSignedIn, onSignIn }: EmptyCartProps) {
     return (
       <EmptyState
         kind="mug"
-        heading="Your cart is empty"
-        line="Sign in to see the pieces you saved."
+        heading="Sign in to see your cart"
+        line="Your cart is kept with your account, so it follows you to any device."
         actionLabel="Sign in"
         onAction={onSignIn}
       />

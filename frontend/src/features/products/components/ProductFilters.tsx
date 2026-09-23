@@ -1,3 +1,7 @@
+"use client";
+
+import { useId } from "react";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -116,13 +120,15 @@ export function ProductFilters({
   onSecondsOnlyChange,
 }: ProductFiltersProps) {
   const hasPriceRange = priceCeiling > priceFloor;
+  // The panel renders twice (sidebar and mobile sheet), so each copy needs its own ids for labels to bind.
+  const scope = useId();
   return (
     <div className="flex flex-col gap-8">
       {/* The group titles are h3s; this is the h2 they hang from. */}
       <h2 className="sr-only">Filters</h2>
       <CheckGroup
         title="Category"
-        idPrefix="category"
+        idPrefix={`${scope}-category`}
         options={categoryOptions}
         selected={selectedCategories}
         onToggle={onToggleCategory}
@@ -130,7 +136,7 @@ export function ProductFilters({
 
       <CheckGroup
         title="Collection"
-        idPrefix="collection"
+        idPrefix={`${scope}-collection`}
         options={collectionOptions}
         selected={selectedCollection ? [selectedCollection] : []}
         onToggle={onToggleCollection}
@@ -170,7 +176,7 @@ export function ProductFilters({
 
       <CheckGroup
         title="Clay body"
-        idPrefix="material"
+        idPrefix={`${scope}-material`}
         options={materialOptions}
         selected={selectedMaterials}
         onToggle={onToggleMaterial}
@@ -178,7 +184,7 @@ export function ProductFilters({
 
       <CheckGroup
         title="Glaze"
-        idPrefix="glaze"
+        idPrefix={`${scope}-glaze`}
         options={glazeOptions}
         selected={selectedGlazes}
         onToggle={onToggleGlaze}
@@ -186,33 +192,33 @@ export function ProductFilters({
 
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between gap-3">
-          <Label htmlFor="filter-in-stock" className="font-normal">
+          <Label htmlFor={`${scope}-filter-in-stock`} className="font-normal">
             Ready to ship only
           </Label>
           <Switch
-            id="filter-in-stock"
+            id={`${scope}-filter-in-stock`}
             checked={inStockOnly}
             onCheckedChange={onInStockOnlyChange}
           />
         </div>
         <div className="flex items-center justify-between gap-3">
-          <Label htmlFor="filter-custom" className="font-normal">
+          <Label htmlFor={`${scope}-filter-custom`} className="font-normal">
             Made to order
           </Label>
           <Switch
-            id="filter-custom"
+            id={`${scope}-filter-custom`}
             checked={customizableOnly}
             onCheckedChange={onCustomizableOnlyChange}
           />
         </div>
         {/* The seconds shelf is listed on the shelf and in the archive alike, count and all. */}
         <div className="flex items-center justify-between gap-3">
-          <Label htmlFor="filter-seconds" className="font-normal">
+          <Label htmlFor={`${scope}-filter-seconds`} className="font-normal">
             Seconds{" "}
             <span className="text-muted-foreground tnum">({secondsCount})</span>
           </Label>
           <Switch
-            id="filter-seconds"
+            id={`${scope}-filter-seconds`}
             checked={secondsOnly}
             onCheckedChange={onSecondsOnlyChange}
           />

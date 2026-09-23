@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+export const MAX_MESSAGE = 2000;
+
 const TEN_DIGITS = /^(?:\+?91|0)?(\d{10})$/;
 
 export const contactSchema = z.object({
@@ -29,7 +31,7 @@ export const contactSchema = z.object({
     .string()
     .trim()
     .min(10, "Message must be at least 10 characters")
-    .max(2000, "Message must be 2000 characters or fewer"),
+    .max(MAX_MESSAGE, `Message must be ${MAX_MESSAGE} characters or fewer`),
 });
 
 export type ContactFormValues = z.infer<typeof contactSchema>;

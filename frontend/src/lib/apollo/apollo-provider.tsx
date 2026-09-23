@@ -15,7 +15,9 @@ import { createAuthLink, createHttpLink, type TokenGetter } from "./links";
 
 function makeClient(getToken: TokenGetter): ApolloClient {
   return new ApolloClient({
-    cache: new InMemoryCache(),
+    // The server pass builds this cache per request and hands the data to the browser, where a
+    // fresh cache with memoised reads takes over; memoising on the server only costs memory.
+    cache: new InMemoryCache({ resultCaching: typeof window !== "undefined" }),
     link: ApolloLink.from([createAuthLink(getToken), createHttpLink()]),
   });
 }

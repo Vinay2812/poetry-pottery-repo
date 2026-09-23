@@ -170,6 +170,39 @@ export class AdminEventsService {
     return toEvent(row);
   }
 
+  // A repeat evening starts as a draft copy of the last one, so the owner edits the date and
+  // publishes rather than typing the same brief again.
+  async duplicate(id: number): Promise<Event> {
+    const source = await this.prisma.event.findUnique({ where: { id } });
+    if (!source) {
+      throw new NotFoundException("Event not found");
+    }
+    const title = `${source.title} (copy)`;
+    const row = await this.prisma.event.create({
+      data: {
+        slug: await this.freeSlug(title),
+        title,
+        description: source.description,
+        event_type: source.event_type,
+        level: source.level,
+        starts_at: source.starts_at,
+        ends_at: source.ends_at,
+        location: source.location,
+        address: source.address,
+        price: source.price,
+        total_seats: source.total_seats,
+        available_seats: source.total_seats,
+        instructor: source.instructor,
+        image_url: source.image_url,
+        gallery: source.gallery,
+        includes: source.includes,
+        highlights: source.highlights,
+        performers: source.performers,
+      },
+    });
+    return toEvent(row);
+  }
+
   // Growing or shrinking the room moves available seats by the same delta, so seats taken
   // since the edit form was opened survive the save.
   async update(id: number, input: AdminEventInput): Promise<Event> {

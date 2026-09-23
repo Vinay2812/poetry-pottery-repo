@@ -89,6 +89,10 @@ const meta = {
     canCancel: true,
     isCancelling: false,
     onCancel: fn(),
+    canReorder: true,
+    isReordering: false,
+    onReorder: fn(),
+    onPrint: fn(),
   },
 } satisfies Meta<typeof OrderDetail>;
 

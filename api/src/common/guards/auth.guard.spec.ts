@@ -47,7 +47,7 @@ function makeUser(overrides: Partial<User> = {}): User {
 const clerkUserStub = {} as ClerkUser;
 
 const clerkMock = {
-  getUser: vi.fn(),
+  getUser: vi.fn(() => Promise.resolve(clerkUserStub)),
   getPrimaryEmail: vi.fn(),
   hasVerifiedPrimaryEmail: vi.fn(),
   getFullName: vi.fn(),
@@ -60,6 +60,7 @@ const prismaMock = {
     findUnique: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
+    updateMany: vi.fn(() => Promise.resolve({ count: 1 })),
   },
   $executeRaw: vi.fn(),
   withTransaction: vi.fn(),
@@ -176,6 +177,29 @@ describe("AuthGuard", () => {
       authGuard.canActivate(createHttpExecutionContext({ request })),
     ).resolves.toBe(true);
     expect(request.authenticatedUser?.db_user_id).toBe(3);
+  });
+
+  it("fills a name that Clerk gained after the first sign-in, once per user", async () => {
+    mockAuth({
+      isAuthenticated: true,
+      userId: "user_9",
+      sessionClaims: { dbUserId: 9, role: UserRole.USER },
+    });
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeUser({ id: 9, auth_id: "user_9", name: null }),
+    );
+    clerkMock.getFullName.mockReturnValue("Maya Iyer");
+    clerkMock.getImageUrl.mockReturnValue(undefined);
+
+    await authGuard.canActivate(createHttpExecutionContext({ request: {} }));
+    await authGuard.canActivate(createHttpExecutionContext({ request: {} }));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(clerkMock.getUser).toHaveBeenCalledTimes(1);
+    expect(prismaMock.user.updateMany).toHaveBeenCalledWith({
+      where: { id: 9, name: null },
+      data: { name: "Maya Iyer" },
+    });
   });
 
   it("ignores an admin role claim the database does not back", async () => {

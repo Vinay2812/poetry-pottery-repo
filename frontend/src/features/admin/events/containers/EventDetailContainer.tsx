@@ -1,12 +1,14 @@
 "use client";
 
 import { useCallback, useOptimistic, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
   AdminEventDocument,
   CancelEventDocument,
+  DuplicateEventDocument,
   CompleteEventDocument,
   EventStatus,
   PublishEventDocument,
@@ -50,6 +52,24 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
   const [unpublishEvent] = useMutation(UnpublishEventDocument);
   const [completeEvent] = useMutation(CompleteEventDocument);
   const [cancelEvent] = useMutation(CancelEventDocument);
+  const [duplicateEvent, { loading: isDuplicating }] = useMutation(
+    DuplicateEventDocument,
+  );
+  const router = useRouter();
+
+  const handleDuplicate = useCallback(async () => {
+    try {
+      const { data: copy } = await duplicateEvent({
+        variables: { id: eventId },
+        refetchQueries: ["AdminEvents"],
+      });
+      if (!copy) throw new Error("The copy did not come back");
+      toast.success("Draft copy made; set its date and publish");
+      router.push(`/dashboard/events/${copy.duplicateEvent.id}`);
+    } catch (copyError) {
+      toast.error(toErrorMessage(copyError));
+    }
+  }, [duplicateEvent, eventId, router]);
 
   const [busyAction, setBusyAction] = useState<EventAction | null>(null);
   const [pendingAction, setPendingAction] = useState<EventAction | null>(null);
@@ -151,7 +171,9 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
             statusTone={eventStatusTone(status)}
             actions={allowedEventActions(status)}
             busyAction={busyAction}
+            isDuplicating={isDuplicating}
             onAction={handleAction}
+            onDuplicate={() => void handleDuplicate()}
           />
         }
       />

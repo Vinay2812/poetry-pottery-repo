@@ -57,6 +57,25 @@ describe("WishlistService", () => {
     });
   });
 
+  it("sets the asked-for state instead of flipping when a stale tab names it", async () => {
+    prismaMock.product.findUnique.mockResolvedValue({ id: 1 });
+    prismaMock.wishlistItem.count.mockResolvedValue(1);
+
+    // Already saved elsewhere: asking to save keeps it saved and never deletes.
+    await expect(service.toggle(1, 1, true)).resolves.toMatchObject({
+      is_wishlisted: true,
+    });
+    expect(prismaMock.wishlistItem.deleteMany).not.toHaveBeenCalled();
+
+    // Already removed elsewhere: asking to remove stays removed and never re-adds.
+    prismaMock.wishlistItem.deleteMany.mockResolvedValue({ count: 0 });
+    prismaMock.wishlistItem.createMany.mockClear();
+    await expect(service.toggle(1, 1, false)).resolves.toMatchObject({
+      is_wishlisted: false,
+    });
+    expect(prismaMock.wishlistItem.createMany).not.toHaveBeenCalled();
+  });
+
   it("rejects unknown products", async () => {
     prismaMock.product.findUnique.mockResolvedValue(null);
     await expect(service.toggle(1, 99)).rejects.toThrow("Product not found");

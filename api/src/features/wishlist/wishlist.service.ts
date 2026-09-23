@@ -38,9 +38,11 @@ export class WishlistService {
     return rows.map((row) => row.product_id);
   }
 
+  // With `wishlisted` the call is idempotent, so a stale tab cannot flip a piece the wrong way.
   async toggle(
     userId: number,
     productId: number,
+    wishlisted?: boolean,
   ): Promise<WishlistToggleResult> {
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
@@ -51,10 +53,12 @@ export class WishlistService {
     }
     const isWishlisted = await this.prisma
       .withTransaction(async () => {
-        const removed = await this.prisma.wishlistItem.deleteMany({
-          where: { user_id: userId, product_id: productId },
-        });
-        if (removed.count > 0) return false;
+        if (wishlisted !== true) {
+          const removed = await this.prisma.wishlistItem.deleteMany({
+            where: { user_id: userId, product_id: productId },
+          });
+          if (removed.count > 0 || wishlisted === false) return false;
+        }
         // A double tap can race the insert; duplicates are simply skipped.
         await this.prisma.wishlistItem.createMany({
           data: { user_id: userId, product_id: productId },

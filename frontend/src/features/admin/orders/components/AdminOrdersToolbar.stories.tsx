@@ -26,6 +26,8 @@ const meta = {
     onStatusChange: fn(),
     onFromChange: fn(),
     onToChange: fn(),
+    isExporting: false,
+    onExport: fn(),
   },
 } satisfies Meta<typeof AdminOrdersToolbar>;
 

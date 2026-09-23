@@ -15,7 +15,9 @@ export interface EventStatusActionsProps {
   statusTone: AdminStatusTone;
   actions: EventAction[];
   busyAction: EventAction | null;
+  isDuplicating: boolean;
   onAction: (action: EventAction) => void;
+  onDuplicate: () => void;
 }
 
 export function EventStatusActions({
@@ -23,7 +25,9 @@ export function EventStatusActions({
   statusTone,
   actions,
   busyAction,
+  isDuplicating,
   onAction,
+  onDuplicate,
 }: EventStatusActionsProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -45,6 +49,16 @@ export function EventStatusActions({
           {busyAction === action ? "Working…" : eventActionLabel(action)}
         </Button>
       ))}
+      {/* A repeat evening starts from this one, whatever state it is in. */}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        disabled={busyAction !== null || isDuplicating}
+        onClick={onDuplicate}
+      >
+        {isDuplicating ? "Copying…" : "Duplicate as draft"}
+      </Button>
     </div>
   );
 }

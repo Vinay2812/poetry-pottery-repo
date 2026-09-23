@@ -11,6 +11,7 @@ import {
   type ContactFormValues,
   contactSchema,
   EMPTY_CONTACT_FORM,
+  MAX_MESSAGE,
 } from "@/lib/validations/contact";
 
 interface FieldProps {
@@ -109,6 +110,7 @@ export function ContactForm({
         <Textarea
           id="contact-message"
           rows={6}
+          maxLength={MAX_MESSAGE}
           aria-invalid={Boolean(errors.message)}
           {...register("message")}
         />

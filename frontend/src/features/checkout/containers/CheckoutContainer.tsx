@@ -34,7 +34,12 @@ import { toOrderPath } from "@/features/orders/types";
 export function CheckoutContainer() {
   const router = useRouter();
   const { openSignIn } = useClerk();
-  const { cart, isLoading: isCartLoading, isSignedIn } = useCart();
+  const {
+    cart,
+    isLoading: isCartLoading,
+    isSignedIn,
+    resync: resyncCart,
+  } = useCart();
   const [addressId, setAddressId] = useState<number | null>(null);
   const [couponDraft, setCouponDraft] = useState("");
   const [isCouponOpen, setIsCouponOpen] = useState(false);
@@ -149,17 +154,21 @@ export function CheckoutContainer() {
           customer_note: note.trim() || null,
           gift_note: gift.gift_note,
           hide_prices: gift.hide_prices,
+          expected_total: quote?.total ?? null,
         },
       },
     })
       .then(({ data }) => {
         if (data) router.push(`${toOrderPath(data.placeOrder.id)}?placed=1`);
       })
-      .catch((error: unknown) =>
+      .catch((error: unknown) => {
         toast.error(
           error instanceof Error ? error.message : "Could not place the order",
-        ),
-      );
+        );
+        // Whatever refused the order, the page should now show the cart the server holds.
+        void resyncCart();
+        void refetchQuote();
+      });
   }, [
     addressId,
     giftNote,
@@ -168,6 +177,8 @@ export function CheckoutContainer() {
     note,
     placeOrder,
     quote,
+    refetchQuote,
+    resyncCart,
     router,
   ]);
 

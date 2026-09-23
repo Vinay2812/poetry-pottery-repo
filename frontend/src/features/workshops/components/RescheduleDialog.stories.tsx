@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
+import { DayClosedKind } from "@/graphql/generated/graphql";
+
 import { atViewport } from "@/lib/storybook/viewports";
 import { formatDateKey, toMonthGrid } from "@/features/workshops/types";
 import type { CalendarDay } from "./BookingCalendar";
@@ -20,6 +22,7 @@ const WEEKS: (CalendarDay | null)[][] = toMonthGrid(MONTH).map((week) =>
       wheelsFree: weekday === 1 ? 0 : 4,
       pickedCount: dateKey === "2026-09-19" ? 1 : 0,
       isClosed: weekday === 1,
+      closedKind: weekday === 1 ? DayClosedKind.StudioClosed : null,
       isPast: dateKey < TODAY,
       mutedReason: null,
     };

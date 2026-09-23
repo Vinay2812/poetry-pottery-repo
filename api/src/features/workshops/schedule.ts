@@ -28,12 +28,35 @@ export interface SlotAvailability {
   reason: string | null;
 }
 
+// Why a day cannot be booked, so the calendar can say "full" or "not open yet" rather than "closed".
+export enum DayClosedKind {
+  PAST = "PAST",
+  NOT_YET_OPEN = "NOT_YET_OPEN",
+  STUDIO_CLOSED = "STUDIO_CLOSED",
+  FULLY_BOOKED = "FULLY_BOOKED",
+  NO_SESSIONS_LEFT = "NO_SESSIONS_LEFT",
+}
+
 export interface DayAvailability {
   date: string;
   weekday: number;
   is_closed: boolean;
+  closed_kind: DayClosedKind | null;
   reason: string | null;
   slots: SlotAvailability[];
+}
+
+// The slot kinds a closed day is judged from: all blacked out is a closure, any full slot makes it full.
+function toClosedKind(
+  unavailable: ("blackout" | "full" | "too-soon")[],
+): DayClosedKind {
+  if (
+    unavailable.length > 0 &&
+    unavailable.every((kind) => kind === "blackout")
+  )
+    return DayClosedKind.STUDIO_CLOSED;
+  if (unavailable.includes("full")) return DayClosedKind.FULLY_BOOKED;
+  return DayClosedKind.NO_SESSIONS_LEFT;
 }
 
 const MINUTE = 60_000;
@@ -184,6 +207,7 @@ export function buildAvailability({
         date,
         weekday,
         is_closed: true,
+        closed_kind: DayClosedKind.PAST,
         reason: "Past",
         slots: [],
       });
@@ -194,6 +218,7 @@ export function buildAvailability({
         date,
         weekday,
         is_closed: true,
+        closed_kind: DayClosedKind.NOT_YET_OPEN,
         reason: `Bookings open ${config.booking_window_days} days ahead`,
         slots: [],
       });
@@ -204,11 +229,13 @@ export function buildAvailability({
         date,
         weekday,
         is_closed: true,
+        closed_kind: DayClosedKind.STUDIO_CLOSED,
         reason: "Studio closed",
         slots: [],
       });
       continue;
     }
+    const unavailable: ("blackout" | "full" | "too-soon")[] = [];
     const slots = slotStartsForDay(date, config).map(
       (starts_at): SlotAvailability => {
         const slot = {
@@ -222,27 +249,33 @@ export function buildAvailability({
           0,
           config.capacity_per_slot - occupancy(slot, occupants),
         );
-        if (starts_at < earliest)
+        if (starts_at < earliest) {
+          unavailable.push("too-soon");
           return {
             ...slot,
             remaining,
             is_available: false,
             reason: "Too soon",
           };
-        if (blackout)
+        }
+        if (blackout) {
+          unavailable.push("blackout");
           return {
             ...slot,
             remaining,
             is_available: false,
             reason: blackout.reason ?? "Studio closed",
           };
-        if (remaining === 0)
+        }
+        if (remaining === 0) {
+          unavailable.push("full");
           return {
             ...slot,
             remaining,
             is_available: false,
             reason: "Fully booked",
           };
+        }
         return { ...slot, remaining, is_available: true, reason: null };
       },
     );
@@ -251,6 +284,7 @@ export function buildAvailability({
       date,
       weekday,
       is_closed: isClosed,
+      closed_kind: isClosed ? toClosedKind(unavailable) : null,
       reason: isClosed ? "No sessions left" : null,
       slots,
     });

@@ -67,11 +67,20 @@ export function SiteHeaderContainer({
   );
   // Checkout keeps the wordmark and one way back, nothing else to wander into.
   const focused = toFocusedHeader(pathname);
+  // The search panel unmounts on close, so the button that opened it takes focus back.
+  const searchOpenerRef = useRef<HTMLElement | null>(null);
   const handleSearchClick = useCallback(() => {
+    const opener = document.activeElement;
+    searchOpenerRef.current = opener instanceof HTMLElement ? opener : null;
     setIsMenuOpen(false);
     setIsSearchOpen(true);
   }, []);
-  const handleCloseSearch = useCallback(() => setIsSearchOpen(false), []);
+  const handleCloseSearch = useCallback(() => {
+    setIsSearchOpen(false);
+    requestAnimationFrame(() => {
+      if (searchOpenerRef.current?.isConnected) searchOpenerRef.current.focus();
+    });
+  }, []);
 
   const handleAccountClick = useCallback(() => {
     setIsMenuOpen(false);

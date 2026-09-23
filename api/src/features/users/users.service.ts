@@ -30,6 +30,25 @@ export class UsersService {
     });
   }
 
+  // Fills a name or photo the first sign-in did not have, never overwriting one already set.
+  async fillMissingProfile(
+    userId: number,
+    profile: { name: string | null; image: string | null },
+  ): Promise<void> {
+    if (profile.name) {
+      await this.prisma.user.updateMany({
+        where: { id: userId, name: null },
+        data: { name: profile.name },
+      });
+    }
+    if (profile.image) {
+      await this.prisma.user.updateMany({
+        where: { id: userId, image: null },
+        data: { image: profile.image },
+      });
+    }
+  }
+
   // Email is unique, so an imported row carrying a production Clerk auth id has to be adopted
   // rather than inserted again when the same person signs in from another Clerk instance.
   // The role is never written here: the database owns it.

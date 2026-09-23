@@ -13,6 +13,7 @@ export function AnnouncementBar({ text, href }: AnnouncementBarProps) {
   return (
     // A landmark, so the one line above the header is not content adrift of every region.
     <aside
+      data-print="hide"
       aria-label="Studio announcement"
       className="flex h-9 items-center justify-center border-b border-ash bg-background px-4 text-foreground"
     >

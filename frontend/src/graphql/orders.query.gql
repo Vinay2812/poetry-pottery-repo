@@ -105,3 +105,12 @@ mutation CancelOrder($id: String!, $reason: String) {
     ...OrderFields
   }
 }
+
+mutation Reorder($orderId: String!) {
+  reorder(order_id: $orderId) {
+    cart {
+      ...CartFields
+    }
+    skipped
+  }
+}

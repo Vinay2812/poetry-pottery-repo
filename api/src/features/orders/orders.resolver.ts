@@ -15,6 +15,7 @@ import {
   Order,
   OrdersResult,
   PlaceOrderInput,
+  ReorderResult,
 } from "./orders.type";
 
 @Resolver(() => Order)
@@ -62,6 +63,15 @@ export class OrdersResolver {
   @Mutation(() => Order)
   addOrderNote(@Args("input") input: AddOrderNoteInput): Promise<Order> {
     return this.ordersService.addNote(input);
+  }
+
+  @AuthRequired()
+  @Mutation(() => ReorderResult)
+  reorder(
+    @CurrentUser() user: AuthUser,
+    @Args("order_id") orderId: string,
+  ): Promise<ReorderResult> {
+    return this.ordersService.reorder(user.db_user_id, orderId);
   }
 
   @AuthRequired()
