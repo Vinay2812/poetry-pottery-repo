@@ -1,10 +1,12 @@
 import {
   BadRequestException,
   Injectable,
+  Logger,
   NotFoundException,
 } from "@nestjs/common";
 import { Prisma, UserRole } from "@prisma/client";
 
+import { ClerkService } from "@/common/clerk/clerk.service";
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
 import { searchTerm, toUserRef } from "../admin.type";
@@ -15,6 +17,7 @@ import type {
 } from "./users.type";
 
 const MAX_LIMIT = 60;
+const ROLE_CHANGE_LOCK = "admin-role-changes";
 
 const userCounts = {
   _count: {
@@ -44,7 +47,12 @@ export function toAdminUser(row: UserRow): AdminUser {
 
 @Injectable()
 export class AdminUsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(AdminUsersService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly clerk: ClerkService,
+  ) {}
 
   async list(filter: AdminUsersFilterInput): Promise<AdminUsersResult> {
     const bounds = clampPage(filter.page, filter.limit, MAX_LIMIT);
@@ -98,22 +106,35 @@ export class AdminUsersService {
       throw new BadRequestException("You cannot take away your own access");
     }
     await this.byId(id);
-    // The studio must always have a way in, so the last admin cannot step down.
-    if (role !== UserRole.ADMIN) {
-      const others = await this.prisma.user.count({
-        where: { role: UserRole.ADMIN, id: { not: id } },
-      });
-      if (others === 0) {
-        throw new BadRequestException(
-          "Make someone else an admin before this one steps down",
-        );
+    const row = await this.prisma.withTransaction(async () => {
+      // Serialised, so two admins demoting each other at once cannot both count the other as the one left.
+      await this.prisma
+        .$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${ROLE_CHANGE_LOCK}))`;
+      // The studio must always have a way in, so the last admin cannot step down.
+      if (role !== UserRole.ADMIN) {
+        const others = await this.prisma.user.count({
+          where: { role: UserRole.ADMIN, id: { not: id } },
+        });
+        if (others === 0) {
+          throw new BadRequestException(
+            "Make someone else an admin before this one steps down",
+          );
+        }
       }
-    }
-    const row = await this.prisma.user.update({
-      where: { id },
-      data: { role },
-      include: userCounts,
+      return this.prisma.user.update({
+        where: { id },
+        data: { role },
+        include: userCounts,
+      });
     });
+    // The dashboard layout reads the role from Clerk, so it follows the change now rather than on their next API call.
+    this.clerk
+      .updatePublicMetadata(row.auth_id, { dbUserId: row.id, role: row.role })
+      .catch((error: unknown) => {
+        this.logger.warn(
+          `Could not refresh Clerk metadata for user ${row.id}: ${String(error)}`,
+        );
+      });
     return toAdminUser(row);
   }
 }

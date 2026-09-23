@@ -49,16 +49,15 @@ export function commissionStudioMail(request: CommissionRequest): MailBody {
   return { subject: `Commission brief · ${request.piece_type}`, ...body };
 }
 
+// Goes to an address nobody has verified, so it carries only the reference the server generated.
 export function commissionAcknowledgementMail(
-  request: CommissionRequest,
+  request: Pick<CommissionRequest, "id">,
 ): MailBody {
   const body = renderMail({
     title: "Your brief is with us",
-    intro: `Thanks, ${request.name}. We will send a sketch within two days, and the piece ships in about ten days once you say yes.`,
-    blocks: [
-      { heading: "What you asked for", lines: briefLines(request) },
-      { heading: "Your reference", lines: [request.id] },
-    ],
+    intro:
+      "Thanks for the brief. We will send a sketch within two days, and the piece ships in about ten days once you say yes.",
+    blocks: [{ heading: "Your reference", lines: [request.id] }],
   });
   return { subject: "Your brief is with us · Poetry & Pottery", ...body };
 }

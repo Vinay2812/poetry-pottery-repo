@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { useUnsubscribeFromNewsletterMutation } from "@/graphql/generated/graphql";
+import { useMutation } from "@apollo/client/react";
+import { UnsubscribeFromNewsletterDocument } from "@/graphql/generated/graphql";
 
 import { isNotFoundError } from "@/lib/apollo/errors";
 
@@ -21,7 +22,7 @@ export function UnsubscribeContainer({ token }: UnsubscribeContainerProps) {
   const [line, setLine] = useState(
     hasToken ? "Taking you off the list…" : MISSING_TOKEN,
   );
-  const [unsubscribe] = useUnsubscribeFromNewsletterMutation();
+  const [unsubscribe] = useMutation(UnsubscribeFromNewsletterDocument);
   // React runs effects twice in development; the link should only be spent once.
   const hasRun = useRef(false);
 

@@ -3,7 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useState } from "react";
 
-import { useSuggestQuery } from "@/graphql/generated/graphql";
+import { useQuery } from "@apollo/client/react";
+import { SuggestDocument } from "@/graphql/generated/graphql";
 import { formatDate, formatInr } from "@/lib/format";
 
 import {
@@ -58,7 +59,7 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
     return () => document.removeEventListener("keydown", handle);
   }, [onClose]);
 
-  const { data, previousData, loading } = useSuggestQuery({
+  const { data, previousData, loading } = useQuery(SuggestDocument, {
     variables: { q: term },
     skip: !isTermReady,
   });

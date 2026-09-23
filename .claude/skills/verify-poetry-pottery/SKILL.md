@@ -170,12 +170,16 @@ subscribers — and cancels the ones it can. Point it at a disposable database.
 
 ## Cleanup
 
-Kill only what this run started, by port, never by process name:
+Kill only what this run started, by port, never by process name. The API
+listener is a child of `nest start --watch`, which respawns it on the next file
+change, so stop the watcher that owns the port as well:
 
 ```bash
 agent-browser --session verify close
 lsof -ti :3036 -sTCP:LISTEN | xargs -r kill
-lsof -ti :6066 -sTCP:LISTEN | xargs -r kill
+for pid in $(lsof -ti :6066 -sTCP:LISTEN); do
+  kill "$(ps -o ppid= -p "$pid" | tr -d ' ')" "$pid"
+done
 ```
 
 Leave the compose services up. Leave `$OUT_DIR` alone — the proof lives there,

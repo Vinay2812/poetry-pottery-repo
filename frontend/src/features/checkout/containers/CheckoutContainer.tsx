@@ -11,9 +11,10 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useCheckoutQuoteQuery,
-  usePlaceOrderMutation,
+  CheckoutQuoteDocument,
+  PlaceOrderDocument,
 } from "@/graphql/generated/graphql";
 
 import { PageShell } from "@/components/layout/PageShell";
@@ -68,7 +69,7 @@ export function CheckoutContainer() {
     previousData: previousQuote,
     loading: isQuoting,
     refetch: refetchQuote,
-  } = useCheckoutQuoteQuery({
+  } = useQuery(CheckoutQuoteDocument, {
     variables: { input: { coupon_code: appliedCoupon } },
     skip: !isSignedIn,
     fetchPolicy: "network-only",
@@ -88,7 +89,7 @@ export function CheckoutContainer() {
   // Placing an order empties the cart, so only the cart queries mounted here are fetched again.
   // The orders list is not mounted on checkout and reads cache-and-network when it opens.
   // A refetch that fails must not swallow an order the server already saved.
-  const [placeOrder, { loading: isPlacing }] = usePlaceOrderMutation({
+  const [placeOrder, { loading: isPlacing }] = useMutation(PlaceOrderDocument, {
     refetchQueries: ["Cart", "CartCount"],
     awaitRefetchQueries: true,
     onQueryUpdated: (query) =>

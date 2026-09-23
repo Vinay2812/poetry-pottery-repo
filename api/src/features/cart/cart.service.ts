@@ -13,10 +13,11 @@ import {
 } from "@/features/products/products.service";
 import { SettingsService } from "@/features/settings/settings.service";
 import { PendingUploadsService } from "@/storage/pending-uploads.service";
-import { StorageService } from "@/storage/storage.service";
+import { customizationPrefix, StorageService } from "@/storage/storage.service";
 import type { AddToCartInput, Cart, CartItem } from "./cart.type";
 import {
   readCustomisation,
+  repriceSelections,
   resolveReferenceImages,
   resolveSelections,
   selectionKey,
@@ -26,7 +27,13 @@ import {
 export const MAX_LINE_QUANTITY = 10;
 
 const cartItemInclude = {
-  product: { include: productListInclude },
+  product: {
+    include: {
+      ...productListInclude,
+      // Every option, active or not, so a retired choice is caught rather than silently kept.
+      option_groups: { include: { options: true } },
+    },
+  },
 } satisfies Prisma.CartItemInclude;
 
 type CartItemRow = Prisma.CartItemGetPayload<{
@@ -45,10 +52,17 @@ export function shippingFor(
 function availability(
   row: CartItemRow,
   now: Date,
+  hasCurrentOptions: boolean,
 ): { is_available: boolean; reason: string | null } {
   const { product } = row;
   if (!product.is_active)
     return { is_available: false, reason: "No longer available" };
+  if (!hasCurrentOptions) {
+    return {
+      is_available: false,
+      reason: "Its options have changed; remove it and add it again",
+    };
+  }
   if (product.collection?.starts_at && product.collection.starts_at > now) {
     return {
       is_available: false,
@@ -68,15 +82,23 @@ function availability(
 
 export function toCartItem(row: CartItemRow, now = new Date()): CartItem {
   const { options, reference_image_urls } = readCustomisation(row.selections);
-  const unit_price = row.product.price + selectionsTotal(options);
-  const { is_available, reason } = availability(row, now);
+  const { option_groups, ...product } = row.product;
+  // A plain piece carries no choices, so leftover ones mean the product changed under the line.
+  const live = product.is_customizable
+    ? repriceSelections(option_groups, options)
+    : options.length === 0
+      ? options
+      : null;
+  const selections = live ?? options;
+  const unit_price = product.price + selectionsTotal(selections);
+  const { is_available, reason } = availability(row, now, live !== null);
   return {
     id: row.id,
-    product: toProduct(row.product),
+    product: toProduct(product),
     quantity: row.quantity,
     unit_price,
     line_total: unit_price * row.quantity,
-    selections: options,
+    selections,
     reference_image_urls,
     is_available,
     unavailable_reason: reason,
@@ -147,7 +169,7 @@ export class CartService {
       : [];
     const referenceImages = product.is_customizable
       ? resolveReferenceImages(input.reference_image_urls, (url) =>
-          this.storage.isOwnUrl(url),
+          this.storage.isUploadedUnder(url, customizationPrefix(userId)),
         )
       : [];
     const key = selectionKey(selections, referenceImages);

@@ -1,4 +1,5 @@
 import { Test } from "@nestjs/testing";
+import { OptionGroupKind } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
@@ -33,6 +34,9 @@ const prismaMock = {
 
 const storageMock = {
   isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.test/")),
+  isUploadedUnder: vi.fn((url: string, prefix: string) =>
+    url.startsWith(`https://cdn.test/${prefix}`),
+  ),
 };
 
 const pendingUploadsMock = { keep: vi.fn(), track: vi.fn(), sweep: vi.fn() };
@@ -69,30 +73,80 @@ describe("shippingFor", () => {
 });
 
 describe("toCartItem", () => {
+  const sizeGroup = (
+    overrides: { price_modifier?: number; is_active?: boolean } = {},
+  ) => ({
+    id: 1,
+    name: "Size",
+    kind: OptionGroupKind.CHOICE,
+    is_required: true,
+    price_modifier: 0,
+    max_length: null,
+    options: [
+      {
+        id: 2,
+        name: "Large",
+        price_modifier: overrides.price_modifier ?? 150,
+        is_active: overrides.is_active ?? true,
+      },
+    ],
+  });
+  const customLine = (optionGroups: unknown[]) => ({
+    id: 7,
+    user_id: 1,
+    product_id: 1,
+    quantity: 2,
+    selections: [
+      {
+        group_id: 1,
+        group_name: "Size",
+        option_id: 2,
+        option_name: "Large",
+        text: null,
+        price_modifier: 150,
+      },
+    ],
+    selection_key: "abc",
+    created_at: new Date(),
+    updated_at: new Date(),
+    product: productRow({
+      is_customizable: true,
+      option_groups: optionGroups,
+    }) as never,
+  });
+
   it("prices lines from the product plus selection modifiers", () => {
-    const item = toCartItem({
-      id: 7,
-      user_id: 1,
-      product_id: 1,
-      quantity: 2,
-      selections: [
-        {
-          group_id: 1,
-          group_name: "Size",
-          option_id: 2,
-          option_name: "Large",
-          text: null,
-          price_modifier: 150,
-        },
-      ],
-      selection_key: "abc",
-      created_at: new Date(),
-      updated_at: new Date(),
-      product: productRow({ is_customizable: true }) as never,
-    });
+    const item = toCartItem(customLine([sizeGroup()]));
     expect(item.unit_price).toBe(1000);
     expect(item.line_total).toBe(2000);
     expect(item.is_available).toBe(true);
+    expect(item.product).not.toHaveProperty("option_groups");
+  });
+
+  it("charges today's surcharge, not the one saved when the piece was carted", () => {
+    const item = toCartItem(customLine([sizeGroup({ price_modifier: 500 })]));
+    expect(item.unit_price).toBe(1350);
+    expect(item.selections[0]?.price_modifier).toBe(500);
+  });
+
+  it("holds back a line whose option was retired or that now needs another choice", () => {
+    const retired = toCartItem(customLine([sizeGroup({ is_active: false })]));
+    const noLongerCustom = toCartItem({
+      ...customLine([sizeGroup()]),
+      product: productRow({ is_customizable: false }) as never,
+    });
+    const newRequired = toCartItem(
+      customLine([
+        sizeGroup(),
+        { ...sizeGroup(), id: 3, name: "Glaze", options: [] },
+      ]),
+    );
+    for (const item of [retired, newRequired, noLongerCustom]) {
+      expect(item.is_available).toBe(false);
+      expect(item.unavailable_reason).toBe(
+        "Its options have changed; remove it and add it again",
+      );
+    }
   });
 
   it("flags sold out and short stock lines", () => {
@@ -259,6 +313,14 @@ describe("CartService", () => {
         product_id: 1,
         quantity: 1,
         reference_image_urls: ["https://evil.test/a.jpg"],
+      }),
+    ).rejects.toThrow("was not uploaded");
+    // Another shopper's upload in the same bucket is not this shopper's reference.
+    await expect(
+      service.add(1, {
+        product_id: 1,
+        quantity: 1,
+        reference_image_urls: ["https://cdn.test/customization/2/a.jpg"],
       }),
     ).rejects.toThrow("was not uploaded");
   });

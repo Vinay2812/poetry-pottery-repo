@@ -18,6 +18,7 @@ export { WhatsAppResolver } from "@/features/whatsapp/whatsapp.resolver";
 export { CommissionsResolver } from "@/features/commissions/commissions.resolver";
 export { SuggestResolver } from "@/features/suggest/suggest.resolver";
 export { VisitsResolver } from "@/features/visits/visits.resolver";
+export { SitemapResolver } from "@/features/sitemap/sitemap.resolver";
 export {
   EventReviewEligibilityResolver,
   ProductReviewEligibilityResolver,

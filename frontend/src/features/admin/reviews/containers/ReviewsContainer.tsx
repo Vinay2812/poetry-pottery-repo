@@ -9,10 +9,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useAdminReviewsQuery,
-  useDeleteReviewAsAdminMutation,
-  useSetReviewHiddenMutation,
+  AdminReviewsDocument,
+  DeleteReviewAsAdminDocument,
+  SetReviewHiddenDocument,
 } from "@/graphql/generated/graphql";
 
 import {
@@ -42,12 +43,15 @@ export function ReviewsContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const filter = useMemo(() => toReviewsFilter(values, page), [values, page]);
   const { personId, personName } = usePersonFilter(values.user);
-  const { data, previousData, loading, error, refetch } = useAdminReviewsQuery({
-    variables: { filter },
-    fetchPolicy: "cache-and-network",
-  });
-  const [setReviewHidden] = useSetReviewHiddenMutation();
-  const [deleteReview] = useDeleteReviewAsAdminMutation();
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AdminReviewsDocument,
+    {
+      variables: { filter },
+      fetchPolicy: "cache-and-network",
+    },
+  );
+  const [setReviewHidden] = useMutation(SetReviewHiddenDocument);
+  const [deleteReview] = useMutation(DeleteReviewAsAdminDocument);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [, startTransition] = useTransition();

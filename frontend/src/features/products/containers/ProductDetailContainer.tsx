@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@apollo/client/react";
 import {
   OptionGroupKind,
-  useRelatedProductsQuery,
+  RelatedProductsDocument,
 } from "@/graphql/generated/graphql";
 
 import { formatInr } from "@/lib/format";
@@ -102,7 +103,7 @@ export function ProductDetailContainer({
   const [activeFact, setActiveFact] = useState<string | null>(null);
   const buyBoxRef = useRef<HTMLDivElement>(null);
 
-  const { data: relatedData } = useRelatedProductsQuery({
+  const { data: relatedData } = useQuery(RelatedProductsDocument, {
     variables: { slug: product.slug, limit: 8 },
   });
   const related = relatedData?.relatedProducts ?? [];

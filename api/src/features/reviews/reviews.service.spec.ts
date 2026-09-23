@@ -139,7 +139,7 @@ describe("ReviewsService", () => {
     const review = await service.create({ product_id: 3 }, 7, {
       rating: 5,
       body: "  Lovely glaze  ",
-      image_urls: ["https://cdn.test/reviews/a.jpg"],
+      image_urls: ["https://cdn.test/reviews/7/a.jpg"],
     });
 
     expect(prismaMock.review.create).toHaveBeenCalledWith(
@@ -149,7 +149,7 @@ describe("ReviewsService", () => {
           user_id: 7,
           rating: 5,
           body: "Lovely glaze",
-          image_urls: ["https://cdn.test/reviews/a.jpg"],
+          image_urls: ["https://cdn.test/reviews/7/a.jpg"],
         },
       }),
     );
@@ -306,6 +306,29 @@ describe("ReviewsService", () => {
         },
       }),
     );
+  });
+
+  it("refuses photos that are not the reviewer's own upload", async () => {
+    prismaMock.orderItem.count.mockResolvedValue(1);
+    prismaMock.review.findFirst.mockResolvedValue(null);
+    for (const url of [
+      "https://cdn.test/products/mug.jpg",
+      "https://cdn.test/reviews/8/theirs.jpg",
+      "https://elsewhere.test/reviews/7/a.jpg",
+    ]) {
+      await expect(
+        service.create({ product_id: 3 }, 7, { rating: 5, image_urls: [url] }),
+      ).rejects.toThrow("uploaded through the site");
+    }
+    expect(prismaMock.review.create).not.toHaveBeenCalled();
+  });
+
+  it("never reclaims an object outside the review folder", async () => {
+    prismaMock.review.findFirst.mockResolvedValue(
+      reviewRow({ image_urls: ["https://cdn.test/products/mug.jpg"] }),
+    );
+    await service.remove(1, 7, true);
+    expect(queueMock.publish).not.toHaveBeenCalled();
   });
 
   it("releases the photos an edit dropped and keeps the ones it kept", async () => {

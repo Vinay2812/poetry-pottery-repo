@@ -1,6 +1,7 @@
 "use client";
 
-import { useAdminUserQuery } from "@/graphql/generated/graphql";
+import { useQuery } from "@apollo/client/react";
+import { AdminUserDocument } from "@/graphql/generated/graphql";
 
 import { toPersonName } from "@/features/admin/ui";
 
@@ -14,7 +15,7 @@ export interface PersonFilter {
 /** Resolves the `user` query key on a list into the person it names, for the notice above the table. */
 export function usePersonFilter(raw: string | undefined): PersonFilter {
   const personId = toPersonId(raw);
-  const { data } = useAdminUserQuery({
+  const { data } = useQuery(AdminUserDocument, {
     variables: { id: personId ?? 0 },
     skip: personId === null,
   });

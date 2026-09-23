@@ -13,6 +13,10 @@ import { GraphQLModule } from "@nestjs/graphql";
 import { ApolloDriver, ApolloDriverConfig } from "@nestjs/apollo";
 import { join } from "path";
 import { Logger } from "winston";
+import {
+  depthLimitRule,
+  MAX_QUERY_DEPTH,
+} from "./common/graphql/depth-limit.rule";
 import { createIntrospectionGuard } from "./common/graphql/introspection.plugin";
 import { createGraphqlLoggingPlugin } from "./common/graphql/logging.plugin";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
@@ -71,6 +75,7 @@ export const CustomGraphQLModule =
       // Introspection is gated per-request: open in dev, key-protected in production.
       introspection: true,
       includeStacktraceInErrorResponses: !env.isProduction,
+      validationRules: [depthLimitRule(MAX_QUERY_DEPTH)],
       plugins: [
         createIntrospectionGuard(),
         createGraphqlLoggingPlugin(logger),
@@ -110,4 +115,5 @@ export { CommissionsModule } from "@/features/commissions/commissions.module";
 export { SuggestModule } from "@/features/suggest/suggest.module";
 export { VisitsModule } from "@/features/visits/visits.module";
 export { ReviewsModule } from "@/features/reviews/reviews.module";
+export { SitemapModule } from "@/features/sitemap/sitemap.module";
 export { AdminModule } from "@/features/admin/admin.module";

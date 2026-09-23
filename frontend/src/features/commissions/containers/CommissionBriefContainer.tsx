@@ -3,7 +3,8 @@
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useState } from "react";
 
-import { useCreateCommissionRequestMutation } from "@/graphql/generated/graphql";
+import { useMutation } from "@apollo/client/react";
+import { CreateCommissionRequestDocument } from "@/graphql/generated/graphql";
 import type { CommissionFormValues } from "@/lib/validations/commission";
 
 import { CommissionBriefForm } from "@/features/commissions/components/CommissionBriefForm";
@@ -53,7 +54,7 @@ export function CommissionBriefContainer({
   const [sent, setSent] = useState<SentBrief | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sentAskUrl, setSentAskUrl] = useState<string | null>(null);
-  const [create, { loading }] = useCreateCommissionRequestMutation();
+  const [create, { loading }] = useMutation(CreateCommissionRequestDocument);
   const {
     photos,
     error: photoError,

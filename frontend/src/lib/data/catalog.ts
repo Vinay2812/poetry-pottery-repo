@@ -1,57 +1,47 @@
 import {
   ArchiveWallDocument,
   type ArchiveWallQuery,
-  type ArchiveWallQueryVariables,
   CategoriesDocument,
   CommissionOptionsDocument,
   type CommissionOptionsQuery,
-  type CommissionOptionsQueryVariables,
   CommissionPiecesDocument,
   type CommissionPiecesQuery,
-  type CommissionPiecesQueryVariables,
   type CategoriesQuery,
-  type CategoriesQueryVariables,
   CollectionDocument,
   type CollectionQuery,
-  type CollectionQueryVariables,
   ContentPageDocument,
   type ContentPageQuery,
-  type ContentPageQueryVariables,
   EventDocument,
   type EventQuery,
-  type EventQueryVariables,
+  EventsDocument,
+  type EventsFilterInput,
+  type EventsQuery,
   FeaturedProductsDocument,
   type FeaturedProductsQuery,
-  type FeaturedProductsQueryVariables,
   ProductDocument,
   ProductSort,
   type ProductQuery,
-  type ProductQueryVariables,
   ProductsDocument,
+  type ProductsFilterInput,
   type ProductsQuery,
-  type ProductsQueryVariables,
   RecentReviewsDocument,
   type RecentReviewsQuery,
-  type RecentReviewsQueryVariables,
+  SitemapDocument,
+  type SitemapQuery,
   UpcomingEventsDocument,
   type UpcomingEventsQuery,
-  type UpcomingEventsQueryVariables,
   WorkshopDocument,
   type WorkshopQuery,
-  type WorkshopQueryVariables,
   WorkshopsDocument,
   type WorkshopsQuery,
-  type WorkshopsQueryVariables,
 } from "@/graphql/generated/graphql";
 
 import { isNotFoundError } from "@/lib/apollo/errors";
 import { getClient } from "@/lib/apollo/rsc-client";
+import { logger } from "@/lib/logger";
 
 export async function getCategories(): Promise<CategoriesQuery["categories"]> {
-  const { data } = await getClient().query<
-    CategoriesQuery,
-    CategoriesQueryVariables
-  >({ query: CategoriesDocument });
+  const { data } = await getClient().query({ query: CategoriesDocument });
   return data?.categories ?? [];
 }
 
@@ -59,10 +49,7 @@ export async function getCollection(
   slug: string,
   archive = false,
 ): Promise<CollectionQuery["collection"] | null> {
-  const { data, error } = await getClient().query<
-    CollectionQuery,
-    CollectionQueryVariables
-  >({
+  const { data, error } = await getClient().query({
     query: CollectionDocument,
     variables: { slug, archive },
     errorPolicy: "all",
@@ -76,10 +63,11 @@ export async function getCollection(
 export async function getContentPage(
   slug: string,
 ): Promise<ContentPageQuery["contentPage"] | null> {
-  const { data, error } = await getClient().query<
-    ContentPageQuery,
-    ContentPageQueryVariables
-  >({ query: ContentPageDocument, variables: { slug }, errorPolicy: "all" });
+  const { data, error } = await getClient().query({
+    query: ContentPageDocument,
+    variables: { slug },
+    errorPolicy: "all",
+  });
   if (data?.contentPage) {
     return data.contentPage.is_published ? data.contentPage : null;
   }
@@ -90,10 +78,7 @@ export async function getContentPage(
 export async function getFeaturedProducts(
   limit = 8,
 ): Promise<FeaturedProductsQuery["featuredProducts"]> {
-  const { data } = await getClient().query<
-    FeaturedProductsQuery,
-    FeaturedProductsQueryVariables
-  >({
+  const { data } = await getClient().query({
     query: FeaturedProductsDocument,
     variables: { limit },
   });
@@ -101,41 +86,51 @@ export async function getFeaturedProducts(
 }
 
 // The wall is grouped by year, so it needs every piece rather than a first page. Pages are
-// walked up to a cap and the count reports what reached the wall, so the header cannot
+// fetched up to a cap and the count reports what reached the wall, so the header cannot
 // promise more pieces than are on it.
 const ARCHIVE_PAGE_SIZE = 60;
 const MAX_ARCHIVE_PAGES = 10;
 
-export async function getArchiveWall(): Promise<ArchiveWallQuery["products"]> {
-  const items: ArchiveWallQuery["products"]["items"] = [];
-  let hasMore = false;
-  for (let page = 1; page <= MAX_ARCHIVE_PAGES; page += 1) {
-    const { data } = await getClient().query<
-      ArchiveWallQuery,
-      ArchiveWallQueryVariables
-    >({
-      query: ArchiveWallDocument,
-      variables: {
-        filter: {
-          archive: true,
-          sort: ProductSort.Newest,
-          page,
-          limit: ARCHIVE_PAGE_SIZE,
-        },
+async function getArchivePage(
+  page: number,
+): Promise<ArchiveWallQuery["products"] | null> {
+  const { data } = await getClient().query({
+    query: ArchiveWallDocument,
+    variables: {
+      filter: {
+        archive: true,
+        sort: ProductSort.Newest,
+        page,
+        limit: ARCHIVE_PAGE_SIZE,
       },
-    });
-    if (!data) break;
-    items.push(...data.products.items);
-    hasMore = data.products.page_info.has_more;
-    if (!hasMore) break;
-  }
+    },
+  });
+  return data?.products ?? null;
+}
+
+export async function getArchiveWall(): Promise<ArchiveWallQuery["products"]> {
+  const first = await getArchivePage(1);
+  const pageCount = first?.page_info.has_more
+    ? Math.min(
+        MAX_ARCHIVE_PAGES,
+        Math.ceil(first.page_info.total / ARCHIVE_PAGE_SIZE),
+      )
+    : 1;
+  // Page one reports the total, so the rest load side by side rather than one after another.
+  const rest = await Promise.all(
+    Array.from({ length: pageCount - 1 }, (_, index) =>
+      getArchivePage(index + 2),
+    ),
+  );
+  const pages = [first, ...rest].filter((page) => page !== null);
+  const items = pages.flatMap((page) => page.items);
   return {
     items,
     page_info: {
       total: items.length,
       page: 1,
       limit: ARCHIVE_PAGE_SIZE,
-      has_more: hasMore,
+      has_more: pages.at(-1)?.page_info.has_more ?? false,
     },
   };
 }
@@ -143,20 +138,19 @@ export async function getArchiveWall(): Promise<ArchiveWallQuery["products"]> {
 export async function getCommissionOptions(): Promise<
   CommissionOptionsQuery["commissionOptions"]
 > {
-  const { data } = await getClient().query<
-    CommissionOptionsQuery,
-    CommissionOptionsQueryVariables
-  >({ query: CommissionOptionsDocument });
+  const { data } = await getClient().query({
+    query: CommissionOptionsDocument,
+  });
   return data?.commissionOptions ?? { piece_types: [], glazes: [] };
 }
 
 export async function getCommissionPieces(
   limit = 6,
 ): Promise<CommissionPiecesQuery["commissionPieces"]> {
-  const { data } = await getClient().query<
-    CommissionPiecesQuery,
-    CommissionPiecesQueryVariables
-  >({ query: CommissionPiecesDocument, variables: { limit } });
+  const { data } = await getClient().query({
+    query: CommissionPiecesDocument,
+    variables: { limit },
+  });
   return data?.commissionPieces ?? [];
 }
 
@@ -167,10 +161,7 @@ export async function getArchiveProducts(
   limit = 4,
 ): Promise<ProductsQuery["products"]["items"]> {
   try {
-    const { data } = await getClient().query<
-      ProductsQuery,
-      ProductsQueryVariables
-    >({
+    const { data } = await getClient().query({
       query: ProductsDocument,
       variables: { filter: { archive: true, limit } },
       errorPolicy: "all",
@@ -185,10 +176,11 @@ export async function getArchiveProducts(
 export async function getProduct(
   slug: string,
 ): Promise<ProductQuery["product"] | null> {
-  const { data, error } = await getClient().query<
-    ProductQuery,
-    ProductQueryVariables
-  >({ query: ProductDocument, variables: { slug }, errorPolicy: "all" });
+  const { data, error } = await getClient().query({
+    query: ProductDocument,
+    variables: { slug },
+    errorPolicy: "all",
+  });
   if (data?.product) return data.product;
   if (isNotFoundError(error)) return null;
   throw error ?? new Error("Product query failed");
@@ -197,51 +189,91 @@ export async function getProduct(
 export async function getUpcomingEvents(
   limit = 3,
 ): Promise<UpcomingEventsQuery["upcomingEvents"]> {
-  const { data } = await getClient().query<
-    UpcomingEventsQuery,
-    UpcomingEventsQueryVariables
-  >({ query: UpcomingEventsDocument, variables: { limit } });
+  const { data } = await getClient().query({
+    query: UpcomingEventsDocument,
+    variables: { limit },
+  });
   return data?.upcomingEvents ?? [];
 }
 
 export async function getRecentReviews(
   limit = 3,
 ): Promise<RecentReviewsQuery["recentReviews"]> {
-  const { data } = await getClient().query<
-    RecentReviewsQuery,
-    RecentReviewsQueryVariables
-  >({ query: RecentReviewsDocument, variables: { limit } });
+  const { data } = await getClient().query({
+    query: RecentReviewsDocument,
+    variables: { limit },
+  });
   return data?.recentReviews ?? [];
 }
 
 export async function getEvent(
   slug: string,
 ): Promise<EventQuery["event"] | null> {
-  const { data, error } = await getClient().query<
-    EventQuery,
-    EventQueryVariables
-  >({ query: EventDocument, variables: { slug }, errorPolicy: "all" });
+  const { data, error } = await getClient().query({
+    query: EventDocument,
+    variables: { slug },
+    errorPolicy: "all",
+  });
   if (data?.event) return data.event;
   if (isNotFoundError(error)) return null;
   throw error ?? new Error("Event query failed");
 }
 
 export async function getWorkshops(): Promise<WorkshopsQuery["workshops"]> {
-  const { data } = await getClient().query<
-    WorkshopsQuery,
-    WorkshopsQueryVariables
-  >({ query: WorkshopsDocument });
+  const { data } = await getClient().query({ query: WorkshopsDocument });
   return data?.workshops ?? [];
 }
 
 export async function getWorkshop(
   slug: string,
 ): Promise<WorkshopQuery["workshop"] | null> {
-  const { data, error } = await getClient().query<
-    WorkshopQuery,
-    WorkshopQueryVariables
-  >({ query: WorkshopDocument, variables: { slug }, errorPolicy: "all" });
+  const { data, error } = await getClient().query({
+    query: WorkshopDocument,
+    variables: { slug },
+    errorPolicy: "all",
+  });
   if (data?.workshop) return data.workshop;
   if (isNotFoundError(error)) return null;
   throw error ?? new Error("Workshop query failed");
+}
+
+export async function getSitemap(): Promise<SitemapQuery["sitemap"]> {
+  const { data } = await getClient().query({ query: SitemapDocument });
+  return data?.sitemap ?? { products: [], events: [], workshops: [] };
+}
+
+// The first page of a list, rendered on the server so the HTML carries the cards. A failure
+// hands the list to the browser, which retries and owns the error state.
+export async function getProductsPage(
+  filter: ProductsFilterInput,
+): Promise<ProductsQuery["products"] | null> {
+  try {
+    const { data } = await getClient().query({
+      query: ProductsDocument,
+      variables: { filter },
+    });
+    return data?.products ?? null;
+  } catch (error) {
+    logger.warn("products first page failed on the server", {
+      error: String(error),
+    });
+    return null;
+  }
+}
+
+export async function getEventsPage(
+  filter: EventsFilterInput,
+): Promise<EventsQuery["events"] | null> {
+  try {
+    const { data } = await getClient().query({
+      query: EventsDocument,
+      variables: { filter },
+    });
+    return data?.events ?? null;
+  } catch (error) {
+    logger.warn("events first page failed on the server", {
+      error: String(error),
+    });
+    return null;
+  }
 }

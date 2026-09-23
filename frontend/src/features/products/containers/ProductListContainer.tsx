@@ -12,9 +12,11 @@ import {
   useTransition,
 } from "react";
 
+import { useQuery } from "@apollo/client/react";
 import {
+  ProductsDocument,
   type ProductSort,
-  useProductsQuery,
+  type ProductsQuery,
 } from "@/graphql/generated/graphql";
 
 import { cn } from "@/lib/utils";
@@ -43,6 +45,7 @@ import {
   type ProductFilters as Filters,
   toCardPhotoLoading,
   toFilterInput,
+  toFilterKey,
   toSearchParams,
 } from "@/features/products/types";
 
@@ -50,6 +53,8 @@ export interface ProductListContainerProps {
   heading: string;
   description: string | null;
   isSearchPage?: boolean;
+  initialProducts?: ProductsQuery["products"] | null;
+  initialFilterKey?: string | null;
 }
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -58,6 +63,8 @@ export function ProductListContainer({
   heading,
   description,
   isSearchPage = false,
+  initialProducts = null,
+  initialFilterKey = null,
 }: ProductListContainerProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -83,12 +90,23 @@ export function ProductListContainer({
   const [searchDraft, setSearchDraft] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { data, previousData, loading, error, fetchMore, refetch } =
-    useProductsQuery({
-      variables: { filter: toFilterInput(filters, 1) },
+  const filterInput = toFilterInput(filters, 1);
+  const { data, previousData, loading, error, fetchMore, refetch } = useQuery(
+    ProductsDocument,
+    {
+      variables: { filter: filterInput },
       notifyOnNetworkStatusChange: true,
-    });
-  const result = data?.products ?? previousData?.products;
+    },
+  );
+  // The server's first page covers the first load, but only while the filters still match it.
+  const serverPage =
+    initialProducts && initialFilterKey === toFilterKey(filterInput)
+      ? initialProducts
+      : undefined;
+  // Old results bridge a load, not a failure: they would sit under filters they do not match.
+  const result =
+    data?.products ??
+    (error ? undefined : (previousData?.products ?? serverPage));
   const items = result?.items ?? [];
   const pageInfo = result?.page_info;
   const facets = result?.facets;

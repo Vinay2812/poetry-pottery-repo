@@ -4,13 +4,14 @@ import { useAuth } from "@clerk/nextjs";
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  AddressesDocument,
   type AddressInput,
-  useAddressesQuery,
-  useCreateAddressMutation,
-  useDeleteAddressMutation,
-  useSetDefaultAddressMutation,
-  useUpdateAddressMutation,
+  CreateAddressDocument,
+  DeleteAddressDocument,
+  SetDefaultAddressDocument,
+  UpdateAddressDocument,
 } from "@/graphql/generated/graphql";
 
 import type { AddressFormValues } from "@/lib/validations/address";
@@ -35,7 +36,7 @@ function toErrorMessage(error: unknown): string {
 // Signed-out visitors have no address book; the query is skipped rather than failing auth.
 export function useAddresses() {
   const { isSignedIn, isLoaded } = useAuth();
-  const { data, previousData, loading, error } = useAddressesQuery({
+  const { data, previousData, loading, error } = useQuery(AddressesDocument, {
     skip: !isSignedIn,
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",
@@ -50,10 +51,14 @@ export function useAddresses() {
 }
 
 export function useAddressMutations() {
-  const [createMutation, { loading: isCreating }] = useCreateAddressMutation();
-  const [updateMutation, { loading: isUpdating }] = useUpdateAddressMutation();
-  const [removeMutation] = useDeleteAddressMutation();
-  const [setDefaultMutation] = useSetDefaultAddressMutation();
+  const [createMutation, { loading: isCreating }] = useMutation(
+    CreateAddressDocument,
+  );
+  const [updateMutation, { loading: isUpdating }] = useMutation(
+    UpdateAddressDocument,
+  );
+  const [removeMutation] = useMutation(DeleteAddressDocument);
+  const [setDefaultMutation] = useMutation(SetDefaultAddressDocument);
 
   const create = useCallback(
     async (input: AddressInput): Promise<SavedAddress | null> => {

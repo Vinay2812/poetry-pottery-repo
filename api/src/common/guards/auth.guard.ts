@@ -2,6 +2,7 @@ import {
   type CanActivate,
   type ExecutionContext,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from "@nestjs/common";
 import { getAuth } from "@clerk/express";
@@ -12,12 +13,15 @@ import { getRequest } from "@/common/graphql/execution-context";
 import type { AppRequest } from "@/common/types/express";
 import type { AuthUser } from "../clerk/clerk.type";
 import { PrismaService } from "@/prisma/prisma.service";
+import type { UserRole } from "@prisma/client";
 
 export const UNAUTHENTICATED_MESSAGE = "Authentication required";
 export const NO_PRIMARY_EMAIL_MESSAGE = "No primary email found";
 
 @Injectable()
 export class AuthGuard implements CanActivate {
+  private readonly logger = new Logger(AuthGuard.name);
+
   constructor(
     private readonly clerk: ClerkService,
     private readonly users: UsersService,
@@ -59,10 +63,7 @@ export class AuthGuard implements CanActivate {
     const owner = await this.users.findByAuth(authId);
     if (owner) {
       if (dbUserId !== owner.id || role !== owner.role) {
-        await this.clerk.updatePublicMetadata(authId, {
-          dbUserId: owner.id,
-          role: owner.role,
-        });
+        this.refreshClaims(authId, owner.id, owner.role);
       }
       const authUser: AuthUser = {
         db_user_id: owner.id,
@@ -82,29 +83,39 @@ export class AuthGuard implements CanActivate {
     const name = this.clerk.getFullName(clerkUser) ?? null;
     const image = this.clerk.getImageUrl(clerkUser) ?? null;
 
-    const authUser = await this.prisma.withTransaction(async () => {
-      // The database owns the role; claims only cache it, so provisioning never writes a role.
-      const user = await this.users.provisionUser({
+    // The database owns the role; claims only cache it, so provisioning never writes a role.
+    const user = await this.prisma.withTransaction(() =>
+      this.users.provisionUser({
         auth_id: authId,
         email: primaryEmail,
         name,
         image,
         can_adopt: this.clerk.hasVerifiedPrimaryEmail(clerkUser),
-      });
+      }),
+    );
+    this.refreshClaims(authId, user.id, user.role);
 
-      await this.clerk.updatePublicMetadata(authId, {
-        dbUserId: user.id,
-        role: user.role,
-      });
-
-      return {
-        db_user_id: user.id,
-        role: user.role,
-        auth_id: authId,
-      };
-    });
-
+    const authUser: AuthUser = {
+      db_user_id: user.id,
+      role: user.role,
+      auth_id: authId,
+    };
     request.authenticatedUser = authUser;
     return authUser;
+  }
+
+  // The metadata only caches the row for the UI, so a Clerk outage must never fail or roll back a sign-in.
+  private refreshClaims(
+    authId: string,
+    dbUserId: number,
+    role: UserRole,
+  ): void {
+    this.clerk
+      .updatePublicMetadata(authId, { dbUserId, role })
+      .catch((error: unknown) => {
+        this.logger.warn(
+          `Could not refresh Clerk metadata for ${authId}: ${String(error)}`,
+        );
+      });
   }
 }

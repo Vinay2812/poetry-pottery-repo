@@ -8,7 +8,7 @@ import {
   getProduct,
 } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
-import { toAbsoluteUrl } from "@/lib/site-url";
+import { pageMetadata, toSiteUrl } from "@/lib/seo";
 
 import {
   COMMISSION_STEPS,
@@ -24,11 +24,12 @@ import {
   toProductPath,
 } from "@/features/products";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Commission a piece",
+  path: "/custom",
   description:
     "Tell us the piece, the size, the glaze and the words. A sketch comes back in two days and the piece ships in about ten.",
-};
+});
 
 export default async function CustomPage({
   searchParams,
@@ -45,7 +46,7 @@ export default async function CustomPage({
   const referencePiece = liked
     ? {
         name: liked.name,
-        url: await toAbsoluteUrl(toProductPath(liked.slug)),
+        url: toSiteUrl(toProductPath(liked.slug)),
         categoryName: liked.categories[0]?.name ?? null,
       }
     : null;

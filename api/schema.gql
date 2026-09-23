@@ -1226,6 +1226,7 @@ type Query {
   registration(id: String!): Registration!
   relatedProducts(limit: Int = 8, slug: String!): [Product!]!
   siteSettings: SiteSettings!
+  sitemap: Sitemap!
   studioVisitAvailability(days: Int, from: String): [VisitDay!]!
   suggest(q: String!): Suggestions!
   upcomingEvents(limit: Int = 3): [Event!]!
@@ -1386,6 +1387,17 @@ type SiteSettings {
   updated_at: DateTime!
   whatsapp_number: String!
   youtube_url: String!
+}
+
+type Sitemap {
+  events: [SitemapEntry!]!
+  products: [SitemapEntry!]!
+  workshops: [SitemapEntry!]!
+}
+
+type SitemapEntry {
+  slug: String!
+  updated_at: DateTime!
 }
 
 type StudioVisit {

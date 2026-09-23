@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Reveal } from "@/components/motion/Reveal";
 import { PageShell } from "@/components/layout/PageShell";
 import { getContentPage } from "@/lib/data/catalog";
+import { pageMetadata } from "@/lib/seo";
 
 import { ContentHeader } from "@/features/content/components/ContentHeader";
 import { ContentIndex } from "@/features/content/components/ContentIndex";
@@ -13,10 +14,12 @@ import { toSectionViews } from "@/features/content/types";
 export async function contentMetadata(slug: string): Promise<Metadata> {
   const page = await getContentPage(slug);
   if (!page) return { title: "Page not found" };
-  return {
+  return pageMetadata({
     title: page.title,
-    description: page.subtitle ?? undefined,
-  };
+    path: `/${slug}`,
+    description: page.subtitle,
+    imageUrl: page.hero_image_url,
+  });
 }
 
 export interface ContentPageContainerProps {

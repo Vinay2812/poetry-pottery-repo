@@ -9,11 +9,12 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useAdminWorkshopBlackoutsQuery,
-  useCreateWorkshopBlackoutMutation,
-  useDeleteWorkshopBlackoutMutation,
-  useUpdateWorkshopBlackoutMutation,
+  AdminWorkshopBlackoutsDocument,
+  CreateWorkshopBlackoutDocument,
+  DeleteWorkshopBlackoutDocument,
+  UpdateWorkshopBlackoutDocument,
 } from "@/graphql/generated/graphql";
 
 import { formatDateTime } from "@/lib/format";
@@ -42,13 +43,16 @@ export function WorkshopBlackoutsContainer({
   configId,
   timezone,
 }: WorkshopBlackoutsContainerProps) {
-  const { data, previousData, refetch } = useAdminWorkshopBlackoutsQuery({
-    variables: { config_id: configId },
-    fetchPolicy: "cache-and-network",
-  });
-  const [createBlackout] = useCreateWorkshopBlackoutMutation();
-  const [updateBlackout] = useUpdateWorkshopBlackoutMutation();
-  const [deleteBlackout] = useDeleteWorkshopBlackoutMutation();
+  const { data, previousData, refetch } = useQuery(
+    AdminWorkshopBlackoutsDocument,
+    {
+      variables: { config_id: configId },
+      fetchPolicy: "cache-and-network",
+    },
+  );
+  const [createBlackout] = useMutation(CreateWorkshopBlackoutDocument);
+  const [updateBlackout] = useMutation(UpdateWorkshopBlackoutDocument);
+  const [deleteBlackout] = useMutation(DeleteWorkshopBlackoutDocument);
 
   const blackouts = useMemo(
     () =>

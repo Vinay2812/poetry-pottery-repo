@@ -81,7 +81,7 @@ export class ContactService {
     }
     await this.mail.enqueue({
       to: message.email,
-      ...contactAcknowledgementMail(message),
+      ...contactAcknowledgementMail(),
     });
     return true;
   }

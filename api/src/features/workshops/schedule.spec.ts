@@ -8,6 +8,7 @@ import {
   occupancy,
   type ScheduleConfig,
   slotBounds,
+  slotsPerBooking,
   spanDays,
   toWallClock,
 } from "./schedule";
@@ -258,5 +259,12 @@ describe("checkSlots", () => {
         [],
       ),
     ).toMatchObject({ reason: "Kiln firing" });
+  });
+});
+
+describe("slotsPerBooking", () => {
+  it("never books fewer slots than the hours paid for", () => {
+    expect(slotsPerBooking(2, { slot_minutes: 30 })).toBe(4);
+    expect(slotsPerBooking(2, { slot_minutes: 90 })).toBe(2);
   });
 });

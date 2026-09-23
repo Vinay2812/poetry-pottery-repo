@@ -10,9 +10,10 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useAdminContentPagesQuery,
-  useDeleteContentPageMutation,
+  AdminContentPagesDocument,
+  DeleteContentPageDocument,
 } from "@/graphql/generated/graphql";
 
 import { contentSlugSchema } from "@/lib/validations/admin/content";
@@ -34,10 +35,13 @@ function withoutSlug(rows: ContentPageRow[], slug: string): ContentPageRow[] {
 
 export function ContentPagesContainer() {
   const router = useRouter();
-  const { data, previousData, loading, refetch } = useAdminContentPagesQuery({
-    fetchPolicy: "cache-and-network",
-  });
-  const [deletePage] = useDeleteContentPageMutation();
+  const { data, previousData, loading, refetch } = useQuery(
+    AdminContentPagesDocument,
+    {
+      fetchPolicy: "cache-and-network",
+    },
+  );
+  const [deletePage] = useMutation(DeleteContentPageDocument);
   const [, startTransition] = useTransition();
   const [busySlug, setBusySlug] = useState<string | null>(null);
   const [pendingSlug, setPendingSlug] = useState<string | null>(null);

@@ -27,11 +27,12 @@ export function contactMessageStudioMail(message: ContactMessage): MailBody {
   };
 }
 
-export function contactAcknowledgementMail(message: ContactMessage): MailBody {
+// Goes to an address nobody has verified, so it repeats nothing the sender typed.
+export function contactAcknowledgementMail(): MailBody {
   const body = renderMail({
     title: "We got your message",
-    intro: `Thanks for writing in, ${message.name}. Someone from the studio will get back to you within two working days.`,
-    blocks: [{ heading: "What you sent", lines: message.message.split("\n") }],
+    intro:
+      "Thanks for writing in. Someone from the studio will get back to you within two working days.",
   });
   return { subject: "We got your message · Poetry & Pottery", ...body };
 }

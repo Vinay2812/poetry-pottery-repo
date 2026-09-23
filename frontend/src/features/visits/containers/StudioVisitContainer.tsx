@@ -2,9 +2,10 @@
 
 import { useCallback, useMemo, useState } from "react";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useBookStudioVisitMutation,
-  useStudioVisitAvailabilityQuery,
+  BookStudioVisitDocument,
+  StudioVisitAvailabilityDocument,
 } from "@/graphql/generated/graphql";
 import type { VisitFormValues } from "@/lib/validations/visit";
 
@@ -32,10 +33,12 @@ export function StudioVisitContainer() {
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const { data, previousData, loading, refetch } =
-    useStudioVisitAvailabilityQuery({
+  const { data, previousData, loading, refetch } = useQuery(
+    StudioVisitAvailabilityDocument,
+    {
       variables: { from: null, days: VISIT_DAYS },
-    });
+    },
+  );
   // Memoised so the empty fallback is not a new array on every render.
   const days = useMemo(
     () =>
@@ -79,7 +82,7 @@ export function StudioVisitContainer() {
     ? `${toWindowLabel(picked.starts_at, picked.ends_at)} on ${toLongDayLabel(toDateKey(picked.starts_at))}`
     : null;
 
-  const [book, { loading: isBooking }] = useBookStudioVisitMutation();
+  const [book, { loading: isBooking }] = useMutation(BookStudioVisitDocument);
 
   const handleSelectDate = useCallback((date: string) => {
     setPickedDate(date);

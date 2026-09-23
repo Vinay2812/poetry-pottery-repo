@@ -6,21 +6,21 @@ import { Reveal } from "@/components/motion/Reveal";
 import { getArchiveWall } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
 import { pluralize } from "@/lib/format";
-import { toAbsoluteUrl } from "@/lib/site-url";
+import { pageMetadata, SITE_ORIGIN } from "@/lib/seo";
 
 import { ArchiveWallContainer } from "@/features/archive";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "The archive",
+  path: "/archive",
   description:
     "Every piece the studio has made and let go, dated and grouped by the run it belonged to.",
-};
+});
 
 export default async function ArchivePage() {
-  const [wall, settings, siteOrigin] = await Promise.all([
+  const [wall, settings] = await Promise.all([
     getArchiveWall(),
     getSiteSettings(),
-    toAbsoluteUrl(""),
   ]);
 
   return (
@@ -44,7 +44,7 @@ export default async function ArchivePage() {
       <ArchiveWallContainer
         pieces={wall.items}
         whatsappNumber={settings.whatsapp_number ?? ""}
-        siteOrigin={siteOrigin}
+        siteOrigin={SITE_ORIGIN}
       />
     </PageShell>
   );

@@ -134,7 +134,7 @@ describe("StorageService", () => {
     expect(presign).toHaveBeenCalledWith(
       expect.any(S3Client),
       expect.any(PutObjectCommand),
-      { expiresIn: 600 },
+      { expiresIn: 600, signableHeaders: new Set(["content-type"]) },
     );
     expect(target.upload_url).toBe(SIGNED_URL);
   });

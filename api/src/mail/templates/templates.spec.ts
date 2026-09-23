@@ -28,6 +28,7 @@ import {
   registrationPlacedStudioMail,
   registrationStatusMail,
 } from "./events";
+import { commissionAcknowledgementMail } from "./commissions";
 import { renderMail } from "./layout";
 import { newsletterWelcomeMail } from "./newsletter";
 import {
@@ -283,15 +284,15 @@ describe("contact templates", () => {
   });
 
   it("renders the acknowledgement the sender gets back", () => {
-    expect(contactAcknowledgementMail(contactMessage())).toMatchSnapshot();
+    expect(contactAcknowledgementMail()).toMatchSnapshot();
   });
 
-  it("names the sender in the acknowledgement and quotes what they wrote", () => {
-    const mail = contactAcknowledgementMail(contactMessage());
+  it("acknowledges without repeating anything the sender typed", () => {
+    const mail = contactAcknowledgementMail();
 
     expect(mail.subject).toBe("We got your message · Poetry & Pottery");
-    expect(mail.html).toContain("Thanks for writing in, Meera Rao.");
-    expect(mail.text).toContain("Do you make sets of six?");
+    expect(mail.html).not.toContain("Meera Rao");
+    expect(mail.text).not.toContain("Do you make sets of six?");
   });
 
   it("escapes a sender who tries to smuggle markup into the studio's inbox", () => {
@@ -304,14 +305,14 @@ describe("contact templates", () => {
     expect(mail.html).toContain("&lt;script&gt;");
     expect(mail.html).toContain("&quot;");
   });
+});
 
-  it("escapes the same markup in the acknowledgement it sends back", () => {
-    const mail = contactAcknowledgementMail(
-      contactMessage({ name: XSS, message: XSS }),
-    );
+describe("commission acknowledgement", () => {
+  it("carries only the server-made reference back to an unverified address", () => {
+    const mail = commissionAcknowledgementMail({ id: "cr_123" });
 
-    expect(mail.html).not.toContain("<script>");
-    expect(mail.html).toContain("&lt;script&gt;");
+    expect(mail.subject).toBe("Your brief is with us · Poetry & Pottery");
+    expect(mail.text).toContain("cr_123");
   });
 });
 

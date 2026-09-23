@@ -1,7 +1,11 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 
-import { clampPage, toPageInfo } from "@/common/pagination/pagination";
+import {
+  clampPage,
+  MAX_PAGE_SIZE,
+  toPageInfo,
+} from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
 import { RedisService } from "@/redis/redis.service";
 import { SearchService } from "@/features/search/search.service";
@@ -95,6 +99,29 @@ export function archivedProductWhere(
   return { NOT: availableProductWhere(now) };
 }
 
+// A piece in a collection that has not opened is not public yet: off the shelf, out of the archive, no page.
+export function releasedProductWhere(
+  now = new Date(),
+): Prisma.ProductWhereInput {
+  return {
+    OR: [
+      { collection_id: null },
+      {
+        collection: {
+          OR: [{ starts_at: null }, { starts_at: { lte: now } }],
+        },
+      },
+    ],
+  };
+}
+
+// What the archive wall lists: pieces let go, never ones still waiting on their launch.
+export function archiveListingWhere(
+  now = new Date(),
+): Prisma.ProductWhereInput {
+  return { AND: [archivedProductWhere(now), releasedProductWhere(now)] };
+}
+
 export interface ArchiveCheck {
   is_active: boolean;
   stock: number;
@@ -166,7 +193,7 @@ export class ProductsService {
     const now = new Date();
     const isArchive = filter.archive ?? false;
     const scope = isArchive
-      ? archivedProductWhere(now)
+      ? archiveListingWhere(now)
       : availableProductWhere(now);
     // The pool both tabs share; a search term or the made-to-order toggle never gets counted as a facet.
     const pool: Prisma.ProductWhereInput[] = [
@@ -232,7 +259,7 @@ export class ProductsService {
           where: { AND: [availableProductWhere(now), ...tabWhere] },
         }),
         this.prisma.product.count({
-          where: { AND: [archivedProductWhere(now), ...tabWhere] },
+          where: { AND: [archiveListingWhere(now), ...tabWhere] },
         }),
         this.prisma.product.count({
           where: { AND: [scoped("seconds"), { is_second: true }] },
@@ -261,9 +288,9 @@ export class ProductsService {
   }
 
   async bySlug(slug: string): Promise<Product> {
-    // Archived pieces are viewable, just not purchasable, so the lookup is by slug alone.
+    // Archived pieces are viewable, just not purchasable; only an unreleased one reads as missing.
     const row = await this.prisma.product.findFirst({
-      where: { slug },
+      where: { slug, ...releasedProductWhere() },
       include: productListInclude,
     });
     if (!row) {
@@ -333,6 +360,7 @@ export class ProductsService {
       where: { ...availableProductWhere(), glaze_id: glazeId },
       include: productListInclude,
       orderBy: SORT_ORDER[ProductSort.FEATURED],
+      take: MAX_PAGE_SIZE,
     });
     return rows.map(toProduct);
   }
@@ -360,7 +388,7 @@ export class ProductsService {
   collections(archive = false): Promise<Collection[]> {
     const now = new Date();
     const productWhere = archive
-      ? archivedProductWhere(now)
+      ? archiveListingWhere(now)
       : availableProductWhere(now);
     return this.redis.getOrSet(
       archive ? "catalog:collections:archive" : "catalog:collections",
@@ -389,7 +417,7 @@ export class ProductsService {
   async collectionBySlug(slug: string, archive = false): Promise<Collection> {
     const now = new Date();
     const productWhere = archive
-      ? archivedProductWhere(now)
+      ? archiveListingWhere(now)
       : availableProductWhere(now);
     const row = await this.prisma.collection.findFirst({
       where: { slug },

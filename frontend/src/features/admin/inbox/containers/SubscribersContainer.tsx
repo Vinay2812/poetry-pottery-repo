@@ -9,10 +9,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useLazyQuery, useMutation, useQuery } from "@apollo/client/react";
 import {
-  useAdminNewsletterSubscribersQuery,
-  useExportNewsletterSubscribersLazyQuery,
-  useUnsubscribeSubscriberMutation,
+  AdminNewsletterSubscribersDocument,
+  ExportNewsletterSubscribersDocument,
+  UnsubscribeSubscriberDocument,
 } from "@/graphql/generated/graphql";
 
 import {
@@ -49,15 +50,20 @@ export function SubscribersContainer() {
     () => toSubscribersFilter(values, page),
     [values, page],
   );
-  const { data, previousData, loading, error, refetch } =
-    useAdminNewsletterSubscribersQuery({
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AdminNewsletterSubscribersDocument,
+    {
       variables: { filter },
       fetchPolicy: "cache-and-network",
-    });
-  const [unsubscribe] = useUnsubscribeSubscriberMutation();
-  const [exportSubscribers] = useExportNewsletterSubscribersLazyQuery({
-    fetchPolicy: "network-only",
-  });
+    },
+  );
+  const [unsubscribe] = useMutation(UnsubscribeSubscriberDocument);
+  const [exportSubscribers] = useLazyQuery(
+    ExportNewsletterSubscribersDocument,
+    {
+      fetchPolicy: "network-only",
+    },
+  );
   const [busyEmail, setBusyEmail] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);

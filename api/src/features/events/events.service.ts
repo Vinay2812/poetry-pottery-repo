@@ -182,104 +182,117 @@ export class EventsService {
     }
     const note = input.note?.trim().slice(0, 500) || null;
 
-    const row = await this.prisma.withTransaction(async () => {
-      const event = await this.prisma.event.findUnique({
-        where: { id: input.event_id },
-      });
-      if (!event || event.status === EventStatus.DRAFT) {
-        throw new NotFoundException("Event not found");
-      }
-      if (
-        event.status !== EventStatus.PUBLISHED ||
-        event.starts_at <= new Date()
-      ) {
-        throw new BadRequestException(
-          "Registrations for this event have closed",
-        );
-      }
-      const existing = await this.prisma.eventRegistration.findUnique({
-        where: { event_id_user_id: { event_id: event.id, user_id: userId } },
-      });
-      if (existing && CUSTOMER_CANCELLABLE.includes(existing.status)) {
-        throw new BadRequestException(
-          "You already have a seat request for this event",
-        );
-      }
-      if (existing?.status === RegistrationStatus.CONFIRMED) {
-        throw new BadRequestException(
-          "You are already confirmed for this event",
-        );
-      }
-
-      // Conditional decrement is the overbooking guard: the last seat cannot be taken twice.
-      // The status is part of the condition too, so a guest waiting behind a cancellation
-      // cannot take a seat on an evening that has just been called off.
-      const held = await this.prisma.event.updateMany({
-        where: {
-          id: event.id,
-          status: EventStatus.PUBLISHED,
-          available_seats: { gte: seats },
-        },
-        data: { available_seats: { decrement: seats } },
-      });
-      if (held.count === 0) {
-        const fresh = await this.prisma.event.findUnique({
-          where: { id: event.id },
-          select: { status: true, available_seats: true },
+    const row = await this.prisma
+      .withTransaction(async () => {
+        const event = await this.prisma.event.findUnique({
+          where: { id: input.event_id },
         });
-        if (!fresh || fresh.status !== EventStatus.PUBLISHED) {
+        if (!event || event.status === EventStatus.DRAFT) {
+          throw new NotFoundException("Event not found");
+        }
+        if (
+          event.status !== EventStatus.PUBLISHED ||
+          event.starts_at <= new Date()
+        ) {
           throw new BadRequestException(
             "Registrations for this event have closed",
           );
         }
-        throw new BadRequestException(
-          fresh.available_seats > 0
-            ? `Only ${fresh.available_seats} seats left`
-            : "This event is full",
-        );
-      }
-
-      const data = {
-        seats,
-        unit_price: event.price,
-        discount: 0,
-        total: event.price * seats,
-        status: RegistrationStatus.PENDING,
-        note,
-        cancel_reason: null,
-        approved_at: null,
-        confirmed_at: null,
-        rejected_at: null,
-        cancelled_at: null,
-      };
-      // A cancelled or rejected row is reused so one person keeps one row per event.
-      if (existing) {
-        // Predicated on the status we read: two rebookings of the same row would each have
-        // held seats above, and the loser rolls its hold back with the transaction.
-        const rebooked = await this.prisma.eventRegistration.updateMany({
-          where: { id: existing.id, status: existing.status },
-          data,
+        const existing = await this.prisma.eventRegistration.findUnique({
+          where: { event_id_user_id: { event_id: event.id, user_id: userId } },
         });
-        if (rebooked.count === 0) {
-          throw new ConflictException(
-            "This registration was just updated, refresh and try again",
+        if (existing && CUSTOMER_CANCELLABLE.includes(existing.status)) {
+          throw new BadRequestException(
+            "You already have a seat request for this event",
           );
         }
-        return this.prisma.eventRegistration.findUniqueOrThrow({
-          where: { id: existing.id },
+        if (existing?.status === RegistrationStatus.CONFIRMED) {
+          throw new BadRequestException(
+            "You are already confirmed for this event",
+          );
+        }
+
+        // Conditional decrement is the overbooking guard: the last seat cannot be taken twice.
+        // The status is part of the condition too, so a guest waiting behind a cancellation
+        // cannot take a seat on an evening that has just been called off.
+        const held = await this.prisma.event.updateMany({
+          where: {
+            id: event.id,
+            status: EventStatus.PUBLISHED,
+            available_seats: { gte: seats },
+          },
+          data: { available_seats: { decrement: seats } },
+        });
+        if (held.count === 0) {
+          const fresh = await this.prisma.event.findUnique({
+            where: { id: event.id },
+            select: { status: true, available_seats: true },
+          });
+          if (!fresh || fresh.status !== EventStatus.PUBLISHED) {
+            throw new BadRequestException(
+              "Registrations for this event have closed",
+            );
+          }
+          throw new BadRequestException(
+            fresh.available_seats > 0
+              ? `Only ${fresh.available_seats} seats left`
+              : "This event is full",
+          );
+        }
+
+        const data = {
+          seats,
+          unit_price: event.price,
+          discount: 0,
+          total: event.price * seats,
+          status: RegistrationStatus.PENDING,
+          note,
+          cancel_reason: null,
+          approved_at: null,
+          confirmed_at: null,
+          rejected_at: null,
+          cancelled_at: null,
+        };
+        // A cancelled or rejected row is reused so one person keeps one row per event.
+        if (existing) {
+          // Predicated on the status we read: two rebookings of the same row would each have
+          // held seats above, and the loser rolls its hold back with the transaction.
+          const rebooked = await this.prisma.eventRegistration.updateMany({
+            where: { id: existing.id, status: existing.status },
+            data,
+          });
+          if (rebooked.count === 0) {
+            throw new ConflictException(
+              "This registration was just updated, refresh and try again",
+            );
+          }
+          return this.prisma.eventRegistration.findUniqueOrThrow({
+            where: { id: existing.id },
+            include: registrationInclude,
+          });
+        }
+        return this.prisma.eventRegistration.create({
+          data: {
+            id: newPublicId("EV"),
+            event_id: event.id,
+            user_id: userId,
+            ...data,
+          },
           include: registrationInclude,
         });
-      }
-      return this.prisma.eventRegistration.create({
-        data: {
-          id: newPublicId("EV"),
-          event_id: event.id,
-          user_id: userId,
-          ...data,
-        },
-        include: registrationInclude,
+      })
+      .catch((error: unknown) => {
+        // Two first-time requests in flight land on the unique index rather than the read above.
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          throw new ConflictException(
+            "You already have a seat request for this event",
+          );
+        }
+        throw error;
       });
-    });
 
     const registration = toRegistration(row);
     await this.notifyPlaced(userId, registration);

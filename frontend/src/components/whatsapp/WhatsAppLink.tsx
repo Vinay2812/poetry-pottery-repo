@@ -2,7 +2,8 @@
 
 import { type ReactNode, useCallback } from "react";
 
-import { useRecordWhatsAppMessageMutation } from "@/graphql/generated/graphql";
+import { useMutation } from "@apollo/client/react";
+import { RecordWhatsAppMessageDocument } from "@/graphql/generated/graphql";
 
 import { toWhatsAppBody } from "@/features/layout/types";
 
@@ -26,7 +27,7 @@ export function WhatsAppLink({
   ariaLabel,
   children,
 }: WhatsAppLinkProps) {
-  const [recordMessage] = useRecordWhatsAppMessageMutation();
+  const [recordMessage] = useMutation(RecordWhatsAppMessageDocument);
 
   const handleClick = useCallback(() => {
     const body = toWhatsAppBody(href);

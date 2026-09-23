@@ -236,6 +236,11 @@ export function toEventsFilterInput(
   };
 }
 
+// The server and the browser both derive this from the URL, so equal keys mean the same first page.
+export function toEventsFilterKey(input: EventsFilterInput): string {
+  return JSON.stringify(input);
+}
+
 export type RegistrationData = RegistrationFieldsFragment;
 
 export interface RegistrationCancellation {

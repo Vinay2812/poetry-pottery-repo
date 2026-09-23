@@ -10,36 +10,34 @@ import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 import { clientEnv } from "@/config/env";
 import { ApolloProvider } from "@/lib/apollo";
 import { fontVariables } from "@/lib/fonts";
+import { DEFAULT_SHARE_IMAGE, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo";
 
 import "./globals.css";
-
-const description =
-  "Wheel-thrown stoneware made in Sangli, plus pottery workshops and open mic evenings at the studio.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(clientEnv.NEXT_PUBLIC_SITE_URL),
   title: {
-    default: "Poetry & Pottery",
-    template: "%s · Poetry & Pottery",
+    default: SITE_NAME,
+    template: `%s · ${SITE_NAME}`,
   },
-  description,
+  description: SITE_DESCRIPTION,
   icons: {
     icon: [{ url: "/brand/favicon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/brand/apple-touch-icon.png", sizes: "180x180" }],
   },
   openGraph: {
     type: "website",
-    siteName: "Poetry & Pottery",
-    title: "Poetry & Pottery",
-    description,
-    images: [
-      {
-        url: "/brand/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Poetry & Pottery",
-      },
-    ],
+    siteName: SITE_NAME,
+    locale: "en_IN",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [DEFAULT_SHARE_IMAGE],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+    images: [DEFAULT_SHARE_IMAGE.url],
   },
 };
 

@@ -4,23 +4,27 @@ import { useAuth } from "@clerk/nextjs";
 import { useCallback } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useCancelOrderMutation,
-  useOrderQuery,
-  useOrdersQuery,
+  CancelOrderDocument,
+  OrderDocument,
+  OrdersDocument,
 } from "@/graphql/generated/graphql";
 
 // Signed-out visitors get a sign-in prompt instead of an auth error from the API.
 export function useOrders(page: number) {
   const { isSignedIn, isLoaded } = useAuth();
-  const { data, previousData, loading, error, refetch } = useOrdersQuery({
-    variables: { page, limit: 12 },
-    skip: !isSignedIn,
-    // An order placed while this list was unmounted must not leave a stale page behind.
-    fetchPolicy: "cache-and-network",
-    nextFetchPolicy: "cache-first",
-    notifyOnNetworkStatusChange: true,
-  });
+  const { data, previousData, loading, error, refetch } = useQuery(
+    OrdersDocument,
+    {
+      variables: { page, limit: 12 },
+      skip: !isSignedIn,
+      // An order placed while this list was unmounted must not leave a stale page behind.
+      fetchPolicy: "cache-and-network",
+      nextFetchPolicy: "cache-first",
+      notifyOnNetworkStatusChange: true,
+    },
+  );
   const result = isSignedIn
     ? (data?.orders ?? previousData?.orders)
     : undefined;
@@ -37,7 +41,7 @@ export function useOrders(page: number) {
 
 export function useOrder(id: string) {
   const { isSignedIn, isLoaded } = useAuth();
-  const { data, loading, error, refetch } = useOrderQuery({
+  const { data, loading, error, refetch } = useQuery(OrderDocument, {
     variables: { id },
     skip: !isSignedIn,
   });
@@ -51,7 +55,7 @@ export function useOrder(id: string) {
 }
 
 export function useCancelOrder() {
-  const [mutate, { loading }] = useCancelOrderMutation();
+  const [mutate, { loading }] = useMutation(CancelOrderDocument);
   const cancel = useCallback(
     async (id: string, reason: string): Promise<boolean> => {
       try {

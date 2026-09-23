@@ -7,10 +7,12 @@ import { PrismaService } from "@/prisma/prisma.service";
 import { RedisService } from "@/redis/redis.service";
 import { SearchService } from "@/features/search/search.service";
 import {
+  archiveListingWhere,
   archivedProductWhere,
   availableProductWhere,
   isProductArchived,
   ProductsService,
+  releasedProductWhere,
 } from "./products.service";
 import { ProductSort } from "./products.type";
 
@@ -352,13 +354,13 @@ describe("ProductsService", () => {
     );
   });
 
-  it("looks archived pieces up by slug alone", async () => {
+  it("looks archived pieces up by slug, but not ones still waiting on their launch", async () => {
     prismaMock.product.findFirst.mockResolvedValue(row(7));
 
     await service.bySlug("p-7");
 
     expect(prismaMock.product.findFirst).toHaveBeenCalledWith(
-      containing({ where: { slug: "p-7" } }),
+      containing({ where: { slug: "p-7", ...releasedProductWhere() } }),
     );
   });
 
@@ -369,7 +371,7 @@ describe("ProductsService", () => {
     const result = await service.list({ archive: true });
 
     expect(prismaMock.product.findMany).toHaveBeenCalledWith(
-      containing({ where: { AND: [archivedProductWhere()] } }),
+      containing({ where: { AND: [archiveListingWhere()] } }),
     );
     expect(result.page_info.total).toBe(15);
     expect(result.facets.active_count).toBe(9);
@@ -386,7 +388,7 @@ describe("ProductsService", () => {
       where: { AND: [availableProductWhere(), narrowing] },
     });
     expect(prismaMock.product.count).toHaveBeenCalledWith({
-      where: { AND: [archivedProductWhere(), narrowing] },
+      where: { AND: [archiveListingWhere(), narrowing] },
     });
   });
 
@@ -399,13 +401,13 @@ describe("ProductsService", () => {
 
     const matched = { id: { in: [3, 1] } };
     expect(prismaMock.product.findMany).toHaveBeenCalledWith(
-      containing({ where: { AND: [archivedProductWhere(), matched] } }),
+      containing({ where: { AND: [archiveListingWhere(), matched] } }),
     );
     expect(prismaMock.product.count).toHaveBeenCalledWith({
       where: { AND: [availableProductWhere(), matched] },
     });
     expect(prismaMock.product.count).toHaveBeenCalledWith({
-      where: { AND: [archivedProductWhere(), matched] },
+      where: { AND: [archiveListingWhere(), matched] },
     });
     expect(result.items.map((item) => item.id)).toEqual([1]);
     expect(result.facets.active_count).toBe(1);
@@ -435,7 +437,7 @@ describe("ProductsService", () => {
     expect(archiveArgs).toEqual(
       containing({
         include: {
-          _count: { select: { products: { where: archivedProductWhere() } } },
+          _count: { select: { products: { where: archiveListingWhere() } } },
         },
       }),
     );
@@ -474,6 +476,22 @@ describe("ProductsService", () => {
 });
 
 describe("archive predicate", () => {
+  it("keeps pieces of collections that have not opened off the archive wall", () => {
+    expect(archiveListingWhere(NOW)).toEqual({
+      AND: [archivedProductWhere(NOW), releasedProductWhere(NOW)],
+    });
+    expect(releasedProductWhere(NOW)).toEqual({
+      OR: [
+        { collection_id: null },
+        {
+          collection: {
+            OR: [{ starts_at: null }, { starts_at: { lte: NOW } }],
+          },
+        },
+      ],
+    });
+  });
+
   it("is the exact negation of the availability rule", () => {
     expect(archivedProductWhere(NOW)).toEqual({
       NOT: availableProductWhere(NOW),

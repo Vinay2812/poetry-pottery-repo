@@ -198,6 +198,11 @@ export function toFilterInput(
   };
 }
 
+// The server and the browser both derive this from the URL, so equal keys mean the same first page.
+export function toFilterKey(input: ProductsFilterInput): string {
+  return JSON.stringify(input);
+}
+
 export function countActiveFilters(filters: ProductFilters): number {
   return (
     filters.categories.length +

@@ -3,12 +3,13 @@
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  UploadPurpose,
-  useAdminSiteSettingsQuery,
-  useUpdateAnnouncementMutation,
-  useUpdateSiteSettingsMutation,
+  AdminSiteSettingsDocument,
   type AdminSiteSettingsFieldsFragment,
+  UpdateAnnouncementDocument,
+  UpdateSiteSettingsDocument,
+  UploadPurpose,
 } from "@/graphql/generated/graphql";
 
 import type {
@@ -41,11 +42,11 @@ function mergeSettings(
 }
 
 export function SiteSettingsContainer() {
-  const { data, previousData, loading } = useAdminSiteSettingsQuery({
+  const { data, previousData, loading } = useQuery(AdminSiteSettingsDocument, {
     fetchPolicy: "cache-and-network",
   });
-  const [updateSettings] = useUpdateSiteSettingsMutation();
-  const [updateAnnouncement] = useUpdateAnnouncementMutation();
+  const [updateSettings] = useMutation(UpdateSiteSettingsDocument);
+  const [updateAnnouncement] = useMutation(UpdateAnnouncementDocument);
   const [, startTransition] = useTransition();
   // The mutations return the whole settings row, so the payload becomes the baseline.
   const [saved, setSaved] = useState<Settings | null>(null);

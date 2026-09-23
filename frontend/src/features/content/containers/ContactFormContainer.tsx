@@ -2,7 +2,8 @@
 
 import { useCallback, useState } from "react";
 
-import { useSendContactMessageMutation } from "@/graphql/generated/graphql";
+import { useMutation } from "@apollo/client/react";
+import { SendContactMessageDocument } from "@/graphql/generated/graphql";
 import type { ContactFormValues } from "@/lib/validations/contact";
 
 import { ConfirmationLine } from "@/features/content/components/ConfirmationLine";
@@ -12,7 +13,7 @@ import { toServerMessage } from "@/features/content/types";
 export function ContactFormContainer() {
   const [isSent, setIsSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [send, { loading }] = useSendContactMessageMutation();
+  const [send, { loading }] = useMutation(SendContactMessageDocument);
 
   const handleSubmit = useCallback(
     async (values: ContactFormValues) => {

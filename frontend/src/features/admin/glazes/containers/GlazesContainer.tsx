@@ -10,12 +10,13 @@ import {
 
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  AdminGlazesDocument,
+  CreateGlazeDocument,
+  DeleteGlazeDocument,
+  UpdateGlazeDocument,
   UploadPurpose,
-  useAdminGlazesQuery,
-  useCreateGlazeMutation,
-  useDeleteGlazeMutation,
-  useUpdateGlazeMutation,
 } from "@/graphql/generated/graphql";
 
 import type { AdminGlazeFormValues } from "@/lib/validations/admin/glaze";
@@ -68,20 +69,23 @@ export function GlazesContainer() {
   );
   const [searchDraft, setSearchDraft] = useSearchDraft(search, commitSearch);
 
-  const { data, previousData, loading, refetch } = useAdminGlazesQuery({
-    variables: {
-      filter: {
-        search: search === "" ? null : search,
-        page,
-        limit: GLAZES_PAGE_SIZE,
+  const { data, previousData, loading, refetch } = useQuery(
+    AdminGlazesDocument,
+    {
+      variables: {
+        filter: {
+          search: search === "" ? null : search,
+          page,
+          limit: GLAZES_PAGE_SIZE,
+        },
       },
+      fetchPolicy: "cache-and-network",
     },
-    fetchPolicy: "cache-and-network",
-  });
+  );
 
-  const [createGlaze] = useCreateGlazeMutation();
-  const [updateGlaze] = useUpdateGlazeMutation();
-  const [deleteGlaze] = useDeleteGlazeMutation();
+  const [createGlaze] = useMutation(CreateGlazeDocument);
+  const [updateGlaze] = useMutation(UpdateGlazeDocument);
+  const [deleteGlaze] = useMutation(DeleteGlazeDocument);
 
   const [editorId, setEditorId] = useState<number | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);

@@ -75,6 +75,19 @@ export function assertHours(input: {
   }
 }
 
+// A tier sells whole slots, so its length must divide into them or the session would run short or long.
+export function assertTiersFit(
+  slotMinutes: number,
+  tierHours: readonly number[],
+): void {
+  const misfit = tierHours.find((hours) => (hours * 60) % slotMinutes !== 0);
+  if (misfit !== undefined) {
+    throw new BadRequestException(
+      `A ${misfit}-hour session does not divide into ${slotMinutes}-minute slots`,
+    );
+  }
+}
+
 export function assertWeekdays(days: readonly number[]): void {
   if (days.some((day) => !Number.isInteger(day) || day < 0 || day > 6)) {
     throw new BadRequestException("Closed weekdays run from 0 to 6");
@@ -121,11 +134,16 @@ export class AdminWorkshopsService {
     if (!current) {
       throw new NotFoundException("Workshop not found");
     }
+    const slotMinutes = input.slot_minutes ?? current.slot_minutes;
     assertHours({
       opening_minutes: input.opening_minutes ?? current.opening_minutes,
       closing_minutes: input.closing_minutes ?? current.closing_minutes,
-      slot_minutes: input.slot_minutes ?? current.slot_minutes,
+      slot_minutes: slotMinutes,
     });
+    assertTiersFit(
+      slotMinutes,
+      current.tiers.map((tier) => tier.hours),
+    );
     if (input.closed_weekdays) {
       assertWeekdays(input.closed_weekdays);
     }
@@ -196,6 +214,14 @@ export class AdminWorkshopsService {
         "Tier prices and pieces cannot be negative",
       );
     }
+    const config = await this.prisma.workshopConfig.findUnique({
+      where: { id: configId },
+      select: { slot_minutes: true },
+    });
+    if (!config) {
+      throw new NotFoundException("Workshop not found");
+    }
+    assertTiersFit(config.slot_minutes, [input.hours]);
     await this.prisma.workshopPricingTier
       .upsert({
         where: { config_id_hours: { config_id: configId, hours: input.hours } },

@@ -9,10 +9,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useAdminContactMessagesQuery,
-  useDeleteContactMessageMutation,
-  useSetContactMessageReadMutation,
+  AdminContactMessagesDocument,
+  DeleteContactMessageDocument,
+  SetContactMessageReadDocument,
 } from "@/graphql/generated/graphql";
 
 import {
@@ -33,13 +34,15 @@ import {
 export function ContactMessagesContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const filter = useMemo(() => toContactFilter(values, page), [values, page]);
-  const { data, previousData, loading, error, refetch } =
-    useAdminContactMessagesQuery({
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AdminContactMessagesDocument,
+    {
       variables: { filter },
       fetchPolicy: "cache-and-network",
-    });
-  const [setMessageRead] = useSetContactMessageReadMutation();
-  const [deleteMessage] = useDeleteContactMessageMutation();
+    },
+  );
+  const [setMessageRead] = useMutation(SetContactMessageReadDocument);
+  const [deleteMessage] = useMutation(DeleteContactMessageDocument);
   const [busyId, setBusyId] = useState<number | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [, startTransition] = useTransition();

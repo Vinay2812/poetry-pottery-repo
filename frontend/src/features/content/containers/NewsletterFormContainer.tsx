@@ -2,7 +2,8 @@
 
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 
-import { useSubscribeToNewsletterMutation } from "@/graphql/generated/graphql";
+import { useMutation } from "@apollo/client/react";
+import { SubscribeToNewsletterDocument } from "@/graphql/generated/graphql";
 
 import { NewsletterForm } from "@/features/content/components/NewsletterForm";
 import {
@@ -20,7 +21,7 @@ export function NewsletterFormContainer() {
     applyNewsletterResult,
   );
   const [, startTransition] = useTransition();
-  const [subscribe] = useSubscribeToNewsletterMutation();
+  const [subscribe] = useMutation(SubscribeToNewsletterDocument);
 
   // The thank-you shows on submit; a refusal puts the field back with the reason.
   const handleSubmit = useCallback(() => {

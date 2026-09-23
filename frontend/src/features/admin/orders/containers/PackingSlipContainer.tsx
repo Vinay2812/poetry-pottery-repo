@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useCallback, useMemo } from "react";
 
-import { useAdminOrderQuery } from "@/graphql/generated/graphql";
+import { useQuery } from "@apollo/client/react";
+import { AdminOrderDocument } from "@/graphql/generated/graphql";
 
 import { formatDate, formatInr } from "@/lib/format";
 
@@ -22,7 +23,7 @@ export interface PackingSlipContainerProps {
 }
 
 export function PackingSlipContainer({ orderId }: PackingSlipContainerProps) {
-  const { data, loading, error } = useAdminOrderQuery({
+  const { data, loading, error } = useQuery(AdminOrderDocument, {
     variables: { id: orderId },
     fetchPolicy: "cache-and-network",
   });

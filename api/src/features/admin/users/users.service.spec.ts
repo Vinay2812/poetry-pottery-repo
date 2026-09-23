@@ -3,11 +3,13 @@ import { Test } from "@nestjs/testing";
 import { UserRole } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { ClerkService } from "@/common/clerk/clerk.service";
 import { PrismaService } from "@/prisma/prisma.service";
 import { AdminUsersService } from "./users.service";
 
 const row = {
   id: 7,
+  auth_id: "user_7",
   name: "Maya",
   email: "maya@example.com",
   image: null,
@@ -29,7 +31,11 @@ const prismaMock = {
     count: vi.fn(),
     update: vi.fn(),
   },
+  $executeRaw: vi.fn(),
+  withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
 };
+
+const clerkMock = { updatePublicMetadata: vi.fn(() => Promise.resolve()) };
 
 describe("AdminUsersService", () => {
   let service: AdminUsersService;
@@ -44,6 +50,7 @@ describe("AdminUsersService", () => {
       providers: [
         AdminUsersService,
         { provide: PrismaService, useValue: prismaMock },
+        { provide: ClerkService, useValue: clerkMock },
       ],
     }).compile();
     service = moduleRef.get(AdminUsersService);
@@ -120,6 +127,25 @@ describe("AdminUsersService", () => {
 
   it("still allows an admin to reassert their own admin role", async () => {
     await expect(service.setRole(7, UserRole.ADMIN, 7)).resolves.toMatchObject({
+      role: UserRole.ADMIN,
+    });
+  });
+
+  it("takes the role-change lock and refreshes the Clerk metadata the dashboard reads", async () => {
+    await service.setRole(7, UserRole.ADMIN, 1);
+
+    expect(prismaMock.withTransaction).toHaveBeenCalledTimes(1);
+    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(clerkMock.updatePublicMetadata).toHaveBeenCalledWith("user_7", {
+      dbUserId: 7,
+      role: UserRole.ADMIN,
+    });
+  });
+
+  it("keeps the role change when Clerk cannot be reached", async () => {
+    clerkMock.updatePublicMetadata.mockRejectedValueOnce(new Error("429"));
+
+    await expect(service.setRole(7, UserRole.ADMIN, 1)).resolves.toMatchObject({
       role: UserRole.ADMIN,
     });
   });

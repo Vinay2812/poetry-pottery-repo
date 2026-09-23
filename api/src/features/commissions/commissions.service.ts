@@ -11,7 +11,7 @@ import {
 } from "@/mail/templates/commissions";
 import { PrismaService } from "@/prisma/prisma.service";
 import { PendingUploadsService } from "@/storage/pending-uploads.service";
-import { StorageService } from "@/storage/storage.service";
+import { customizationPrefix, StorageService } from "@/storage/storage.service";
 import { rethrowMissing } from "@/features/admin/missing-row";
 import { normalisePhone } from "@/features/addresses/address-validation";
 import { type Product } from "@/features/products/products.type";
@@ -193,9 +193,11 @@ export class CommissionsService {
     userId: number | null,
   ): Promise<CommissionRequest> {
     const fields = parseCommissionInput(input);
-    // Only files the studio's own uploader produced travel with a brief.
+    // Only photos this sender uploaded travel with a brief; a guest cannot upload, so carries none.
     const foreign = fields.reference_image_urls.find(
-      (url) => !this.storage.isOwnUrl(url),
+      (url) =>
+        userId === null ||
+        !this.storage.isUploadedUnder(url, customizationPrefix(userId)),
     );
     if (foreign) {
       throw new BadRequestException(

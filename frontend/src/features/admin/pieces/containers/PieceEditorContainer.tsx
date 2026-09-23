@@ -12,17 +12,18 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  AdjustProductStockDocument,
+  AdminCategoriesDocument,
+  AdminCollectionsDocument,
+  AdminGlazesDocument,
+  AdminProductDocument,
+  CreateProductDocument,
+  SetProductActiveDocument,
+  SetProductFeaturedDocument,
+  UpdateProductDocument,
   UploadPurpose,
-  useAdjustProductStockMutation,
-  useAdminCategoriesQuery,
-  useAdminCollectionsQuery,
-  useAdminGlazesQuery,
-  useAdminProductQuery,
-  useCreateProductMutation,
-  useSetProductActiveMutation,
-  useSetProductFeaturedMutation,
-  useUpdateProductMutation,
 } from "@/graphql/generated/graphql";
 
 import type { ProductFormValues } from "@/lib/validations/admin/product";
@@ -85,27 +86,27 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   const router = useRouter();
   const isCreate = productId === null;
 
-  const { data, loading, error, refetch } = useAdminProductQuery({
+  const { data, loading, error, refetch } = useQuery(AdminProductDocument, {
     variables: { id: productId ?? 0 },
     skip: isCreate,
     fetchPolicy: "cache-and-network",
   });
-  const { data: categoryData } = useAdminCategoriesQuery({
+  const { data: categoryData } = useQuery(AdminCategoriesDocument, {
     fetchPolicy: "cache-first",
   });
-  const { data: collectionData } = useAdminCollectionsQuery({
+  const { data: collectionData } = useQuery(AdminCollectionsDocument, {
     fetchPolicy: "cache-first",
   });
-  const { data: glazeData } = useAdminGlazesQuery({
+  const { data: glazeData } = useQuery(AdminGlazesDocument, {
     variables: { filter: { page: 1, limit: GLAZE_PICKER_LIMIT } },
     fetchPolicy: "cache-first",
   });
 
-  const [createProduct] = useCreateProductMutation();
-  const [updateProduct] = useUpdateProductMutation();
-  const [setActive] = useSetProductActiveMutation();
-  const [setFeatured] = useSetProductFeaturedMutation();
-  const [adjustStock] = useAdjustProductStockMutation();
+  const [createProduct] = useMutation(CreateProductDocument);
+  const [updateProduct] = useMutation(UpdateProductDocument);
+  const [setActive] = useMutation(SetProductActiveDocument);
+  const [setFeatured] = useMutation(SetProductFeaturedDocument);
+  const [adjustStock] = useMutation(AdjustProductStockDocument);
 
   const [isSaving, setIsSaving] = useState(false);
   const [isBusy, setIsBusy] = useState(false);

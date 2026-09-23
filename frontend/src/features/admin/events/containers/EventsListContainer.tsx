@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useCallback, useMemo } from "react";
 
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@apollo/client/react";
 import {
+  AdminEventsDocument,
   EventStatus,
   EventType,
-  useAdminEventsQuery,
 } from "@/graphql/generated/graphql";
 
 import { formatInr } from "@/lib/format";
@@ -62,7 +63,7 @@ export function EventsListContainer() {
     commitSearch,
   );
 
-  const { data, previousData, loading } = useAdminEventsQuery({
+  const { data, previousData, loading } = useQuery(AdminEventsDocument, {
     variables: {
       filter: {
         search: search || null,

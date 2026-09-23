@@ -237,6 +237,16 @@ export class WorkshopsService {
         request.slot_starts,
         current.config.slot_minutes,
       );
+      // Predicated on the status we read, so a cancellation landing mid-move is not overwritten.
+      const moved = await this.prisma.workshopBooking.updateMany({
+        where: { id: current.id, status: current.status },
+        data: { starts_at: bounds.starts_at, ends_at: bounds.ends_at },
+      });
+      if (moved.count === 0) {
+        throw new ConflictException(
+          "This booking was just updated, refresh and try again",
+        );
+      }
       // The whole set is replaced, so a move can drop, add or shuffle days at once.
       await this.prisma.workshopBookingSlot.deleteMany({
         where: { booking_id: current.id },
@@ -244,8 +254,6 @@ export class WorkshopsService {
       return this.prisma.workshopBooking.update({
         where: { id: current.id },
         data: {
-          starts_at: bounds.starts_at,
-          ends_at: bounds.ends_at,
           slots: {
             create: this.toSlotRows(request.slot_starts, current.config),
           },

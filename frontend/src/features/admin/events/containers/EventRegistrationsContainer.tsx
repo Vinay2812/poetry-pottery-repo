@@ -9,10 +9,11 @@ import {
 } from "react";
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  AdminEventRegistrationsDocument,
   RegistrationStatus,
-  useAdminEventRegistrationsQuery,
-  useSetRegistrationStatusMutation,
+  SetRegistrationStatusDocument,
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatInr } from "@/lib/format";
@@ -95,8 +96,9 @@ export function EventRegistrationsContainer({
     commitSearch,
   );
 
-  const { data, previousData, loading, refetch } =
-    useAdminEventRegistrationsQuery({
+  const { data, previousData, loading, refetch } = useQuery(
+    AdminEventRegistrationsDocument,
+    {
       variables: {
         filter: {
           event_id: eventId,
@@ -107,9 +109,10 @@ export function EventRegistrationsContainer({
         },
       },
       fetchPolicy: "cache-and-network",
-    });
+    },
+  );
 
-  const [setRegistrationStatus] = useSetRegistrationStatusMutation();
+  const [setRegistrationStatus] = useMutation(SetRegistrationStatusDocument);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [reason, setReason] = useState("");

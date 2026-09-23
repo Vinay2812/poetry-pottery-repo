@@ -3,7 +3,8 @@
 import { useAuth } from "@clerk/nextjs";
 import { useCallback, useEffect, useMemo } from "react";
 
-import { useWishlistQuery } from "@/graphql/generated/graphql";
+import { useQuery } from "@apollo/client/react";
+import { WishlistDocument } from "@/graphql/generated/graphql";
 
 import { useWishlistContext } from "@/features/wishlist/containers/WishlistProvider";
 
@@ -20,7 +21,7 @@ export function useWishlistIds() {
 export function useWishlist() {
   const { isSignedIn, isLoaded } = useAuth();
   const { ids, adoptIds } = useWishlistContext();
-  const { data, previousData, loading, error } = useWishlistQuery({
+  const { data, previousData, loading, error } = useQuery(WishlistDocument, {
     skip: !isSignedIn,
     fetchPolicy: "cache-and-network",
     nextFetchPolicy: "cache-first",

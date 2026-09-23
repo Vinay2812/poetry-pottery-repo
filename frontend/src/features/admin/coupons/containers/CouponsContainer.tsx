@@ -10,11 +10,12 @@ import {
 
 import { toast } from "sonner";
 
+import { useMutation, useQuery } from "@apollo/client/react";
 import {
-  useAdminCouponsQuery,
-  useCreateCouponMutation,
-  useDeleteCouponMutation,
-  useUpdateCouponMutation,
+  AdminCouponsDocument,
+  CreateCouponDocument,
+  DeleteCouponDocument,
+  UpdateCouponDocument,
 } from "@/graphql/generated/graphql";
 
 import type { AdminCouponFormValues } from "@/lib/validations/admin/coupon";
@@ -75,21 +76,24 @@ export function CouponsContainer() {
   );
   const [searchDraft, setSearchDraft] = useSearchDraft(search, commitSearch);
 
-  const { data, previousData, loading, refetch } = useAdminCouponsQuery({
-    variables: {
-      filter: {
-        search: search === "" ? null : search,
-        is_active: isActive ?? null,
-        page,
-        limit: COUPONS_PAGE_SIZE,
+  const { data, previousData, loading, refetch } = useQuery(
+    AdminCouponsDocument,
+    {
+      variables: {
+        filter: {
+          search: search === "" ? null : search,
+          is_active: isActive ?? null,
+          page,
+          limit: COUPONS_PAGE_SIZE,
+        },
       },
+      fetchPolicy: "cache-and-network",
     },
-    fetchPolicy: "cache-and-network",
-  });
+  );
 
-  const [createCoupon] = useCreateCouponMutation();
-  const [updateCoupon] = useUpdateCouponMutation();
-  const [deleteCoupon] = useDeleteCouponMutation();
+  const [createCoupon] = useMutation(CreateCouponDocument);
+  const [updateCoupon] = useMutation(UpdateCouponDocument);
+  const [deleteCoupon] = useMutation(DeleteCouponDocument);
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);

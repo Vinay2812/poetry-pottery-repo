@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { getWorkshops } from "@/lib/data/catalog";
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { pageMetadata } from "@/lib/seo";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -12,11 +13,12 @@ import {
   WorkshopIntro,
 } from "@/features/workshops";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata({
   title: "Book a wheel session",
+  path: "/workshops",
   description:
     "Book an hour or more at the wheel in our Sangli studio. Clay, tools and firing are part of the price.",
-};
+});
 
 export default async function WorkshopsPage() {
   const [workshops, settings] = await Promise.all([
