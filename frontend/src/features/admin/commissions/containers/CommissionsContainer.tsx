@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -19,11 +11,9 @@ import {
   SetCommissionRequestStatusDocument,
 } from "@/graphql/generated/graphql";
 
-import {
-  toErrorMessage,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
+
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminPageHeader,
   AdminPagination,
@@ -47,6 +37,11 @@ import {
 import { toWhatsAppBody } from "@/features/layout";
 
 const STATUS_OPTIONS = enumOptions(CommissionStatus);
+
+interface StatusMove {
+  id: string;
+  status: CommissionStatus;
+}
 
 export function CommissionsContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
@@ -80,8 +75,6 @@ export function CommissionsContainer() {
   const [sendWhatsAppReply] = useMutation(SendWhatsAppReplyDocument);
 
   const [openId, setOpenId] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
 
   const result = data?.commissionRequests ?? previousData?.commissionRequests;
 
@@ -94,23 +87,22 @@ export function CommissionsContainer() {
 
   const openRow = optimisticRows.find((row) => row.id === openId) ?? null;
 
+  const { execute: markBriefRead } = useOptimisticAction({
+    patch: (id: string) => patchRows({ kind: "read", id }),
+    run: (id) => markRead({ variables: { id } }),
+    refresh: refetch,
+    messages: { success: null, failure: "The brief could not be marked read" },
+  });
+
   // Opening a brief is the studio reading it, so the unread mark comes off there.
   const handleOpen = useCallback(
     (id: string) => {
       setOpenId(id);
       const row = optimisticRows.find((item) => item.id === id);
       if (!row || row.isRead) return;
-      startTransition(async () => {
-        patchRows({ kind: "read", id });
-        try {
-          await markRead({ variables: { id } });
-          await refetch();
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        }
-      });
+      markBriefRead(id);
     },
-    [markRead, optimisticRows, patchRows, refetch],
+    [markBriefRead, optimisticRows],
   );
 
   const whatsAppHref = openRow
@@ -134,26 +126,27 @@ export function CommissionsContainer() {
     }).catch(() => undefined);
   }, [openRow, sendWhatsAppReply, whatsAppHref]);
 
+  const { execute: moveBrief, pending: pendingMove } = useOptimisticAction({
+    patch: (move: StatusMove) =>
+      patchRows({ kind: "status", id: move.id, status: move.status }),
+    run: (move) =>
+      setStatus({ variables: { id: move.id, status: move.status } }),
+    refresh: refetch,
+    messages: {
+      success: "Brief moved",
+      failure: "The brief could not be moved",
+    },
+  });
+
   const handleStatusChange = useCallback(
     (next: CommissionStatus) => {
-      const id = openId;
-      if (id === null) return;
-      setBusyId(id);
-      startTransition(async () => {
-        patchRows({ kind: "status", id, status: next });
-        try {
-          await setStatus({ variables: { id, status: next } });
-          await refetch();
-          toast.success("Brief moved");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setBusyId(null);
-        }
-      });
+      if (openId === null) return;
+      moveBrief({ id: openId, status: next });
     },
-    [openId, patchRows, refetch, setStatus],
+    [moveBrief, openId],
   );
+
+  const busyId = pendingMove?.id ?? null;
 
   const pageInfo = result?.page_info;
   const hasFilters = search !== "" || status !== null;

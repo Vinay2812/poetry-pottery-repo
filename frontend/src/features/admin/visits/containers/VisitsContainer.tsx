@@ -1,14 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -16,14 +8,12 @@ import {
   CancelStudioVisitDocument,
 } from "@/graphql/generated/graphql";
 
+import { type ReasonInput, useReasonAction } from "@/lib/use-reason-action";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
-import {
-  toErrorMessage,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminDateFilter,
   AdminPageHeader,
@@ -64,11 +54,6 @@ export function VisitsContainer() {
 
   const [cancelVisit] = useMutation(CancelStudioVisitDocument);
 
-  const [pendingId, setPendingId] = useState<string | null>(null);
-  const [reason, setReason] = useState("");
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-
   const result = data?.adminStudioVisits ?? previousData?.adminStudioVisits;
 
   const rows = useMemo<VisitRow[]>(
@@ -78,28 +63,19 @@ export function VisitsContainer() {
 
   const [optimisticRows, patchRows] = useOptimistic(rows, applyVisitPatch);
 
-  const handleCancelConfirm = useCallback(() => {
-    const id = pendingId;
-    if (id === null) return;
-    const note = reason.trim();
-    setPendingId(null);
-    setBusyId(id);
-    startTransition(async () => {
-      patchRows({ kind: "cancel", id, at: new Date().toISOString() });
-      try {
-        await cancelVisit({
-          variables: { id, reason: note === "" ? null : note },
-        });
-        await refetch();
-        toast.success("Visit cancelled and the window is free again");
-      } catch (error) {
-        toast.error(toErrorMessage(error));
-      } finally {
-        setBusyId(null);
-        setReason("");
-      }
-    });
-  }, [cancelVisit, patchRows, pendingId, reason, refetch]);
+  const cancel = useReasonAction({
+    patch: ({ target }: ReasonInput<string>) =>
+      patchRows({ kind: "cancel", id: target, at: new Date().toISOString() }),
+    run: ({ target, reason }) =>
+      cancelVisit({ variables: { id: target, reason } }),
+    refresh: refetch,
+    policy: () => "optional",
+    requiredMessage: "Say why the visit is off",
+    messages: {
+      success: "Visit cancelled and the window is free again",
+      failure: "The visit could not be cancelled",
+    },
+  });
 
   const pageInfo = result?.page_info;
   const hasFilters =
@@ -161,11 +137,11 @@ export function VisitsContainer() {
       <VisitsTable
         rows={optimisticRows}
         isBusy={isPending || (loading && result !== undefined)}
-        busyId={busyId}
+        busyId={cancel.pending}
         emptyMessage={
           hasFilters ? "No visits match that search" : "Nobody is coming by yet"
         }
-        onCancel={setPendingId}
+        onCancel={cancel.start}
       />
 
       {pageInfo && (
@@ -179,25 +155,22 @@ export function VisitsContainer() {
       )}
 
       <AdminReasonDialog
-        isOpen={pendingId !== null}
+        isOpen={cancel.target !== null}
         title="Cancel this visit?"
         description="The window goes back on offer and the visitor is told, if they left an address."
         fieldLabel="Why"
         hint="Optional. It goes into the email."
         placeholder="The kiln is running that morning"
-        value={reason}
-        error={undefined}
+        value={cancel.reason}
+        error={cancel.error}
         confirmLabel="Cancel visit"
         isDestructive
         isRequired={false}
-        isBusy={busyId !== null}
-        onValueChange={setReason}
-        onConfirm={handleCancelConfirm}
+        isBusy={cancel.isPending}
+        onValueChange={cancel.setReason}
+        onConfirm={cancel.confirm}
         onOpenChange={(isOpen) => {
-          if (!isOpen) {
-            setPendingId(null);
-            setReason("");
-          }
+          if (!isOpen) cancel.close();
         }}
       />
     </div>

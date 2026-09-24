@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -16,11 +9,10 @@ import {
   SetReviewHiddenDocument,
 } from "@/graphql/generated/graphql";
 
-import {
-  toErrorMessage,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { describeError } from "@/lib/apollo/errors";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
+
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
   AdminPageHeader,
@@ -39,6 +31,11 @@ import {
   toReviewsFilter,
 } from "@/features/admin/reviews/types";
 
+interface HiddenChange {
+  id: number;
+  isHidden: boolean;
+}
+
 export function ReviewsContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const filter = useMemo(() => toReviewsFilter(values, page), [values, page]);
@@ -52,9 +49,7 @@ export function ReviewsContainer() {
   );
   const [setReviewHidden] = useMutation(SetReviewHiddenDocument);
   const [deleteReview] = useMutation(DeleteReviewAsAdminDocument);
-  const [busyId, setBusyId] = useState<number | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
-  const [, startTransition] = useTransition();
 
   const result = data?.adminReviews ?? previousData?.adminReviews;
   const rows = useMemo(() => (result?.items ?? []).map(toReviewRow), [result]);
@@ -71,43 +66,43 @@ export function ReviewsContainer() {
     handleSearchCommit,
   );
 
-  const handleToggleHidden = useCallback(
-    (id: number, isHidden: boolean) => {
-      setBusyId(id);
-      startTransition(async () => {
-        patchRows({ kind: "hidden", id, isHidden });
-        try {
-          await setReviewHidden({ variables: { id, is_hidden: isHidden } });
-          await refetch();
-          toast.success(isHidden ? "Review hidden" : "Review is visible again");
-        } catch (patchError) {
-          toast.error(toErrorMessage(patchError));
-        } finally {
-          setBusyId(null);
-        }
-      });
+  const { execute: saveHidden, pending: pendingHidden } = useOptimisticAction({
+    patch: (change: HiddenChange) =>
+      patchRows({ kind: "hidden", id: change.id, isHidden: change.isHidden }),
+    run: (change) =>
+      setReviewHidden({
+        variables: { id: change.id, is_hidden: change.isHidden },
+      }),
+    refresh: refetch,
+    messages: {
+      success: (change) =>
+        change.isHidden ? "Review hidden" : "Review is visible again",
+      failure: "The review could not be updated",
     },
-    [patchRows, refetch, setReviewHidden],
+  });
+
+  const handleToggleHidden = useCallback(
+    (id: number, isHidden: boolean) => saveHidden({ id, isHidden }),
+    [saveHidden],
   );
 
-  const handleConfirmDelete = useCallback(() => {
-    const id = pendingDeleteId;
-    if (id === null) return;
-    setBusyId(id);
-    startTransition(async () => {
-      patchRows({ kind: "remove", id });
-      try {
-        await deleteReview({ variables: { id } });
-        await refetch();
-        setPendingDeleteId(null);
-        toast.success("Review deleted");
-      } catch (deleteError) {
-        toast.error(toErrorMessage(deleteError));
-      } finally {
-        setBusyId(null);
-      }
+  const { execute: removeReview, pending: pendingRemoveId } =
+    useOptimisticAction({
+      patch: (id: number) => patchRows({ kind: "remove", id }),
+      run: (id) => deleteReview({ variables: { id } }),
+      refresh: refetch,
+      messages: {
+        success: "Review deleted",
+        failure: "The review could not be deleted",
+      },
+      onSuccess: () => setPendingDeleteId(null),
     });
-  }, [deleteReview, patchRows, pendingDeleteId, refetch]);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (pendingDeleteId !== null) removeReview(pendingDeleteId);
+  }, [pendingDeleteId, removeReview]);
+
+  const busyId = pendingHidden?.id ?? pendingRemoveId ?? null;
 
   const handleDeleteOpenChange = useCallback((isOpen: boolean) => {
     if (!isOpen) setPendingDeleteId(null);
@@ -136,7 +131,9 @@ export function ReviewsContainer() {
   if (!result) {
     return (
       <p className="text-[13px]">
-        {error ? toErrorMessage(error) : "Reviews could not be loaded."}
+        {error
+          ? describeError(error, "Reviews could not be loaded.")
+          : "Reviews could not be loaded."}
       </p>
     );
   }

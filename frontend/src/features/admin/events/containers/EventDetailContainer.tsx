@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useOptimistic, useState, useTransition } from "react";
+import { useCallback, useOptimistic } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -15,7 +15,10 @@ import {
   UnpublishEventDocument,
 } from "@/graphql/generated/graphql";
 
-import { formatEnumLabel, toErrorMessage } from "@/features/admin/shell";
+import { describeError } from "@/lib/apollo/errors";
+import { useReasonAction } from "@/lib/use-reason-action";
+
+import { formatEnumLabel } from "@/features/admin/shell";
 import {
   AdminPageHeader,
   AdminReasonDialog,
@@ -67,14 +70,9 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
       toast.success("Draft copy made; set its date and publish");
       router.push(`/dashboard/events/${copy.duplicateEvent.id}`);
     } catch (copyError) {
-      toast.error(toErrorMessage(copyError));
+      toast.error(describeError(copyError, "The event could not be copied"));
     }
   }, [duplicateEvent, eventId, router]);
-
-  const [busyAction, setBusyAction] = useState<EventAction | null>(null);
-  const [pendingAction, setPendingAction] = useState<EventAction | null>(null);
-  const [reason, setReason] = useState("");
-  const [, startTransition] = useTransition();
 
   const event = data?.adminEvent ?? previousData?.adminEvent;
   const [status, setOptimisticStatus] = useOptimistic(
@@ -82,63 +80,33 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
     (_current: EventStatus, next: EventStatus) => next,
   );
 
-  const runAction = useCallback(
-    (action: EventAction, note: string) => {
-      setBusyAction(action);
-      startTransition(async () => {
-        setOptimisticStatus(eventActionStatus(action));
-        try {
-          if (action === "publish") {
-            await publishEvent({ variables: { id: eventId } });
-          } else if (action === "unpublish") {
-            await unpublishEvent({ variables: { id: eventId } });
-          } else if (action === "complete") {
-            await completeEvent({ variables: { id: eventId } });
-          } else {
-            // Cancelling closes every live registration, so the table below is read back too.
-            await cancelEvent({
-              variables: { id: eventId, reason: note || null },
-              refetchQueries: ["AdminEventRegistrations"],
-              awaitRefetchQueries: true,
-            });
-          }
-          await refetch();
-          toast.success(eventActionDoneMessage(action));
-        } catch (actionError) {
-          toast.error(toErrorMessage(actionError));
-        } finally {
-          setBusyAction(null);
-        }
+  const move = useReasonAction({
+    patch: ({ target }) => setOptimisticStatus(eventActionStatus(target)),
+    run: ({ target, reason }) => {
+      if (target === "publish") {
+        return publishEvent({ variables: { id: eventId } });
+      }
+      if (target === "unpublish") {
+        return unpublishEvent({ variables: { id: eventId } });
+      }
+      if (target === "complete") {
+        return completeEvent({ variables: { id: eventId } });
+      }
+      // Cancelling closes every live registration, so the table below is read back too.
+      return cancelEvent({
+        variables: { id: eventId, reason },
+        refetchQueries: ["AdminEventRegistrations"],
       });
     },
-    [
-      cancelEvent,
-      completeEvent,
-      eventId,
-      publishEvent,
-      refetch,
-      setOptimisticStatus,
-      unpublishEvent,
-    ],
-  );
-
-  const handleAction = useCallback(
-    (action: EventAction) => {
-      if (eventActionNeedsReason(action)) {
-        setReason("");
-        setPendingAction(action);
-        return;
-      }
-      runAction(action, "");
+    refresh: refetch,
+    policy: (target: EventAction) =>
+      eventActionNeedsReason(target) ? "optional" : "none",
+    requiredMessage: "Say why this event is being cancelled",
+    messages: {
+      success: ({ target }) => eventActionDoneMessage(target),
+      failure: "The event could not be moved",
     },
-    [runAction],
-  );
-
-  const handleConfirm = useCallback(() => {
-    if (!pendingAction) return;
-    runAction(pendingAction, reason);
-    setPendingAction(null);
-  }, [pendingAction, reason, runAction]);
+  });
 
   if (!event && loading) {
     return (
@@ -170,9 +138,9 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
             statusLabel={formatEnumLabel(status)}
             statusTone={eventStatusTone(status)}
             actions={allowedEventActions(status)}
-            busyAction={busyAction}
+            busyAction={move.pending}
             isDuplicating={isDuplicating}
-            onAction={handleAction}
+            onAction={move.start}
             onDuplicate={() => void handleDuplicate()}
           />
         }
@@ -188,22 +156,22 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
         isEventCancelled={status === EventStatus.Cancelled}
       />
       <AdminReasonDialog
-        isOpen={pendingAction !== null}
+        isOpen={move.target !== null}
         title="Cancel this event?"
         description="Everyone registered is told and the seats go back."
         fieldLabel="Reason"
         hint="Optional. It goes out with the notice."
         placeholder="The kiln is down for the week"
-        value={reason}
-        error={undefined}
+        value={move.reason}
+        error={move.error}
         confirmLabel="Cancel event"
         isDestructive
         isRequired={false}
-        isBusy={busyAction !== null}
-        onValueChange={setReason}
-        onConfirm={handleConfirm}
+        isBusy={move.isPending}
+        onValueChange={move.setReason}
+        onConfirm={move.confirm}
         onOpenChange={(isOpen) => {
-          if (!isOpen) setPendingAction(null);
+          if (!isOpen) move.close();
         }}
       />
     </div>

@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useOptimistic, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { useCallback, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -12,9 +11,9 @@ import {
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { ContentPageFormValues } from "@/lib/validations/admin/content";
 
-import { toErrorMessage } from "@/features/admin/shell";
 import { AdminPageHeader, AdminStatusPill } from "@/features/admin/ui";
 import { ImageUploaderContainer } from "@/features/admin/uploads";
 
@@ -36,6 +35,11 @@ interface PagePatch {
   is_published: boolean;
 }
 
+interface PageSave {
+  values: ContentPageFormValues;
+  hero: string | null;
+}
+
 function mergePage(current: Page | null, patch: PagePatch): Page | null {
   return current === null ? null : { ...current, ...patch };
 }
@@ -52,10 +56,8 @@ export function ContentPageEditorContainer({
     fetchPolicy: "cache-and-network",
   });
   const [savePage] = useMutation(SaveContentPageDocument);
-  const [, startTransition] = useTransition();
   // The mutation returns the saved page, so the payload becomes the baseline.
   const [saved, setSaved] = useState<Page | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const [heroDraft, setHeroDraft] = useState<string | null | undefined>(
     undefined,
   );
@@ -66,26 +68,25 @@ export function ContentPageEditorContainer({
   const heroUrl =
     heroDraft === undefined ? (page?.hero_image_url ?? null) : heroDraft;
 
+  const { execute: save, isPending: isSaving } = useOptimisticAction({
+    patch: ({ values }: PageSave) =>
+      applyPatch({ title: values.title, is_published: values.is_published }),
+    run: ({ values, hero }) =>
+      savePage({
+        variables: { slug, input: toContentPageInput(values, hero) },
+      }),
+    messages: { success: "Page saved", failure: "The page could not be saved" },
+    onSuccess: (result) => {
+      if (result.data) setSaved(result.data.saveContentPage);
+    },
+  });
+
   const handleSubmit = useCallback(
     (values: ContentPageFormValues) => {
       const hero = heroUrl !== null && heroUrl.length > 0 ? heroUrl : null;
-      setIsSaving(true);
-      startTransition(async () => {
-        applyPatch({ title: values.title, is_published: values.is_published });
-        try {
-          const result = await savePage({
-            variables: { slug, input: toContentPageInput(values, hero) },
-          });
-          if (result.data) setSaved(result.data.saveContentPage);
-          toast.success("Page saved");
-        } catch (saveError) {
-          toast.error(toErrorMessage(saveError));
-        } finally {
-          setIsSaving(false);
-        }
-      });
+      save({ values, hero });
     },
-    [applyPatch, heroUrl, savePage, slug],
+    [heroUrl, save],
   );
 
   const isMissing =

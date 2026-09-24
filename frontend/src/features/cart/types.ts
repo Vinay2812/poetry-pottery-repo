@@ -78,14 +78,7 @@ export function toFreeShippingProgress(
 export type CartData = CartFieldsFragment;
 
 // Both the badge and the lines are server-owned totals, so every write reads them back.
-export const CART_REFETCH = {
-  refetchQueries: ["Cart", "CartCount"],
-  awaitRefetchQueries: true,
-};
-
-export function toCartErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Something went wrong";
-}
+export const CART_QUERIES = ["Cart", "CartCount"];
 
 export type CartAction =
   | { kind: "quantity"; id: number; quantity: number }

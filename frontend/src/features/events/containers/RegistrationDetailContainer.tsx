@@ -1,7 +1,7 @@
 "use client";
 
 import { useClerk, useUser } from "@clerk/nextjs";
-import { useCallback, useOptimistic, useState, useTransition } from "react";
+import { useCallback, useOptimistic, useState } from "react";
 
 import { RegistrationStatus } from "@/graphql/generated/graphql";
 
@@ -49,9 +49,15 @@ export function RegistrationDetailContainer({
     registration,
     applyRegistrationCancellation,
   );
-  const [, startTransition] = useTransition();
   const { openSignIn } = useClerk();
-  const { cancel, isCancelling } = useCancelRegistration();
+  const { cancel, isCancelling } = useCancelRegistration({
+    patch: (request) =>
+      applyCancellation({
+        reason: request.reason,
+        at: new Date().toISOString(),
+      }),
+    refresh: refetch,
+  });
   const { user } = useUser();
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -59,11 +65,8 @@ export function RegistrationDetailContainer({
   // The dialog closes and the badge turns at once; a refusal rolls both back with a toast.
   const handleConfirmCancel = useCallback(() => {
     setIsCancelOpen(false);
-    startTransition(async () => {
-      applyCancellation({ reason, at: new Date().toISOString() });
-      await cancel(registrationId, reason);
-    });
-  }, [applyCancellation, cancel, reason, registrationId]);
+    cancel(registrationId, reason);
+  }, [cancel, reason, registrationId]);
 
   if (isLoading) {
     return (

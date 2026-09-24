@@ -1,18 +1,12 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
   AdminCategoriesDocument,
+  type AdminCategoryInput,
+  type AdminCollectionInput,
   AdminCollectionsDocument,
   CreateCategoryDocument,
   CreateCollectionDocument,
@@ -23,12 +17,12 @@ import {
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type {
   AdminCategoryFormValues,
   AdminCollectionFormValues,
 } from "@/lib/validations/admin/catalog";
 
-import { toErrorMessage } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
   AdminPageHeader,
@@ -66,6 +60,19 @@ interface DeleteTarget {
   productCount: number;
 }
 
+interface CategorySave {
+  id: number | null;
+  // The raw form value; the input sends null for an empty icon.
+  icon: string;
+  input: AdminCategoryInput;
+}
+
+interface CollectionSave {
+  id: number | null;
+  description: string;
+  input: AdminCollectionInput;
+}
+
 export function CatalogContainer() {
   const categoriesQuery = useQuery(AdminCategoriesDocument, {
     fetchPolicy: "cache-and-network",
@@ -83,10 +90,7 @@ export function CatalogContainer() {
 
   const [editor, setEditor] = useState<EditorTarget | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<DeleteTarget | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [, startTransition] = useTransition();
 
   const categories = categoriesQuery.data ?? categoriesQuery.previousData;
   const collections = collectionsQuery.data ?? collectionsQuery.previousData;
@@ -168,140 +172,131 @@ export function CatalogContainer() {
     setImageUrl(null);
   }, []);
 
+  const { execute: saveCategory, isPending: isCategorySaving } =
+    useOptimisticAction({
+      patch: (draft: CategorySave) => {
+        if (draft.id === null) return;
+        patchCategories({
+          kind: "save",
+          id: draft.id,
+          name: draft.input.name,
+          icon: draft.icon,
+          imageUrl: draft.input.image_url ?? null,
+        });
+      },
+      run: (draft) =>
+        draft.id === null
+          ? createCategory({ variables: { input: draft.input } })
+          : updateCategory({ variables: { id: draft.id, input: draft.input } }),
+      refresh: categoriesQuery.refetch,
+      messages: {
+        success: (draft) =>
+          draft.id === null ? "Category added" : "Category saved",
+        failure: "The category could not be saved",
+      },
+      onSuccess: handleCancel,
+    });
+
   const handleCategorySubmit = useCallback(
     (values: AdminCategoryFormValues) => {
-      const id = editor?.id ?? null;
-      const input = {
-        name: values.name,
-        icon: values.icon === "" ? null : values.icon,
-        image_url: imageUrl,
-        sort_order: Number(values.sort_order),
-      };
-      setIsSaving(true);
-      startTransition(async () => {
-        if (id !== null) {
-          patchCategories({
-            kind: "save",
-            id,
-            name: input.name,
-            icon: values.icon,
-            imageUrl,
-          });
-        }
-        try {
-          if (id === null) {
-            await createCategory({ variables: { input } });
-          } else {
-            await updateCategory({ variables: { id, input } });
-          }
-          await categoriesQuery.refetch();
-          setEditor(null);
-          setImageUrl(null);
-          toast.success(id === null ? "Category added" : "Category saved");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setIsSaving(false);
-        }
+      saveCategory({
+        id: editor?.id ?? null,
+        icon: values.icon,
+        input: {
+          name: values.name,
+          icon: values.icon === "" ? null : values.icon,
+          image_url: imageUrl,
+          sort_order: Number(values.sort_order),
+        },
       });
     },
-    [
-      categoriesQuery,
-      createCategory,
-      editor,
-      imageUrl,
-      patchCategories,
-      updateCategory,
-    ],
+    [editor, imageUrl, saveCategory],
   );
+
+  const { execute: saveCollection, isPending: isCollectionSaving } =
+    useOptimisticAction({
+      patch: (draft: CollectionSave) => {
+        if (draft.id === null) return;
+        patchCollections({
+          kind: "save",
+          id: draft.id,
+          name: draft.input.name,
+          description: draft.description,
+          imageUrl: draft.input.image_url ?? null,
+          startsAt: draft.input.starts_at ?? null,
+          endsAt: draft.input.ends_at ?? null,
+        });
+      },
+      run: (draft) =>
+        draft.id === null
+          ? createCollection({ variables: { input: draft.input } })
+          : updateCollection({
+              variables: { id: draft.id, input: draft.input },
+            }),
+      refresh: collectionsQuery.refetch,
+      messages: {
+        success: (draft) =>
+          draft.id === null ? "Collection added" : "Collection saved",
+        failure: "The collection could not be saved",
+      },
+      onSuccess: handleCancel,
+    });
 
   const handleCollectionSubmit = useCallback(
     (values: AdminCollectionFormValues) => {
-      const id = editor?.id ?? null;
-      const startsAt = fromDateTimeLocal(values.starts_at);
-      const endsAt = fromDateTimeLocal(values.ends_at);
-      const input = {
-        name: values.name,
-        description: values.description === "" ? null : values.description,
-        image_url: imageUrl,
-        starts_at: startsAt,
-        ends_at: endsAt,
-      };
-      setIsSaving(true);
-      startTransition(async () => {
-        if (id !== null) {
-          patchCollections({
-            kind: "save",
-            id,
-            name: values.name,
-            description: values.description,
-            imageUrl,
-            startsAt,
-            endsAt,
-          });
-        }
-        try {
-          if (id === null) {
-            await createCollection({ variables: { input } });
-          } else {
-            await updateCollection({ variables: { id, input } });
-          }
-          await collectionsQuery.refetch();
-          setEditor(null);
-          setImageUrl(null);
-          toast.success(id === null ? "Collection added" : "Collection saved");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setIsSaving(false);
-        }
+      saveCollection({
+        id: editor?.id ?? null,
+        description: values.description,
+        input: {
+          name: values.name,
+          description: values.description === "" ? null : values.description,
+          image_url: imageUrl,
+          starts_at: fromDateTimeLocal(values.starts_at),
+          ends_at: fromDateTimeLocal(values.ends_at),
+        },
       });
     },
-    [
-      collectionsQuery,
-      createCollection,
-      editor,
-      imageUrl,
-      patchCollections,
-      updateCollection,
-    ],
+    [editor, imageUrl, saveCollection],
   );
 
-  const handleDeleteConfirm = useCallback(() => {
-    const target = pendingDelete;
-    if (!target) return;
-    setIsDeleting(true);
-    startTransition(async () => {
-      if (target.kind === "category") {
-        patchCategories({ kind: "remove", id: target.id });
-      } else {
-        patchCollections({ kind: "remove", id: target.id });
-      }
-      try {
-        if (target.kind === "category") {
-          await deleteCategory({ variables: { id: target.id } });
-          await categoriesQuery.refetch();
-        } else {
-          await deleteCollection({ variables: { id: target.id } });
-          await collectionsQuery.refetch();
-        }
-        setPendingDelete(null);
-        toast.success(`${target.name} deleted`);
-      } catch (error) {
-        toast.error(toErrorMessage(error));
-      } finally {
-        setIsDeleting(false);
-      }
+  const isSaving = isCategorySaving || isCollectionSaving;
+
+  const closeDeleteDialog = useCallback(() => setPendingDelete(null), []);
+
+  // Each kind refetches only its own list, so the two deletes are separate actions.
+  const { execute: removeCategory, isPending: isCategoryDeleting } =
+    useOptimisticAction({
+      patch: (target: DeleteTarget) =>
+        patchCategories({ kind: "remove", id: target.id }),
+      run: (target) => deleteCategory({ variables: { id: target.id } }),
+      refresh: categoriesQuery.refetch,
+      messages: {
+        success: (target) => `${target.name} deleted`,
+        failure: "The category could not be deleted",
+      },
+      onSuccess: closeDeleteDialog,
     });
-  }, [
-    categoriesQuery,
-    collectionsQuery,
-    deleteCategory,
-    deleteCollection,
-    patchCategories,
-    patchCollections,
-    pendingDelete,
-  ]);
+
+  const { execute: removeCollection, isPending: isCollectionDeleting } =
+    useOptimisticAction({
+      patch: (target: DeleteTarget) =>
+        patchCollections({ kind: "remove", id: target.id }),
+      run: (target) => deleteCollection({ variables: { id: target.id } }),
+      refresh: collectionsQuery.refetch,
+      messages: {
+        success: (target) => `${target.name} deleted`,
+        failure: "The collection could not be deleted",
+      },
+      onSuccess: closeDeleteDialog,
+    });
+
+  const isDeleting = isCategoryDeleting || isCollectionDeleting;
+
+  const handleDeleteConfirm = useCallback(() => {
+    if (!pendingDelete) return;
+    if (pendingDelete.kind === "category") removeCategory(pendingDelete);
+    else removeCollection(pendingDelete);
+  }, [pendingDelete, removeCategory, removeCollection]);
 
   const handleCategoryDelete = useCallback(
     (id: number) => {

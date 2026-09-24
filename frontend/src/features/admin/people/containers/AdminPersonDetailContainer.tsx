@@ -1,7 +1,6 @@
 "use client";
 
-import { useCallback, useOptimistic, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { useCallback, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -12,8 +11,9 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatDate } from "@/lib/format";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
-import { formatEnumLabel, toErrorMessage } from "@/features/admin/shell";
+import { formatEnumLabel } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
   AdminPageHeader,
@@ -63,9 +63,7 @@ export function AdminPersonDetailContainer({
     person,
     applyPersonRolePatch,
   );
-  const [, startTransition] = useTransition();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
 
   const nextRole = optimisticPerson
     ? toOppositeRole(optimisticPerson.role)
@@ -76,23 +74,21 @@ export function AdminPersonDetailContainer({
     ? isOnlyAdmin(optimisticPerson.role, adminCount)
     : false;
 
+  const { execute: changeRole, isPending: isSaving } = useOptimisticAction({
+    patch: (role: UserRole) => applyRole({ role }),
+    run: (role) => setUserRole({ variables: { id: personId, role } }),
+    refresh: refetch,
+    messages: {
+      success: (role) => `Role changed to ${formatEnumLabel(role)}`,
+      failure: "The role could not be changed",
+    },
+  });
+
   const handleConfirm = useCallback(() => {
     if (!nextRole || isLastAdmin) return;
     setIsConfirmOpen(false);
-    setIsSaving(true);
-    startTransition(async () => {
-      applyRole({ role: nextRole });
-      try {
-        await setUserRole({ variables: { id: personId, role: nextRole } });
-        await refetch();
-        toast.success(`Role changed to ${formatEnumLabel(nextRole)}`);
-      } catch (roleError) {
-        toast.error(toErrorMessage(roleError));
-      } finally {
-        setIsSaving(false);
-      }
-    });
-  }, [applyRole, isLastAdmin, nextRole, personId, refetch, setUserRole]);
+    changeRole(nextRole);
+  }, [changeRole, isLastAdmin, nextRole]);
 
   if (!optimisticPerson && loading) {
     return (

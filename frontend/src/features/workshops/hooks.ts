@@ -15,12 +15,11 @@ import {
   WorkshopDocument,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
+
 import { useRequireAuth } from "@/features/auth";
 import { toBookingPath } from "@/features/workshops/types";
-
-function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Something went wrong";
-}
 
 export function useWorkshop(slug: string) {
   const { data, loading, error } = useQuery(WorkshopDocument, {
@@ -44,34 +43,37 @@ export interface BookSessionInput {
 export function useBookWorkshop(onBooked?: () => void) {
   const router = useRouter();
   const requireAuth = useRequireAuth();
-  const [mutate, { loading }] = useMutation(BookWorkshopDocument);
+  const [mutate] = useMutation(BookWorkshopDocument);
+
+  const { execute, isPending: isBooking } = useOptimisticAction({
+    run: (input: BookSessionInput) =>
+      mutate({
+        variables: {
+          input: {
+            config_slug: input.configSlug,
+            slot_starts: input.slotStarts,
+            hours: input.hours,
+            participants: input.participants,
+            note: input.note.trim() || null,
+          },
+        },
+      }),
+    messages: { success: null, failure: "The session could not be booked" },
+    onSuccess: ({ data }) => {
+      if (!data) return;
+      onBooked?.();
+      router.push(`${toBookingPath(data.bookWorkshop.id)}?placed=1`);
+    },
+  });
 
   const book = useCallback(
     (input: BookSessionInput) => {
-      requireAuth(() => {
-        void mutate({
-          variables: {
-            input: {
-              config_slug: input.configSlug,
-              slot_starts: input.slotStarts,
-              hours: input.hours,
-              participants: input.participants,
-              note: input.note.trim() || null,
-            },
-          },
-        })
-          .then(({ data }) => {
-            if (!data) return;
-            onBooked?.();
-            router.push(`${toBookingPath(data.bookWorkshop.id)}?placed=1`);
-          })
-          .catch((error: unknown) => toast.error(toErrorMessage(error)));
-      });
+      requireAuth(() => execute(input));
     },
-    [mutate, onBooked, requireAuth, router],
+    [execute, requireAuth],
   );
 
-  return { book, isBooking: loading };
+  return { book, isBooking };
 }
 
 export function useMyWorkshopBookings(page: number) {
@@ -114,6 +116,7 @@ export function useWorkshopBooking(id: string) {
   };
 }
 
+// The booking page patches inside its own transition, so these return a promise it can await.
 export function useCancelWorkshopBooking() {
   const [mutate, { loading }] = useMutation(CancelWorkshopBookingDocument);
 
@@ -125,7 +128,7 @@ export function useCancelWorkshopBooking() {
         toast.success("Session cancelled");
         return true;
       } catch (error) {
-        toast.error(toErrorMessage(error));
+        toast.error(describeError(error, "The session could not be cancelled"));
         return false;
       }
     },
@@ -147,7 +150,7 @@ export function useRescheduleWorkshopBooking() {
         toast.success("Session moved");
         return true;
       } catch (error) {
-        toast.error(toErrorMessage(error));
+        toast.error(describeError(error, "The session could not be moved"));
         return false;
       }
     },

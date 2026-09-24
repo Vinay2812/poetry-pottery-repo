@@ -15,7 +15,11 @@ import { useMutation, useQuery } from "@apollo/client/react";
 import {
   CheckoutQuoteDocument,
   PlaceOrderDocument,
+  type PlaceOrderInput,
 } from "@/graphql/generated/graphql";
+
+import { describeError } from "@/lib/apollo/errors";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -56,11 +60,7 @@ export function CheckoutContainer() {
       try {
         await action();
       } catch (error) {
-        toast.error(
-          error instanceof Error
-            ? error.message
-            : "Could not update the coupon",
-        );
+        toast.error(describeError(error, "Could not update the coupon"));
       }
     });
   }, []);
@@ -91,19 +91,17 @@ export function CheckoutContainer() {
     quoteDiscount: quote?.discount ?? 0,
   });
 
-  // Placing an order empties the cart, so only the cart queries mounted here are fetched again.
+  const [placeOrder] = useMutation(PlaceOrderDocument);
+
+  // Placing an order empties the cart, so only the cart and quote mounted here are read again.
   // The orders list is not mounted on checkout and reads cache-and-network when it opens.
-  // A refetch that fails must not swallow an order the server already saved.
-  const [placeOrder, { loading: isPlacing }] = useMutation(PlaceOrderDocument, {
-    refetchQueries: ["Cart", "CartCount"],
-    awaitRefetchQueries: true,
-    onQueryUpdated: (query) =>
-      query
-        .refetch()
-        .retain()
-        .catch(() => {
-          toast.warning("Order saved, but your account could not refresh.");
-        }),
+  const { execute: submitOrder, isPending: isPlacing } = useOptimisticAction({
+    run: (input: PlaceOrderInput) => placeOrder({ variables: { input } }),
+    refresh: () => Promise.all([resyncCart(), refetchQuote()]),
+    messages: { success: null, failure: "Could not place the order" },
+    onSuccess: ({ data }) => {
+      if (data) router.push(`${toOrderPath(data.placeOrder.id)}?placed=1`);
+    },
   });
 
   const handleApplyCoupon = useCallback(() => {
@@ -146,41 +144,15 @@ export function CheckoutContainer() {
   const handlePlaceOrder = useCallback(() => {
     if (addressId === null) return;
     const gift = toGiftView(isGift, giftNote, hasHiddenPrices);
-    void placeOrder({
-      variables: {
-        input: {
-          address_id: addressId,
-          coupon_code: quote?.coupon_code ?? null,
-          customer_note: note.trim() || null,
-          gift_note: gift.gift_note,
-          hide_prices: gift.hide_prices,
-          expected_total: quote?.total ?? null,
-        },
-      },
-    })
-      .then(({ data }) => {
-        if (data) router.push(`${toOrderPath(data.placeOrder.id)}?placed=1`);
-      })
-      .catch((error: unknown) => {
-        toast.error(
-          error instanceof Error ? error.message : "Could not place the order",
-        );
-        // Whatever refused the order, the page should now show the cart the server holds.
-        void resyncCart();
-        void refetchQuote();
-      });
-  }, [
-    addressId,
-    giftNote,
-    hasHiddenPrices,
-    isGift,
-    note,
-    placeOrder,
-    quote,
-    refetchQuote,
-    resyncCart,
-    router,
-  ]);
+    submitOrder({
+      address_id: addressId,
+      coupon_code: quote?.coupon_code ?? null,
+      customer_note: note.trim() || null,
+      gift_note: gift.gift_note,
+      hide_prices: gift.hide_prices,
+      expected_total: quote?.total ?? null,
+    });
+  }, [addressId, giftNote, hasHiddenPrices, isGift, note, quote, submitOrder]);
 
   const items = cart?.items.filter((item) => item.is_available) ?? [];
   const availableItemCount = items.reduce(

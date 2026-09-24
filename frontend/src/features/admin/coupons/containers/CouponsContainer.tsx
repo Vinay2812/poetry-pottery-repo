@@ -1,30 +1,20 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  type AdminCouponInput,
   AdminCouponsDocument,
   CreateCouponDocument,
   DeleteCouponDocument,
   UpdateCouponDocument,
 } from "@/graphql/generated/graphql";
 
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { AdminCouponFormValues } from "@/lib/validations/admin/coupon";
 
-import {
-  toErrorMessage,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
   AdminPageHeader,
@@ -64,6 +54,12 @@ interface DeleteTarget {
   usesCount: number;
 }
 
+interface CouponSave {
+  id: number | null;
+  input: AdminCouponInput;
+  row: CouponRow;
+}
+
 export function CouponsContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const search = values.search ?? "";
@@ -97,11 +93,7 @@ export function CouponsContainer() {
 
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [busyId, setBusyId] = useState<number | null>(null);
   const [pendingDelete, setPendingDelete] = useState<DeleteTarget | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [, startTransition] = useTransition();
 
   const result = data?.adminCoupons ?? previousData?.adminCoupons;
 
@@ -128,6 +120,29 @@ export function CouponsContainer() {
     };
   }, [editedRow]);
 
+  const closeForm = useCallback(() => {
+    setIsFormOpen(false);
+    setEditingId(null);
+  }, []);
+
+  const {
+    execute: saveCoupon,
+    isPending: isSaving,
+    pending: pendingSave,
+  } = useOptimisticAction({
+    patch: (draft: CouponSave) => patchRows({ kind: "save", row: draft.row }),
+    run: (draft) =>
+      draft.id === null
+        ? createCoupon({ variables: { input: draft.input } })
+        : updateCoupon({ variables: { id: draft.id, input: draft.input } }),
+    refresh: refetch,
+    messages: {
+      success: (draft) => (draft.id === null ? "Code added" : "Code saved"),
+      failure: "The code could not be saved",
+    },
+    onSuccess: closeForm,
+  });
+
   const handleSubmit = useCallback(
     (formValues: AdminCouponFormValues) => {
       const id = editingId;
@@ -143,63 +158,47 @@ export function CouponsContainer() {
         expires_at: fromDateTimeLocal(formValues.expires_at),
         is_active: formValues.is_active,
       };
-      const draft: CouponRow = {
-        id: id ?? DRAFT_COUPON_ID,
-        code: input.code,
-        kind: input.kind,
-        value: input.value,
-        minOrder: input.min_order,
-        maxUses,
-        usesCount: editedRow?.usesCount ?? 0,
-        startsAt: input.starts_at,
-        expiresAt: input.expires_at,
-        isActive: input.is_active,
-      };
-      setIsSaving(true);
-      setBusyId(draft.id);
-      startTransition(async () => {
-        patchRows({ kind: "save", row: draft });
-        try {
-          if (id === null) {
-            await createCoupon({ variables: { input } });
-          } else {
-            await updateCoupon({ variables: { id, input } });
-          }
-          await refetch();
-          setIsFormOpen(false);
-          setEditingId(null);
-          toast.success(id === null ? "Code added" : "Code saved");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setIsSaving(false);
-          setBusyId(null);
-        }
+      saveCoupon({
+        id,
+        input,
+        row: {
+          id: id ?? DRAFT_COUPON_ID,
+          code: input.code,
+          kind: input.kind,
+          value: input.value,
+          minOrder: input.min_order,
+          maxUses,
+          usesCount: editedRow?.usesCount ?? 0,
+          startsAt: input.starts_at,
+          expiresAt: input.expires_at,
+          isActive: input.is_active,
+        },
       });
     },
-    [createCoupon, editedRow, editingId, patchRows, refetch, updateCoupon],
+    [editedRow, editingId, saveCoupon],
   );
 
+  const {
+    execute: removeCoupon,
+    isPending: isDeleting,
+    pending: pendingRemove,
+  } = useOptimisticAction({
+    patch: (target: DeleteTarget) =>
+      patchRows({ kind: "remove", id: target.id }),
+    run: (target) => deleteCoupon({ variables: { id: target.id } }),
+    refresh: refetch,
+    messages: {
+      success: (target) => `${target.code} deleted`,
+      failure: "The code could not be deleted",
+    },
+    onSuccess: () => setPendingDelete(null),
+  });
+
   const handleDeleteConfirm = useCallback(() => {
-    const target = pendingDelete;
-    if (!target) return;
-    setIsDeleting(true);
-    setBusyId(target.id);
-    startTransition(async () => {
-      patchRows({ kind: "remove", id: target.id });
-      try {
-        await deleteCoupon({ variables: { id: target.id } });
-        await refetch();
-        setPendingDelete(null);
-        toast.success(`${target.code} deleted`);
-      } catch (error) {
-        toast.error(toErrorMessage(error));
-      } finally {
-        setIsDeleting(false);
-        setBusyId(null);
-      }
-    });
-  }, [deleteCoupon, patchRows, pendingDelete, refetch]);
+    if (pendingDelete) removeCoupon(pendingDelete);
+  }, [pendingDelete, removeCoupon]);
+
+  const busyId = pendingSave?.row.id ?? pendingRemove?.id ?? null;
 
   const handleEdit = useCallback((id: number) => {
     setEditingId(id);

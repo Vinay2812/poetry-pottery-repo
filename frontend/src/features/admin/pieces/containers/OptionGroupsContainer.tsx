@@ -1,19 +1,14 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
   type AdminOptionGroupFieldsFragment,
+  type AdminOptionGroupInput,
+  type AdminOptionInput,
   AdminProductOptionGroupsDocument,
   CreateProductOptionDocument,
   CreateProductOptionGroupDocument,
@@ -24,12 +19,12 @@ import {
   UpdateProductOptionGroupDocument,
 } from "@/graphql/generated/graphql";
 
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type {
   OptionGroupFormValues,
   ProductOptionFormValues,
 } from "@/lib/validations/admin/product";
 
-import { toErrorMessage } from "@/features/admin/shell";
 import { AdminConfirmDialog } from "@/features/admin/ui";
 
 import { OptionForm } from "@/features/admin/pieces/components/OptionForm";
@@ -79,6 +74,17 @@ function applyGroupPatch(
   }));
 }
 
+interface GroupSave {
+  id: number | null;
+  input: AdminOptionGroupInput;
+}
+
+interface OptionSave {
+  groupId: number;
+  optionId: number | null;
+  input: AdminOptionInput;
+}
+
 export interface OptionGroupsContainerProps {
   productId: number;
 }
@@ -103,9 +109,6 @@ export function OptionGroupsContainer({
 
   const [editor, setEditor] = useState<Editor>({ kind: "none" });
   const [doomed, setDoomed] = useState<Doomed | null>(null);
-  const [busyId, setBusyId] = useState<number | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [, startTransition] = useTransition();
 
   const groups = useMemo(
     () =>
@@ -159,87 +162,90 @@ export function OptionGroupsContainer({
     [groups],
   );
 
+  const closeEditor = useCallback(() => setEditor({ kind: "none" }), []);
+
+  const { execute: saveGroup, isPending: isGroupSaving } = useOptimisticAction({
+    run: (save: GroupSave) =>
+      save.id === null
+        ? createGroup({
+            variables: { product_id: productId, input: save.input },
+          })
+        : updateGroup({ variables: { id: save.id, input: save.input } }),
+    refresh: refetch,
+    messages: {
+      success: (save) => (save.id === null ? "Group added" : "Group saved"),
+      failure: "The group could not be saved",
+    },
+    onSuccess: closeEditor,
+  });
+
   const handleGroupSubmit = useCallback(
     (values: OptionGroupFormValues) => {
-      const input = toOptionGroupInput(values);
-      const editing = editor.kind === "edit-group" ? editor.groupId : null;
-      setIsSaving(true);
-      void (async () => {
-        try {
-          if (editing === null) {
-            await createGroup({ variables: { product_id: productId, input } });
-          } else {
-            await updateGroup({ variables: { id: editing, input } });
-          }
-          await refetch();
-          setEditor({ kind: "none" });
-          toast.success(editing === null ? "Group added" : "Group saved");
-        } catch (caught) {
-          toast.error(toErrorMessage(caught));
-        } finally {
-          setIsSaving(false);
-        }
-      })();
+      saveGroup({
+        id: editor.kind === "edit-group" ? editor.groupId : null,
+        input: toOptionGroupInput(values),
+      });
     },
-    [createGroup, editor, productId, refetch, updateGroup],
+    [editor, saveGroup],
   );
+
+  const { execute: saveOption, isPending: isOptionSaving } =
+    useOptimisticAction({
+      run: (save: OptionSave) =>
+        save.optionId === null
+          ? createOption({
+              variables: { group_id: save.groupId, input: save.input },
+            })
+          : updateOption({
+              variables: { id: save.optionId, input: save.input },
+            }),
+      refresh: refetch,
+      messages: {
+        success: (save) =>
+          save.optionId === null ? "Option added" : "Option saved",
+        failure: "The option could not be saved",
+      },
+      onSuccess: closeEditor,
+    });
 
   const handleOptionSubmit = useCallback(
     (values: ProductOptionFormValues) => {
       if (editor.kind !== "new-option" && editor.kind !== "edit-option") return;
-      const input = toOptionInput(values);
-      const current = editor;
-      setIsSaving(true);
-      void (async () => {
-        try {
-          if (current.kind === "new-option") {
-            await createOption({
-              variables: { group_id: current.groupId, input },
-            });
-          } else {
-            await updateOption({ variables: { id: current.optionId, input } });
-          }
-          await refetch();
-          setEditor({ kind: "none" });
-          toast.success(
-            current.kind === "new-option" ? "Option added" : "Option saved",
-          );
-        } catch (caught) {
-          toast.error(toErrorMessage(caught));
-        } finally {
-          setIsSaving(false);
-        }
-      })();
+      saveOption({
+        groupId: editor.groupId,
+        optionId: editor.kind === "edit-option" ? editor.optionId : null,
+        input: toOptionInput(values),
+      });
     },
-    [createOption, editor, refetch, updateOption],
+    [editor, saveOption],
+  );
+
+  const { execute: removeDoomed, pending: pendingRemove } = useOptimisticAction(
+    {
+      patch: (target: Doomed) =>
+        patchGroups(
+          target.kind === "group"
+            ? { kind: "remove-group", groupId: target.groupId }
+            : { kind: "remove-option", optionId: target.optionId },
+        ),
+      run: (target) =>
+        target.kind === "group"
+          ? deleteGroup({ variables: { id: target.groupId } })
+          : deleteOption({ variables: { id: target.optionId } }),
+      refresh: refetch,
+      messages: { success: null, failure: "That could not be deleted" },
+      onSuccess: closeEditor,
+    },
   );
 
   const handleDelete = useCallback(() => {
     if (!doomed) return;
-    const target = doomed;
     setDoomed(null);
-    setBusyId(target.kind === "group" ? target.groupId : null);
-    startTransition(async () => {
-      patchGroups(
-        target.kind === "group"
-          ? { kind: "remove-group", groupId: target.groupId }
-          : { kind: "remove-option", optionId: target.optionId },
-      );
-      try {
-        if (target.kind === "group") {
-          await deleteGroup({ variables: { id: target.groupId } });
-        } else {
-          await deleteOption({ variables: { id: target.optionId } });
-        }
-        await refetch();
-        setEditor({ kind: "none" });
-      } catch (caught) {
-        toast.error(toErrorMessage(caught));
-      } finally {
-        setBusyId(null);
-      }
-    });
-  }, [deleteGroup, deleteOption, doomed, patchGroups, refetch]);
+    removeDoomed(doomed);
+  }, [doomed, removeDoomed]);
+
+  const busyId = pendingRemove?.kind === "group" ? pendingRemove.groupId : null;
+  const isSaving = isGroupSaving || isOptionSaving;
 
   const editingGroup =
     editor.kind === "edit-group" ? findGroup(editor.groupId) : null;
@@ -290,7 +296,7 @@ export function OptionGroupsContainer({
           isSubmitting={isSaving}
           submitLabel={editingGroup ? "Save group" : "Add group"}
           onSubmit={handleGroupSubmit}
-          onCancel={() => setEditor({ kind: "none" })}
+          onCancel={closeEditor}
         />
       )}
 
@@ -311,7 +317,7 @@ export function OptionGroupsContainer({
           isSubmitting={isSaving}
           submitLabel={editingOption ? "Save option" : "Add option"}
           onSubmit={handleOptionSubmit}
-          onCancel={() => setEditor({ kind: "none" })}
+          onCancel={closeEditor}
         />
       )}
 

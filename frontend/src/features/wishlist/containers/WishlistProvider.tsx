@@ -8,16 +8,17 @@ import {
   useMemo,
   useOptimistic,
   useState,
-  useTransition,
   type PropsWithChildren,
 } from "react";
 import { toast } from "sonner";
 
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client/react";
 import {
   ToggleWishlistDocument,
   WishlistIdsDocument,
 } from "@/graphql/generated/graphql";
+
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
 import { useRequireAuth } from "@/features/auth";
 import { applyWishlistToggle } from "@/features/wishlist/types";
@@ -36,6 +37,15 @@ interface WishlistValue {
   adoptIds: (ids: readonly number[] | null) => void;
 }
 
+interface WishlistToggle {
+  productId: number;
+  productName: string;
+  isWishlisted: boolean;
+}
+
+// The reply only carries a count, so the refetched lists become the new baseline.
+const WISHLIST_QUERIES = ["WishlistIds", "Wishlist"];
+
 const WishlistContext = createContext<WishlistValue | null>(null);
 
 // Every heart on the site reads this one list, so a toggle anywhere shows everywhere at once.
@@ -53,41 +63,41 @@ export function WishlistProvider({ children }: PropsWithChildren) {
   }, [data, isSignedIn, lentIds, previousData]);
 
   const [optimisticIds, applyToggle] = useOptimistic(ids, applyWishlistToggle);
-  const [isSaving, startTransition] = useTransition();
   const [mutate] = useMutation(ToggleWishlistDocument);
+  const client = useApolloClient();
   const requireAuth = useRequireAuth();
+
+  const { execute, isPending: isSaving } = useOptimisticAction({
+    patch: (change: WishlistToggle) => applyToggle(change),
+    // The heart sends what it shows, so a stale tab sets that state instead of flipping the server's.
+    run: (change) =>
+      mutate({
+        variables: {
+          productId: change.productId,
+          wishlisted: change.isWishlisted,
+        },
+      }),
+    refresh: () => client.refetchQueries({ include: WISHLIST_QUERIES }),
+    messages: { success: null, failure: "Could not update your wishlist" },
+    onSuccess: ({ data: reply }, change) => {
+      const isSaved =
+        reply?.toggleWishlist.is_wishlisted ?? change.isWishlisted;
+      toast(
+        isSaved
+          ? `${change.productName} saved to your wishlist`
+          : `${change.productName} removed from your wishlist`,
+      );
+    },
+  });
 
   const toggle = useCallback(
     (productId: number, productName: string, wishlisted?: boolean) => {
       requireAuth(() => {
         const isWishlisted = wishlisted ?? !optimisticIds.includes(productId);
-        startTransition(async () => {
-          applyToggle({ productId, isWishlisted });
-          try {
-            // The reply only carries a count, so the refetched lists become the new baseline.
-            // The heart sends what it shows, so a stale tab sets that state instead of flipping the server's.
-            const { data } = await mutate({
-              variables: { productId, wishlisted: isWishlisted },
-              refetchQueries: ["WishlistIds", "Wishlist"],
-              awaitRefetchQueries: true,
-            });
-            const isSaved = data?.toggleWishlist.is_wishlisted ?? isWishlisted;
-            toast(
-              isSaved
-                ? `${productName} saved to your wishlist`
-                : `${productName} removed from your wishlist`,
-            );
-          } catch (error) {
-            toast.error(
-              error instanceof Error
-                ? error.message
-                : "Could not update your wishlist",
-            );
-          }
-        });
+        execute({ productId, productName, isWishlisted });
       });
     },
-    [applyToggle, mutate, optimisticIds, requireAuth],
+    [execute, optimisticIds, requireAuth],
   );
 
   const value = useMemo<WishlistValue>(

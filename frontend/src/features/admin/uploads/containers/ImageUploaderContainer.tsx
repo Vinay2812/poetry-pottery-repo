@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 
 import type { UploadPurpose } from "@/graphql/generated/graphql";
+import { describeError } from "@/lib/apollo/errors";
 
-import { toErrorMessage } from "@/features/admin/shell";
 import { ImageCropDialog } from "@/features/admin/uploads/components/ImageCropDialog";
 import { ImageDropField } from "@/features/admin/uploads/components/ImageDropField";
 import {
@@ -68,7 +68,9 @@ export function ImageUploaderContainer({
         setError(null);
         setPending(null);
       } catch (uploadError) {
-        setError(toErrorMessage(uploadError));
+        setError(
+          describeError(uploadError, "That image could not be uploaded"),
+        );
       } finally {
         setIsBusy(false);
       }
@@ -122,7 +124,7 @@ export function ImageUploaderContainer({
       try {
         cropped = await cropToRatio(file, requirement.ratio ?? 1);
       } catch (cropError) {
-        setError(toErrorMessage(cropError));
+        setError(describeError(cropError, "That image could not be cropped"));
         return;
       }
 
@@ -152,7 +154,7 @@ export function ImageUploaderContainer({
       const cropped = await cropToRatio(pending.file, requirement.ratio ?? 1);
       await send(cropped.blob);
     } catch (cropError) {
-      setError(toErrorMessage(cropError));
+      setError(describeError(cropError, "That image could not be cropped"));
     }
   }, [pending, requirement, send]);
 

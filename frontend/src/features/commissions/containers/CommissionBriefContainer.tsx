@@ -5,6 +5,7 @@ import { useCallback, useState } from "react";
 
 import { useMutation } from "@apollo/client/react";
 import { CreateCommissionRequestDocument } from "@/graphql/generated/graphql";
+import { describeError } from "@/lib/apollo/errors";
 import type { CommissionFormValues } from "@/lib/validations/commission";
 
 import { CommissionBriefForm } from "@/features/commissions/components/CommissionBriefForm";
@@ -21,7 +22,6 @@ import {
   toReferenceBrief,
   toReferenceLine,
 } from "@/features/commissions/types";
-import { toServerMessage } from "@/features/content/types";
 import { ReferencePhotoPicker } from "@/features/products/components/ReferencePhotoPicker";
 import { useReferencePhotos } from "@/features/products/hooks";
 import {
@@ -98,7 +98,7 @@ export function CommissionBriefContainer({
         });
       } catch (error) {
         setErrorMessage(
-          toServerMessage(
+          describeError(
             error,
             "We could not send that just now. Try again in a minute.",
           ),

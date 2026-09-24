@@ -75,8 +75,3 @@ export function useSearchDraft(
 
   return [draft ?? committed, change];
 }
-
-/** Turns an unknown thrown value into something worth putting in a toast. */
-export function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Something went wrong";
-}

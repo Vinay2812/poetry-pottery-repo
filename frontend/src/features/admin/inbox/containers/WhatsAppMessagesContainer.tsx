@@ -5,11 +5,9 @@ import { useCallback, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { AdminWhatsAppMessagesDocument } from "@/graphql/generated/graphql";
 
-import {
-  toErrorMessage,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { describeError } from "@/lib/apollo/errors";
+
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import { AdminPagination } from "@/features/admin/ui";
 
 import { WhatsAppFilters } from "@/features/admin/inbox/components/WhatsAppFilters";
@@ -67,7 +65,7 @@ export function WhatsAppMessagesContainer() {
     return (
       <p className="text-[13px]">
         {error
-          ? toErrorMessage(error)
+          ? describeError(error, "WhatsApp messages could not be loaded.")
           : "WhatsApp messages could not be loaded."}
       </p>
     );
