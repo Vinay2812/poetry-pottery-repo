@@ -36,6 +36,7 @@ const prismaMock = {
     update: vi.fn(),
   },
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
 };
 const reviewsMock = {
   lockSubject: vi.fn(),

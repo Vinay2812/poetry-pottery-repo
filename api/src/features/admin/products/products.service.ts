@@ -19,8 +19,7 @@ import type {
   Product,
   ProductOptionGroup,
 } from "@/features/products/products.type";
-import { NotificationsService } from "@/features/notifications/notifications.service";
-import { cameBackInStock } from "@/features/notifications/restock";
+import { ShelfService } from "@/features/products/shelf.service";
 import { SearchService } from "@/features/search/search.service";
 import { searchTerm } from "../admin.type";
 import { LOW_STOCK_THRESHOLD } from "../dashboard/dashboard.service";
@@ -110,7 +109,7 @@ export class AdminProductsService {
     private readonly products: ProductsService,
     private readonly search: SearchService,
     private readonly uploads: UploadsService,
-    private readonly notifications: NotificationsService,
+    private readonly shelf: ShelfService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -324,25 +323,19 @@ export class AdminProductsService {
   }
 
   async setActive(id: number, isActive: boolean): Promise<Product> {
+    const current = await this.prisma.product.findUnique({
+      where: { id },
+      select: { stock: true, is_customizable: true },
+    });
+    if (!current) {
+      throw new NotFoundException("Product not found");
+    }
     if (isActive) {
-      const current = await this.prisma.product.findUnique({
-        where: { id },
-        select: { stock: true, is_customizable: true },
-      });
-      if (!current) {
-        throw new NotFoundException("Product not found");
-      }
       assertCanBeLive(current.stock, current.is_customizable);
     }
-    const row = await this.prisma.product
-      .update({
-        where: { id },
-        data: { is_active: isActive },
-        include: productListInclude,
-      })
-      .catch(rethrowMissing("Product not found"));
+    await this.shelf.setListed(id, isActive);
     await this.afterWrite(id);
-    return toProduct(row);
+    return this.byId(id);
   }
 
   async setFeatured(id: number, isFeatured: boolean): Promise<Product> {
@@ -370,22 +363,13 @@ export class AdminProductsService {
     if (note.length < 3) {
       throw new BadRequestException("Say why the count changed");
     }
-    // Returning the new count makes the edge exact: the row the increment actually landed on.
-    const moved = await this.prisma.product.updateManyAndReturn({
-      where: { id, ...(delta < 0 ? { stock: { gte: -delta } } : {}) },
-      data: { stock: { increment: delta } },
-      select: { stock: true },
-    });
-    const after = moved[0]?.stock;
-    if (after === undefined) {
+    const after = await this.shelf.adjust(id, delta);
+    if (after === null) {
       throw new BadRequestException(
         "There are not that many pieces on the shelf",
       );
     }
     this.logger.info("stock adjusted", { product_id: id, delta, reason: note });
-    if (cameBackInStock(after - delta, after)) {
-      await this.notifications.announceRestock(id);
-    }
     await this.afterWrite(id);
     return this.byId(id);
   }

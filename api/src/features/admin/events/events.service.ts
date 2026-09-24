@@ -19,7 +19,7 @@ import {
   canTransition,
   SEAT_HOLDING,
 } from "@/features/events/registration-status";
-import type { Event, Registration } from "@/features/events/events.type";
+import type { Event } from "@/features/events/events.type";
 import { SearchService } from "@/features/search/search.service";
 import { searchTerm, toUserRef, trimmed } from "../admin.type";
 import { slugify, uniqueSlug } from "../slug";
@@ -285,7 +285,7 @@ export class AdminEventsService {
   // a second admin waits on the lock and is then told there is nothing left to call off.
   async cancel(id: number, reason: string | null): Promise<Event> {
     const note = trimmed(reason, 300) ?? "The studio called this one off";
-    const { row, mails } = await this.prisma.withTransaction(async () => {
+    const row = await this.prisma.withTransaction(async () => {
       await this.prisma
         .$executeRaw`SELECT id FROM events WHERE id = ${id} FOR UPDATE`;
       const current = await this.requireStatus(id, EventStatus.CANCELLED);
@@ -302,27 +302,16 @@ export class AdminEventsService {
         where: { event_id: id, status: { in: [...SEAT_HOLDING] } },
         include: adminRegistrationInclude,
       });
-      const mails: { user_id: number; registration: Registration }[] = [];
+      // Each transition mails its guest; the mail waits for this commit, so a rolled back sweep mails nobody.
       for (const registration of live) {
-        const updated = await this.events.applyStatus(
+        await this.events.applyStatus(
           registration,
           RegistrationStatus.CANCELLED,
           note,
         );
-        mails.push({
-          user_id: registration.user_id,
-          registration: toRegistration(updated),
-        });
       }
-      return {
-        row: await this.prisma.event.findUniqueOrThrow({ where: { id } }),
-        mails,
-      };
+      return this.prisma.event.findUniqueOrThrow({ where: { id } });
     });
-    // Only once the cancellation has committed, so a rolled back sweep mails nobody.
-    for (const mail of mails) {
-      await this.events.notifyStatus(mail.user_id, mail.registration);
-    }
     await this.search.requestEventIndex(id);
     return toEvent(row);
   }
@@ -379,7 +368,6 @@ export class AdminEventsService {
       status,
       trimmed(reason, 300),
     );
-    await this.events.notifyStatus(current.user_id, toRegistration(updated));
     return toAdminRegistration({ ...updated, user: current.user });
   }
 

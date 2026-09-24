@@ -42,7 +42,7 @@ const prismaMock = {
     update: vi.fn(),
   },
 };
-const ordersMock = { applyStatus: vi.fn(), notifyStatus: vi.fn() };
+const ordersMock = { applyStatus: vi.fn() };
 
 describe("nextStatuses", () => {
   it("offers the transitions the shared state machine allows", () => {
@@ -150,17 +150,13 @@ describe("AdminOrdersService", () => {
     ]);
   });
 
-  it("moves the status through the shared guard and mails the customer", async () => {
+  it("moves the status through the shared transition, which mails the customer itself", async () => {
     await service.setStatus(row.id, OrderStatus.PAID);
 
     expect(ordersMock.applyStatus).toHaveBeenCalledWith(
       row,
       OrderStatus.PAID,
       {},
-    );
-    expect(ordersMock.notifyStatus).toHaveBeenCalledWith(
-      7,
-      expect.objectContaining({ id: row.id }),
     );
   });
 

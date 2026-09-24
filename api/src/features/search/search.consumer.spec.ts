@@ -8,6 +8,7 @@ import { SearchService } from "./search.service";
 
 const subscriptionSchema = z.object({
   type: z.string(),
+  errorHandler: z.custom<() => void>((value) => typeof value === "function"),
   exchange: z.string(),
   routingKey: z.string(),
   queue: z.string(),
@@ -16,6 +17,8 @@ const subscriptionSchema = z.object({
     deadLetterExchange: z.string(),
   }),
 });
+
+const anyFunction = (): unknown => expect.any(Function);
 
 function subscriptionOn(
   target: object,
@@ -105,6 +108,7 @@ describe("SearchConsumer", () => {
   it("listens on one durable queue per index job", () => {
     expect(subscriptionOn(SearchConsumer.prototype, "indexProduct")).toEqual({
       type: "subscribe",
+      errorHandler: anyFunction(),
       exchange: "poetry",
       routingKey: "search.index-product",
       queue: "poetry.search.index-product",
@@ -112,6 +116,7 @@ describe("SearchConsumer", () => {
     });
     expect(subscriptionOn(SearchConsumer.prototype, "indexEvent")).toEqual({
       type: "subscribe",
+      errorHandler: anyFunction(),
       exchange: "poetry",
       routingKey: "search.index-event",
       queue: "poetry.search.index-event",

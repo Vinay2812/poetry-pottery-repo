@@ -1,3 +1,4 @@
+import { AmqpConnection } from "@golevelup/nestjs-rabbitmq";
 import { Test, type TestingModule } from "@nestjs/testing";
 import { EventStatus, OrderStatus, type Prisma } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -14,6 +15,7 @@ import { NewsletterService } from "@/features/newsletter/newsletter.service";
 import { NotificationsService } from "@/features/notifications/notifications.service";
 import { OrdersService } from "@/features/orders/orders.service";
 import { ProductsService } from "@/features/products/products.service";
+import { ShelfService } from "@/features/products/shelf.service";
 import { ReviewsService } from "@/features/reviews/reviews.service";
 import { SearchService } from "@/features/search/search.service";
 import { SettingsService } from "@/features/settings/settings.service";
@@ -31,6 +33,7 @@ import {
   PrismaService,
   withAmbientTransactions,
 } from "@/prisma/prisma.service";
+import { jobSchemas } from "@/queue/jobs";
 import { QueueService } from "@/queue/queue.service";
 import { RedisService } from "@/redis/redis.service";
 import { PendingUploadsService } from "@/storage/pending-uploads.service";
@@ -87,19 +90,12 @@ class StorageStub {
   }
 }
 
-class MailStub {
-  enqueue(): Promise<void> {
-    return Promise.resolve();
-  }
-}
-
-// Same silence as the stub, but it keeps the envelopes so a test can count them.
+// The mail jobs that reached the broker, so a test can count envelopes; only committed work gets here.
 export class MailRecorder {
   readonly sent: MailMessage[] = [];
 
-  enqueue(message: MailMessage): Promise<void> {
+  record(message: MailMessage): void {
     this.sent.push(message);
-    return Promise.resolve();
   }
 
   reset(): void {
@@ -157,23 +153,65 @@ export class PendingUploadsRecorder {
   }
 }
 
-// No broker in the sandbox, so a test reads the jobs a service meant to publish.
+export type Deliver = (job: string, payload: unknown) => Promise<void>;
+
+// No broker in the sandbox, so a test reads the jobs that reached the connection. The real
+// QueueService sits in front, so only what was published after a commit (or outside any
+// transaction) lands here; anything published mid-transaction is kept aside as a leak.
 export class QueueRecorder {
   readonly published: { job: string; payload: unknown }[] = [];
+  readonly leaked: { job: string; payload: unknown }[] = [];
+  // Set by a test to play the consumer at the moment the job is handed over.
+  onPublish: Deliver | null = null;
 
-  publish(job: string, payload: unknown): Promise<void> {
-    this.published.push({ job, payload });
-    return Promise.resolve();
+  record(job: string, payload: unknown, inTransaction: boolean): void {
+    const entry = { job, payload };
+    this.published.push(entry);
+    if (inTransaction) this.leaked.push(entry);
   }
 
   reset(): void {
     this.published.length = 0;
+    this.leaked.length = 0;
+    this.onPublish = null;
   }
 
   productIdsFor(job: string): number[] {
     return this.published
       .filter((entry) => entry.job === job)
-      .map((entry) => (entry.payload as { productId: number }).productId);
+      .map((entry) => jobSchemas["notify.back-in-stock"].parse(entry.payload))
+      .map((payload) => payload.productId);
+  }
+}
+
+// Stands in for the AMQP connection and fans each publish out to the recorders.
+class BrokerStub {
+  readonly connected = true;
+
+  constructor(
+    private readonly prisma: { current: PrismaService | null },
+    private readonly queue: QueueRecorder,
+    private readonly mail: MailRecorder,
+  ) {}
+
+  async publish(
+    _exchange: string,
+    job: string,
+    payload: unknown,
+  ): Promise<boolean> {
+    const prisma = this.prisma.current;
+    this.queue.record(job, payload, prisma?.inTransaction ?? false);
+    if (job === "mail.send") {
+      this.mail.record(jobSchemas["mail.send"].parse(payload));
+    }
+    const deliver = this.queue.onPublish;
+    if (deliver) {
+      // Outside any transaction scope, the way a consumer on its own connection would run.
+      await (prisma
+        ? prisma.txStore.exit(() => deliver(job, payload))
+        : deliver(job, payload));
+    }
+    return true;
   }
 }
 
@@ -194,6 +232,7 @@ export interface Harness {
   adminEvents: AdminEventsService;
   adminProducts: AdminProductsService;
   products: ProductsService;
+  queueService: QueueService;
   close: () => Promise<void>;
 }
 
@@ -206,10 +245,17 @@ export interface HarnessOptions {
   uploads?: PendingUploadsRecorder;
 }
 
-// Real services and a real PrismaService against the sandbox database; only the outside world is stubbed.
+// Real services and a real PrismaService against the sandbox database; only the outside world is
+// stubbed, and the queue and mail services are the real ones so publishing goes through the seam.
 export async function createHarness(
   options: HarnessOptions = {},
 ): Promise<Harness> {
+  const prismaRef: { current: PrismaService | null } = { current: null };
+  const broker = new BrokerStub(
+    prismaRef,
+    options.queue ?? new QueueRecorder(),
+    options.mail ?? new MailRecorder(),
+  );
   const moduleRef: TestingModule = await Test.createTestingModule({
     providers: [
       {
@@ -219,16 +265,18 @@ export async function createHarness(
       },
       { provide: WINSTON_MODULE_PROVIDER, useClass: LoggerStub },
       { provide: RedisService, useClass: RedisStub },
-      { provide: MailService, useValue: options.mail ?? new MailStub() },
+      { provide: AmqpConnection, useValue: broker },
+      QueueService,
+      MailService,
       { provide: SearchService, useClass: SearchStub },
       { provide: StorageService, useClass: StorageStub },
-      { provide: QueueService, useValue: options.queue ?? new QueueRecorder() },
       {
         provide: PendingUploadsService,
         useValue: options.uploads ?? new PendingUploadsRecorder(),
       },
       { provide: UploadsService, useClass: UploadsStub },
       SettingsService,
+      ShelfService,
       NotificationsService,
       CartService,
       OrdersService,
@@ -247,8 +295,10 @@ export async function createHarness(
     ],
   }).compile();
   await moduleRef.init();
+  prismaRef.current = moduleRef.get(PrismaService);
   return {
     prisma: moduleRef.get(PrismaService),
+    queueService: moduleRef.get(QueueService),
     cart: moduleRef.get(CartService),
     orders: moduleRef.get(OrdersService),
     events: moduleRef.get(EventsService),

@@ -15,6 +15,7 @@ import {
   bookingPlacedStudioMail,
   bookingStatusMail,
 } from "@/mail/templates/workshops";
+import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import {
   canTransition,
@@ -325,9 +326,7 @@ export class WorkshopsService {
         "USER",
       );
     });
-    const booking = toBooking(row);
-    await this.notifyStatus(userId, booking, "status");
-    return booking;
+    return toBooking(row);
   }
 
   // Shared with the admin console; occupancy is derived from status, so no counters to adjust.
@@ -381,14 +380,17 @@ export class WorkshopsService {
           "This booking was just updated, refresh and try again",
         );
       }
-      return this.prisma.workshopBooking.findUniqueOrThrow({
+      const row = await this.prisma.workshopBooking.findUniqueOrThrow({
         where: { id: current.id },
         include: bookingInclude,
       });
+      // Queued on the transaction, so the guest hears only about a move that committed.
+      await this.notifyStatus(current.user_id, toBooking(row), "status");
+      return row;
     });
   }
 
-  async notifyStatus(
+  private async notifyStatus(
     userId: number,
     booking: WorkshopBooking,
     kind: "status" | "rescheduled",
@@ -428,8 +430,8 @@ export class WorkshopsService {
   }
 
   // Serialises bookings per studio so two people cannot take the last wheel at once.
-  private async lock(configId: number): Promise<void> {
-    await this.prisma.$executeRaw`SELECT pg_advisory_xact_lock(${configId})`;
+  private lock(configId: number): Promise<void> {
+    return this.prisma.lock(LockNamespace.WORKSHOP_CONFIG, configId);
   }
 
   private toSlotRows(

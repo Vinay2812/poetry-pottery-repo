@@ -9,6 +9,8 @@ const notificationsMock = {
   sendBackInStock: vi.fn<NotificationsService["sendBackInStock"]>(),
 };
 
+const anyFunction = (): unknown => expect.any(Function);
+
 describe("NotificationsConsumer", () => {
   let consumer: NotificationsConsumer;
 
@@ -52,6 +54,7 @@ describe("NotificationsConsumer", () => {
 
     expect(Reflect.getMetadata(RABBIT_HANDLER, handler as object)).toEqual({
       type: "subscribe",
+      errorHandler: anyFunction(),
       exchange: "poetry",
       routingKey: "notify.back-in-stock",
       queue: "poetry.notify.back-in-stock",

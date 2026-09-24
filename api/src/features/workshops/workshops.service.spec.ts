@@ -3,6 +3,7 @@ import { RegistrationStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MailService } from "@/mail/mail.service";
+import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import { addDays, fromWallClock } from "./schedule";
 import { WorkshopsService } from "./workshops.service";
@@ -13,6 +14,8 @@ const matching = (pattern: RegExp): unknown => expect.stringMatching(pattern);
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
+  lock: vi.fn(),
   $executeRaw: vi.fn(),
   workshopConfig: { findMany: vi.fn(), findFirst: vi.fn() },
   workshopBlackout: { findMany: vi.fn() },
@@ -145,7 +148,10 @@ describe("WorkshopsService", () => {
       participants: 2,
     });
 
-    expect(prismaMock.$executeRaw).toHaveBeenCalled();
+    expect(prismaMock.lock).toHaveBeenCalledWith(
+      LockNamespace.WORKSHOP_CONFIG,
+      1,
+    );
     expect(prismaMock.workshopBooking.create).toHaveBeenCalledWith(
       containing({
         data: containing({

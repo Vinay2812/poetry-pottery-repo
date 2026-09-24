@@ -3,6 +3,7 @@ import { Test } from "@nestjs/testing";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { PrismaService } from "@/prisma/prisma.service";
 import { jobSchemas, QUEUE_EXCHANGE } from "./jobs";
 import { QueueService } from "./queue.service";
 
@@ -19,6 +20,9 @@ const amqpMock = {
   connected: true,
 };
 const loggerMock = { error: vi.fn(), info: vi.fn(), warn: vi.fn() };
+const prismaMock = {
+  afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
+};
 
 describe("QueueService", () => {
   let service: QueueService;
@@ -30,6 +34,7 @@ describe("QueueService", () => {
       providers: [
         QueueService,
         { provide: AmqpConnection, useValue: amqpMock },
+        { provide: PrismaService, useValue: prismaMock },
         { provide: WINSTON_MODULE_PROVIDER, useValue: loggerMock },
       ],
     }).compile();
@@ -45,6 +50,21 @@ describe("QueueService", () => {
       { productId: 12 },
       { persistent: true },
     );
+  });
+
+  it("hands the publish to the transaction seam, so it waits for the commit", async () => {
+    const deferred: (() => Promise<void> | void)[] = [];
+    prismaMock.afterCommit.mockImplementationOnce((fn) => {
+      deferred.push(fn);
+      return Promise.resolve();
+    });
+
+    await service.publish("search.index-product", { productId: 12 });
+    expect(amqpMock.publish).not.toHaveBeenCalled();
+
+    expect(deferred).toHaveLength(1);
+    await deferred[0]?.();
+    expect(amqpMock.publish).toHaveBeenCalledTimes(1);
   });
 
   it("publishes a mail payload the consumer will accept", async () => {
@@ -70,21 +90,28 @@ describe("QueueService", () => {
     ).resolves.toBeUndefined();
     expect(loggerMock.error).toHaveBeenCalledWith("queue publish failed", {
       job: "search.index-event",
-      payload: { eventId: 3 },
+      payload_keys: ["eventId"],
       message: "channel closed",
     });
   });
 
-  it("logs a non-error rejection without losing the job details", async () => {
+  it("logs the shape of a lost mail, never the address or the body", async () => {
     amqpMock.publish.mockRejectedValue("broker went away");
 
-    await service.publish("search.index-event", { eventId: 3 });
+    await service.publish("mail.send", {
+      to: "potter@example.com",
+      subject: "Order received",
+      html: "<p>Thanks</p>",
+    });
 
     expect(loggerMock.error).toHaveBeenCalledWith("queue publish failed", {
-      job: "search.index-event",
-      payload: { eventId: 3 },
+      job: "mail.send",
+      payload_keys: ["to", "subject", "html"],
       message: "broker went away",
     });
+    const logged = JSON.stringify(loggerMock.error.mock.calls);
+    expect(logged).not.toContain("potter@example.com");
+    expect(logged).not.toContain("<p>Thanks</p>");
   });
 
   it("reports whether the broker connection is up", () => {

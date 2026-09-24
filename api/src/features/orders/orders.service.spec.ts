@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
 import { StorageService } from "@/storage/storage.service";
-import { NotificationsService } from "@/features/notifications/notifications.service";
+import { ShelfService } from "@/features/products/shelf.service";
 import { UploadsService } from "@/features/admin/uploads/uploads.service";
 import { UploadPurpose } from "@/features/admin/uploads/uploads.type";
 import { CartService } from "@/features/cart/cart.service";
@@ -18,6 +18,7 @@ const containing = (value: Record<string, unknown>): unknown =>
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
   $executeRaw: vi.fn().mockResolvedValue(1),
   address: { findFirst: vi.fn() },
   coupon: { findUnique: vi.fn(), updateMany: vi.fn() },
@@ -38,7 +39,7 @@ const prismaMock = {
 const cartMock = { get: vi.fn(), add: vi.fn() };
 const settingsMock = { get: vi.fn() };
 const mailMock = { enqueue: vi.fn() };
-const notificationsMock = { announceRestock: vi.fn() };
+const shelfMock = { take: vi.fn(), release: vi.fn() };
 const uploadsMock = { assertConfirmed: vi.fn() };
 const storageMock = {
   isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.test/")),
@@ -141,9 +142,8 @@ describe("OrdersService", () => {
     });
     cartMock.get.mockResolvedValue({ items: [cartItem()] });
     prismaMock.address.findFirst.mockResolvedValue(address);
-    prismaMock.product.updateMany.mockResolvedValue({ count: 1 });
-    // A restock that leaves the shelf stocked either way, so nothing is announced by default.
-    prismaMock.product.update.mockResolvedValue({ id: 10, stock: 5 });
+    shelfMock.take.mockResolvedValue(true);
+    shelfMock.release.mockResolvedValue(undefined);
     prismaMock.order.create.mockResolvedValue(orderRow());
     prismaMock.user.findUnique.mockResolvedValue({ email: "maya@example.com" });
     prismaMock.order.updateMany.mockResolvedValue({ count: 1 });
@@ -156,7 +156,7 @@ describe("OrdersService", () => {
         { provide: SettingsService, useValue: settingsMock },
         { provide: MailService, useValue: mailMock },
         { provide: StorageService, useValue: storageMock },
-        { provide: NotificationsService, useValue: notificationsMock },
+        { provide: ShelfService, useValue: shelfMock },
         { provide: UploadsService, useValue: uploadsMock },
       ],
     }).compile();
@@ -242,13 +242,10 @@ describe("OrdersService", () => {
   });
 
   describe("place", () => {
-    it("decrements stock conditionally, snapshots the address, clears the cart and emails both sides", async () => {
+    it("takes each line from the shelf, snapshots the address, clears the cart and emails both sides", async () => {
       const order = await service.place(1, { address_id: 5 });
 
-      expect(prismaMock.product.updateMany).toHaveBeenCalledWith({
-        where: { id: 10, stock: { gte: 2 } },
-        data: { stock: { decrement: 2 }, sales_count: { increment: 2 } },
-      });
+      expect(shelfMock.take).toHaveBeenCalledWith(containing({ id: 10 }), 2);
       expect(prismaMock.order.create).toHaveBeenCalledWith(
         containing({
           data: containing({
@@ -273,7 +270,7 @@ describe("OrdersService", () => {
       await expect(
         service.place(1, { address_id: 5, expected_total: 1250 }),
       ).rejects.toThrow("Your cart changed since you opened checkout");
-      expect(prismaMock.product.updateMany).not.toHaveBeenCalled();
+      expect(shelfMock.take).not.toHaveBeenCalled();
       expect(prismaMock.order.create).not.toHaveBeenCalled();
 
       await expect(
@@ -282,7 +279,7 @@ describe("OrdersService", () => {
     });
 
     it("fails when another buyer took the last piece", async () => {
-      prismaMock.product.updateMany.mockResolvedValue({ count: 0 });
+      shelfMock.take.mockResolvedValue(false);
 
       await expect(service.place(1, { address_id: 5 })).rejects.toThrow(
         "sold out while you were checking out",
@@ -371,12 +368,7 @@ describe("OrdersService", () => {
 
       const order = await service.cancel(1, "ORD123", "Changed my mind");
 
-      expect(prismaMock.product.update).toHaveBeenCalledWith(
-        containing({
-          where: { id: 10 },
-          data: { sales_count: { decrement: 2 }, stock: { increment: 2 } },
-        }),
-      );
+      expect(shelfMock.release).toHaveBeenCalledWith(containing({ id: 10 }), 2);
       expect(prismaMock.order.updateMany).toHaveBeenCalledWith(
         containing({
           where: { id: "ORD123", status: OrderStatus.PENDING },
@@ -434,7 +426,7 @@ describe("OrdersService", () => {
         OrderStatus.PAID,
       );
 
-      expect(prismaMock.product.update).not.toHaveBeenCalled();
+      expect(shelfMock.release).not.toHaveBeenCalled();
       expect(prismaMock.order.updateMany).toHaveBeenCalledWith(
         containing({
           data: containing({
@@ -445,25 +437,17 @@ describe("OrdersService", () => {
       );
     });
 
-    it("announces a piece that the cancellation put back on an empty shelf", async () => {
-      prismaMock.product.update.mockResolvedValue({ id: 10, stock: 2 });
+    it("releases every line through the shelf and mails the customer itself", async () => {
       prismaMock.order.findUniqueOrThrow.mockResolvedValue(
         orderRow({ status: OrderStatus.CANCELLED }),
       );
 
       await service.applyStatus(orderRow() as never, OrderStatus.CANCELLED);
 
-      expect(notificationsMock.announceRestock).toHaveBeenCalledWith(10);
-    });
-
-    it("stays quiet when the shelf still had pieces on it", async () => {
-      prismaMock.order.findUniqueOrThrow.mockResolvedValue(
-        orderRow({ status: OrderStatus.CANCELLED }),
+      expect(shelfMock.release).toHaveBeenCalledWith(containing({ id: 10 }), 2);
+      expect(mailMock.enqueue).toHaveBeenCalledWith(
+        containing({ to: "maya@example.com" }),
       );
-
-      await service.applyStatus(orderRow() as never, OrderStatus.CANCELLED);
-
-      expect(notificationsMock.announceRestock).not.toHaveBeenCalled();
     });
 
     it("refuses when another transition won the race", async () => {
@@ -472,7 +456,7 @@ describe("OrdersService", () => {
       await expect(
         service.applyStatus(orderRow() as never, OrderStatus.CANCELLED),
       ).rejects.toThrow("just updated");
-      expect(prismaMock.product.update).not.toHaveBeenCalled();
+      expect(shelfMock.release).not.toHaveBeenCalled();
     });
   });
 

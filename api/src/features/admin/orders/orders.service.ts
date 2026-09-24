@@ -165,7 +165,7 @@ export class AdminOrdersService {
     } = {},
   ): Promise<AdminOrder> {
     const current = await this.require(id);
-    const row = await this.orders.applyStatus(current, next, {
+    await this.orders.applyStatus(current, next, {
       ...(extra.tracking_note === undefined
         ? {}
         : { tracking_note: trimmed(extra.tracking_note, 300) }),
@@ -176,8 +176,6 @@ export class AdminOrdersService {
         ? {}
         : { admin_note: trimmed(extra.admin_note, 1000) }),
     });
-    const order = toOrder(row);
-    await this.orders.notifyStatus(current.user_id, order);
     return this.byId(id);
   }
 

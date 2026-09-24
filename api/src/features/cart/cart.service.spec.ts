@@ -2,6 +2,7 @@ import { Test } from "@nestjs/testing";
 import { OptionGroupKind } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import { SettingsService } from "@/features/settings/settings.service";
 import { PendingUploadsService } from "@/storage/pending-uploads.service";
@@ -18,6 +19,8 @@ const containing = (value: Record<string, unknown>): unknown =>
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
+  lock: vi.fn(),
   $executeRaw: vi.fn().mockResolvedValue(1),
   cartItem: {
     aggregate: vi.fn(),
@@ -290,7 +293,10 @@ describe("CartService", () => {
         create: containing({ quantity: 3, selection_key: "" }),
       }),
     );
-    expect(prismaMock.$executeRaw).toHaveBeenCalled();
+    expect(prismaMock.lock).toHaveBeenCalledWith(
+      LockNamespace.CART_LINE,
+      [1, 1],
+    );
   });
 
   it("stores reference photos on a custom line and rejects foreign URLs", async () => {

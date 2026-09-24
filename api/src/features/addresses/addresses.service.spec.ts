@@ -10,6 +10,7 @@ const containing = (value: Record<string, unknown>): unknown =>
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
   address: {
     findMany: vi.fn(),
     findFirst: vi.fn(),

@@ -23,8 +23,7 @@ import {
   productListInclude,
   toProduct,
 } from "@/features/products/products.service";
-import { NotificationsService } from "@/features/notifications/notifications.service";
-import { cameBackInStock } from "@/features/notifications/restock";
+import { ShelfService } from "@/features/products/shelf.service";
 import { SettingsService } from "@/features/settings/settings.service";
 import { UploadsService } from "@/features/admin/uploads/uploads.service";
 import { UploadPurpose } from "@/features/admin/uploads/uploads.type";
@@ -129,7 +128,7 @@ export class OrdersService {
     private readonly settings: SettingsService,
     private readonly mail: MailService,
     private readonly storage: StorageService,
-    private readonly notifications: NotificationsService,
+    private readonly shelf: ShelfService,
     private readonly uploads: UploadsService,
   ) {}
 
@@ -235,22 +234,8 @@ export class OrdersService {
       }
 
       for (const item of available) {
-        if (item.product.is_customizable) {
-          await this.prisma.product.update({
-            where: { id: item.product.id },
-            data: { sales_count: { increment: item.quantity } },
-          });
-          continue;
-        }
-        // Conditional decrement is the oversell guard: two buyers cannot both take the last piece.
-        const taken = await this.prisma.product.updateMany({
-          where: { id: item.product.id, stock: { gte: item.quantity } },
-          data: {
-            stock: { decrement: item.quantity },
-            sales_count: { increment: item.quantity },
-          },
-        });
-        if (taken.count === 0) {
+        const taken = await this.shelf.take(item.product, item.quantity);
+        if (!taken) {
           throw new BadRequestException(
             `${item.product.name} sold out while you were checking out`,
           );
@@ -391,9 +376,7 @@ export class OrdersService {
           reason?.trim().slice(0, 300) || "Cancelled by the customer",
       });
     });
-    const order = toOrder(row);
-    await this.notifyStatus(userId, order);
-    return order;
+    return toOrder(row);
   }
 
   // Puts a past order's pieces back in the cart, one line at a time, so a piece that has since
@@ -443,7 +426,8 @@ export class OrdersService {
     return { cart: await this.cart.get(userId), skipped };
   }
 
-  // Shared by customer cancellation and the admin console; releases stock when an order leaves the holding states.
+  // Shared by customer cancellation and the admin console; releases stock when an order leaves
+  // the holding states and mails the customer, both settling only once the transaction commits.
   async applyStatus(
     current: OrderRow,
     next: OrderStatus,
@@ -458,9 +442,7 @@ export class OrdersService {
         `An order cannot move from ${current.status.toLowerCase()} to ${next.toLowerCase()}`,
       );
     }
-    // Filled inside the transaction, announced once it has committed.
-    const restocked: number[] = [];
-    const row = await this.prisma.withTransaction(async () => {
+    return this.prisma.withTransaction(async () => {
       const stamp = STATUS_TIMESTAMP[next];
       // Predicated on the status we read, so two concurrent transitions cannot both release stock.
       const moved = await this.prisma.order.updateMany({
@@ -480,22 +462,7 @@ export class OrdersService {
         STOCK_HOLDING.includes(current.status) && !STOCK_HOLDING.includes(next);
       if (releasesStock) {
         for (const item of current.items) {
-          const restored = await this.prisma.product.update({
-            where: { id: item.product_id },
-            data: {
-              sales_count: { decrement: item.quantity },
-              ...(item.product.is_customizable
-                ? {}
-                : { stock: { increment: item.quantity } }),
-            },
-            select: { id: true, stock: true },
-          });
-          if (
-            !item.product.is_customizable &&
-            cameBackInStock(restored.stock - item.quantity, restored.stock)
-          ) {
-            restocked.push(restored.id);
-          }
+          await this.shelf.release(item.product, item.quantity);
         }
         if (current.coupon_id !== null) {
           await this.prisma.coupon.updateMany({
@@ -504,15 +471,13 @@ export class OrdersService {
           });
         }
       }
-      return this.prisma.order.findUniqueOrThrow({
+      const row = await this.prisma.order.findUniqueOrThrow({
         where: { id: current.id },
         include: orderInclude,
       });
+      await this.notifyStatus(current.user_id, toOrder(row));
+      return row;
     });
-    for (const productId of restocked) {
-      await this.notifications.announceRestock(productId);
-    }
-    return row;
   }
 
   // Admin only: the note is written for the customer, so it goes out as one mail straight away.
@@ -553,7 +518,7 @@ export class OrdersService {
     return result;
   }
 
-  async notifyStatus(userId: number, order: Order): Promise<void> {
+  private async notifyStatus(userId: number, order: Order): Promise<void> {
     const mail = orderStatusMail(order);
     if (!mail) return;
     const user = await this.prisma.user.findUnique({
