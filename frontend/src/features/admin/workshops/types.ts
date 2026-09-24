@@ -228,12 +228,15 @@ export function applyBlackoutPatch(
   if (patch.kind === "remove") {
     return blackouts.filter((entry) => entry.id !== patch.blackout.id);
   }
-  const exists = blackouts.some((entry) => entry.id === patch.blackout.id);
-  const next = exists
+  // A draft (id 0) whose saved row has already been read back is matched by its span instead.
+  const isSame = (entry: WorkshopBlackoutData) =>
+    entry.id === patch.blackout.id ||
+    (patch.blackout.id === 0 &&
+      entry.starts_at === patch.blackout.starts_at &&
+      entry.ends_at === patch.blackout.ends_at);
+  const next = blackouts.some(isSame)
     ? blackouts.map((entry) =>
-        entry.id === patch.blackout.id
-          ? { ...entry, ...patch.blackout }
-          : entry,
+        isSame(entry) ? { ...entry, ...patch.blackout, id: entry.id } : entry,
       )
     : [...blackouts, patch.blackout];
   return next.sort((a, b) => a.starts_at.localeCompare(b.starts_at));

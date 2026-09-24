@@ -213,6 +213,10 @@ export class WorkshopAvailabilityInput {
 
   @Field(() => Int, { nullable: true, defaultValue: 14 })
   days!: number;
+
+  // Counts that booking's own hours as free, honoured only for the booking's owner.
+  @Field(() => String, { nullable: true })
+  exclude_booking_id?: string | null;
 }
 
 @InputType()

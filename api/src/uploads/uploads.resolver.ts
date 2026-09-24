@@ -1,13 +1,13 @@
 import { BadRequestException } from "@nestjs/common";
 import { Args, Int, Mutation, Resolver } from "@nestjs/graphql";
+import { UploadPurpose } from "@prisma/client";
 
 import type { AuthUser } from "@/common/clerk/clerk.type";
 import { AuthRequired } from "@/common/decorators/auth.decorators";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
 import { StrictThrottle } from "@/common/decorators/throttle.decorators";
-import { PendingUploadsService } from "./pending-uploads.service";
-import { StorageService } from "./storage.service";
-import { UploadTicket } from "./storage.type";
+import { UploadsService } from "./uploads.service";
+import { UploadTicket } from "./uploads.type";
 
 const REFERENCE_PHOTO_TYPES: Record<string, string> = {
   "image/jpeg": "jpg",
@@ -16,11 +16,8 @@ const REFERENCE_PHOTO_TYPES: Record<string, string> = {
 };
 
 @Resolver(() => UploadTicket)
-export class StorageResolver {
-  constructor(
-    private readonly storage: StorageService,
-    private readonly pending: PendingUploadsService,
-  ) {}
+export class UploadsResolver {
+  constructor(private readonly uploads: UploadsService) {}
 
   @AuthRequired()
   @StrictThrottle()
@@ -36,16 +33,10 @@ export class StorageResolver {
         "Reference photos must be JPEG, PNG or WebP",
       );
     }
-    // Asking for a new photo is the moment to clear out the ones this person abandoned.
-    await this.pending.sweep(user.db_user_id);
-    const ticket = await this.storage.createImageUpload({
-      folder: "customization",
-      subfolder: String(user.db_user_id),
+    return this.uploads.issue(user.db_user_id, UploadPurpose.REFERENCE, {
       filename: `reference.${extension}`,
       content_type,
       size,
     });
-    await this.pending.track(user.db_user_id, ticket.key);
-    return ticket;
   }
 }

@@ -5,6 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AuthUser } from "@/common/clerk/clerk.type";
 import { AuthGuard } from "@/common/guards/auth.guard";
+import type {
+  AppRequest,
+  AppResponse,
+  GqlContext,
+} from "@/common/types/express";
 import { configInclude, WorkshopsService } from "./workshops.service";
 import { WorkshopsResolver } from "./workshops.resolver";
 import type {
@@ -40,6 +45,11 @@ function session(dbUserId: number): AuthUser {
     role: UserRole.USER,
     auth_id: `user_${dbUserId}`,
   };
+}
+
+// The resolver only hands the request to the guard, so a bare stub stands in for express's.
+function gqlContext(request: Partial<AppRequest> = {}): GqlContext {
+  return { req: request as AppRequest, res: {} as AppResponse };
 }
 
 function makeConfig(overrides: Partial<WorkshopConfig> = {}): WorkshopConfig {
@@ -157,6 +167,11 @@ const workshopsMock = {
   cancel: vi.fn<WorkshopsService["cancel"]>(),
 };
 
+const authGuardMock = {
+  canActivate: vi.fn<AuthGuard["canActivate"]>(() => Promise.resolve(true)),
+  tryAuthenticate: vi.fn<AuthGuard["tryAuthenticate"]>(),
+};
+
 describe("WorkshopsResolver", () => {
   let resolver: WorkshopsResolver;
 
@@ -166,11 +181,12 @@ describe("WorkshopsResolver", () => {
       providers: [
         WorkshopsResolver,
         { provide: WorkshopsService, useValue: workshopsMock },
+        { provide: AuthGuard, useValue: authGuardMock },
       ],
     })
       // Nest instantiates the guard named in the UseGuards metadata, so it is stubbed out.
       .overrideGuard(AuthGuard)
-      .useValue({ canActivate: () => true })
+      .useValue(authGuardMock)
       .compile();
     resolver = moduleRef.get(WorkshopsResolver);
   });
@@ -200,8 +216,30 @@ describe("WorkshopsResolver", () => {
     const days = [makeDay()];
     workshopsMock.availability.mockResolvedValue(days);
 
-    await expect(resolver.workshopAvailability(input)).resolves.toBe(days);
-    expect(workshopsMock.availability).toHaveBeenCalledWith(input);
+    await expect(
+      resolver.workshopAvailability(input, gqlContext()),
+    ).resolves.toBe(days);
+    expect(workshopsMock.availability).toHaveBeenCalledWith(input, null);
+    // Without a booking to exclude, a public read never touches the session.
+    expect(authGuardMock.tryAuthenticate).not.toHaveBeenCalled();
+  });
+
+  it("names the session's own user, never one from the input, when excluding a booking", async () => {
+    const input: WorkshopAvailabilityInput = {
+      config_slug: "open-studio",
+      from: "2026-02-01",
+      days: 14,
+      exclude_booking_id: "WS-1",
+    };
+    workshopsMock.availability.mockResolvedValue([]);
+    authGuardMock.tryAuthenticate.mockResolvedValueOnce(session(7));
+
+    await resolver.workshopAvailability(input, gqlContext());
+    expect(workshopsMock.availability).toHaveBeenCalledWith(input, 7);
+
+    authGuardMock.tryAuthenticate.mockResolvedValueOnce(null);
+    await resolver.workshopAvailability(input, gqlContext());
+    expect(workshopsMock.availability).toHaveBeenLastCalledWith(input, null);
   });
 
   it("books for the session, not for anyone named in the input", async () => {

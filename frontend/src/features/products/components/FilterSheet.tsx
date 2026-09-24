@@ -10,7 +10,6 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { useRestoreFocus } from "@/lib/use-restore-focus";
 
 export interface FilterSheetProps {
   isOpen: boolean;
@@ -29,12 +28,9 @@ export function FilterSheet({
   onClear,
   children,
 }: FilterSheetProps) {
-  const restoreFocus = useRestoreFocus();
   return (
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
-        onOpenAutoFocus={restoreFocus.onOpenAutoFocus}
-        onCloseAutoFocus={restoreFocus.onCloseAutoFocus}
         side="right"
         className="flex h-dvh w-full flex-col sm:max-w-sm"
       >

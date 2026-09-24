@@ -1,8 +1,7 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import { useCallback, useOptimistic, useTransition } from "react";
-import { toast } from "sonner";
+import { useCallback, useOptimistic } from "react";
 
 import { useApolloClient, useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -12,12 +11,14 @@ import {
   UpdateCartItemDocument,
 } from "@/graphql/generated/graphql";
 
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
+
 import { useCartContext } from "@/features/cart/containers/CartProvider";
 import {
   applyCartAction,
-  CART_REFETCH,
+  CART_QUERIES,
+  type CartAction,
   type CartData,
-  toCartErrorMessage,
 } from "@/features/cart/types";
 
 interface CartDetail {
@@ -43,62 +44,51 @@ export function useCart(): CartDetail {
   const cart = isSignedIn ? (data?.cart ?? previousData?.cart ?? null) : null;
 
   const [optimisticCart, applyAction] = useOptimistic(cart, applyCartAction);
-  const [, startTransition] = useTransition();
   const [updateItem] = useMutation(UpdateCartItemDocument);
   const [removeItem] = useMutation(RemoveCartItemDocument);
   const [clear] = useMutation(ClearCartDocument);
   const client = useApolloClient();
 
-  // A failed change means this tab's cart is out of date, so the server's copy becomes the baseline again.
+  // Both the badge and the lines are server-owned totals, so every write reads them back.
+  const refreshCart = useCallback(
+    () => client.refetchQueries({ include: CART_QUERIES }),
+    [client],
+  );
   const resync = useCallback(async () => {
     try {
-      await client.refetchQueries({ include: CART_REFETCH.refetchQueries });
+      await refreshCart();
     } catch {
-      // The failure toast already told the shopper; a reload still recovers.
+      // The caller already told the shopper; a reload still recovers.
     }
-  }, [client]);
+  }, [refreshCart]);
+
+  const { execute } = useOptimisticAction({
+    patch: applyAction,
+    run: (action: CartAction) => {
+      if (action.kind === "quantity") {
+        return updateItem({
+          variables: { id: action.id, quantity: action.quantity },
+        });
+      }
+      if (action.kind === "remove") {
+        return removeItem({ variables: { id: action.id } });
+      }
+      return clear();
+    },
+    refresh: refreshCart,
+    messages: { success: null, failure: "The cart could not be updated" },
+  });
 
   const setQuantity = useCallback(
-    (id: number, quantity: number) => {
-      startTransition(async () => {
-        applyAction({ kind: "quantity", id, quantity });
-        try {
-          await updateItem({ variables: { id, quantity }, ...CART_REFETCH });
-        } catch (error) {
-          toast.error(toCartErrorMessage(error));
-          await resync();
-        }
-      });
-    },
-    [applyAction, resync, updateItem],
+    (id: number, quantity: number) =>
+      execute({ kind: "quantity", id, quantity }),
+    [execute],
   );
-
   const remove = useCallback(
-    (id: number) => {
-      startTransition(async () => {
-        applyAction({ kind: "remove", id });
-        try {
-          await removeItem({ variables: { id }, ...CART_REFETCH });
-        } catch (error) {
-          toast.error(toCartErrorMessage(error));
-          await resync();
-        }
-      });
-    },
-    [applyAction, removeItem, resync],
+    (id: number) => execute({ kind: "remove", id }),
+    [execute],
   );
-
-  const clearAll = useCallback(() => {
-    startTransition(async () => {
-      applyAction({ kind: "clear" });
-      try {
-        await clear({ ...CART_REFETCH });
-      } catch (error) {
-        toast.error(toCartErrorMessage(error));
-        await resync();
-      }
-    });
-  }, [applyAction, clear, resync]);
+  const clearAll = useCallback(() => execute({ kind: "clear" }), [execute]);
 
   return {
     cart: optimisticCart,

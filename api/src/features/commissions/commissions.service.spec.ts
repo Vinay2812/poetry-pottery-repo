@@ -1,13 +1,12 @@
 import { BadRequestException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { CommissionStatus } from "@prisma/client";
+import { CommissionStatus, UploadPurpose } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { env } from "@/config/env";
 import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
-import { PendingUploadsService } from "@/storage/pending-uploads.service";
-import { StorageService } from "@/storage/storage.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import { CommissionsService } from "./commissions.service";
 import type { CommissionRequestInput } from "./commissions.type";
 
@@ -15,6 +14,7 @@ const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
 
 const prismaMock = {
+  withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
   commissionRequest: {
     create: vi.fn(),
     findMany: vi.fn(),
@@ -28,13 +28,7 @@ const prismaMock = {
 };
 
 const mailMock = { enqueue: vi.fn() };
-const storageMock = {
-  isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.studio/")),
-  isUploadedUnder: vi.fn((url: string, prefix: string) =>
-    url.startsWith(`https://cdn.studio/${prefix}`),
-  ),
-};
-const pendingUploadsMock = { keep: vi.fn(), track: vi.fn(), sweep: vi.fn() };
+const uploadsMock = { claim: vi.fn() };
 
 const row = {
   id: "abc123def456",
@@ -77,8 +71,7 @@ describe("CommissionsService", () => {
         CommissionsService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: MailService, useValue: mailMock },
-        { provide: StorageService, useValue: storageMock },
-        { provide: PendingUploadsService, useValue: pendingUploadsMock },
+        { provide: UploadsService, useValue: uploadsMock },
       ],
     }).compile();
     service = moduleRef.get(CommissionsService);
@@ -102,7 +95,7 @@ describe("CommissionsService", () => {
     );
   });
 
-  it("stops sweeping the photos a signed-in brief kept", async () => {
+  it("claims the photos a signed-in brief carries, inside the write", async () => {
     prismaMock.commissionRequest.create.mockResolvedValue(row);
 
     await service.create(
@@ -112,30 +105,39 @@ describe("CommissionsService", () => {
       7,
     );
 
-    expect(pendingUploadsMock.keep).toHaveBeenCalledWith(7, [
+    expect(uploadsMock.claim).toHaveBeenCalledWith(7, UploadPurpose.REFERENCE, [
       "https://cdn.studio/customization/7/1.jpg",
     ]);
+    expect(prismaMock.withTransaction).toHaveBeenCalled();
   });
 
-  it("refuses photos the sender did not upload, including any on a guest brief", async () => {
+  it("surfaces a photo the sender did not upload, and refuses any photo on a guest brief", async () => {
     const theirs = input({
       reference_image_urls: ["https://cdn.studio/customization/8/1.jpg"],
     });
-    await expect(service.create(theirs, 7)).rejects.toThrow(
-      "uploaded through the studio",
+    prismaMock.commissionRequest.create.mockResolvedValue(row);
+    uploadsMock.claim.mockRejectedValueOnce(
+      new BadRequestException("That photo was not uploaded through the site"),
     );
+    await expect(service.create(theirs, 7)).rejects.toThrow(
+      "not uploaded through the site",
+    );
+    expect(mailMock.enqueue).not.toHaveBeenCalled();
+
+    vi.clearAllMocks();
     await expect(service.create(theirs, null)).rejects.toThrow(
       "uploaded through the studio",
     );
     expect(prismaMock.commissionRequest.create).not.toHaveBeenCalled();
+    expect(uploadsMock.claim).not.toHaveBeenCalled();
   });
 
-  it("has nothing to untrack for a brief sent by a stranger", async () => {
+  it("has nothing to claim for a brief sent by a stranger", async () => {
     prismaMock.commissionRequest.create.mockResolvedValue(row);
 
     await service.create(input(), null);
 
-    expect(pendingUploadsMock.keep).not.toHaveBeenCalled();
+    expect(uploadsMock.claim).not.toHaveBeenCalled();
   });
 
   it("tells the studio about a new brief when an address is configured", async () => {

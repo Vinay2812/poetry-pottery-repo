@@ -19,15 +19,14 @@ import type {
   Product,
   ProductOptionGroup,
 } from "@/features/products/products.type";
-import { NotificationsService } from "@/features/notifications/notifications.service";
-import { cameBackInStock } from "@/features/notifications/restock";
+import { ShelfService } from "@/features/products/shelf.service";
 import { SearchService } from "@/features/search/search.service";
 import { searchTerm } from "../admin.type";
 import { LOW_STOCK_THRESHOLD } from "../dashboard/dashboard.service";
 import { rethrowMissing } from "../missing-row";
 import { slugify, uniqueSlug } from "../slug";
-import { UploadsService } from "../uploads/uploads.service";
-import { UploadPurpose } from "../uploads/uploads.type";
+import { UploadsService } from "@/uploads/uploads.service";
+import { UploadPurpose } from "@/uploads/uploads.type";
 import type {
   AdminOptionGroupInput,
   AdminOptionInput,
@@ -110,7 +109,7 @@ export class AdminProductsService {
     private readonly products: ProductsService,
     private readonly search: SearchService,
     private readonly uploads: UploadsService,
-    private readonly notifications: NotificationsService,
+    private readonly shelf: ShelfService,
     @Inject(WINSTON_MODULE_PROVIDER) private readonly logger: Logger,
   ) {}
 
@@ -183,7 +182,7 @@ export class AdminProductsService {
       input.glaze_id,
     );
     const image_urls = cleanList(input.image_urls);
-    await this.uploads.assertConfirmed(image_urls, [], UploadPurpose.PRODUCT);
+    await this.uploads.claimConfirmed(image_urls, [], UploadPurpose.PRODUCT);
 
     const row = await this.prisma.product.create({
       data: {
@@ -250,99 +249,98 @@ export class AdminProductsService {
       ? cleanList(input.image_urls)
       : undefined;
     if (image_urls) {
-      await this.uploads.assertConfirmed(
+      await this.uploads.claimConfirmed(
         image_urls,
         current.image_urls,
         UploadPurpose.PRODUCT,
       );
     }
 
-    const row = await this.prisma.product.update({
-      where: { id },
-      data: {
-        ...(input.name == null ? {} : { name: input.name.trim() }),
-        ...(input.description == null
-          ? {}
-          : { description: input.description.trim() }),
-        ...(input.price == null ? {} : { price: input.price }),
-        ...(input.compare_at_price === undefined
-          ? {}
-          : { compare_at_price: input.compare_at_price }),
-        ...(input.material == null ? {} : { material: input.material.trim() }),
-        ...(input.color_name === undefined
-          ? {}
-          : { color_name: input.color_name?.trim() || null }),
-        ...(input.color_code === undefined
-          ? {}
-          : { color_code: input.color_code?.trim() || null }),
-        ...(input.dimensions === undefined
-          ? {}
-          : { dimensions: input.dimensions?.trim() || null }),
-        ...(input.care_notes
-          ? { care_notes: cleanList(input.care_notes) }
-          : {}),
-        ...(image_urls ? { image_urls } : {}),
-        ...(input.is_customizable == null
-          ? {}
-          : { is_customizable: input.is_customizable }),
-        ...(input.collection_id === undefined
-          ? {}
-          : { collection_id: input.collection_id }),
-        ...(input.glaze_id === undefined ? {} : { glaze_id: input.glaze_id }),
-        ...(input.capacity_ml === undefined
-          ? {}
-          : { capacity_ml: input.capacity_ml }),
-        ...(input.height_cm === undefined
-          ? {}
-          : { height_cm: input.height_cm }),
-        ...(input.diameter_cm === undefined
-          ? {}
-          : { diameter_cm: input.diameter_cm }),
-        ...(input.weight_g === undefined ? {} : { weight_g: input.weight_g }),
-        ...(input.maker_note === undefined
-          ? {}
-          : { maker_note: input.maker_note?.trim() || null }),
-        ...(input.is_second == null ? {} : { is_second: input.is_second }),
-        ...(input.flaw_note === undefined
-          ? {}
-          : { flaw_note: input.flaw_note?.trim() || null }),
-        ...(input.is_commission == null
-          ? {}
-          : { is_commission: input.is_commission }),
-        ...(input.category_ids
-          ? {
-              categories: {
-                set: input.category_ids.map((cid) => ({ id: cid })),
-              },
-            }
-          : {}),
-      },
-      include: productListInclude,
+    const row = await this.prisma.withTransaction(async () => {
+      // Made to order is a shelf fact: switching it on can put a sold-out piece back on sale.
+      if (input.is_customizable != null) {
+        await this.shelf.setMadeToOrder(id, input.is_customizable);
+      }
+      return this.prisma.product.update({
+        where: { id },
+        data: {
+          ...(input.name == null ? {} : { name: input.name.trim() }),
+          ...(input.description == null
+            ? {}
+            : { description: input.description.trim() }),
+          ...(input.price == null ? {} : { price: input.price }),
+          ...(input.compare_at_price === undefined
+            ? {}
+            : { compare_at_price: input.compare_at_price }),
+          ...(input.material == null
+            ? {}
+            : { material: input.material.trim() }),
+          ...(input.color_name === undefined
+            ? {}
+            : { color_name: input.color_name?.trim() || null }),
+          ...(input.color_code === undefined
+            ? {}
+            : { color_code: input.color_code?.trim() || null }),
+          ...(input.dimensions === undefined
+            ? {}
+            : { dimensions: input.dimensions?.trim() || null }),
+          ...(input.care_notes
+            ? { care_notes: cleanList(input.care_notes) }
+            : {}),
+          ...(image_urls ? { image_urls } : {}),
+          ...(input.collection_id === undefined
+            ? {}
+            : { collection_id: input.collection_id }),
+          ...(input.glaze_id === undefined ? {} : { glaze_id: input.glaze_id }),
+          ...(input.capacity_ml === undefined
+            ? {}
+            : { capacity_ml: input.capacity_ml }),
+          ...(input.height_cm === undefined
+            ? {}
+            : { height_cm: input.height_cm }),
+          ...(input.diameter_cm === undefined
+            ? {}
+            : { diameter_cm: input.diameter_cm }),
+          ...(input.weight_g === undefined ? {} : { weight_g: input.weight_g }),
+          ...(input.maker_note === undefined
+            ? {}
+            : { maker_note: input.maker_note?.trim() || null }),
+          ...(input.is_second == null ? {} : { is_second: input.is_second }),
+          ...(input.flaw_note === undefined
+            ? {}
+            : { flaw_note: input.flaw_note?.trim() || null }),
+          ...(input.is_commission == null
+            ? {}
+            : { is_commission: input.is_commission }),
+          ...(input.category_ids
+            ? {
+                categories: {
+                  set: input.category_ids.map((cid) => ({ id: cid })),
+                },
+              }
+            : {}),
+        },
+        include: productListInclude,
+      });
     });
     await this.afterWrite(id);
     return toProduct(row);
   }
 
   async setActive(id: number, isActive: boolean): Promise<Product> {
+    const current = await this.prisma.product.findUnique({
+      where: { id },
+      select: { stock: true, is_customizable: true },
+    });
+    if (!current) {
+      throw new NotFoundException("Product not found");
+    }
     if (isActive) {
-      const current = await this.prisma.product.findUnique({
-        where: { id },
-        select: { stock: true, is_customizable: true },
-      });
-      if (!current) {
-        throw new NotFoundException("Product not found");
-      }
       assertCanBeLive(current.stock, current.is_customizable);
     }
-    const row = await this.prisma.product
-      .update({
-        where: { id },
-        data: { is_active: isActive },
-        include: productListInclude,
-      })
-      .catch(rethrowMissing("Product not found"));
+    await this.shelf.setListed(id, isActive);
     await this.afterWrite(id);
-    return toProduct(row);
+    return this.byId(id);
   }
 
   async setFeatured(id: number, isFeatured: boolean): Promise<Product> {
@@ -370,22 +368,13 @@ export class AdminProductsService {
     if (note.length < 3) {
       throw new BadRequestException("Say why the count changed");
     }
-    // Returning the new count makes the edge exact: the row the increment actually landed on.
-    const moved = await this.prisma.product.updateManyAndReturn({
-      where: { id, ...(delta < 0 ? { stock: { gte: -delta } } : {}) },
-      data: { stock: { increment: delta } },
-      select: { stock: true },
-    });
-    const after = moved[0]?.stock;
-    if (after === undefined) {
+    const after = await this.shelf.adjust(id, delta);
+    if (after === null) {
       throw new BadRequestException(
         "There are not that many pieces on the shelf",
       );
     }
     this.logger.info("stock adjusted", { product_id: id, delta, reason: note });
-    if (cameBackInStock(after - delta, after)) {
-      await this.notifications.announceRestock(id);
-    }
     await this.afterWrite(id);
     return this.byId(id);
   }

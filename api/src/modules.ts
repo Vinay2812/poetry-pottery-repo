@@ -93,6 +93,7 @@ export { RedisModule } from "@/redis/redis.module";
 export { QueueModule } from "@/queue/queue.module";
 export { MailModule } from "@/mail/mail.module";
 export { StorageModule } from "@/storage/storage.module";
+export { UploadsModule } from "@/uploads/uploads.module";
 export { EmbeddingsModule } from "@/embeddings/embeddings.module";
 export { HealthModule } from "@/health/health.module";
 

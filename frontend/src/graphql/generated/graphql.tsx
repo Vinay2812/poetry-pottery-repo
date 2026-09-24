@@ -2417,6 +2417,7 @@ export type WishlistToggleResult = {
 export type WorkshopAvailabilityInput = {
   config_slug: Scalars['String']['input'];
   days?: InputMaybe<Scalars['Int']['input']>;
+  exclude_booking_id?: InputMaybe<Scalars['String']['input']>;
   from: Scalars['String']['input'];
 };
 

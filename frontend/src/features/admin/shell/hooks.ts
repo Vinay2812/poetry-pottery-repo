@@ -1,15 +1,8 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useOptimistic,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+import { type UrlCodec, useUrlState } from "@/lib/use-url-state";
 
 import {
   applyQueryPatch,
@@ -27,45 +20,16 @@ export interface AdminQueryState {
   patch: (next: QueryPatch) => void;
 }
 
-/**
- * URL-driven list state. The address bar stays the source of truth; the optimistic
- * layer only covers the navigation so filters never lag behind a click.
- */
+const ADMIN_QUERY_CODEC: UrlCodec<QueryValues, QueryPatch> = {
+  parse: readQueryValues,
+  serialize: toQueryString,
+  apply: applyQueryPatch,
+};
+
+// Every console list keeps its filters, search and page in the URL.
 export function useAdminQueryState(): AdminQueryState {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const urlValues = useMemo(
-    () => readQueryValues(new URLSearchParams(searchParams.toString())),
-    [searchParams],
-  );
-  const [values, addOptimisticPatch] = useOptimistic(
-    urlValues,
-    applyQueryPatch,
-  );
-  const [isPending, startTransition] = useTransition();
-  // Rapid clicks stack on each other; the URL takes over again once they settle.
-  const pendingRef = useRef(urlValues);
-  useEffect(() => {
-    if (!isPending) pendingRef.current = urlValues;
-  }, [isPending, urlValues]);
-
-  const patch = useCallback(
-    (next: QueryPatch) => {
-      const merged = applyQueryPatch(pendingRef.current, next);
-      pendingRef.current = merged;
-      const query = toQueryString(merged);
-      startTransition(() => {
-        addOptimisticPatch(next);
-        router.replace(query ? `${pathname}?${query}` : pathname, {
-          scroll: false,
-        });
-      });
-    },
-    [addOptimisticPatch, pathname, router],
-  );
-
-  return { values, page: readPage(values), isPending, patch };
+  const { value, isPending, dispatch } = useUrlState(ADMIN_QUERY_CODEC);
+  return { values: value, page: readPage(value), isPending, patch: dispatch };
 }
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -110,9 +74,4 @@ export function useSearchDraft(
   );
 
   return [draft ?? committed, change];
-}
-
-/** Turns an unknown thrown value into something worth putting in a toast. */
-export function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Something went wrong";
 }

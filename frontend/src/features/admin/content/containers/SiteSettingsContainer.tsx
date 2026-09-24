@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useOptimistic, useState, useTransition } from "react";
-import { toast } from "sonner";
+import { useCallback, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  type AdminAnnouncementInput,
   AdminSiteSettingsDocument,
   type AdminSiteSettingsFieldsFragment,
   UpdateAnnouncementDocument,
@@ -12,12 +12,12 @@ import {
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type {
   AnnouncementFormValues,
   SiteSettingsFormValues,
 } from "@/lib/validations/admin/content";
 
-import { toErrorMessage } from "@/features/admin/shell";
 import { ImageUploaderContainer } from "@/features/admin/uploads";
 
 import { AnnouncementForm } from "../components/AnnouncementForm";
@@ -34,6 +34,11 @@ import {
 
 type Settings = AdminSiteSettingsFieldsFragment;
 
+interface SettingsSave {
+  values: SiteSettingsFormValues;
+  hero: string | null;
+}
+
 function mergeSettings(
   current: Settings | null,
   patch: Partial<Settings>,
@@ -47,11 +52,8 @@ export function SiteSettingsContainer() {
   });
   const [updateSettings] = useMutation(UpdateSiteSettingsDocument);
   const [updateAnnouncement] = useMutation(UpdateAnnouncementDocument);
-  const [, startTransition] = useTransition();
   // The mutations return the whole settings row, so the payload becomes the baseline.
   const [saved, setSaved] = useState<Settings | null>(null);
-  const [isSavingSettings, setIsSavingSettings] = useState(false);
-  const [isSavingBar, setIsSavingBar] = useState(false);
   const [heroDraft, setHeroDraft] = useState<string | null | undefined>(
     undefined,
   );
@@ -62,53 +64,53 @@ export function SiteSettingsContainer() {
   const heroUrl =
     heroDraft === undefined ? (settings?.hero_image_url ?? null) : heroDraft;
 
+  const { execute: saveSettings, isPending: isSavingSettings } =
+    useOptimisticAction({
+      patch: ({ values, hero }: SettingsSave) =>
+        applyPatch(toSettingsPatch(values, hero)),
+      run: ({ values, hero }) =>
+        updateSettings({ variables: { input: toSettingsInput(values, hero) } }),
+      messages: {
+        success: "Settings saved",
+        failure: "The settings could not be saved",
+      },
+      onSuccess: (result) => {
+        if (result.data) setSaved(result.data.updateSiteSettings);
+      },
+    });
+
   const handleSettingsSubmit = useCallback(
     (values: SiteSettingsFormValues) => {
       const hero = heroUrl !== null && heroUrl.length > 0 ? heroUrl : null;
-      setIsSavingSettings(true);
-      startTransition(async () => {
-        applyPatch(toSettingsPatch(values, hero));
-        try {
-          const result = await updateSettings({
-            variables: { input: toSettingsInput(values, hero) },
-          });
-          if (result.data) setSaved(result.data.updateSiteSettings);
-          toast.success("Settings saved");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setIsSavingSettings(false);
-        }
-      });
+      saveSettings({ values, hero });
     },
-    [applyPatch, heroUrl, updateSettings],
+    [heroUrl, saveSettings],
   );
 
-  const handleAnnouncementSubmit = useCallback(
-    (values: AnnouncementFormValues) => {
-      const input = toAnnouncementInput(values);
-      setIsSavingBar(true);
-      startTransition(async () => {
+  const { execute: saveAnnouncement, isPending: isSavingBar } =
+    useOptimisticAction({
+      patch: (input: AdminAnnouncementInput) =>
         applyPatch({
           announcement_text: input.text ?? null,
           announcement_href: input.href ?? null,
-        });
-        try {
-          const result = await updateAnnouncement({ variables: { input } });
-          if (result.data) setSaved(result.data.updateAnnouncement);
-          toast.success(
-            input.text === null
-              ? "Announcement bar cleared"
-              : "Announcement saved",
-          );
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setIsSavingBar(false);
-        }
-      });
-    },
-    [applyPatch, updateAnnouncement],
+        }),
+      run: (input) => updateAnnouncement({ variables: { input } }),
+      messages: {
+        success: (input) =>
+          input.text === null
+            ? "Announcement bar cleared"
+            : "Announcement saved",
+        failure: "The announcement could not be saved",
+      },
+      onSuccess: (result) => {
+        if (result.data) setSaved(result.data.updateAnnouncement);
+      },
+    });
+
+  const handleAnnouncementSubmit = useCallback(
+    (values: AnnouncementFormValues) =>
+      saveAnnouncement(toAnnouncementInput(values)),
+    [saveAnnouncement],
   );
 
   if (!settings) {

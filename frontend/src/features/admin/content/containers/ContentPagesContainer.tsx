@@ -1,14 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -16,9 +9,9 @@ import {
   DeleteContentPageDocument,
 } from "@/graphql/generated/graphql";
 
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import { contentSlugSchema } from "@/lib/validations/admin/content";
 
-import { toErrorMessage } from "@/features/admin/shell";
 import { AdminConfirmDialog, AdminPageHeader } from "@/features/admin/ui";
 import { Button } from "@/components/ui/button";
 
@@ -42,8 +35,6 @@ export function ContentPagesContainer() {
     },
   );
   const [deletePage] = useMutation(DeleteContentPageDocument);
-  const [, startTransition] = useTransition();
-  const [busySlug, setBusySlug] = useState<string | null>(null);
   const [pendingSlug, setPendingSlug] = useState<string | null>(null);
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [newSlug, setNewSlug] = useState("");
@@ -64,24 +55,21 @@ export function ContentPagesContainer() {
 
   const [optimisticRows, dropRow] = useOptimistic(rows, withoutSlug);
 
+  const { execute: removePage, pending: busySlug } = useOptimisticAction({
+    patch: (slug: string) => dropRow(slug),
+    run: (slug) => deletePage({ variables: { slug } }),
+    refresh: refetch,
+    messages: {
+      success: (slug) => `/${slug} deleted`,
+      failure: "The page could not be deleted",
+    },
+  });
+
   const handleDelete = useCallback(() => {
     if (pendingSlug === null) return;
-    const slug = pendingSlug;
-    setBusySlug(slug);
     setPendingSlug(null);
-    startTransition(async () => {
-      dropRow(slug);
-      try {
-        await deletePage({ variables: { slug } });
-        await refetch();
-        toast.success(`/${slug} deleted`);
-      } catch (error) {
-        toast.error(toErrorMessage(error));
-      } finally {
-        setBusySlug(null);
-      }
-    });
-  }, [deletePage, dropRow, pendingSlug, refetch]);
+    removePage(pendingSlug);
+  }, [pendingSlug, removePage]);
 
   const handleCreate = useCallback(() => {
     const parsed = contentSlugSchema.safeParse(newSlug);

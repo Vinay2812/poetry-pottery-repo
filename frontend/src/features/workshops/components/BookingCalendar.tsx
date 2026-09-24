@@ -24,6 +24,7 @@ export interface BookingCalendarProps {
   selectedDate: string | null;
   canGoBack: boolean;
   canGoForward: boolean;
+  isLoading?: boolean;
   // Rendered straight under the week holding the selected day, so the hours sit where
   // the eye already is instead of a screen further down.
   slotPanel?: React.ReactNode;
@@ -92,6 +93,7 @@ export function BookingCalendar({
   selectedDate,
   canGoBack,
   canGoForward,
+  isLoading = false,
   slotPanel,
   onPreviousMonth,
   onNextMonth,
@@ -135,33 +137,47 @@ export function BookingCalendar({
         ))}
       </div>
 
-      <div className="flex flex-col gap-px bg-ash">
-        {weeks.map((week, weekIndex) => (
-          <Fragment key={weekIndex}>
-            <div className="grid grid-cols-7 gap-px">
-              {week.map((day, index) =>
-                day ? (
-                  <DayCell
-                    key={day.dateKey}
-                    day={day}
-                    isSelected={day.dateKey === selectedDate}
-                    onSelect={onSelectDate}
-                  />
-                ) : (
-                  <span
-                    key={`empty-${weekIndex}-${index}`}
-                    aria-hidden="true"
-                    className="aspect-square bg-background"
-                  />
-                ),
-              )}
-            </div>
-            {slotPanel && week.some((day) => day?.dateKey === selectedDate) && (
-              <div className="bg-background p-4">{slotPanel}</div>
-            )}
-          </Fragment>
-        ))}
-      </div>
+      {/* The month and its buttons stay put while a month loads, so keyboard focus is kept. */}
+      {isLoading ? (
+        <div className="grid grid-cols-7 gap-px bg-ash" aria-busy="true">
+          {Array.from({ length: 35 }, (_, index) => (
+            <span
+              key={index}
+              aria-hidden="true"
+              className="aspect-square animate-pulse bg-background"
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-col gap-px bg-ash">
+          {weeks.map((week, weekIndex) => (
+            <Fragment key={weekIndex}>
+              <div className="grid grid-cols-7 gap-px">
+                {week.map((day, index) =>
+                  day ? (
+                    <DayCell
+                      key={day.dateKey}
+                      day={day}
+                      isSelected={day.dateKey === selectedDate}
+                      onSelect={onSelectDate}
+                    />
+                  ) : (
+                    <span
+                      key={`empty-${weekIndex}-${index}`}
+                      aria-hidden="true"
+                      className="aspect-square bg-background"
+                    />
+                  ),
+                )}
+              </div>
+              {slotPanel &&
+                week.some((day) => day?.dateKey === selectedDate) && (
+                  <div className="bg-background p-4">{slotPanel}</div>
+                )}
+            </Fragment>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

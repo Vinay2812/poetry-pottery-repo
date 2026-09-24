@@ -8,6 +8,7 @@ import { Prisma, UserRole } from "@prisma/client";
 
 import { ClerkService } from "@/common/clerk/clerk.service";
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
+import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import { searchTerm, toUserRef } from "../admin.type";
 import type {
@@ -108,8 +109,7 @@ export class AdminUsersService {
     await this.byId(id);
     const row = await this.prisma.withTransaction(async () => {
       // Serialised, so two admins demoting each other at once cannot both count the other as the one left.
-      await this.prisma
-        .$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${ROLE_CHANGE_LOCK}))`;
+      await this.prisma.lock(LockNamespace.ROLE_CHANGE, ROLE_CHANGE_LOCK);
       // The studio must always have a way in, so the last admin cannot step down.
       if (role !== UserRole.ADMIN) {
         const others = await this.prisma.user.count({

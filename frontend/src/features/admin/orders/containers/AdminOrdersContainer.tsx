@@ -10,8 +10,8 @@ import {
   ExportOrdersDocument,
   OrderStatus,
 } from "@/graphql/generated/graphql";
+import { describeError } from "@/lib/apollo/errors";
 import { downloadCsv } from "@/lib/download";
-import { toErrorMessage } from "@/features/admin/shell";
 
 import { formatDate, formatInr } from "@/lib/format";
 
@@ -103,7 +103,7 @@ export function AdminOrdersContainer() {
       if (csv === undefined) throw new Error("The export came back empty");
       downloadCsv(`orders-${new Date().toISOString().slice(0, 10)}.csv`, csv);
     } catch (exportError) {
-      toast.error(toErrorMessage(exportError));
+      toast.error(describeError(exportError, "The export could not be made"));
     }
   }, [exportOrders, from, personId, search, status, to]);
 

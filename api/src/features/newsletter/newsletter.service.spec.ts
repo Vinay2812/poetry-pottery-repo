@@ -10,6 +10,7 @@ const anyDate: unknown = expect.any(Date);
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
   newsletterSubscriber: {
     findUnique: vi.fn(),
     findUniqueOrThrow: vi.fn(),

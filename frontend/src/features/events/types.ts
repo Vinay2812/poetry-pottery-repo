@@ -10,6 +10,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatTime } from "@/lib/format";
+import type { UrlCodec } from "@/lib/use-url-state";
 
 import type { StatusTone } from "@/features/orders/types";
 
@@ -222,6 +223,15 @@ export function toEventSearchParams(filters: EventFilters): URLSearchParams {
   if (filters.level) params.set("level", filters.level);
   return params;
 }
+
+export const EVENT_FILTERS_CODEC: UrlCodec<
+  EventFilters,
+  Partial<EventFilters>
+> = {
+  parse: parseEventFilters,
+  serialize: (filters) => toEventSearchParams(filters).toString(),
+  apply: (filters, patch) => ({ ...filters, ...patch }),
+};
 
 export function toEventsFilterInput(
   filters: EventFilters,

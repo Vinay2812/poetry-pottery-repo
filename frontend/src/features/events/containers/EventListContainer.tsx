@@ -1,10 +1,10 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useMemo, useOptimistic, useTransition } from "react";
+import { useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 import {
   type EventLevel,
@@ -21,10 +21,8 @@ import { EventGrid } from "@/features/events/components/EventGrid";
 import { useEvents } from "@/features/events/hooks";
 import {
   DEFAULT_EVENT_FILTERS,
-  type EventFilters as Filters,
-  parseEventFilters,
+  EVENT_FILTERS_CODEC,
   toEventPath,
-  toEventSearchParams,
   toEventTypeLabel,
   toEventWhenLabel,
   toSeatsLabel,
@@ -43,16 +41,12 @@ export function EventListContainer({
   initialEvents = null,
   initialFilterKey = null,
 }: EventListContainerProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const urlFilters = useMemo(
-    () => parseEventFilters(new URLSearchParams(searchParams.toString())),
-    [searchParams],
-  );
   // The chips answer on the click; the URL and the grid catch up inside the transition.
-  const [filters, setOptimisticFilters] = useOptimistic(urlFilters);
-  const [isFiltering, startTransition] = useTransition();
+  const {
+    value: filters,
+    isPending: isFiltering,
+    dispatch,
+  } = useUrlState(EVENT_FILTERS_CODEC);
   const {
     events,
     pageInfo,
@@ -63,36 +57,22 @@ export function EventListContainer({
     refetch,
   } = useEvents(filters, initialEvents, initialFilterKey);
 
-  const applyFilters = useCallback(
-    (next: Filters) => {
-      const query = toEventSearchParams(next).toString();
-      startTransition(() => {
-        setOptimisticFilters(next);
-        router.replace(query ? `${pathname}?${query}` : pathname, {
-          scroll: false,
-        });
-      });
-    },
-    [pathname, router, setOptimisticFilters],
-  );
-
   const handleWhenChange = useCallback(
-    (when: EventWhen) => applyFilters({ ...filters, when }),
-    [applyFilters, filters],
+    (when: EventWhen) => dispatch({ when }),
+    [dispatch],
   );
   // Level only applies to workshops, so it clears whenever the type changes.
   const handleEventTypeChange = useCallback(
-    (eventType: EventType | null) =>
-      applyFilters({ ...filters, eventType, level: null }),
-    [applyFilters, filters],
+    (eventType: EventType | null) => dispatch({ eventType, level: null }),
+    [dispatch],
   );
   const handleLevelChange = useCallback(
-    (level: EventLevel | null) => applyFilters({ ...filters, level }),
-    [applyFilters, filters],
+    (level: EventLevel | null) => dispatch({ level }),
+    [dispatch],
   );
   const handleClearFilters = useCallback(
-    () => applyFilters(DEFAULT_EVENT_FILTERS),
-    [applyFilters],
+    () => dispatch(DEFAULT_EVENT_FILTERS),
+    [dispatch],
   );
 
   const isPast = filters.when === EventWhen.Past;

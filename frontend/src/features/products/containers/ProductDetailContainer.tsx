@@ -34,6 +34,7 @@ import { StickyBuyBar } from "@/features/products/components/StickyBuyBar";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
   computeUnitPrice,
+  hasFailedPhoto,
   isPhotoUploadPending,
   MAX_REFERENCE_PHOTOS,
   type ProductDetailData,
@@ -202,6 +203,11 @@ export function ProductDetailContainer({
     }
     if (isPhotoUploadPending(photos)) {
       setPhotoError("Wait for the photos to finish uploading");
+      return;
+    }
+    // A failed photo would otherwise be dropped from the line without a word.
+    if (hasFailedPhoto(photos)) {
+      setPhotoError("Remove the photo that did not upload, or try it again");
       return;
     }
     addToCart(

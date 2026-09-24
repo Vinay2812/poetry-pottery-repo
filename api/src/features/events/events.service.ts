@@ -170,6 +170,24 @@ export class EventsService {
     return row ? toRegistration(row) : null;
   }
 
+  // The visitor's booking for each event in one query; null where they have none or are signed out.
+  async registrationsFor(
+    userId: number | null,
+    eventIds: number[],
+  ): Promise<Map<number, Registration | null>> {
+    const found = new Map<number, Registration | null>(
+      eventIds.map((id) => [id, null]),
+    );
+    if (userId === null) return found;
+    const now = new Date();
+    const rows = await this.prisma.eventRegistration.findMany({
+      where: { user_id: userId, event_id: { in: eventIds } },
+      include: registrationInclude,
+    });
+    for (const row of rows) found.set(row.event_id, toRegistration(row, now));
+    return found;
+  }
+
   async register(
     userId: number,
     input: RegisterForEventInput,
@@ -359,9 +377,7 @@ export class EventsService {
         reason?.trim().slice(0, 300) || "Cancelled by the guest",
       );
     });
-    const registration = toRegistration(row);
-    await this.notifyStatus(userId, registration);
-    return registration;
+    return toRegistration(row);
   }
 
   // Shared with the admin console; seat counts follow the holding states.
@@ -413,14 +429,17 @@ export class EventsService {
           );
         }
       }
-      return this.prisma.eventRegistration.findUniqueOrThrow({
+      const row = await this.prisma.eventRegistration.findUniqueOrThrow({
         where: { id: current.id },
         include: registrationInclude,
       });
+      // Queued on the transaction, so the guest hears only about a move that committed.
+      await this.notifyStatus(current.user_id, toRegistration(row));
+      return row;
     });
   }
 
-  async notifyStatus(
+  private async notifyStatus(
     userId: number,
     registration: Registration,
   ): Promise<void> {

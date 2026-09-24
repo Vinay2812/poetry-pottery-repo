@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -17,9 +10,10 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { DEFAULT_TIME_ZONE, safeTimeZone } from "@/lib/timezones";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { WorkshopConfigFormValues } from "@/lib/validations/admin/workshop";
 
-import { toErrorMessage, useAdminQueryState } from "@/features/admin/shell";
+import { useAdminQueryState } from "@/features/admin/shell";
 import { AdminPageHeader } from "@/features/admin/ui";
 import { ImageUploaderContainer } from "@/features/admin/uploads";
 
@@ -40,6 +34,31 @@ interface PickedImage {
   url: string | null;
 }
 
+function toConfigInput(
+  formValues: WorkshopConfigFormValues,
+  imageUrl: string | null,
+) {
+  return {
+    name: formValues.name,
+    description: formValues.description || null,
+    image_url: imageUrl,
+    is_active: formValues.is_active,
+    timezone: formValues.timezone,
+    opening_minutes: timeInputToMinutes(formValues.opening_time),
+    closing_minutes: timeInputToMinutes(formValues.closing_time),
+    slot_minutes: formValues.slot_minutes,
+    capacity_per_slot: formValues.capacity_per_slot,
+    booking_window_days: formValues.booking_window_days,
+    slot_span_days: formValues.slot_span_days,
+    closed_weekdays: formValues.closed_weekdays,
+  };
+}
+
+interface ConfigSave {
+  id: number;
+  input: ReturnType<typeof toConfigInput>;
+}
+
 export function WorkshopsContainer() {
   const { values, patch } = useAdminQueryState();
   const { data, previousData, loading, refetch } = useQuery(
@@ -57,7 +76,6 @@ export function WorkshopsContainer() {
     configs,
     applyConfigPatch,
   );
-  const [isSaving, startTransition] = useTransition();
   // The picked image is held against its studio so switching studios drops it.
   const [pickedImage, setPickedImage] = useState<PickedImage | null>(null);
 
@@ -87,35 +105,27 @@ export function WorkshopsContainer() {
   const timezone = safeTimeZone(storedTimezone);
   const hasBrokenTimezone = timezone !== storedTimezone;
 
+  // The payload carries the saved studio back, so there is nothing to refetch.
+  const { execute: saveConfig, isPending: isSaving } = useOptimisticAction({
+    patch: (save: ConfigSave) =>
+      patchConfigs({ id: save.id, changes: save.input }),
+    run: (save) =>
+      updateConfig({ variables: { id: save.id, input: save.input } }),
+    messages: {
+      success: "Settings saved",
+      failure: "The settings could not be saved",
+    },
+  });
+
   const handleSubmit = useCallback(
     (formValues: WorkshopConfigFormValues) => {
       if (!selected) return;
-      const input = {
-        name: formValues.name,
-        description: formValues.description || null,
-        image_url: currentImage,
-        is_active: formValues.is_active,
-        timezone: formValues.timezone,
-        opening_minutes: timeInputToMinutes(formValues.opening_time),
-        closing_minutes: timeInputToMinutes(formValues.closing_time),
-        slot_minutes: formValues.slot_minutes,
-        capacity_per_slot: formValues.capacity_per_slot,
-        booking_window_days: formValues.booking_window_days,
-        slot_span_days: formValues.slot_span_days,
-        closed_weekdays: formValues.closed_weekdays,
-      };
-      const id = selected.id;
-      startTransition(async () => {
-        patchConfigs({ id, changes: input });
-        try {
-          await updateConfig({ variables: { id, input } });
-          toast.success("Settings saved");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        }
+      saveConfig({
+        id: selected.id,
+        input: toConfigInput(formValues, currentImage),
       });
     },
-    [currentImage, patchConfigs, selected, updateConfig],
+    [currentImage, saveConfig, selected],
   );
 
   if (!selected) {

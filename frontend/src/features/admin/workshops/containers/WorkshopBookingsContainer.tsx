@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -17,10 +10,10 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatInr } from "@/lib/format";
+import { useReasonAction } from "@/lib/use-reason-action";
 
 import {
   formatEnumLabel,
-  toErrorMessage,
   useAdminQueryState,
   useSearchDraft,
 } from "@/features/admin/shell";
@@ -62,7 +55,7 @@ export interface WorkshopBookingsContainerProps {
   timezone: string;
 }
 
-interface PendingReason {
+interface BookingMove {
   id: string;
   status: RegistrationStatus;
 }
@@ -107,12 +100,6 @@ export function WorkshopBookingsContainer({
     items,
     applyBookingStatus,
   );
-  const [isSaving, startTransition] = useTransition();
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [pendingReason, setPendingReason] = useState<PendingReason | null>(
-    null,
-  );
-  const [reason, setReason] = useState("");
 
   const handleSearch = useCallback(
     (value: string) => patch({ search: value || null }),
@@ -145,38 +132,28 @@ export function WorkshopBookingsContainer({
     [optimisticItems],
   );
 
-  const applyStatus = useCallback(
-    (id: string, next: RegistrationStatus, reason: string | null) => {
-      setBusyId(id);
-      startTransition(async () => {
-        patchItems({ id, status: next });
-        try {
-          await setStatus({ variables: { id, status: next, reason } });
-          // The payload is one row; the list needs a fresh take on what is next.
-          await refetch();
-          setPendingReason(null);
-          setReason("");
-          toast.success(`Booking ${formatEnumLabel(next).toLowerCase()}`);
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setBusyId(null);
-        }
-      });
+  const move = useReasonAction({
+    patch: ({ target }) => patchItems(target),
+    // The payload is one row; the list needs a fresh take on what is next.
+    run: ({ target, reason }) =>
+      setStatus({
+        variables: { id: target.id, status: target.status, reason },
+      }),
+    refresh: refetch,
+    policy: (target: BookingMove) =>
+      registrationActionNeedsReason(target.status) ? "required" : "none",
+    requiredMessage: "Tell them why, in a line",
+    messages: {
+      success: ({ target }) =>
+        `Booking ${formatEnumLabel(target.status).toLowerCase()}`,
+      failure: "The booking could not be moved",
     },
-    [patchItems, refetch, setStatus],
-  );
+  });
 
+  const startMove = move.start;
   const handleAction = useCallback(
-    (id: string, next: RegistrationStatus) => {
-      if (registrationActionNeedsReason(next)) {
-        setReason("");
-        setPendingReason({ id, status: next });
-        return;
-      }
-      applyStatus(id, next, null);
-    },
-    [applyStatus],
+    (id: string, next: RegistrationStatus) => startMove({ id, status: next }),
+    [startMove],
   );
 
   const pageInfo = result?.page_info;
@@ -230,8 +207,8 @@ export function WorkshopBookingsContainer({
       )}
       <WorkshopBookingsTable
         rows={rows}
-        isBusy={isNavigating || isSaving}
-        busyId={busyId}
+        isBusy={isNavigating || move.isPending}
+        busyId={move.pending?.id ?? null}
         onAction={handleAction}
       />
       <AdminPagination
@@ -242,9 +219,9 @@ export function WorkshopBookingsContainer({
         onPageChange={(next) => patch({ page: String(next) })}
       />
       <AdminReasonDialog
-        isOpen={pendingReason !== null}
+        isOpen={move.target !== null}
         title={
-          pendingReason?.status === RegistrationStatus.Rejected
+          move.target?.status === RegistrationStatus.Rejected
             ? "Turn this booking down?"
             : "Cancel this booking?"
         }
@@ -252,22 +229,18 @@ export function WorkshopBookingsContainer({
         fieldLabel="Reason"
         hint="The guest reads this, so keep it kind"
         placeholder="The wheel is booked that afternoon"
-        value={reason}
-        error={undefined}
+        value={move.reason}
+        error={move.error}
         confirmLabel={
-          pendingReason ? registrationActionLabel(pendingReason.status) : ""
+          move.target ? registrationActionLabel(move.target.status) : ""
         }
         isDestructive
         isRequired
-        isBusy={busyId !== null}
-        onValueChange={setReason}
-        onConfirm={() => {
-          if (pendingReason) {
-            applyStatus(pendingReason.id, pendingReason.status, reason.trim());
-          }
-        }}
+        isBusy={move.isPending}
+        onValueChange={move.setReason}
+        onConfirm={move.confirm}
         onOpenChange={(isOpen) => {
-          if (!isOpen) setPendingReason(null);
+          if (!isOpen) move.close();
         }}
       />
     </section>

@@ -5,20 +5,36 @@ import {
   ObjectType,
   registerEnumType,
 } from "@nestjs/graphql";
+import { UploadPurpose as StoredPurpose } from "@prisma/client";
 
-export enum UploadPurpose {
-  PRODUCT = "PRODUCT",
-  CATEGORY = "CATEGORY",
-  GLAZE = "GLAZE",
-  COLLECTION = "COLLECTION",
-  EVENT = "EVENT",
-  HERO = "HERO",
-  CONTENT = "CONTENT",
-  REVIEW = "REVIEW",
-  ORDER_NOTE = "ORDER_NOTE",
-}
+// The purposes the console presigns for; a shopper's reference photos never come through it.
+export const UploadPurpose = {
+  PRODUCT: StoredPurpose.PRODUCT,
+  CATEGORY: StoredPurpose.CATEGORY,
+  GLAZE: StoredPurpose.GLAZE,
+  COLLECTION: StoredPurpose.COLLECTION,
+  EVENT: StoredPurpose.EVENT,
+  HERO: StoredPurpose.HERO,
+  CONTENT: StoredPurpose.CONTENT,
+  REVIEW: StoredPurpose.REVIEW,
+  ORDER_NOTE: StoredPurpose.ORDER_NOTE,
+} as const;
+
+export type UploadPurpose = (typeof UploadPurpose)[keyof typeof UploadPurpose];
 
 registerEnumType(UploadPurpose, { name: "UploadPurpose" });
+
+@ObjectType()
+export class UploadTicket {
+  @Field()
+  upload_url!: string;
+
+  @Field()
+  public_url!: string;
+
+  @Field()
+  key!: string;
+}
 
 @ObjectType()
 export class ImageSpec {

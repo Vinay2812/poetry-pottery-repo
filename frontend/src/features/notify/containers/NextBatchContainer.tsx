@@ -6,7 +6,8 @@ import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { useMutation } from "@apollo/client/react";
 import { NotifyWhenBackInStockDocument } from "@/graphql/generated/graphql";
 
-import { toServerMessage } from "@/features/content/types";
+import { describeError } from "@/lib/apollo/errors";
+
 import { NextBatchForm } from "@/features/notify/components/NextBatchForm";
 import {
   ALREADY_WAITING_LINE,
@@ -55,7 +56,7 @@ export function NextBatchContainer({ productId }: NextBatchContainerProps) {
       } catch (error) {
         setResult({
           state: "error",
-          message: toServerMessage(
+          message: describeError(
             error,
             "We could not add you just now. Try again in a minute.",
           ),

@@ -8,8 +8,8 @@ import { ProductsService } from "@/features/products/products.service";
 import { SearchService } from "@/features/search/search.service";
 import { missingRow } from "@test/helpers/prisma-errors";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
-import { NotificationsService } from "@/features/notifications/notifications.service";
-import { UploadsService } from "../uploads/uploads.service";
+import { ShelfService } from "@/features/products/shelf.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import {
   assertSecond,
   cleanList,
@@ -33,6 +33,7 @@ const row = {
 };
 
 const prismaMock = {
+  withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
   product: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
@@ -57,8 +58,12 @@ const prismaMock = {
 };
 const productsMock = { invalidateCatalogCache: vi.fn() };
 const searchMock = { requestProductIndex: vi.fn() };
-const uploadsMock = { assertConfirmed: vi.fn() };
-const notificationsMock = { announceRestock: vi.fn() };
+const uploadsMock = { claimConfirmed: vi.fn() };
+const shelfMock = {
+  adjust: vi.fn(),
+  setListed: vi.fn(),
+  setMadeToOrder: vi.fn(),
+};
 const loggerMock = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 
 function input(overrides: Record<string, unknown> = {}) {
@@ -99,7 +104,9 @@ describe("AdminProductsService", () => {
     prismaMock.category.count.mockResolvedValue(2);
     prismaMock.collection.count.mockResolvedValue(1);
     prismaMock.glaze.count.mockResolvedValue(1);
-    prismaMock.product.updateManyAndReturn.mockResolvedValue([{ stock: 2 }]);
+    shelfMock.adjust.mockResolvedValue(2);
+    shelfMock.setListed.mockResolvedValue(true);
+    shelfMock.setMadeToOrder.mockResolvedValue(true);
     const moduleRef = await Test.createTestingModule({
       providers: [
         AdminProductsService,
@@ -107,7 +114,7 @@ describe("AdminProductsService", () => {
         { provide: ProductsService, useValue: productsMock },
         { provide: SearchService, useValue: searchMock },
         { provide: UploadsService, useValue: uploadsMock },
-        { provide: NotificationsService, useValue: notificationsMock },
+        { provide: ShelfService, useValue: shelfMock },
         { provide: WINSTON_MODULE_PROVIDER, useValue: loggerMock },
       ],
     }).compile();
@@ -170,7 +177,7 @@ describe("AdminProductsService", () => {
       input({ image_urls: ["https://cdn.example.com/products/one.png"] }),
     );
 
-    expect(uploadsMock.assertConfirmed).toHaveBeenCalledWith(
+    expect(uploadsMock.claimConfirmed).toHaveBeenCalledWith(
       ["https://cdn.example.com/products/one.png"],
       [],
       "PRODUCT",
@@ -205,12 +212,25 @@ describe("AdminProductsService", () => {
     );
   });
 
-  it("toggles the archive flag", async () => {
+  it("toggles the listing through the shelf, which owns the back-in-stock edge", async () => {
     await service.setActive(1, false);
 
-    expect(prismaMock.product.update).toHaveBeenCalledWith(
-      containing({ data: { is_active: false } }),
-    );
+    expect(shelfMock.setListed).toHaveBeenCalledWith(1, false);
+  });
+
+  it("routes a made-to-order flip through the shelf, inside the same write", async () => {
+    await service.update(1, { is_customizable: true });
+
+    expect(shelfMock.setMadeToOrder).toHaveBeenCalledWith(1, true);
+    expect(prismaMock.withTransaction).toHaveBeenCalled();
+    const call = prismaMock.product.update.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(call.data).not.toHaveProperty("is_customizable");
+
+    vi.clearAllMocks();
+    await service.update(1, { name: "Slate mug" });
+    expect(shelfMock.setMadeToOrder).not.toHaveBeenCalled();
   });
 
   it("refuses to put an empty batch on the shelf", async () => {
@@ -218,29 +238,27 @@ describe("AdminProductsService", () => {
       service.create(input({ stock: 0, is_customizable: false })),
     ).rejects.toBeInstanceOf(BadRequestException);
 
-    prismaMock.product.findUnique.mockResolvedValue({
+    prismaMock.product.findUnique.mockResolvedValueOnce({
       stock: 0,
       is_customizable: false,
     });
     await expect(service.setActive(1, true)).rejects.toBeInstanceOf(
       BadRequestException,
     );
-    expect(prismaMock.product.update).not.toHaveBeenCalled();
+    expect(shelfMock.setListed).not.toHaveBeenCalled();
   });
 
   it("lets a made-to-order piece go live with nothing in stock", async () => {
     await service.create(input({ stock: 0, is_customizable: true }));
 
-    prismaMock.product.findUnique.mockResolvedValue({
+    prismaMock.product.findUnique.mockResolvedValueOnce({
       stock: 0,
       is_customizable: true,
     });
     await service.setActive(1, true);
 
     expect(prismaMock.product.create).toHaveBeenCalled();
-    expect(prismaMock.product.update).toHaveBeenCalledWith(
-      containing({ data: { is_active: true } }),
-    );
+    expect(shelfMock.setListed).toHaveBeenCalledWith(1, true);
   });
 
   it("keeps a live piece editable after it sells out", async () => {
@@ -257,44 +275,23 @@ describe("AdminProductsService", () => {
     expect(prismaMock.product.update).toHaveBeenCalled();
   });
 
-  it("adjusts stock conditionally and logs the reason", async () => {
-    prismaMock.product.updateManyAndReturn.mockResolvedValue([{ stock: 2 }]);
-
+  it("moves the count through the shelf and logs the reason", async () => {
     await service.adjustStock(1, -2, "Two broke in the kiln");
 
-    expect(prismaMock.product.updateManyAndReturn).toHaveBeenCalledWith(
-      containing({
-        where: { id: 1, stock: { gte: 2 } },
-        data: { stock: { increment: -2 } },
-      }),
-    );
+    expect(shelfMock.adjust).toHaveBeenCalledWith(1, -2);
     expect(loggerMock.info).toHaveBeenCalledWith(
       "stock adjusted",
       containing({ reason: "Two broke in the kiln" }),
     );
   });
 
-  it("refuses a stock adjustment that would go negative", async () => {
-    prismaMock.product.updateManyAndReturn.mockResolvedValue([]);
+  it("refuses a stock adjustment the shelf cannot give", async () => {
+    shelfMock.adjust.mockResolvedValue(null);
 
     await expect(
       service.adjustStock(1, -9, "Counted the shelf"),
     ).rejects.toBeInstanceOf(BadRequestException);
-  });
-
-  it("announces a restock only when the shelf was empty before the top-up", async () => {
-    prismaMock.product.updateManyAndReturn.mockResolvedValue([{ stock: 3 }]);
-    await service.adjustStock(1, 3, "Out of the kiln");
-    expect(notificationsMock.announceRestock).toHaveBeenCalledWith(1);
-
-    notificationsMock.announceRestock.mockClear();
-    prismaMock.product.updateManyAndReturn.mockResolvedValue([{ stock: 5 }]);
-    await service.adjustStock(1, 3, "Topping up a shelf that was not empty");
-    expect(notificationsMock.announceRestock).not.toHaveBeenCalled();
-
-    prismaMock.product.updateManyAndReturn.mockResolvedValue([{ stock: 1 }]);
-    await service.adjustStock(1, -2, "Two sold at the market");
-    expect(notificationsMock.announceRestock).not.toHaveBeenCalled();
+    expect(searchMock.requestProductIndex).not.toHaveBeenCalled();
   });
 
   it("demands a reason for a stock adjustment", async () => {
@@ -445,12 +442,13 @@ describe("AdminProductsService", () => {
     );
   });
 
-  it("answers not found when the piece was archived out from under the toggle", async () => {
-    prismaMock.product.update.mockRejectedValue(missingRow());
+  it("answers not found when the piece was deleted out from under the toggle", async () => {
+    prismaMock.product.findUnique.mockResolvedValue(null);
 
     await expect(service.setActive(1, false)).rejects.toBeInstanceOf(
       NotFoundException,
     );
+    expect(shelfMock.setListed).not.toHaveBeenCalled();
   });
 
   it("answers not found when an option group is added to a piece that is gone", async () => {

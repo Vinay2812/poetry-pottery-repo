@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 import { toast } from "sonner";
 
 import { useLazyQuery, useMutation, useQuery } from "@apollo/client/react";
@@ -16,11 +10,10 @@ import {
   UnsubscribeSubscriberDocument,
 } from "@/graphql/generated/graphql";
 
-import {
-  toErrorMessage,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { describeError } from "@/lib/apollo/errors";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
+
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import { AdminConfirmDialog, AdminPagination } from "@/features/admin/ui";
 
 import { SubscribersFilters } from "@/features/admin/inbox/components/SubscribersFilters";
@@ -54,10 +47,8 @@ export function SubscribersContainer() {
       fetchPolicy: "network-only",
     },
   );
-  const [busyEmail, setBusyEmail] = useState<string | null>(null);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
-  const [, startTransition] = useTransition();
 
   const result =
     data?.adminNewsletterSubscribers ??
@@ -79,24 +70,22 @@ export function SubscribersContainer() {
     handleSearchCommit,
   );
 
+  const { execute: removeSubscriber, pending: busyEmail } = useOptimisticAction(
+    {
+      patch: (email: string) => patchRows({ email }),
+      run: (email) => unsubscribe({ variables: { email } }),
+      refresh: refetch,
+      messages: {
+        success: "Taken off the list",
+        failure: "That address could not be unsubscribed",
+      },
+      onSuccess: () => setPendingEmail(null),
+    },
+  );
+
   const handleConfirmUnsubscribe = useCallback(() => {
-    const email = pendingEmail;
-    if (email === null) return;
-    setBusyEmail(email);
-    startTransition(async () => {
-      patchRows({ email });
-      try {
-        await unsubscribe({ variables: { email } });
-        await refetch();
-        setPendingEmail(null);
-        toast.success("Taken off the list");
-      } catch (unsubscribeError) {
-        toast.error(toErrorMessage(unsubscribeError));
-      } finally {
-        setBusyEmail(null);
-      }
-    });
-  }, [patchRows, pendingEmail, refetch, unsubscribe]);
+    if (pendingEmail !== null) removeSubscriber(pendingEmail);
+  }, [pendingEmail, removeSubscriber]);
 
   const handleUnsubscribeRequest = useCallback((email: string) => {
     setPendingEmail(email);
@@ -117,7 +106,7 @@ export function SubscribersContainer() {
       if (csv === undefined) throw new Error("The export came back empty");
       downloadCsv(toSubscribersCsvName(new Date()), csv);
     } catch (exportError) {
-      toast.error(toErrorMessage(exportError));
+      toast.error(describeError(exportError, "The export could not be made"));
     } finally {
       setIsExporting(false);
     }
@@ -137,7 +126,9 @@ export function SubscribersContainer() {
   if (!result) {
     return (
       <p className="text-[13px]">
-        {error ? toErrorMessage(error) : "Subscribers could not be loaded."}
+        {error
+          ? describeError(error, "Subscribers could not be loaded.")
+          : "Subscribers could not be loaded."}
       </p>
     );
   }

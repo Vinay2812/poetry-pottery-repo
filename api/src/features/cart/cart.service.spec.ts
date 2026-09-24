@@ -1,11 +1,12 @@
+import { BadRequestException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
-import { OptionGroupKind } from "@prisma/client";
+import { OptionGroupKind, UploadPurpose } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import { SettingsService } from "@/features/settings/settings.service";
-import { PendingUploadsService } from "@/storage/pending-uploads.service";
-import { StorageService } from "@/storage/storage.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import {
   CartService,
   MAX_LINE_QUANTITY,
@@ -18,6 +19,8 @@ const containing = (value: Record<string, unknown>): unknown =>
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
+  lock: vi.fn(),
   $executeRaw: vi.fn().mockResolvedValue(1),
   cartItem: {
     aggregate: vi.fn(),
@@ -32,14 +35,7 @@ const prismaMock = {
   product: { findFirst: vi.fn() },
 };
 
-const storageMock = {
-  isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.test/")),
-  isUploadedUnder: vi.fn((url: string, prefix: string) =>
-    url.startsWith(`https://cdn.test/${prefix}`),
-  ),
-};
-
-const pendingUploadsMock = { keep: vi.fn(), track: vi.fn(), sweep: vi.fn() };
+const uploadsMock = { claim: vi.fn(), release: vi.fn() };
 
 const settingsMock = {
   get: vi
@@ -244,8 +240,7 @@ describe("CartService", () => {
         CartService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: SettingsService, useValue: settingsMock },
-        { provide: StorageService, useValue: storageMock },
-        { provide: PendingUploadsService, useValue: pendingUploadsMock },
+        { provide: UploadsService, useValue: uploadsMock },
       ],
     }).compile();
     service = moduleRef.get(CartService);
@@ -290,10 +285,13 @@ describe("CartService", () => {
         create: containing({ quantity: 3, selection_key: "" }),
       }),
     );
-    expect(prismaMock.$executeRaw).toHaveBeenCalled();
+    expect(prismaMock.lock).toHaveBeenCalledWith(
+      LockNamespace.CART_LINE,
+      [1, 1],
+    );
   });
 
-  it("stores reference photos on a custom line and rejects foreign URLs", async () => {
+  it("stores reference photos on a custom line and claims them inside the write", async () => {
     prismaMock.product.findFirst.mockResolvedValue(
       productRow({ is_customizable: true }),
     );
@@ -314,20 +312,15 @@ describe("CartService", () => {
         }),
       }),
     );
-
-    // The photo is on a line now, so the sweeper must stop counting it as abandoned.
-    expect(pendingUploadsMock.keep).toHaveBeenCalledWith(1, [
+    // The line holds the photo now; the claim is what proves it was this shopper's upload.
+    expect(uploadsMock.claim).toHaveBeenCalledWith(1, UploadPurpose.REFERENCE, [
       "https://cdn.test/customization/1/a.jpg",
     ]);
+    expect(prismaMock.withTransaction).toHaveBeenCalled();
 
-    await expect(
-      service.add(1, {
-        product_id: 1,
-        quantity: 1,
-        reference_image_urls: ["https://evil.test/a.jpg"],
-      }),
-    ).rejects.toThrow("was not uploaded");
-    // Another shopper's upload in the same bucket is not this shopper's reference.
+    uploadsMock.claim.mockRejectedValueOnce(
+      new BadRequestException("That photo was not uploaded through the site"),
+    );
     await expect(
       service.add(1, {
         product_id: 1,
@@ -347,17 +340,59 @@ describe("CartService", () => {
     expect(prismaMock.product.findFirst).not.toHaveBeenCalled();
   });
 
-  it("removes a line when the quantity drops to zero", async () => {
+  it("removes a line when the quantity drops to zero and releases its photos", async () => {
     prismaMock.cartItem.findFirst.mockResolvedValue({
       id: 9,
       product: { stock: 5, is_customizable: false },
     });
+    prismaMock.cartItem.findMany.mockResolvedValueOnce([
+      {
+        id: 9,
+        selections: {
+          options: [],
+          reference_image_urls: ["https://cdn.test/customization/1/a.jpg"],
+        },
+      },
+    ]);
 
     await service.updateQuantity(1, 9, 0);
 
-    expect(prismaMock.cartItem.delete).toHaveBeenCalledWith({
-      where: { id: 9 },
+    expect(prismaMock.cartItem.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: [9] } },
     });
+    expect(uploadsMock.release).toHaveBeenCalledWith([
+      "https://cdn.test/customization/1/a.jpg",
+    ]);
+  });
+
+  it("releases the photos of every line a clear takes away, and nothing for an empty cart", async () => {
+    prismaMock.cartItem.findMany.mockResolvedValueOnce([
+      { id: 1, selections: null },
+      {
+        id: 2,
+        selections: {
+          options: [],
+          reference_image_urls: ["https://cdn.test/customization/1/b.jpg"],
+        },
+      },
+    ]);
+
+    await service.clear(1);
+
+    expect(prismaMock.cartItem.findMany).toHaveBeenCalledWith(
+      containing({ where: { user_id: 1 } }),
+    );
+    expect(prismaMock.cartItem.deleteMany).toHaveBeenCalledWith({
+      where: { id: { in: [1, 2] } },
+    });
+    expect(uploadsMock.release).toHaveBeenCalledWith([
+      "https://cdn.test/customization/1/b.jpg",
+    ]);
+
+    vi.clearAllMocks();
+    await service.remove(1, 7);
+    expect(prismaMock.cartItem.deleteMany).not.toHaveBeenCalled();
+    expect(uploadsMock.release).not.toHaveBeenCalled();
   });
 
   it("totals only available lines and applies free shipping", async () => {

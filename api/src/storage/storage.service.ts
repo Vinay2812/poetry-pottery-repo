@@ -25,11 +25,6 @@ export const UPLOAD_FOLDERS = [
 ] as const;
 export type UploadFolder = (typeof UPLOAD_FOLDERS)[number];
 
-// Reference photos land under the uploader's id, so a check on this prefix proves whose photo it is.
-export function customizationPrefix(userId: number): string {
-  return `customization/${userId}/`;
-}
-
 export const ALLOWED_IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
@@ -107,10 +102,6 @@ export class StorageService {
   }
 
   // The object key behind one of our own public urls, or null for anyone else's.
-  isUploadedUnder(url: string, prefix: string): boolean {
-    return this.keyFor(url)?.startsWith(prefix) ?? false;
-  }
-
   keyFor(url: string): string | null {
     if (!this.config || !this.isOwnUrl(url)) return null;
     return url.slice(this.config.publicUrl.length + 1) || null;

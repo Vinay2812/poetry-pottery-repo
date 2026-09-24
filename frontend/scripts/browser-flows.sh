@@ -296,7 +296,7 @@ flow_shop() {
   local before
   before="$(count_matching 'to cart$')"
   note "add-to-cart buttons before filtering: $before"
-  act "filter to mugs" find role checkbox check --name "Mugs 4"
+  act "filter to mugs" click '[id$="-category-mugs"]'
   settle 2500
   expect_url "categor"
   local after
@@ -519,7 +519,7 @@ flow_seconds() {
   start_flow seconds
   goto "/products"
   expect_text "Seconds" "the shelf lists the seconds filter"
-  act "turn the seconds shelf on" click "#filter-seconds" || {
+  act "turn the seconds shelf on" click '[id$="-filter-seconds"]' || {
     end_flow
     return
   }

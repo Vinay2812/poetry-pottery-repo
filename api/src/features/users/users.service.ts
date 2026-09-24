@@ -3,6 +3,7 @@ import { type User } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import type { Logger } from "winston";
 
+import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 
 export interface ProvisionUserInput {
@@ -56,8 +57,7 @@ export class UsersService {
     // A first sign-in fires several queries at once. The lock holds everyone but the first
     // behind the insert, so the rest read the row back instead of racing it into P2002.
     return this.prisma.withTransaction(async () => {
-      await this.prisma
-        .$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${input.auth_id}))`;
+      await this.prisma.lock(LockNamespace.USER_PROVISION, input.auth_id);
 
       const byAuth = await this.prisma.user.findUnique({
         where: { auth_id: input.auth_id },

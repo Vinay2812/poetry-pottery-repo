@@ -10,13 +10,13 @@ import {
   OrderStatus,
   Prisma,
   RegistrationStatus,
+  UploadPurpose,
 } from "@prisma/client";
 
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
-import { QueueService } from "@/queue/queue.service";
-import { RedisService } from "@/redis/redis.service";
-import { StorageService, type UploadTarget } from "@/storage/storage.service";
+import type { UploadTarget } from "@/storage/storage.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import type {
   RatingSummary,
   Review,
@@ -28,16 +28,8 @@ import type {
 
 const MAX_BODY = 1000;
 const MAX_IMAGES = 3;
-const REVIEW_FOLDER = "reviews";
-// A photo waits a day for the review it belongs to; after that it is an orphan in the bucket.
-const PENDING_UPLOAD_SECONDS = 24 * 60 * 60;
-const MAX_PENDING_UPLOADS = 12;
 const ALREADY_REVIEWED =
   "You have already reviewed this. Edit your review instead.";
-
-function pendingUploadsKey(userId: number): string {
-  return `reviews:uploads:${userId}`;
-}
 
 export const reviewInclude = {
   user: { select: { name: true, image: true } },
@@ -48,6 +40,7 @@ export const reviewInclude = {
 type ReviewRow = Prisma.ReviewGetPayload<{ include: typeof reviewInclude }>;
 
 export type ReviewSubject = { product_id: number } | { event_id: number };
+export type ReviewSubjectKind = "product_id" | "event_id";
 
 // A row always carries exactly one of the two foreign keys; the schema allows both to be null.
 export function subjectOf(row: {
@@ -107,9 +100,7 @@ export function summariseCounts(
 export class ReviewsService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly storage: StorageService,
-    private readonly redis: RedisService,
-    private readonly queue: QueueService,
+    private readonly uploads: UploadsService,
   ) {}
 
   async list(
@@ -198,13 +189,103 @@ export class ReviewsService {
     return { can_review: reason === null, reason, my_review: null };
   }
 
+  // The rules of eligibility() for a whole list, in at most two queries; the integration suite checks they agree.
+  async eligibilityFor(
+    kind: ReviewSubjectKind,
+    ids: number[],
+    userId: number | null,
+  ): Promise<Map<number, ReviewEligibility>> {
+    if (userId === null) {
+      return new Map(
+        ids.map((id) => [
+          id,
+          { can_review: false, reason: "Sign in to review", my_review: null },
+        ]),
+      );
+    }
+    const reviews = await this.prisma.review.findMany({
+      where: {
+        user_id: userId,
+        ...(kind === "product_id"
+          ? { product_id: { in: ids } }
+          : { event_id: { in: ids } }),
+      },
+      include: reviewInclude,
+    });
+    const found = new Map<number, ReviewEligibility>();
+    for (const row of reviews) {
+      const id = kind === "product_id" ? row.product_id : row.event_id;
+      if (id !== null) {
+        found.set(id, {
+          can_review: true,
+          reason: null,
+          my_review: toReview(row, userId),
+        });
+      }
+    }
+    const unreviewed = ids.filter((id) => !found.has(id));
+    if (unreviewed.length === 0) return found;
+    const eligible =
+      kind === "product_id"
+        ? await this.deliveredProductIds(unreviewed, userId)
+        : await this.attendedEventIds(unreviewed, userId);
+    const reason =
+      kind === "product_id"
+        ? "You can review a piece once it has been delivered to you"
+        : "You can review an event after attending it";
+    for (const id of unreviewed) {
+      found.set(
+        id,
+        eligible.has(id)
+          ? { can_review: true, reason: null, my_review: null }
+          : { can_review: false, reason, my_review: null },
+      );
+    }
+    return found;
+  }
+
+  private async deliveredProductIds(
+    productIds: number[],
+    userId: number,
+  ): Promise<Set<number>> {
+    const lines = await this.prisma.orderItem.findMany({
+      where: {
+        product_id: { in: productIds },
+        order: { user_id: userId, status: OrderStatus.DELIVERED },
+      },
+      select: { product_id: true },
+      distinct: ["product_id"],
+    });
+    return new Set(lines.map((line) => line.product_id));
+  }
+
+  private async attendedEventIds(
+    eventIds: number[],
+    userId: number,
+  ): Promise<Set<number>> {
+    const seats = await this.prisma.eventRegistration.findMany({
+      where: {
+        event_id: { in: eventIds },
+        user_id: userId,
+        status: RegistrationStatus.CONFIRMED,
+        event: {
+          OR: [
+            { status: EventStatus.COMPLETED },
+            { ends_at: { lt: new Date() } },
+          ],
+        },
+      },
+      select: { event_id: true },
+    });
+    return new Set(seats.map((seat) => seat.event_id));
+  }
+
   async create(
     subject: ReviewSubject,
     userId: number,
     input: ReviewInput,
   ): Promise<Review> {
     const data = this.validate(input);
-    this.assertOwnPhotos(userId, data.image_urls, []);
     const row = await this.prisma
       .withTransaction(async () => {
         await this.lockSubject(subject);
@@ -222,6 +303,8 @@ export class ReviewsService {
           data: { ...subject, user_id: userId, ...data },
           include: reviewInclude,
         });
+        // The review holds its photos now; only this reviewer's own uploads pass.
+        await this.uploads.claim(userId, UploadPurpose.REVIEW, data.image_urls);
         await this.refreshRating(subject);
         return created;
       })
@@ -235,7 +318,6 @@ export class ReviewsService {
         }
         throw error;
       });
-    await this.settleImages(userId, data.image_urls, []);
     return toReview(row, userId);
   }
 
@@ -245,35 +327,37 @@ export class ReviewsService {
     input: ReviewInput,
   ): Promise<Review> {
     const data = this.validate(input);
-    const { row, previousImages } = await this.prisma.withTransaction(
-      async () => {
-        const current = await this.prisma.review.findFirst({
-          where: { id, user_id: userId },
-        });
-        if (!current) {
-          throw new NotFoundException("Review not found");
-        }
-        this.assertOwnPhotos(userId, data.image_urls, current.image_urls);
-        await this.lockSubject(subjectOf(current));
-        const updated = await this.prisma.review.update({
-          where: { id },
-          data,
-          include: reviewInclude,
-        });
-        await this.refreshRating(subjectOf(current));
-        return { row: updated, previousImages: current.image_urls };
-      },
-    );
-    await this.settleImages(
-      userId,
-      data.image_urls,
-      previousImages.filter((url) => !data.image_urls.includes(url)),
-    );
+    const row = await this.prisma.withTransaction(async () => {
+      const current = await this.prisma.review.findFirst({
+        where: { id, user_id: userId },
+      });
+      if (!current) {
+        throw new NotFoundException("Review not found");
+      }
+      await this.lockSubject(subjectOf(current));
+      const updated = await this.prisma.review.update({
+        where: { id },
+        data,
+        include: reviewInclude,
+      });
+      await this.uploads.claim(
+        userId,
+        UploadPurpose.REVIEW,
+        data.image_urls,
+        current.image_urls,
+      );
+      await this.refreshRating(subjectOf(current));
+      // The photos it let go are only deleted once the new set is committed.
+      await this.uploads.release(
+        current.image_urls.filter((url) => !data.image_urls.includes(url)),
+      );
+      return updated;
+    });
     return toReview(row, userId);
   }
 
   async remove(id: number, userId: number, isAdmin = false): Promise<boolean> {
-    const images = await this.prisma.withTransaction(async () => {
+    await this.prisma.withTransaction(async () => {
       const current = await this.prisma.review.findFirst({
         where: isAdmin ? { id } : { id, user_id: userId },
       });
@@ -284,14 +368,12 @@ export class ReviewsService {
       await this.lockSubject(subject);
       await this.prisma.review.delete({ where: { id } });
       await this.refreshRating(subject);
-      return current.image_urls;
+      await this.uploads.release(current.image_urls);
     });
-    await this.discardImages(images);
     return true;
   }
 
-  // A presigned URL is only minted for someone who may actually review this piece or event, and
-  // every key is parked for a day so anything that never reaches a review can be swept.
+  // A presigned URL is only minted for someone who may actually review this piece or event.
   async createImageUpload(
     userId: number,
     input: ReviewUploadInput,
@@ -310,75 +392,11 @@ export class ReviewsService {
     if (reason && !existing) {
       throw new ForbiddenException(reason);
     }
-    const pendingKey = pendingUploadsKey(userId);
-    const { expired, pending } = await this.redis.sweepPending(
-      pendingKey,
-      Date.now() - PENDING_UPLOAD_SECONDS * 1000,
-    );
-    await this.deleteObjects(expired);
-    if (pending >= MAX_PENDING_UPLOADS) {
-      throw new BadRequestException(
-        "Too many photos are waiting on a review; post the ones you have first",
-      );
-    }
-    const target = await this.storage.createImageUpload({
-      folder: REVIEW_FOLDER,
-      subfolder: String(userId),
+    return this.uploads.issue(userId, UploadPurpose.REVIEW, {
       filename: input.filename,
       content_type: input.content_type,
       size: input.size,
     });
-    await this.redis.trackPending(
-      pendingKey,
-      target.key,
-      PENDING_UPLOAD_SECONDS,
-    );
-    return target;
-  }
-
-  // Photos that reached a review stop waiting to be swept; the ones it let go are reclaimed now.
-  private async settleImages(
-    userId: number,
-    kept: string[],
-    dropped: string[],
-  ): Promise<void> {
-    await this.redis.dropPending(pendingUploadsKey(userId), this.toKeys(kept));
-    await this.discardImages(dropped);
-  }
-
-  private discardImages(urls: string[]): Promise<void> {
-    return this.deleteObjects(this.toKeys(urls));
-  }
-
-  // Only review photos are ever reclaimed here, whatever URL a review row ended up holding.
-  private toKeys(urls: string[]): string[] {
-    return urls.flatMap((url) => {
-      const key = this.storage.keyFor(url);
-      return key?.startsWith(`${REVIEW_FOLDER}/`) ? [key] : [];
-    });
-  }
-
-  // A review may carry photos this reviewer uploaded, or ones it already had; never someone else's object.
-  private assertOwnPhotos(
-    userId: number,
-    urls: string[],
-    attached: string[],
-  ): void {
-    const ownPrefix = `${REVIEW_FOLDER}/${userId}/`;
-    for (const url of urls) {
-      if (attached.includes(url)) continue;
-      if (!this.storage.keyFor(url)?.startsWith(ownPrefix)) {
-        throw new BadRequestException(
-          "Review photos must be uploaded through the site",
-        );
-      }
-    }
-  }
-
-  private async deleteObjects(keys: string[]): Promise<void> {
-    for (const key of keys) {
-      await this.queue.publish("storage.delete-object", { key });
-    }
   }
 
   // Product reviews need a delivered order with the piece; event reviews need a confirmed seat at a past event.

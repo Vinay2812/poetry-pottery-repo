@@ -6,11 +6,10 @@ import { useCallback, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { AdminOrderDocument } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { formatDate, formatInr } from "@/lib/format";
 
 import { Button } from "@/components/ui/button";
-
-import { toErrorMessage } from "@/features/admin/shell";
 
 import type { PackingSlipLine } from "@/features/admin/orders/components/PackingSlip";
 import { PackingSlip } from "@/features/admin/orders/components/PackingSlip";
@@ -52,7 +51,9 @@ export function PackingSlipContainer({ orderId }: PackingSlipContainerProps) {
           <div aria-busy="true" className="h-64 animate-pulse bg-ash" />
         ) : (
           <p className="text-[13px]">
-            {error ? toErrorMessage(error) : "No order with that id."}
+            {error
+              ? describeError(error, "That order could not be loaded.")
+              : "No order with that id."}
           </p>
         )}
       </div>

@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
-import { QueueService } from "@/queue/queue.service";
 import { NotificationsService } from "./notifications.service";
 
 const prismaMock = {
@@ -16,9 +15,14 @@ const prismaMock = {
   },
 };
 const mailMock = { enqueue: vi.fn() };
-const queueMock = { publish: vi.fn() };
 
-const PIECE = { id: 4, name: "Slate mug", slug: "slate-mug", is_active: true };
+const PIECE = {
+  id: 4,
+  name: "Slate mug",
+  slug: "slate-mug",
+  is_active: true,
+  is_customizable: false,
+};
 
 describe("NotificationsService", () => {
   let service: NotificationsService;
@@ -33,7 +37,6 @@ describe("NotificationsService", () => {
         NotificationsService,
         { provide: PrismaService, useValue: prismaMock },
         { provide: MailService, useValue: mailMock },
-        { provide: QueueService, useValue: queueMock },
       ],
     }).compile();
     service = moduleRef.get(NotificationsService);
@@ -126,12 +129,18 @@ describe("NotificationsService", () => {
     });
   });
 
-  it("publishes one job per restocked piece", async () => {
-    await service.announceRestock(4);
-
-    expect(queueMock.publish).toHaveBeenCalledWith("notify.back-in-stock", {
-      productId: 4,
+  it("agrees with the shelf that a made-to-order piece is buyable with nothing in stock", async () => {
+    prismaMock.product.findUnique.mockResolvedValue({
+      ...PIECE,
+      stock: 0,
+      is_customizable: true,
     });
+    prismaMock.batchNotification.updateManyAndReturn.mockResolvedValue([
+      { email: "maya@example.com", token: "tok_1" },
+    ]);
+
+    await expect(service.sendBackInStock(4)).resolves.toBe(1);
+    expect(mailMock.enqueue).toHaveBeenCalledTimes(1);
   });
 
   it("spends the stop link once", async () => {

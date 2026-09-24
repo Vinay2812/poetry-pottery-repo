@@ -2,18 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
-import { toast } from "sonner";
 
 import { useMutation } from "@apollo/client/react";
 import {
+  type AdminEventInput,
   CreateEventDocument,
   UpdateEventDocument,
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { EventFormValues } from "@/lib/validations/admin/event";
 
-import { toErrorMessage } from "@/features/admin/shell";
 import {
   ImageListUploaderContainer,
   ImageUploaderContainer,
@@ -34,38 +34,40 @@ export function EventFormContainer({
   submitLabel,
 }: EventFormContainerProps) {
   const router = useRouter();
-  const [createEvent, { loading: isCreating }] =
-    useMutation(CreateEventDocument);
-  const [updateEvent, { loading: isUpdating }] =
-    useMutation(UpdateEventDocument);
+  const [createEvent] = useMutation(CreateEventDocument);
+  const [updateEvent] = useMutation(UpdateEventDocument);
+
+  // Resolves with the new event's id on create, null on update.
+  const { execute: save, isPending: isSubmitting } = useOptimisticAction({
+    run: async (input: AdminEventInput): Promise<number | null> => {
+      if (eventId === null) {
+        const { data } = await createEvent({ variables: { input } });
+        const created = data?.createEvent;
+        if (!created) throw new Error("The event was not created");
+        return created.id;
+      }
+      await updateEvent({ variables: { id: eventId, input } });
+      return null;
+    },
+    messages: {
+      success: (_input, createdId) =>
+        createdId === null ? "Event saved" : "Event created",
+      failure: "The event could not be saved",
+    },
+    onSuccess: (createdId) => {
+      if (createdId !== null) router.push(`/dashboard/events/${createdId}`);
+    },
+  });
 
   const handleSubmit = useCallback(
-    (values: EventFormValues) => {
-      const input = toEventInput(values);
-      void (async () => {
-        try {
-          if (eventId === null) {
-            const { data } = await createEvent({ variables: { input } });
-            const created = data?.createEvent;
-            if (!created) throw new Error("The event was not created");
-            toast.success("Event created");
-            router.push(`/dashboard/events/${created.id}`);
-            return;
-          }
-          await updateEvent({ variables: { id: eventId, input } });
-          toast.success("Event saved");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        }
-      })();
-    },
-    [createEvent, eventId, router, updateEvent],
+    (values: EventFormValues) => save(toEventInput(values)),
+    [save],
   );
 
   return (
     <EventForm
       defaultValues={defaultValues}
-      isSubmitting={isCreating || isUpdating}
+      isSubmitting={isSubmitting}
       submitLabel={submitLabel}
       renderCoverField={(value, onChange) => (
         <ImageUploaderContainer

@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useRestoreFocus } from "@/lib/use-restore-focus";
 
 export interface CancelRegistrationDialogProps {
   isOpen: boolean;
@@ -30,14 +29,9 @@ export function CancelRegistrationDialog({
   onOpenChange,
   onConfirm,
 }: CancelRegistrationDialogProps) {
-  const restoreFocus = useRestoreFocus();
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent
-        onOpenAutoFocus={restoreFocus.onOpenAutoFocus}
-        onCloseAutoFocus={restoreFocus.onCloseAutoFocus}
-        className="max-w-md"
-      >
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Cancel this booking?

@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation } from "@apollo/client/react";
 import {
@@ -16,9 +9,9 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatInr } from "@/lib/format";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { WorkshopTierFormValues } from "@/lib/validations/admin/workshop";
 
-import { toErrorMessage } from "@/features/admin/shell";
 import { AdminConfirmDialog } from "@/features/admin/ui";
 
 import { WorkshopTierDialog } from "@/features/admin/workshops/components/WorkshopTierDialog";
@@ -31,6 +24,11 @@ import {
   formatHoursLabel,
   type WorkshopTierData,
 } from "@/features/admin/workshops/types";
+
+interface TierSave {
+  id: number;
+  values: WorkshopTierFormValues;
+}
 
 export interface WorkshopTiersContainerProps {
   configId: number;
@@ -53,11 +51,10 @@ export function WorkshopTiersContainer({
   const [saveTier] = useMutation(SaveWorkshopTierDocument);
   const [deleteTier] = useMutation(DeleteWorkshopTierDocument);
   const [optimisticTiers, patchTiers] = useOptimistic(tiers, applyTierPatch);
-  const [isPending, startTransition] = useTransition();
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [busyId, setBusyId] = useState<number | null>(null);
+  const [hoursError, setHoursError] = useState<string | null>(null);
 
   const editing = useMemo(
     () => optimisticTiers.find((tier) => tier.id === editingId) ?? null,
@@ -75,46 +72,66 @@ export function WorkshopTiersContainer({
     [optimisticTiers],
   );
 
+  // The API upserts on hours, so the payload carries the whole config back.
+  const {
+    execute: saveTierRow,
+    isPending: isSaving,
+    pending: pendingSave,
+  } = useOptimisticAction({
+    patch: (save: TierSave) =>
+      patchTiers({ kind: "save", tier: { ...save.values, id: save.id } }),
+    run: (save) =>
+      saveTier({ variables: { config_id: configId, input: save.values } }),
+    messages: {
+      success: "Price saved",
+      failure: "The price could not be saved",
+    },
+    onSuccess: () => {
+      setEditingId(null);
+      setIsAdding(false);
+    },
+  });
+
+  // The API upserts on hours, so adding a length that already exists would quietly reprice it.
   const handleSubmit = useCallback(
     (values: WorkshopTierFormValues) => {
-      const id = editing?.id ?? 0;
-      setBusyId(id);
-      startTransition(async () => {
-        patchTiers({ kind: "save", tier: { ...values, id } });
-        try {
-          // The API upserts on hours, so the payload carries the whole config back.
-          await saveTier({ variables: { config_id: configId, input: values } });
-          setEditingId(null);
-          setIsAdding(false);
-          toast.success("Price saved");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setBusyId(null);
-        }
-      });
+      const isTaken =
+        editing === null &&
+        optimisticTiers.some((tier) => tier.hours === values.hours);
+      if (isTaken) {
+        setHoursError(
+          `${formatHoursLabel(values.hours)} already has a price. Edit that row instead.`,
+        );
+        return;
+      }
+      setHoursError(null);
+      saveTierRow({ id: editing?.id ?? 0, values });
     },
-    [configId, editing, patchTiers, saveTier],
+    [editing, optimisticTiers, saveTierRow],
   );
+
+  const {
+    execute: removeTier,
+    isPending: isDeleting,
+    pending: pendingRemove,
+  } = useOptimisticAction({
+    patch: (tier: WorkshopTierData) => patchTiers({ kind: "remove", tier }),
+    run: (tier) => deleteTier({ variables: { id: tier.id } }),
+    refresh: onRefetch,
+    messages: {
+      success: "Price removed",
+      failure: "The price could not be removed",
+    },
+    onSuccess: () => setDeletingId(null),
+  });
 
   const handleDelete = useCallback(() => {
     const tier = optimisticTiers.find((row) => row.id === deletingId);
-    if (!tier) return;
-    setBusyId(tier.id);
-    startTransition(async () => {
-      patchTiers({ kind: "remove", tier });
-      try {
-        await deleteTier({ variables: { id: tier.id } });
-        await onRefetch();
-        setDeletingId(null);
-        toast.success("Price removed");
-      } catch (error) {
-        toast.error(toErrorMessage(error));
-      } finally {
-        setBusyId(null);
-      }
-    });
-  }, [deletingId, deleteTier, onRefetch, optimisticTiers, patchTiers]);
+    if (tier) removeTier(tier);
+  }, [deletingId, optimisticTiers, removeTier]);
+
+  const busyId = pendingSave?.id ?? pendingRemove?.id ?? null;
+  const isPending = isSaving || isDeleting;
 
   const draft = editing ?? NEW_TIER;
 
@@ -136,12 +153,14 @@ export function WorkshopTiersContainer({
         hours={draft.hours}
         pricePerPerson={draft.price_per_person}
         piecesPerPerson={draft.pieces_per_person}
+        hoursError={hoursError}
         isBusy={busyId !== null}
         onSubmit={handleSubmit}
         onOpenChange={(isOpen) => {
           if (isOpen) return;
           setIsAdding(false);
           setEditingId(null);
+          setHoursError(null);
         }}
       />
       <AdminConfirmDialog

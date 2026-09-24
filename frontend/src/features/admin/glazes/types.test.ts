@@ -148,3 +148,31 @@ describe("applyGlazePatch", () => {
     ).toHaveLength(1);
   });
 });
+
+describe("applyGlazePatch drafts", () => {
+  const row = (id: number, name: string) => ({
+    id,
+    slug: name.toLowerCase(),
+    name,
+    description: "",
+    variationNote: "",
+    swatchUrl: null,
+    colorCode: null,
+    productCount: 0,
+  });
+
+  it("adds a new draft at the top", () => {
+    expect(
+      applyGlazePatch([row(1, "Ash")], { kind: "save", row: row(0, "Moss") }),
+    ).toEqual([row(0, "Moss"), row(1, "Ash")]);
+  });
+
+  it("never shows a draft twice once its saved row is read back", () => {
+    expect(
+      applyGlazePatch([row(9, "Moss"), row(1, "Ash")], {
+        kind: "save",
+        row: row(0, "Moss"),
+      }),
+    ).toEqual([row(9, "Moss"), row(1, "Ash")]);
+  });
+});

@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -22,6 +15,8 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatDateTime, formatInr } from "@/lib/format";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
+import { useReasonAction } from "@/lib/use-reason-action";
 
 import type { StudioNoteFormValues } from "@/lib/validations/admin/order";
 
@@ -31,7 +26,7 @@ import { Button } from "@/components/ui/button";
 
 import { toProductPath } from "@/features/products/types";
 
-import { formatEnumLabel, toErrorMessage } from "@/features/admin/shell";
+import { formatEnumLabel } from "@/features/admin/shell";
 import {
   AdminPageHeader,
   AdminReasonDialog,
@@ -96,17 +91,10 @@ export function AdminOrderDetailContainer({
     detail,
     applyAdminOrderPatch,
   );
-  const [, startTransition] = useTransition();
 
-  const [busyStatus, setBusyStatus] = useState<OrderStatus | null>(null);
-  const [pendingStatus, setPendingStatus] = useState<OrderStatus | null>(null);
-  const [dialogNote, setDialogNote] = useState("");
-  const [dialogError, setDialogError] = useState<string | undefined>(undefined);
   const [noteDraft, setNoteDraft] = useState<string | null>(null);
-  const [isNoteSaving, setIsNoteSaving] = useState(false);
   const [isNoteSaved, setIsNoteSaved] = useState(false);
   const [studioPhotoUrl, setStudioPhotoUrl] = useState<string | null>(null);
-  const [isStudioNoteSending, setIsStudioNoteSending] = useState(false);
   const [studioFormKey, setStudioFormKey] = useState(0);
 
   const order = optimisticDetail?.order ?? null;
@@ -160,135 +148,93 @@ export function AdminOrderDetailContainer({
 
   // Every move finishes with a refetch, so the fresh payload is the baseline the
   // optimistic layer falls back to.
-  const runStatusMove = useCallback(
-    (status: OrderStatus, note: string) => {
-      setBusyStatus(status);
-      startTransition(async () => {
-        applyPatch({
-          at: new Date().toISOString(),
-          status,
-          ...(status === OrderStatus.Shipped ? { trackingNote: note } : {}),
-          ...(status === OrderStatus.Cancelled ? { cancelReason: note } : {}),
-        });
-        try {
-          if (status === OrderStatus.Paid) {
-            await markOrderPaid({ variables: { id: orderId } });
-          } else if (status === OrderStatus.Cancelled) {
-            await cancelOrderAsAdmin({
-              variables: { id: orderId, reason: note.trim() || null },
-            });
-          } else {
-            await setOrderStatus({
-              variables: {
-                id: orderId,
-                status,
-                tracking_note:
-                  status === OrderStatus.Shipped ? note.trim() || null : null,
-                cancel_reason: null,
-              },
-            });
-          }
-          await refetch();
-          toast.success(
-            `Order is now ${formatEnumLabel(status).toLowerCase()}`,
-          );
-        } catch (moveError) {
-          toast.error(toErrorMessage(moveError));
-        } finally {
-          setBusyStatus(null);
-        }
+  const move = useReasonAction({
+    patch: ({ target, reason }) =>
+      applyPatch({
+        at: new Date().toISOString(),
+        status: target,
+        ...(target === OrderStatus.Shipped
+          ? { trackingNote: reason ?? "" }
+          : {}),
+        ...(target === OrderStatus.Cancelled
+          ? { cancelReason: reason ?? "" }
+          : {}),
+      }),
+    run: ({ target, reason }) => {
+      if (target === OrderStatus.Paid) {
+        return markOrderPaid({ variables: { id: orderId } });
+      }
+      if (target === OrderStatus.Cancelled) {
+        return cancelOrderAsAdmin({ variables: { id: orderId, reason } });
+      }
+      return setOrderStatus({
+        variables: {
+          id: orderId,
+          status: target,
+          tracking_note: target === OrderStatus.Shipped ? reason : null,
+          cancel_reason: null,
+        },
       });
     },
-    [
-      applyPatch,
-      cancelOrderAsAdmin,
-      markOrderPaid,
-      orderId,
-      refetch,
-      setOrderStatus,
-    ],
-  );
-
-  const handleAction = useCallback(
-    (status: OrderStatus) => {
-      if (status === OrderStatus.Shipped || status === OrderStatus.Cancelled) {
-        setDialogNote("");
-        setDialogError(undefined);
-        setPendingStatus(status);
-        return;
-      }
-      runStatusMove(status, "");
+    refresh: refetch,
+    // A cancellation always tells the customer why; a tracking note can wait.
+    policy: (target: OrderStatus) => {
+      if (target === OrderStatus.Cancelled) return "required";
+      return target === OrderStatus.Shipped ? "optional" : "none";
     },
-    [runStatusMove],
+    requiredMessage: "Say why this order is being cancelled",
+    messages: {
+      success: ({ target }) =>
+        `Order is now ${formatEnumLabel(target).toLowerCase()}`,
+      failure: "The order could not be moved",
+    },
+  });
+
+  const { execute: saveNote, isPending: isNoteSaving } = useOptimisticAction({
+    patch: (note: string | null) =>
+      applyPatch({ at: new Date().toISOString(), adminNote: note }),
+    run: (note) => setOrderAdminNote({ variables: { id: orderId, note } }),
+    refresh: refetch,
+    messages: { success: null, failure: "The note could not be saved" },
+    onSuccess: () => {
+      setNoteDraft(null);
+      setIsNoteSaved(true);
+    },
+  });
+
+  const handleNoteSave = useCallback(
+    () => saveNote(toAdminNoteValue(noteValue)),
+    [noteValue, saveNote],
   );
 
-  const handleDialogConfirm = useCallback(() => {
-    if (!pendingStatus) return;
-    if (dialogNote.trim().length === 0) {
-      setDialogError(
-        pendingStatus === OrderStatus.Shipped
-          ? "Add the courier and tracking number"
-          : "Say why this order is being cancelled",
-      );
-      return;
-    }
-    const status = pendingStatus;
-    const note = dialogNote;
-    setPendingStatus(null);
-    runStatusMove(status, note);
-  }, [dialogNote, pendingStatus, runStatusMove]);
-
-  const handleNoteSave = useCallback(() => {
-    const note = toAdminNoteValue(noteValue);
-    setIsNoteSaving(true);
-    startTransition(async () => {
-      applyPatch({ at: new Date().toISOString(), adminNote: note });
-      try {
-        await setOrderAdminNote({ variables: { id: orderId, note } });
-        await refetch();
-        setNoteDraft(null);
-        setIsNoteSaved(true);
-      } catch (noteError) {
-        toast.error(toErrorMessage(noteError));
-      } finally {
-        setIsNoteSaving(false);
-      }
+  // A studio note is mailed the moment it is sent, so there is nothing to roll back.
+  const { execute: sendStudioNote, isPending: isStudioNoteSending } =
+    useOptimisticAction({
+      run: (values: StudioNoteFormValues) =>
+        addOrderNote({
+          variables: {
+            input: {
+              order_id: orderId,
+              body: values.body,
+              image_url: studioPhotoUrl,
+            },
+          },
+        }),
+      refresh: refetch,
+      messages: {
+        success: "Note sent to the customer",
+        failure: "The note could not be sent",
+      },
+      onSuccess: () => {
+        setStudioPhotoUrl(null);
+        setStudioFormKey((key) => key + 1);
+      },
     });
-  }, [applyPatch, noteValue, orderId, refetch, setOrderAdminNote]);
 
   const handleNoteChange = useCallback((value: string) => {
     setNoteDraft(value);
     setIsNoteSaved(false);
   }, []);
-
-  // A studio note is mailed the moment it is sent, so there is nothing to roll back.
-  const handleStudioNoteSubmit = useCallback(
-    (values: StudioNoteFormValues) => {
-      setIsStudioNoteSending(true);
-      void (async () => {
-        try {
-          await addOrderNote({
-            variables: {
-              input: {
-                order_id: orderId,
-                body: values.body,
-                image_url: studioPhotoUrl,
-              },
-            },
-          });
-          await refetch();
-          setStudioPhotoUrl(null);
-          setStudioFormKey((key) => key + 1);
-          toast.success("Note sent to the customer");
-        } catch (sendError) {
-          toast.error(toErrorMessage(sendError));
-        } finally {
-          setIsStudioNoteSending(false);
-        }
-      })();
-    },
-    [addOrderNote, orderId, refetch, studioPhotoUrl],
-  );
 
   if (!optimisticDetail && loading) {
     return (
@@ -362,10 +308,10 @@ export function AdminOrderDetailContainer({
             <h2 className={SECTION_TITLE}>What happens next</h2>
             <AdminOrderActions
               actions={statusActions}
-              busyStatus={busyStatus}
-              isBusy={busyStatus !== null}
+              busyStatus={move.pending}
+              isBusy={move.isPending}
               emptyMessage="This order is closed. Nothing left to move."
-              onAction={handleAction}
+              onAction={move.start}
             />
           </section>
           <section className="flex flex-col gap-3 border-t border-ash pt-6">
@@ -383,7 +329,7 @@ export function AdminOrderDetailContainer({
                   onChange={setStudioPhotoUrl}
                 />
               }
-              onSubmit={handleStudioNoteSubmit}
+              onSubmit={sendStudioNote}
             />
           </section>
           <section className="border-t border-ash pt-6">
@@ -423,49 +369,45 @@ export function AdminOrderDetailContainer({
       </div>
 
       <AdminReasonDialog
-        isOpen={pendingStatus !== null}
+        isOpen={move.target !== null}
         title={
-          pendingStatus === OrderStatus.Cancelled
+          move.target === OrderStatus.Cancelled
             ? "Cancel this order"
             : "Mark this order shipped"
         }
         description={
-          pendingStatus === OrderStatus.Cancelled
+          move.target === OrderStatus.Cancelled
             ? "The pieces go back on the shelf straight away."
             : "The customer sees this note on their order page."
         }
         fieldLabel={
-          pendingStatus === OrderStatus.Cancelled ? "Reason" : "Tracking note"
+          move.target === OrderStatus.Cancelled ? "Reason" : "Tracking note"
         }
         hint={
-          pendingStatus === OrderStatus.Cancelled
+          move.target === OrderStatus.Cancelled
             ? "The customer reads this, so keep it kind"
             : "Courier and tracking number"
         }
         placeholder={
-          pendingStatus === OrderStatus.Cancelled
+          move.target === OrderStatus.Cancelled
             ? "The batch cracked in the kiln"
             : "Delhivery 7712445901"
         }
-        value={dialogNote}
-        error={dialogError}
+        value={move.reason}
+        error={move.error}
         confirmLabel={
-          pendingStatus === OrderStatus.Cancelled
+          move.target === OrderStatus.Cancelled
             ? "Cancel order"
             : "Mark shipped"
         }
-        isDestructive={pendingStatus === OrderStatus.Cancelled}
-        // A cancellation always tells the customer why; a tracking note can wait.
-        isRequired={pendingStatus === OrderStatus.Cancelled}
-        isBusy={busyStatus !== null}
-        onValueChange={(value) => {
-          setDialogNote(value);
-          setDialogError(undefined);
-        }}
+        isDestructive={move.target === OrderStatus.Cancelled}
+        isRequired={move.target === OrderStatus.Cancelled}
+        isBusy={move.isPending}
+        onValueChange={move.setReason}
+        onConfirm={move.confirm}
         onOpenChange={(isOpen) => {
-          if (!isOpen) setPendingStatus(null);
+          if (!isOpen) move.close();
         }}
-        onConfirm={handleDialogConfirm}
       />
     </div>
   );

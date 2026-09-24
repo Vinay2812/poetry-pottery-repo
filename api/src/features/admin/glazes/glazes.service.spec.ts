@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { ProductsService } from "@/features/products/products.service";
-import { UploadsService } from "../uploads/uploads.service";
-import { UploadPurpose } from "../uploads/uploads.type";
+import { UploadsService } from "@/uploads/uploads.service";
+import { UploadPurpose } from "@/uploads/uploads.type";
 import { AdminGlazesService, parseColorCode } from "./glazes.service";
 
 const containing = (value: Record<string, unknown>): unknown =>
@@ -35,7 +35,7 @@ const prismaMock = {
   },
 };
 const productsMock = { invalidateCatalogCache: vi.fn() };
-const uploadsMock = { assertConfirmed: vi.fn() };
+const uploadsMock = { claimConfirmed: vi.fn() };
 
 function input(overrides: Record<string, unknown> = {}) {
   return {
@@ -112,7 +112,7 @@ describe("AdminGlazesService", () => {
       input({ swatch_url: "https://cdn.example.com/glazes/ash.png" }),
     );
 
-    expect(uploadsMock.assertConfirmed).toHaveBeenCalledWith(
+    expect(uploadsMock.claimConfirmed).toHaveBeenCalledWith(
       ["https://cdn.example.com/glazes/ash.png"],
       [],
       UploadPurpose.GLAZE,

@@ -1,14 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -26,9 +19,10 @@ import {
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { ProductFormValues } from "@/lib/validations/admin/product";
 
-import { toErrorMessage } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
   AdminPageHeader,
@@ -78,6 +72,27 @@ function applyPieceStatePatch(
   return { ...state, isFeatured: patch.isFeatured };
 }
 
+interface ActiveChange {
+  id: number;
+  isActive: boolean;
+}
+
+interface FeaturedChange {
+  id: number;
+  isFeatured: boolean;
+}
+
+interface StockChange {
+  id: number;
+  delta: number;
+  reason: string;
+}
+
+interface PieceSave {
+  values: ProductFormValues;
+  imageUrls: string[];
+}
+
 export interface PieceEditorContainerProps {
   productId: number | null;
 }
@@ -108,12 +123,9 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   const [setFeatured] = useMutation(SetProductFeaturedDocument);
   const [adjustStock] = useMutation(AdjustProductStockDocument);
 
-  const [isSaving, setIsSaving] = useState(false);
-  const [isBusy, setIsBusy] = useState(false);
   const [isArchiveOpen, setIsArchiveOpen] = useState(false);
   const [isStockOpen, setIsStockOpen] = useState(false);
   const [imageDraft, setImageDraft] = useState<string[] | null>(null);
-  const [, startTransition] = useTransition();
 
   const product = data?.adminProduct ?? null;
 
@@ -162,105 +174,116 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     [glazeData],
   );
 
-  const handleSubmit = useCallback(
-    (values: ProductFormValues) => {
-      setIsSaving(true);
-      void (async () => {
-        try {
-          if (productId === null) {
-            const created = await createProduct({
-              variables: { input: toProductInput(values, imageUrls) },
-            });
-            const id = created.data?.createProduct.id;
-            if (id === undefined)
-              throw new Error("The piece could not be saved");
-            toast.success("Piece created");
-            router.push(`/dashboard/pieces/${id}`);
-            return;
-          }
-          await updateProduct({
+  const createPiece = useCallback(
+    async (save: PieceSave) => {
+      const created = await createProduct({
+        variables: { input: toProductInput(save.values, save.imageUrls) },
+      });
+      const id = created.data?.createProduct.id;
+      if (id === undefined) throw new Error("The piece could not be saved");
+      return id;
+    },
+    [createProduct],
+  );
+
+  // A new piece has no query to read back; it navigates to its own page instead.
+  const { execute: savePiece, isPending: isSaving } = useOptimisticAction({
+    run: (save: PieceSave) =>
+      productId === null
+        ? createPiece(save)
+        : updateProduct({
             variables: {
               id: productId,
-              input: toProductUpdateInput(values, imageUrls),
+              input: toProductUpdateInput(save.values, save.imageUrls),
             },
-          });
-          setImageDraft(null);
-          await refetch();
-          toast.success("Piece saved");
-        } catch (caught) {
-          toast.error(toErrorMessage(caught));
-        } finally {
-          setIsSaving(false);
-        }
-      })();
+          }),
+    refresh: isCreate ? undefined : refetch,
+    messages: {
+      success: isCreate ? "Piece created" : "Piece saved",
+      failure: "The piece could not be saved",
     },
-    [createProduct, imageUrls, productId, refetch, router, updateProduct],
+    onSuccess: (result) => {
+      if (typeof result === "number") {
+        router.push(`/dashboard/pieces/${result}`);
+        return;
+      }
+      setImageDraft(null);
+    },
+  });
+
+  const handleSubmit = useCallback(
+    (values: ProductFormValues) => savePiece({ values, imageUrls }),
+    [imageUrls, savePiece],
   );
+
+  const { execute: saveActive, isPending: isActiveBusy } = useOptimisticAction({
+    patch: (change: ActiveChange) =>
+      patchState({ kind: "active", isActive: change.isActive }),
+    run: (change) =>
+      setActive({ variables: { id: change.id, is_active: change.isActive } }),
+    refresh: refetch,
+    messages: {
+      success: (change) =>
+        change.isActive ? "Back on the shelf" : "Moved to the archive",
+      failure: "The piece could not be moved",
+    },
+  });
 
   const runActive = useCallback(
     (isActive: boolean) => {
       if (productId === null) return;
-      setIsBusy(true);
-      startTransition(async () => {
-        patchState({ kind: "active", isActive });
-        try {
-          await setActive({
-            variables: { id: productId, is_active: isActive },
-          });
-          await refetch();
-          toast.success(
-            isActive ? "Back on the shelf" : "Moved to the archive",
-          );
-        } catch (caught) {
-          toast.error(toErrorMessage(caught));
-        } finally {
-          setIsBusy(false);
-        }
-      });
+      saveActive({ id: productId, isActive });
     },
-    [patchState, productId, refetch, setActive],
+    [productId, saveActive],
   );
+
+  const { execute: saveFeatured, isPending: isFeaturedBusy } =
+    useOptimisticAction({
+      patch: (change: FeaturedChange) =>
+        patchState({ kind: "featured", isFeatured: change.isFeatured }),
+      run: (change) =>
+        setFeatured({
+          variables: { id: change.id, is_featured: change.isFeatured },
+        }),
+      refresh: refetch,
+      messages: { success: null, failure: "The piece could not be featured" },
+    });
 
   const runFeatured = useCallback(
     (isFeatured: boolean) => {
       if (productId === null) return;
-      setIsBusy(true);
-      startTransition(async () => {
-        patchState({ kind: "featured", isFeatured });
-        try {
-          await setFeatured({
-            variables: { id: productId, is_featured: isFeatured },
-          });
-          await refetch();
-        } catch (caught) {
-          toast.error(toErrorMessage(caught));
-        } finally {
-          setIsBusy(false);
-        }
-      });
+      saveFeatured({ id: productId, isFeatured });
     },
-    [patchState, productId, refetch, setFeatured],
+    [productId, saveFeatured],
   );
+
+  const { execute: saveStock, isPending: isStockBusy } = useOptimisticAction({
+    patch: (change: StockChange) =>
+      patchState({ kind: "stock", delta: change.delta }),
+    run: (change) =>
+      adjustStock({
+        variables: {
+          id: change.id,
+          delta: change.delta,
+          reason: change.reason,
+        },
+      }),
+    refresh: refetch,
+    messages: {
+      success: "Stock updated",
+      failure: "The stock could not be updated",
+    },
+  });
+
+  const isBusy = isActiveBusy || isFeaturedBusy || isStockBusy;
 
   const handleStockSubmit = useCallback(
     (delta: number, reason: string) => {
       if (productId === null) return;
       setIsStockOpen(false);
-      setIsBusy(true);
-      startTransition(async () => {
-        patchState({ kind: "stock", delta });
-        try {
-          await adjustStock({ variables: { id: productId, delta, reason } });
-          await refetch();
-          toast.success("Stock updated");
-        } catch (caught) {
-          toast.error(toErrorMessage(caught));
-        } finally {
-          setIsBusy(false);
-        }
-      });
+      saveStock({ id: productId, delta, reason });
     },
-    [adjustStock, patchState, productId, refetch],
+    [productId, saveStock],
   );
 
   const handleCancel = useCallback(
@@ -281,7 +304,9 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
           <div aria-busy="true" className="h-64 animate-pulse bg-ash" />
         ) : (
           <p className="text-[13px]">
-            {error ? toErrorMessage(error) : "That piece could not be found."}
+            {error
+              ? describeError(error, "That piece could not be found.")
+              : "That piece could not be found."}
           </p>
         )}
       </div>

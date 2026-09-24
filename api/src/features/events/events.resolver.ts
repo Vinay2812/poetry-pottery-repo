@@ -9,6 +9,7 @@ import {
   Resolver,
 } from "@nestjs/graphql";
 
+import { RequestBatch } from "@/common/batch/batch";
 import { AuthRequired } from "@/common/decorators/auth.decorators";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
 import { StrictThrottle } from "@/common/decorators/throttle.decorators";
@@ -27,6 +28,12 @@ import {
 
 @Resolver(() => Event)
 export class EventsResolver {
+  // Scoped by the signed-in user, so one visitor's bookings never answer for another.
+  private readonly registrationBatch = new RequestBatch(
+    (eventIds: number[], userId: number | null) =>
+      this.eventsService.registrationsFor(userId, eventIds),
+  );
+
   constructor(
     private readonly eventsService: EventsService,
     private readonly authGuard: AuthGuard,
@@ -62,7 +69,7 @@ export class EventsResolver {
     if (event.my_registration !== undefined) return event.my_registration;
     const user = await this.authGuard.tryAuthenticate(context.req);
     return user
-      ? this.eventsService.registrationFor(user.db_user_id, event.id)
+      ? this.registrationBatch.load(context, event.id, user.db_user_id)
       : null;
   }
 

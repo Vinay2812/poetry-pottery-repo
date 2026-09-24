@@ -6,9 +6,9 @@ import { PrismaService } from "@/prisma/prisma.service";
 import { RedisService } from "@/redis/redis.service";
 import { ContentService } from "@/features/content/content.service";
 import { SettingsService } from "@/features/settings/settings.service";
-import { UploadsService } from "../uploads/uploads.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import { AdminContentService } from "./content.service";
-import { UploadPurpose } from "../uploads/uploads.type";
+import { UploadPurpose } from "@/uploads/uploads.type";
 
 const pageRow = {
   slug: "about",
@@ -26,7 +26,7 @@ const prismaMock = {
 const contentMock = { list: vi.fn(), update: vi.fn() };
 const settingsMock = { get: vi.fn(), update: vi.fn() };
 const redisMock = { del: vi.fn() };
-const uploadsMock = { assertConfirmed: vi.fn() };
+const uploadsMock = { claimConfirmed: vi.fn() };
 
 describe("AdminContentService", () => {
   let service: AdminContentService;
@@ -85,7 +85,7 @@ describe("AdminContentService", () => {
       hero_image_url: "https://cdn.example.com/content/a.png",
     });
 
-    expect(uploadsMock.assertConfirmed).toHaveBeenCalledWith(
+    expect(uploadsMock.claimConfirmed).toHaveBeenCalledWith(
       ["https://cdn.example.com/content/a.png"],
       [],
       UploadPurpose.CONTENT,

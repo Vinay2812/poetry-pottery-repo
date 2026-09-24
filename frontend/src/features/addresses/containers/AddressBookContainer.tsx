@@ -49,7 +49,7 @@ export function AddressBookContainer() {
             defaultValues={editing ? toFormValues(editing) : undefined}
             isSubmitting={isSaving}
             submitLabel={editing ? "Save changes" : "Save address"}
-            onSubmit={(values) => void submit(values)}
+            onSubmit={(values) => submit(values)}
             onCancel={closeForm}
           />
         ) : null

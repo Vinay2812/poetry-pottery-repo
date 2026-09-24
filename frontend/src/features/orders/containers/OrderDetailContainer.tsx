@@ -1,7 +1,7 @@
 "use client";
 
 import { useClerk, useUser } from "@clerk/nextjs";
-import { useCallback, useOptimistic, useState, useTransition } from "react";
+import { useCallback, useOptimistic, useState } from "react";
 
 import { OrderStatus } from "@/graphql/generated/graphql";
 
@@ -53,9 +53,8 @@ export function OrderDetailContainer({
     order,
     applyOrderCancellation,
   );
-  const [, startTransition] = useTransition();
   const { openSignIn } = useClerk();
-  const { cancel, isCancelling } = useCancelOrder();
+  const { cancel, isCancelling } = useCancelOrder(applyCancellation);
   const { reorder, isReordering } = useReorder();
   const { user } = useUser();
   const [isCancelOpen, setIsCancelOpen] = useState(false);
@@ -64,11 +63,8 @@ export function OrderDetailContainer({
   // The dialog closes and the badge turns at once; a refusal rolls both back with a toast.
   const handleConfirmCancel = useCallback(() => {
     setIsCancelOpen(false);
-    startTransition(async () => {
-      applyCancellation({ reason, at: new Date().toISOString() });
-      await cancel(orderId, reason);
-    });
-  }, [applyCancellation, cancel, orderId, reason]);
+    cancel(orderId, reason);
+  }, [cancel, orderId, reason]);
 
   if (isLoading) {
     return (
@@ -221,7 +217,7 @@ export function OrderDetailContainer({
         onCancel={() => setIsCancelOpen(true)}
         canReorder={optimisticOrder.items.length > 0}
         isReordering={isReordering}
-        onReorder={() => void reorder(optimisticOrder.id)}
+        onReorder={() => reorder(optimisticOrder.id)}
         onPrint={() => window.print()}
       />
       <CancelOrderDialog

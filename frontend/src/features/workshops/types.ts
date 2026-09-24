@@ -45,55 +45,6 @@ export function toDateKey(instant: string | Date, timezone: string): string {
   return parts;
 }
 
-export function addDays(dateKey: string, days: number): string {
-  const [year, month, day] = dateKey.split("-").map(Number);
-  const shifted = new Date(
-    Date.UTC(year ?? 1970, (month ?? 1) - 1, (day ?? 1) + days),
-  );
-  return shifted.toISOString().slice(0, 10);
-}
-
-export function toMonthKey(dateKey: string): string {
-  return dateKey.slice(0, 7);
-}
-
-export function shiftMonth(monthKey: string, delta: number): string {
-  const [year, month] = monthKey.split("-").map(Number);
-  const next = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1 + delta, 1));
-  return next.toISOString().slice(0, 7);
-}
-
-export function daysInMonth(monthKey: string): number {
-  const [year, month] = monthKey.split("-").map(Number);
-  return new Date(Date.UTC(year ?? 1970, month ?? 1, 0)).getUTCDate();
-}
-
-export function formatMonth(monthKey: string): string {
-  const [year, month] = monthKey.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-IN", {
-    month: "long",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, 1)));
-}
-
-// Monday-first grid of date keys with nulls padding the first and last week.
-export function toMonthGrid(monthKey: string): (string | null)[][] {
-  const [year, month] = monthKey.split("-").map(Number);
-  const first = new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, 1));
-  const lead = (first.getUTCDay() + 6) % 7;
-  const total = daysInMonth(monthKey);
-  const cells: (string | null)[] = Array.from({ length: lead }, () => null);
-  for (let day = 1; day <= total; day += 1) {
-    cells.push(`${monthKey}-${String(day).padStart(2, "0")}`);
-  }
-  while (cells.length % 7 !== 0) cells.push(null);
-  const weeks: (string | null)[][] = [];
-  for (let index = 0; index < cells.length; index += 7)
-    weeks.push(cells.slice(index, index + 7));
-  return weeks;
-}
-
 export function formatDateKey(dateKey: string): string {
   const [year, month, day] = dateKey.split("-").map(Number);
   return new Intl.DateTimeFormat("en-IN", {
@@ -144,12 +95,7 @@ export interface SlotInterval {
   ends_at: string;
 }
 
-// "Sat 20 Sep · 3–4 pm", the one line a picked hour gets everywhere it is listed.
-export function formatSlotLine(slot: SlotInterval, timezone: string): string {
-  return `${formatDayLabel(slot.starts_at, timezone)} · ${formatHourRange(slot.starts_at, slot.ends_at, timezone)}`;
-}
-
-export interface SlotDayGroup {
+interface SlotDayGroup {
   dateKey: string;
   dayLabel: string;
   timesLabel: string;
@@ -217,54 +163,6 @@ export function quoteSession(
   };
 }
 
-// Hours are picked one slot at a time, so a booking needs this many of them.
-export function slotsNeeded(hours: number, slotMinutes: number): number {
-  // Matches the API's slotsPerBooking, which rounds up so a session never runs short.
-  return Math.max(1, Math.ceil((hours * 60) / slotMinutes));
-}
-
-export function isSlotPickable(
-  slot: WorkshopSlotData,
-  participants: number,
-): boolean {
-  return slot.is_available && slot.remaining >= participants;
-}
-
-export function pickableSlots(
-  day: WorkshopDayData | undefined,
-  participants: number,
-): WorkshopSlotData[] {
-  if (!day || day.is_closed) return [];
-  return day.slots.filter((slot) => isSlotPickable(slot, participants));
-}
-
-function dayDelta(later: string, earlier: string): number {
-  const [ly, lm, ld] = later.split("-").map(Number);
-  const [ey, em, ed] = earlier.split("-").map(Number);
-  return Math.round(
-    (Date.UTC(ly ?? 0, (lm ?? 1) - 1, ld ?? 1) -
-      Date.UTC(ey ?? 0, (em ?? 1) - 1, ed ?? 1)) /
-      86_400_000,
-  );
-}
-
-// Calendar days covered by a set of day keys, counting both ends.
-export function spanDays(dateKeys: string[]): number {
-  if (dateKeys.length === 0) return 0;
-  const sorted = [...dateKeys].sort();
-  return dayDelta(sorted[sorted.length - 1] ?? "", sorted[0] ?? "") + 1;
-}
-
-// A day stays open while adding it keeps the whole set inside the allowed span.
-export function isDayWithinSpan(
-  dateKey: string,
-  pickedDateKeys: string[],
-  allowedSpanDays: number,
-): boolean {
-  if (pickedDateKeys.length === 0) return true;
-  return spanDays([...pickedDateKeys, dateKey]) <= allowedSpanDays;
-}
-
 // One sentence above the pickers that says how the hours are chosen, before anyone scrolls.
 export function toPickingGuide(
   needed: number,
@@ -277,74 +175,6 @@ export function toPickingGuide(
   return allowedSpanDays === 1
     ? `Pick a day on the calendar, then ${hours} from the times under it; they all sit on that one day.`
     : `Pick a day on the calendar, then ${hours} from the times under it. They can sit on different days, within ${allowedSpanDays} days of your first one.`;
-}
-
-export function spanNotice(allowedSpanDays: number): string {
-  return allowedSpanDays === 1
-    ? "Pick every hour on the same day"
-    : `Pick within ${allowedSpanDays} days of your first slot`;
-}
-
-export interface PickedSlotLabel {
-  startsAt: string;
-  label: string;
-}
-
-// Picked hours are always shown and sent in the order they happen.
-export function toPickedSlots(
-  picked: SlotInterval[],
-  timezone: string,
-): PickedSlotLabel[] {
-  return [...picked]
-    .sort((a, b) => a.starts_at.localeCompare(b.starts_at))
-    .map((slot) => ({
-      startsAt: slot.starts_at,
-      label: formatSlotLine(slot, timezone),
-    }));
-}
-
-// Tapping an hour adds or drops it; once the tier is filled, further hours are ignored.
-// Fills the session in layers: one hour on every free day in the window first, then a second
-// hour on the earliest of them, and so on. Hours spread as thin as the window allows and only
-// stack when they must. Null when the loaded days cannot hold them.
-export function suggestSlots(
-  days: readonly WorkshopDayData[],
-  needed: number,
-  participants: number,
-  allowedSpanDays: number,
-  todayKey: string,
-): SlotInterval[] | null {
-  if (needed <= 0) return [];
-  const open = days
-    .filter((day) => day.date >= todayKey)
-    .map((day) => ({
-      date: day.date,
-      slots: [...pickableSlots(day, participants)].sort((a, b) =>
-        a.starts_at.localeCompare(b.starts_at),
-      ),
-    }))
-    .filter((day) => day.slots.length > 0)
-    .sort((a, b) => a.date.localeCompare(b.date));
-  for (let start = 0; start < open.length; start += 1) {
-    const first = open[start];
-    if (!first) break;
-    const window = open
-      .slice(start)
-      .filter((day) => spanDays([first.date, day.date]) <= allowedSpanDays);
-    const deepest = Math.max(...window.map((day) => day.slots.length));
-    const picks: SlotInterval[] = [];
-    for (let layer = 0; layer < deepest; layer += 1) {
-      for (const day of window) {
-        const slot = day.slots[layer];
-        if (!slot) continue;
-        picks.push({ starts_at: slot.starts_at, ends_at: slot.ends_at });
-        if (picks.length === needed) {
-          return picks.sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-        }
-      }
-    }
-  }
-  return null;
 }
 
 // A party bigger than the wheels is a special request, so the ask names the session and the size.
@@ -390,41 +220,11 @@ export function toUnavailableMessage(
 export const SUGGESTED_NOTE =
   "Picked for you: the earliest free hours. Change any of them.";
 
-export function togglePicked(
-  picked: SlotInterval[],
-  slot: SlotInterval,
-  needed: number,
-): SlotInterval[] {
-  if (picked.some((candidate) => candidate.starts_at === slot.starts_at)) {
-    return picked.filter((candidate) => candidate.starts_at !== slot.starts_at);
-  }
-  // A full pick swaps its earliest hour for the new one rather than ignoring the click.
-  const kept =
-    picked.length >= needed
-      ? [...picked]
-          .sort((a, b) => a.starts_at.localeCompare(b.starts_at))
-          .slice(1)
-      : picked;
-  return [...kept, { starts_at: slot.starts_at, ends_at: slot.ends_at }];
-}
-
-// The move dialog opens on the hours already held, so an untouched selection
-// would otherwise ask the studio to move a session onto itself.
-export function isSameSelection(
-  picked: readonly SlotInterval[],
-  current: readonly SlotInterval[],
-): boolean {
-  if (picked.length !== current.length) return false;
-  const pickedStarts = picked.map((slot) => slot.starts_at).sort();
-  const currentStarts = current.map((slot) => slot.starts_at).sort();
-  return pickedStarts.every((start, index) => start === currentStarts[index]);
-}
-
 export function formatPickedProgress(picked: number, needed: number): string {
   return `${picked} of ${needed} ${needed === 1 ? "hour" : "hours"} picked`;
 }
 
-export interface WhatsAppSessionInput {
+interface WhatsAppSessionInput {
   bookingId: string;
   when: string;
   hours: number;
@@ -445,7 +245,7 @@ export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
   ].join("\n");
 }
 
-export interface BookingStep {
+interface BookingStep {
   key: RegistrationStatus;
   label: string;
   description: string;
@@ -498,7 +298,7 @@ export function toBookingStepIndex(status: RegistrationStatus): number {
   return index === -1 ? 0 : index;
 }
 
-export type BookingGroup = "upcoming" | "past";
+type BookingGroup = "upcoming" | "past";
 
 // A session that has run, or one the studio will never run, belongs behind the ones
 // still ahead of the visitor.
@@ -530,7 +330,7 @@ export function formatWheels(remaining: number): string {
   return `${remaining} ${remaining === 1 ? "wheel" : "wheels"} free`;
 }
 
-export interface CalendarDayState {
+interface CalendarDayState {
   wheelsFree: number;
   pickedCount: number;
   isClosed: boolean;
@@ -539,7 +339,7 @@ export interface CalendarDayState {
   mutedReason: string | null;
 }
 
-export interface DayNote {
+interface DayNote {
   caption: string;
   description: string;
   isPickable: boolean;
@@ -602,7 +402,7 @@ export function toDayNote(day: CalendarDayState): DayNote {
   };
 }
 
-export type BookingAction =
+type BookingAction =
   | { kind: "cancel"; reason: string; at: string }
   | { kind: "reschedule"; slots: readonly SlotInterval[] };
 

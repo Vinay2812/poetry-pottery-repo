@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
 
 import { ActiveMarker } from "@/components/nav/ActiveMarker";
 import { Button } from "@/components/ui/button";
@@ -51,9 +50,6 @@ export function MobileMenuSheet({
   onAccountClick,
   onSignOut,
 }: MobileMenuSheetProps) {
-  // The sheet is opened from the header, not a Radix trigger, so it has to remember
-  // the button itself or closing drops focus on the body.
-  const openerRef = useRef<HTMLElement | null>(null);
   const phoneHref = toPhoneHref(contactPhone);
 
   return (
@@ -62,15 +58,6 @@ export function MobileMenuSheet({
         side="right"
         // The whole sheet scrolls, so a landscape phone reaches every link instead of a sliver of them.
         className="flex h-dvh w-full flex-col overflow-y-auto"
-        onOpenAutoFocus={() => {
-          const opener = document.activeElement;
-          openerRef.current = opener instanceof HTMLElement ? opener : null;
-        }}
-        onCloseAutoFocus={(event) => {
-          if (!openerRef.current?.isConnected) return;
-          event.preventDefault();
-          openerRef.current.focus();
-        }}
       >
         <SheetHeader className="px-6 py-5">
           <SheetTitle className="font-heading text-xl tracking-tight">

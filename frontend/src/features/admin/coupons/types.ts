@@ -116,9 +116,11 @@ export function applyCouponPatch(
   if (patch.kind === "remove") {
     return rows.filter((row) => row.id !== patch.id);
   }
-  const isKnown = rows.some((row) => row.id === patch.row.id);
-  if (!isKnown) return [patch.row, ...rows];
-  return rows.map((row) => (row.id === patch.row.id ? patch.row : row));
+  // Codes are unique, so a draft whose saved row has already been read back replaces it, not joins it.
+  const isSame = (row: CouponRow) =>
+    row.id === patch.row.id || row.code === patch.row.code;
+  if (!rows.some(isSame)) return [patch.row, ...rows];
+  return rows.map((row) => (isSame(row) ? { ...patch.row, id: row.id } : row));
 }
 
 export function describeCouponDeletion(

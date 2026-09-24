@@ -358,6 +358,15 @@ describe("applyBlackoutPatch", () => {
     expect(next[0]?.reason).toBe("Kiln");
   });
 
+  it("never shows a draft twice once its saved spell is read back", () => {
+    const next = applyBlackoutPatch([blackout(5, "2026-10-01T00:00:00.000Z")], {
+      kind: "save",
+      blackout: blackout(0, "2026-10-01T00:00:00.000Z"),
+    });
+
+    expect(next.map((row) => row.id)).toEqual([5]);
+  });
+
   it("removes a spell by id", () => {
     const next = applyBlackoutPatch(
       [

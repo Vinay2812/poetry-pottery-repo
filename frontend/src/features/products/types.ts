@@ -6,6 +6,8 @@ import {
   type ProductsFilterInput,
 } from "@/graphql/generated/graphql";
 
+import type { UrlCodec } from "@/lib/use-url-state";
+
 import { buildWhatsAppUrl } from "@/features/layout/types";
 
 export type ProductCardData = ProductCardFragment;
@@ -606,3 +608,13 @@ export function toConfirmedPhotoUrls(photos: ReferencePhoto[]): string[] {
 export function isPhotoUploadPending(photos: ReferencePhoto[]): boolean {
   return photos.some((photo) => photo.url === null && photo.error === null);
 }
+
+export function hasFailedPhoto(photos: ReferencePhoto[]): boolean {
+  return photos.some((photo) => photo.error !== null);
+}
+
+export const PRODUCT_FILTERS_CODEC: UrlCodec<ProductFilters, FilterAction> = {
+  parse: parseFilters,
+  serialize: (filters) => toSearchParams(filters).toString(),
+  apply: applyFilterAction,
+};

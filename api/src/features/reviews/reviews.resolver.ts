@@ -10,6 +10,7 @@ import {
 } from "@nestjs/graphql";
 import { UserRole } from "@prisma/client";
 
+import { RequestBatch } from "@/common/batch/batch";
 import { AuthRequired } from "@/common/decorators/auth.decorators";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
 import { StrictThrottle } from "@/common/decorators/throttle.decorators";
@@ -142,20 +143,26 @@ export class ReviewsResolver {
 
 @Resolver(() => Product)
 export class ProductReviewEligibilityResolver {
+  // Scoped by the signed-in user, so one visitor's answer never reaches another.
+  private readonly eligibilityBatch = new RequestBatch(
+    (productIds: number[], userId: number | null) =>
+      this.reviewsService.eligibilityFor("product_id", productIds, userId),
+  );
+
   constructor(
     private readonly reviewsService: ReviewsService,
     private readonly authGuard: AuthGuard,
   ) {}
 
-  // Only the product page asks for this, so the extra lookups never hit list queries.
   @ResolveField(() => ReviewEligibility)
   async review_eligibility(
     @Parent() product: Product,
     @Context() context: GqlContext,
   ): Promise<ReviewEligibility> {
     const user = await this.authGuard.tryAuthenticate(context.req);
-    return this.reviewsService.eligibility(
-      { product_id: product.id },
+    return this.eligibilityBatch.load(
+      context,
+      product.id,
       user?.db_user_id ?? null,
     );
   }
@@ -163,6 +170,11 @@ export class ProductReviewEligibilityResolver {
 
 @Resolver(() => Event)
 export class EventReviewEligibilityResolver {
+  private readonly eligibilityBatch = new RequestBatch(
+    (eventIds: number[], userId: number | null) =>
+      this.reviewsService.eligibilityFor("event_id", eventIds, userId),
+  );
+
   constructor(
     private readonly reviewsService: ReviewsService,
     private readonly authGuard: AuthGuard,
@@ -174,8 +186,9 @@ export class EventReviewEligibilityResolver {
     @Context() context: GqlContext,
   ): Promise<ReviewEligibility> {
     const user = await this.authGuard.tryAuthenticate(context.req);
-    return this.reviewsService.eligibility(
-      { event_id: event.id },
+    return this.eligibilityBatch.load(
+      context,
+      event.id,
       user?.db_user_id ?? null,
     );
   }

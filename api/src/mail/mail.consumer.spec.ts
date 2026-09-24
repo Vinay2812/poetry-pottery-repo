@@ -8,6 +8,7 @@ import { MailService, type MailMessage } from "./mail.service";
 
 const subscriptionSchema = z.object({
   type: z.string(),
+  errorHandler: z.custom<() => void>((value) => typeof value === "function"),
   exchange: z.string(),
   routingKey: z.string(),
   queue: z.string(),
@@ -16,6 +17,8 @@ const subscriptionSchema = z.object({
     deadLetterExchange: z.string(),
   }),
 });
+
+const anyFunction = (): unknown => expect.any(Function);
 
 function subscriptionOn(
   target: object,
@@ -117,6 +120,7 @@ describe("MailConsumer", () => {
   it("listens on the durable mail queue bound to the topic exchange", () => {
     expect(subscriptionOn(MailConsumer.prototype, "handle")).toEqual({
       type: "subscribe",
+      errorHandler: anyFunction(),
       exchange: "poetry",
       routingKey: "mail.send",
       queue: "poetry.mail.send",

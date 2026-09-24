@@ -22,10 +22,10 @@ import {
   SlotList,
   type SlotOption,
 } from "@/features/workshops/components/SlotList";
-import { useRestoreFocus } from "@/lib/use-restore-focus";
 
 export interface RescheduleDialogProps {
   isOpen: boolean;
+  isLoading: boolean;
   monthLabel: string;
   notice: string | null;
   weeks: (CalendarDay | null)[][];
@@ -48,6 +48,7 @@ export interface RescheduleDialogProps {
 
 export function RescheduleDialog({
   isOpen,
+  isLoading,
   monthLabel,
   weeks,
   selectedDate,
@@ -67,14 +68,9 @@ export function RescheduleDialog({
   onRemoveSlot,
   onConfirm,
 }: RescheduleDialogProps) {
-  const restoreFocus = useRestoreFocus();
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent
-        onOpenAutoFocus={restoreFocus.onOpenAutoFocus}
-        onCloseAutoFocus={restoreFocus.onCloseAutoFocus}
-        className="max-h-[90vh] max-w-lg overflow-y-auto"
-      >
+      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Move this session
@@ -92,21 +88,24 @@ export function RescheduleDialog({
           selectedDate={selectedDate}
           canGoBack={canGoBack}
           canGoForward={canGoForward}
+          isLoading={isLoading}
           onPreviousMonth={onPreviousMonth}
           onNextMonth={onNextMonth}
           onSelectDate={onSelectDate}
         />
 
-        <SlotList
-          slots={slots}
-          selectedStarts={pickedSlots.map((slot) => slot.startsAt)}
-          emptyMessage={
-            selectedDate
-              ? "Nothing is free that day."
-              : "Pick a day to see its hours."
-          }
-          onToggleSlot={onToggleSlot}
-        />
+        {!isLoading && (
+          <SlotList
+            slots={slots}
+            selectedStarts={pickedSlots.map((slot) => slot.startsAt)}
+            emptyMessage={
+              selectedDate
+                ? "Nothing is free that day."
+                : "Pick a day to see its hours."
+            }
+            onToggleSlot={onToggleSlot}
+          />
+        )}
 
         <PickedSlots
           slots={pickedSlots}

@@ -19,8 +19,8 @@ import type {
 import { SettingsService } from "@/features/settings/settings.service";
 import { slugify } from "../slug";
 import { trimmed } from "../admin.type";
-import { UploadsService } from "../uploads/uploads.service";
-import { UploadPurpose } from "../uploads/uploads.type";
+import { UploadsService } from "@/uploads/uploads.service";
+import { UploadPurpose } from "@/uploads/uploads.type";
 import type {
   AdminAnnouncementInput,
   AdminSiteSettingsInput,
@@ -74,7 +74,7 @@ export class AdminContentService {
       select: { hero_image_url: true },
     });
     const hero = input.hero_image_url?.trim() || null;
-    await this.uploads.assertConfirmed(
+    await this.uploads.claimConfirmed(
       hero ? [hero] : [],
       current?.hero_image_url ? [current.hero_image_url] : [],
       UploadPurpose.CONTENT,
@@ -115,7 +115,7 @@ export class AdminContentService {
     );
     if (input.hero_image_url !== undefined) {
       const current = stored;
-      await this.uploads.assertConfirmed(
+      await this.uploads.claimConfirmed(
         hero ? [hero] : [],
         current.hero_image_url ? [current.hero_image_url] : [],
         UploadPurpose.HERO,
