@@ -16,8 +16,10 @@ export const jobSchemas = {
     html: z.string().min(1),
     text: z.string().optional(),
   }),
-  // A photo nobody kept: abandoned before it reached a cart or a brief, or left by a removed review.
+  // A photo something on the site let go of, once nothing else holds it.
   "storage.delete-object": z.object({ key: z.string().min(1) }),
+  // Fired a day after a presign; the upload is deleted if nothing has claimed it by then.
+  "upload.expire": z.object({ key: z.string().min(1) }),
 } as const;
 
 export type JobName = keyof typeof jobSchemas;
@@ -28,6 +30,15 @@ export type JobPayload<Name extends JobName> = z.infer<
 
 export const JOB_NAMES = Object.keys(jobSchemas) as JobName[];
 
+// Jobs that wait before they run sit out this long on their own delay queue first.
+export const DELAYS = {
+  "upload.expire": 24 * 60 * 60 * 1000,
+} as const satisfies Partial<Record<JobName, number>>;
+
+export type DelayedJobName = keyof typeof DELAYS;
+
+export const DELAYED_JOB_NAMES = Object.keys(DELAYS) as DelayedJobName[];
+
 export function queueNameFor(job: JobName): string {
   return `${QUEUE_EXCHANGE}.${job}`;
 }
@@ -35,6 +46,17 @@ export function queueNameFor(job: JobName): string {
 // A failed delivery parks here and flows back to the job's own queue once the TTL runs out.
 export function retryQueueNameFor(job: JobName): string {
   return `${queueNameFor(job)}.retry`;
+}
+
+// A delayed job is published straight to this queue and dead-letters onto its routing key when the TTL runs out.
+export function delayQueueNameFor(job: DelayedJobName): string {
+  return `${queueNameFor(job)}.delay`;
+}
+
+export function jobForDelayQueue(queue: string): DelayedJobName | null {
+  return (
+    DELAYED_JOB_NAMES.find((job) => delayQueueNameFor(job) === queue) ?? null
+  );
 }
 
 // Header carrying how many times the job has been handed to a consumer.

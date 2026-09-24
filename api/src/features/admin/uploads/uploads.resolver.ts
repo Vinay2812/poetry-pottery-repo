@@ -1,9 +1,16 @@
 import { Args, Int, Mutation, Query, Resolver } from "@nestjs/graphql";
 
+import type { AuthUser } from "@/common/clerk/clerk.type";
 import { AdminRequired } from "@/common/decorators/auth.decorators";
+import { CurrentUser } from "@/common/decorators/current-user.decorator";
 import { UploadTarget } from "@/features/reviews/reviews.type";
-import { UploadsService } from "./uploads.service";
-import { ConfirmedImage, ImageSpec, UploadPurpose } from "./uploads.type";
+import { extensionFor } from "@/uploads/image-specs";
+import { UploadsService } from "@/uploads/uploads.service";
+import {
+  ConfirmedImage,
+  ImageSpec,
+  UploadPurpose,
+} from "@/uploads/uploads.type";
 
 @Resolver(() => ImageSpec)
 export class AdminUploadsResolver {
@@ -18,11 +25,16 @@ export class AdminUploadsResolver {
   @AdminRequired()
   @Mutation(() => UploadTarget)
   createAdminUpload(
+    @CurrentUser() user: AuthUser,
     @Args("purpose", { type: () => UploadPurpose }) purpose: UploadPurpose,
     @Args("content_type") contentType: string,
     @Args("size", { type: () => Int }) size: number,
   ): Promise<UploadTarget> {
-    return this.uploads.createUpload(purpose, contentType, size);
+    return this.uploads.issue(user.db_user_id, purpose, {
+      filename: `${purpose.toLowerCase()}.${extensionFor(contentType)}`,
+      content_type: contentType,
+      size,
+    });
   }
 
   @AdminRequired()

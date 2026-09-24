@@ -195,4 +195,41 @@ describe("ShelfService", () => {
       expect(queueMock.publish).not.toHaveBeenCalled();
     });
   });
+
+  describe("setMadeToOrder", () => {
+    it("announces a sold-out piece made to order, since it can be bought again", async () => {
+      prismaMock.product.updateManyAndReturn.mockResolvedValue([
+        { ...listed, stock: 0, is_customizable: true },
+      ]);
+
+      await expect(service.setMadeToOrder(10, true)).resolves.toBe(true);
+
+      expect(prismaMock.product.updateManyAndReturn).toHaveBeenCalledWith(
+        containing({
+          where: { id: 10, is_customizable: false },
+          data: { is_customizable: true },
+        }),
+      );
+      expect(queueMock.publish).toHaveBeenCalledWith("notify.back-in-stock", {
+        productId: 10,
+      });
+    });
+
+    it("stays quiet when the piece was buyable anyway, is archived, or the flag did not move", async () => {
+      prismaMock.product.updateManyAndReturn.mockResolvedValue([
+        { ...listed, stock: 3, is_customizable: true },
+      ]);
+      await service.setMadeToOrder(10, true);
+
+      prismaMock.product.updateManyAndReturn.mockResolvedValue([
+        { ...listed, is_active: false, stock: 0, is_customizable: true },
+      ]);
+      await service.setMadeToOrder(10, true);
+
+      prismaMock.product.updateManyAndReturn.mockResolvedValue([]);
+      await expect(service.setMadeToOrder(10, true)).resolves.toBe(false);
+
+      expect(queueMock.publish).not.toHaveBeenCalled();
+    });
+  });
 });

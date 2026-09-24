@@ -10,7 +10,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PrismaService } from "@/prisma/prisma.service";
 import { EventsService } from "@/features/events/events.service";
 import { SearchService } from "@/features/search/search.service";
-import { UploadsService } from "../uploads/uploads.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import {
   AdminEventsService,
   assertSchedule,
@@ -86,7 +86,7 @@ const prismaMock = {
 };
 const eventsMock = { applyStatus: vi.fn() };
 const searchMock = { requestEventIndex: vi.fn() };
-const uploadsMock = { assertConfirmed: vi.fn() };
+const uploadsMock = { claimConfirmed: vi.fn() };
 
 function input(overrides: Record<string, unknown> = {}) {
   return {
@@ -201,7 +201,7 @@ describe("AdminEventsService", () => {
       input({ gallery: ["https://cdn.example.com/events/b.png"] }),
     );
 
-    expect(uploadsMock.assertConfirmed).toHaveBeenCalledWith(
+    expect(uploadsMock.claimConfirmed).toHaveBeenCalledWith(
       [
         "https://cdn.example.com/events/a.png",
         "https://cdn.example.com/events/b.png",

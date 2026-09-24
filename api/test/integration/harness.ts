@@ -7,7 +7,6 @@ import { Client } from "pg";
 
 import { AdminEventsService } from "@/features/admin/events/events.service";
 import { AdminProductsService } from "@/features/admin/products/products.service";
-import { UploadsService } from "@/features/admin/uploads/uploads.service";
 import { CartService } from "@/features/cart/cart.service";
 import { CommissionsService } from "@/features/commissions/commissions.service";
 import { ContactService } from "@/features/contact/contact.service";
@@ -34,11 +33,11 @@ import {
   PrismaService,
   withAmbientTransactions,
 } from "@/prisma/prisma.service";
-import { jobSchemas } from "@/queue/jobs";
+import { jobForDelayQueue, jobSchemas } from "@/queue/jobs";
 import { QueueService } from "@/queue/queue.service";
 import { RedisService } from "@/redis/redis.service";
-import { PendingUploadsService } from "@/storage/pending-uploads.service";
-import { StorageService } from "@/storage/storage.service";
+import { StorageService, type UploadTarget } from "@/storage/storage.service";
+import { UploadsService } from "@/uploads/uploads.service";
 
 class RedisStub {
   getOrSet<T>(
@@ -50,18 +49,6 @@ class RedisStub {
   }
 
   del(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  trackPending(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  sweepPending(): Promise<{ expired: string[]; pending: number }> {
-    return Promise.resolve({ expired: [], pending: 0 });
-  }
-
-  dropPending(): Promise<void> {
     return Promise.resolve();
   }
 }
@@ -77,17 +64,61 @@ class LoggerStub {
 // The studio's own bucket inside the sandbox; every other origin is somebody else's.
 export const STUDIO_CDN = "https://cdn.test";
 
-class StorageStub {
+// Stands in for the bucket: presigns hand out keys, objects a test puts in can be read back, and
+// deletes are recorded so a test can see which photos were really let go.
+export class StorageRecorder {
+  readonly isEnabled = true;
+  readonly objects = new Map<string, Buffer>();
+  readonly deleted: string[] = [];
+  private sequence = 0;
+
   isOwnUrl(url: string): boolean {
     return url.startsWith(`${STUDIO_CDN}/`);
   }
 
-  keyFor(): string | null {
-    return null;
+  keyFor(url: string): string | null {
+    if (!this.isOwnUrl(url)) return null;
+    return url.slice(STUDIO_CDN.length + 1) || null;
   }
 
-  isUploadedUnder(url: string, prefix: string): boolean {
-    return url.startsWith(`${STUDIO_CDN}/${prefix}`);
+  publicUrlFor(key: string): string {
+    return `${STUDIO_CDN}/${key}`;
+  }
+
+  createImageUpload(input: {
+    folder: string;
+    subfolder?: string;
+    filename: string;
+  }): Promise<UploadTarget> {
+    this.sequence += 1;
+    const prefix = input.subfolder
+      ? `${input.folder}/${input.subfolder}`
+      : input.folder;
+    const key = `${prefix}/${this.sequence}-${input.filename}`;
+    return Promise.resolve({
+      upload_url: `https://upload.test/${key}`,
+      public_url: this.publicUrlFor(key),
+      key,
+    });
+  }
+
+  readObject(key: string): Promise<Buffer> {
+    const body = this.objects.get(key);
+    if (!body) {
+      return Promise.reject(new Error(`no object at ${key}`));
+    }
+    return Promise.resolve(body);
+  }
+
+  deleteObject(key: string): Promise<void> {
+    this.deleted.push(key);
+    this.objects.delete(key);
+    return Promise.resolve();
+  }
+
+  reset(): void {
+    this.objects.clear();
+    this.deleted.length = 0;
   }
 }
 
@@ -126,34 +157,6 @@ class SearchStub {
   }
 }
 
-class UploadsStub {
-  assertConfirmed(): Promise<void> {
-    return Promise.resolve();
-  }
-}
-
-// Redis is outside the sandbox, so the tracker is stubbed and a test reads what it was told to keep.
-export class PendingUploadsRecorder {
-  readonly kept: { userId: number; urls: readonly string[] }[] = [];
-
-  track(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  keep(userId: number, urls: readonly string[]): Promise<void> {
-    this.kept.push({ userId, urls });
-    return Promise.resolve();
-  }
-
-  sweep(): Promise<number> {
-    return Promise.resolve(0);
-  }
-
-  reset(): void {
-    this.kept.length = 0;
-  }
-}
-
 export type Deliver = (job: string, payload: unknown) => Promise<void>;
 
 // No broker in the sandbox, so a test reads the jobs that reached the connection. The real
@@ -183,6 +186,12 @@ export class QueueRecorder {
       .map((entry) => jobSchemas["notify.back-in-stock"].parse(entry.payload))
       .map((payload) => payload.productId);
   }
+
+  keysFor(job: "upload.expire" | "storage.delete-object"): string[] {
+    return this.published
+      .filter((entry) => entry.job === job)
+      .map((entry) => jobSchemas[job].parse(entry.payload).key);
+  }
 }
 
 // Stands in for the AMQP connection and fans each publish out to the recorders.
@@ -196,10 +205,15 @@ class BrokerStub {
   ) {}
 
   async publish(
-    _exchange: string,
-    job: string,
+    exchange: string,
+    routingKey: string,
     payload: unknown,
   ): Promise<boolean> {
+    // A delayed job is addressed to its delay queue; record it under the job it will become.
+    const job =
+      exchange === ""
+        ? (jobForDelayQueue(routingKey) ?? routingKey)
+        : routingKey;
     const prisma = this.prisma.current;
     this.queue.record(job, payload, prisma?.inTransaction ?? false);
     if (job === "mail.send") {
@@ -230,6 +244,7 @@ export interface Harness {
   reviews: ReviewsService;
   commissions: CommissionsService;
   users: UsersService;
+  uploads: UploadsService;
   adminEvents: AdminEventsService;
   adminProducts: AdminProductsService;
   products: ProductsService;
@@ -242,8 +257,8 @@ export interface HarnessOptions {
   mail?: MailRecorder;
   // Pass one when the test needs to read the jobs a service published.
   queue?: QueueRecorder;
-  // Pass one when the test needs to see which reference photos were kept.
-  uploads?: PendingUploadsRecorder;
+  // Pass one when the test needs to put objects in the bucket or see which were deleted.
+  storage?: StorageRecorder;
   // Wraps the client, e.g. to count the queries a request makes.
   prisma?: (service: PrismaService) => PrismaService;
 }
@@ -272,12 +287,10 @@ export function outsideWorld(options: HarnessOptions = {}): Provider[] {
     QueueService,
     MailService,
     { provide: SearchService, useClass: SearchStub },
-    { provide: StorageService, useClass: StorageStub },
     {
-      provide: PendingUploadsService,
-      useValue: options.uploads ?? new PendingUploadsRecorder(),
+      provide: StorageService,
+      useValue: options.storage ?? new StorageRecorder(),
     },
-    { provide: UploadsService, useClass: UploadsStub },
   ];
 }
 
@@ -290,6 +303,7 @@ export async function createHarness(
       ...outsideWorld(options),
       SettingsService,
       ShelfService,
+      UploadsService,
       NotificationsService,
       CartService,
       OrdersService,
@@ -323,6 +337,7 @@ export async function createHarness(
     reviews: moduleRef.get(ReviewsService),
     commissions: moduleRef.get(CommissionsService),
     users: moduleRef.get(UsersService),
+    uploads: moduleRef.get(UploadsService),
     adminEvents: moduleRef.get(AdminEventsService),
     adminProducts: moduleRef.get(AdminProductsService),
     products: moduleRef.get(ProductsService),
@@ -356,6 +371,7 @@ const TRUNCATED = [
   "newsletter_subscribers",
   "contact_messages",
   "commission_requests",
+  "uploads",
   "users",
 ];
 

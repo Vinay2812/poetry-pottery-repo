@@ -23,8 +23,8 @@ import type { Event } from "@/features/events/events.type";
 import { SearchService } from "@/features/search/search.service";
 import { searchTerm, toUserRef, trimmed } from "../admin.type";
 import { slugify, uniqueSlug } from "../slug";
-import { UploadsService } from "../uploads/uploads.service";
-import { UploadPurpose } from "../uploads/uploads.type";
+import { UploadsService } from "@/uploads/uploads.service";
+import { UploadPurpose } from "@/uploads/uploads.type";
 import type {
   AdminEventInput,
   AdminEventsFilterInput,
@@ -139,7 +139,7 @@ export class AdminEventsService {
     const gallery = (input.gallery ?? [])
       .map((url) => url.trim())
       .filter(Boolean);
-    await this.uploads.assertConfirmed(
+    await this.uploads.claimConfirmed(
       [input.image_url, ...gallery],
       [],
       UploadPurpose.EVENT,
@@ -214,7 +214,7 @@ export class AdminEventsService {
     const gallery = (input.gallery ?? [])
       .map((url) => url.trim())
       .filter(Boolean);
-    await this.uploads.assertConfirmed(
+    await this.uploads.claimConfirmed(
       [input.image_url, ...gallery],
       [current.image_url, ...current.gallery],
       UploadPurpose.EVENT,

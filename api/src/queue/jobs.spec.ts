@@ -3,7 +3,11 @@ import { describe, expect, it } from "vitest";
 import {
   DEAD_LETTER_EXCHANGE,
   DEAD_LETTER_QUEUE,
+  DELAYED_JOB_NAMES,
+  DELAYS,
+  delayQueueNameFor,
   JOB_NAMES,
+  jobForDelayQueue,
   type JobName,
   jobSchemas,
   QUEUE_EXCHANGE,
@@ -106,6 +110,17 @@ describe("delete object job payload", () => {
   });
 });
 
+describe("upload expiry job payload", () => {
+  it("accepts a non-empty key and nothing else", () => {
+    expect(
+      jobSchemas["upload.expire"].parse({ key: "reviews/7/a.jpg" }),
+    ).toEqual({ key: "reviews/7/a.jpg" });
+    expect(() => jobSchemas["upload.expire"].parse({ key: "" })).toThrow();
+    expect(() => jobSchemas["upload.expire"].parse({})).toThrow();
+    expect(() => jobSchemas["upload.expire"].parse({ key: 42 })).toThrow();
+  });
+});
+
 describe("queue topology", () => {
   const jobNames: JobName[] = [
     "search.index-product",
@@ -113,6 +128,7 @@ describe("queue topology", () => {
     "notify.back-in-stock",
     "mail.send",
     "storage.delete-object",
+    "upload.expire",
   ];
 
   it("names one durable queue per job under the topic exchange", () => {
@@ -124,13 +140,26 @@ describe("queue topology", () => {
       "poetry.notify.back-in-stock",
       "poetry.mail.send",
       "poetry.storage.delete-object",
+      "poetry.upload.expire",
     ]);
   });
 
-  it("gives every job its own delay queue and a bounded retry budget", () => {
+  it("gives every job its own retry queue and a bounded retry budget", () => {
     expect(retryQueueNameFor("mail.send")).toBe("poetry.mail.send.retry");
     expect(RETRY.maxAttempts).toBeGreaterThan(1);
     expect(RETRY.delayMs).toBeGreaterThan(0);
+  });
+
+  it("parks an upload expiry for a day on its own delay queue and finds its way back", () => {
+    expect(DELAYED_JOB_NAMES).toEqual(["upload.expire"]);
+    expect(DELAYS["upload.expire"]).toBe(24 * 60 * 60 * 1000);
+    expect(delayQueueNameFor("upload.expire")).toBe(
+      "poetry.upload.expire.delay",
+    );
+    expect(jobForDelayQueue("poetry.upload.expire.delay")).toBe(
+      "upload.expire",
+    );
+    expect(jobForDelayQueue("poetry.mail.send")).toBeNull();
   });
 
   it("keeps the exchange and dead-letter names the module binds", () => {

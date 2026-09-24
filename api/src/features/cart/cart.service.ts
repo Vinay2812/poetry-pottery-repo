@@ -3,7 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from "@nestjs/common";
-import { Prisma } from "@prisma/client";
+import { Prisma, UploadPurpose } from "@prisma/client";
 
 import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
@@ -13,8 +13,7 @@ import {
   toProduct,
 } from "@/features/products/products.service";
 import { SettingsService } from "@/features/settings/settings.service";
-import { PendingUploadsService } from "@/storage/pending-uploads.service";
-import { customizationPrefix, StorageService } from "@/storage/storage.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import type { AddToCartInput, Cart, CartItem } from "./cart.type";
 import {
   readCustomisation,
@@ -112,8 +111,7 @@ export class CartService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly settings: SettingsService,
-    private readonly storage: StorageService,
-    private readonly pendingUploads: PendingUploadsService,
+    private readonly uploads: UploadsService,
   ) {}
 
   async get(userId: number): Promise<Cart> {
@@ -170,9 +168,7 @@ export class CartService {
       ? resolveSelections(product.option_groups, input.selections ?? [])
       : [];
     const referenceImages = product.is_customizable
-      ? resolveReferenceImages(input.reference_image_urls, (url) =>
-          this.storage.isUploadedUnder(url, customizationPrefix(userId)),
-        )
+      ? resolveReferenceImages(input.reference_image_urls)
       : [];
     const key = selectionKey(selections, referenceImages);
 
@@ -222,10 +218,14 @@ export class CartService {
         },
         update: { quantity: nextQuantity },
       });
+      // The line holds the photos now; only this shopper's own uploads pass, and a rollback unclaims them.
+      await this.uploads.claim(
+        userId,
+        UploadPurpose.REFERENCE,
+        referenceImages,
+      );
     });
 
-    // The photos are on a cart line now, so they are no longer waiting to be swept.
-    await this.pendingUploads.keep(userId, referenceImages);
     return this.get(userId);
   }
 
@@ -243,7 +243,7 @@ export class CartService {
     }
     const next = Math.trunc(quantity);
     if (next <= 0) {
-      await this.prisma.cartItem.delete({ where: { id: row.id } });
+      await this.removeLines(userId, [row.id]);
     } else {
       if (next > MAX_LINE_QUANTITY) {
         throw new BadRequestException(
@@ -260,15 +260,39 @@ export class CartService {
   }
 
   async remove(userId: number, itemId: number): Promise<Cart> {
-    await this.prisma.cartItem.deleteMany({
-      where: { id: itemId, user_id: userId },
-    });
+    await this.removeLines(userId, [itemId]);
     return this.get(userId);
   }
 
   async clear(userId: number): Promise<Cart> {
-    await this.prisma.cartItem.deleteMany({ where: { user_id: userId } });
+    await this.removeLines(userId, null);
     return this.get(userId);
+  }
+
+  // Every way a line leaves the cart comes through here, so its reference photos are released and
+  // deleted unless another line, an order item or a brief still holds them. Null means every line.
+  removeLines(
+    userId: number,
+    itemIds: readonly number[] | null,
+  ): Promise<void> {
+    return this.prisma.withTransaction(async () => {
+      const rows = await this.prisma.cartItem.findMany({
+        where: {
+          user_id: userId,
+          ...(itemIds === null ? {} : { id: { in: [...itemIds] } }),
+        },
+        select: { id: true, selections: true },
+      });
+      if (rows.length === 0) return;
+      await this.prisma.cartItem.deleteMany({
+        where: { id: { in: rows.map((row) => row.id) } },
+      });
+      await this.uploads.release(
+        rows.flatMap(
+          (row) => readCustomisation(row.selections).reference_image_urls,
+        ),
+      );
+    });
   }
 
   // inCart is what the line already held, so the message explains why a small add was refused.

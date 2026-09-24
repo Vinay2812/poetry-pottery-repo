@@ -1,4 +1,4 @@
-import { CouponKind, OrderStatus } from "@prisma/client";
+import { CouponKind, OrderStatus, UploadPurpose } from "@prisma/client";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { orderInclude } from "@/features/orders/orders.service";
@@ -294,6 +294,14 @@ describe("studio notes on an order", () => {
 
   it("files the note on the order and writes to the buyer once", async () => {
     const order = await placeOrder();
+    // A photo the console already confirmed against the order-note spec.
+    await harness.prisma.upload.create({
+      data: {
+        key: "orders/kiln.jpg",
+        purpose: UploadPurpose.ORDER_NOTE,
+        confirmed_at: new Date(),
+      },
+    });
 
     const result = await harness.orders.addNote({
       order_id: order.id,

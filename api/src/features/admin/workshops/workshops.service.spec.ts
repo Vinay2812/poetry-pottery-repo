@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PrismaService } from "@/prisma/prisma.service";
 import { WorkshopsService } from "@/features/workshops/workshops.service";
 import { missingRow } from "@test/helpers/prisma-errors";
-import { UploadsService } from "../uploads/uploads.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import {
   AdminWorkshopsService,
   assertHours,
@@ -84,7 +84,7 @@ const prismaMock = {
   workshopBooking: { findMany: vi.fn(), findUnique: vi.fn(), count: vi.fn() },
 };
 const workshopsMock = { applyStatus: vi.fn() };
-const uploadsMock = { assertConfirmed: vi.fn() };
+const uploadsMock = { claimConfirmed: vi.fn() };
 
 describe("assertTiersFit", () => {
   it("accepts tiers that are whole numbers of slots", () => {

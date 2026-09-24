@@ -32,6 +32,7 @@ import {
 import { ReviewsService } from "@/features/reviews/reviews.service";
 import { WishlistService } from "@/features/wishlist/wishlist.service";
 import { PrismaService } from "@/prisma/prisma.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import { postGraphql } from "@test/helpers/http";
 // Registers every GraphQL type and enum, as the running API does; some type files lean on another's enums.
 import "@/resolvers";
@@ -259,6 +260,7 @@ describe("nested list fields", () => {
         { provide: AuthGuard, useClass: ViewerGuard },
         ProductsService,
         WishlistService,
+        UploadsService,
         ReviewsService,
         EventsService,
         ProductsResolver,

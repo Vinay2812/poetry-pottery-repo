@@ -9,7 +9,7 @@ import { SearchService } from "@/features/search/search.service";
 import { missingRow } from "@test/helpers/prisma-errors";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ShelfService } from "@/features/products/shelf.service";
-import { UploadsService } from "../uploads/uploads.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import {
   assertSecond,
   cleanList,
@@ -33,6 +33,7 @@ const row = {
 };
 
 const prismaMock = {
+  withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
   product: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
@@ -57,8 +58,12 @@ const prismaMock = {
 };
 const productsMock = { invalidateCatalogCache: vi.fn() };
 const searchMock = { requestProductIndex: vi.fn() };
-const uploadsMock = { assertConfirmed: vi.fn() };
-const shelfMock = { adjust: vi.fn(), setListed: vi.fn() };
+const uploadsMock = { claimConfirmed: vi.fn() };
+const shelfMock = {
+  adjust: vi.fn(),
+  setListed: vi.fn(),
+  setMadeToOrder: vi.fn(),
+};
 const loggerMock = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
 
 function input(overrides: Record<string, unknown> = {}) {
@@ -101,6 +106,7 @@ describe("AdminProductsService", () => {
     prismaMock.glaze.count.mockResolvedValue(1);
     shelfMock.adjust.mockResolvedValue(2);
     shelfMock.setListed.mockResolvedValue(true);
+    shelfMock.setMadeToOrder.mockResolvedValue(true);
     const moduleRef = await Test.createTestingModule({
       providers: [
         AdminProductsService,
@@ -171,7 +177,7 @@ describe("AdminProductsService", () => {
       input({ image_urls: ["https://cdn.example.com/products/one.png"] }),
     );
 
-    expect(uploadsMock.assertConfirmed).toHaveBeenCalledWith(
+    expect(uploadsMock.claimConfirmed).toHaveBeenCalledWith(
       ["https://cdn.example.com/products/one.png"],
       [],
       "PRODUCT",
@@ -210,6 +216,21 @@ describe("AdminProductsService", () => {
     await service.setActive(1, false);
 
     expect(shelfMock.setListed).toHaveBeenCalledWith(1, false);
+  });
+
+  it("routes a made-to-order flip through the shelf, inside the same write", async () => {
+    await service.update(1, { is_customizable: true });
+
+    expect(shelfMock.setMadeToOrder).toHaveBeenCalledWith(1, true);
+    expect(prismaMock.withTransaction).toHaveBeenCalled();
+    const call = prismaMock.product.update.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(call.data).not.toHaveProperty("is_customizable");
+
+    vi.clearAllMocks();
+    await service.update(1, { name: "Slate mug" });
+    expect(shelfMock.setMadeToOrder).not.toHaveBeenCalled();
   });
 
   it("refuses to put an empty batch on the shelf", async () => {

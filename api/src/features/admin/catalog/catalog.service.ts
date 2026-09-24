@@ -9,8 +9,8 @@ import { ProductsService } from "@/features/products/products.service";
 import type { Category, Collection } from "@/features/products/products.type";
 import { rethrowMissing } from "../missing-row";
 import { slugify, uniqueSlug } from "../slug";
-import { UploadsService } from "../uploads/uploads.service";
-import { UploadPurpose } from "../uploads/uploads.type";
+import { UploadsService } from "@/uploads/uploads.service";
+import { UploadPurpose } from "@/uploads/uploads.type";
 import type { AdminCategoryInput, AdminCollectionInput } from "./catalog.type";
 
 export function assertWindow(
@@ -55,7 +55,7 @@ export class AdminCatalogService {
 
   async createCategory(input: AdminCategoryInput): Promise<Category> {
     const image_url = input.image_url?.trim() || null;
-    await this.uploads.assertConfirmed(
+    await this.uploads.claimConfirmed(
       image_url ? [image_url] : [],
       [],
       UploadPurpose.CATEGORY,
@@ -85,7 +85,7 @@ export class AdminCatalogService {
       throw new NotFoundException("Category not found");
     }
     const image_url = input.image_url?.trim() || null;
-    await this.uploads.assertConfirmed(
+    await this.uploads.claimConfirmed(
       image_url ? [image_url] : [],
       current.image_url ? [current.image_url] : [],
       UploadPurpose.CATEGORY,
@@ -116,7 +116,7 @@ export class AdminCatalogService {
   async createCollection(input: AdminCollectionInput): Promise<Collection> {
     assertWindow(input.starts_at, input.ends_at);
     const image_url = input.image_url?.trim() || null;
-    await this.uploads.assertConfirmed(
+    await this.uploads.claimConfirmed(
       image_url ? [image_url] : [],
       [],
       UploadPurpose.COLLECTION,
@@ -148,7 +148,7 @@ export class AdminCatalogService {
       throw new NotFoundException("Collection not found");
     }
     const image_url = input.image_url?.trim() || null;
-    await this.uploads.assertConfirmed(
+    await this.uploads.claimConfirmed(
       image_url ? [image_url] : [],
       current.image_url ? [current.image_url] : [],
       UploadPurpose.COLLECTION,

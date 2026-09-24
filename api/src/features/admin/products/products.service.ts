@@ -25,8 +25,8 @@ import { searchTerm } from "../admin.type";
 import { LOW_STOCK_THRESHOLD } from "../dashboard/dashboard.service";
 import { rethrowMissing } from "../missing-row";
 import { slugify, uniqueSlug } from "../slug";
-import { UploadsService } from "../uploads/uploads.service";
-import { UploadPurpose } from "../uploads/uploads.type";
+import { UploadsService } from "@/uploads/uploads.service";
+import { UploadPurpose } from "@/uploads/uploads.type";
 import type {
   AdminOptionGroupInput,
   AdminOptionInput,
@@ -182,7 +182,7 @@ export class AdminProductsService {
       input.glaze_id,
     );
     const image_urls = cleanList(input.image_urls);
-    await this.uploads.assertConfirmed(image_urls, [], UploadPurpose.PRODUCT);
+    await this.uploads.claimConfirmed(image_urls, [], UploadPurpose.PRODUCT);
 
     const row = await this.prisma.product.create({
       data: {
@@ -249,74 +249,79 @@ export class AdminProductsService {
       ? cleanList(input.image_urls)
       : undefined;
     if (image_urls) {
-      await this.uploads.assertConfirmed(
+      await this.uploads.claimConfirmed(
         image_urls,
         current.image_urls,
         UploadPurpose.PRODUCT,
       );
     }
 
-    const row = await this.prisma.product.update({
-      where: { id },
-      data: {
-        ...(input.name == null ? {} : { name: input.name.trim() }),
-        ...(input.description == null
-          ? {}
-          : { description: input.description.trim() }),
-        ...(input.price == null ? {} : { price: input.price }),
-        ...(input.compare_at_price === undefined
-          ? {}
-          : { compare_at_price: input.compare_at_price }),
-        ...(input.material == null ? {} : { material: input.material.trim() }),
-        ...(input.color_name === undefined
-          ? {}
-          : { color_name: input.color_name?.trim() || null }),
-        ...(input.color_code === undefined
-          ? {}
-          : { color_code: input.color_code?.trim() || null }),
-        ...(input.dimensions === undefined
-          ? {}
-          : { dimensions: input.dimensions?.trim() || null }),
-        ...(input.care_notes
-          ? { care_notes: cleanList(input.care_notes) }
-          : {}),
-        ...(image_urls ? { image_urls } : {}),
-        ...(input.is_customizable == null
-          ? {}
-          : { is_customizable: input.is_customizable }),
-        ...(input.collection_id === undefined
-          ? {}
-          : { collection_id: input.collection_id }),
-        ...(input.glaze_id === undefined ? {} : { glaze_id: input.glaze_id }),
-        ...(input.capacity_ml === undefined
-          ? {}
-          : { capacity_ml: input.capacity_ml }),
-        ...(input.height_cm === undefined
-          ? {}
-          : { height_cm: input.height_cm }),
-        ...(input.diameter_cm === undefined
-          ? {}
-          : { diameter_cm: input.diameter_cm }),
-        ...(input.weight_g === undefined ? {} : { weight_g: input.weight_g }),
-        ...(input.maker_note === undefined
-          ? {}
-          : { maker_note: input.maker_note?.trim() || null }),
-        ...(input.is_second == null ? {} : { is_second: input.is_second }),
-        ...(input.flaw_note === undefined
-          ? {}
-          : { flaw_note: input.flaw_note?.trim() || null }),
-        ...(input.is_commission == null
-          ? {}
-          : { is_commission: input.is_commission }),
-        ...(input.category_ids
-          ? {
-              categories: {
-                set: input.category_ids.map((cid) => ({ id: cid })),
-              },
-            }
-          : {}),
-      },
-      include: productListInclude,
+    const row = await this.prisma.withTransaction(async () => {
+      // Made to order is a shelf fact: switching it on can put a sold-out piece back on sale.
+      if (input.is_customizable != null) {
+        await this.shelf.setMadeToOrder(id, input.is_customizable);
+      }
+      return this.prisma.product.update({
+        where: { id },
+        data: {
+          ...(input.name == null ? {} : { name: input.name.trim() }),
+          ...(input.description == null
+            ? {}
+            : { description: input.description.trim() }),
+          ...(input.price == null ? {} : { price: input.price }),
+          ...(input.compare_at_price === undefined
+            ? {}
+            : { compare_at_price: input.compare_at_price }),
+          ...(input.material == null
+            ? {}
+            : { material: input.material.trim() }),
+          ...(input.color_name === undefined
+            ? {}
+            : { color_name: input.color_name?.trim() || null }),
+          ...(input.color_code === undefined
+            ? {}
+            : { color_code: input.color_code?.trim() || null }),
+          ...(input.dimensions === undefined
+            ? {}
+            : { dimensions: input.dimensions?.trim() || null }),
+          ...(input.care_notes
+            ? { care_notes: cleanList(input.care_notes) }
+            : {}),
+          ...(image_urls ? { image_urls } : {}),
+          ...(input.collection_id === undefined
+            ? {}
+            : { collection_id: input.collection_id }),
+          ...(input.glaze_id === undefined ? {} : { glaze_id: input.glaze_id }),
+          ...(input.capacity_ml === undefined
+            ? {}
+            : { capacity_ml: input.capacity_ml }),
+          ...(input.height_cm === undefined
+            ? {}
+            : { height_cm: input.height_cm }),
+          ...(input.diameter_cm === undefined
+            ? {}
+            : { diameter_cm: input.diameter_cm }),
+          ...(input.weight_g === undefined ? {} : { weight_g: input.weight_g }),
+          ...(input.maker_note === undefined
+            ? {}
+            : { maker_note: input.maker_note?.trim() || null }),
+          ...(input.is_second == null ? {} : { is_second: input.is_second }),
+          ...(input.flaw_note === undefined
+            ? {}
+            : { flaw_note: input.flaw_note?.trim() || null }),
+          ...(input.is_commission == null
+            ? {}
+            : { is_commission: input.is_commission }),
+          ...(input.category_ids
+            ? {
+                categories: {
+                  set: input.category_ids.map((cid) => ({ id: cid })),
+                },
+              }
+            : {}),
+        },
+        include: productListInclude,
+      });
     });
     await this.afterWrite(id);
     return toProduct(row);

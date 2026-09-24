@@ -1,24 +1,24 @@
+import { UploadPurpose } from "@prisma/client";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { LINE_FULL, MAX_LINE_QUANTITY } from "@/features/cart/cart.service";
+import { NOT_OWN_UPLOAD } from "@/uploads/uploads.service";
 import {
   createHarness,
   type Harness,
   makeProduct,
   makeUsers,
-  PendingUploadsRecorder,
   race,
   resetData,
 } from "./harness";
 
 const RACERS = 20;
-const uploads = new PendingUploadsRecorder();
 
 describe("cart writes under concurrency", () => {
   let harness: Harness;
 
   beforeAll(async () => {
-    harness = await createHarness({ uploads });
+    harness = await createHarness();
   });
 
   afterAll(async () => {
@@ -27,7 +27,6 @@ describe("cart writes under concurrency", () => {
 
   beforeEach(async () => {
     await resetData(harness.prisma);
-    uploads.reset();
   });
 
   it("merges twenty simultaneous adds into one line and refuses the ones past the limit", async () => {
@@ -53,26 +52,46 @@ describe("cart writes under concurrency", () => {
     expect(rows[0]?.quantity).toBe(MAX_LINE_QUANTITY);
   });
 
-  it("stops sweeping a reference photo once it is on a line", async () => {
+  it("claims a reference photo for the line, and only the shopper's own", async () => {
     const product = await makeProduct(harness.prisma, {
       stock: 5,
       is_customizable: true,
     });
-    const [user] = await makeUsers(harness.prisma, 1);
-    if (!user) throw new Error("no user");
-    const photo = `https://cdn.test/customization/${user.id}/a.jpg`;
+    const [user, other] = await makeUsers(harness.prisma, 2);
+    if (!user || !other) throw new Error("no users");
+    const photo = await harness.uploads.issue(
+      user.id,
+      UploadPurpose.REFERENCE,
+      {
+        filename: "a.jpg",
+        content_type: "image/jpeg",
+        size: 1024,
+      },
+    );
+
+    await expect(
+      harness.cart.add(other.id, {
+        product_id: product.id,
+        quantity: 1,
+        reference_image_urls: [photo.public_url],
+      }),
+    ).rejects.toThrow(NOT_OWN_UPLOAD);
+    expect(await harness.prisma.cartItem.count()).toBe(0);
 
     await harness.cart.add(user.id, {
       product_id: product.id,
       quantity: 1,
-      reference_image_urls: [photo],
+      reference_image_urls: [photo.public_url],
     });
 
     const rows = await harness.prisma.cartItem.findMany({
       where: { user_id: user.id },
     });
     expect(rows).toHaveLength(1);
-    expect(uploads.kept).toEqual([{ userId: user.id, urls: [photo] }]);
+    const upload = await harness.prisma.upload.findUniqueOrThrow({
+      where: { key: photo.key },
+    });
+    expect(upload.claimed_at).not.toBeNull();
   });
 
   it("stops a merged line from climbing past the stock on the shelf", async () => {

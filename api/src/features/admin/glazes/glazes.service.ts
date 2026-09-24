@@ -10,8 +10,8 @@ import { PrismaService } from "@/prisma/prisma.service";
 import { ProductsService } from "@/features/products/products.service";
 import { searchTerm } from "../admin.type";
 import { slugify, uniqueSlug } from "../slug";
-import { UploadsService } from "../uploads/uploads.service";
-import { UploadPurpose } from "../uploads/uploads.type";
+import { UploadsService } from "@/uploads/uploads.service";
+import { UploadPurpose } from "@/uploads/uploads.type";
 import type {
   AdminGlaze,
   AdminGlazeInput,
@@ -79,7 +79,7 @@ export class AdminGlazesService {
 
   async create(input: AdminGlazeInput): Promise<AdminGlaze> {
     const swatch_url = input.swatch_url?.trim() || null;
-    await this.uploads.assertConfirmed(
+    await this.uploads.claimConfirmed(
       swatch_url ? [swatch_url] : [],
       [],
       UploadPurpose.GLAZE,
@@ -108,7 +108,7 @@ export class AdminGlazesService {
       throw new NotFoundException("Glaze not found");
     }
     const swatch_url = input.swatch_url?.trim() || null;
-    await this.uploads.assertConfirmed(
+    await this.uploads.claimConfirmed(
       swatch_url ? [swatch_url] : [],
       current.swatch_url ? [current.swatch_url] : [],
       UploadPurpose.GLAZE,

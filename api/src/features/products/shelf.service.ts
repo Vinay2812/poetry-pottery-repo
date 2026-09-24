@@ -86,6 +86,24 @@ export class ShelfService {
     });
   }
 
+  // Made to order is the third shelf fact: switching it on puts a sold-out piece back on sale.
+  setMadeToOrder(productId: number, isCustomizable: boolean): Promise<boolean> {
+    return this.prisma.withTransaction(async () => {
+      const moved = await this.prisma.product.updateManyAndReturn({
+        where: { id: productId, is_customizable: !isCustomizable },
+        data: { is_customizable: isCustomizable },
+        select: shelfSelect,
+      });
+      const after = moved[0];
+      if (!after) return false;
+      await this.announce(
+        { ...after, is_customizable: !isCustomizable },
+        after,
+      );
+      return true;
+    });
+  }
+
   private async announce(
     before: ShelfState,
     after: ShelfState & { id: number },

@@ -10,6 +10,9 @@ const silentLogger = { log() {}, error() {}, warn() {}, debug() {} };
 import {
   DEAD_LETTER_EXCHANGE,
   DEAD_LETTER_QUEUE,
+  DELAYED_JOB_NAMES,
+  DELAYS,
+  delayQueueNameFor,
   JOB_NAMES,
   QUEUE_EXCHANGE,
   RETRY,
@@ -44,6 +47,16 @@ import { QueueService } from "./queue.service";
           options: {
             durable: true,
             messageTtl: RETRY.delayMs,
+            deadLetterExchange: QUEUE_EXCHANGE,
+            deadLetterRoutingKey: job,
+          },
+        })),
+        // One delay queue per delayed job: the message sits out the delay, then lands on its own routing key.
+        ...DELAYED_JOB_NAMES.map((job) => ({
+          name: delayQueueNameFor(job),
+          options: {
+            durable: true,
+            messageTtl: DELAYS[job],
             deadLetterExchange: QUEUE_EXCHANGE,
             deadLetterRoutingKey: job,
           },

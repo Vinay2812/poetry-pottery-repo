@@ -18,8 +18,8 @@ import {
 import type { WorkshopConfig } from "@/features/workshops/workshops.type";
 import { searchTerm, toUserRef, trimmed } from "../admin.type";
 import { rethrowMissing } from "../missing-row";
-import { UploadsService } from "../uploads/uploads.service";
-import { UploadPurpose } from "../uploads/uploads.type";
+import { UploadsService } from "@/uploads/uploads.service";
+import { UploadPurpose } from "@/uploads/uploads.type";
 import type {
   AdminWorkshopBlackout,
   AdminWorkshopBlackoutInput,
@@ -157,7 +157,7 @@ export class AdminWorkshopsService {
 
     const image_url = input.image_url?.trim() || null;
     if (input.image_url !== undefined) {
-      await this.uploads.assertConfirmed(
+      await this.uploads.claimConfirmed(
         image_url ? [image_url] : [],
         current.image_url ? [current.image_url] : [],
         UploadPurpose.HERO,

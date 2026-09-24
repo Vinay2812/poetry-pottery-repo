@@ -25,8 +25,8 @@ import {
 } from "@/features/products/products.service";
 import { ShelfService } from "@/features/products/shelf.service";
 import { SettingsService } from "@/features/settings/settings.service";
-import { UploadsService } from "@/features/admin/uploads/uploads.service";
-import { UploadPurpose } from "@/features/admin/uploads/uploads.type";
+import { UploadsService } from "@/uploads/uploads.service";
+import { UploadPurpose } from "@/uploads/uploads.type";
 import { toCareLines } from "./care";
 import { checkCoupon, normaliseCouponCode } from "./coupons";
 import { readGift } from "./gift";
@@ -303,12 +303,11 @@ export class OrdersService {
         },
         include: orderInclude,
       });
-      await this.prisma.cartItem.deleteMany({
-        where: {
-          user_id: userId,
-          id: { in: available.map((item) => item.id) },
-        },
-      });
+      // The order items now hold the reference photos, so releasing the lines keeps them.
+      await this.cart.removeLines(
+        userId,
+        available.map((item) => item.id),
+      );
       return created;
     });
 
@@ -491,7 +490,7 @@ export class OrdersService {
       throw new BadRequestException("Attach a photo uploaded to the studio");
     }
     // The same spec check every other console image goes through.
-    await this.uploads.assertConfirmed(
+    await this.uploads.claimConfirmed(
       imageUrl ? [imageUrl] : [],
       [],
       UploadPurpose.ORDER_NOTE,

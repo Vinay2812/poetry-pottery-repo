@@ -1,3 +1,5 @@
+import { UploadPurpose as StoredPurpose } from "@prisma/client";
+
 import type { UploadFolder } from "@/storage/storage.service";
 import { ImageSpec, UploadPurpose } from "./uploads.type";
 
@@ -117,19 +119,20 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
   },
 };
 
-const PURPOSE_FOLDER: Record<UploadPurpose, UploadFolder> = {
-  [UploadPurpose.PRODUCT]: "products",
-  [UploadPurpose.CATEGORY]: "categories",
-  [UploadPurpose.GLAZE]: "glazes",
-  [UploadPurpose.COLLECTION]: "collections",
-  [UploadPurpose.EVENT]: "events",
-  [UploadPurpose.HERO]: "hero",
-  [UploadPurpose.CONTENT]: "content",
-  [UploadPurpose.REVIEW]: "reviews",
-  [UploadPurpose.ORDER_NOTE]: "orders",
+const PURPOSE_FOLDER: Record<StoredPurpose, UploadFolder> = {
+  [StoredPurpose.PRODUCT]: "products",
+  [StoredPurpose.CATEGORY]: "categories",
+  [StoredPurpose.GLAZE]: "glazes",
+  [StoredPurpose.COLLECTION]: "collections",
+  [StoredPurpose.EVENT]: "events",
+  [StoredPurpose.HERO]: "hero",
+  [StoredPurpose.CONTENT]: "content",
+  [StoredPurpose.REVIEW]: "reviews",
+  [StoredPurpose.ORDER_NOTE]: "orders",
+  [StoredPurpose.REFERENCE]: "customization",
 };
 
-export function folderFor(purpose: UploadPurpose): UploadFolder {
+export function folderFor(purpose: StoredPurpose): UploadFolder {
   return PURPOSE_FOLDER[purpose];
 }
 

@@ -4,7 +4,18 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import type { Logger } from "winston";
 
 import { PrismaService } from "@/prisma/prisma.service";
-import { type JobName, type JobPayload, QUEUE_EXCHANGE } from "./jobs";
+import {
+  type DelayedJobName,
+  delayQueueNameFor,
+  type JobName,
+  type JobPayload,
+  QUEUE_EXCHANGE,
+} from "./jobs";
+
+interface Route {
+  exchange: string;
+  routingKey: string;
+}
 
 @Injectable()
 export class QueueService {
@@ -25,15 +36,31 @@ export class QueueService {
     job: Name,
     payload: JobPayload<Name>,
   ): Promise<void> {
-    return this.prisma.afterCommit(() => this.send(job, payload));
+    return this.prisma.afterCommit(() =>
+      this.send(job, payload, { exchange: QUEUE_EXCHANGE, routingKey: job }),
+    );
+  }
+
+  // Parks the job on its delay queue; the broker hands it to the consumer once the delay has run out.
+  publishDelayed<Name extends DelayedJobName>(
+    job: Name,
+    payload: JobPayload<Name>,
+  ): Promise<void> {
+    return this.prisma.afterCommit(() =>
+      this.send(job, payload, {
+        exchange: "",
+        routingKey: delayQueueNameFor(job),
+      }),
+    );
   }
 
   private async send<Name extends JobName>(
     job: Name,
     payload: JobPayload<Name>,
+    route: Route,
   ): Promise<void> {
     try {
-      await this.amqp.publish(QUEUE_EXCHANGE, job, payload, {
+      await this.amqp.publish(route.exchange, route.routingKey, payload, {
         persistent: true,
       });
     } catch (error) {

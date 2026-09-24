@@ -5,9 +5,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PrismaService } from "@/prisma/prisma.service";
 import { ProductsService } from "@/features/products/products.service";
 import { missingRow } from "@test/helpers/prisma-errors";
-import { UploadsService } from "../uploads/uploads.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import { AdminCatalogService, assertWindow } from "./catalog.service";
-import { UploadPurpose } from "../uploads/uploads.type";
+import { UploadPurpose } from "@/uploads/uploads.type";
 
 const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
@@ -29,7 +29,7 @@ const prismaMock = {
   },
 };
 const productsMock = { invalidateCatalogCache: vi.fn() };
-const uploadsMock = { assertConfirmed: vi.fn() };
+const uploadsMock = { claimConfirmed: vi.fn() };
 
 describe("assertWindow", () => {
   it("accepts an open-ended window", () => {
@@ -91,7 +91,7 @@ describe("AdminCatalogService", () => {
       image_url: "https://cdn.example.com/categories/a.png",
     });
 
-    expect(uploadsMock.assertConfirmed).toHaveBeenCalledWith(
+    expect(uploadsMock.claimConfirmed).toHaveBeenCalledWith(
       ["https://cdn.example.com/categories/a.png"],
       [],
       UploadPurpose.CATEGORY,

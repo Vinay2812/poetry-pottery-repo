@@ -42,6 +42,7 @@ model User {
   newsletter          NewsletterSubscriber?
   batch_notifications BatchNotification[]
   whatsapp_messages   WhatsAppMessage[]
+  uploads             Upload[]
 
   @@map("users")
 }
@@ -783,14 +784,35 @@ model ContentPage {
   @@map("content_pages")
 }
 
-// Images an admin uploaded and the API verified against the spec table; entity writes only accept these keys.
-model ConfirmedUpload {
-  key        String   @id
-  purpose    String
-  width      Int
-  height     Int
-  bytes      Int
-  created_at DateTime @default(now())
+enum UploadPurpose {
+  PRODUCT
+  CATEGORY
+  GLAZE
+  COLLECTION
+  EVENT
+  HERO
+  CONTENT
+  REVIEW
+  ORDER_NOTE
+  // A shopper's reference photo: lands on a cart line, then an order item, or on a commission brief.
+  REFERENCE
+}
 
-  @@map("confirmed_uploads")
+// Every object presigned into the bucket, from the moment it is signed until something on the site
+// holds it (claimed_at) or the expiry job finds it still unclaimed. Console images also record the spec check.
+model Upload {
+  key          String        @id
+  owner_id     Int?
+  purpose      UploadPurpose
+  width        Int?
+  height       Int?
+  bytes        Int?
+  confirmed_at DateTime?
+  claimed_at   DateTime?
+  created_at   DateTime      @default(now())
+
+  owner User? @relation(fields: [owner_id], references: [id], onDelete: Cascade)
+
+  @@index([owner_id, purpose])
+  @@map("uploads")
 }

@@ -1,4 +1,4 @@
-export { StorageResolver } from "@/storage/storage.resolver";
+export { UploadsResolver } from "@/uploads/uploads.resolver";
 export { SettingsResolver } from "@/features/settings/settings.resolver";
 export {
   GlazeResolver,

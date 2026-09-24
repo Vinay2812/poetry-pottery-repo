@@ -52,6 +52,17 @@ describe("QueueService", () => {
     );
   });
 
+  it("parks a delayed job on its delay queue through the default exchange", async () => {
+    await service.publishDelayed("upload.expire", { key: "reviews/7/a.jpg" });
+
+    expect(amqpMock.publish).toHaveBeenCalledWith(
+      "",
+      "poetry.upload.expire.delay",
+      { key: "reviews/7/a.jpg" },
+      { persistent: true },
+    );
+  });
+
   it("hands the publish to the transaction seam, so it waits for the commit", async () => {
     const deferred: (() => Promise<void> | void)[] = [];
     prismaMock.afterCommit.mockImplementationOnce((fn) => {

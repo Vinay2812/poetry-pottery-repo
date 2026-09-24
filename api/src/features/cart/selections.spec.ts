@@ -123,30 +123,26 @@ describe("selectionKey", () => {
   });
 });
 
-const isOwnUrl = (url: string): boolean => url.startsWith("https://cdn.test/");
-
 describe("resolveReferenceImages", () => {
   it("trims, drops blanks and de-duplicates", () => {
     expect(
-      resolveReferenceImages(
-        [" https://cdn.test/a.jpg ", "", "https://cdn.test/a.jpg"],
-        isOwnUrl,
-      ),
+      resolveReferenceImages([
+        " https://cdn.test/a.jpg ",
+        "",
+        "https://cdn.test/a.jpg",
+      ]),
     ).toEqual(["https://cdn.test/a.jpg"]);
-    expect(resolveReferenceImages(null, isOwnUrl)).toEqual([]);
+    expect(resolveReferenceImages(null)).toEqual([]);
   });
 
-  it("rejects more than the limit and URLs we did not issue", () => {
+  it("rejects more than the limit", () => {
     const urls = Array.from(
       { length: MAX_REFERENCE_IMAGES + 1 },
       (_, index) => `https://cdn.test/${index}.jpg`,
     );
-    expect(() => resolveReferenceImages(urls, isOwnUrl)).toThrow(
+    expect(() => resolveReferenceImages(urls)).toThrow(
       "up to 3 reference photos",
     );
-    expect(() =>
-      resolveReferenceImages(["https://elsewhere.test/a.jpg"], isOwnUrl),
-    ).toThrow("was not uploaded");
   });
 });
 

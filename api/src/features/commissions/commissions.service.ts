@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from "@nestjs/common";
-import { CommissionStatus, Prisma } from "@prisma/client";
+import { CommissionStatus, Prisma, UploadPurpose } from "@prisma/client";
 import { z } from "zod";
 
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
@@ -10,8 +10,7 @@ import {
   commissionStudioMail,
 } from "@/mail/templates/commissions";
 import { PrismaService } from "@/prisma/prisma.service";
-import { PendingUploadsService } from "@/storage/pending-uploads.service";
-import { customizationPrefix, StorageService } from "@/storage/storage.service";
+import { UploadsService } from "@/uploads/uploads.service";
 import { rethrowMissing } from "@/features/admin/missing-row";
 import { normalisePhone } from "@/features/addresses/address-validation";
 import { type Product } from "@/features/products/products.type";
@@ -115,8 +114,7 @@ export class CommissionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly mail: MailService,
-    private readonly storage: StorageService,
-    private readonly pendingUploads: PendingUploadsService,
+    private readonly uploads: UploadsService,
   ) {}
 
   // The form never invents a size or a glaze: it offers the glazes the studio fires and, per
@@ -193,26 +191,27 @@ export class CommissionsService {
     userId: number | null,
   ): Promise<CommissionRequest> {
     const fields = parseCommissionInput(input);
-    // Only photos this sender uploaded travel with a brief; a guest cannot upload, so carries none.
-    const foreign = fields.reference_image_urls.find(
-      (url) =>
-        userId === null ||
-        !this.storage.isUploadedUnder(url, customizationPrefix(userId)),
-    );
-    if (foreign) {
+    // A guest cannot upload, so a guest brief carries no photos.
+    if (userId === null && fields.reference_image_urls.length > 0) {
       throw new BadRequestException(
         "Reference photos must be uploaded through the studio",
       );
     }
 
-    const request = await this.prisma.commissionRequest.create({
-      data: { ...fields, user_id: userId },
+    const request = await this.prisma.withTransaction(async () => {
+      const created = await this.prisma.commissionRequest.create({
+        data: { ...fields, user_id: userId },
+      });
+      // The brief holds its photos now; only the sender's own uploads pass.
+      if (userId !== null) {
+        await this.uploads.claim(
+          userId,
+          UploadPurpose.REFERENCE,
+          fields.reference_image_urls,
+        );
+      }
+      return created;
     });
-
-    // The brief keeps its photos, so they are no longer waiting to be swept.
-    if (userId !== null) {
-      await this.pendingUploads.keep(userId, fields.reference_image_urls);
-    }
 
     if (env.BUSINESS_EMAIL) {
       await this.mail.enqueue({

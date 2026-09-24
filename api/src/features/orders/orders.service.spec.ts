@@ -7,8 +7,8 @@ import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
 import { StorageService } from "@/storage/storage.service";
 import { ShelfService } from "@/features/products/shelf.service";
-import { UploadsService } from "@/features/admin/uploads/uploads.service";
-import { UploadPurpose } from "@/features/admin/uploads/uploads.type";
+import { UploadsService } from "@/uploads/uploads.service";
+import { UploadPurpose } from "@/uploads/uploads.type";
 import { CartService } from "@/features/cart/cart.service";
 import { SettingsService } from "@/features/settings/settings.service";
 import { OrdersService } from "./orders.service";
@@ -33,14 +33,13 @@ const prismaMock = {
     updateMany: vi.fn(),
   },
   orderNote: { create: vi.fn() },
-  cartItem: { deleteMany: vi.fn() },
   user: { findUnique: vi.fn() },
 };
-const cartMock = { get: vi.fn(), add: vi.fn() };
+const cartMock = { get: vi.fn(), add: vi.fn(), removeLines: vi.fn() };
 const settingsMock = { get: vi.fn() };
 const mailMock = { enqueue: vi.fn() };
 const shelfMock = { take: vi.fn(), release: vi.fn() };
-const uploadsMock = { assertConfirmed: vi.fn() };
+const uploadsMock = { claimConfirmed: vi.fn() };
 const storageMock = {
   isOwnUrl: vi.fn((url: string) => url.startsWith("https://cdn.test/")),
 };
@@ -259,9 +258,8 @@ describe("OrdersService", () => {
           }),
         }),
       );
-      expect(prismaMock.cartItem.deleteMany).toHaveBeenCalledWith({
-        where: { user_id: 1, id: { in: [1] } },
-      });
+      // The lines leave through the cart, which releases their photos; the order items still hold them.
+      expect(cartMock.removeLines).toHaveBeenCalledWith(1, [1]);
       expect(mailMock.enqueue).toHaveBeenCalledTimes(2);
       expect(order.can_cancel).toBe(true);
     });
@@ -503,7 +501,7 @@ describe("OrdersService", () => {
         image_url: PHOTO,
       });
 
-      expect(uploadsMock.assertConfirmed).toHaveBeenCalledWith(
+      expect(uploadsMock.claimConfirmed).toHaveBeenCalledWith(
         [PHOTO],
         [],
         UploadPurpose.ORDER_NOTE,

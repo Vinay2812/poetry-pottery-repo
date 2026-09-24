@@ -43,10 +43,9 @@ export function readCustomisation(
   };
 }
 
-// Only URLs we handed out through a presigned upload are ever stored.
+// Tidies the list; whether each photo is really this shopper's upload is settled when the line claims it.
 export function resolveReferenceImages(
   urls: readonly string[] | null | undefined,
-  isOwnUrl: (url: string) => boolean,
 ): string[] {
   const cleaned = (urls ?? []).map((url) => url.trim()).filter(Boolean);
   const unique = [...new Set(cleaned)];
@@ -54,11 +53,6 @@ export function resolveReferenceImages(
     throw new BadRequestException(
       `Attach up to ${MAX_REFERENCE_IMAGES} reference photos`,
     );
-  }
-  for (const url of unique) {
-    if (!isOwnUrl(url)) {
-      throw new BadRequestException("That reference photo was not uploaded");
-    }
   }
   return unique;
 }
