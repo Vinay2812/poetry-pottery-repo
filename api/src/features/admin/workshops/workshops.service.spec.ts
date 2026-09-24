@@ -83,7 +83,7 @@ const prismaMock = {
   },
   workshopBooking: { findMany: vi.fn(), findUnique: vi.fn(), count: vi.fn() },
 };
-const workshopsMock = { applyStatus: vi.fn(), notifyStatus: vi.fn() };
+const workshopsMock = { applyStatus: vi.fn() };
 const uploadsMock = { assertConfirmed: vi.fn() };
 
 describe("assertTiersFit", () => {
@@ -340,7 +340,7 @@ describe("AdminWorkshopsService", () => {
     );
   });
 
-  it("moves a booking through the shared transition and mails the guest", async () => {
+  it("moves a booking through the shared transition, which mails the guest itself", async () => {
     const result = await service.setBookingStatus(
       bookingRow.id,
       RegistrationStatus.APPROVED,
@@ -352,11 +352,6 @@ describe("AdminWorkshopsService", () => {
       RegistrationStatus.APPROVED,
       null,
       "ADMIN",
-    );
-    expect(workshopsMock.notifyStatus).toHaveBeenCalledWith(
-      7,
-      anything(),
-      "status",
     );
     expect(result.customer.email).toBe("maya@example.com");
   });

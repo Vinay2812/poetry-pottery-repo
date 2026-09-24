@@ -8,6 +8,7 @@ import { StorageService } from "./storage.service";
 
 const subscriptionSchema = z.object({
   type: z.string(),
+  errorHandler: z.custom<() => void>((value) => typeof value === "function"),
   exchange: z.string(),
   routingKey: z.string(),
   queue: z.string(),
@@ -16,6 +17,8 @@ const subscriptionSchema = z.object({
     deadLetterExchange: z.string(),
   }),
 });
+
+const anyFunction = (): unknown => expect.any(Function);
 
 function subscriptionOn(
   target: object,
@@ -75,6 +78,7 @@ describe("StorageConsumer", () => {
   it("listens on the durable delete queue bound to the topic exchange", () => {
     expect(subscriptionOn(StorageConsumer.prototype, "handle")).toEqual({
       type: "subscribe",
+      errorHandler: anyFunction(),
       exchange: "poetry",
       routingKey: "storage.delete-object",
       queue: "poetry.storage.delete-object",

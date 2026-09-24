@@ -371,11 +371,6 @@ export class AdminWorkshopsService {
       trimmed(reason, 300),
       "ADMIN",
     );
-    await this.workshops.notifyStatus(
-      current.user_id,
-      toBooking(updated),
-      "status",
-    );
     return toAdminBooking({ ...updated, user: current.user });
   }
 

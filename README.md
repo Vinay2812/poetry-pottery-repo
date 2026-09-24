@@ -85,7 +85,7 @@ Clerk on both sides. The API JIT-provisions a `User` row on the first authentica
 
 ## Background jobs
 
-Slow work leaves the request path through RabbitMQ (`api/src/queue`): search embeddings for products and events, and transactional email. Every WhatsApp hand-off the site offers (the `wa.me` links on the storefront, and the admin's reply from a commission brief) is recorded as a `WhatsAppMessage`, emailed through the same queue, and listed under Inbox → WhatsApp in the dashboard. Consumers run inside the API process; set `QUEUE_CONSUMERS_ENABLED=false` on replicas that should only serve GraphQL. Failed messages are dead-lettered to `poetry.dead-letters`.
+Slow work leaves the request path through RabbitMQ (`api/src/queue`): search embeddings for products and events, and transactional email. Every WhatsApp hand-off the site offers (the `wa.me` links on the storefront, and the admin's reply from a commission brief) is recorded as a `WhatsAppMessage`, emailed through the same queue, and listed under Inbox → WhatsApp in the dashboard. Consumers run inside the API process; set `QUEUE_CONSUMERS_ENABLED=false` on replicas that should only serve GraphQL. Jobs are published only once the transaction that produced them has committed (`PrismaService.afterCommit`). A failed delivery retries through a per-job delay queue a bounded number of times, then lands in `poetry.dead-letters`; `pnpm queue:replay` (api) hands those back to their original routing key once the cause is fixed.
 
 ## Search
 

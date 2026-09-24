@@ -337,35 +337,36 @@ export class ReviewsService {
     input: ReviewInput,
   ): Promise<Review> {
     const data = this.validate(input);
-    const { row, previousImages } = await this.prisma.withTransaction(
-      async () => {
-        const current = await this.prisma.review.findFirst({
-          where: { id, user_id: userId },
-        });
-        if (!current) {
-          throw new NotFoundException("Review not found");
-        }
-        this.assertOwnPhotos(userId, data.image_urls, current.image_urls);
-        await this.lockSubject(subjectOf(current));
-        const updated = await this.prisma.review.update({
-          where: { id },
-          data,
-          include: reviewInclude,
-        });
-        await this.refreshRating(subjectOf(current));
-        return { row: updated, previousImages: current.image_urls };
-      },
-    );
-    await this.settleImages(
-      userId,
-      data.image_urls,
-      previousImages.filter((url) => !data.image_urls.includes(url)),
-    );
+    const row = await this.prisma.withTransaction(async () => {
+      const current = await this.prisma.review.findFirst({
+        where: { id, user_id: userId },
+      });
+      if (!current) {
+        throw new NotFoundException("Review not found");
+      }
+      this.assertOwnPhotos(userId, data.image_urls, current.image_urls);
+      await this.lockSubject(subjectOf(current));
+      const updated = await this.prisma.review.update({
+        where: { id },
+        data,
+        include: reviewInclude,
+      });
+      await this.refreshRating(subjectOf(current));
+      // The photos it let go are only reclaimed once the new set is committed.
+      await this.prisma.afterCommit(() =>
+        this.settleImages(
+          userId,
+          data.image_urls,
+          current.image_urls.filter((url) => !data.image_urls.includes(url)),
+        ),
+      );
+      return updated;
+    });
     return toReview(row, userId);
   }
 
   async remove(id: number, userId: number, isAdmin = false): Promise<boolean> {
-    const images = await this.prisma.withTransaction(async () => {
+    await this.prisma.withTransaction(async () => {
       const current = await this.prisma.review.findFirst({
         where: isAdmin ? { id } : { id, user_id: userId },
       });
@@ -376,9 +377,10 @@ export class ReviewsService {
       await this.lockSubject(subject);
       await this.prisma.review.delete({ where: { id } });
       await this.refreshRating(subject);
-      return current.image_urls;
+      await this.prisma.afterCommit(() =>
+        this.discardImages(current.image_urls),
+      );
     });
-    await this.discardImages(images);
     return true;
   }
 

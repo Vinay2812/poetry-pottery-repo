@@ -377,9 +377,7 @@ export class EventsService {
         reason?.trim().slice(0, 300) || "Cancelled by the guest",
       );
     });
-    const registration = toRegistration(row);
-    await this.notifyStatus(userId, registration);
-    return registration;
+    return toRegistration(row);
   }
 
   // Shared with the admin console; seat counts follow the holding states.
@@ -431,14 +429,17 @@ export class EventsService {
           );
         }
       }
-      return this.prisma.eventRegistration.findUniqueOrThrow({
+      const row = await this.prisma.eventRegistration.findUniqueOrThrow({
         where: { id: current.id },
         include: registrationInclude,
       });
+      // Queued on the transaction, so the guest hears only about a move that committed.
+      await this.notifyStatus(current.user_id, toRegistration(row));
+      return row;
     });
   }
 
-  async notifyStatus(
+  private async notifyStatus(
     userId: number,
     registration: Registration,
   ): Promise<void> {

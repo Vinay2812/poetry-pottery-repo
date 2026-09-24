@@ -5,6 +5,7 @@ import {
 } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 
+import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import {
   productListInclude,
@@ -177,8 +178,7 @@ export class CartService {
 
     await this.prisma.withTransaction(async () => {
       // The merge reads the line before rewriting it, so two tabs adding at once must queue up.
-      await this.prisma
-        .$executeRaw`SELECT pg_advisory_xact_lock(${userId}::int, ${product.id}::int)`;
+      await this.prisma.lock(LockNamespace.CART_LINE, [userId, product.id]);
       const existing = await this.prisma.cartItem.findUnique({
         where: {
           user_id_product_id_selection_key: {

@@ -3,10 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   DEAD_LETTER_EXCHANGE,
   DEAD_LETTER_QUEUE,
+  JOB_NAMES,
   type JobName,
   jobSchemas,
   QUEUE_EXCHANGE,
   queueNameFor,
+  RETRY,
+  retryQueueNameFor,
 } from "./jobs";
 
 describe("search indexing job payloads", () => {
@@ -114,6 +117,7 @@ describe("queue topology", () => {
 
   it("names one durable queue per job under the topic exchange", () => {
     expect(Object.keys(jobSchemas)).toEqual(jobNames);
+    expect(JOB_NAMES).toEqual(jobNames);
     expect(jobNames.map(queueNameFor)).toEqual([
       "poetry.search.index-product",
       "poetry.search.index-event",
@@ -121,6 +125,12 @@ describe("queue topology", () => {
       "poetry.mail.send",
       "poetry.storage.delete-object",
     ]);
+  });
+
+  it("gives every job its own delay queue and a bounded retry budget", () => {
+    expect(retryQueueNameFor("mail.send")).toBe("poetry.mail.send.retry");
+    expect(RETRY.maxAttempts).toBeGreaterThan(1);
+    expect(RETRY.delayMs).toBeGreaterThan(0);
   });
 
   it("keeps the exchange and dead-letter names the module binds", () => {

@@ -10,7 +10,10 @@ const silentLogger = { log() {}, error() {}, warn() {}, debug() {} };
 import {
   DEAD_LETTER_EXCHANGE,
   DEAD_LETTER_QUEUE,
+  JOB_NAMES,
   QUEUE_EXCHANGE,
+  RETRY,
+  retryQueueNameFor,
 } from "./jobs";
 import { QueueService } from "./queue.service";
 
@@ -27,14 +30,24 @@ import { QueueService } from "./queue.service";
           options: { durable: true },
         },
       ],
-      // Failed messages land in a durable dead-letter queue for inspection and replay.
       queues: [
+        // Messages that exhausted their attempts land here for inspection and `pnpm queue:replay`.
         {
           name: DEAD_LETTER_QUEUE,
           exchange: DEAD_LETTER_EXCHANGE,
           routingKey: "",
           options: { durable: true },
         },
+        // One delay queue per job: a parked message expires back onto the job's own routing key.
+        ...JOB_NAMES.map((job) => ({
+          name: retryQueueNameFor(job),
+          options: {
+            durable: true,
+            messageTtl: RETRY.delayMs,
+            deadLetterExchange: QUEUE_EXCHANGE,
+            deadLetterRoutingKey: job,
+          },
+        })),
       ],
       defaultSubscribeErrorBehavior: MessageHandlerErrorBehavior.NACK,
       registerHandlers: env.QUEUE_CONSUMERS_ENABLED && !env.isTest,

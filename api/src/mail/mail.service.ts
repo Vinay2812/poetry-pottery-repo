@@ -36,9 +36,9 @@ export class MailService {
   }
 
   async deliver(message: MailMessage): Promise<void> {
+    // Logs carry the subject only: the recipient and body are the customer's, not the log's.
     if (!this.transporter) {
       this.logger.info("mail skipped (SMTP not configured)", {
-        to: message.to,
         subject: message.subject,
       });
       return;
@@ -50,6 +50,6 @@ export class MailService {
       html: message.html,
       text: message.text,
     });
-    this.logger.info("mail sent", { to: message.to, subject: message.subject });
+    this.logger.info("mail sent", { subject: message.subject });
   }
 }

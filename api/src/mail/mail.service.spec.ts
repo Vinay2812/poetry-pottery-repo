@@ -102,9 +102,11 @@ describe("MailService", () => {
       text: "Thanks for ordering",
     });
     expect(loggerMock.info).toHaveBeenCalledWith("mail sent", {
-      to: "potter@example.com",
       subject: "Order kiln-7 received",
     });
+    expect(JSON.stringify(loggerMock.info.mock.calls)).not.toContain(
+      "potter@example.com",
+    );
     expect(queueMock.publish).not.toHaveBeenCalled();
   });
 
@@ -136,7 +138,7 @@ describe("MailService", () => {
     expect(transport.sendMail).not.toHaveBeenCalled();
     expect(loggerMock.info).toHaveBeenCalledWith(
       "mail skipped (SMTP not configured)",
-      { to: "potter@example.com", subject: "Order kiln-7 received" },
+      { subject: "Order kiln-7 received" },
     );
   });
 

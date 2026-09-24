@@ -4,6 +4,7 @@ import { UserRole } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ClerkService } from "@/common/clerk/clerk.service";
+import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import { AdminUsersService } from "./users.service";
 
@@ -33,6 +34,8 @@ const prismaMock = {
   },
   $executeRaw: vi.fn(),
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
+  lock: vi.fn(),
 };
 
 const clerkMock = { updatePublicMetadata: vi.fn(() => Promise.resolve()) };
@@ -135,7 +138,10 @@ describe("AdminUsersService", () => {
     await service.setRole(7, UserRole.ADMIN, 1);
 
     expect(prismaMock.withTransaction).toHaveBeenCalledTimes(1);
-    expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+    expect(prismaMock.lock).toHaveBeenCalledWith(
+      LockNamespace.ROLE_CHANGE,
+      expect.any(String),
+    );
     expect(clerkMock.updatePublicMetadata).toHaveBeenCalledWith("user_7", {
       dbUserId: 7,
       role: UserRole.ADMIN,

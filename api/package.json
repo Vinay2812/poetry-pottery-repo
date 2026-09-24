@@ -29,6 +29,7 @@
     "db:reset": "prisma migrate reset --force && pnpm db:seed",
     "make-admin": "ts-node -r tsconfig-paths/register --project tsconfig.json scripts/make-admin.ts",
     "search:reindex": "QUEUE_CONSUMERS_ENABLED=false ts-node -r tsconfig-paths/register --project tsconfig.json scripts/reindex-search.ts",
+    "queue:replay": "QUEUE_CONSUMERS_ENABLED=false ts-node -r tsconfig-paths/register --project tsconfig.json scripts/replay-dead-letters.ts",
     "tsc": "tsc --noEmit",
     "import:legacy": "ts-node -r tsconfig-paths/register --project tsconfig.json scripts/import-legacy.ts",
     "db:seed:demo": "ts-node -r tsconfig-paths/register --project tsconfig.json prisma/seed/demo.ts",

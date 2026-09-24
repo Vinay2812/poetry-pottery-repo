@@ -20,8 +20,6 @@ import {
 const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
 
-const anything = (): unknown => expect.anything();
-
 const eventRow = {
   id: 3,
   slug: "wheel-evening",
@@ -69,6 +67,7 @@ const registrationRow = {
 
 const prismaMock = {
   withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
+  afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
   $executeRaw: vi.fn(),
   event: {
     findMany: vi.fn(),
@@ -85,7 +84,7 @@ const prismaMock = {
     count: vi.fn(),
   },
 };
-const eventsMock = { applyStatus: vi.fn(), notifyStatus: vi.fn() };
+const eventsMock = { applyStatus: vi.fn() };
 const searchMock = { requestEventIndex: vi.fn() };
 const uploadsMock = { assertConfirmed: vi.fn() };
 
@@ -147,7 +146,6 @@ describe("AdminEventsService", () => {
       (fn: () => Promise<unknown>) => fn(),
     );
     prismaMock.$executeRaw.mockResolvedValue(1);
-    eventsMock.notifyStatus.mockResolvedValue(undefined);
     prismaMock.event.findMany.mockResolvedValue([]);
     prismaMock.event.count.mockResolvedValue(0);
     prismaMock.event.findUnique.mockResolvedValue(eventRow);
@@ -304,7 +302,6 @@ describe("AdminEventsService", () => {
       RegistrationStatus.CANCELLED,
       "Kiln repair",
     );
-    expect(eventsMock.notifyStatus).toHaveBeenCalledWith(7, anything());
     expect(prismaMock.event.updateMany).toHaveBeenCalledWith({
       where: { id: 3, status: EventStatus.PUBLISHED },
       data: { status: EventStatus.CANCELLED },
@@ -320,7 +317,7 @@ describe("AdminEventsService", () => {
     );
   });
 
-  it("mails the guests only after the cancellation has committed", async () => {
+  it("walks every seat inside the one transaction, so their mails wait for its commit", async () => {
     prismaMock.event.findUnique.mockResolvedValue({
       ...eventRow,
       status: EventStatus.PUBLISHED,
@@ -335,17 +332,17 @@ describe("AdminEventsService", () => {
         return result;
       },
     );
-    eventsMock.notifyStatus.mockImplementation(() => {
-      expect(inTransaction).toBe(false);
-      return Promise.resolve();
+    eventsMock.applyStatus.mockImplementation(() => {
+      expect(inTransaction).toBe(true);
+      return Promise.resolve(registrationRow);
     });
 
     await service.cancel(3, "Kiln repair");
 
-    expect(eventsMock.notifyStatus).toHaveBeenCalledTimes(1);
+    expect(eventsMock.applyStatus).toHaveBeenCalledTimes(1);
   });
 
-  it("refunds nothing and mails nobody when the event has already run", async () => {
+  it("refunds nothing when the event has already run", async () => {
     prismaMock.event.findUnique.mockResolvedValue({
       status: EventStatus.COMPLETED,
     });
@@ -355,7 +352,6 @@ describe("AdminEventsService", () => {
       BadRequestException,
     );
     expect(eventsMock.applyStatus).not.toHaveBeenCalled();
-    expect(eventsMock.notifyStatus).not.toHaveBeenCalled();
   });
 
   it("moves one registration and mails the guest", async () => {

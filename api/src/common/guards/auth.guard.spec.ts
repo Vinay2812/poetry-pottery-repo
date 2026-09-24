@@ -65,6 +65,8 @@ const prismaMock = {
   },
   $executeRaw: vi.fn(),
   withTransaction: vi.fn(),
+  afterCommit: vi.fn(),
+  lock: vi.fn(),
 };
 
 type FakeRequest = { authenticatedUser?: AuthUser };

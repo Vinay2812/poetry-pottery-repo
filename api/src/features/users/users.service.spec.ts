@@ -4,6 +4,7 @@ import { UserRole, type User } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import { EMAIL_TAKEN_MESSAGE, UsersService } from "./users.service";
 
@@ -26,6 +27,8 @@ const prismaMock = {
   user: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
   $executeRaw: vi.fn(),
   withTransaction: vi.fn(),
+  afterCommit: vi.fn(),
+  lock: vi.fn(),
 };
 
 const loggerMock = { info: vi.fn(), warn: vi.fn(), error: vi.fn() };
@@ -81,10 +84,8 @@ describe("UsersService", () => {
       await service.provisionUser(input);
 
       expect(prismaMock.withTransaction).toHaveBeenCalled();
-      expect(prismaMock.$executeRaw).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.stringContaining("pg_advisory_xact_lock"),
-        ]),
+      expect(prismaMock.lock).toHaveBeenCalledWith(
+        LockNamespace.USER_PROVISION,
         "user_dev",
       );
     });

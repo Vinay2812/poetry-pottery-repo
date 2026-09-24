@@ -6,8 +6,10 @@ import {
   QUEUE_EXCHANGE,
   queueNameFor,
 } from "./jobs";
+import { retryOrDeadLetter } from "./retry";
 
-// One durable queue per job, bound to the topic exchange and dead-lettered on failure.
+// One durable queue per job, bound to the topic exchange; failures retry through the delay
+// queue and are dead-lettered once the attempts run out.
 export function SubscribeJob(job: JobName): MethodDecorator {
   return RabbitSubscribe({
     exchange: QUEUE_EXCHANGE,
@@ -17,5 +19,6 @@ export function SubscribeJob(job: JobName): MethodDecorator {
       durable: true,
       deadLetterExchange: DEAD_LETTER_EXCHANGE,
     },
+    errorHandler: retryOrDeadLetter(job),
   });
 }
