@@ -1,9 +1,11 @@
-import { Args, Int, Mutation, Query, Resolver } from "@nestjs/graphql";
+import { Args, Context, Int, Mutation, Query, Resolver } from "@nestjs/graphql";
 
 import { AuthRequired } from "@/common/decorators/auth.decorators";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
 import { StrictThrottle } from "@/common/decorators/throttle.decorators";
 import type { AuthUser } from "@/common/clerk/clerk.type";
+import { AuthGuard } from "@/common/guards/auth.guard";
+import type { GqlContext } from "@/common/types/express";
 import { toConfig, WorkshopsService } from "./workshops.service";
 import {
   BookWorkshopInput,
@@ -17,7 +19,10 @@ import {
 
 @Resolver(() => WorkshopBooking)
 export class WorkshopsResolver {
-  constructor(private readonly workshopsService: WorkshopsService) {}
+  constructor(
+    private readonly workshopsService: WorkshopsService,
+    private readonly authGuard: AuthGuard,
+  ) {}
 
   @Query(() => [WorkshopConfig])
   workshops(): Promise<WorkshopConfig[]> {
@@ -29,11 +34,19 @@ export class WorkshopsResolver {
     return toConfig(await this.workshopsService.configBySlug(slug));
   }
 
+  // Public; a session is only looked up when the caller asks to see their own hours as free.
   @Query(() => [WorkshopDay])
-  workshopAvailability(
+  async workshopAvailability(
     @Args("input") input: WorkshopAvailabilityInput,
+    @Context() context: GqlContext,
   ): Promise<WorkshopDay[]> {
-    return this.workshopsService.availability(input);
+    const viewer = input.exclude_booking_id
+      ? await this.authGuard.tryAuthenticate(context.req)
+      : null;
+    return this.workshopsService.availability(
+      input,
+      viewer?.db_user_id ?? null,
+    );
   }
 
   @AuthRequired()

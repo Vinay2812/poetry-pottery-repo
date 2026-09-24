@@ -1550,6 +1550,7 @@ type WishlistToggleResult {
 input WorkshopAvailabilityInput {
   config_slug: String!
   days: Int = 14
+  exclude_booking_id: String
   from: String!
 }
 

@@ -4,7 +4,8 @@ import { fn } from "storybook/test";
 import { DayClosedKind } from "@/graphql/generated/graphql";
 
 import { atViewport } from "@/lib/storybook/viewports";
-import { formatDateKey, toMonthGrid } from "@/features/workshops/types";
+import { toMonthGrid } from "@/features/workshops/slot-picker/grid";
+import { formatDateKey } from "@/features/workshops/types";
 import { BookingCalendar, type CalendarDay } from "./BookingCalendar";
 
 const MONTH = "2026-09";

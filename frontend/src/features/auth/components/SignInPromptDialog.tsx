@@ -9,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useRestoreFocus } from "@/lib/use-restore-focus";
 
 export interface SignInPromptDialogProps {
   isOpen: boolean;
@@ -22,14 +21,9 @@ export function SignInPromptDialog({
   onOpenChange,
   onConfirm,
 }: SignInPromptDialogProps) {
-  const restoreFocus = useRestoreFocus();
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent
-        onOpenAutoFocus={restoreFocus.onOpenAutoFocus}
-        onCloseAutoFocus={restoreFocus.onCloseAutoFocus}
-        className="max-w-sm"
-      >
+      <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Sign in to continue

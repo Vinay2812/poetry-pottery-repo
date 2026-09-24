@@ -123,7 +123,11 @@ export class WorkshopsService {
     return row;
   }
 
-  async availability(input: WorkshopAvailabilityInput): Promise<WorkshopDay[]> {
+  // A foreign or unknown booking id is ignored, so the answer is never more than the public view.
+  async availability(
+    input: WorkshopAvailabilityInput,
+    viewerId: number | null = null,
+  ): Promise<WorkshopDay[]> {
     if (!DATE_KEY.test(input.from)) {
       throw new BadRequestException("from must be a YYYY-MM-DD date");
     }
@@ -136,6 +140,17 @@ export class WorkshopsService {
     const rangeStart = new Date(`${input.from}T00:00:00.000Z`);
     rangeStart.setUTCDate(rangeStart.getUTCDate() - 1);
     const rangeEnd = new Date(`${addDays(input.from, days + 1)}T00:00:00.000Z`);
+    const excluded =
+      input.exclude_booking_id && viewerId !== null
+        ? await this.prisma.workshopBooking.findFirst({
+            where: {
+              id: input.exclude_booking_id,
+              user_id: viewerId,
+              config_id: config.id,
+            },
+            select: { id: true },
+          })
+        : null;
     const [blackouts, occupants] = await Promise.all([
       this.prisma.workshopBlackout.findMany({
         where: {
@@ -144,7 +159,12 @@ export class WorkshopsService {
           ends_at: { gt: rangeStart },
         },
       }),
-      this.activeBookings(config.id, rangeStart, rangeEnd),
+      this.activeBookings(
+        config.id,
+        rangeStart,
+        rangeEnd,
+        excluded?.id ?? null,
+      ),
     ]);
     return buildAvailability({
       config,

@@ -11,13 +11,12 @@ import {
   CancelWorkshopBookingDocument,
   MyWorkshopBookingsDocument,
   RescheduleWorkshopBookingDocument,
-  WorkshopAvailabilityDocument,
   WorkshopBookingDocument,
   WorkshopDocument,
 } from "@/graphql/generated/graphql";
 
 import { useRequireAuth } from "@/features/auth";
-import { daysInMonth, toBookingPath } from "@/features/workshops/types";
+import { toBookingPath } from "@/features/workshops/types";
 
 function toErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : "Something went wrong";
@@ -31,35 +30,6 @@ export function useWorkshop(slug: string) {
     workshop: data?.workshop ?? null,
     isLoading: loading && !data,
     hasError: Boolean(error) && !data,
-  };
-}
-
-// One calendar month of availability, keyed on the studio's own calendar days.
-export function useAvailability(
-  configSlug: string,
-  monthKey: string,
-  isSkipped = false,
-) {
-  const { data, previousData, loading, error, refetch } = useQuery(
-    WorkshopAvailabilityDocument,
-    {
-      variables: {
-        input: {
-          config_slug: configSlug,
-          from: `${monthKey}-01`,
-          days: daysInMonth(monthKey),
-        },
-      },
-      skip: isSkipped,
-      notifyOnNetworkStatusChange: true,
-    },
-  );
-  const days = data?.workshopAvailability ?? previousData?.workshopAvailability;
-  return {
-    days: days ?? [],
-    isLoading: loading && !days,
-    hasError: Boolean(error) && !days,
-    refetch,
   };
 }
 

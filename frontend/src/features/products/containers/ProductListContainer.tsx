@@ -1,15 +1,11 @@
 "use client";
 
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   useCallback,
   useDeferredValue,
   useEffect,
-  useMemo,
-  useOptimistic,
   useRef,
   useState,
-  useTransition,
 } from "react";
 
 import { useQuery } from "@apollo/client/react";
@@ -19,6 +15,7 @@ import {
   type ProductsQuery,
 } from "@/graphql/generated/graphql";
 
+import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 
 import { PageShell } from "@/components/layout/PageShell";
@@ -37,16 +34,12 @@ import { SearchField } from "@/features/products/components/SearchField";
 import { ShelfTabs } from "@/features/products/components/ShelfTabs";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
-  applyFilterAction,
   clampPriceRange,
   countActiveFilters,
-  type FilterAction,
-  parseFilters,
-  type ProductFilters as Filters,
+  PRODUCT_FILTERS_CODEC,
   toCardPhotoLoading,
   toFilterInput,
   toFilterKey,
-  toSearchParams,
 } from "@/features/products/types";
 
 export interface ProductListContainerProps {
@@ -66,24 +59,12 @@ export function ProductListContainer({
   initialProducts = null,
   initialFilterKey = null,
 }: ProductListContainerProps) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  // The URL stays the source of truth; the optimistic layer only covers the navigation.
-  const urlFilters = useMemo(
-    () => parseFilters(new URLSearchParams(searchParams.toString())),
-    [searchParams],
-  );
-  const [filters, addOptimisticFilter] = useOptimistic(
-    urlFilters,
-    applyFilterAction,
-  );
-  const [isPending, startTransition] = useTransition();
-  // Rapid clicks stack on each other; the URL takes over again once the navigations settle.
-  const pendingRef = useRef(urlFilters);
-  useEffect(() => {
-    if (!isPending) pendingRef.current = urlFilters;
-  }, [isPending, urlFilters]);
+  const {
+    value: filters,
+    isPending,
+    dispatch,
+    toHref,
+  } = useUrlState(PRODUCT_FILTERS_CODEC);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isAppending, setIsAppending] = useState(false);
   const [priceDraft, setPriceDraft] = useState<[number, number] | null>(null);
@@ -111,26 +92,6 @@ export function ProductListContainer({
   const pageInfo = result?.page_info;
   const facets = result?.facets;
   const isInitialLoading = loading && !result;
-
-  const toHref = useCallback(
-    (next: Filters) => {
-      const query = toSearchParams(next).toString();
-      return query ? `${pathname}?${query}` : pathname;
-    },
-    [pathname],
-  );
-
-  const dispatch = useCallback(
-    (action: FilterAction) => {
-      const next = applyFilterAction(pendingRef.current, action);
-      pendingRef.current = next;
-      startTransition(() => {
-        addOptimisticFilter(action);
-        router.replace(toHref(next), { scroll: false });
-      });
-    },
-    [addOptimisticFilter, router, toHref],
-  );
 
   // Typing updates the field at once and the URL after a short pause.
   const handleSearchChange = useCallback(

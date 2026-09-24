@@ -4,7 +4,8 @@ import { fn } from "storybook/test";
 import { DayClosedKind } from "@/graphql/generated/graphql";
 
 import { atViewport } from "@/lib/storybook/viewports";
-import { formatDateKey, toMonthGrid } from "@/features/workshops/types";
+import { toMonthGrid } from "@/features/workshops/slot-picker/grid";
+import { formatDateKey } from "@/features/workshops/types";
 import type { CalendarDay } from "./BookingCalendar";
 import { RescheduleDialog } from "./RescheduleDialog";
 
@@ -59,6 +60,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     isOpen: true,
+    isLoading: false,
     monthLabel: "September 2026",
     notice: null,
     weeks: WEEKS,
@@ -91,6 +93,8 @@ export const Default: Story = {};
 export const NothingPicked: Story = {
   args: { selectedDate: null, pickedSlots: [], slots: [] },
 };
+
+export const LoadingMonth: Story = { args: { isLoading: true } };
 
 export const Moving: Story = { args: { isSubmitting: true } };
 

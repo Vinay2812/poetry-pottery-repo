@@ -245,6 +245,45 @@ describe("WorkshopsService", () => {
     expect(days[0]?.slots.length).toBe(6);
   });
 
+  it("frees a booking's own hours only for the guest who owns it", async () => {
+    const hour = bookingRow().slots[0];
+    if (!hour) throw new Error("no slot");
+    const heldByOwn = [{ ...hour, booking: { participants: 6 } }];
+    // The owner check is the lookup's user_id; the slot query then drops that booking.
+    prismaMock.workshopBooking.findFirst.mockImplementation(
+      ({ where }: { where: { id: string; user_id: number } }) =>
+        Promise.resolve(
+          where.id === "WS-1" && where.user_id === 1 ? { id: "WS-1" } : null,
+        ),
+    );
+    prismaMock.workshopBookingSlot.findMany.mockImplementation(
+      ({ where }: { where: { booking: { id?: { not: string } } } }) =>
+        Promise.resolve(where.booking.id?.not === "WS-1" ? [] : heldByOwn),
+    );
+    const input = {
+      config_slug: "open-studio",
+      from: nextSunday(),
+      days: 1,
+      exclude_booking_id: "WS-1",
+    };
+    const remainingAt = async (viewerId: number | null) => {
+      const [day] = await service.availability(input, viewerId);
+      return day?.slots.find(
+        (slot) => slot.starts_at.getTime() === hour.starts_at.getTime(),
+      )?.remaining;
+    };
+
+    await expect(remainingAt(1)).resolves.toBe(6);
+    await expect(remainingAt(2)).resolves.toBe(0);
+    await expect(remainingAt(null)).resolves.toBe(0);
+    expect(prismaMock.workshopBooking.findFirst).toHaveBeenCalledWith({
+      where: { id: "WS-1", user_id: 2, config_id: config.id },
+      select: { id: true },
+    });
+    // A signed-out caller never reaches the lookup.
+    expect(prismaMock.workshopBooking.findFirst).toHaveBeenCalledTimes(2);
+  });
+
   it("refuses a move that a cancellation beat to the row", async () => {
     prismaMock.workshopBooking.findFirst.mockResolvedValue(bookingRow());
     prismaMock.workshopBooking.updateMany.mockResolvedValueOnce({ count: 0 });
