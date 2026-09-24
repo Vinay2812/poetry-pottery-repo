@@ -15,7 +15,11 @@ const REFRESH_RETRY_MS = 2000;
 const REFRESH_RETRIES = 3;
 
 type Refresh = () => Promise<unknown>;
-type RetryTimer = RefObject<ReturnType<typeof setTimeout> | null>;
+interface RetryState {
+  timer: ReturnType<typeof setTimeout> | null;
+  isStopped: boolean;
+}
+type RetryTimer = RefObject<RetryState>;
 
 interface OptimisticActionMessages<TInput, TRun extends Promise<unknown>> {
   /** Shown once the write lands; null when the caller toasts on its own. */
@@ -72,10 +76,12 @@ function retryRefresh(
   timer: RetryTimer,
   attemptsLeft: number,
 ): void {
-  if (attemptsLeft === 0) return;
-  if (timer.current) clearTimeout(timer.current);
-  timer.current = setTimeout(() => {
-    timer.current = null;
+  const state = timer.current;
+  // Once the container has gone, nothing is left to refresh.
+  if (attemptsLeft === 0 || state.isStopped) return;
+  if (state.timer) clearTimeout(state.timer);
+  state.timer = setTimeout(() => {
+    state.timer = null;
     void attemptRefresh(refresh).then((refreshed) => {
       if (!refreshed) retryRefresh(refresh, timer, attemptsLeft - 1);
     });
@@ -97,14 +103,17 @@ export function useOptimisticAction<TInput, TRun extends Promise<unknown>>(
 
   const [isPending, startTransition] = useTransition();
   const [pending, setPending] = useState<TInput | null>(null);
-  const retryTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryTimer = useRef<RetryState>({ timer: null, isStopped: false });
 
-  useEffect(
-    () => () => {
-      if (retryTimer.current) clearTimeout(retryTimer.current);
-    },
-    [],
-  );
+  useEffect(() => {
+    const state = retryTimer.current;
+    state.isStopped = false;
+    return () => {
+      state.isStopped = true;
+      if (state.timer) clearTimeout(state.timer);
+      state.timer = null;
+    };
+  }, []);
 
   const execute = useCallback((input: TInput) => {
     setPending(input);

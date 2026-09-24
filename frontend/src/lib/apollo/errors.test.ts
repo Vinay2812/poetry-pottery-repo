@@ -77,6 +77,18 @@ describe("describeError", () => {
     }
   });
 
+  it("words the throttler's own error, which reaches the client with no status attached", () => {
+    const throttled = new CombinedGraphQLErrors({
+      errors: [
+        {
+          message: "ThrottlerException: Too Many Requests",
+          extensions: { code: "INTERNAL_SERVER_ERROR" },
+        },
+      ],
+    });
+    expect(describeError(throttled, "no")).toBe(THROTTLED_MESSAGE);
+  });
+
   it("maps an HTTP-level 429 to the throttled wording and other statuses to the fallback", () => {
     const throttled = new ServerError("Too Many Requests", {
       response: new Response(null, { status: 429 }),

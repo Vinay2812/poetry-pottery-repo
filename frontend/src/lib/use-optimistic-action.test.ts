@@ -153,6 +153,25 @@ describe("useOptimisticAction", () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
+  it("stops retrying the read-back once the container unmounts", async () => {
+    vi.useFakeTimers();
+    const run = vi.fn<(input: number) => Promise<string>>(async () => "ok");
+    const refresh = vi
+      .fn<() => Promise<unknown>>()
+      .mockResolvedValue({ error: new Error("offline") });
+    const { result, unmount } = renderAction({ run, refresh });
+
+    await act(async () => {
+      result.current.action.execute(1);
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(refresh).toHaveBeenCalledTimes(1);
+
+    unmount();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
   it("stays quiet on success when the caller toasts on its own", async () => {
     const run = vi.fn<(input: number) => Promise<string>>(async () => "ok");
     const { result } = renderHook(() =>

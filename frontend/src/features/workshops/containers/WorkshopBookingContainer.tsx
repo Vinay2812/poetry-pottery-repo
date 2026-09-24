@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 
 import { PageShell } from "@/components/layout/PageShell";
 
-import { AvailabilitySkeleton } from "@/features/workshops/components/AvailabilitySkeleton";
 import { BookingCalendar } from "@/features/workshops/components/BookingCalendar";
 import { BookingSummary } from "@/features/workshops/components/BookingSummary";
 import { DurationPicker } from "@/features/workshops/components/DurationPicker";
@@ -116,37 +115,34 @@ export function WorkshopBookingContainer({
             </div>
           </div>
 
-          {picker.isLoading ? (
-            <AvailabilitySkeleton />
-          ) : (
-            <BookingCalendar
-              monthLabel={picker.monthLabel}
-              notice={picker.notice}
-              weeks={picker.weeks}
-              selectedDate={picker.selectedDate}
-              canGoBack={picker.canGoBack}
-              canGoForward={picker.canGoForward}
-              slotPanel={
-                <div className="flex flex-col gap-3">
-                  <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                    Hours on{" "}
-                    {picker.selectedDate
-                      ? formatDateKey(picker.selectedDate)
-                      : ""}
-                  </h3>
-                  <SlotList
-                    slots={picker.slots}
-                    selectedStarts={picker.pickedStarts}
-                    emptyMessage="Nothing is free that day."
-                    onToggleSlot={picker.onToggleSlot}
-                  />
-                </div>
-              }
-              onPreviousMonth={picker.onPreviousMonth}
-              onNextMonth={picker.onNextMonth}
-              onSelectDate={picker.onSelectDate}
-            />
-          )}
+          <BookingCalendar
+            monthLabel={picker.monthLabel}
+            notice={picker.notice}
+            weeks={picker.weeks}
+            selectedDate={picker.selectedDate}
+            canGoBack={picker.canGoBack}
+            canGoForward={picker.canGoForward}
+            isLoading={picker.isLoading}
+            slotPanel={
+              <div className="flex flex-col gap-3">
+                <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+                  Hours on{" "}
+                  {picker.selectedDate
+                    ? formatDateKey(picker.selectedDate)
+                    : ""}
+                </h3>
+                <SlotList
+                  slots={picker.slots}
+                  selectedStarts={picker.pickedStarts}
+                  emptyMessage="Nothing is free that day."
+                  onToggleSlot={picker.onToggleSlot}
+                />
+              </div>
+            }
+            onPreviousMonth={picker.onPreviousMonth}
+            onNextMonth={picker.onNextMonth}
+            onSelectDate={picker.onSelectDate}
+          />
         </div>
 
         <aside className="lg:sticky lg:top-24">

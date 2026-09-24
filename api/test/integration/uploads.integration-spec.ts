@@ -1,6 +1,14 @@
 import { UploadPurpose } from "@prisma/client";
 import sharp from "sharp";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+} from "vitest";
 
 import type { UploadTarget } from "@/storage/storage.service";
 import {
@@ -251,6 +259,34 @@ describe("the upload lifecycle", () => {
     await expect(upload(owner.id, UploadPurpose.REVIEW)).resolves.toBeDefined();
   });
 
+  it("frees the cap from photos whose expiry job was lost, and never caps the console", async () => {
+    const [owner] = await makeUsers(harness.prisma, 1);
+    if (!owner) throw new Error("no user");
+    const keys: string[] = [];
+    for (let index = 0; index < MAX_UNCLAIMED_PER_OWNER; index += 1) {
+      keys.push((await upload(owner.id, UploadPurpose.REFERENCE)).key);
+    }
+    // Aged past the expiry window without the job ever running.
+    await harness.prisma.upload.updateMany({
+      where: { key: { in: keys } },
+      data: { created_at: new Date(Date.now() - 26 * 60 * 60 * 1000) },
+    });
+
+    await expect(
+      upload(owner.id, UploadPurpose.REFERENCE),
+    ).resolves.toBeDefined();
+    for (const key of keys) {
+      expect(await rowCount(key)).toBe(0);
+      expect(storage.deleted).toContain(key);
+    }
+
+    for (let index = 0; index <= MAX_UNCLAIMED_PER_OWNER; index += 1) {
+      await expect(
+        upload(owner.id, UploadPurpose.EVENT),
+      ).resolves.toBeDefined();
+    }
+  });
+
   it("releases a cart line's photos only once no other line or order item holds them", async () => {
     const piece = await makeProduct(harness.prisma, {
       stock: 5,
@@ -303,6 +339,60 @@ describe("the upload lifecycle", () => {
     ]);
     expect(await rowCount(shared.key)).toBe(1);
     expect(queue.leaked).toEqual([]);
+  });
+
+  it("never deletes a photo that a racing checkout moved onto an order", async () => {
+    const piece = await makeProduct(harness.prisma, {
+      stock: 5,
+      is_customizable: true,
+    });
+    const [buyer] = await makeUsers(harness.prisma, 1);
+    if (!buyer) throw new Error("no user");
+    const photo = await upload(buyer.id, UploadPurpose.REFERENCE);
+    await harness.cart.add(buyer.id, {
+      product_id: piece.id,
+      quantity: 1,
+      reference_image_urls: [photo.public_url],
+    });
+    const line = await harness.prisma.cartItem.findFirstOrThrow({
+      where: { user_id: buyer.id },
+    });
+    queue.reset();
+
+    // Checkout pauses right after reading the cart, and the line is removed in that gap.
+    let resume = (): void => {};
+    const paused = new Promise<void>((resolve) => {
+      resume = resolve;
+    });
+    let hasRead = (): void => {};
+    const read = new Promise<void>((resolve) => {
+      hasRead = resolve;
+    });
+    const readCart = harness.cart.get.bind(harness.cart);
+    const spy = vi
+      .spyOn(harness.cart, "get")
+      .mockImplementationOnce(async (userId) => {
+        const cart = await readCart(userId);
+        hasRead();
+        await paused;
+        return cart;
+      });
+
+    const checkout = harness.orders.place(buyer.id, {
+      address_id: buyer.address_id,
+    });
+    await read;
+    const removal = harness.cart.remove(buyer.id, line.id);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    resume();
+    await Promise.allSettled([checkout, removal]);
+    spy.mockRestore();
+
+    expect(
+      await harness.prisma.order.count({ where: { user_id: buyer.id } }),
+    ).toBe(1);
+    expect(queue.keysFor("storage.delete-object")).not.toContain(photo.key);
+    expect(await rowCount(photo.key)).toBe(1);
   });
 
   it("lets a review drop, swap and finally lose its photos", async () => {

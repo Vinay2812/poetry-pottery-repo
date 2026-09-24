@@ -10,7 +10,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { AvailabilitySkeleton } from "@/features/workshops/components/AvailabilitySkeleton";
 import {
   BookingCalendar,
   type CalendarDay,
@@ -82,33 +81,30 @@ export function RescheduleDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {isLoading ? (
-          <AvailabilitySkeleton />
-        ) : (
-          <>
-            <BookingCalendar
-              monthLabel={monthLabel}
-              notice={notice}
-              weeks={weeks}
-              selectedDate={selectedDate}
-              canGoBack={canGoBack}
-              canGoForward={canGoForward}
-              onPreviousMonth={onPreviousMonth}
-              onNextMonth={onNextMonth}
-              onSelectDate={onSelectDate}
-            />
+        <BookingCalendar
+          monthLabel={monthLabel}
+          notice={notice}
+          weeks={weeks}
+          selectedDate={selectedDate}
+          canGoBack={canGoBack}
+          canGoForward={canGoForward}
+          isLoading={isLoading}
+          onPreviousMonth={onPreviousMonth}
+          onNextMonth={onNextMonth}
+          onSelectDate={onSelectDate}
+        />
 
-            <SlotList
-              slots={slots}
-              selectedStarts={pickedSlots.map((slot) => slot.startsAt)}
-              emptyMessage={
-                selectedDate
-                  ? "Nothing is free that day."
-                  : "Pick a day to see its hours."
-              }
-              onToggleSlot={onToggleSlot}
-            />
-          </>
+        {!isLoading && (
+          <SlotList
+            slots={slots}
+            selectedStarts={pickedSlots.map((slot) => slot.startsAt)}
+            emptyMessage={
+              selectedDate
+                ? "Nothing is free that day."
+                : "Pick a day to see its hours."
+            }
+            onToggleSlot={onToggleSlot}
+          />
         )}
 
         <PickedSlots

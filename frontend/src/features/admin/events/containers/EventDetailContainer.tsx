@@ -4,7 +4,7 @@ import { useCallback, useOptimistic } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client/react";
 import {
   AdminEventDocument,
   CancelEventDocument,
@@ -44,13 +44,10 @@ export interface EventDetailContainerProps {
 }
 
 export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
-  const { data, previousData, loading, error, refetch } = useQuery(
-    AdminEventDocument,
-    {
-      variables: { id: eventId },
-      fetchPolicy: "cache-and-network",
-    },
-  );
+  const { data, previousData, loading, error } = useQuery(AdminEventDocument, {
+    variables: { id: eventId },
+    fetchPolicy: "cache-and-network",
+  });
   const [publishEvent] = useMutation(PublishEventDocument);
   const [unpublishEvent] = useMutation(UnpublishEventDocument);
   const [completeEvent] = useMutation(CompleteEventDocument);
@@ -80,6 +77,7 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
     (_current: EventStatus, next: EventStatus) => next,
   );
 
+  const client = useApolloClient();
   const move = useReasonAction({
     patch: ({ target }) => setOptimisticStatus(eventActionStatus(target)),
     run: ({ target, reason }) => {
@@ -92,13 +90,13 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
       if (target === "complete") {
         return completeEvent({ variables: { id: eventId } });
       }
-      // Cancelling closes every live registration, so the table below is read back too.
-      return cancelEvent({
-        variables: { id: eventId, reason },
-        refetchQueries: ["AdminEventRegistrations"],
-      });
+      return cancelEvent({ variables: { id: eventId, reason } });
     },
-    refresh: refetch,
+    // Cancelling closes every live registration, so the table below is read back with the event.
+    refresh: () =>
+      client.refetchQueries({
+        include: ["AdminEvent", "AdminEventRegistrations"],
+      }),
     policy: (target: EventAction) =>
       eventActionNeedsReason(target) ? "optional" : "none",
     requiredMessage: "Say why this event is being cancelled",

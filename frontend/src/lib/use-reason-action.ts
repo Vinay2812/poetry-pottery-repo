@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import {
   type OptimisticActionOptions,
@@ -47,7 +47,12 @@ export function useReasonAction<TTarget, TRun extends Promise<unknown>>(
   options: ReasonActionOptions<TTarget, TRun>,
 ): ReasonAction<TTarget> {
   const { policy, requiredMessage, onSuccess, ...actionOptions } = options;
-  const [target, setTarget] = useState<TTarget | null>(null);
+  const [target, setTargetState] = useState<TTarget | null>(null);
+  const targetRef = useRef<TTarget | null>(null);
+  const setTarget = useCallback((next: TTarget | null) => {
+    targetRef.current = next;
+    setTargetState(next);
+  }, []);
   const [reason, setReasonText] = useState("");
   const [error, setError] = useState<string | undefined>(undefined);
 
@@ -55,15 +60,16 @@ export function useReasonAction<TTarget, TRun extends Promise<unknown>>(
     setTarget(null);
     setReasonText("");
     setError(undefined);
-  }, []);
+  }, [setTarget]);
 
   const { execute, isPending, pending } = useOptimisticAction<
     ReasonInput<TTarget>,
     TRun
   >({
     ...actionOptions,
+    // Only the dialog this write came from closes; one opened for another row meanwhile stays.
     onSuccess: (result, input) => {
-      close();
+      if (targetRef.current === input.target) close();
       onSuccess?.(result, input);
     },
   });
@@ -78,7 +84,7 @@ export function useReasonAction<TTarget, TRun extends Promise<unknown>>(
       setError(undefined);
       setTarget(next);
     },
-    [execute, policy],
+    [execute, policy, setTarget],
   );
 
   const setReason = useCallback((value: string) => {

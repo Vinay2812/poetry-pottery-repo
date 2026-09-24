@@ -79,6 +79,8 @@ export const LastMonthInWindow: Story = {
   args: { canGoBack: true, canGoForward: false },
 };
 
+export const LoadingMonth: Story = { args: { isLoading: true } };
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };

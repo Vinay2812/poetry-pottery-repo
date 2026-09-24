@@ -66,6 +66,7 @@ const prismaMock = {
   withTransaction: vi.fn(<T>(fn: () => Promise<T>) => fn()),
   upload: {
     count: vi.fn(),
+    findMany: vi.fn().mockResolvedValue([]),
     create: vi.fn(),
     update: vi.fn(),
     updateMany: vi.fn(),

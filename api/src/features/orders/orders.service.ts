@@ -187,12 +187,15 @@ export class OrdersService {
   // Pins every piece in the cart for the rest of the transaction, so a price, an option or the
   // active flag cannot move between the quote and the decrement. Ordered by id so two carts
   // holding the same pieces can never deadlock against each other.
-  private async lockCartProducts(userId: number): Promise<void> {
+  // Locking the lines too makes a racing remove wait, so its photo release sees the order items.
+  private async lockCart(userId: number): Promise<void> {
     await this.prisma.$executeRaw`
       SELECT id FROM products
       WHERE id IN (SELECT product_id FROM cart_items WHERE user_id = ${userId})
       ORDER BY id
       FOR UPDATE`;
+    await this.prisma.$executeRaw`
+      SELECT id FROM cart_items WHERE user_id = ${userId} ORDER BY id FOR UPDATE`;
   }
 
   async place(userId: number, input: PlaceOrderInput): Promise<Order> {
@@ -200,7 +203,7 @@ export class OrdersService {
     const gift = readGift(input.gift_note, input.hide_prices);
 
     const order = await this.prisma.withTransaction(async () => {
-      await this.lockCartProducts(userId);
+      await this.lockCart(userId);
       const address = await this.prisma.address.findFirst({
         where: { id: input.address_id, user_id: userId },
       });

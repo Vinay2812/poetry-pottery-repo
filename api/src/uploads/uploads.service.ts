@@ -3,6 +3,7 @@ import { UploadPurpose as StoredPurpose } from "@prisma/client";
 import sharp from "sharp";
 
 import { PrismaService } from "@/prisma/prisma.service";
+import { DELAYS } from "@/queue/jobs";
 import { QueueService } from "@/queue/queue.service";
 import { StorageService, type UploadTarget } from "@/storage/storage.service";
 import {
@@ -13,8 +14,14 @@ import {
 } from "./image-specs";
 import { ConfirmedImage, ImageSpec, UploadPurpose } from "./uploads.type";
 
-// One person may have this many photos signed but not yet attached to anything, per purpose.
+// A shopper may have this many photos signed but not yet attached to anything, per purpose.
 export const MAX_UNCLAIMED_PER_OWNER = 12;
+const SHOPPER_PURPOSES: readonly StoredPurpose[] = [
+  StoredPurpose.REVIEW,
+  StoredPurpose.REFERENCE,
+];
+// Past the expiry delay plus slack, an unclaimed row means its expiry job was lost.
+const STALE_AFTER_MS = DELAYS["upload.expire"] + 60 * 60 * 1000;
 export const TOO_MANY_WAITING =
   "Too many photos are waiting to be used; attach the ones you have first";
 export const NOT_OWN_UPLOAD = "That photo was not uploaded through the site";
@@ -48,11 +55,14 @@ export class UploadsService {
     purpose: StoredPurpose,
     file: UploadFile,
   ): Promise<UploadTarget> {
-    const waiting = await this.prisma.upload.count({
-      where: { owner_id: ownerId, purpose, claimed_at: null },
-    });
-    if (waiting >= MAX_UNCLAIMED_PER_OWNER) {
-      throw new BadRequestException(TOO_MANY_WAITING);
+    if (SHOPPER_PURPOSES.includes(purpose)) {
+      await this.sweepStale(ownerId, purpose);
+      const waiting = await this.prisma.upload.count({
+        where: { owner_id: ownerId, purpose, claimed_at: null },
+      });
+      if (waiting >= MAX_UNCLAIMED_PER_OWNER) {
+        throw new BadRequestException(TOO_MANY_WAITING);
+      }
     }
     const target = await this.storage.createImageUpload({
       folder: folderFor(purpose),
@@ -180,6 +190,25 @@ export class UploadsService {
     });
     if (claimed.count !== keys.length) {
       throw new BadRequestException(NOT_CONFIRMED);
+    }
+  }
+
+  // Expires what a lost or dead-lettered expiry job left behind, so the cap cannot lock anyone out.
+  private async sweepStale(
+    ownerId: number,
+    purpose: StoredPurpose,
+  ): Promise<void> {
+    const stale = await this.prisma.upload.findMany({
+      where: {
+        owner_id: ownerId,
+        purpose,
+        claimed_at: null,
+        created_at: { lt: new Date(Date.now() - STALE_AFTER_MS) },
+      },
+      select: { key: true },
+    });
+    for (const row of stale) {
+      await this.expire(row.key);
     }
   }
 

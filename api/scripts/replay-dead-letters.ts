@@ -2,6 +2,7 @@ import { AmqpConnection } from "@golevelup/nestjs-rabbitmq";
 import { Module } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 
+import { CustomWinstonModule } from "@/modules";
 import { PrismaModule } from "@/prisma/prisma.module";
 import {
   ATTEMPT_HEADER,
@@ -11,7 +12,7 @@ import {
 import { QueueModule } from "@/queue/queue.module";
 
 // Only the broker and its one dependency: no resolvers, consumers or Redis come up for a replay.
-@Module({ imports: [PrismaModule, QueueModule] })
+@Module({ imports: [CustomWinstonModule, PrismaModule, QueueModule] })
 class ReplayModule {}
 
 // The slice of the AMQP channel a replay uses; amqplib's own types are not resolvable here.
@@ -26,6 +27,7 @@ interface DeadLetter {
 }
 
 interface BrokerChannel {
+  checkQueue(queue: string): Promise<{ messageCount: number }>;
   get(queue: string, options: { noAck: boolean }): Promise<DeadLetter | false>;
   publish(
     exchange: string,
@@ -52,8 +54,10 @@ async function main(): Promise<void> {
     const managed = amqp.managedChannel as { waitForConnect(): Promise<void> };
     await managed.waitForConnect();
     const channel = amqp.channel as BrokerChannel;
+    // Bounded by what was parked at the start, so a message that fails again at once cannot loop forever.
+    const { messageCount } = await channel.checkQueue(DEAD_LETTER_QUEUE);
     let replayed = 0;
-    for (;;) {
+    while (replayed < messageCount) {
       const msg = await channel.get(DEAD_LETTER_QUEUE, { noAck: false });
       if (msg === false) break;
       const headers = { ...msg.properties.headers };

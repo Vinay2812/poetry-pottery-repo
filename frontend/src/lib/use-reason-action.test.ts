@@ -146,6 +146,30 @@ describe("useReasonAction", () => {
     expect(result.current.pending).toBeNull();
   });
 
+  it("leaves a dialog opened for another move meanwhile alone when the first write lands", async () => {
+    let finish!: (value: string) => void;
+    const run = vi.fn(
+      () =>
+        new Promise<string>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const { result } = renderReason(run);
+
+    act(() => result.current.start("cancel"));
+    act(() => result.current.setReason("Sold out"));
+    act(() => result.current.confirm());
+    await waitFor(() => expect(result.current.isPending).toBe(true));
+
+    act(() => result.current.start("ship"));
+    act(() => result.current.setReason("Tracking 42"));
+    await act(async () => finish("ok"));
+
+    await waitFor(() => expect(result.current.isPending).toBe(false));
+    expect(result.current.target).toBe("ship");
+    expect(result.current.reason).toBe("Tracking 42");
+  });
+
   it("closing by hand discards the text", () => {
     const { result } = renderReason(vi.fn(async () => "ok"));
 

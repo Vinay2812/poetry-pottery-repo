@@ -5,6 +5,9 @@ export const OFFLINE_MESSAGE =
 export const THROTTLED_MESSAGE =
   "That was a lot of tries in a row. Wait a minute and try again.";
 
+// The throttler's exception carries a bare string, so Nest attaches no status and only the words say 429.
+const THROTTLED_PATTERN = /too many requests/i;
+
 interface NestOriginalError {
   statusCode?: number;
   message?: string | string[];
@@ -49,8 +52,11 @@ export function describeError(error: unknown, fallback: string): string {
   if (CombinedGraphQLErrors.is(error)) {
     const first = error.errors[0];
     const original = readOriginalError(first?.extensions);
-    if (original?.statusCode === 429) return THROTTLED_MESSAGE;
-    return toSentence(original?.message ?? first?.message) || fallback;
+    const sentence = toSentence(original?.message ?? first?.message);
+    if (original?.statusCode === 429 || THROTTLED_PATTERN.test(sentence)) {
+      return THROTTLED_MESSAGE;
+    }
+    return sentence || fallback;
   }
   if (ServerError.is(error)) {
     return error.statusCode === 429 ? THROTTLED_MESSAGE : fallback;
