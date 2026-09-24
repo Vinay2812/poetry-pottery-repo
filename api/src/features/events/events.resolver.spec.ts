@@ -132,7 +132,7 @@ const eventsMock = {
   list: vi.fn<EventsService["list"]>(),
   bySlug: vi.fn<EventsService["bySlug"]>(),
   upcoming: vi.fn<EventsService["upcoming"]>(),
-  registrationFor: vi.fn<EventsService["registrationFor"]>(),
+  registrationsFor: vi.fn<EventsService["registrationsFor"]>(),
   register: vi.fn<EventsService["register"]>(),
   myRegistrations: vi.fn<EventsService["myRegistrations"]>(),
   registrationById: vi.fn<EventsService["registrationById"]>(),
@@ -204,18 +204,28 @@ describe("EventsResolver", () => {
       registration,
     );
     expect(authGuardMock.tryAuthenticate).not.toHaveBeenCalled();
-    expect(eventsMock.registrationFor).not.toHaveBeenCalled();
+    expect(eventsMock.registrationsFor).not.toHaveBeenCalled();
   });
 
-  it("looks the booking up for the signed-in visitor by event", async () => {
+  it("looks the signed-in visitor's bookings up for a whole list of events at once", async () => {
     const registration = makeRegistration();
     authGuardMock.tryAuthenticate.mockResolvedValue(session(7));
-    eventsMock.registrationFor.mockResolvedValue(registration);
+    eventsMock.registrationsFor.mockResolvedValue(
+      new Map([
+        [3, registration],
+        [5, null],
+      ]),
+    );
+    const context = gqlContext();
 
     await expect(
-      resolver.my_registration(makeEvent({ id: 3 }), gqlContext()),
-    ).resolves.toBe(registration);
-    expect(eventsMock.registrationFor).toHaveBeenCalledWith(7, 3);
+      Promise.all([
+        resolver.my_registration(makeEvent({ id: 3 }), context),
+        resolver.my_registration(makeEvent({ id: 5 }), context),
+      ]),
+    ).resolves.toEqual([registration, null]);
+    expect(eventsMock.registrationsFor).toHaveBeenCalledTimes(1);
+    expect(eventsMock.registrationsFor).toHaveBeenCalledWith(7, [3, 5]);
   });
 
   it("tells an anonymous visitor they have no booking without asking the service", async () => {
@@ -224,7 +234,7 @@ describe("EventsResolver", () => {
     await expect(
       resolver.my_registration(makeEvent(), gqlContext()),
     ).resolves.toBeNull();
-    expect(eventsMock.registrationFor).not.toHaveBeenCalled();
+    expect(eventsMock.registrationsFor).not.toHaveBeenCalled();
   });
 
   it("registers the session, not the event id in the input", async () => {

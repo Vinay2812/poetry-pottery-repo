@@ -48,6 +48,7 @@ export const reviewInclude = {
 type ReviewRow = Prisma.ReviewGetPayload<{ include: typeof reviewInclude }>;
 
 export type ReviewSubject = { product_id: number } | { event_id: number };
+export type ReviewSubjectKind = "product_id" | "event_id";
 
 // A row always carries exactly one of the two foreign keys; the schema allows both to be null.
 export function subjectOf(row: {
@@ -196,6 +197,97 @@ export class ReviewsService {
     }
     const reason = await this.ineligibleReason(subject, userId);
     return { can_review: reason === null, reason, my_review: null };
+  }
+
+  // The rules of eligibility() for a whole list, in at most two queries; the integration suite checks they agree.
+  async eligibilityFor(
+    kind: ReviewSubjectKind,
+    ids: number[],
+    userId: number | null,
+  ): Promise<Map<number, ReviewEligibility>> {
+    if (userId === null) {
+      return new Map(
+        ids.map((id) => [
+          id,
+          { can_review: false, reason: "Sign in to review", my_review: null },
+        ]),
+      );
+    }
+    const reviews = await this.prisma.review.findMany({
+      where: {
+        user_id: userId,
+        ...(kind === "product_id"
+          ? { product_id: { in: ids } }
+          : { event_id: { in: ids } }),
+      },
+      include: reviewInclude,
+    });
+    const found = new Map<number, ReviewEligibility>();
+    for (const row of reviews) {
+      const id = kind === "product_id" ? row.product_id : row.event_id;
+      if (id !== null) {
+        found.set(id, {
+          can_review: true,
+          reason: null,
+          my_review: toReview(row, userId),
+        });
+      }
+    }
+    const unreviewed = ids.filter((id) => !found.has(id));
+    if (unreviewed.length === 0) return found;
+    const eligible =
+      kind === "product_id"
+        ? await this.deliveredProductIds(unreviewed, userId)
+        : await this.attendedEventIds(unreviewed, userId);
+    const reason =
+      kind === "product_id"
+        ? "You can review a piece once it has been delivered to you"
+        : "You can review an event after attending it";
+    for (const id of unreviewed) {
+      found.set(
+        id,
+        eligible.has(id)
+          ? { can_review: true, reason: null, my_review: null }
+          : { can_review: false, reason, my_review: null },
+      );
+    }
+    return found;
+  }
+
+  private async deliveredProductIds(
+    productIds: number[],
+    userId: number,
+  ): Promise<Set<number>> {
+    const lines = await this.prisma.orderItem.findMany({
+      where: {
+        product_id: { in: productIds },
+        order: { user_id: userId, status: OrderStatus.DELIVERED },
+      },
+      select: { product_id: true },
+      distinct: ["product_id"],
+    });
+    return new Set(lines.map((line) => line.product_id));
+  }
+
+  private async attendedEventIds(
+    eventIds: number[],
+    userId: number,
+  ): Promise<Set<number>> {
+    const seats = await this.prisma.eventRegistration.findMany({
+      where: {
+        event_id: { in: eventIds },
+        user_id: userId,
+        status: RegistrationStatus.CONFIRMED,
+        event: {
+          OR: [
+            { status: EventStatus.COMPLETED },
+            { ends_at: { lt: new Date() } },
+          ],
+        },
+      },
+      select: { event_id: true },
+    });
+    return new Set(seats.map((seat) => seat.event_id));
   }
 
   async create(

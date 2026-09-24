@@ -7,6 +7,8 @@ declare global {
     interface Request {
       requestId?: string;
       authenticatedUser?: AuthUser;
+      // One optional sign-in check per request, however many resolvers ask for it.
+      authAttempt?: Promise<AuthUser | null>;
       // Set by the GraphQL logging plugin so the access log can name the operation.
       graphqlOperation?: string;
       // Per-request memo so list resolvers look wishlist membership up once.

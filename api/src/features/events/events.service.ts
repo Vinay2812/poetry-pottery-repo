@@ -170,6 +170,24 @@ export class EventsService {
     return row ? toRegistration(row) : null;
   }
 
+  // The visitor's booking for each event in one query; null where they have none or are signed out.
+  async registrationsFor(
+    userId: number | null,
+    eventIds: number[],
+  ): Promise<Map<number, Registration | null>> {
+    const found = new Map<number, Registration | null>(
+      eventIds.map((id) => [id, null]),
+    );
+    if (userId === null) return found;
+    const now = new Date();
+    const rows = await this.prisma.eventRegistration.findMany({
+      where: { user_id: userId, event_id: { in: eventIds } },
+      include: registrationInclude,
+    });
+    for (const row of rows) found.set(row.event_id, toRegistration(row, now));
+    return found;
+  }
+
   async register(
     userId: number,
     input: RegisterForEventInput,

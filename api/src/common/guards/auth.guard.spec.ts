@@ -10,6 +10,7 @@ import { PrismaService } from "@/prisma/prisma.service";
 import { UsersService } from "@/features/users/users.service";
 import { ClerkService } from "@/common/clerk/clerk.service";
 import type { AuthUser } from "@/common/clerk/clerk.type";
+import type { AppRequest } from "@/common/types/express";
 import { AdminGuard } from "./admin.guard";
 import { AuthGuard } from "./auth.guard";
 
@@ -357,6 +358,42 @@ describe("AuthGuard", () => {
 
     expect(getAuthMock).toHaveBeenCalledTimes(1);
     expect(prismaMock.user.findUnique).toHaveBeenCalledTimes(1);
+  });
+
+  it("shares one optional sign-in check between every row resolver on a request", async () => {
+    mockAuth({
+      isAuthenticated: true,
+      userId: "user_1",
+      sessionClaims: { dbUserId: 1, role: UserRole.USER },
+    });
+    prismaMock.user.findUnique.mockResolvedValue(
+      makeUser({ id: 1, auth_id: "user_1" }),
+    );
+    const request = {} as AppRequest;
+
+    const users = await Promise.all(
+      [1, 2, 3].map(() => authGuard.tryAuthenticate(request)),
+    );
+
+    expect(users.map((user) => user?.db_user_id)).toEqual([1, 1, 1]);
+    expect(prismaMock.user.findUnique).toHaveBeenCalledTimes(1);
+    await expect(authGuard.tryAuthenticate({} as AppRequest)).resolves.toEqual(
+      users[0],
+    );
+    expect(prismaMock.user.findUnique).toHaveBeenCalledTimes(2);
+  });
+
+  it("answers an anonymous request with null and keeps unexpected failures", async () => {
+    mockAuth({ isAuthenticated: false });
+    await expect(
+      authGuard.tryAuthenticate({} as AppRequest),
+    ).resolves.toBeNull();
+
+    mockAuth({ isAuthenticated: true, userId: "user_1", sessionClaims: {} });
+    prismaMock.user.findUnique.mockRejectedValue(new Error("database down"));
+    await expect(authGuard.tryAuthenticate({} as AppRequest)).rejects.toThrow(
+      "database down",
+    );
   });
 });
 

@@ -28,8 +28,8 @@ const prismaMock = {
     aggregate: vi.fn(),
     groupBy: vi.fn(),
   },
-  orderItem: { count: vi.fn() },
-  eventRegistration: { count: vi.fn() },
+  orderItem: { count: vi.fn(), findMany: vi.fn() },
+  eventRegistration: { count: vi.fn(), findMany: vi.fn() },
   product: { update: vi.fn() },
   event: { update: vi.fn() },
 };
@@ -251,6 +251,83 @@ describe("ReviewsService", () => {
         where: containing({ event_id: 9, user_id: 7, status: "CONFIRMED" }),
       }),
     );
+  });
+
+  it("answers eligibility for a list of pieces in two queries, like one at a time", async () => {
+    prismaMock.review.findMany.mockResolvedValue([
+      reviewRow({ product_id: 3 }),
+    ]);
+    prismaMock.orderItem.findMany.mockResolvedValue([{ product_id: 4 }]);
+
+    const found = await service.eligibilityFor("product_id", [3, 4, 5], 7);
+
+    expect(found.get(3)).toMatchObject({ can_review: true, reason: null });
+    expect(found.get(3)?.my_review?.id).toBe(1);
+    expect(found.get(4)).toEqual({
+      can_review: true,
+      reason: null,
+      my_review: null,
+    });
+    expect(found.get(5)).toEqual({
+      can_review: false,
+      reason: "You can review a piece once it has been delivered to you",
+      my_review: null,
+    });
+    expect(prismaMock.review.findMany).toHaveBeenCalledWith(
+      containing({ where: { user_id: 7, product_id: { in: [3, 4, 5] } } }),
+    );
+    expect(prismaMock.orderItem.findMany).toHaveBeenCalledWith(
+      containing({
+        where: {
+          product_id: { in: [4, 5] },
+          order: { user_id: 7, status: "DELIVERED" },
+        },
+      }),
+    );
+  });
+
+  it("asks for a confirmed seat at a finished event across a list of events", async () => {
+    prismaMock.review.findMany.mockResolvedValue([]);
+    prismaMock.eventRegistration.findMany.mockResolvedValue([{ event_id: 9 }]);
+
+    const found = await service.eligibilityFor("event_id", [9, 10], 7);
+
+    expect(found.get(9)?.can_review).toBe(true);
+    expect(found.get(10)).toEqual({
+      can_review: false,
+      reason: "You can review an event after attending it",
+      my_review: null,
+    });
+    expect(prismaMock.eventRegistration.findMany).toHaveBeenCalledWith(
+      containing({
+        where: containing({
+          event_id: { in: [9, 10] },
+          user_id: 7,
+          status: "CONFIRMED",
+        }),
+      }),
+    );
+  });
+
+  it("skips the second query once every piece on the list is already reviewed", async () => {
+    prismaMock.review.findMany.mockResolvedValue([
+      reviewRow({ product_id: 3 }),
+    ]);
+
+    await service.eligibilityFor("product_id", [3], 7);
+
+    expect(prismaMock.orderItem.findMany).not.toHaveBeenCalled();
+  });
+
+  it("tells a signed-out visitor to sign in without touching the database", async () => {
+    const found = await service.eligibilityFor("event_id", [9], null);
+
+    expect(found.get(9)).toEqual({
+      can_review: false,
+      reason: "Sign in to review",
+      my_review: null,
+    });
+    expect(prismaMock.review.findMany).not.toHaveBeenCalled();
   });
 
   it("reports an existing review as editable", async () => {

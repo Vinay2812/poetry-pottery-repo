@@ -179,6 +179,31 @@ describe("EventsService", () => {
     service = moduleRef.get(EventsService);
   });
 
+  it("reads a visitor's bookings for many events in one query, null where there is none", async () => {
+    prismaMock.eventRegistration.findMany.mockResolvedValue([
+      registrationRow({ id: "EV-2", event_id: 2, event: eventRow({ id: 2 }) }),
+    ]);
+
+    const found = await service.registrationsFor(7, [1, 2]);
+
+    expect(found.get(1)).toBeNull();
+    expect(found.get(2)?.id).toBe("EV-2");
+    expect(prismaMock.eventRegistration.findMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.eventRegistration.findMany).toHaveBeenCalledWith(
+      containing({ where: { user_id: 7, event_id: { in: [1, 2] } } }),
+    );
+  });
+
+  it("answers a signed-out visitor with no bookings and no query", async () => {
+    const found = await service.registrationsFor(null, [1, 2]);
+
+    expect([...found]).toEqual([
+      [1, null],
+      [2, null],
+    ]);
+    expect(prismaMock.eventRegistration.findMany).not.toHaveBeenCalled();
+  });
+
   it("answers a double-submitted first request as a conflict, not a server error", async () => {
     prismaMock.eventRegistration.create.mockRejectedValueOnce(
       new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {

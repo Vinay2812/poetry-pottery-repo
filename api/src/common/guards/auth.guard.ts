@@ -35,16 +35,17 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  // For public resolvers that personalise when a session happens to exist.
-  async tryAuthenticate(request: AppRequest): Promise<AuthUser | null> {
-    try {
-      return await this.authenticate(request);
-    } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        return null;
-      }
-      throw error;
-    }
+  // For public resolvers that personalise when a session happens to exist; shared across a request's rows.
+  tryAuthenticate(request: AppRequest): Promise<AuthUser | null> {
+    request.authAttempt ??= this.authenticate(request).catch(
+      (error: unknown) => {
+        if (error instanceof UnauthorizedException) {
+          return null;
+        }
+        throw error;
+      },
+    );
+    return request.authAttempt;
   }
 
   protected async authenticate(request: AppRequest): Promise<AuthUser> {

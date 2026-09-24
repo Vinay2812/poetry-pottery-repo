@@ -8,6 +8,7 @@ import {
   Resolver,
 } from "@nestjs/graphql";
 
+import { RequestBatch } from "@/common/batch/batch";
 import { AuthGuard } from "@/common/guards/auth.guard";
 import type { GqlContext } from "@/common/types/express";
 import { WishlistService } from "@/features/wishlist/wishlist.service";
@@ -25,6 +26,10 @@ import {
 
 @Resolver(() => Product)
 export class ProductsResolver {
+  private readonly optionGroupBatch = new RequestBatch((productIds: number[]) =>
+    this.productsService.optionGroupsFor(productIds),
+  );
+
   constructor(
     private readonly productsService: ProductsService,
     private readonly wishlistService: WishlistService,
@@ -65,10 +70,13 @@ export class ProductsResolver {
   }
 
   @ResolveField(() => [ProductOptionGroup])
-  option_groups(@Parent() product: Product): Promise<ProductOptionGroup[]> {
+  option_groups(
+    @Parent() product: Product,
+    @Context() context: GqlContext,
+  ): Promise<ProductOptionGroup[]> {
     return product.option_groups
       ? Promise.resolve(product.option_groups)
-      : this.productsService.optionGroups(product.id);
+      : this.optionGroupBatch.load(context, product.id);
   }
 
   @Query(() => [Product])
@@ -131,11 +139,17 @@ export class ProductsResolver {
 
 @Resolver(() => Glaze)
 export class GlazeResolver {
+  private readonly pieceBatch = new RequestBatch((glazeIds: number[]) =>
+    this.productsService.glazePiecesFor(glazeIds),
+  );
+
   constructor(private readonly productsService: ProductsService) {}
 
-  // Only loaded when a caller asks, so the facet list stays one query.
   @ResolveField(() => [Product])
-  pieces(@Parent() glaze: Glaze): Promise<Product[]> {
-    return this.productsService.glazePieces(glaze.id);
+  pieces(
+    @Parent() glaze: Glaze,
+    @Context() context: GqlContext,
+  ): Promise<Product[]> {
+    return this.pieceBatch.load(context, glaze.id);
   }
 }
