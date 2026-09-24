@@ -97,7 +97,10 @@ export function applyGlazePatch(
   if (patch.kind === "remove") {
     return rows.filter((row) => row.id !== patch.id);
   }
-  const isKnown = rows.some((row) => row.id === patch.row.id);
-  if (!isKnown) return [patch.row, ...rows];
-  return rows.map((row) => (row.id === patch.row.id ? patch.row : row));
+  // A draft (id 0) whose saved row has already been read back is matched by name, so it never shows twice.
+  const isSame = (row: GlazeRow) =>
+    row.id === patch.row.id ||
+    (patch.row.id === 0 && row.name === patch.row.name);
+  if (!rows.some(isSame)) return [patch.row, ...rows];
+  return rows.map((row) => (isSame(row) ? { ...patch.row, id: row.id } : row));
 }

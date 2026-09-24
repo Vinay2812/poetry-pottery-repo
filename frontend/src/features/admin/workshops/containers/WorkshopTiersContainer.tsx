@@ -54,6 +54,7 @@ export function WorkshopTiersContainer({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [hoursError, setHoursError] = useState<string | null>(null);
 
   const editing = useMemo(
     () => optimisticTiers.find((tier) => tier.id === editingId) ?? null,
@@ -91,10 +92,22 @@ export function WorkshopTiersContainer({
     },
   });
 
+  // The API upserts on hours, so adding a length that already exists would quietly reprice it.
   const handleSubmit = useCallback(
-    (values: WorkshopTierFormValues) =>
-      saveTierRow({ id: editing?.id ?? 0, values }),
-    [editing, saveTierRow],
+    (values: WorkshopTierFormValues) => {
+      const isTaken =
+        editing === null &&
+        optimisticTiers.some((tier) => tier.hours === values.hours);
+      if (isTaken) {
+        setHoursError(
+          `${formatHoursLabel(values.hours)} already has a price. Edit that row instead.`,
+        );
+        return;
+      }
+      setHoursError(null);
+      saveTierRow({ id: editing?.id ?? 0, values });
+    },
+    [editing, optimisticTiers, saveTierRow],
   );
 
   const {
@@ -140,12 +153,14 @@ export function WorkshopTiersContainer({
         hours={draft.hours}
         pricePerPerson={draft.price_per_person}
         piecesPerPerson={draft.pieces_per_person}
+        hoursError={hoursError}
         isBusy={busyId !== null}
         onSubmit={handleSubmit}
         onOpenChange={(isOpen) => {
           if (isOpen) return;
           setIsAdding(false);
           setEditingId(null);
+          setHoursError(null);
         }}
       />
       <AdminConfirmDialog

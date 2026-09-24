@@ -27,6 +27,8 @@ export interface WorkshopTierDialogProps {
   hours: number;
   pricePerPerson: number;
   piecesPerPerson: number;
+  /** Set by the container when the hours typed already have a price. */
+  hoursError: string | null;
   isBusy: boolean;
   onSubmit: (values: WorkshopTierFormValues) => void;
   onOpenChange: (isOpen: boolean) => void;
@@ -38,6 +40,7 @@ export function WorkshopTierDialog({
   hours,
   pricePerPerson,
   piecesPerPerson,
+  hoursError,
   isBusy,
   onSubmit,
   onOpenChange,
@@ -78,7 +81,7 @@ export function WorkshopTierDialog({
             id="tier-hours"
             label="Hours"
             hint={null}
-            error={errors.hours?.message}
+            error={errors.hours?.message ?? hoursError ?? undefined}
           >
             <Input
               id="tier-hours"
@@ -87,7 +90,7 @@ export function WorkshopTierDialog({
               min={1}
               readOnly={isEditing}
               className="h-9 text-[13px] tnum"
-              aria-invalid={Boolean(errors.hours)}
+              aria-invalid={Boolean(errors.hours ?? hoursError)}
               {...register("hours", { valueAsNumber: true })}
             />
           </AdminField>

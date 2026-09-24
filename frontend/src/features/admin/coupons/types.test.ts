@@ -160,3 +160,32 @@ describe("describeCouponDeletion", () => {
     expect(describeCouponDeletion("MONSOON20", 4)).toContain("used 4 times");
   });
 });
+
+describe("applyCouponPatch drafts", () => {
+  const row = (id: number, code: string) => ({
+    id,
+    code,
+    kind: CouponKind.Percent,
+    value: 10,
+    minOrder: 0,
+    maxUses: null,
+    usesCount: 0,
+    startsAt: null,
+    expiresAt: null,
+    isActive: true,
+  });
+
+  it("adds a new draft at the top", () => {
+    expect(
+      applyCouponPatch([row(1, "OLD")], { kind: "save", row: row(0, "NEW") }),
+    ).toEqual([row(0, "NEW"), row(1, "OLD")]);
+  });
+
+  it("never shows a draft twice once its saved row is read back", () => {
+    const next = applyCouponPatch([row(7, "NEW"), row(1, "OLD")], {
+      kind: "save",
+      row: row(0, "NEW"),
+    });
+    expect(next).toEqual([row(7, "NEW"), row(1, "OLD")]);
+  });
+});

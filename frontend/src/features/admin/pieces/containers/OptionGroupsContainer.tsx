@@ -233,7 +233,11 @@ export function OptionGroupsContainer({
           ? deleteGroup({ variables: { id: target.groupId } })
           : deleteOption({ variables: { id: target.optionId } }),
       refresh: refetch,
-      messages: { success: null, failure: "That could not be deleted" },
+      messages: {
+        success: (target) =>
+          target.kind === "group" ? "Group removed" : "Option removed",
+        failure: "That could not be deleted",
+      },
       onSuccess: closeEditor,
     },
   );

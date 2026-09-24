@@ -19,17 +19,26 @@ type AutoFocusHandler = (event: Event) => void;
 
 interface HarnessProps {
   kind: "dialog" | "sheet";
+  hasAutoFocusField?: boolean;
   onOpenAutoFocus?: AutoFocusHandler;
   onCloseAutoFocus?: AutoFocusHandler;
 }
 
 // Opened from a plain button, never a Radix Trigger, the way our containers open them.
-function Harness({ kind, onOpenAutoFocus, onCloseAutoFocus }: HarnessProps) {
+function Harness({
+  kind,
+  hasAutoFocusField = false,
+  onOpenAutoFocus,
+  onCloseAutoFocus,
+}: HarnessProps) {
   const [isOpen, setIsOpen] = useState(false);
   const body = (
-    <button type="button" onClick={() => setIsOpen(false)}>
-      Done
-    </button>
+    <>
+      {hasAutoFocusField && <input aria-label="Reason" autoFocus />}
+      <button type="button" onClick={() => setIsOpen(false)}>
+        Done
+      </button>
+    </>
   );
   return (
     <>
@@ -82,6 +91,12 @@ describe.each(["dialog", "sheet"] as const)(
   (kind) => {
     it("hands focus back to whatever opened it", async () => {
       render(<Harness kind={kind} />);
+      const opener = await openAndClose();
+      await waitFor(() => expect(opener).toHaveFocus());
+    });
+
+    it("finds the opener even when a field inside takes focus first", async () => {
+      render(<Harness kind={kind} hasAutoFocusField />);
       const opener = await openAndClose();
       await waitFor(() => expect(opener).toHaveFocus());
     });
