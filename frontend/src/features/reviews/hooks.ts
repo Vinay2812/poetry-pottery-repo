@@ -4,7 +4,7 @@ import { useAuth, useUser } from "@clerk/nextjs";
 import { useCallback, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client/react";
 import {
   CreateEventReviewDocument,
   CreateProductReviewDocument,
@@ -17,6 +17,8 @@ import {
   UpdateReviewDocument,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { ReviewFormValues } from "@/lib/validations/review";
 
 import {
@@ -31,10 +33,6 @@ import {
   toSubjectHref,
   toUploadSubject,
 } from "./types";
-
-function toErrorMessage(error: unknown): string {
-  return error instanceof Error ? error.message : "Something went wrong";
-}
 
 async function readDimensions(file: File): Promise<string | null> {
   try {
@@ -91,7 +89,7 @@ function useReviewPhotoUpload(subject: ReviewSubject) {
         }
         return target.public_url;
       } catch (error) {
-        toast.error(toErrorMessage(error));
+        toast.error(describeError(error, "That photo did not upload"));
         return null;
       } finally {
         setIsUploading(false);
@@ -232,6 +230,7 @@ function useReviewMutations(
   subject: ReviewSubject,
   list: ReviewListSync | undefined,
 ) {
+  const client = useApolloClient();
   const [createProduct] = useMutation(CreateProductReviewDocument);
   const [createEvent] = useMutation(CreateEventReviewDocument);
   const [updateMutation] = useMutation(UpdateReviewDocument);
@@ -263,18 +262,20 @@ function useReviewMutations(
   );
 
   const remove = useCallback(
-    async (id: number): Promise<void> => {
-      await removeMutation({
-        variables: { id },
-        refetchQueries: [toEligibilityName(subject)],
-        awaitRefetchQueries: true,
-      });
-      await list?.refetchLoaded();
-    },
-    [list, removeMutation, subject],
+    (id: number) => removeMutation({ variables: { id } }),
+    [removeMutation],
   );
 
-  return { save, remove };
+  const refresh = useCallback(
+    () =>
+      Promise.all([
+        client.refetchQueries({ include: [toEligibilityName(subject)] }),
+        list?.refetchLoaded(),
+      ]),
+    [client, list, subject],
+  );
+
+  return { save, remove, refresh };
 }
 
 // Everything the write-a-review dialog needs, wherever it is opened from. The panel
@@ -285,12 +286,12 @@ export function useReviewComposer(
   list?: ReviewListSync,
 ) {
   const { canReview, myReview, isSignedIn } = useReviewEligibility(subject);
-  const { save, remove } = useReviewMutations(subject, list);
+  const { save, remove, refresh } = useReviewMutations(subject, list);
   const { upload, isUploading } = useReviewPhotoUpload(subject);
   const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isSaving, startTransition] = useTransition();
+  const [isSubmitting, startTransition] = useTransition();
 
   const open = useCallback(() => {
     setError(null);
@@ -298,7 +299,7 @@ export function useReviewComposer(
   }, []);
 
   // The review shows at once behind the dialog; a refusal leaves the dialog standing with the
-  // typed words and the uploaded photos still in it, and says why.
+  // typed words and the uploaded photos still in it, and says why inline rather than in a toast.
   const submit = useCallback(
     (values: ReviewFormValues) => {
       const previous = myReview;
@@ -323,33 +324,34 @@ export function useReviewComposer(
           setIsOpen(false);
           toast.success(previous ? "Review updated" : "Review posted");
         } catch (caught) {
-          setError(toErrorMessage(caught));
+          setError(describeError(caught, "The review could not be saved"));
         }
       });
     },
     [list, myReview, save, subject, subjectName, user],
   );
 
+  const { execute: removeReview, isPending: isRemoving } = useOptimisticAction({
+    patch: (id: number) => list?.onOptimistic({ kind: "remove", id }),
+    run: remove,
+    refresh,
+    messages: {
+      success: "Review removed",
+      failure: "The review could not be removed",
+    },
+  });
+
   const removeMine = useCallback(() => {
-    const previous = myReview;
-    if (!previous) return;
+    if (!myReview) return;
     setIsOpen(false);
-    startTransition(async () => {
-      list?.onOptimistic({ kind: "remove", id: previous.id });
-      try {
-        await remove(previous.id);
-        toast.success("Review removed");
-      } catch (caught) {
-        toast.error(toErrorMessage(caught));
-      }
-    });
-  }, [list, myReview, remove]);
+    removeReview(myReview.id);
+  }, [myReview, removeReview]);
 
   return {
     canReview,
     error,
     isOpen,
-    isSaving,
+    isSaving: isSubmitting || isRemoving,
     isSignedIn,
     isUploading,
     myReview,

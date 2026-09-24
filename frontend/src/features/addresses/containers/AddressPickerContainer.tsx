@@ -47,9 +47,7 @@ export function AddressPickerContainer({
 
   const handleSubmit = useCallback(
     (values: AddressFormValues) => {
-      void submit(values).then((saved) => {
-        if (saved) onSelect(saved.id);
-      });
+      submit(values, (saved) => onSelect(saved.id));
     },
     [onSelect, submit],
   );

@@ -9,9 +9,6 @@ import {
   splitParagraphs,
   toAnchorId,
   toSectionViews,
-  OFFLINE_MESSAGE,
-  THROTTLED_MESSAGE,
-  toServerMessage,
 } from "./types";
 
 function section(
@@ -116,44 +113,5 @@ describe("sectionAt", () => {
 
   it("returns null when the CMS has fewer sections", () => {
     expect(sectionAt(sections, 5)).toBeNull();
-  });
-});
-
-describe("toServerMessage", () => {
-  it("drops the exception prefix the API puts in front of its message", () => {
-    expect(
-      toServerMessage(
-        new Error("BadRequestException: Enter a valid email"),
-        "no",
-      ),
-    ).toBe("Enter a valid email");
-  });
-
-  it("puts a dropped connection and a rate limit in plain words", () => {
-    for (const raw of [
-      "Failed to fetch",
-      "NetworkError when attempting to fetch resource.",
-      "Load failed",
-    ]) {
-      expect(toServerMessage(new TypeError(raw), "no")).toBe(OFFLINE_MESSAGE);
-    }
-    expect(
-      toServerMessage(new Error("ThrottlerException: Too Many Requests"), "no"),
-    ).toBe(THROTTLED_MESSAGE);
-  });
-
-  it("keeps a plain message as it is", () => {
-    expect(toServerMessage(new Error("Enter a valid email"), "no")).toBe(
-      "Enter a valid email",
-    );
-  });
-
-  it("falls back when there is no message to show", () => {
-    expect(toServerMessage(new Error("   "), "Try again in a minute.")).toBe(
-      "Try again in a minute.",
-    );
-    expect(toServerMessage("not an error", "Try again in a minute.")).toBe(
-      "Try again in a minute.",
-    );
   });
 });

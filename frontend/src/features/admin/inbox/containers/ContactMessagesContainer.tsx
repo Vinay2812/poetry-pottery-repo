@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -16,11 +9,10 @@ import {
   SetContactMessageReadDocument,
 } from "@/graphql/generated/graphql";
 
-import {
-  toErrorMessage,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { describeError } from "@/lib/apollo/errors";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
+
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import { AdminConfirmDialog, AdminPagination } from "@/features/admin/ui";
 
 import { ContactMessagesTable } from "@/features/admin/inbox/components/ContactMessagesTable";
@@ -30,6 +22,11 @@ import {
   toContactFilter,
   toContactRow,
 } from "@/features/admin/inbox/types";
+
+interface ReadToggle {
+  id: number;
+  isRead: boolean;
+}
 
 export function ContactMessagesContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
@@ -43,9 +40,7 @@ export function ContactMessagesContainer() {
   );
   const [setMessageRead] = useMutation(SetContactMessageReadDocument);
   const [deleteMessage] = useMutation(DeleteContactMessageDocument);
-  const [busyId, setBusyId] = useState<number | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
-  const [, startTransition] = useTransition();
 
   const result =
     data?.adminContactMessages ?? previousData?.adminContactMessages;
@@ -63,42 +58,37 @@ export function ContactMessagesContainer() {
     handleSearchCommit,
   );
 
+  const { execute: toggleRead, pending: pendingRead } = useOptimisticAction({
+    patch: ({ id, isRead }: ReadToggle) =>
+      patchRows({ kind: "read", id, isRead }),
+    run: ({ id, isRead }) =>
+      setMessageRead({ variables: { id, is_read: isRead } }),
+    refresh: refetch,
+    messages: { success: null, failure: "The message could not be updated" },
+  });
+
   const handleToggleRead = useCallback(
-    (id: number, isRead: boolean) => {
-      setBusyId(id);
-      startTransition(async () => {
-        patchRows({ kind: "read", id, isRead });
-        try {
-          await setMessageRead({ variables: { id, is_read: isRead } });
-          await refetch();
-        } catch (readError) {
-          toast.error(toErrorMessage(readError));
-        } finally {
-          setBusyId(null);
-        }
-      });
-    },
-    [patchRows, refetch, setMessageRead],
+    (id: number, isRead: boolean) => toggleRead({ id, isRead }),
+    [toggleRead],
   );
 
-  const handleConfirmDelete = useCallback(() => {
-    const id = pendingDeleteId;
-    if (id === null) return;
-    setBusyId(id);
-    startTransition(async () => {
-      patchRows({ kind: "remove", id });
-      try {
-        await deleteMessage({ variables: { id } });
-        await refetch();
-        setPendingDeleteId(null);
-        toast.success("Message deleted");
-      } catch (deleteError) {
-        toast.error(toErrorMessage(deleteError));
-      } finally {
-        setBusyId(null);
-      }
+  const { execute: removeMessage, pending: pendingRemove } =
+    useOptimisticAction({
+      patch: (id: number) => patchRows({ kind: "remove", id }),
+      run: (id) => deleteMessage({ variables: { id } }),
+      refresh: refetch,
+      messages: {
+        success: "Message deleted",
+        failure: "The message could not be deleted",
+      },
+      onSuccess: () => setPendingDeleteId(null),
     });
-  }, [deleteMessage, patchRows, pendingDeleteId, refetch]);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (pendingDeleteId !== null) removeMessage(pendingDeleteId);
+  }, [pendingDeleteId, removeMessage]);
+
+  const busyId = pendingRead?.id ?? pendingRemove ?? null;
 
   const handleDeleteOpenChange = useCallback((isOpen: boolean) => {
     if (!isOpen) setPendingDeleteId(null);
@@ -122,7 +112,9 @@ export function ContactMessagesContainer() {
   if (!result) {
     return (
       <p className="text-[13px]">
-        {error ? toErrorMessage(error) : "Messages could not be loaded."}
+        {error
+          ? describeError(error, "Messages could not be loaded.")
+          : "Messages could not be loaded."}
       </p>
     );
   }

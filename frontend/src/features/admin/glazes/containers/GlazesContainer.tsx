@@ -1,17 +1,10 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
+  type AdminGlazeInput,
   AdminGlazesDocument,
   CreateGlazeDocument,
   DeleteGlazeDocument,
@@ -19,13 +12,10 @@ import {
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { AdminGlazeFormValues } from "@/lib/validations/admin/glaze";
 
-import {
-  toErrorMessage,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
   AdminPageHeader,
@@ -59,6 +49,12 @@ interface DeleteTarget {
   productCount: number;
 }
 
+interface GlazeSave {
+  id: number | null;
+  input: AdminGlazeInput;
+  row: GlazeRow;
+}
+
 export function GlazesContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const search = values.search ?? "";
@@ -90,10 +86,7 @@ export function GlazesContainer() {
   const [editorId, setEditorId] = useState<number | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [swatchUrl, setSwatchUrl] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<DeleteTarget | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [, startTransition] = useTransition();
 
   const result = data?.adminGlazes ?? previousData?.adminGlazes;
 
@@ -131,49 +124,39 @@ export function GlazesContainer() {
     setIsEditorOpen(true);
   }, []);
 
+  const { execute: saveGlaze, isPending: isSaving } = useOptimisticAction({
+    patch: (draft: GlazeSave) => patchRows({ kind: "save", row: draft.row }),
+    run: (draft) =>
+      draft.id === null
+        ? createGlaze({ variables: { input: draft.input } })
+        : updateGlaze({ variables: { id: draft.id, input: draft.input } }),
+    refresh: refetch,
+    messages: {
+      success: (draft) => (draft.id === null ? "Glaze added" : "Glaze saved"),
+      failure: "The glaze could not be saved",
+    },
+    onSuccess: closeEditor,
+  });
+
   const handleSubmit = useCallback(
     (formValues: AdminGlazeFormValues) => {
-      const id = editorId;
       const input = toGlazeInput(formValues, swatchUrl);
-      const draft: GlazeRow = {
-        id: id ?? DRAFT_GLAZE_ID,
-        slug: editedRow?.slug ?? "",
-        name: input.name,
-        description: input.description,
-        variationNote: input.variation_note ?? "",
-        swatchUrl,
-        colorCode: input.color_code ?? null,
-        productCount: editedRow?.productCount ?? 0,
-      };
-      setIsSaving(true);
-      startTransition(async () => {
-        patchRows({ kind: "save", row: draft });
-        try {
-          if (id === null) {
-            await createGlaze({ variables: { input } });
-          } else {
-            await updateGlaze({ variables: { id, input } });
-          }
-          await refetch();
-          closeEditor();
-          toast.success(id === null ? "Glaze added" : "Glaze saved");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setIsSaving(false);
-        }
+      saveGlaze({
+        id: editorId,
+        input,
+        row: {
+          id: editorId ?? DRAFT_GLAZE_ID,
+          slug: editedRow?.slug ?? "",
+          name: input.name,
+          description: input.description,
+          variationNote: input.variation_note ?? "",
+          swatchUrl,
+          colorCode: input.color_code ?? null,
+          productCount: editedRow?.productCount ?? 0,
+        },
       });
     },
-    [
-      closeEditor,
-      createGlaze,
-      editedRow,
-      editorId,
-      patchRows,
-      refetch,
-      swatchUrl,
-      updateGlaze,
-    ],
+    [editedRow, editorId, saveGlaze, swatchUrl],
   );
 
   const handleDelete = useCallback(
@@ -189,24 +172,21 @@ export function GlazesContainer() {
     [optimisticRows],
   );
 
+  const { execute: removeGlaze, isPending: isDeleting } = useOptimisticAction({
+    patch: (target: DeleteTarget) =>
+      patchRows({ kind: "remove", id: target.id }),
+    run: (target) => deleteGlaze({ variables: { id: target.id } }),
+    refresh: refetch,
+    messages: {
+      success: (target) => `${target.name} deleted`,
+      failure: "The glaze could not be deleted",
+    },
+    onSuccess: () => setPendingDelete(null),
+  });
+
   const handleDeleteConfirm = useCallback(() => {
-    const target = pendingDelete;
-    if (!target) return;
-    setIsDeleting(true);
-    startTransition(async () => {
-      patchRows({ kind: "remove", id: target.id });
-      try {
-        await deleteGlaze({ variables: { id: target.id } });
-        await refetch();
-        setPendingDelete(null);
-        toast.success(`${target.name} deleted`);
-      } catch (error) {
-        toast.error(toErrorMessage(error));
-      } finally {
-        setIsDeleting(false);
-      }
-    });
-  }, [deleteGlaze, patchRows, pendingDelete, refetch]);
+    if (pendingDelete) removeGlaze(pendingDelete);
+  }, [pendingDelete, removeGlaze]);
 
   const pageInfo = result?.page_info;
 

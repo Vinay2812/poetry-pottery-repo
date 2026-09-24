@@ -5,12 +5,13 @@ import { useCallback, useOptimistic, useState, useTransition } from "react";
 import { useMutation } from "@apollo/client/react";
 import { SubscribeToNewsletterDocument } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
+
 import { NewsletterForm } from "@/features/content/components/NewsletterForm";
 import {
   type NewsletterResult,
   applyNewsletterResult,
   IDLE_NEWSLETTER,
-  toServerMessage,
 } from "@/features/content/types";
 
 export function NewsletterFormContainer() {
@@ -46,7 +47,7 @@ export function NewsletterFormContainer() {
       } catch (error) {
         setResult({
           state: "error",
-          message: toServerMessage(
+          message: describeError(
             error,
             "We could not add you just now. Try again in a minute.",
           ),

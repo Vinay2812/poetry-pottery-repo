@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -21,8 +14,9 @@ import {
   formatInr,
   formatTime,
 } from "@/lib/format";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
-import { formatEnumLabel, toErrorMessage } from "@/features/admin/shell";
+import { formatEnumLabel } from "@/features/admin/shell";
 import { AdminPageHeader } from "@/features/admin/ui";
 import { orderStatusTone, registrationStatusTone } from "@/features/admin/ui";
 
@@ -51,6 +45,10 @@ interface StockPatch {
   delta: number;
 }
 
+interface StockAdjust extends StockPatch {
+  name: string;
+}
+
 function applyStockPatch(
   rows: LowStockRow[],
   patch: StockPatch,
@@ -75,8 +73,6 @@ export function DashboardContainer() {
     },
   );
   const [adjustStock] = useMutation(AdjustProductStockDocument);
-  const [busyId, setBusyId] = useState<number | null>(null);
-  const [, startTransition] = useTransition();
 
   const dashboard = data?.adminDashboard ?? previousData?.adminDashboard;
 
@@ -139,29 +135,28 @@ export function DashboardContainer() {
     [dashboard],
   );
 
+  const { execute: adjust, pending: pendingAdjust } = useOptimisticAction({
+    patch: ({ id, delta }: StockAdjust) => patchStock({ id, delta }),
+    run: ({ id, delta }) =>
+      adjustStock({ variables: { id, delta, reason: "Quick adjust" } }),
+    refresh: refetch,
+    messages: {
+      success: ({ name }) => `${name} stock updated`,
+      failure: "The stock could not be updated",
+    },
+  });
+
+  const busyId = pendingAdjust?.id ?? null;
+
   const handleAdjust = useCallback(
     (id: number, delta: number) => {
       const row = optimisticRows.find((item) => item.id === id);
       if (!row) return;
       const applied = clampDelta(delta, row.stock);
       if (applied === 0) return;
-      setBusyId(id);
-      startTransition(async () => {
-        patchStock({ id, delta: applied });
-        try {
-          await adjustStock({
-            variables: { id, delta: applied, reason: "Quick adjust" },
-          });
-          await refetch();
-          toast.success(`${row.name} stock updated`);
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setBusyId(null);
-        }
-      });
+      adjust({ id, delta: applied, name: row.name });
     },
-    [adjustStock, optimisticRows, patchStock, refetch],
+    [adjust, optimisticRows],
   );
 
   if (!dashboard && loading) {

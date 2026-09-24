@@ -7,10 +7,10 @@ import {
   BookStudioVisitDocument,
   StudioVisitAvailabilityDocument,
 } from "@/graphql/generated/graphql";
+import { describeError } from "@/lib/apollo/errors";
 import type { VisitFormValues } from "@/lib/validations/visit";
 
 import { ConfirmationLine } from "@/features/content/components/ConfirmationLine";
-import { toServerMessage } from "@/features/content/types";
 import { VisitDayStrip } from "@/features/visits/components/VisitDayStrip";
 import { VisitForm } from "@/features/visits/components/VisitForm";
 import { VisitWindowPicker } from "@/features/visits/components/VisitWindowPicker";
@@ -117,7 +117,7 @@ export function StudioVisitContainer() {
         );
       } catch (error) {
         setErrorMessage(
-          toServerMessage(error, "We could not take that window. Try another."),
+          describeError(error, "We could not take that window. Try another."),
         );
         // A lost race means the calendar on screen is stale; the refetch is the new baseline, and a
         // window someone else took stops matching `picked`, while one still free stays chosen.

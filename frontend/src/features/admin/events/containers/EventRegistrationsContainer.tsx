@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -17,10 +10,10 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatInr } from "@/lib/format";
+import { useReasonAction } from "@/lib/use-reason-action";
 
 import {
   formatEnumLabel,
-  toErrorMessage,
   toPageNumber,
   useAdminQueryState,
   useSearchDraft,
@@ -47,11 +40,6 @@ const PAGE_SIZE = 20;
 const STATUS_OPTIONS = enumOptions(RegistrationStatus);
 
 interface StatusPatch {
-  id: string;
-  status: RegistrationStatus;
-}
-
-interface PendingAction {
   id: string;
   status: RegistrationStatus;
 }
@@ -113,10 +101,6 @@ export function EventRegistrationsContainer({
   );
 
   const [setRegistrationStatus] = useMutation(SetRegistrationStatusDocument);
-  const [busyId, setBusyId] = useState<string | null>(null);
-  const [pending, setPending] = useState<PendingAction | null>(null);
-  const [reason, setReason] = useState("");
-  const [, startTransition] = useTransition();
 
   const result =
     data?.adminEventRegistrations ?? previousData?.adminEventRegistrations;
@@ -141,48 +125,30 @@ export function EventRegistrationsContainer({
 
   const [optimisticRows, patchRow] = useOptimistic(rows, applyStatusPatch);
 
-  const runAction = useCallback(
-    (id: string, status: RegistrationStatus, note: string) => {
-      setBusyId(id);
-      startTransition(async () => {
-        patchRow({ id, status });
-        try {
-          // The event header counts seats, so it reads again once the row moves.
-          await setRegistrationStatus({
-            variables: { id, status, reason: note || null },
-            refetchQueries: ["AdminEvent"],
-          });
-          await refetch();
-          toast.success(
-            `Registration ${formatEnumLabel(status).toLowerCase()}`,
-          );
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setBusyId(null);
-        }
-      });
+  const move = useReasonAction({
+    patch: ({ target }) => patchRow(target),
+    // The event header counts seats, so it reads again once the row moves.
+    run: ({ target, reason }) =>
+      setRegistrationStatus({
+        variables: { id: target.id, status: target.status, reason },
+        refetchQueries: ["AdminEvent"],
+      }),
+    refresh: refetch,
+    policy: (target: StatusPatch) =>
+      registrationActionNeedsReason(target.status) ? "required" : "none",
+    requiredMessage: "Say why, in a sentence the person can read",
+    messages: {
+      success: ({ target }) =>
+        `Registration ${formatEnumLabel(target.status).toLowerCase()}`,
+      failure: "The registration could not be moved",
     },
-    [patchRow, refetch, setRegistrationStatus],
-  );
+  });
 
+  const startMove = move.start;
   const handleAction = useCallback(
-    (id: string, status: RegistrationStatus) => {
-      if (registrationActionNeedsReason(status)) {
-        setReason("");
-        setPending({ id, status });
-        return;
-      }
-      runAction(id, status, "");
-    },
-    [runAction],
+    (id: string, status: RegistrationStatus) => startMove({ id, status }),
+    [startMove],
   );
-
-  const handleConfirm = useCallback(() => {
-    if (!pending) return;
-    runAction(pending.id, pending.status, reason);
-    setPending(null);
-  }, [pending, reason, runAction]);
 
   const pageInfo = result?.page_info;
 
@@ -214,7 +180,7 @@ export function EventRegistrationsContainer({
         rows={optimisticRows}
         isBusy={isPending || loading}
         isLocked={isEventCancelled}
-        busyId={busyId}
+        busyId={move.pending?.id ?? null}
         onAction={handleAction}
       />
       <AdminPagination
@@ -225,9 +191,9 @@ export function EventRegistrationsContainer({
         onPageChange={(next) => patch({ reg_page: String(next) })}
       />
       <AdminReasonDialog
-        isOpen={pending !== null}
+        isOpen={move.target !== null}
         title={
-          pending?.status === RegistrationStatus.Rejected
+          move.target?.status === RegistrationStatus.Rejected
             ? "Reject this registration?"
             : "Cancel this registration?"
         }
@@ -235,18 +201,18 @@ export function EventRegistrationsContainer({
         fieldLabel="Reason"
         hint="The person reads this, so keep it kind"
         placeholder="The session is full"
-        value={reason}
-        error={undefined}
+        value={move.reason}
+        error={move.error}
         confirmLabel={
-          pending ? registrationActionLabel(pending.status) : "Confirm"
+          move.target ? registrationActionLabel(move.target.status) : "Confirm"
         }
         isDestructive
         isRequired
-        isBusy={busyId !== null}
-        onValueChange={setReason}
-        onConfirm={handleConfirm}
+        isBusy={move.isPending}
+        onValueChange={move.setReason}
+        onConfirm={move.confirm}
         onOpenChange={(isOpen) => {
-          if (!isOpen) setPending(null);
+          if (!isOpen) move.close();
         }}
       />
     </section>

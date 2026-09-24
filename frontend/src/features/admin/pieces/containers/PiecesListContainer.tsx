@@ -1,14 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import {
-  useCallback,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
@@ -24,12 +17,9 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatInr } from "@/lib/format";
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
-import {
-  toErrorMessage,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
   AdminPageHeader,
@@ -57,6 +47,10 @@ type RowPatch =
   | { kind: "active"; id: number; isActive: boolean }
   | { kind: "featured"; id: number; isFeatured: boolean }
   | { kind: "stock"; id: number; delta: number };
+
+type ActiveChange = Extract<RowPatch, { kind: "active" }>;
+type FeaturedChange = Extract<RowPatch, { kind: "featured" }>;
+type StockChange = Extract<RowPatch, { kind: "stock" }> & { reason: string };
 
 function applyRowPatch(rows: PieceRow[], patch: RowPatch): PieceRow[] {
   return rows.map((row) => {
@@ -95,10 +89,8 @@ export function PiecesListContainer() {
   const [setFeatured] = useMutation(SetProductFeaturedDocument);
   const [adjustStock] = useMutation(AdjustProductStockDocument);
 
-  const [busyId, setBusyId] = useState<number | null>(null);
   const [archiveId, setArchiveId] = useState<number | null>(null);
   const [stockId, setStockId] = useState<number | null>(null);
-  const [, startTransition] = useTransition();
 
   const result = data?.adminProducts ?? previousData?.adminProducts;
 
@@ -160,43 +152,39 @@ export function PiecesListContainer() {
     handleSearchCommit,
   );
 
+  const { execute: saveFeatured, pending: pendingFeatured } =
+    useOptimisticAction({
+      patch: (change: FeaturedChange) => patchRow(change),
+      run: (change) =>
+        setFeatured({
+          variables: { id: change.id, is_featured: change.isFeatured },
+        }),
+      refresh: refetch,
+      messages: { success: null, failure: "The piece could not be featured" },
+    });
+
   const runFeatured = useCallback(
-    (id: number, isFeatured: boolean) => {
-      setBusyId(id);
-      startTransition(async () => {
-        patchRow({ kind: "featured", id, isFeatured });
-        try {
-          await setFeatured({ variables: { id, is_featured: isFeatured } });
-          await refetch();
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setBusyId(null);
-        }
-      });
-    },
-    [patchRow, refetch, setFeatured],
+    (id: number, isFeatured: boolean) =>
+      saveFeatured({ kind: "featured", id, isFeatured }),
+    [saveFeatured],
   );
 
-  const runActive = useCallback(
-    (id: number, isActive: boolean) => {
-      setBusyId(id);
-      startTransition(async () => {
-        patchRow({ kind: "active", id, isActive });
-        try {
-          await setActive({ variables: { id, is_active: isActive } });
-          await refetch();
-          toast.success(
-            isActive ? "Back on the shelf" : "Moved to the archive",
-          );
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setBusyId(null);
-        }
-      });
+  const { execute: saveActive, pending: pendingActive } = useOptimisticAction({
+    patch: (change: ActiveChange) => patchRow(change),
+    run: (change) =>
+      setActive({ variables: { id: change.id, is_active: change.isActive } }),
+    refresh: refetch,
+    messages: {
+      success: (change) =>
+        change.isActive ? "Back on the shelf" : "Moved to the archive",
+      failure: "The piece could not be moved",
     },
-    [patchRow, refetch, setActive],
+  });
+
+  const runActive = useCallback(
+    (id: number, isActive: boolean) =>
+      saveActive({ kind: "active", id, isActive }),
+    [saveActive],
   );
 
   // Hiding a piece takes it off the storefront, so it asks first; showing one does not.
@@ -211,27 +199,36 @@ export function PiecesListContainer() {
     [runActive],
   );
 
+  const { execute: saveStock, pending: pendingStock } = useOptimisticAction({
+    patch: (change: StockChange) =>
+      patchRow({ kind: "stock", id: change.id, delta: change.delta }),
+    run: (change) =>
+      adjustStock({
+        variables: {
+          id: change.id,
+          delta: change.delta,
+          reason: change.reason,
+        },
+      }),
+    refresh: refetch,
+    messages: {
+      success: "Stock updated",
+      failure: "The stock could not be updated",
+    },
+  });
+
   const handleStockSubmit = useCallback(
     (delta: number, reason: string) => {
       const id = stockId;
       if (id === null) return;
       setStockId(null);
-      setBusyId(id);
-      startTransition(async () => {
-        patchRow({ kind: "stock", id, delta });
-        try {
-          await adjustStock({ variables: { id, delta, reason } });
-          await refetch();
-          toast.success("Stock updated");
-        } catch (error) {
-          toast.error(toErrorMessage(error));
-        } finally {
-          setBusyId(null);
-        }
-      });
+      saveStock({ kind: "stock", id, delta, reason });
     },
-    [adjustStock, patchRow, refetch, stockId],
+    [saveStock, stockId],
   );
+
+  const busyId =
+    pendingFeatured?.id ?? pendingActive?.id ?? pendingStock?.id ?? null;
 
   const archiveRow = optimisticRows.find((row) => row.id === archiveId);
   const stockRow = optimisticRows.find((row) => row.id === stockId);

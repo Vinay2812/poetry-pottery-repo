@@ -10,13 +10,11 @@ import {
   ExportBatchNotificationsDocument,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
+
 import { Button } from "@/components/ui/button";
 
-import {
-  toErrorMessage,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminPageHeader,
   AdminPagination,
@@ -98,7 +96,7 @@ export function NotificationsContainer() {
       if (csv === undefined) throw new Error("The export came back empty");
       downloadCsv(toWatchersCsvName(new Date()), csv);
     } catch (exportError) {
-      toast.error(toErrorMessage(exportError));
+      toast.error(describeError(exportError, "The export could not be made"));
     } finally {
       setIsExporting(false);
     }

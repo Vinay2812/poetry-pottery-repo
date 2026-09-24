@@ -13,6 +13,18 @@ import {
   ReorderDocument,
 } from "@/graphql/generated/graphql";
 
+import { useOptimisticAction } from "@/lib/use-optimistic-action";
+
+import { CART_QUERIES } from "@/features/cart/types";
+import type { OrderCancellation } from "@/features/orders/types";
+
+const ORDER_QUERIES = ["Order", "Orders"];
+
+interface CancelRequest {
+  id: string;
+  reason: string;
+}
+
 // Signed-out visitors get a sign-in prompt instead of an auth error from the API.
 export function useOrders(page: number) {
   const { isSignedIn, isLoaded } = useAuth();
@@ -56,62 +68,59 @@ export function useOrder(id: string) {
   };
 }
 
-export function useCancelOrder() {
-  const [mutate, { loading }] = useMutation(CancelOrderDocument);
+// The reply is the whole order, so Apollo's own normalisation is the new baseline; the read-back
+// also catches a refusal that means another tab or the studio moved the order.
+export function useCancelOrder(
+  applyCancellation?: (cancellation: OrderCancellation) => void,
+) {
+  const [mutate] = useMutation(CancelOrderDocument);
   const client = useApolloClient();
-  const cancel = useCallback(
-    async (id: string, reason: string): Promise<boolean> => {
-      try {
-        // The reply is the whole order, so Apollo's own normalisation is the new baseline.
-        await mutate({ variables: { id, reason: reason.trim() || null } });
-        toast.success("Order cancelled");
-        return true;
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Could not cancel the order",
-        );
-        // A refusal usually means another tab or the studio moved the order, so show where it stands.
-        await client
-          .refetchQueries({ include: ["Order", "Orders"] })
-          .catch(() => undefined);
-        return false;
-      }
+  const { execute, isPending } = useOptimisticAction({
+    patch: (request: CancelRequest) =>
+      applyCancellation?.({
+        reason: request.reason,
+        at: new Date().toISOString(),
+      }),
+    run: (request) =>
+      mutate({
+        variables: { id: request.id, reason: request.reason.trim() || null },
+      }),
+    refresh: () => client.refetchQueries({ include: ORDER_QUERIES }),
+    messages: {
+      success: "Order cancelled",
+      failure: "Could not cancel the order",
     },
-    [client, mutate],
+  });
+  const cancel = useCallback(
+    (id: string, reason: string) => execute({ id, reason }),
+    [execute],
   );
-  return { cancel, isCancelling: loading };
+  return { cancel, isCancelling: isPending };
 }
 
 // Puts a past order back in the cart and says which pieces could not come along.
 export function useReorder() {
   const router = useRouter();
-  const [mutate, { loading }] = useMutation(ReorderDocument, {
-    refetchQueries: ["Cart", "CartCount"],
-    awaitRefetchQueries: true,
-  });
-  const reorder = useCallback(
-    async (orderId: string): Promise<void> => {
-      try {
-        const { data } = await mutate({ variables: { orderId } });
-        const skipped = data?.reorder.skipped ?? [];
-        const added = data?.reorder.cart.item_count ?? 0;
-        if (added === 0) {
-          toast.error("None of these pieces are on the shelf right now");
-          return;
-        }
-        if (skipped.length > 0) {
-          toast.warning(`Back in your cart, except ${skipped.join(", ")}`);
-        } else {
-          toast.success("Back in your cart");
-        }
-        router.push("/cart");
-      } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Could not add these again",
-        );
+  const client = useApolloClient();
+  const [mutate] = useMutation(ReorderDocument);
+  const { execute: reorder, isPending: isReordering } = useOptimisticAction({
+    run: (orderId: string) => mutate({ variables: { orderId } }),
+    refresh: () => client.refetchQueries({ include: CART_QUERIES }),
+    messages: { success: null, failure: "Could not add these again" },
+    onSuccess: ({ data }) => {
+      const skipped = data?.reorder.skipped ?? [];
+      const added = data?.reorder.cart.item_count ?? 0;
+      if (added === 0) {
+        toast.error("None of these pieces are on the shelf right now");
+        return;
       }
+      if (skipped.length > 0) {
+        toast.warning(`Back in your cart, except ${skipped.join(", ")}`);
+      } else {
+        toast.success("Back in your cart");
+      }
+      router.push("/cart");
     },
-    [mutate, router],
-  );
-  return { reorder, isReordering: loading };
+  });
+  return { reorder, isReordering };
 }
