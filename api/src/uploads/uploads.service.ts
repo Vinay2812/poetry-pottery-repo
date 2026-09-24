@@ -104,14 +104,15 @@ export class UploadsService {
 
   // The expiry job: an upload nothing claimed within the day is deleted; a claimed one is left alone.
   async expire(key: string): Promise<boolean> {
-    const row = await this.prisma.upload.findUnique({
-      where: { key },
-      select: { claimed_at: true },
+    // The row lock holds off a racing claim; a refused bucket delete rolls back so the retry finds the row.
+    return this.prisma.withTransaction(async () => {
+      const gone = await this.prisma.upload.deleteMany({
+        where: { key, claimed_at: null },
+      });
+      if (gone.count === 0) return false;
+      await this.storage.deleteObject(key);
+      return true;
     });
-    if (!row || row.claimed_at !== null) return false;
-    await this.storage.deleteObject(key);
-    await this.prisma.upload.deleteMany({ where: { key, claimed_at: null } });
-    return true;
   }
 
   // Console only: the browser could have sent anything past the presigned URL, so the stored bytes decide.

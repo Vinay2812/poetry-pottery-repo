@@ -70,6 +70,8 @@ export class StorageRecorder {
   readonly isEnabled = true;
   readonly objects = new Map<string, Buffer>();
   readonly deleted: string[] = [];
+  // Set by a test to make the next delete fail the way a refused bucket call would.
+  refuseNextDelete = false;
   private sequence = 0;
 
   isOwnUrl(url: string): boolean {
@@ -111,6 +113,10 @@ export class StorageRecorder {
   }
 
   deleteObject(key: string): Promise<void> {
+    if (this.refuseNextDelete) {
+      this.refuseNextDelete = false;
+      return Promise.reject(new Error("bucket refused"));
+    }
     this.deleted.push(key);
     this.objects.delete(key);
     return Promise.resolve();
@@ -119,6 +125,7 @@ export class StorageRecorder {
   reset(): void {
     this.objects.clear();
     this.deleted.length = 0;
+    this.refuseNextDelete = false;
   }
 }
 

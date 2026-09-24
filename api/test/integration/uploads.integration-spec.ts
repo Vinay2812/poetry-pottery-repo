@@ -179,6 +179,22 @@ describe("the upload lifecycle", () => {
     }
   });
 
+  it("keeps an expiring upload's row when the bucket refuses, so the retry can finish it", async () => {
+    const [owner] = await makeUsers(harness.prisma, 1);
+    if (!owner) throw new Error("no user");
+    const abandoned = await upload(owner.id, UploadPurpose.REVIEW);
+
+    storage.refuseNextDelete = true;
+    await expect(harness.uploads.expire(abandoned.key)).rejects.toThrow(
+      "bucket refused",
+    );
+    expect(await rowCount(abandoned.key)).toBe(1);
+
+    await expect(harness.uploads.expire(abandoned.key)).resolves.toBe(true);
+    expect(await rowCount(abandoned.key)).toBe(0);
+    expect(storage.deleted).toContain(abandoned.key);
+  });
+
   it("refuses to claim someone else's photo, or one issued for another purpose", async () => {
     const [owner, stranger] = await makeUsers(harness.prisma, 2);
     if (!owner || !stranger) throw new Error("no users");

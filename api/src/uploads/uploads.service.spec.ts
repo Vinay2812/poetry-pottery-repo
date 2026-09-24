@@ -63,6 +63,7 @@ const containing = (value: Record<string, unknown>): unknown =>
 
 const prismaMock = {
   afterCommit: vi.fn((fn: () => Promise<void> | void) => Promise.resolve(fn())),
+  withTransaction: vi.fn(<T>(fn: () => Promise<T>) => fn()),
   upload: {
     count: vi.fn(),
     create: vi.fn(),
@@ -472,38 +473,34 @@ describe("UploadsService", () => {
   });
 
   describe("expire", () => {
-    it("deletes the object and the row when nothing claimed it", async () => {
-      prismaMock.upload.findUnique.mockResolvedValue({ claimed_at: null });
+    it("deletes the row and the object when nothing claimed it", async () => {
+      prismaMock.upload.deleteMany.mockResolvedValue({ count: 1 });
 
       await expect(service.expire("reviews/7/a.jpg")).resolves.toBe(true);
 
-      expect(storageMock.deleteObject).toHaveBeenCalledWith("reviews/7/a.jpg");
+      expect(prismaMock.withTransaction).toHaveBeenCalled();
       expect(prismaMock.upload.deleteMany).toHaveBeenCalledWith({
         where: { key: "reviews/7/a.jpg", claimed_at: null },
       });
+      expect(storageMock.deleteObject).toHaveBeenCalledWith("reviews/7/a.jpg");
     });
 
     it("leaves a claimed upload, or one already gone, alone", async () => {
-      prismaMock.upload.findUnique.mockResolvedValue({
-        claimed_at: new Date(),
-      });
-      await expect(service.expire("reviews/7/a.jpg")).resolves.toBe(false);
+      prismaMock.upload.deleteMany.mockResolvedValue({ count: 0 });
 
-      prismaMock.upload.findUnique.mockResolvedValue(null);
       await expect(service.expire("reviews/7/a.jpg")).resolves.toBe(false);
 
       expect(storageMock.deleteObject).not.toHaveBeenCalled();
-      expect(prismaMock.upload.deleteMany).not.toHaveBeenCalled();
     });
 
-    it("keeps the row when the bucket refuses, so the retry finds it again", async () => {
-      prismaMock.upload.findUnique.mockResolvedValue({ claimed_at: null });
+    it("fails inside the transaction when the bucket refuses, so the row delete rolls back", async () => {
+      prismaMock.upload.deleteMany.mockResolvedValue({ count: 1 });
       storageMock.deleteObject.mockRejectedValueOnce(new Error("r2 refused"));
 
       await expect(service.expire("reviews/7/a.jpg")).rejects.toThrow(
         "r2 refused",
       );
-      expect(prismaMock.upload.deleteMany).not.toHaveBeenCalled();
+      expect(prismaMock.withTransaction).toHaveBeenCalled();
     });
   });
 
