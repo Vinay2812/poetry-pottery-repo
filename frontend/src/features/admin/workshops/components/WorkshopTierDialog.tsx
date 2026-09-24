@@ -68,7 +68,7 @@ export function WorkshopTierDialog({
           <DialogDescription>
             {isEditing
               ? "Hours name the row, so they stay as they are."
-              : "Hours name the row. Saving the same hours again replaces that row."}
+              : "Each length has one price. To change a price, edit its row."}
           </DialogDescription>
         </DialogHeader>
         <form
