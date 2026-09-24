@@ -187,6 +187,17 @@ describe("useSlotPicker", () => {
     ]);
   });
 
+  it("keeps the hours panel on the day an hour was just toggled on", () => {
+    const { result } = renderPicker({ hours: 2 });
+
+    act(() => result.current.onToggleSlot(studioHour("2026-10-03", 13)));
+    act(() => result.current.onToggleSlot(studioHour("2026-10-02", 13)));
+    expect(result.current.selectedDate).toBe("2026-10-02");
+
+    act(() => result.current.onToggleSlot(studioHour("2026-10-02", 13)));
+    expect(result.current.selectedDate).toBe("2026-10-02");
+  });
+
   it("drops picked hours a bigger group no longer fits", () => {
     months["2026-10-01"] = {
       workshopAvailability: [

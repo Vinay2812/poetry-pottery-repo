@@ -7,6 +7,7 @@ import {
   applyFilterAction,
   clampPriceRange,
   computeUnitPrice,
+  hasFailedPhoto,
   isPhotoUploadPending,
   MAX_REFERENCE_PHOTO_BYTES,
   type ReferencePhoto,
@@ -504,6 +505,16 @@ describe("isPhotoUploadPending", () => {
     expect(
       isPhotoUploadPending([photo({ url: null, error: "Upload failed" })]),
     ).toBe(false);
+  });
+});
+
+describe("hasFailedPhoto", () => {
+  it("flags a photo the bucket refused, not one still in flight", () => {
+    expect(hasFailedPhoto([])).toBe(false);
+    expect(hasFailedPhoto([photo({ url: null })])).toBe(false);
+    expect(hasFailedPhoto([photo({ url: null, error: "Upload failed" })])).toBe(
+      true,
+    );
   });
 });
 

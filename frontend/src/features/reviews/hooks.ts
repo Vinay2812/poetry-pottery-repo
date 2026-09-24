@@ -78,12 +78,13 @@ function useReviewPhotoUpload(subject: ReviewSubject) {
         });
         const target = data?.createReviewImageUpload;
         if (!target) return null;
+        // The bucket answers for itself, so its refusal is about the photo, not the connection.
         const response = await fetch(target.upload_url, {
           method: "PUT",
           body: file,
           headers: { "content-type": file.type },
-        });
-        if (!response.ok) {
+        }).catch(() => null);
+        if (!response?.ok) {
           toast.error("That photo did not upload");
           return null;
         }

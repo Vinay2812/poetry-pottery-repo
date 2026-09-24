@@ -230,9 +230,11 @@ export function useSlotPicker({
     (startsAt: string) => {
       const slot = slotByStart.get(startsAt);
       if (!slot) return;
+      // The panel stays on the day being worked on, even once its last hour is unpicked.
+      setChosenDate(toDateKey(startsAt, timezone));
       setManual(togglePicked(picked, slot, needed));
     },
-    [needed, picked, slotByStart],
+    [needed, picked, slotByStart, timezone],
   );
 
   const handleRemoveSlot = useCallback(

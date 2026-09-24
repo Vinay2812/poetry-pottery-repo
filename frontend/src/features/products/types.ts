@@ -609,6 +609,10 @@ export function isPhotoUploadPending(photos: ReferencePhoto[]): boolean {
   return photos.some((photo) => photo.url === null && photo.error === null);
 }
 
+export function hasFailedPhoto(photos: ReferencePhoto[]): boolean {
+  return photos.some((photo) => photo.error !== null);
+}
+
 export const PRODUCT_FILTERS_CODEC: UrlCodec<ProductFilters, FilterAction> = {
   parse: parseFilters,
   serialize: (filters) => toSearchParams(filters).toString(),

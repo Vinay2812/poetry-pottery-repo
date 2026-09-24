@@ -95,12 +95,16 @@ export function CheckoutContainer() {
 
   // Placing an order empties the cart, so only the cart and quote mounted here are read again.
   // The orders list is not mounted on checkout and reads cache-and-network when it opens.
+  // Set once the order exists, so the emptied cart never flashes before the order page opens.
+  const [isPlaced, setIsPlaced] = useState(false);
   const { execute: submitOrder, isPending: isPlacing } = useOptimisticAction({
     run: (input: PlaceOrderInput) => placeOrder({ variables: { input } }),
     refresh: () => Promise.all([resyncCart(), refetchQuote()]),
     messages: { success: null, failure: "Could not place the order" },
     onSuccess: ({ data }) => {
-      if (data) router.push(`${toOrderPath(data.placeOrder.id)}?placed=1`);
+      if (!data) return;
+      setIsPlaced(true);
+      router.push(`${toOrderPath(data.placeOrder.id)}?placed=1`);
     },
   });
 
@@ -168,7 +172,7 @@ export function CheckoutContainer() {
           ? "Remove the unavailable pieces from your cart first."
           : null;
 
-  if (isCartLoading) {
+  if (isCartLoading || isPlaced) {
     return (
       <PageShell column="wide" className="py-8 md:py-12" isBusy>
         <div className="h-8 w-40 animate-pulse bg-ash" />
