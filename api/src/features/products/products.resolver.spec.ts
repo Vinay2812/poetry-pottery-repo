@@ -167,7 +167,7 @@ function makeProductsResult(
 const productsMock = {
   list: vi.fn<ProductsService["list"]>(),
   bySlug: vi.fn<ProductsService["bySlug"]>(),
-  optionGroups: vi.fn<ProductsService["optionGroups"]>(),
+  optionGroupsFor: vi.fn<ProductsService["optionGroupsFor"]>(),
   related: vi.fn<ProductsService["related"]>(),
   featured: vi.fn<ProductsService["featured"]>(),
   categories: vi.fn<ProductsService["categories"]>(),
@@ -175,7 +175,7 @@ const productsMock = {
   collectionBySlug: vi.fn<ProductsService["collectionBySlug"]>(),
   glazes: vi.fn<ProductsService["glazes"]>(),
   glazeBySlug: vi.fn<ProductsService["glazeBySlug"]>(),
-  glazePieces: vi.fn<ProductsService["glazePieces"]>(),
+  glazePiecesFor: vi.fn<ProductsService["glazePiecesFor"]>(),
 };
 
 const wishlistMock = {
@@ -313,18 +313,31 @@ describe("ProductsResolver", () => {
     const groups = [makeOptionGroup()];
     const product = makeProduct({ option_groups: groups });
 
-    await expect(resolver.option_groups(product)).resolves.toBe(groups);
-    expect(productsMock.optionGroups).not.toHaveBeenCalled();
-  });
-
-  it("fetches the option groups by product id when the parent has none", async () => {
-    const groups = [makeOptionGroup()];
-    productsMock.optionGroups.mockResolvedValue(groups);
-
-    await expect(resolver.option_groups(makeProduct({ id: 3 }))).resolves.toBe(
+    await expect(resolver.option_groups(product, gqlContext())).resolves.toBe(
       groups,
     );
-    expect(productsMock.optionGroups).toHaveBeenCalledWith(3);
+    expect(productsMock.optionGroupsFor).not.toHaveBeenCalled();
+  });
+
+  it("loads the option groups for a whole list of pieces in one call", async () => {
+    const groups = [makeOptionGroup()];
+    productsMock.optionGroupsFor.mockResolvedValue(
+      new Map([
+        [3, groups],
+        [4, []],
+      ]),
+    );
+    const context = gqlContext();
+
+    await expect(
+      Promise.all([
+        resolver.option_groups(makeProduct({ id: 3 }), context),
+        resolver.option_groups(makeProduct({ id: 4 }), context),
+        resolver.option_groups(makeProduct({ id: 3 }), context),
+      ]),
+    ).resolves.toEqual([groups, [], groups]);
+    expect(productsMock.optionGroupsFor).toHaveBeenCalledTimes(1);
+    expect(productsMock.optionGroupsFor).toHaveBeenCalledWith([3, 4]);
   });
 
   it("asks for eight related pieces the schema defaults to, slug first", async () => {
@@ -432,11 +445,23 @@ describe("GlazeResolver", () => {
     resolver = moduleRef.get(GlazeResolver);
   });
 
-  it("loads the pieces wearing the glaze it was handed", async () => {
+  it("loads the pieces for every glaze on the list in one call", async () => {
     const pieces = [makeProduct()];
-    productsMock.glazePieces.mockResolvedValue(pieces);
+    productsMock.glazePiecesFor.mockResolvedValue(
+      new Map([
+        [3, pieces],
+        [5, []],
+      ]),
+    );
+    const context = gqlContext();
 
-    await expect(resolver.pieces(makeGlaze())).resolves.toBe(pieces);
-    expect(productsMock.glazePieces).toHaveBeenCalledWith(3);
+    await expect(
+      Promise.all([
+        resolver.pieces(makeGlaze(), context),
+        resolver.pieces(makeGlaze({ id: 5 }), context),
+      ]),
+    ).resolves.toEqual([pieces, []]);
+    expect(productsMock.glazePiecesFor).toHaveBeenCalledTimes(1);
+    expect(productsMock.glazePiecesFor).toHaveBeenCalledWith([3, 5]);
   });
 });

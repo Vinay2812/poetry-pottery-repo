@@ -2,39 +2,20 @@ import { GUARDS_METADATA } from "@nestjs/common/constants";
 import { describe, expect, it } from "vitest";
 
 import { AdminGuard } from "@/common/guards/admin.guard";
-import { AdminCatalogResolver } from "./catalog/catalog.resolver";
-import { AdminContentResolver } from "./content/content.resolver";
-import { AdminCouponsResolver } from "./coupons/coupons.resolver";
-import { AdminDashboardResolver } from "./dashboard/dashboard.resolver";
-import { AdminEventsResolver } from "./events/events.resolver";
-import { AdminGlazesResolver } from "./glazes/glazes.resolver";
-import { AdminInboxResolver } from "./inbox/inbox.resolver";
-import { AdminOrdersResolver } from "./orders/orders.resolver";
-import { AdminProductsResolver } from "./products/products.resolver";
-import { AdminReviewsResolver } from "./reviews/reviews.resolver";
-import { AdminUploadsResolver } from "./uploads/uploads.resolver";
-import { AdminUsersResolver } from "./users/users.resolver";
-import { AdminVisitsResolver } from "./visits/visits.resolver";
-import { AdminWorkshopsResolver } from "./workshops/workshops.resolver";
+import * as resolvers from "@/resolvers";
+import {
+  type ClassRef,
+  namesOf,
+  providedResolvers,
+} from "@test/helpers/nest-modules";
+import { AdminModule } from "./admin.module";
 
-const RESOLVERS = {
-  AdminCatalogResolver,
-  AdminContentResolver,
-  AdminCouponsResolver,
-  AdminDashboardResolver,
-  AdminEventsResolver,
-  AdminGlazesResolver,
-  AdminInboxResolver,
-  AdminOrdersResolver,
-  AdminProductsResolver,
-  AdminReviewsResolver,
-  AdminUploadsResolver,
-  AdminUsersResolver,
-  AdminVisitsResolver,
-  AdminWorkshopsResolver,
-};
+// Every console resolver is named Admin*; the first test proves that rule matches AdminModule exactly.
+const RESOLVERS = Object.entries(resolvers).filter(([name]) =>
+  name.startsWith("Admin"),
+);
 
-function fieldsOf(resolver: new (...args: never[]) => object): string[] {
+function fieldsOf(resolver: ClassRef): string[] {
   return Object.getOwnPropertyNames(resolver.prototype).filter(
     (name) => name !== "constructor",
   );
@@ -54,7 +35,16 @@ function guardsOn(prototype: object, field: string): unknown[] {
 
 // A new console field that forgets @AdminRequired() would otherwise ship open to anyone.
 describe("admin resolver guards", () => {
-  for (const [name, resolver] of Object.entries(RESOLVERS)) {
+  it("covers every resolver the admin module provides, and only those", async () => {
+    // AdminModule's own sub-modules; below them sit the storefront modules they reuse.
+    const provided = await providedResolvers(AdminModule, 1);
+
+    expect(namesOf(RESOLVERS.map(([, resolver]) => resolver))).toEqual(
+      namesOf(provided),
+    );
+  });
+
+  for (const [name, resolver] of RESOLVERS) {
     it(`keeps every field of ${name} behind the administrator guard`, () => {
       const fields = fieldsOf(resolver);
 

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { Prisma } from "@prisma/client";
 
+import { groupByKey } from "@/common/batch/batch";
 import {
   clampPage,
   MAX_PAGE_SIZE,
@@ -299,14 +300,18 @@ export class ProductsService {
     return toProduct(row);
   }
 
-  optionGroups(productId: number): Promise<ProductOptionGroup[]> {
-    return this.prisma.productOptionGroup.findMany({
-      where: { product_id: productId },
+  // One query for a whole list of pieces; each gets its groups in sort order, empty when it has none.
+  async optionGroupsFor(
+    productIds: number[],
+  ): Promise<Map<number, ProductOptionGroup[]>> {
+    const rows = await this.prisma.productOptionGroup.findMany({
+      where: { product_id: { in: productIds } },
       orderBy: { sort_order: "asc" },
       include: {
         options: { where: { is_active: true }, orderBy: { sort_order: "asc" } },
       },
     });
+    return groupByKey(productIds, rows, (group) => group.product_id);
   }
 
   async related(slug: string, limit: number): Promise<Product[]> {
@@ -354,15 +359,21 @@ export class ProductsService {
     return row;
   }
 
-  // The pieces a visitor can actually buy in this glaze; the archive has its own route.
-  async glazePieces(glazeId: number): Promise<Product[]> {
+  // The pieces a visitor can actually buy in each glaze, capped per glaze; the archive has its own route.
+  async glazePiecesFor(glazeIds: number[]): Promise<Map<number, Product[]>> {
+    // A piece has one glaze, so the rows are bounded by what is on the shelf in these glazes.
     const rows = await this.prisma.product.findMany({
-      where: { ...availableProductWhere(), glaze_id: glazeId },
+      where: { ...availableProductWhere(), glaze_id: { in: glazeIds } },
       include: productListInclude,
       orderBy: SORT_ORDER[ProductSort.FEATURED],
-      take: MAX_PAGE_SIZE,
     });
-    return rows.map(toProduct);
+    const groups = groupByKey(glazeIds, rows, (row) => row.glaze_id);
+    return new Map(
+      [...groups].map(([glazeId, pieces]) => [
+        glazeId,
+        pieces.slice(0, MAX_PAGE_SIZE).map(toProduct),
+      ]),
+    );
   }
 
   categories(): Promise<Category[]> {

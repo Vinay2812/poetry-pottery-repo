@@ -30,10 +30,11 @@ export async function getJson(
 export async function postGraphql(
   app: INestApplication,
   query: string,
+  headers: Record<string, string> = {},
 ): Promise<RawResponse> {
   const response = await request(server(app))
     .post("/graphql")
-    .set("content-type", "application/json")
+    .set({ ...headers, "content-type": "application/json" })
     .send({ query });
   return {
     status: response.status,

@@ -3,6 +3,7 @@ import { Test } from "@nestjs/testing";
 import { Prisma } from "@prisma/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { MAX_PAGE_SIZE } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
 import { RedisService } from "@/redis/redis.service";
 import { SearchService } from "@/features/search/search.service";
@@ -25,6 +26,7 @@ const prismaMock = {
     groupBy: vi.fn(),
     aggregate: vi.fn(),
   },
+  productOptionGroup: { findMany: vi.fn() },
   category: { findMany: vi.fn() },
   glaze: { findMany: vi.fn(), findUnique: vi.fn() },
   collection: { findMany: vi.fn(), findFirst: vi.fn() },
@@ -335,14 +337,62 @@ describe("ProductsService", () => {
     );
   });
 
-  it("lists only the pieces still for sale in a glaze", async () => {
-    prismaMock.product.findMany.mockResolvedValue([row(4)]);
+  it("lists only the pieces still for sale in each glaze, in one query", async () => {
+    prismaMock.product.findMany.mockResolvedValue([
+      { ...row(4), glaze_id: 3 },
+      { ...row(5), glaze_id: 8 },
+      { ...row(6), glaze_id: 3 },
+    ]);
 
-    const pieces = await service.glazePieces(3);
+    const pieces = await service.glazePiecesFor([3, 8, 9]);
 
-    expect(pieces.map((piece) => piece.id)).toEqual([4]);
+    expect(pieces.get(3)?.map((piece) => piece.id)).toEqual([4, 6]);
+    expect(pieces.get(8)?.map((piece) => piece.id)).toEqual([5]);
+    expect(pieces.get(9)).toEqual([]);
+    expect(prismaMock.product.findMany).toHaveBeenCalledTimes(1);
     expect(prismaMock.product.findMany).toHaveBeenCalledWith(
-      containing({ where: { ...availableProductWhere(), glaze_id: 3 } }),
+      containing({
+        where: { ...availableProductWhere(), glaze_id: { in: [3, 8, 9] } },
+      }),
+    );
+  });
+
+  it("caps each glaze at a page of pieces, keeping the featured order", async () => {
+    prismaMock.product.findMany.mockResolvedValue(
+      Array.from({ length: MAX_PAGE_SIZE + 5 }, (_, index) => ({
+        ...row(index + 1),
+        glaze_id: 3,
+      })),
+    );
+
+    const pieces = await service.glazePiecesFor([3]);
+
+    expect(pieces.get(3)).toHaveLength(MAX_PAGE_SIZE);
+    expect(pieces.get(3)?.[0]?.id).toBe(1);
+  });
+
+  it("loads the option groups of many pieces in one query", async () => {
+    const group = (id: number, productId: number) => ({
+      id,
+      product_id: productId,
+      options: [],
+    });
+    prismaMock.productOptionGroup.findMany.mockResolvedValue([
+      group(1, 7),
+      group(2, 4),
+      group(3, 7),
+    ]);
+
+    const groups = await service.optionGroupsFor([4, 7, 9]);
+
+    expect(groups.get(7)?.map((entry) => entry.id)).toEqual([1, 3]);
+    expect(groups.get(4)?.map((entry) => entry.id)).toEqual([2]);
+    expect(groups.get(9)).toEqual([]);
+    expect(prismaMock.productOptionGroup.findMany).toHaveBeenCalledWith(
+      containing({
+        where: { product_id: { in: [4, 7, 9] } },
+        orderBy: { sort_order: "asc" },
+      }),
     );
   });
 

@@ -1,3 +1,4 @@
+import type { Provider } from "@nestjs/common";
 import { Test, type TestingModule } from "@nestjs/testing";
 import { EventStatus, OrderStatus, type Prisma } from "@prisma/client";
 import { WINSTON_MODULE_PROVIDER } from "nest-winston";
@@ -204,30 +205,40 @@ export interface HarnessOptions {
   queue?: QueueRecorder;
   // Pass one when the test needs to see which reference photos were kept.
   uploads?: PendingUploadsRecorder;
+  // Wraps the client, e.g. to count the queries a request makes.
+  prisma?: (service: PrismaService) => PrismaService;
 }
 
-// Real services and a real PrismaService against the sandbox database; only the outside world is stubbed.
+// A real PrismaService against the sandbox database, and stand-ins for everything outside it.
+export function outsideWorld(options: HarnessOptions = {}): Provider[] {
+  const wrap = options.prisma ?? ((service: PrismaService) => service);
+  return [
+    {
+      provide: PrismaService,
+      useFactory: (): PrismaService =>
+        wrap(withAmbientTransactions(new PrismaService())),
+    },
+    { provide: WINSTON_MODULE_PROVIDER, useClass: LoggerStub },
+    { provide: RedisService, useClass: RedisStub },
+    { provide: MailService, useValue: options.mail ?? new MailStub() },
+    { provide: SearchService, useClass: SearchStub },
+    { provide: StorageService, useClass: StorageStub },
+    { provide: QueueService, useValue: options.queue ?? new QueueRecorder() },
+    {
+      provide: PendingUploadsService,
+      useValue: options.uploads ?? new PendingUploadsRecorder(),
+    },
+    { provide: UploadsService, useClass: UploadsStub },
+  ];
+}
+
+// Real services against the sandbox database; only the outside world is stubbed.
 export async function createHarness(
   options: HarnessOptions = {},
 ): Promise<Harness> {
   const moduleRef: TestingModule = await Test.createTestingModule({
     providers: [
-      {
-        provide: PrismaService,
-        useFactory: (): PrismaService =>
-          withAmbientTransactions(new PrismaService()),
-      },
-      { provide: WINSTON_MODULE_PROVIDER, useClass: LoggerStub },
-      { provide: RedisService, useClass: RedisStub },
-      { provide: MailService, useValue: options.mail ?? new MailStub() },
-      { provide: SearchService, useClass: SearchStub },
-      { provide: StorageService, useClass: StorageStub },
-      { provide: QueueService, useValue: options.queue ?? new QueueRecorder() },
-      {
-        provide: PendingUploadsService,
-        useValue: options.uploads ?? new PendingUploadsRecorder(),
-      },
-      { provide: UploadsService, useClass: UploadsStub },
+      ...outsideWorld(options),
       SettingsService,
       NotificationsService,
       CartService,
@@ -288,6 +299,7 @@ const TRUNCATED = [
   "product_option_groups",
   "batch_notifications",
   "products",
+  "glazes",
   "collections",
   "addresses",
   "newsletter_subscribers",
