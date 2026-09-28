@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "WhatsApp: Tap and Admin Reply",
+    "output": "architecture/whatsapp.html",
+    "viewBox": [1080, 580],
+    "column_fit": "spread",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "customer-tap", "label": "Customer tap", "focus": ["visitor", "link", "api", "service", "db", "queue"], "note": "Any WhatsApp link records the prefilled message and mails the studio after commit." },
+      { "id": "admin-reply", "label": "Admin reply", "focus": ["admin", "api", "service", "db", "queue", "wa"], "note": "A commission reply also opens WhatsApp and mails the customer." },
+      { "id": "inbox", "label": "Inbox listing", "focus": ["admin", "api"], "note": "Both directions list together in the admin Inbox WhatsApp tab." }
+    ]
+  },
+  "participants": [
+    { "id": "visitor", "type": "external", "label": "Visitor", "sublabel": "storefront" },
+    { "id": "link", "type": "frontend", "label": "Link", "sublabel": "WhatsAppLink" },
+    { "id": "api", "type": "backend", "label": "API", "sublabel": "WhatsAppResolver" },
+    { "id": "service", "type": "backend", "label": "Service", "sublabel": "WhatsAppService" },
+    { "id": "db", "type": "database", "label": "Postgres", "sublabel": "WhatsAppMessage" },
+    { "id": "queue", "type": "messagebus", "label": "Mail queue", "sublabel": "RabbitMQ" },
+    { "id": "admin", "type": "frontend", "label": "Admin", "sublabel": "Inbox / Commissions" },
+    { "id": "wa", "type": "external", "label": "WhatsApp", "sublabel": "wa.me chat" }
+  ],
+  "messages": [
+    { "id": "tap-link", "from": "visitor", "to": "link", "y": 160, "label": "tap WhatsApp link", "variant": "default" },
+    { "id": "record", "from": "link", "to": "api", "y": 188, "label": "recordWhatsAppMessage(kind, body)", "variant": "emphasis", "note": "identity optional; StrictThrottle-limited" },
+    { "id": "open-wa", "from": "link", "to": "wa", "y": 216, "label": "open wa.me chat (new tab)", "variant": "dashed", "note": "best effort — opens whether or not the record lands" },
+    { "id": "try-auth", "from": "api", "to": "service", "y": 244, "label": "tryAuthenticate(), then record(...)", "variant": "default" },
+    { "id": "create-to-studio", "from": "service", "to": "db", "y": 272, "label": "create WhatsAppMessage · TO_STUDIO", "variant": "default" },
+    { "id": "enqueue-studio", "from": "service", "to": "queue", "y": 300, "label": "enqueue studio mail", "variant": "dashed", "note": "queued only after commit (prisma.afterCommit)" },
+    { "id": "admin-reply", "from": "admin", "to": "api", "y": 328, "label": "sendWhatsAppReply(kind, body, reference)", "variant": "emphasis", "note": "commission reply, @AdminRequired" },
+    { "id": "reply-call", "from": "api", "to": "service", "y": 356, "label": "reply(input, adminId)", "variant": "default" },
+    { "id": "create-to-customer", "from": "service", "to": "db", "y": 384, "label": "create WhatsAppMessage · TO_CUSTOMER", "variant": "default" },
+    { "id": "enqueue-customer", "from": "service", "to": "queue", "y": 412, "label": "enqueue customer mail", "variant": "dashed" },
+    { "id": "admin-open-wa", "from": "admin", "to": "wa", "y": 440, "label": "open wa.me chat regardless", "variant": "dashed" },
+    { "id": "list-request", "from": "admin", "to": "api", "y": 468, "label": "adminWhatsAppMessages(filter)", "variant": "default" },
+    { "id": "list-response", "from": "api", "to": "admin", "y": 496, "label": "both directions, newest first", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "link", "from": 160, "to": 216, "type": "frontend" },
+    { "participant": "api", "from": 188, "to": 496, "type": "backend" },
+    { "participant": "service", "from": 244, "to": 412, "type": "backend" },
+    { "participant": "db", "from": 272, "to": 300, "type": "database" },
+    { "participant": "db", "from": 384, "to": 412, "type": "database" },
+    { "participant": "admin", "from": 328, "to": 496, "type": "frontend" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How it works",
+      "items": [
+        "Every wa.me tap fires recordWhatsAppMessage; identity optional.",
+        "A commission reply fires sendWhatsAppReply, mailing customer.",
+        "Both directions list in Inbox → WhatsApp via one query."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Guards",
+      "items": [
+        "recordWhatsAppMessage is @StrictThrottle-limited against spam.",
+        "sendWhatsAppReply is @AdminRequired; only staff can reply.",
+        "The wa.me tab opens whether or not the record call succeeds."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "After commit",
+      "items": [
+        "queue.service.ts: publish() defers to prisma.afterCommit().",
+        "whatsapp.service.ts: record()/reply() enqueue mail after create.",
+        "A rolled-back write never reaches the studio or the customer."
+      ]
+    }
+  ]
+}

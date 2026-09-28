@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Product options: server re-prices every add-to-cart",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [1080, 575],
+    "views": [
+      {
+        "id": "client-preview",
+        "label": "Client shows a preview only",
+        "focus": ["shopper", "productDetail"],
+        "note": "computeUnitPrice renders a live estimate, but the mutation never carries a price."
+      },
+      {
+        "id": "server-reprice",
+        "label": "Server re-derives the real price",
+        "focus": ["cartService", "selections", "db"],
+        "note": "resolveSelections walks the live option rows and prices from their price_modifier, not the input."
+      },
+      {
+        "id": "lock-and-merge",
+        "label": "Lock, merge, respond",
+        "focus": ["cartService", "cartDb", "productDetail"],
+        "note": "An advisory lock serializes concurrent adds before the line is upserted by its selection key."
+      }
+    ]
+  },
+  "participants": [
+    { "id": "shopper", "type": "external", "label": "Shopper", "sublabel": "browser" },
+    { "id": "productDetail", "type": "frontend", "label": "Product Detail", "sublabel": "client preview" },
+    { "id": "cartService", "type": "backend", "label": "CartService", "sublabel": "add()" },
+    { "id": "selections", "type": "backend", "label": "selections.ts", "sublabel": "resolveSelections" },
+    { "id": "db", "type": "database", "label": "Product DB", "sublabel": "live option_groups" },
+    { "id": "cartDb", "type": "database", "label": "Cart Table", "sublabel": "cart_item" }
+  ],
+  "segments": [
+    { "from": 321, "to": 371, "label": "Re-price from live DB" },
+    { "from": 379, "to": 490, "label": "Lock, merge, respond" }
+  ],
+  "messages": [
+    { "id": "pick-options", "from": "shopper", "to": "productDetail", "y": 160, "label": "pick size / engraving text", "variant": "default" },
+    { "id": "preview-shown", "from": "productDetail", "to": "shopper", "y": 189, "label": "computeUnitPrice() preview", "variant": "dashed", "note": "display only, never sent to the server" },
+    { "id": "submit", "from": "shopper", "to": "productDetail", "y": 218, "label": "tap Add to Cart", "variant": "default" },
+    { "id": "add-to-cart", "from": "productDetail", "to": "cartService", "y": 247, "label": "AddToCart(product_id, selections[], photos[])", "variant": "emphasis", "note": "no price field in the input" },
+    { "id": "load-live", "from": "cartService", "to": "db", "y": 276, "label": "load product + live option_groups", "variant": "default" },
+    { "id": "live-groups", "from": "db", "to": "cartService", "y": 305, "label": "groups[] with options[].is_active", "variant": "return" },
+    { "id": "resolve", "from": "cartService", "to": "selections", "y": 334, "label": "resolveSelections(groups, inputs)", "variant": "emphasis" },
+    { "id": "priced-selections", "from": "selections", "to": "cartService", "y": 363, "label": "Selection[] priced from price_modifier", "variant": "return", "note": "never the client's price" },
+    { "id": "lock-upsert", "from": "cartService", "to": "cartDb", "y": 392, "label": "lock(user, product); upsert by selection_key", "variant": "emphasis" },
+    { "id": "line-back", "from": "cartDb", "to": "cartService", "y": 421, "label": "cart_item row (qty topped up, max 10)", "variant": "return" },
+    { "id": "cart-back", "from": "cartService", "to": "productDetail", "y": 450, "label": "Cart { unit_price = price + selectionsTotal }", "variant": "emphasis" },
+    { "id": "shopper-sees", "from": "productDetail", "to": "shopper", "y": 479, "label": "cart updates with the server total", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "productDetail", "from": 155, "to": 484, "type": "frontend" },
+    { "participant": "cartService", "from": 241, "to": 455, "type": "backend" },
+    { "participant": "db", "from": 270, "to": 311, "type": "database" },
+    { "participant": "selections", "from": 328, "to": 368, "type": "backend" },
+    { "participant": "cartDb", "from": 386, "to": 427, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Guards",
+      "items": [
+        "Client sends selections only; price never crosses the wire",
+        "Server reloads the product + live option rows before pricing",
+        "resolveSelections prices from DB price_modifier, not input"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Call trace",
+      "items": [
+        "cart.service.ts: CartService.add loads live option_groups",
+        "selections.ts: resolveSelections walks groups, not input",
+        "cart.service.ts: lock(); upsert by (user, product, selection_key)"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "Edge cases",
+      "items": [
+        "Missing required TEXT or retired option: BadRequestException",
+        "Unknown group_id in payload: \"Unknown customisation option\"",
+        "Line already at qty 10 throws LINE_FULL instead of capping"
+      ]
+    }
+  ]
+}

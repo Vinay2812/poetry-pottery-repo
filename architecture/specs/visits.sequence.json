@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Studio Visit Booking",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [1080, 600],
+    "views": [
+      { "id": "book-a-window", "label": "Book a window", "focus": ["guest", "web", "api", "db"], "note": "Follow a guest's booking from picking a window to a saved row." },
+      { "id": "race-by-index", "label": "Race resolved by index", "focus": ["api", "db"], "note": "Two simultaneous inserts are separated by a partial unique index, not a lock." },
+      { "id": "studio-cancels", "label": "Studio cancels", "focus": ["admin", "api", "db", "queue"], "note": "The studio frees a window and both sides hear about it by mail." }
+    ]
+  },
+  "participants": [
+    { "id": "guest", "type": "external", "label": "Guest", "sublabel": "wants a tour" },
+    { "id": "web", "type": "frontend", "label": "Web App", "sublabel": "visit form" },
+    { "id": "api", "type": "backend", "label": "API", "sublabel": "VisitsService" },
+    { "id": "db", "type": "database", "label": "Postgres", "sublabel": "studio_visits" },
+    { "id": "queue", "type": "messagebus", "label": "Mail Queue", "sublabel": "after commit" },
+    { "id": "admin", "type": "external", "label": "Studio Admin", "sublabel": "calls off a visit" }
+  ],
+  "segments": [
+    { "from": 150, "to": 410, "label": "Book a window" },
+    { "from": 412, "to": 512, "label": "Studio cancels" }
+  ],
+  "messages": [
+    { "id": "pick-window", "from": "guest", "to": "web", "y": 160, "label": "pick a free half-hour", "variant": "default" },
+    { "id": "book-mutation", "from": "web", "to": "api", "y": 190, "label": "bookStudioVisit(input)", "variant": "emphasis" },
+    { "id": "read-blackouts", "from": "api", "to": "db", "y": 220, "label": "read blackouts + occupants", "variant": "default" },
+    { "id": "blackout-rows", "from": "db", "to": "api", "y": 250, "label": "rows", "variant": "return", "note": "checkSlots() rechecks hours, lead time, blackouts" },
+    { "id": "insert-visit", "from": "api", "to": "db", "y": 280, "label": "INSERT studio_visits", "variant": "emphasis", "note": "races unique(starts_at) WHERE cancelled_at IS NULL" },
+    { "id": "insert-result", "from": "db", "to": "api", "y": 310, "label": "created (or 23505 conflict)", "variant": "return" },
+    { "id": "enqueue-mail", "from": "api", "to": "queue", "y": 340, "label": "enqueue studio mail", "variant": "dashed" },
+    { "id": "booking-response", "from": "api", "to": "web", "y": 370, "label": "visit confirmed", "variant": "return" },
+    { "id": "confirmation", "from": "web", "to": "guest", "y": 400, "label": "show confirmation", "variant": "return" },
+    { "id": "cancel-call", "from": "admin", "to": "api", "y": 416, "label": "cancelStudioVisit(id, reason)", "variant": "security" },
+    { "id": "update-cancelled", "from": "api", "to": "db", "y": 446, "label": "UPDATE cancelled_at = now()", "variant": "emphasis" },
+    { "id": "cancel-mail", "from": "api", "to": "queue", "y": 476, "label": "enqueue guest + studio mail", "variant": "dashed" },
+    { "id": "cancel-return", "from": "api", "to": "admin", "y": 506, "label": "visit cancelled", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "web", "from": 165, "to": 405, "type": "frontend" },
+    { "participant": "api", "from": 195, "to": 400, "type": "backend" },
+    { "participant": "db", "from": 215, "to": 315, "type": "database" },
+    { "participant": "queue", "from": 335, "to": 345, "type": "messagebus" },
+    { "participant": "api", "from": 421, "to": 511, "type": "backend" },
+    { "participant": "db", "from": 441, "to": 451, "type": "database" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Guards", "items": ["checkSlots enforces hours, lead time and blackouts", "A partial unique index holds one live window, not a lock", "cancelStudioVisit is admin-only; guests can't self-cancel"] },
+    { "dot": "violet", "title": "Call trace", "items": ["visits.service.ts: book() calls schedule.ts checkSlots()", "studioVisit.create() races unique(starts_at) live rows", "visits.service.ts: cancel() sets cancelled_at, frees it"] },
+    { "dot": "amber", "title": "After commit", "items": ["A losing insert's P2002 becomes 'pick another window'", "Cancel mails the guest (if signed in) and the studio", "A cancelled window no longer counts as an occupant"] }
+  ]
+}

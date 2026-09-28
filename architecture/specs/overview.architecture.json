@@ -1,0 +1,302 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Poetry & Pottery: the whole system",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1040,
+      500
+    ],
+    "views": [
+      {
+        "id": "request-path",
+        "label": "A request",
+        "focus": [
+          "shoppers",
+          "storefront",
+          "clerk",
+          "api",
+          "postgres"
+        ],
+        "note": "Every read and write goes through the one GraphQL API; identity always comes from the Clerk token."
+      },
+      {
+        "id": "background",
+        "label": "Work after commit",
+        "focus": [
+          "api",
+          "rabbit",
+          "consumers",
+          "smtp",
+          "r2"
+        ],
+        "note": "Mail, search indexing and object deletion are queued only after the transaction commits."
+      },
+      {
+        "id": "state",
+        "label": "Where state lives",
+        "focus": [
+          "postgres",
+          "redis",
+          "r2"
+        ],
+        "note": "Postgres holds every record; Redis only throttles and caches settings; R2 holds photos."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "shoppers",
+      "type": "external",
+      "label": "Shoppers + studio",
+      "sublabel": "browser",
+      "pos": [
+        30,
+        250
+      ],
+      "size": [
+        140,
+        60
+      ]
+    },
+    {
+      "id": "storefront",
+      "type": "frontend",
+      "label": "Next.js 16",
+      "sublabel": "Vercel: shop + /dashboard",
+      "pos": [
+        230,
+        250
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "clerk",
+      "type": "security",
+      "label": "Clerk",
+      "sublabel": "sign-in, JWT",
+      "pos": [
+        440,
+        90
+      ],
+      "size": [
+        140,
+        60
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "NestJS API",
+      "sublabel": "GraphQL behind nginx",
+      "pos": [
+        440,
+        250
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "redis",
+      "type": "database",
+      "label": "Redis 8",
+      "sublabel": "throttle + cache",
+      "pos": [
+        660,
+        90
+      ],
+      "size": [
+        140,
+        60
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "Postgres 17",
+      "sublabel": "pgvector, pg_trgm",
+      "pos": [
+        660,
+        250
+      ],
+      "size": [
+        140,
+        60
+      ]
+    },
+    {
+      "id": "r2",
+      "type": "cloud",
+      "label": "Cloudflare R2",
+      "sublabel": "photos, env files",
+      "pos": [
+        890,
+        250
+      ],
+      "size": [
+        140,
+        60
+      ]
+    },
+    {
+      "id": "rabbit",
+      "type": "messagebus",
+      "label": "RabbitMQ 4",
+      "sublabel": "jobs.ts",
+      "pos": [
+        440,
+        400
+      ],
+      "size": [
+        150,
+        60
+      ]
+    },
+    {
+      "id": "consumers",
+      "type": "backend",
+      "label": "Consumers",
+      "sublabel": "in the API process",
+      "pos": [
+        660,
+        400
+      ],
+      "size": [
+        140,
+        60
+      ]
+    },
+    {
+      "id": "smtp",
+      "type": "external",
+      "label": "SMTP",
+      "sublabel": "nodemailer",
+      "pos": [
+        890,
+        400
+      ],
+      "size": [
+        140,
+        60
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "shop-https",
+      "from": "shoppers",
+      "to": "storefront",
+      "label": "HTTPS",
+      "variant": "emphasis"
+    },
+    {
+      "id": "graphql",
+      "from": "storefront",
+      "to": "api",
+      "label": "GraphQL",
+      "variant": "emphasis"
+    },
+    {
+      "id": "sign-in",
+      "from": "clerk",
+      "to": "storefront",
+      "label": "session",
+      "variant": "security",
+      "fromSide": "left",
+      "toSide": "top"
+    },
+    {
+      "id": "verify",
+      "from": "clerk",
+      "to": "api",
+      "label": "verify JWT",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "cache",
+      "from": "api",
+      "to": "redis",
+      "label": "throttle"
+    },
+    {
+      "id": "records",
+      "from": "api",
+      "to": "postgres",
+      "variant": "emphasis"
+    },
+    {
+      "id": "publish",
+      "from": "api",
+      "to": "rabbit",
+      "label": "after commit",
+      "variant": "dashed",
+      "labelAt": [
+        515,
+        355
+      ]
+    },
+    {
+      "id": "deliver",
+      "from": "rabbit",
+      "to": "consumers",
+      "label": "deliver"
+    },
+    {
+      "id": "embed",
+      "from": "consumers",
+      "to": "postgres",
+      "label": "embeddings"
+    },
+    {
+      "id": "mail",
+      "from": "consumers",
+      "to": "smtp",
+      "label": "mail.send",
+      "labelDy": 16
+    },
+    {
+      "id": "delete-object",
+      "from": "consumers",
+      "to": "r2",
+      "label": "delete",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Rules everywhere",
+      "items": [
+        "Identity comes from the Clerk token, never an input",
+        "Money, stock and seats move only in transactions",
+        "Queue work is published only after commit"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "How it runs",
+      "items": [
+        "Storefront and admin on Vercel, one Next.js app",
+        "API, Postgres, Redis, RabbitMQ on one VM",
+        "Data services listen on the Tailscale address only"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Where to read next",
+      "items": [
+        "checkout: the most guarded write",
+        "workshops: slot capacity and suggestions",
+        "search: hybrid keyword, trigram, vector rank"
+      ]
+    }
+  ]
+}

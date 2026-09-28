@@ -1,0 +1,267 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Checkout: placing an order",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [
+      1080,
+      575
+    ],
+    "views": [
+      {
+        "id": "lock-and-quote",
+        "label": "Lock and re-quote",
+        "focus": [
+          "service",
+          "db"
+        ],
+        "note": "Pieces and cart lines are locked by id, then the cart is priced again inside the lock."
+      },
+      {
+        "id": "take-stock",
+        "label": "Take the pieces",
+        "focus": [
+          "service",
+          "shelf",
+          "db"
+        ],
+        "note": "Stock only moves through a conditional update, so two buyers can never oversell a piece."
+      },
+      {
+        "id": "after-commit",
+        "label": "Mail after commit",
+        "focus": [
+          "service",
+          "queue",
+          "checkout"
+        ],
+        "note": "Mail is queued only once the transaction has committed."
+      }
+    ]
+  },
+  "participants": [
+    {
+      "id": "checkout",
+      "type": "frontend",
+      "label": "CheckoutContainer",
+      "sublabel": "features/checkout"
+    },
+    {
+      "id": "resolver",
+      "type": "security",
+      "label": "OrdersResolver",
+      "sublabel": "@AuthRequired"
+    },
+    {
+      "id": "service",
+      "type": "backend",
+      "label": "OrdersService",
+      "sublabel": "place()"
+    },
+    {
+      "id": "shelf",
+      "type": "backend",
+      "label": "ShelfService",
+      "sublabel": "take()"
+    },
+    {
+      "id": "db",
+      "type": "database",
+      "label": "Postgres",
+      "sublabel": "one transaction"
+    },
+    {
+      "id": "queue",
+      "type": "messagebus",
+      "label": "RabbitMQ",
+      "sublabel": "mail.send"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 198,
+      "label": "Request"
+    },
+    {
+      "from": 206,
+      "to": 284,
+      "label": "Lock + quote"
+    },
+    {
+      "from": 294,
+      "to": 405,
+      "label": "Take + write"
+    },
+    {
+      "from": 413,
+      "to": 490,
+      "label": "Commit + reply"
+    }
+  ],
+  "messages": [
+    {
+      "id": "place-order",
+      "from": "checkout",
+      "to": "resolver",
+      "y": 160,
+      "label": "placeOrder + expected_total",
+      "variant": "emphasis"
+    },
+    {
+      "id": "place",
+      "from": "resolver",
+      "to": "service",
+      "y": 186,
+      "label": "place(user from Clerk)",
+      "variant": "security"
+    },
+    {
+      "id": "lock",
+      "from": "service",
+      "to": "db",
+      "y": 216,
+      "label": "lock pieces + lines FOR UPDATE",
+      "variant": "emphasis"
+    },
+    {
+      "id": "requote",
+      "from": "service",
+      "to": "db",
+      "y": 244,
+      "label": "re-quote locked cart"
+    },
+    {
+      "id": "quote-back",
+      "from": "db",
+      "to": "service",
+      "y": 272,
+      "label": "total + problems",
+      "variant": "return",
+      "note": "total differs from expected_total: 409, nothing written"
+    },
+    {
+      "id": "take",
+      "from": "service",
+      "to": "shelf",
+      "y": 306,
+      "label": "take(piece, qty)"
+    },
+    {
+      "id": "decrement",
+      "from": "shelf",
+      "to": "db",
+      "y": 334,
+      "label": "stock -= qty WHERE stock >= qty",
+      "variant": "emphasis"
+    },
+    {
+      "id": "taken",
+      "from": "db",
+      "to": "shelf",
+      "y": 362,
+      "label": "1 row or 0",
+      "variant": "return"
+    },
+    {
+      "id": "write-order",
+      "from": "service",
+      "to": "db",
+      "y": 393,
+      "label": "redeem coupon, create order, drop lines"
+    },
+    {
+      "id": "commit",
+      "from": "service",
+      "to": "db",
+      "y": 423,
+      "label": "COMMIT",
+      "variant": "emphasis"
+    },
+    {
+      "id": "mail",
+      "from": "service",
+      "to": "queue",
+      "y": 451,
+      "label": "afterCommit: order mails",
+      "variant": "dashed"
+    },
+    {
+      "id": "order-back",
+      "from": "service",
+      "to": "checkout",
+      "y": 479,
+      "label": "Order",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "checkout",
+      "from": 155,
+      "to": 484,
+      "type": "frontend"
+    },
+    {
+      "participant": "resolver",
+      "from": 160,
+      "to": 190,
+      "type": "security"
+    },
+    {
+      "participant": "service",
+      "from": 182,
+      "to": 484,
+      "type": "backend"
+    },
+    {
+      "participant": "shelf",
+      "from": 301,
+      "to": 367,
+      "type": "backend"
+    },
+    {
+      "participant": "db",
+      "from": 211,
+      "to": 428,
+      "type": "database"
+    },
+    {
+      "participant": "queue",
+      "from": 446,
+      "to": 470,
+      "type": "messagebus"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Guards",
+      "items": [
+        "Locks run in id order, so two carts never deadlock",
+        "A moved total refuses with CART_CHANGED (409)",
+        "A sold-out piece or a used-up coupon rolls back everything"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Call trace",
+      "items": [
+        "orders.resolver.ts: placeOrder",
+        "orders.service.ts: place, lockCart, quote",
+        "shelf.service.ts: take; prisma.service.ts: withTransaction"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "After commit",
+      "items": [
+        "Buyer and studio mails queue only after COMMIT",
+        "A rolled-back order never sends mail",
+        "The buyer lands on the order page with ?placed=1"
+      ]
+    }
+  ]
+}

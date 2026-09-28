@@ -1,0 +1,89 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Catalogue Pipeline: Shelf, Archive & Facets",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "shelf-vs-archive",
+        "label": "Shelf vs archive",
+        "focus": ["scope_select", "pool_narrow", "facets_db"],
+        "note": "One scope flag switches between the shelf and the archive listing."
+      },
+      {
+        "id": "facet-scoping",
+        "label": "Per-facet scoping",
+        "focus": ["pool_narrow", "facets_db", "paginate"],
+        "note": "Each facet counts against every other filter, never against itself."
+      },
+      {
+        "id": "url-loop",
+        "label": "URL state loop",
+        "focus": ["url_filters", "results"],
+        "note": "The URL is the source of truth; a new filter re-enters the whole pipeline."
+      }
+    ]
+  },
+  "lanes": [
+    { "id": "frontend", "label": "Storefront (Next.js Client)" },
+    { "id": "api", "label": "ProductsService (NestJS API)" },
+    { "id": "data", "label": "Prisma / PostgreSQL" }
+  ],
+  "phases": [
+    { "id": "request", "label": "Client Request", "fromCol": 0, "toCol": 1 },
+    { "id": "rules", "label": "Catalogue Rules", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "respond", "label": "Query + Respond", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "facet_pipeline", "label": "Shelf/archive + facet scoping", "lane": "api", "fromCol": 2, "toCol": 3, "variant": "emphasis" }
+  ],
+  "mainPath": ["url_filters", "list_fn", "scope_select", "pool_narrow", "facets_db", "paginate", "results"],
+  "nodes": [
+    { "id": "url_filters", "lane": "frontend", "col": 0, "type": "frontend", "label": "URL Filters", "sublabel": "useUrlState codec", "width": 132 },
+    { "id": "list_fn", "lane": "api", "col": 1, "type": "backend", "label": "ProductsService.list", "sublabel": "GraphQL products query", "tag": "entry point", "width": 132 },
+    { "id": "scope_select", "lane": "api", "col": 2, "type": "security", "label": "Scope Select", "sublabel": "shelf vs archive + window", "tag": "available / archiveListing", "width": 132 },
+    { "id": "pool_narrow", "lane": "api", "col": 3, "type": "backend", "label": "Pool + Narrowing", "sublabel": "search ids + facet keys", "tag": "others(skip)", "width": 132 },
+    { "id": "facets_db", "lane": "data", "col": 4, "type": "database", "label": "Scoped Query", "sublabel": "rows + facets + counts", "tag": "Promise.all", "width": 132 },
+    { "id": "paginate", "lane": "api", "col": 5, "type": "backend", "label": "Rank Sort + Page", "sublabel": "sortByRank, slice", "width": 110 },
+    { "id": "results", "lane": "frontend", "col": 5, "type": "frontend", "label": "Product Grid", "sublabel": "items + facets", "width": 110 }
+  ],
+  "edges": [
+    { "id": "filters-to-list", "from": "url_filters", "to": "list_fn", "label": "filter input", "variant": "default" },
+    { "id": "list-to-scope", "from": "list_fn", "to": "scope_select", "label": "archive flag", "variant": "emphasis" },
+    { "id": "scope-to-pool", "from": "scope_select", "to": "pool_narrow", "label": "scope", "variant": "default" },
+    { "id": "pool-to-db", "from": "pool_narrow", "to": "facets_db", "label": "scoped(...skip)", "variant": "emphasis" },
+    { "id": "db-to-paginate", "from": "facets_db", "to": "paginate", "label": "rows + facets", "variant": "default" },
+    { "id": "paginate-to-results", "from": "paginate", "to": "results", "label": "items + facets + counts", "variant": "emphasis" },
+    { "id": "results-to-filters", "from": "results", "to": "url_filters", "label": "new filter / tab", "variant": "dashed", "role": "return", "route": "up-channel", "fromSide": "top", "toSide": "top" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How it works",
+      "items": [
+        "Scope picks shelf (available) or archive (archiveListing)",
+        "Pool = search ids + customizable; narrowing = facet keys",
+        "Facets rerun scoped(key) so a facet keeps its own options"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Guards",
+      "items": [
+        "archivedProductWhere is the exact complement of the shelf",
+        "releasedProductWhere hides unopened collection pieces",
+        "Zero ranked search IDs return an empty result early"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Call trace",
+      "items": [
+        "products.service.ts: list() calls scoped() then Promise.all",
+        "products.service.ts: sortByRank + slice orders ranked rows",
+        "products/types.ts: toFilterInput/toFilterKey drive the loop"
+      ]
+    }
+  ]
+}

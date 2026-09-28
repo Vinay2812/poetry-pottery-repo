@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Cart & wishlist: optimistic writes",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [1080, 560],
+    "views": [
+      {
+        "id": "cart-optimistic-write",
+        "label": "Cart optimistic write",
+        "focus": ["cart", "action", "cartApi", "db"],
+        "note": "setQuantity/remove patches the UI instantly, then the mutation reconciles Postgres."
+      },
+      {
+        "id": "wishlist-toggle",
+        "label": "Wishlist toggle",
+        "focus": ["wishlist", "action", "wishlistApi", "db"],
+        "note": "toggle() is idempotent, so save-for-later and a stale tab can never flip the wrong way."
+      },
+      {
+        "id": "shared-hook",
+        "label": "One hook, two features",
+        "focus": ["action", "cartApi", "wishlistApi"],
+        "note": "useOptimisticAction owns patch, run, refresh, and rollback for both features."
+      }
+    ]
+  },
+  "participants": [
+    { "id": "cart", "type": "frontend", "label": "CartContainer", "sublabel": "features/cart, useCart()" },
+    { "id": "wishlist", "type": "frontend", "label": "WishlistProvider", "sublabel": "features/wishlist" },
+    { "id": "action", "type": "frontend", "label": "useOptimisticAction", "sublabel": "lib/use-optimistic-action.ts" },
+    { "id": "cartApi", "type": "backend", "label": "CartService", "sublabel": "cart.service.ts" },
+    { "id": "db", "type": "database", "label": "Postgres", "sublabel": "CartItem / WishlistItem" },
+    { "id": "wishlistApi", "type": "backend", "label": "WishlistService", "sublabel": "wishlist.service.ts" }
+  ],
+  "segments": [
+    { "from": 150, "to": 305, "label": "Cart edit" },
+    { "from": 313, "to": 477, "label": "Wishlist toggle" }
+  ],
+  "messages": [
+    {
+      "id": "cart-execute",
+      "from": "cart",
+      "to": "action",
+      "y": 160,
+      "label": "setQuantity(id, qty) / remove(id) → execute()",
+      "variant": "emphasis",
+      "note": "patch() applies useOptimistic (applyCartAction) instantly; auto-reverts if the transition never commits"
+    },
+    {
+      "id": "cart-run",
+      "from": "action",
+      "to": "cartApi",
+      "y": 188,
+      "label": "run(): updateItem() / removeItem() / clear()"
+    },
+    {
+      "id": "cart-upsert",
+      "from": "cartApi",
+      "to": "db",
+      "y": 216,
+      "label": "cartItem.upsert(user_id_product_id_selection_key)",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cart-row",
+      "from": "db",
+      "to": "cartApi",
+      "y": 244,
+      "label": "row",
+      "variant": "return"
+    },
+    {
+      "id": "cart-result",
+      "from": "cartApi",
+      "to": "action",
+      "y": 272,
+      "label": "success",
+      "variant": "return"
+    },
+    {
+      "id": "cart-refresh",
+      "from": "action",
+      "to": "cartApi",
+      "y": 300,
+      "label": "refresh(): refetchQueries([Cart, CartCount])",
+      "variant": "dashed",
+      "note": "new baseline; a failed write instead toasts and retries this refresh silently up to 3x"
+    },
+    {
+      "id": "wishlist-execute",
+      "from": "wishlist",
+      "to": "action",
+      "y": 328,
+      "label": "toggle(productId, productName, wishlisted?) → execute()",
+      "variant": "emphasis",
+      "note": "an explicit wishlisted makes the call idempotent, not a flip (used by save-for-later)"
+    },
+    {
+      "id": "wishlist-run",
+      "from": "action",
+      "to": "wishlistApi",
+      "y": 356,
+      "label": "run(): mutate() → ToggleWishlistDocument"
+    },
+    {
+      "id": "wishlist-write",
+      "from": "wishlistApi",
+      "to": "db",
+      "y": 384,
+      "label": "createMany skipDuplicates / deleteMany",
+      "variant": "emphasis"
+    },
+    {
+      "id": "wishlist-count",
+      "from": "db",
+      "to": "wishlistApi",
+      "y": 412,
+      "label": "wishlist_count",
+      "variant": "return"
+    },
+    {
+      "id": "wishlist-result",
+      "from": "wishlistApi",
+      "to": "action",
+      "y": 440,
+      "label": "wishlisted boolean",
+      "variant": "return"
+    },
+    {
+      "id": "wishlist-refresh",
+      "from": "action",
+      "to": "wishlistApi",
+      "y": 468,
+      "label": "refresh(): refetchQueries([WishlistIds, Wishlist])",
+      "variant": "dashed"
+    }
+  ],
+  "activations": [
+    { "participant": "cart", "from": 155, "to": 170, "type": "frontend" },
+    { "participant": "action", "from": 155, "to": 305, "type": "frontend" },
+    { "participant": "cartApi", "from": 183, "to": 305, "type": "backend" },
+    { "participant": "db", "from": 211, "to": 249, "type": "database" },
+    { "participant": "wishlist", "from": 323, "to": 338, "type": "frontend" },
+    { "participant": "action", "from": 323, "to": 473, "type": "frontend" },
+    { "participant": "wishlistApi", "from": 351, "to": 473, "type": "backend" },
+    { "participant": "db", "from": 379, "to": 417, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "How it works",
+      "items": [
+        "patch() applies useOptimistic instantly, no network wait",
+        "run() awaits the real GraphQL mutation underneath",
+        "refresh() refetch becomes the new baseline; retries quietly"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Call trace",
+      "items": [
+        "use-optimistic-action.ts: execute → patch → run",
+        "cart/types.ts: applyCartAction → canPredictShipping",
+        "wishlist.service.ts: toggle → createMany/deleteMany"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Edge cases",
+      "items": [
+        "canPredictShipping false → cart returned unmodified",
+        "Rejected write: one failure toast, then a refresh() resync",
+        "handleSaveForLater: toggle(id, name, true) then remove(item)"
+      ]
+    }
+  ]
+}

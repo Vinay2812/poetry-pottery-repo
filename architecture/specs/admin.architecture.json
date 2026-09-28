@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Admin Console",
+    "output": "architecture/admin.html",
+    "quality_profile": "showcase",
+    "viewBox": [900, 460],
+    "views": [
+      { "id": "console", "label": "Console shell", "focus": ["shell", "people", "pieces", "lists"], "note": "Sections share one shell and one guarded GraphQL layer." },
+      { "id": "guards", "label": "Admin guards", "focus": ["guard", "usersService", "productsService", "db"], "note": "Every mutation is checked twice: who you are, then whether the change is safe." },
+      { "id": "people", "label": "Person links", "focus": ["people", "guard", "usersService"], "note": "A person's stat tiles open their filtered orders, bookings, and reviews." }
+    ]
+  },
+  "components": [
+    { "id": "shell", "type": "frontend", "label": "Admin shell", "sublabel": "AdminChromeContainer", "pos": [370, 25], "size": [160, 50] },
+    { "id": "people", "type": "frontend", "label": "People", "sublabel": "person detail + roles", "pos": [90, 115], "size": [150, 50] },
+    { "id": "pieces", "type": "frontend", "label": "Pieces", "sublabel": "product catalog", "pos": [370, 115], "size": [150, 50] },
+    { "id": "lists", "type": "frontend", "label": "Filtered lists", "sublabel": "orders · events · workshops · reviews", "pos": [630, 115], "size": [220, 50] },
+    { "id": "guard", "type": "security", "label": "AdminGuard", "sublabel": "@AdminRequired", "pos": [365, 205], "size": [160, 50] },
+    { "id": "usersService", "type": "backend", "label": "Admin Users", "sublabel": "users.service.ts", "pos": [190, 295], "size": [170, 50] },
+    { "id": "productsService", "type": "backend", "label": "Admin Products", "sublabel": "products.service.ts", "pos": [500, 295], "size": [190, 50] },
+    { "id": "db", "type": "database", "label": "Postgres", "pos": [370, 385], "size": [150, 50] }
+  ],
+  "connections": [
+    { "id": "shell-people", "from": "shell", "to": "people", "fromSide": "bottom", "toSide": "top" },
+    { "id": "shell-pieces", "from": "shell", "to": "pieces", "fromSide": "bottom", "toSide": "top" },
+    { "id": "shell-lists", "from": "shell", "to": "lists", "fromSide": "bottom", "toSide": "top" },
+    { "id": "people-guard", "from": "people", "to": "guard", "label": "setUserRole(id, role)", "fromSide": "bottom", "toSide": "top" },
+    { "id": "pieces-guard", "from": "pieces", "to": "guard", "label": "createProduct / setActive", "fromSide": "bottom", "toSide": "top", "labelAt": [560, 179] },
+    { "id": "guard-users", "from": "guard", "to": "usersService", "label": "authorised call", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "guard-products", "from": "guard", "to": "productsService", "label": "authorised call", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "users-db", "from": "usersService", "to": "db", "label": "role + admin count", "fromSide": "bottom", "toSide": "top" },
+    { "id": "products-db", "from": "productsService", "to": "db", "label": "stock + listing", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How it works",
+      "items": [
+        "AdminShell renders sections behind typed GraphQL documents.",
+        "Every admin resolver field sits behind @AdminRequired.",
+        "A person's stat tiles link to their orders/bookings by ?user=."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Guards",
+      "items": [
+        "assertCanBeLive: no-stock piece can't go live unless made to order.",
+        "setRole: the last admin can never be demoted, by anyone.",
+        "setRole: an admin cannot take away their own access."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Call trace",
+      "items": [
+        "admin-guards.spec.ts: every Admin* field carries AdminGuard.",
+        "products.service.ts: create()/setActive() call assertCanBeLive().",
+        "users.service.ts: setRole() locks ROLE_CHANGE, counts admins."
+      ]
+    }
+  ]
+}

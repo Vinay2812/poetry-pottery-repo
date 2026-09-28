@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Brand Pipeline and Design System",
+    "output": "architecture/design.html",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 460],
+    "legend": { "entries": { "dashed": { "label": "shared constant" } } },
+    "views": [
+      { "id": "wordmark-to-svg", "label": "Constants to SVG", "focus": ["constants", "brand_script", "svgs"], "note": "brand.mjs reads the drawn constants and writes every brand SVG." },
+      { "id": "raster-pipeline", "label": "SVG to PNG", "focus": ["svgs", "rasters", "pngs"], "note": "brand-rasters.sh screenshots the SVGs with a headless browser." },
+      { "id": "tokens", "label": "Shared palette", "focus": ["tokens", "brand_script"], "note": "The INK and CLAY constants match the CSS tokens exactly." }
+    ]
+  },
+  "stages": [
+    { "label": "Source" },
+    { "label": "Generate" },
+    { "label": "SVG assets" },
+    { "label": "Raster" },
+    { "label": "Delivered" }
+  ],
+  "nodes": [
+    { "id": "tokens", "type": "frontend", "label": "globals.css tokens", "sublabel": "clay-white, ink, sage, kiln", "stage": 0, "row": 1, "width": 140 },
+    { "id": "constants", "type": "frontend", "label": "Wordmark.tsx", "sublabel": "LETTERS, SPIRAL, STROKE, DOT", "stage": 0, "row": 0, "width": 140 },
+    { "id": "brand_script", "type": "frontend", "label": "scripts/brand.mjs", "sublabel": "strips font bowl, draws coil", "stage": 1, "row": 0, "width": 140 },
+    { "id": "svgs", "type": "frontend", "label": "public/brand/*.svg", "sublabel": "wordmark, mark, favicon, og", "stage": 2, "row": 0, "width": 140 },
+    { "id": "rewrite", "type": "frontend", "label": "Wordmark.tsx rewrite", "sublabel": "constants replaced in place", "stage": 2, "row": 1, "width": 140 },
+    { "id": "rasters", "type": "frontend", "label": "brand-rasters.sh", "sublabel": "agent-browser screenshots", "stage": 3, "row": 0, "width": 140 },
+    { "id": "pngs", "type": "frontend", "label": "public/brand/*.png", "sublabel": "icon-512, apple-touch, og", "stage": 4, "row": 0, "width": 140 }
+  ],
+  "flows": [
+    { "id": "tokens-to-script", "from": "tokens", "to": "brand_script", "label": "INK/CLAY match the hex", "variant": "dashed" },
+    { "id": "constants-to-script", "from": "constants", "to": "brand_script", "label": "readFileSync, regex match", "variant": "default", "route": "straight", "labelDy": -22 },
+    { "id": "script-to-svgs", "from": "brand_script", "to": "svgs", "label": "writeFileSync per asset", "variant": "default", "route": "straight", "labelDy": -22 },
+    { "id": "script-to-rewrite", "from": "brand_script", "to": "rewrite", "label": "rewrites constants in place", "variant": "emphasis" },
+    { "id": "svgs-to-rasters", "from": "svgs", "to": "rasters", "label": "favicon.svg, og-image.svg", "variant": "default", "route": "straight", "labelDy": -22 },
+    { "id": "rasters-to-pngs", "from": "rasters", "to": "pngs", "label": "screenshot per size", "variant": "default", "route": "straight", "labelDy": -22 }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Guards",
+      "items": [
+        "Regenerate only: change the constants, never hand-edit the paths",
+        "Everything paints in currentColor; reverse is a class swap",
+        "brand.mjs is idempotent: strips the font bowl on the first run only"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Call trace",
+      "items": [
+        "brand.mjs - readFileSync(Wordmark.tsx), matches LETTERS by regex",
+        "brand.mjs - strokeMarkup(ink, cx, cy) draws the ring, coil and dot",
+        "brand-rasters.sh - agent-browser screenshot into public/brand/*.png"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Edge cases",
+      "items": [
+        "favicon.svg sets only the P glyph, scaled for a 16px read",
+        "og-image.svg centers the stacked lockup at 1200x630",
+        "docs/design/logo.md records the geometry; regenerate, never edit"
+      ]
+    }
+  ]
+}

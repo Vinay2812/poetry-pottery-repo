@@ -1,0 +1,49 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Commission a Piece",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "ask-for-one-like-it", "label": "Ask for one like it", "focus": ["browse_archive", "ask_like_it", "brief_form"], "note": "An archived piece's page links straight into a prefilled brief." },
+      { "id": "one-brief-one-tx", "label": "One brief, one transaction", "focus": ["brief_form", "create_request", "acknowledge"], "note": "The brief row and its photo claims commit together before mail sends." },
+      { "id": "studio-decides", "label": "Studio decides", "focus": ["review", "reply_whatsapp", "resolved"], "note": "A status change or a recorded WhatsApp reply both close the loop." }
+    ]
+  },
+  "lanes": [
+    { "id": "guest", "label": "Guest" },
+    { "id": "api", "label": "API" },
+    { "id": "studio", "label": "Studio" }
+  ],
+  "phases": [
+    { "id": "brief", "label": "Brief the piece", "fromCol": 0, "toCol": 2 },
+    { "id": "save", "label": "Save + acknowledge", "fromCol": 3, "toCol": 3, "variant": "emphasis" },
+    { "id": "decide", "label": "Studio decides", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["browse_archive", "ask_like_it", "brief_form", "create_request", "acknowledge", "review", "resolved"],
+  "nodes": [
+    { "id": "browse_archive", "lane": "guest", "col": 0, "type": "frontend", "label": "Browse Archive", "sublabel": "a sold-out piece", "width": 140 },
+    { "id": "ask_like_it", "lane": "guest", "col": 1, "type": "frontend", "label": "Ask For One Like It", "sublabel": "/custom?like=<slug>", "width": 140 },
+    { "id": "brief_form", "lane": "guest", "col": 2, "type": "frontend", "label": "Send The Brief", "sublabel": "piece, size, glaze, photos", "width": 140 },
+    { "id": "create_request", "lane": "api", "col": 3, "type": "backend", "label": "Create Request", "sublabel": "brief + upload claim, one tx", "tag": "createCommissionRequest", "width": 140 },
+    { "id": "acknowledge", "lane": "api", "col": 4, "type": "backend", "label": "Acknowledge", "sublabel": "mail guest + studio", "width": 140 },
+    { "id": "review", "lane": "studio", "col": 4, "type": "security", "label": "Studio Reviews", "sublabel": "marks the brief read", "width": 140 },
+    { "id": "reply_whatsapp", "lane": "api", "col": 2, "type": "messagebus", "label": "WhatsApp Reply", "sublabel": "recorded + mailed", "width": 140 },
+    { "id": "resolved", "lane": "studio", "col": 5, "type": "backend", "label": "Brief Resolved", "sublabel": "sketched, accepted or declined", "width": 140 }
+  ],
+  "edges": [
+    { "id": "archive-ask", "from": "browse_archive", "to": "ask_like_it", "label": "archived piece", "variant": "default" },
+    { "id": "ask-brief", "from": "ask_like_it", "to": "brief_form", "label": "prefills piece + reference", "variant": "default" },
+    { "id": "brief-create", "from": "brief_form", "to": "create_request", "label": "createCommissionRequest", "variant": "emphasis" },
+    { "id": "create-ack", "from": "create_request", "to": "acknowledge", "label": "brief saved, photos claimed", "variant": "emphasis" },
+    { "id": "ack-review", "from": "acknowledge", "to": "review", "label": "NEW brief queued", "variant": "default" },
+    { "id": "review-resolved", "from": "review", "to": "resolved", "label": "setCommissionRequestStatus", "variant": "emphasis" },
+    { "id": "review-whatsapp", "from": "review", "to": "reply_whatsapp", "label": "admin replies on WhatsApp", "variant": "dashed", "role": "branch" },
+    { "id": "whatsapp-resolved", "from": "reply_whatsapp", "to": "resolved", "label": "reply recorded + mailed", "variant": "dashed", "role": "return" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "How it works", "items": ["Sizes come from each piece's own size options", "commissionOptions never caches; nothing else writes glazes", "An archived piece's slug prefills /custom?like=<slug>"] },
+    { "dot": "violet", "title": "Call trace", "items": ["commissions.service.ts: create() saves the brief", "whatsapp.service.ts: reply() records + mails the guest", "commissions.service.ts: setStatus() marks NEW as read"] },
+    { "dot": "rose", "title": "Edge cases", "items": ["A signed-out guest's brief carries no reference photos", "uploads.claim binds only the sender's own uploads", "An unknown ?like= slug is ignored, not an error"] }
+  ]
+}

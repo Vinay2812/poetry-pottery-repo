@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Legacy Data Import",
+    "output": "architecture/legacy-import.html",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 560],
+    "views": [
+      { "id": "read-path", "label": "Read the legacy source", "focus": ["legacy_db", "read_legacy", "transform"], "note": "Raw rows leave the read-only legacy database and pass through normalization." },
+      { "id": "write-path", "label": "Ordered writes", "focus": ["transform", "prisma_writes", "new_db"], "note": "Sequential, idempotent upserts land in the new schema." },
+      { "id": "reindex-path", "label": "Search reindex", "focus": ["new_db", "reindex_script"], "note": "pnpm search:reindex embeds imported products and events." }
+    ]
+  },
+  "stages": [
+    { "label": "Legacy source" },
+    { "label": "Read" },
+    { "label": "Transform" },
+    { "label": "Write" },
+    { "label": "Reindex" }
+  ],
+  "nodes": [
+    { "id": "legacy_db", "type": "database", "label": "Legacy Postgres", "sublabel": "read-only", "stage": 0, "row": 1, "tag": "old app" },
+    { "id": "read_legacy", "type": "backend", "label": "readLegacy()", "sublabel": "raw pg client", "stage": 1, "row": 1, "tag": "import-legacy.ts" },
+    { "id": "transform", "type": "backend", "label": "Transforms", "sublabel": "pure functions", "stage": 2, "row": 1, "tag": "import-legacy.ts" },
+    { "id": "prisma_writes", "type": "backend", "label": "Ordered Upserts", "sublabel": "Prisma writes", "stage": 3, "row": 1, "tag": "import-legacy.ts" },
+    { "id": "new_db", "type": "database", "label": "New Postgres", "sublabel": "17 + pgvector", "stage": 4, "row": 0, "tag": "new schema" },
+    { "id": "reindex_script", "type": "backend", "label": "reindex-search.ts", "sublabel": "embeds ids", "stage": 4, "row": 2, "tag": "one-off script" }
+  ],
+  "flows": [
+    { "id": "legacy-select", "from": "legacy_db", "to": "read_legacy", "label": "SELECT (read-only)", "variant": "default" },
+    { "id": "raw-rows", "from": "read_legacy", "to": "transform", "label": "raw legacy rows", "variant": "default" },
+    { "id": "normalized", "from": "transform", "to": "prisma_writes", "label": "normalized records", "variant": "emphasis" },
+    { "id": "ordered-upserts", "from": "prisma_writes", "to": "new_db", "label": "users → catalog → workshop → content", "variant": "emphasis" },
+    { "id": "reindex-roundtrip", "from": "new_db", "to": "reindex_script", "label": "ids in, embeddings back", "variant": "dashed", "labelAt": [960, 240] }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "How it works", "items": [
+      "Legacy session is read-only, never writes back",
+      "Transforms normalize slugs, care notes, glaze names",
+      "Upserts run users → catalog → workshop → content"
+    ] },
+    { "dot": "cyan", "title": "Call trace", "items": [
+      "import-legacy.ts: readLegacy()",
+      "import-legacy.ts: importUsers()...importContent()",
+      "reindex-search.ts: reindexAll()"
+    ] },
+    { "dot": "rose", "title": "Edge cases", "items": [
+      "--dry-run prints counts, writes nothing",
+      "No $transaction: upserts run sequentially",
+      "Addresses dedupe by user_id+line1+pincode"
+    ] }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Testing and Verification",
+    "output": "architecture/testing.html",
+    "quality_profile": "showcase",
+    "legend": {
+      "entries": {
+        "frontend": { "label": "Developer action" },
+        "backend": { "label": "Test run" },
+        "database": { "label": "Race suite" },
+        "security": { "label": "Git hook" },
+        "cloud": { "label": "Deploy" }
+      }
+    },
+    "views": [
+      { "id": "local-verification", "label": "Local test surfaces", "focus": ["change", "unit", "integration"], "note": "Unit specs and the throwaway-database race suite run before a commit." },
+      { "id": "commit-gates", "label": "Hooks at commit and push", "focus": ["commit", "push"], "note": "pre-push regenerates the schema and hooks, then typechecks the frontend." },
+      { "id": "ship", "label": "Reaching production", "focus": ["push", "deploy"], "note": "A synced push to main touching api/ or infra/ ships without its own test gate." }
+    ]
+  },
+  "lanes": [
+    { "id": "dev", "label": "Developer" },
+    { "id": "local", "label": "Local test surfaces" },
+    { "id": "deploy", "label": "Deploy" }
+  ],
+  "mainPath": ["change", "unit", "commit", "push", "deploy"],
+  "nodes": [
+    { "id": "change", "lane": "dev", "col": 0, "type": "frontend", "label": "Code change", "sublabel": "api/ or frontend/", "width": 130 },
+    { "id": "unit", "lane": "local", "col": 0, "type": "backend", "label": "pnpm test", "sublabel": "unit + storybook, a11y", "width": 150 },
+    { "id": "integration", "lane": "local", "col": 1, "type": "database", "label": "test:integration", "sublabel": "throwaway DB, 77 races", "width": 150 },
+    { "id": "commit", "lane": "dev", "col": 2, "type": "security", "label": "git commit", "sublabel": "pre-commit + commit-msg", "width": 150 },
+    { "id": "push", "lane": "dev", "col": 3, "type": "security", "label": "git push", "sublabel": "pre-push: schema sync", "width": 150 },
+    { "id": "deploy", "lane": "deploy", "col": 4, "type": "cloud", "label": "Deploy API", "sublabel": "SSH deploy on main", "width": 150 }
+  ],
+  "edges": [
+    { "from": "change", "to": "unit", "label": "before committing" },
+    { "from": "change", "to": "integration", "label": "concurrency-sensitive change", "variant": "dashed" },
+    { "from": "unit", "to": "commit", "label": "green" },
+    { "from": "integration", "to": "commit", "label": "green", "variant": "dashed" },
+    { "from": "commit", "to": "push", "label": "hooks pass" },
+    { "from": "push", "to": "deploy", "label": "in sync, reaches main", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Guards",
+      "items": [
+        "pre-push regenerates schema.gql and hooks in place before failing",
+        "Race specs run serially against a throwaway database, then dropped",
+        "Storybook a11y violations fail the run - the only automated a11y gate"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Call trace",
+      "items": [
+        ".husky/pre-push - runs scripts/check-schema-sync.sh",
+        "check-schema-sync.sh - schema:emit, codegen, pnpm -C frontend tsc",
+        "api/test/integration/run.ts:main - creates it_<hex> DB, migrates"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Failure",
+      "items": [
+        "Deploy API workflow ships on push to main with no test gate of its own",
+        "A failing race is a finding, not a flake - rerun it three times",
+        "browser-flows.sh flows skip when data-dependent, never silently pass"
+      ]
+    }
+  ]
+}
