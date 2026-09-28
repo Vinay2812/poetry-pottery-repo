@@ -1,0 +1,50 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Wheel Session Booking",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "layered-suggestion", "label": "Layered suggestion", "focus": ["pick_hours", "suggest_slots", "submit"], "note": "See the spread-then-stack rule fill a session automatically." },
+      { "id": "manual-override", "label": "Manual override", "focus": ["suggest_slots", "manual_pick", "submit"], "note": "A single tap replaces the suggestion for the rest of the visit." },
+      { "id": "no-room", "label": "When there's no room", "focus": ["pick_hours", "suggest_slots", "group_ask", "arrangement_ask"], "note": "Group size or a full calendar redirect the guest to ask by hand." }
+    ]
+  },
+  "lanes": [
+    { "id": "ui", "label": "Guest Picker" },
+    { "id": "suggest", "label": "Suggestion Engine" },
+    { "id": "booking", "label": "Booking Transaction" }
+  ],
+  "phases": [
+    { "id": "choose", "label": "Choose", "fromCol": 0, "toCol": 1 },
+    { "id": "match", "label": "Match slots", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "commit", "label": "Lock + commit", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["pick_hours", "suggest_slots", "submit", "lock_and_check", "booked"],
+  "nodes": [
+    { "id": "pick_hours", "lane": "ui", "col": 0, "type": "frontend", "label": "Choose Session", "sublabel": "hours + participants", "width": 140 },
+    { "id": "suggest_slots", "lane": "suggest", "col": 1, "type": "backend", "label": "Suggest Slots", "sublabel": "spread across the span", "tag": "suggestSlots()", "width": 140 },
+    { "id": "manual_pick", "lane": "ui", "col": 2, "type": "frontend", "label": "Manual Pick", "sublabel": "tap or drag overrides", "width": 140 },
+    { "id": "submit", "lane": "ui", "col": 3, "type": "frontend", "label": "Submit Booking", "sublabel": "book() mutation", "width": 140 },
+    { "id": "lock_and_check", "lane": "booking", "col": 4, "type": "backend", "label": "Lock + Recheck", "sublabel": "lock, then checkSlots()", "tag": "assertSlots()", "width": 140 },
+    { "id": "booked", "lane": "booking", "col": 5, "type": "backend", "label": "Confirmed", "sublabel": "slots + mail queued", "width": 140 },
+    { "id": "group_ask", "lane": "suggest", "col": 0, "type": "external", "label": "Group Ask", "sublabel": "at capacity_per_slot", "width": 140 },
+    { "id": "arrangement_ask", "lane": "booking", "col": 1, "type": "external", "label": "Arrangement Ask", "sublabel": "no room in the window", "width": 140 }
+  ],
+  "edges": [
+    { "id": "pick-suggest", "from": "pick_hours", "to": "suggest_slots", "variant": "default" },
+    { "id": "pick-group", "from": "pick_hours", "to": "group_ask", "label": "hits the wheel cap", "variant": "dashed", "role": "branch" },
+    { "id": "suggest-manual", "from": "suggest_slots", "to": "manual_pick", "label": "guest edits a pick", "variant": "dashed", "role": "branch" },
+    { "id": "manual-submit", "from": "manual_pick", "to": "submit", "label": "manual pick wins", "variant": "default", "role": "branch" },
+    { "id": "suggest-submit", "from": "suggest_slots", "to": "submit", "label": "suggestion accepted", "variant": "emphasis" },
+    { "id": "suggest-arrangement", "from": "suggest_slots", "to": "arrangement_ask", "label": "no free hour fits", "variant": "security", "role": "error" },
+    { "id": "submit-lock", "from": "submit", "to": "lock_and_check", "label": "book()", "variant": "emphasis" },
+    { "id": "lock-booked", "from": "lock_and_check", "to": "booked", "label": "checkSlots ok", "variant": "emphasis" },
+    { "id": "lock-arrangement", "from": "lock_and_check", "to": "arrangement_ask", "label": "hour taken meanwhile", "variant": "security", "role": "error" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "How it works", "items": ["suggestSlots fills one hour on every free day", "A second hour lands on the earliest days", "A manual tap or drag replaces the suggestion"] },
+    { "dot": "violet", "title": "Call trace", "items": ["grid.ts: suggestSlots() layers hours across span", "workshops.service.ts: book() locks, asserts slots", "schedule.ts: checkSlots() rechecks hours + span"] },
+    { "dot": "rose", "title": "Edge cases", "items": ["At capacity_per_slot, only a group ask is offered", "No free hour in the window opens an arrangement ask", "Reschedule frees the booking's own held slots"] }
+  ]
+}

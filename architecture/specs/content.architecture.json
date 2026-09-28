@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Content, Settings and Newsletter",
+    "output": "architecture/content.html",
+    "quality_profile": "showcase",
+    "viewBox": [900, 440],
+    "views": [
+      { "id": "read-path", "label": "Cached reads", "focus": ["visitor", "frontend", "settingsContent", "redis", "postgres"], "note": "Settings and content pages serve from a short Redis cache before touching Postgres." },
+      { "id": "write-path", "label": "Admin invalidation", "focus": ["admin", "settingsContent", "redis", "postgres"], "note": "An admin write updates Postgres and deletes the cache key in the same step." },
+      { "id": "mail-path", "label": "Newsletter and contact", "focus": ["visitor", "newsletterContact", "postgres", "queue"], "note": "Both flows enqueue mail that only sends after the database commit." }
+    ]
+  },
+  "components": [
+    { "id": "admin", "type": "frontend", "label": "Admin console", "sublabel": "content editor", "pos": [380, 25], "size": [190, 50] },
+    { "id": "visitor", "type": "external", "label": "Visitor", "pos": [20, 140], "size": [130, 50] },
+    { "id": "frontend", "type": "frontend", "label": "Storefront", "sublabel": "site-settings.ts", "pos": [190, 140], "size": [150, 50] },
+    { "id": "settingsContent", "type": "backend", "label": "Settings & Content", "sublabel": "settings/content.service.ts", "pos": [380, 140], "size": [190, 50] },
+    { "id": "redis", "type": "database", "label": "Redis", "sublabel": "60–120s cache", "pos": [610, 140], "size": [150, 50] },
+    { "id": "newsletterContact", "type": "backend", "label": "Newsletter & Contact", "sublabel": "newsletter/contact.service.ts", "pos": [150, 250], "size": [210, 50] },
+    { "id": "postgres", "type": "database", "label": "Postgres", "pos": [470, 250], "size": [160, 50] },
+    { "id": "queue", "type": "messagebus", "label": "Mail queue", "sublabel": "RabbitMQ → mail.send", "pos": [310, 350], "size": [170, 50] }
+  ],
+  "connections": [
+    { "id": "visitor-frontend", "from": "visitor", "to": "frontend", "label": "browse" },
+    { "id": "frontend-settings", "from": "frontend", "to": "settingsContent", "label": "query settings / page", "labelDy": -19 },
+    { "id": "settings-redis", "from": "settingsContent", "to": "redis", "label": "getOrSet / del", "labelDy": -19 },
+    { "id": "admin-settings", "from": "admin", "to": "settingsContent", "label": "update mutation", "variant": "emphasis", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "settings-postgres", "from": "settingsContent", "to": "postgres", "label": "write row", "fromSide": "bottom", "toSide": "top" },
+    { "id": "redis-postgres", "from": "redis", "to": "postgres", "label": "miss: read-through", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "visitor-newsletter", "from": "visitor", "to": "newsletterContact", "label": "subscribe / send message", "fromSide": "bottom", "toSide": "top" },
+    { "id": "newsletter-postgres", "from": "newsletterContact", "to": "postgres", "label": "create row" },
+    { "id": "newsletter-queue", "from": "newsletterContact", "to": "queue", "label": "enqueue mail", "variant": "dashed", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How it works",
+      "items": [
+        "Settings/content/categories cache in Redis (60–120s TTL).",
+        "Every admin write calls redis.del() so nothing stays stale.",
+        "Sitemap reads products/events/workshops straight from Postgres."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Call trace",
+      "items": [
+        "settings.service.ts: get() → redis.getOrSet(CACHE_KEY, 60).",
+        "content.service.ts: update() writes then redis.del(slug key).",
+        "newsletter.service.ts: subscribe() wakes a dormant row once."
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "After commit",
+      "items": [
+        "contact.service.ts: send() enqueues studio + acknowledgement.",
+        "queue.service.ts: publish() defers to prisma.afterCommit().",
+        "A rolled-back write never reaches the mail queue."
+      ]
+    }
+  ]
+}

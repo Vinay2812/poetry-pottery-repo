@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Order Lifecycle After Placement",
+    "quality_profile": "showcase",
+    "viewBox": [1000, 621],
+    "views": [
+      { "id": "happy-path", "label": "Happy path", "focus": ["pending", "confirmed", "paid", "shipped", "delivered"], "note": "Admin moves the order forward one step at a time or jumps Pending straight to Paid." },
+      { "id": "cancel-paths", "label": "Cancellation paths", "focus": ["pending", "confirmed", "paid", "cancelled"], "note": "Customers self-cancel only from Pending or Confirmed; Paid+ is admin-only. Both release stock and coupon use once applyStatus commits." },
+      { "id": "refund-paths", "label": "Refund paths", "focus": ["paid", "shipped", "delivered", "refunded"], "note": "Every terminal move is guarded by a status-predicated update (one writer wins) and mails the customer only after the transaction commits." }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Order status" },
+    { "id": "terminal", "label": "Terminal outcomes" }
+  ],
+  "states": [
+    { "id": "pending", "type": "start", "label": "Pending", "sublabel": "order placed", "lane": "main", "col": 0, "step": "01", "tag": "held" },
+    { "id": "confirmed", "type": "active", "label": "Confirmed", "sublabel": "confirmed_at", "lane": "main", "col": 1, "step": "02", "tag": "held" },
+    { "id": "paid", "type": "active", "label": "Paid", "sublabel": "paid_at", "lane": "main", "col": 2, "step": "03", "tag": "held" },
+    { "id": "shipped", "type": "active", "label": "Shipped", "sublabel": "shipped_at", "lane": "main", "col": 3, "step": "04", "tag": "held" },
+    { "id": "delivered", "type": "success", "label": "Delivered", "sublabel": "delivered_at", "lane": "main", "col": 4, "step": "05", "tag": "held" },
+    { "id": "cancelled", "type": "failure", "label": "Cancelled", "sublabel": "cancelled_at", "lane": "terminal", "col": 0, "tag": "released", "height": 48 },
+    { "id": "refunded", "type": "neutral", "label": "Refunded", "sublabel": "refunded_at", "lane": "terminal", "col": 2, "tag": "released", "height": 48 }
+  ],
+  "transitions": [
+    { "id": "pending-paid-fasttrack", "from": "pending", "to": "paid", "label": "skip", "variant": "dashed", "route": "top-channel", "channelY": 75, "fromSide": "top", "toSide": "top" },
+    { "id": "pending-cancelled", "from": "pending", "to": "cancelled", "variant": "emphasis", "route": "drop", "channelY": 300, "fromSide": "bottom", "toSide": "top" },
+    { "id": "confirmed-cancelled", "from": "confirmed", "to": "cancelled", "variant": "emphasis", "route": "drop", "channelY": 340, "fromSide": "bottom", "toSide": "top" },
+    { "id": "paid-cancelled", "from": "paid", "to": "cancelled", "variant": "security", "route": "straight", "fromSide": "bottom", "toSide": "top" },
+    { "id": "paid-refunded", "from": "paid", "to": "refunded", "variant": "security", "route": "drop", "channelY": 300, "fromSide": "bottom", "toSide": "top" },
+    { "id": "shipped-refunded", "from": "shipped", "to": "refunded", "variant": "security", "route": "drop", "channelY": 340, "fromSide": "bottom", "toSide": "top" },
+    { "id": "delivered-refunded", "from": "delivered", "to": "refunded", "variant": "security", "route": "straight", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    { "dot": "amber", "title": "Guards", "items": ["Cancel: Pending or Confirmed only", "canTransition() blocks other moves", "0 rows updated -> Conflict, retry"] },
+    { "dot": "cyan", "title": "Call trace", "items": ["order-status.ts canTransition()", "orders.service.ts applyStatus()", "applyStatus() notifies after commit"] },
+    { "dot": "rose", "title": "Edge cases", "items": ["addNote() mails now, no gate", "cancel_reason lives in extra", "reorder() skips bad lines only"] }
+  ]
+}

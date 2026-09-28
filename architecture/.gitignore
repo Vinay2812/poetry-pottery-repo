@@ -1,0 +1,2 @@
+# Archify browser-check sidecars: regenerate with visual-check, never commit
+*.visual-check.*

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Event Registration Lifecycle",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 566],
+    "views": [
+      { "id": "seat-held", "label": "Seat held", "focus": ["requested", "approved", "confirmed"], "note": "All three states keep one seat decremented." },
+      { "id": "admin-gate", "label": "Admin gate", "focus": ["requested", "approved", "rejected"], "note": "Only an admin approves, confirms or rejects." },
+      { "id": "cancellation", "label": "Cancellation", "focus": ["approved", "confirmed", "cancelled"], "note": "Only an admin cancels an already-confirmed seat." }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Registration" }
+  ],
+  "states": [
+    { "id": "requested", "type": "start", "label": "Requested", "sublabel": "PENDING · seat held", "lane": "main", "col": 0, "tag": "register()" },
+    { "id": "approved", "type": "waiting", "label": "Approved", "sublabel": "APPROVED · seat held", "lane": "main", "col": 1, "tag": "admin" },
+    { "id": "confirmed", "type": "success", "label": "Confirmed", "sublabel": "CONFIRMED · seat held", "lane": "main", "col": 2, "tag": "paid" },
+    { "id": "cancelled", "type": "failure", "label": "Cancelled", "sublabel": "CANCELLED · seat released", "lane": "main", "col": 3, "tag": "terminal" },
+    { "id": "rejected", "type": "failure", "label": "Rejected", "sublabel": "REJECTED · seat released", "lane": "main", "col": 4, "tag": "terminal" }
+  ],
+  "transitions": [
+    { "from": "requested", "to": "approved", "label": "admin approves", "variant": "default", "labelAt": [171, 122] },
+    { "from": "approved", "to": "confirmed", "label": "payment confirmed", "variant": "default", "labelAt": [325, 122] },
+    { "from": "confirmed", "to": "cancelled", "label": "admin cancels (event closed)", "variant": "security", "labelAt": [479, 122] },
+    { "from": "approved", "to": "cancelled", "label": "guest or admin cancels", "variant": "dashed", "route": "bottom-channel", "fromSide": "bottom", "toSide": "bottom", "channelY": 230 },
+    { "from": "requested", "to": "rejected", "label": "admin rejects", "variant": "security", "route": "top-channel", "fromSide": "top", "toSide": "top", "channelY": 90 }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Guards", "items": ["SEAT_HOLDING covers pending, approved and confirmed", "canTransition allows only the listed admin moves", "A conditional update guards every status change"] },
+    { "dot": "violet", "title": "Call trace", "items": ["registration-status.ts: canTransition, releasesSeats", "events.service.ts: applyStatus() moves the seat count", "queue.service.ts: publish() waits for prisma.afterCommit"] },
+    { "dot": "amber", "title": "After commit", "items": ["Mail fires only on the four closing status moves", "Cancelling an event sweeps every held seat closed", "A rolled-back status change mails nobody at all"] }
+  ]
+}

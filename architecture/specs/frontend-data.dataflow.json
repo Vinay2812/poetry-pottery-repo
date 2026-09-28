@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Frontend Data Layer",
+    "output": "architecture/frontend-data.html",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 520],
+    "views": [
+      { "id": "read-path", "label": "Server and client reads", "focus": ["rsc_page", "catalog", "apollo_provider", "hooks", "graphql"], "note": "Follow the initial server read and the deferred client read to the same API." },
+      { "id": "optimistic-write", "label": "Optimistic write", "focus": ["container", "action", "graphql"], "note": "See a container patch the UI, run the mutation, then read the API back." },
+      { "id": "cache-rule", "label": "Fetch only, never hand-edit", "focus": ["apollo_provider", "container", "hooks"], "note": "The cache is written only by Apollo itself; resetStore is the one lifecycle call." }
+    ]
+  },
+  "stages": [
+    { "label": "Server" },
+    { "label": "Fetch" },
+    { "label": "Mount" },
+    { "label": "Read + write" },
+    { "label": "API" }
+  ],
+  "nodes": [
+    { "id": "rsc_page", "type": "frontend", "label": "page.tsx", "sublabel": "server component", "stage": 0, "row": 0, "width": 140 },
+    { "id": "catalog", "type": "frontend", "label": "lib/data/catalog.ts", "sublabel": "getClient().query()", "stage": 1, "row": 0, "width": 140 },
+    { "id": "apollo_provider", "type": "frontend", "label": "ApolloProvider", "sublabel": "makeClient, token ref", "stage": 1, "row": 1, "width": 140 },
+    { "id": "container", "type": "frontend", "label": "Feature container", "sublabel": "useOptimistic+patch", "stage": 2, "row": 1, "width": 140 },
+    { "id": "hooks", "type": "frontend", "label": "Generated hooks", "sublabel": "data ?? previousData", "stage": 3, "row": 1, "width": 140 },
+    { "id": "action", "type": "frontend", "label": "useOptimisticAction", "sublabel": "patch, run, refresh", "stage": 3, "row": 2, "width": 140 },
+    { "id": "graphql", "type": "backend", "label": "GraphQL /graphql", "sublabel": "bearer, IP fwd", "stage": 4, "row": 0, "width": 140 }
+  ],
+  "flows": [
+    { "id": "page-to-catalog", "from": "rsc_page", "to": "catalog", "label": "await getProduct(slug)", "variant": "default", "route": "straight", "labelDy": -22 },
+    { "id": "catalog-to-api", "from": "catalog", "to": "graphql", "label": "query, IP forwarded", "variant": "default", "route": "straight", "labelDy": -22 },
+    { "id": "provider-to-container", "from": "apollo_provider", "to": "container", "label": "client via context", "variant": "default", "route": "straight", "labelDy": -22 },
+    { "id": "container-to-hooks", "from": "container", "to": "hooks", "label": "useXQuery(...)", "variant": "default", "route": "straight", "labelDy": -22 },
+    { "id": "hooks-to-api", "from": "hooks", "to": "graphql", "label": "query", "variant": "default", "labelAt": [745, 316] },
+    { "id": "container-to-action", "from": "container", "to": "action", "label": "execute(input)", "variant": "emphasis", "labelDy": 10 },
+    { "id": "action-to-api", "from": "action", "to": "graphql", "label": "mutation", "variant": "emphasis", "labelAt": [745, 430] }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Guards",
+      "items": [
+        "Cache is fetch-only: no writeQuery, modify, evict or clearStore",
+        "resetStore() on a Clerk account change is the only lifecycle call",
+        "Baseline is the mutation payload or an awaited refetch, never optimisticResponse"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Call trace",
+      "items": [
+        "lib/data/catalog.ts:getProduct - errorPolicy all, awaited on the server",
+        "lib/apollo/rsc-client.ts:getClient - one client per request, forwards IP",
+        "lib/use-optimistic-action.ts:useOptimisticAction - patch, run, refresh, toast"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Failure",
+      "items": [
+        "A refused write rolls back via toast; refresh() retries 3x at 2s",
+        "refetchQueries by name only reaches queries mounted right now",
+        "URL-driven filters keep previous results visible, no skeleton flash"
+      ]
+    }
+  ]
+}

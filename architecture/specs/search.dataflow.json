@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Search: Indexing & Hybrid Ranking",
+    "output": "architecture/search.html",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 580],
+    "views": [
+      { "id": "indexing-pipeline", "label": "Indexing pipeline", "focus": ["admin", "queue", "indexer", "store"], "note": "An admin edit queues a job after commit; SearchConsumer embeds the text and updates the embedding column." },
+      { "id": "hybrid-rank", "label": "Hybrid ranking", "focus": ["store", "rankQuery"], "note": "rankQuery blends keyword rank, trigram similarity, and cosine distance into one order." },
+      { "id": "typeahead", "label": "Typeahead", "focus": ["rankQuery", "consumers"], "note": "SuggestService embeds the term once and reuses the vector to rank both products and events." }
+    ]
+  },
+  "stages": [
+    { "label": "Write" },
+    { "label": "Queue" },
+    { "label": "Index" },
+    { "label": "Store" },
+    { "label": "Query & Consumers" }
+  ],
+  "nodes": [
+    { "id": "admin", "type": "backend", "label": "Admin Write", "sublabel": "create / update", "stage": 0, "row": 1 },
+    { "id": "queue", "type": "messagebus", "label": "RabbitMQ", "sublabel": "after commit", "stage": 1, "row": 1 },
+    { "id": "indexer", "type": "backend", "label": "SearchConsumer", "sublabel": "embed & index", "tag": "search.consumer.ts", "stage": 2, "row": 1 },
+    { "id": "store", "type": "database", "label": "products / events", "sublabel": "hybrid columns", "tag": "GIN + pgvector", "stage": 3, "row": 1, "width": 148 },
+    { "id": "rankQuery", "type": "backend", "label": "rankQuery", "sublabel": "hybrid rank", "tag": "search.service.ts", "stage": 4, "row": 0 },
+    { "id": "consumers", "type": "backend", "label": "Consumers", "sublabel": "list + typeahead", "tag": "list + suggest", "stage": 4, "row": 2 }
+  ],
+  "flows": [
+    { "id": "queue-index", "from": "admin", "to": "queue", "label": "requestProductIndex/Event()", "classification": "queued after commit", "variant": "emphasis", "labelAt": [208, 210] },
+    { "id": "consume-job", "from": "queue", "to": "indexer", "label": "search.index-product/event", "classification": "job consumed", "variant": "default", "labelAt": [423, 210] },
+    { "id": "write-embedding", "from": "indexer", "to": "store", "label": "embed(text) → embedding", "classification": "UPDATE embedding", "variant": "emphasis", "labelAt": [638, 210] },
+    { "id": "hybrid-select", "from": "store", "to": "rankQuery", "label": "search_vector + embedding", "classification": "hybrid SELECT", "variant": "emphasis", "labelAt": [790, 170] },
+    { "id": "rank-to-consumers", "from": "rankQuery", "to": "consumers", "label": "ranked ids", "classification": "products/events list + typeahead", "variant": "default", "route": "straight", "fromSide": "bottom", "toSide": "top", "labelAt": [975, 260] }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "How it works",
+      "items": [
+        "requestProductIndex/Event queues after commit",
+        "SearchConsumer embeds text, updates embedding",
+        "rankQuery blends ts_rank·2 + similarity + (1-distance)"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "Call trace",
+      "items": [
+        "products.service.ts: rankProducts (self-embed)",
+        "suggest.service.ts: safeEmbed once, ranks both tables",
+        "search.consumer.ts: indexProduct / indexEvent"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "After commit",
+      "items": [
+        "queue.publish waits on prisma.afterCommit",
+        "Postgres trigger fills search_vector synchronously",
+        "safeEmbed returns null; keyword search still works"
+      ]
+    }
+  ]
+}

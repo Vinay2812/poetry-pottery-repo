@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Auth: Clerk Sign-in to JIT Provisioning",
+    "output": "architecture/auth.html",
+    "viewBox": [1080, 555],
+    "column_fit": "spread",
+    "quality_profile": "showcase",
+    "views": [
+      { "id": "session", "label": "Sign-in", "focus": ["shopper", "clerk", "frontend"], "note": "Clerk issues the session; the API only trusts what it can verify." },
+      { "id": "identity", "label": "Identity check", "focus": ["frontend", "authguard", "clerk", "users"], "note": "AuthGuard verifies the token, then resolves the caller's own database row." },
+      { "id": "provision", "label": "First sign-in", "focus": ["authguard", "users", "db"], "note": "A new user is locked, adopted by verified email, or created — never duplicated." }
+    ]
+  },
+  "participants": [
+    { "id": "shopper", "type": "external", "label": "Shopper", "sublabel": "browser" },
+    { "id": "clerk", "type": "external", "label": "Clerk", "sublabel": "identity" },
+    { "id": "frontend", "type": "frontend", "label": "Frontend", "sublabel": "Apollo client" },
+    { "id": "authguard", "type": "security", "label": "AuthGuard", "sublabel": "auth.guard.ts" },
+    { "id": "users", "type": "backend", "label": "Users", "sublabel": "users.service.ts" },
+    { "id": "db", "type": "database", "label": "Postgres", "sublabel": "User table" }
+  ],
+  "messages": [
+    { "id": "sign-in", "from": "shopper", "to": "clerk", "y": 160, "label": "sign in (hosted UI)", "variant": "default" },
+    { "id": "session-token", "from": "clerk", "to": "frontend", "y": 188, "label": "session + JWT", "variant": "return" },
+    { "id": "gql-request", "from": "frontend", "to": "authguard", "y": 216, "label": "GraphQL request + Bearer token", "variant": "emphasis" },
+    { "id": "verify-claims", "from": "authguard", "to": "clerk", "y": 244, "label": "getAuth(request): verify session claims", "variant": "security" },
+    { "id": "find-by-auth", "from": "authguard", "to": "users", "y": 272, "label": "findByAuth(auth_id)", "variant": "default" },
+    { "id": "select-user", "from": "users", "to": "db", "y": 300, "label": "SELECT user WHERE auth_id", "variant": "default" },
+    { "id": "no-row", "from": "db", "to": "users", "y": 328, "label": "no row (first sign-in)", "variant": "return" },
+    { "id": "get-primary-email", "from": "authguard", "to": "clerk", "y": 356, "label": "getUser(): primary email", "variant": "security", "note": "only a verified primary email may adopt an existing row" },
+    { "id": "provision-user", "from": "authguard", "to": "users", "y": 384, "label": "provisionUser(...)", "variant": "emphasis" },
+    { "id": "lock-and-write", "from": "users", "to": "db", "y": 412, "label": "advisory lock, then adopt-or-create", "variant": "emphasis" },
+    { "id": "user-row", "from": "db", "to": "users", "y": 440, "label": "user row", "variant": "return" },
+    { "id": "resolver-response", "from": "authguard", "to": "frontend", "y": 468, "label": "200 + resolver data", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "clerk", "from": 160, "to": 188, "type": "external" },
+    { "participant": "clerk", "from": 244, "to": 250, "type": "external" },
+    { "participant": "clerk", "from": 356, "to": 362, "type": "external" },
+    { "participant": "frontend", "from": 188, "to": 468, "type": "frontend" },
+    { "participant": "authguard", "from": 216, "to": 468, "type": "security" },
+    { "participant": "users", "from": 272, "to": 440, "type": "backend" },
+    { "participant": "db", "from": 300, "to": 328, "type": "database" },
+    { "participant": "db", "from": 412, "to": 440, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How it works",
+      "items": [
+        "Clerk verifies identity; AuthGuard verifies the session.",
+        "@AuthRequired/@AdminRequired guard resolvers; DB owns role.",
+        "tryAuthenticate lets public queries personalise, never blocks."
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Guards",
+      "items": [
+        "AdminGuard extends AuthGuard, then checks role === ADMIN.",
+        "User id always comes from context, never from inputs.",
+        "Clerk metadata refresh is fire-and-forget, never blocking."
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Call trace",
+      "items": [
+        "auth.guard.ts: authenticate() calls users.findByAuth().",
+        "users.service.ts: provisionUser() locks, adopts, creates.",
+        "apollo-provider.tsx: resetStore() on Clerk id change."
+      ]
+    }
+  ]
+}

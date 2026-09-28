@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Production Infrastructure",
+    "output": "architecture/infra.html",
+    "quality_profile": "showcase",
+    "viewBox": [1040, 588],
+    "views": [
+      { "id": "request-path", "label": "Request path", "focus": ["vercel", "dns", "nginx", "api", "clerk"], "note": "The storefront calls the API domain; nginx terminates TLS and proxies to the container." },
+      { "id": "data-tier", "label": "Data tier", "focus": ["api", "data"], "note": "Postgres, Redis and RabbitMQ bind the Tailscale address only, never the public internet." },
+      { "id": "deploy-path", "label": "Deploy pipeline", "focus": ["github_actions", "r2", "api"], "note": "GitHub Actions fetches a key from R2 over SSH, then runs infra/deploy.sh on the box." }
+    ]
+  },
+  "components": [
+    { "id": "vercel", "type": "frontend", "label": "Vercel", "sublabel": "storefront (Next.js)", "pos": [40, 50], "size": [150, 62] },
+    { "id": "dns", "type": "external", "label": "DNS", "sublabel": "A record → VM", "pos": [40, 230], "size": [130, 58] },
+    { "id": "github_actions", "type": "external", "label": "GitHub Actions", "sublabel": "deploy-api.yml", "pos": [40, 420], "size": [150, 62] },
+    { "id": "nginx", "type": "security", "label": "nginx", "sublabel": "TLS via Let's Encrypt", "pos": [270, 230], "size": [140, 58] },
+    { "id": "api", "type": "backend", "label": "API Container", "sublabel": "127.0.0.1:6060", "pos": [470, 230], "size": [150, 58] },
+    { "id": "data", "type": "database", "label": "Postgres · Redis · RabbitMQ", "sublabel": "Tailscale address only", "pos": [670, 216], "size": [200, 86] },
+    { "id": "clerk", "type": "security", "label": "Clerk", "sublabel": "auth", "pos": [880, 50], "size": [130, 62] },
+    { "id": "r2", "type": "cloud", "label": "Cloudflare R2", "sublabel": "env files + uploads", "pos": [880, 420], "size": [150, 62] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Production VM", "wraps": ["nginx", "api", "data"], "pad": 22 }
+  ],
+  "connections": [
+    { "from": "vercel", "to": "clerk", "label": "Clerk SDK", "variant": "security" },
+    { "from": "vercel", "to": "nginx", "label": "GraphQL, HTTPS", "variant": "emphasis" },
+    { "from": "dns", "to": "nginx", "label": "A record", "variant": "default", "labelAt": [165, 226] },
+    { "from": "nginx", "to": "api", "label": "proxy_pass", "variant": "emphasis" },
+    { "from": "api", "to": "clerk", "label": "verify session", "variant": "security" },
+    { "from": "api", "to": "data", "label": "Prisma, Redis, AMQP", "variant": "emphasis", "labelAt": [700, 316] },
+    { "from": "api", "to": "r2", "label": "uploads (S3 API)", "variant": "default" },
+    { "from": "github_actions", "to": "r2", "label": "fetch SSH key", "variant": "dashed" },
+    { "from": "github_actions", "to": "api", "label": "ssh → deploy.sh", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "How it works", "items": [
+      "nginx proxies to 127.0.0.1:6060, TLS via certbot",
+      "Data services bind the Tailscale IP, never public",
+      "deploy.sh is idempotent: setup and redeploy, one script"
+    ] },
+    { "dot": "cyan", "title": "Call trace", "items": [
+      "deploy-api.yml: fetch key from R2 → ssh → deploy.sh",
+      "deploy.sh: pull env from R2, docker compose up",
+      "deploy.sh: migrate → health check → nginx + certbot"
+    ] },
+    { "dot": "rose", "title": "Guards", "items": [
+      "ufw allows only 22, 80, 443 and tailscale0",
+      "prisma migrate deploy runs before API restarts",
+      "Health check polls /health up to 30x before failing"
+    ] }
+  ]
+}

@@ -1,0 +1,297 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Buyer Account Area: All Client-Rendered",
+    "output": "account-rendered.html",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      500
+    ],
+    "views": [
+      {
+        "id": "no-rsc",
+        "label": "No RSC fetch",
+        "focus": [
+          "shell",
+          "account",
+          "orders",
+          "bookings",
+          "addresses",
+          "wishlist"
+        ],
+        "note": "Every account route is a plain Server Component shell with zero server-side GraphQL fetch."
+      },
+      {
+        "id": "account-identity",
+        "label": "Clerk-only account",
+        "focus": [
+          "account",
+          "clerk"
+        ],
+        "note": "AccountContainer talks to Clerk directly and never calls the GraphQL API."
+      },
+      {
+        "id": "client-fetch",
+        "label": "Client Apollo fetches",
+        "focus": [
+          "orders",
+          "bookings",
+          "addresses",
+          "wishlist",
+          "api"
+        ],
+        "note": "Orders, Registrations/Bookings, Addresses, and Wishlist each run their own Apollo useQuery after hydration."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "shell",
+      "type": "frontend",
+      "label": "Account Route Shells",
+      "sublabel": "Server Component page.tsx: metadata + noindex only",
+      "pos": [
+        410,
+        20
+      ],
+      "size": [
+        260,
+        70
+      ]
+    },
+    {
+      "id": "account",
+      "type": "frontend",
+      "label": "AccountContainer",
+      "sublabel": "use client, no GraphQL query",
+      "pos": [
+        50,
+        170
+      ],
+      "size": [
+        160,
+        70
+      ]
+    },
+    {
+      "id": "orders",
+      "type": "frontend",
+      "label": "OrdersListContainer",
+      "sublabel": "useOrders(page)",
+      "pos": [
+        245,
+        170
+      ],
+      "size": [
+        160,
+        70
+      ]
+    },
+    {
+      "id": "bookings",
+      "type": "frontend",
+      "label": "Registrations & Bookings",
+      "sublabel": "event seats + wheel slots",
+      "pos": [
+        435,
+        170
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "addresses",
+      "type": "frontend",
+      "label": "AddressBookContainer",
+      "sublabel": "useAddressBook()",
+      "pos": [
+        665,
+        170
+      ],
+      "size": [
+        170,
+        70
+      ]
+    },
+    {
+      "id": "wishlist",
+      "type": "frontend",
+      "label": "WishlistProvider",
+      "sublabel": "useWishlistIds/useWishlist",
+      "pos": [
+        865,
+        170
+      ],
+      "size": [
+        160,
+        70
+      ]
+    },
+    {
+      "id": "clerk",
+      "type": "security",
+      "label": "Clerk",
+      "sublabel": "identity source",
+      "pos": [
+        55,
+        370
+      ],
+      "size": [
+        160,
+        80
+      ]
+    },
+    {
+      "id": "api",
+      "type": "backend",
+      "label": "GraphQL API + Postgres",
+      "sublabel": "NestJS resolvers, AuthRequired guard",
+      "pos": [
+        380,
+        370
+      ],
+      "size": [
+        320,
+        80
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Client-rendered: no RSC data fetch anywhere in this subtree",
+      "wraps": [
+        "account",
+        "orders",
+        "bookings",
+        "addresses",
+        "wishlist"
+      ],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    {
+      "id": "shell-account",
+      "from": "shell",
+      "to": "account",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "shell-orders",
+      "from": "shell",
+      "to": "orders",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "shell-bookings",
+      "from": "shell",
+      "to": "bookings",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "shell-addresses",
+      "from": "shell",
+      "to": "addresses",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "shell-wishlist",
+      "from": "shell",
+      "to": "wishlist",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "account-clerk",
+      "from": "account",
+      "to": "clerk",
+      "label": "useUser / useClerk",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "orders-api",
+      "from": "orders",
+      "to": "api",
+      "label": "useOrders() query",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": -40
+    },
+    {
+      "id": "bookings-api",
+      "from": "bookings",
+      "to": "api",
+      "label": "useQuery + mutations",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 40
+    },
+    {
+      "id": "addresses-api",
+      "from": "addresses",
+      "to": "api",
+      "label": "useAddressBook() CRUD",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": -40
+    },
+    {
+      "id": "wishlist-api",
+      "from": "wishlist",
+      "to": "api",
+      "label": "useWishlistIds/useWishlist",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 40
+    },
+    {
+      "id": "api-clerk",
+      "from": "api",
+      "to": "clerk",
+      "label": "Clerk context (server guard)",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "How it works",
+      "items": [
+        "page.tsx: metadata only, no server fetch",
+        "AccountContainer reads Clerk directly, no GraphQL",
+        "Other containers each run client Apollo useQuery"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Call trace",
+      "items": [
+        "AccountContainer.tsx: useUser -> useClerk",
+        "OrdersListContainer.tsx: useOrders(page) query",
+        "AddressBookContainer.tsx: useAddressBook() CRUD"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Edge cases",
+      "items": [
+        "Newsletter form lives in footer, not in /account",
+        "Orders gate: SignInWall, skeleton, EmptyOrders",
+        "WishlistProvider ids power heart icons sitewide"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Reviews: Eligibility, Uploads, Locked Writes, Rollup",
+    "output": "architecture/reviews.html",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "reviewer", "label": "Reviewer + Uploads Module" },
+    { "id": "reviews_service", "label": "Reviews Service" },
+    { "id": "admin", "label": "Admin Moderation", "variant": "exception" }
+  ],
+  "phases": [
+    { "id": "gate", "label": "Eligibility + photos", "fromCol": 0, "toCol": 1 },
+    { "id": "write", "label": "Locked write", "fromCol": 2, "toCol": 2, "variant": "emphasis" },
+    { "id": "rollup", "label": "Rollup + read", "fromCol": 3, "toCol": 4, "variant": "dashed" }
+  ],
+  "groups": [],
+  "mainPath": ["eligibility", "upload", "locked_mutate", "rollup", "storefront"],
+  "nodes": [
+    { "id": "eligibility", "lane": "reviewer", "col": 0, "type": "security", "label": "Eligibility Gate", "sublabel": "ineligibleReason()", "tag": "delivered / attended", "width": 132 },
+    { "id": "upload", "lane": "reviewer", "col": 1, "type": "external", "label": "Upload Photos", "sublabel": "issue → claim", "tag": "UploadPurpose.REVIEW", "width": 134 },
+    { "id": "locked_mutate", "lane": "reviews_service", "col": 2, "type": "backend", "label": "Locked Write", "sublabel": "lockSubject() first", "tag": "create/update/remove/hide", "width": 148 },
+    { "id": "rollup", "lane": "reviews_service", "col": 3, "type": "database", "label": "Refresh Rating", "sublabel": "refreshRating(subject)", "tag": "avg → Product/Event", "width": 132 },
+    { "id": "storefront", "lane": "reviews_service", "col": 4, "type": "frontend", "label": "Storefront List", "sublabel": "is_hidden: false", "width": 118 },
+    { "id": "blocked", "lane": "admin", "col": 1, "type": "security", "label": "Ineligible", "sublabel": "not delivered / attended", "tag": "or signed out", "width": 122 },
+    { "id": "admin_action", "lane": "admin", "col": 2, "type": "security", "label": "Admin Hide/Delete", "sublabel": "setHidden / remove(isAdmin)", "tag": "@AdminRequired()", "width": 148 }
+  ],
+  "edges": [
+    { "from": "eligibility", "to": "upload", "label": "eligible or editing my review" },
+    { "from": "eligibility", "to": "blocked", "label": "sign in / not delivered / not attended", "variant": "security", "role": "error" },
+    { "from": "upload", "to": "locked_mutate", "label": "claim(REVIEW, image_urls) in tx" },
+    { "from": "locked_mutate", "to": "rollup", "label": "refreshRating after commit" },
+    { "from": "rollup", "to": "storefront", "label": "avg + summary" },
+    { "from": "admin_action", "to": "locked_mutate", "label": "same lockSubject() + refreshRating()", "variant": "security" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Guards", "items": ["Product: order must be DELIVERED", "Event: CONFIRMED registration, event over", "Already reviewed → editing, no recheck"] },
+    { "dot": "violet", "title": "Call trace", "items": ["reviews.service.ts: ineligibleReason() gates write", "lockSubject() locks row before insert", "refreshRating() writes avg to Product/Event"] },
+    { "dot": "rose", "title": "Edge cases", "items": ["Racing creates → P2002 unique conflict", "MAX_IMAGES=3, MAX_UNCLAIMED_PER_OWNER=12", "Hidden reviews leave storefront + average"] }
+  ]
+}

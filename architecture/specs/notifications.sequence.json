@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Back-in-Stock Notifications",
+    "output": "architecture/notifications.html",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 600],
+    "column_fit": "spread",
+    "views": [
+      { "id": "watch-registration", "label": "Shopper watches a piece", "focus": ["shopper", "nextBatch", "notifSvc", "batchNotif"], "note": "canWatchPiece() only shows the form for a listed, non-customizable, sold-out piece." },
+      { "id": "restock-and-announce", "label": "Restock announces once", "focus": ["shelfSvc", "queueSvc"], "note": "ShelfService.announce() fires only on the not-buyable-to-buyable edge, after commit." },
+      { "id": "claim-and-send", "label": "Claim then mail", "focus": ["notifSvc", "batchNotif", "shopper"], "note": "updateManyAndReturn claims the waiting rows atomically before mail is enqueued." }
+    ]
+  },
+  "participants": [
+    { "id": "shopper", "type": "external", "label": "Shopper", "sublabel": "sold-out piece" },
+    { "id": "nextBatch", "type": "frontend", "label": "NextBatchContainer", "sublabel": "notify feature" },
+    { "id": "notifSvc", "type": "backend", "label": "NotificationsService", "sublabel": "watch/send" },
+    { "id": "batchNotif", "type": "database", "label": "BatchNotification", "sublabel": "email+product" },
+    { "id": "shelfSvc", "type": "backend", "label": "ShelfService", "sublabel": "stock writes" },
+    { "id": "queueSvc", "type": "messagebus", "label": "QueueService", "sublabel": "RabbitMQ" }
+  ],
+  "segments": [
+    { "from": 160, "to": 330, "label": "Watch registration" },
+    { "from": 340, "to": 530, "label": "Restock, claim, send" }
+  ],
+  "messages": [
+    { "from": "shopper", "to": "nextBatch", "y": 180, "label": "sold-out piece, submits email", "variant": "default" },
+    { "from": "nextBatch", "to": "notifSvc", "y": 208, "label": "notifyWhenBackInStock(productId, email)", "variant": "emphasis" },
+    { "from": "notifSvc", "to": "batchNotif", "y": 236, "label": "watch(): upsert, notified_at: null", "variant": "emphasis" },
+    { "from": "batchNotif", "to": "notifSvc", "y": 264, "label": "was_already_waiting", "variant": "return" },
+    { "from": "notifSvc", "to": "nextBatch", "y": 292, "label": "BatchNotificationResult", "variant": "return" },
+    { "from": "nextBatch", "to": "shopper", "y": 320, "label": "WAITING_LINE / ALREADY_WAITING_LINE", "variant": "return" },
+    { "from": "shelfSvc", "to": "queueSvc", "y": 348, "label": "announce(): becameBuyable → publish(\"notify.back-in-stock\")", "variant": "emphasis", "note": "adjust/setListed/setMadeToOrder restocked or relisted the piece" },
+    { "from": "queueSvc", "to": "notifSvc", "y": 380, "label": "afterCommit → NotificationsConsumer.backInStock() → sendBackInStock(productId)", "variant": "dashed" },
+    { "from": "notifSvc", "to": "batchNotif", "y": 412, "label": "claim: updateManyAndReturn, notified_at: null → now", "variant": "emphasis" },
+    { "from": "batchNotif", "to": "notifSvc", "y": 440, "label": "claimed rows { email, token }", "variant": "return" },
+    { "from": "notifSvc", "to": "shopper", "y": 468, "label": "mail.enqueue(backInStockMail): back-in-stock email + unsubscribe token", "variant": "dashed" }
+  ],
+  "activations": [
+    { "participant": "nextBatch", "from": 174, "to": 326, "type": "frontend" },
+    { "participant": "notifSvc", "from": 202, "to": 296, "type": "backend" },
+    { "participant": "batchNotif", "from": 230, "to": 268, "type": "database" },
+    { "participant": "shelfSvc", "from": 342, "to": 354, "type": "backend" },
+    { "participant": "queueSvc", "from": 342, "to": 386, "type": "messagebus" },
+    { "participant": "notifSvc", "from": 374, "to": 474, "type": "backend" },
+    { "participant": "batchNotif", "from": 406, "to": 444, "type": "database" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Guards", "items": [
+      "becameBuyable: fires only the not→buyable edge",
+      "Claim before send: updateManyAndReturn flips notified_at",
+      "publish() waits on prisma.afterCommit; rollback drops it"
+    ] },
+    { "dot": "orange", "title": "Call trace", "items": [
+      "shelf.service.ts: announce() → queue.service.ts: publish()",
+      "notifications.consumer.ts: backInStock() parses payload",
+      "notifications.service.ts: sendBackInStock() claims + mails"
+    ] },
+    { "dot": "rose", "title": "Edge cases", "items": [
+      "Made-to-order/inactive piece: watch() throws, no row made",
+      "Re-ask after mailed: upsert resets notified_at to null",
+      "stopWatching(token): deleteMany; 404 if link already used"
+    ] }
+  ]
+}

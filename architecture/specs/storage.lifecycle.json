@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Upload Lifecycle",
+    "output": "architecture/storage.html",
+    "quality_profile": "showcase",
+    "viewBox": [1030, 580],
+    "views": [
+      { "id": "shopper-path", "label": "Shopper uploads", "focus": ["issued", "pending", "claimed"], "note": "A presigned upload is claimed directly by cart, review or order-note flows." },
+      { "id": "console-path", "label": "Console verification", "focus": ["pending", "confirming", "rejected"], "note": "Admin uploads must pass a dimension and ratio check before claimConfirmed() can attach them." },
+      { "id": "cleanup-path", "label": "Cleanup", "focus": ["pending", "expired"], "note": "An unclaimed upload expires 24h after it was issued." }
+    ]
+  },
+  "lanes": [
+    { "id": "main", "label": "Lifecycle" },
+    { "id": "console", "label": "Outcomes" }
+  ],
+  "states": [
+    { "id": "issued", "type": "start", "label": "Issued", "sublabel": "presign + pending row", "lane": "main", "col": 0, "step": "01" },
+    { "id": "pending", "type": "active", "label": "Pending", "sublabel": "claimed_at: null", "lane": "main", "col": 2, "step": "02" },
+    { "id": "claimed", "type": "success", "label": "Claimed", "sublabel": "attached to entity", "lane": "main", "col": 4, "step": "03" },
+    { "id": "confirming", "type": "decision", "label": "Confirm Check", "sublabel": "sharp + IMAGE_SPECS", "lane": "console", "col": 0 },
+    { "id": "expired", "type": "failure", "label": "Expired", "sublabel": "DB + R2 delete, 1 txn", "lane": "console", "col": 1 },
+    { "id": "rejected", "type": "failure", "label": "Rejected", "sublabel": "row + object deleted", "lane": "console", "col": 0, "yOffset": 90 }
+  ],
+  "transitions": [
+    { "id": "issued-pending", "from": "issued", "to": "pending", "label": "24h expiry job scheduled", "variant": "default" },
+    { "id": "pending-claimed", "from": "pending", "to": "claimed", "label": "claim() in caller's tx", "variant": "emphasis", "route": "straight" },
+    { "id": "pending-confirming", "from": "pending", "to": "confirming", "label": "console upload", "variant": "default", "route": "drop" },
+    { "id": "confirming-rejected", "from": "confirming", "to": "rejected", "label": "spec check fails", "variant": "security", "route": "drop", "labelAt": [402, 350] },
+    { "id": "pending-expired", "from": "pending", "to": "expired", "label": "24h unclaimed", "variant": "security", "labelDx": 90 }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "How it works", "items": [
+      "issue() presigns, writes a row, schedules 24h expiry",
+      "claim() runs inside the caller's own transaction",
+      "claimConfirmed() attaches a console-verified upload"
+    ] },
+    { "dot": "cyan", "title": "Call trace", "items": [
+      "uploads.service.ts: issue() → createImageUpload()",
+      "uploads.service.ts: confirm() → checkImage()",
+      "uploads.service.ts: expire() → deleteObject()"
+    ] },
+    { "dot": "rose", "title": "Edge cases", "items": [
+      "expire() deletes DB row and R2 object in one txn",
+      "release() deletes the row, then queues R2 delete",
+      "sweepStale() self-heals a lost expiry job after 25h"
+    ] }
+  ]
+}

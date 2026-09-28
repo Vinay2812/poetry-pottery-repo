@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Storefront Shell",
+    "output": "architecture/shell.html",
+    "quality_profile": "showcase",
+    "viewBox": [1000, 480],
+    "views": [
+      { "id": "providers", "label": "Providers above the router", "focus": ["storefront_layout", "cart_provider", "wishlist_provider", "graphql_api"], "note": "Cart and wishlist mount above the router, so counts survive navigation." },
+      { "id": "header", "label": "The header's two variants", "focus": ["storefront_layout", "header", "search"], "note": "toFocusedHeader picks full or focused by pathname." },
+      { "id": "auth-stamp", "label": "Proxy stamp gates the RSC client", "focus": ["proxy", "root_layout", "storefront_layout"], "note": "rsc-client.ts only calls Clerk when the proxy stamped the request." }
+    ]
+  },
+  "components": [
+    { "id": "proxy", "type": "cloud", "label": "proxy.ts", "sublabel": "clerkMiddleware() stamps request", "pos": [40, 24], "size": [230, 56] },
+    { "id": "root_layout", "type": "frontend", "label": "app/layout.tsx", "sublabel": "ClerkProvider > ApolloProvider > Toaster", "pos": [40, 126], "size": [230, 60] },
+    { "id": "storefront_layout", "type": "frontend", "label": "(storefront)/layout.tsx", "sublabel": "getSiteSettings() once per render", "pos": [385, 20], "size": [250, 54] },
+    { "id": "cart_provider", "type": "frontend", "label": "CartProvider", "sublabel": "cartCount, skipped signed out", "pos": [385, 114], "size": [250, 54] },
+    { "id": "wishlist_provider", "type": "frontend", "label": "WishlistProvider", "sublabel": "wishlistIds, adoptIds lending", "pos": [385, 208], "size": [250, 54] },
+    { "id": "header", "type": "frontend", "label": "SiteHeaderContainer", "sublabel": "toFocusedHeader(pathname)", "pos": [385, 302], "size": [250, 58] },
+    { "id": "search", "type": "frontend", "label": "SearchMenuContainer", "sublabel": "Suggest query, 200ms debounce", "pos": [385, 400], "size": [250, 54] },
+    { "id": "graphql_api", "type": "backend", "label": "GraphQL /graphql", "sublabel": "cartCount, wishlistIds, suggest(q)", "pos": [740, 190], "size": [225, 58] }
+  ],
+  "connections": [
+    { "id": "proxy-to-root", "from": "proxy", "to": "root_layout", "label": "stamps x-clerk-auth-status", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "root-to-storefront", "from": "root_layout", "to": "storefront_layout", "label": "renders route", "variant": "emphasis", "fromSide": "right", "toSide": "left", "labelAt": [250, 110] },
+    { "id": "storefront-to-cart", "from": "storefront_layout", "to": "cart_provider", "label": "mounts above router", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "storefront-to-wishlist", "from": "storefront_layout", "to": "wishlist_provider", "fromSide": "left", "toSide": "left", "via": [[350, 47], [350, 235]] },
+    { "id": "storefront-to-header", "from": "storefront_layout", "to": "header", "label": "contactPhone, whatsappUrl", "fromSide": "left", "toSide": "left", "via": [[320, 47], [320, 331]], "labelAt": [300, 316] },
+    { "id": "header-to-search", "from": "header", "to": "search", "label": "opens panel", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "cart-to-api", "from": "cart_provider", "to": "graphql_api", "label": "cartCount", "fromSide": "right", "toSide": "top" },
+    { "id": "wishlist-to-api", "from": "wishlist_provider", "to": "graphql_api", "label": "wishlistIds", "fromSide": "right", "toSide": "left" },
+    { "id": "search-to-api", "from": "search", "to": "graphql_api", "label": "suggest(q)", "fromSide": "right", "toSide": "bottom" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Guards",
+      "items": [
+        "Both providers mount above the router, so counts survive navigation",
+        "Focused header only on /cart and /checkout, everything else full",
+        "rsc-client.ts calls Clerk only when the proxy stamped the request"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Call trace",
+      "items": [
+        "proxy.ts:proxy - stamps x-clerk-auth-status on every request",
+        "(storefront)/layout.tsx:StorefrontLayout - awaits getSiteSettings() once",
+        "SiteHeaderContainer.tsx - toFocusedHeader(pathname) picks the variant"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Edge cases",
+      "items": [
+        "An unstamped render (static asset) is served signed out, not crashed",
+        "adoptIds lends wishlist ids so the ids query is skipped once",
+        "Search recents live in localStorage, capped at five terms"
+      ]
+    }
+  ]
+}

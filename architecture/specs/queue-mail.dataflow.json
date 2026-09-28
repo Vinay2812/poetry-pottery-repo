@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Queue and Mail Jobs",
+    "output": "architecture/queue-mail.html",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 560],
+    "views": [
+      { "id": "commit-path", "label": "Settle after commit", "focus": ["domain_service", "after_commit", "exchange"], "note": "A job only reaches the broker once the owning transaction commits." },
+      { "id": "consume-path", "label": "In-process consumers", "focus": ["exchange", "consumer"], "note": "Six job types are validated with zod and handled in the same API process." },
+      { "id": "effect-path", "label": "Where jobs land", "focus": ["consumer", "mail_sink", "storage_search_sink"], "note": "Mail is delivered over SMTP; storage and search jobs touch R2 and Postgres." }
+    ]
+  },
+  "stages": [
+    { "label": "Transaction" },
+    { "label": "Publish" },
+    { "label": "Broker" },
+    { "label": "Consume" },
+    { "label": "Effect" }
+  ],
+  "nodes": [
+    { "id": "domain_service", "type": "backend", "label": "Domain Service", "sublabel": "withTransaction()", "stage": 0, "row": 1, "tag": "Orders / Shelf" },
+    { "id": "after_commit", "type": "backend", "label": "afterCommit()", "sublabel": "QueueService.publish", "stage": 1, "row": 1, "tag": "prisma.service.ts" },
+    { "id": "exchange", "type": "messagebus", "label": "poetry exchange", "sublabel": "topic, durable", "stage": 2, "row": 1, "tag": "RabbitMQ" },
+    { "id": "consumer", "type": "backend", "label": "In-process Consumer", "sublabel": "@SubscribeJob", "stage": 3, "row": 1, "tag": "same API process" },
+    { "id": "mail_sink", "type": "external", "label": "SMTP", "sublabel": "MailService.deliver", "stage": 4, "row": 0, "tag": "nodemailer" },
+    { "id": "storage_search_sink", "type": "cloud", "label": "R2 / Postgres", "sublabel": "delete object, embed", "stage": 4, "row": 2, "tag": "async effects" }
+  ],
+  "flows": [
+    { "id": "job-payload", "from": "domain_service", "to": "after_commit", "label": "job payload (zod schema)", "variant": "emphasis", "labelDy": -26 },
+    { "id": "publish", "from": "after_commit", "to": "exchange", "label": "publish (persistent)", "variant": "emphasis", "labelDy": -26 },
+    { "id": "deliver", "from": "exchange", "to": "consumer", "label": "6 job types, routed by name", "variant": "emphasis", "labelDy": -26 },
+    { "id": "mail-send", "from": "consumer", "to": "mail_sink", "label": "mail.send", "variant": "default" },
+    { "id": "storage-search", "from": "consumer", "to": "storage_search_sink", "label": "storage.delete-object, search.index-*", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "emerald", "title": "How it works", "items": [
+      "afterCommit() defers publish until commit",
+      "6 jobs: search.index-*, notify.back-in-stock, mail.send, storage.delete-object, upload.expire",
+      "Consumers run in-process (QUEUE_CONSUMERS_ENABLED)"
+    ] },
+    { "dot": "cyan", "title": "Call trace", "items": [
+      "queue.service.ts: publish() → prisma.afterCommit()",
+      "orders.service.ts: applyStatus() → mail.enqueue()",
+      "mail.consumer.ts: handle() → MailService.deliver()"
+    ] },
+    { "dot": "rose", "title": "Failure", "items": [
+      "Retries 5x, 60s delay, x-attempt header",
+      "Exhausted or ZodError → poetry.dead-letters",
+      "Replay with pnpm queue:replay"
+    ] }
+  ]
+}

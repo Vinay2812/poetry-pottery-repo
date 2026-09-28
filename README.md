@@ -120,21 +120,8 @@ Each app validates `process.env` with zod at boot and fails fast. `.env.example`
 
 ## Architecture
 
-[`architecture/index.html`](architecture/index.html) — 24 pages, one per system (auth, catalogue and search, commissions, cart, notifications, checkout, events, workshops, studio visits, reviews, queue, uploads, admin, the storefront shell, frontend data, …), each with a diagram, the algorithm and its guards, a call trace through the real files, edge cases and the specs that cover it. Self-contained HTML; open it from disk.
+[`architecture/index.html`](architecture/index.html) is the map: one interactive diagram per system, drawn from the current code with the [Archify](https://github.com/tt-a1i/archify) skill (`npx skills add tt-a1i/archify -g`). Each page lets you pan, zoom, search and play guided views, and its cards hold the rules that keep the system correct and the call trace through the real files. Start with [`architecture/overview.html`](architecture/overview.html). The diagrams are generated from the JSON in [`architecture/specs/`](architecture/specs/README.md); edit the JSON and regenerate, never the HTML. The pages are self-contained and open from disk.
 
-## Branches
+## History
 
-The rewrite is built as one PR per feature, each stacked on the previous branch. All ten PRs are open and none is merged. The commit graph is one strictly linear line from `origin/main` to `feat/admin-ui`, with the documentation branch on the end, so every pull request base is also the real parent. [`architecture/branches.html`](architecture/branches.html) has the measured counts and the commands that produce them.
-
-| Branch                     | Adds                                                                                                                                                                               | PR  |
-| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
-| `feat/platform-foundation` | Schema, queue, throttling, storefront shell                                                                                                                                        | #1  |
-| `feat/catalog`             | Products, hybrid keyword + semantic search, filters, product pages                                                                                                                 | #2  |
-| `feat/cart-wishlist`       | Cart and wishlist, server-priced customisations, optimistic updates                                                                                                                | #3  |
-| `feat/checkout`            | Checkout, orders, saved addresses, coupons, account page                                                                                                                           | #4  |
-| `feat/events`              | Events with seat-guarded registrations and bookings pages                                                                                                                          | #5  |
-| `feat/workshops`           | Open-studio session booking, capacity-aware availability                                                                                                                           | #6  |
-| `feat/design-refresh`      | Sharp/zero-radius direction, legacy catalogue import, archive gallery, made-to-order reference photos, seconds, glazes, piece facts, motion pass, concurrency hardening, the brand | #7  |
-| `feat/reviews`             | Product and event reviews with photos, the subject lock, gated presigns, the upload cap, the cleanup job                                                                           | #8  |
-| `feat/admin`               | Admin API: catalogue, glazes, orders, events, workshops, visits, commissions, coupons, content, users, waiting list                                                                | #9  |
-| `feat/admin-ui`            | Admin console shell, tables and forms for every module, the printable packing slip                                                                                                 | #10 |
+The rewrite was built as one pull request per feature and has since been merged into `main`; `git log --first-parent main` lists every merge in order.
