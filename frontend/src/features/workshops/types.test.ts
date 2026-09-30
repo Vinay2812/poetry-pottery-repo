@@ -377,6 +377,7 @@ describe("toDayNote", () => {
   it("counts the wheels a bookable day still has", () => {
     expect(toDayNote(day)).toEqual({
       caption: "6 wheels free",
+      shortCaption: "6 free",
       description: "6 wheels free",
       isPickable: true,
     });
@@ -388,6 +389,7 @@ describe("toDayNote", () => {
   it("tells a past day apart from a closed one", () => {
     expect(toDayNote({ ...day, isPast: true, isClosed: true })).toEqual({
       caption: "past",
+      shortCaption: "past",
       description: "past",
       isPickable: false,
     });
@@ -419,6 +421,7 @@ describe("toDayNote", () => {
       }),
     ).toEqual({
       caption: "too far",
+      shortCaption: "too far",
       description: "pick within 7 days of your first slot",
       isPickable: false,
     });

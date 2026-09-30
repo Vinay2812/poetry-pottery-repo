@@ -53,35 +53,39 @@ function DayCell({ day, isSelected, onSelect }: DayCellProps) {
       aria-label={`${day.dayLabel}, ${note.description}`}
       onClick={() => onSelect(day.dateKey)}
       className={cn(
-        "flex aspect-square flex-col items-center justify-center gap-0.5 bg-background transition-colors",
+        "flex aspect-square flex-col items-center justify-center gap-1 bg-background transition-colors",
         isSelected && "bg-ink text-white",
         !isSelected && !isDisabled && "hover:bg-secondary",
         isDisabled && "text-muted-foreground/50",
       )}
     >
       <span className="text-sm tnum">{day.dayNumber}</span>
-      {day.pickedCount > 0 ? (
-        <span
-          aria-hidden="true"
-          className={cn(
-            "flex gap-0.5",
-            isSelected ? "text-white" : "text-primary",
-          )}
-        >
-          {Array.from({ length: day.pickedCount }, (_, mark) => (
-            <span key={mark} className="size-1 bg-current" />
-          ))}
-        </span>
-      ) : (
-        <span
-          className={cn(
-            "px-1 text-center text-[10px] leading-tight tnum",
-            isSelected ? "text-white/70" : "text-muted-foreground",
-          )}
-        >
-          {note.caption}
-        </span>
-      )}
+      {/* One fixed-height line under every number, so the numbers in a week line up. */}
+      <span className="flex h-3.5 items-center">
+        {day.pickedCount > 0 ? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "flex gap-0.5",
+              isSelected ? "text-white" : "text-primary",
+            )}
+          >
+            {Array.from({ length: day.pickedCount }, (_, mark) => (
+              <span key={mark} className="size-1 bg-current" />
+            ))}
+          </span>
+        ) : (
+          <span
+            className={cn(
+              "text-[10px] leading-none whitespace-nowrap tnum",
+              isSelected ? "text-white/70" : "text-muted-foreground",
+            )}
+          >
+            <span className="sm:hidden">{note.shortCaption}</span>
+            <span className="hidden sm:inline">{note.caption}</span>
+          </span>
+        )}
+      </span>
     </button>
   );
 }
@@ -172,7 +176,7 @@ export function BookingCalendar({
               </div>
               {slotPanel &&
                 week.some((day) => day?.dateKey === selectedDate) && (
-                  <div className="bg-background p-4">{slotPanel}</div>
+                  <div className="bg-background py-5">{slotPanel}</div>
                 )}
             </Fragment>
           ))}
