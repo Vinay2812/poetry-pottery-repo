@@ -341,6 +341,8 @@ interface CalendarDayState {
 
 interface DayNote {
   caption: string;
+  // Fits a phone-width day cell on one line.
+  shortCaption: string;
   description: string;
   isPickable: boolean;
 }
@@ -349,11 +351,17 @@ interface DayNote {
 // reach of the hours already picked. "Studio closed" was answering all four.
 export function toDayNote(day: CalendarDayState): DayNote {
   if (day.isPast) {
-    return { caption: "past", description: "past", isPickable: false };
+    return {
+      caption: "past",
+      shortCaption: "past",
+      description: "past",
+      isPickable: false,
+    };
   }
   if (day.closedKind === DayClosedKind.NotYetOpen) {
     return {
       caption: "not yet",
+      shortCaption: "not yet",
       description: "bookings not open yet",
       isPickable: false,
     };
@@ -361,6 +369,7 @@ export function toDayNote(day: CalendarDayState): DayNote {
   if (day.closedKind === DayClosedKind.FullyBooked) {
     return {
       caption: "full",
+      shortCaption: "full",
       description: "no wheels free",
       isPickable: false,
     };
@@ -368,6 +377,7 @@ export function toDayNote(day: CalendarDayState): DayNote {
   if (day.closedKind === DayClosedKind.NoSessionsLeft) {
     return {
       caption: "none left",
+      shortCaption: "none left",
       description: "no sessions left today",
       isPickable: false,
     };
@@ -375,6 +385,7 @@ export function toDayNote(day: CalendarDayState): DayNote {
   if (day.isClosed) {
     return {
       caption: "closed",
+      shortCaption: "closed",
       description: "studio closed",
       isPickable: false,
     };
@@ -382,6 +393,7 @@ export function toDayNote(day: CalendarDayState): DayNote {
   if (day.wheelsFree <= 0) {
     return {
       caption: "full",
+      shortCaption: "full",
       description: "no wheels free",
       isPickable: false,
     };
@@ -389,6 +401,7 @@ export function toDayNote(day: CalendarDayState): DayNote {
   if (day.mutedReason) {
     return {
       caption: "too far",
+      shortCaption: "too far",
       description: day.mutedReason.toLowerCase(),
       isPickable: false,
     };
@@ -396,6 +409,7 @@ export function toDayNote(day: CalendarDayState): DayNote {
   const free = formatWheels(day.wheelsFree);
   return {
     caption: free,
+    shortCaption: `${day.wheelsFree} free`,
     description:
       day.pickedCount > 0 ? `${free}, ${day.pickedCount} picked` : free,
     isPickable: true,

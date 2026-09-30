@@ -27,7 +27,11 @@ export function SlotList({
     return <p className="text-[13px] text-muted-foreground">{emptyMessage}</p>;
   }
   return (
-    <div role="group" aria-label="Hours" className="flex flex-wrap gap-2">
+    <div
+      role="group"
+      aria-label="Hours"
+      className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+    >
       {slots.map((slot) => {
         const isPicked = selectedStarts.includes(slot.startsAt);
         return (
