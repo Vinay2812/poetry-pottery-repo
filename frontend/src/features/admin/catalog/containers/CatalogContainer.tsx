@@ -17,7 +17,7 @@ import {
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
-import { isCategoryPieceKind } from "@/components/media/categoryPieces";
+import { isCategoryPieceKind } from "@/components/media/categoryKinds";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type {
   AdminCategoryFormValues,

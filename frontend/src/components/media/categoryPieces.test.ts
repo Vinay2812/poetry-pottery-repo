@@ -2,12 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { parsePath } from "@/lib/drawing/vessel";
 
+import { CATEGORY_PIECE_KINDS } from "./categoryKinds";
 import {
-  CATEGORY_PIECE_OPTIONS,
   toCategoryPiece,
   toCategoryPieceKind,
   toCategoryTileKind,
-  type CategoryPieceKind,
 } from "./categoryPieces";
 
 describe("toCategoryPieceKind", () => {
@@ -53,28 +52,9 @@ describe("toCategoryTileKind", () => {
   });
 });
 
-const KINDS: CategoryPieceKind[] = [
-  "mug",
-  "bowl",
-  "plate",
-  "vase",
-  "planter",
-  "serving-dish",
-  "small-things",
-  "accessories",
-  "wood-fired",
-];
-
-describe("CATEGORY_PIECE_OPTIONS", () => {
-  it("offers every drawing exactly once", () => {
-    const offered = CATEGORY_PIECE_OPTIONS.map((option) => option.kind);
-    expect([...offered].sort()).toEqual([...KINDS].sort());
-  });
-});
-
 describe("toCategoryPiece", () => {
   it("draws every kind with clay, hatching and an outline", () => {
-    for (const kind of KINDS) {
+    for (const kind of CATEGORY_PIECE_KINDS) {
       const [main, ...rest] = toCategoryPiece(kind).elements;
       expect(main.body.startsWith("M")).toBe(true);
       expect(main.hatch.length).toBeGreaterThan(0);
