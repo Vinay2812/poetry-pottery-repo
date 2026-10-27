@@ -276,3 +276,31 @@ export function toCategoryPieceKind(slug: string): CategoryPieceKind {
   }
   return "small-things";
 }
+
+/** The drawings an admin can pick for a category, in the order the picker lists them. */
+export const CATEGORY_PIECE_OPTIONS: {
+  kind: CategoryPieceKind;
+  label: string;
+}[] = [
+  { kind: "mug", label: "Mug" },
+  { kind: "bowl", label: "Bowl" },
+  { kind: "plate", label: "Plate" },
+  { kind: "vase", label: "Vase" },
+  { kind: "planter", label: "Planter" },
+  { kind: "serving-dish", label: "Serving dish" },
+  { kind: "accessories", label: "Ring dish" },
+  { kind: "wood-fired", label: "Wood-fired bottle" },
+  { kind: "small-things", label: "Small things" },
+];
+
+export function isCategoryPieceKind(value: string): value is CategoryPieceKind {
+  return (KINDS as string[]).includes(value);
+}
+
+// The icon chosen in admin wins; without one the slug still guesses a shape.
+export function toCategoryTileKind(
+  icon: string | null,
+  slug: string,
+): CategoryPieceKind {
+  return icon && isCategoryPieceKind(icon) ? icon : toCategoryPieceKind(slug);
+}
