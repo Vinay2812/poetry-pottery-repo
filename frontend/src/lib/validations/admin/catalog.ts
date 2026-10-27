@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { isCategoryPieceKind } from "@/components/media/categoryKinds";
+
 const NAME = z
   .string()
   .trim()
@@ -8,7 +10,12 @@ const NAME = z
 
 export const adminCategorySchema = z.object({
   name: NAME,
-  icon: z.string().trim().max(40, "Icon must be 40 characters or fewer"),
+  icon: z
+    .string()
+    .refine(
+      (value): boolean => value === "" || isCategoryPieceKind(value),
+      "Pick a drawing from the list",
+    ),
   sort_order: z
     .string()
     .trim()

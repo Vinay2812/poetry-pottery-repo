@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
+import { CATEGORY_PIECE_OPTIONS } from "@/components/media/categoryKinds";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -68,15 +69,22 @@ export function CategoryEditorForm({
         <AdminField
           id={`${idPrefix}-icon`}
           label="Icon"
-          hint="The drawn icon the storefront uses, by name."
+          hint="Drawn on the home page when the category has no image."
           error={errors.icon?.message}
         >
-          <Input
+          <select
             id={`${idPrefix}-icon`}
-            className="h-9 text-[13px]"
+            className="h-9 w-full border border-ash bg-transparent px-2.5 text-[13px] outline-none focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary"
             aria-invalid={Boolean(errors.icon)}
             {...register("icon")}
-          />
+          >
+            <option value="">Guess from the name</option>
+            {CATEGORY_PIECE_OPTIONS.map((option) => (
+              <option key={option.kind} value={option.kind}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </AdminField>
         <AdminField
           id={`${idPrefix}-sort-order`}

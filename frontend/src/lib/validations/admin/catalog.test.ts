@@ -48,6 +48,12 @@ describe("adminCategorySchema", () => {
     ).toBe(true);
   });
 
+  it("only takes an icon the storefront can draw", () => {
+    expect(firstCategoryError({ icon: "teapot" })).toBe(
+      "Pick a drawing from the list",
+    );
+  });
+
   it("only counts whole numbers as a sort order", () => {
     expect(firstCategoryError({ sort_order: "-1" })).toBe(
       "Sort order must be a whole number",

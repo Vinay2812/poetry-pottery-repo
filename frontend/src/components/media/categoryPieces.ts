@@ -25,7 +25,13 @@ import {
 
 const AXIS = 100;
 
-export type CategoryPieceKind = PotteryIconKind | "accessories" | "wood-fired";
+import {
+  CATEGORY_PIECE_KINDS,
+  isCategoryPieceKind,
+  type CategoryPieceKind,
+} from "./categoryKinds";
+
+export type { CategoryPieceKind };
 
 /** A kiln blush on one side: a warm haze and the hatching that flashed with it. */
 interface FlashMark {
@@ -224,20 +230,8 @@ function woodFiredBottle(): CategoryPieceDrawing {
   };
 }
 
-const KINDS: CategoryPieceKind[] = [
-  "mug",
-  "bowl",
-  "plate",
-  "vase",
-  "planter",
-  "serving-dish",
-  "small-things",
-  "accessories",
-  "wood-fired",
-];
-
 const DRAWINGS = Object.fromEntries(
-  KINDS.map((kind) => {
+  CATEGORY_PIECE_KINDS.map((kind) => {
     if (kind === "accessories") return [kind, ringDish()];
     if (kind === "wood-fired") return [kind, woodFiredBottle()];
     return [kind, fromVessel(kind)];
@@ -275,4 +269,12 @@ export function toCategoryPieceKind(slug: string): CategoryPieceKind {
     if (text.includes(keyword)) return kind;
   }
   return "small-things";
+}
+
+// The icon chosen in admin wins; without one the slug still guesses a shape.
+export function toCategoryTileKind(
+  icon: string | null,
+  slug: string,
+): CategoryPieceKind {
+  return icon && isCategoryPieceKind(icon) ? icon : toCategoryPieceKind(slug);
 }

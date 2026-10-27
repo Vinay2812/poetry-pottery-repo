@@ -17,6 +17,7 @@ import {
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
+import { isCategoryPieceKind } from "@/components/media/categoryKinds";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type {
   AdminCategoryFormValues,
@@ -144,7 +145,8 @@ export function CatalogContainer() {
     if (!editedCategory) return EMPTY_CATEGORY_FORM;
     return {
       name: editedCategory.name,
-      icon: editedCategory.icon,
+      // A free-text icon from before the picker existed reads as "guess from the slug".
+      icon: isCategoryPieceKind(editedCategory.icon) ? editedCategory.icon : "",
       sort_order: String(editedCategory.sortOrder),
     };
   }, [editedCategory]);

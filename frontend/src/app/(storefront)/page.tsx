@@ -85,7 +85,8 @@ export default async function HomePage() {
                 href={`/products?category=${category.slug}`}
                 slug={category.slug}
                 name={category.name}
-                imageUrl={category.image_url}
+                icon={category.icon ?? null}
+                imageUrl={category.image_url ?? null}
                 productCount={category.product_count}
               />
             ))}

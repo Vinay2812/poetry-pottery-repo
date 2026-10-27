@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { parsePath } from "@/lib/drawing/vessel";
 
+import { CATEGORY_PIECE_KINDS } from "./categoryKinds";
 import {
   toCategoryPiece,
   toCategoryPieceKind,
-  type CategoryPieceKind,
+  toCategoryTileKind,
 } from "./categoryPieces";
 
 describe("toCategoryPieceKind", () => {
@@ -38,21 +39,22 @@ describe("toCategoryPieceKind", () => {
   });
 });
 
-const KINDS: CategoryPieceKind[] = [
-  "mug",
-  "bowl",
-  "plate",
-  "vase",
-  "planter",
-  "serving-dish",
-  "small-things",
-  "accessories",
-  "wood-fired",
-];
+describe("toCategoryTileKind", () => {
+  it("draws the icon chosen in admin over the slug's guess", () => {
+    expect(toCategoryTileKind("vase", "mugs")).toBe("vase");
+    expect(toCategoryTileKind("wood-fired", "gift-cards")).toBe("wood-fired");
+  });
+
+  it("guesses from the slug when no icon or an unknown one is set", () => {
+    expect(toCategoryTileKind(null, "mugs")).toBe("mug");
+    expect(toCategoryTileKind("", "bowls")).toBe("bowl");
+    expect(toCategoryTileKind("teapot", "planters")).toBe("planter");
+  });
+});
 
 describe("toCategoryPiece", () => {
   it("draws every kind with clay, hatching and an outline", () => {
-    for (const kind of KINDS) {
+    for (const kind of CATEGORY_PIECE_KINDS) {
       const [main, ...rest] = toCategoryPiece(kind).elements;
       expect(main.body.startsWith("M")).toBe(true);
       expect(main.hatch.length).toBeGreaterThan(0);

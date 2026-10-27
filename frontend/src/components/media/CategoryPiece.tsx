@@ -3,7 +3,7 @@ import { useId } from "react";
 import { ClayGradients } from "@/components/media/ClayGradients";
 import {
   toCategoryPiece,
-  toCategoryPieceKind,
+  toCategoryTileKind,
   type PieceElement,
 } from "@/components/media/categoryPieces";
 import { VESSEL_BOX } from "@/components/media/vessels";
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 export interface CategoryPieceProps {
   slug: string;
+  icon?: string | null;
   className?: string;
 }
 
@@ -145,8 +146,12 @@ function Element({
  * The piece a category is named after, drawn and shaded like the hero jar
  * rather than outlined. Decorative: the category name is always beside it.
  */
-export function CategoryPiece({ slug, className }: CategoryPieceProps) {
-  const piece = toCategoryPiece(toCategoryPieceKind(slug));
+export function CategoryPiece({
+  slug,
+  icon = null,
+  className,
+}: CategoryPieceProps) {
+  const piece = toCategoryPiece(toCategoryTileKind(icon, slug));
   const id = useId();
   const clayId = `${id}-clay`;
   const highlightId = `${id}-highlight`;
