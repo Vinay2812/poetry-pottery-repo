@@ -336,10 +336,11 @@ export class ProductsService {
     return rows.map(toProduct);
   }
 
+  // The home shelf shows pieces that are ready to ship; made-to-order work has its own banner.
   async featured(limit: number): Promise<Product[]> {
     const take = Math.min(12, Math.max(1, limit));
     const rows = await this.prisma.product.findMany({
-      where: availableProductWhere(),
+      where: { ...availableProductWhere(), is_customizable: false },
       include: productListInclude,
       orderBy: SORT_ORDER[ProductSort.FEATURED],
       take,

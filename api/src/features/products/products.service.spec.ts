@@ -256,6 +256,15 @@ describe("ProductsService", () => {
     );
   });
 
+  it("keeps made-to-order pieces off the featured shelf", async () => {
+    prismaMock.product.findMany.mockResolvedValue([]);
+
+    await service.featured(8);
+
+    const args: unknown = prismaMock.product.findMany.mock.calls[0]?.[0];
+    expect(args).toMatchObject({ where: { is_customizable: false }, take: 8 });
+  });
+
   it("lists every category and collection, even empty ones", async () => {
     prismaMock.product.findMany.mockResolvedValue([]);
 
