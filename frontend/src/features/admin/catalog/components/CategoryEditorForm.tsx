@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 
-import { CATEGORY_PIECE_OPTIONS } from "@/components/media/categoryPieces";
+import { CATEGORY_PIECE_OPTIONS } from "@/components/media/categoryKinds";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 

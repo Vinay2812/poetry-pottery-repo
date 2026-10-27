@@ -29,7 +29,7 @@ export function CategoryTile({
       className="group flex flex-col items-center gap-3 py-2 text-center"
     >
       {imageUrl ? (
-        <span className="relative block size-16 tilt-straighten overflow-hidden md:size-20">
+        <span className="relative block size-16 overflow-hidden md:size-20">
           <Image
             src={imageUrl}
             alt=""
