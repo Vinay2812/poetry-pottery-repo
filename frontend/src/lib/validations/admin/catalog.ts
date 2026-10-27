@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { isCategoryPieceKind } from "@/components/media/categoryPieces";
+import { isCategoryPieceKind } from "@/components/media/categoryKinds";
 
 const NAME = z
   .string()
