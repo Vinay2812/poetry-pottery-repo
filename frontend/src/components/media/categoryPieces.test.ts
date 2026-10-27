@@ -3,8 +3,10 @@ import { describe, expect, it } from "vitest";
 import { parsePath } from "@/lib/drawing/vessel";
 
 import {
+  CATEGORY_PIECE_OPTIONS,
   toCategoryPiece,
   toCategoryPieceKind,
+  toCategoryTileKind,
   type CategoryPieceKind,
 } from "./categoryPieces";
 
@@ -38,6 +40,19 @@ describe("toCategoryPieceKind", () => {
   });
 });
 
+describe("toCategoryTileKind", () => {
+  it("draws the icon chosen in admin over the slug's guess", () => {
+    expect(toCategoryTileKind("vase", "mugs")).toBe("vase");
+    expect(toCategoryTileKind("wood-fired", "gift-cards")).toBe("wood-fired");
+  });
+
+  it("guesses from the slug when no icon or an unknown one is set", () => {
+    expect(toCategoryTileKind(null, "mugs")).toBe("mug");
+    expect(toCategoryTileKind("", "bowls")).toBe("bowl");
+    expect(toCategoryTileKind("teapot", "planters")).toBe("planter");
+  });
+});
+
 const KINDS: CategoryPieceKind[] = [
   "mug",
   "bowl",
@@ -49,6 +64,13 @@ const KINDS: CategoryPieceKind[] = [
   "accessories",
   "wood-fired",
 ];
+
+describe("CATEGORY_PIECE_OPTIONS", () => {
+  it("offers every drawing exactly once", () => {
+    const offered = CATEGORY_PIECE_OPTIONS.map((option) => option.kind);
+    expect([...offered].sort()).toEqual([...KINDS].sort());
+  });
+});
 
 describe("toCategoryPiece", () => {
   it("draws every kind with clay, hatching and an outline", () => {
