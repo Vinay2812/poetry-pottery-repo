@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { AdminSiteSettingsFieldsFragment } from "@/graphql/generated/graphql";
 
 import {
+  canAddCommissionStep,
+  describeCommissionStepCount,
   describeSaved,
   emptyPageValues,
   formatRupeeField,
@@ -39,6 +41,11 @@ const settings: AdminSiteSettingsFieldsFragment = {
   hero_cta_text: "Shop the shelf",
   hero_cta_href: "/products",
   hero_image_url: "https://cdn.example.com/hero.jpg",
+  commission_intro: "Tell us what to make.",
+  commission_steps: [
+    { title: "You send the brief", detail: "In the form below." },
+    { title: "It ships", detail: "Packed in straw." },
+  ],
   announcement_text: null,
   announcement_href: null,
   updated_at: "2026-09-14T06:30:00.000Z",
@@ -117,6 +124,26 @@ describe("settings form values", () => {
     expect(input.hero_image_url).toBe("https://cdn.example.com/hero.jpg");
   });
 
+  it("sends the commission steps without the GraphQL typename", () => {
+    // Apollo adds __typename at runtime, and the input type would reject it.
+    const values = toSettingsFormValues({
+      ...settings,
+      commission_steps: settings.commission_steps.map((step) =>
+        Object.assign({ __typename: "CommissionStep" }, step),
+      ),
+    });
+    expect(values.commission_intro).toBe("Tell us what to make.");
+    expect(values.commission_steps).toEqual([
+      { title: "You send the brief", detail: "In the form below." },
+      { title: "It ships", detail: "Packed in straw." },
+    ]);
+
+    expect(toSettingsInput(values, null).commission_steps).toEqual([
+      { title: "You send the brief", detail: "In the form below." },
+      { title: "It ships", detail: "Packed in straw." },
+    ]);
+  });
+
   it("sends an empty string when the hero image is cleared", () => {
     expect(
       toSettingsInput(toSettingsFormValues(settings), null).hero_image_url,
@@ -171,6 +198,19 @@ describe("nextIndex", () => {
     expect(nextIndex(3, 2, 1)).toBeNull();
     expect(nextIndex(3, 1, 1)).toBe(2);
     expect(nextIndex(3, 1, -1)).toBe(0);
+  });
+});
+
+describe("commission steps", () => {
+  it("stops adding steps at eight", () => {
+    expect(canAddCommissionStep(7)).toBe(true);
+    expect(canAddCommissionStep(8)).toBe(false);
+  });
+
+  it("counts the steps against the limit", () => {
+    expect(describeCommissionStepCount(5)).toBe(
+      "5 of 8 steps. They show on /custom in this order.",
+    );
   });
 });
 

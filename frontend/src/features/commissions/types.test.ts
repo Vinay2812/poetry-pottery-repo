@@ -6,7 +6,6 @@ import {
 } from "@/lib/validations/commission";
 
 import {
-  COMMISSION_STEPS,
   toBriefSummary,
   toCommissionAskUrl,
   toCommissionInput,
@@ -31,15 +30,6 @@ function values(
     ...overrides,
   };
 }
-
-describe("COMMISSION_STEPS", () => {
-  it("runs brief, sketch, throw, fire, ship in that order", () => {
-    expect(COMMISSION_STEPS).toHaveLength(5);
-    expect(COMMISSION_STEPS[0]?.title).toContain("brief");
-    expect(COMMISSION_STEPS[1]?.detail).toContain("price");
-    expect(COMMISSION_STEPS[4]?.title).toContain("ten days");
-  });
-});
 
 describe("toCommissionInput", () => {
   it("sends the optional fields as null rather than empty strings", () => {

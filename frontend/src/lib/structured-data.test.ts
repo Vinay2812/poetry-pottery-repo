@@ -175,6 +175,8 @@ describe("toStudioJsonLd", () => {
       hero_image_url: "",
       hero_cta_text: "",
       hero_cta_href: "",
+      commission_intro: "",
+      commission_steps: [],
     };
     const node = toStudioJsonLd(settings);
     expect(node).toMatchObject({

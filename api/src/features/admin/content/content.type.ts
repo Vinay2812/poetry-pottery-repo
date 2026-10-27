@@ -1,6 +1,15 @@
 import { Field, InputType, Int } from "@nestjs/graphql";
 
 @InputType()
+export class CommissionStepInput {
+  @Field()
+  title!: string;
+
+  @Field()
+  detail!: string;
+}
+
+@InputType()
 export class AdminSiteSettingsInput {
   @Field(() => String, { nullable: true })
   contact_phone?: string | null;
@@ -53,6 +62,13 @@ export class AdminSiteSettingsInput {
 
   @Field(() => String, { nullable: true })
   hero_cta_href?: string | null;
+
+  @Field(() => String, { nullable: true })
+  commission_intro?: string | null;
+
+  // Replaces the whole list, in the order sent.
+  @Field(() => [CommissionStepInput], { nullable: true })
+  commission_steps?: CommissionStepInput[] | null;
 }
 
 @InputType()

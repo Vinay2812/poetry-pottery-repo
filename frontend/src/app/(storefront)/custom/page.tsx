@@ -11,7 +11,6 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 import { pageMetadata, toSiteUrl } from "@/lib/seo";
 
 import {
-  COMMISSION_STEPS,
   CommissionBriefContainer,
   CommissionSteps,
   toGlazeChoices,
@@ -59,20 +58,21 @@ export default async function CustomPage({
             Commission a piece
           </h1>
           <p className="max-w-2xl text-muted-foreground">
-            Tell us what to make, how big and in which glaze. We sketch it,
-            throw it and fire it, and it reaches you in about ten days.
+            {settings.commission_intro}
           </p>
         </header>
       </Reveal>
 
-      <Reveal>
-        <section className="flex flex-col gap-5 border-t border-ash pt-10">
-          <h2 className="font-heading text-2xl tracking-tight">
-            How a commission runs
-          </h2>
-          <CommissionSteps steps={COMMISSION_STEPS} />
-        </section>
-      </Reveal>
+      {settings.commission_steps.length > 0 && (
+        <Reveal>
+          <section className="flex flex-col gap-5 border-t border-ash pt-10">
+            <h2 className="font-heading text-2xl tracking-tight">
+              How a commission runs
+            </h2>
+            <CommissionSteps steps={settings.commission_steps} />
+          </section>
+        </Reveal>
+      )}
 
       {pieces.length > 0 && (
         <Reveal isGroup>

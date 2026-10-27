@@ -399,6 +399,8 @@ type AdminReviewsResult {
 
 input AdminSiteSettingsInput {
   address: String
+  commission_intro: String
+  commission_steps: [CommissionStepInput!]
   contact_email: String
   contact_phone: String
   dispatch_days_max: Int
@@ -713,6 +715,16 @@ enum CommissionStatus {
   DECLINED
   NEW
   SKETCHED
+}
+
+type CommissionStep {
+  detail: String!
+  title: String!
+}
+
+input CommissionStepInput {
+  detail: String!
+  title: String!
 }
 
 type ConfirmedImage {
@@ -1403,6 +1415,8 @@ type SiteSettings {
   address: String!
   announcement_href: String
   announcement_text: String
+  commission_intro: String!
+  commission_steps: [CommissionStep!]!
   contact_email: String!
   contact_phone: String!
   dispatch_days_max: Int!

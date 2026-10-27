@@ -4,7 +4,8 @@ import type { Prisma, SiteSettings } from "@prisma/client";
 import { PrismaService } from "@/prisma/prisma.service";
 import { RedisService } from "@/redis/redis.service";
 
-const CACHE_KEY = "settings:site";
+// Bump the suffix when the row gains columns, so a deploy never serves a cached row without them.
+const CACHE_KEY = "settings:site:v2";
 const CACHE_TTL_SECONDS = 60;
 
 @Injectable()

@@ -40,6 +40,13 @@ declare global {
     }
 
     type ContentSections = ContentSection[];
+
+    interface CommissionStep {
+      title: string;
+      detail: string;
+    }
+
+    type CommissionSteps = CommissionStep[];
   }
 }
 

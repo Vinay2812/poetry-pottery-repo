@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, useWatch } from "react-hook-form";
+import { useFieldArray, useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 
@@ -12,7 +12,13 @@ import {
   type SiteSettingsFormValues,
 } from "@/lib/validations/admin/content";
 
-import { describeDispatchWindow } from "@/features/admin/content/types";
+import {
+  canAddCommissionStep,
+  describeCommissionStepCount,
+  describeDispatchWindow,
+  EMPTY_COMMISSION_STEP,
+  nextIndex,
+} from "@/features/admin/content/types";
 
 import { ContentTextField } from "./ContentTextField";
 
@@ -54,6 +60,11 @@ export function SiteSettingsForm({
     resolver: zodResolver(siteSettingsSchema),
     defaultValues,
   });
+
+  const steps = useFieldArray({ control, name: "commission_steps" });
+  const stepCount = steps.fields.length;
+  const stepsError =
+    errors.commission_steps?.message ?? errors.commission_steps?.root?.message;
 
   const dispatchMin = useWatch({ control, name: "dispatch_days_min" });
   const dispatchMax = useWatch({ control, name: "dispatch_days_max" });
@@ -215,6 +226,108 @@ export function SiteSettingsForm({
       </SettingsGroup>
 
       {heroField}
+
+      <fieldset className="flex flex-col gap-4 border-t border-ash pt-4">
+        <legend className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+          Commission page
+        </legend>
+        <ContentTextField
+          id="settings-commission-intro"
+          label="Intro"
+          hint="The line under “Commission a piece” on /custom."
+          error={errors.commission_intro?.message}
+          isMultiline
+          registration={register("commission_intro")}
+        />
+
+        <div className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-[12px] text-muted-foreground">
+              {describeCommissionStepCount(stepCount)}
+            </span>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={!canAddCommissionStep(stepCount)}
+              onClick={() => steps.append({ ...EMPTY_COMMISSION_STEP })}
+            >
+              Add step
+            </Button>
+          </div>
+          {stepsError && (
+            <p role="alert" className="text-[12px] text-destructive">
+              {stepsError}
+            </p>
+          )}
+          {steps.fields.map((step, index) => {
+            const stepErrors = errors.commission_steps?.[index];
+            const position = index + 1;
+            const up = nextIndex(stepCount, index, -1);
+            const down = nextIndex(stepCount, index, 1);
+            return (
+              <div
+                key={step.id}
+                className="flex flex-col gap-3 border border-ash p-4"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-[12px] text-muted-foreground">
+                    Step {position}
+                  </span>
+                  <span className="flex gap-1">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon-sm"
+                      aria-label={`Move step ${position} up`}
+                      disabled={up === null}
+                      onClick={() => up !== null && steps.move(index, up)}
+                    >
+                      ↑
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon-sm"
+                      aria-label={`Move step ${position} down`}
+                      disabled={down === null}
+                      onClick={() => down !== null && steps.move(index, down)}
+                    >
+                      ↓
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      aria-label={`Remove step ${position}`}
+                      disabled={stepCount === 1}
+                      onClick={() => steps.remove(index)}
+                    >
+                      Remove
+                    </Button>
+                  </span>
+                </div>
+                <ContentTextField
+                  id={`settings-commission-step-${index}-title`}
+                  label="Title"
+                  hint={null}
+                  error={stepErrors?.title?.message}
+                  isMultiline={false}
+                  registration={register(`commission_steps.${index}.title`)}
+                />
+                <ContentTextField
+                  id={`settings-commission-step-${index}-detail`}
+                  label="Detail"
+                  hint={null}
+                  error={stepErrors?.detail?.message}
+                  isMultiline
+                  registration={register(`commission_steps.${index}.detail`)}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </fieldset>
 
       <div className="flex gap-3">
         <Button type="submit" size="sm" disabled={isSaving}>

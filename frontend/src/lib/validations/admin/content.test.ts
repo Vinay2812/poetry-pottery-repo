@@ -44,6 +44,10 @@ function settingsValues(overrides: Record<string, unknown> = {}) {
     hero_subheading: "Stoneware and terracotta from a small wheel studio.",
     hero_cta_text: "Shop the shelf",
     hero_cta_href: "/products",
+    commission_intro: "Tell us what to make.",
+    commission_steps: [
+      { title: "You send the brief", detail: "In the form below." },
+    ],
     ...overrides,
   };
 }
@@ -214,6 +218,79 @@ describe("siteSettingsSchema", () => {
   });
 });
 
+describe("siteSettingsSchema commission steps", () => {
+  const step = { title: "You send the brief", detail: "In the form below." };
+
+  it("trims the intro and each step", () => {
+    const result = siteSettingsSchema.parse(
+      settingsValues({
+        commission_intro: "  Tell us.  ",
+        commission_steps: [{ title: " Brief ", detail: " Send it. " }],
+      }),
+    );
+    expect(result.commission_intro).toBe("Tell us.");
+    expect(result.commission_steps).toEqual([
+      { title: "Brief", detail: "Send it." },
+    ]);
+  });
+
+  it("needs at least one step and at most eight", () => {
+    expect(
+      firstError(
+        siteSettingsSchema.safeParse(settingsValues({ commission_steps: [] })),
+      ),
+    ).toBe("Add at least one step");
+    expect(
+      firstError(
+        siteSettingsSchema.safeParse(
+          settingsValues({ commission_steps: Array(9).fill(step) }),
+        ),
+      ),
+    ).toBe("The page shows at most 8 steps");
+    expect(
+      siteSettingsSchema.safeParse(
+        settingsValues({ commission_steps: Array(8).fill(step) }),
+      ).success,
+    ).toBe(true);
+  });
+
+  it("refuses a blank or overlong step", () => {
+    expect(
+      firstError(
+        siteSettingsSchema.safeParse(
+          settingsValues({ commission_steps: [{ title: "  ", detail: "x" }] }),
+        ),
+      ),
+    ).toBe("A step title is required");
+    expect(
+      firstError(
+        siteSettingsSchema.safeParse(
+          settingsValues({
+            commission_steps: [{ title: "a".repeat(81), detail: "x" }],
+          }),
+        ),
+      ),
+    ).toBe("A step title must be 80 characters or fewer");
+    expect(
+      firstError(
+        siteSettingsSchema.safeParse(
+          settingsValues({
+            commission_steps: [{ title: "x", detail: "a".repeat(241) }],
+          }),
+        ),
+      ),
+    ).toBe("A step detail must be 240 characters or fewer");
+  });
+
+  it("needs an intro", () => {
+    expect(
+      firstError(
+        siteSettingsSchema.safeParse(settingsValues({ commission_intro: " " })),
+      ),
+    ).toBe("Commission intro is required");
+  });
+});
+
 describe("announcementSchema", () => {
   it("accepts an empty bar", () => {
     const result = announcementSchema.safeParse({ text: "", href: "" });
@@ -263,6 +340,8 @@ describe("siteSettingsSchema dispatch window", () => {
       hero_subheading: "One kiln, one shelf",
       hero_cta_text: "See the shelf",
       hero_cta_href: "/products",
+      commission_intro: "Tell us what to make.",
+      commission_steps: [{ title: "Brief", detail: "Send it." }],
       ...overrides,
     };
   }

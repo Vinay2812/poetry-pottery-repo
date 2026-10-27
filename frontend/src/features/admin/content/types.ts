@@ -6,10 +6,11 @@ import type {
 } from "@/graphql/generated/graphql";
 
 import { formatDateTime } from "@/lib/format";
-import type {
-  AnnouncementFormValues,
-  ContentPageFormValues,
-  SiteSettingsFormValues,
+import {
+  type AnnouncementFormValues,
+  COMMISSION_STEPS_MAX,
+  type ContentPageFormValues,
+  type SiteSettingsFormValues,
 } from "@/lib/validations/admin/content";
 
 import type { AdminStatusTone } from "@/features/admin/ui";
@@ -35,6 +36,22 @@ export const EMPTY_SECTION: ContentPageFormValues["sections"][number] = {
 };
 
 export const EMPTY_ITEM = { title: "", body: "" };
+
+export const EMPTY_COMMISSION_STEP = { title: "", detail: "" };
+
+export function canAddCommissionStep(count: number): boolean {
+  return count < COMMISSION_STEPS_MAX;
+}
+
+export function describeCommissionStepCount(count: number): string {
+  return `${count} of ${COMMISSION_STEPS_MAX} steps. They show on /custom in this order.`;
+}
+
+function toCommissionSteps(
+  steps: readonly { title: string; detail: string }[],
+): SiteSettingsFormValues["commission_steps"] {
+  return steps.map((step) => ({ title: step.title, detail: step.detail }));
+}
 
 export function emptyPageValues(): ContentPageFormValues {
   return {
@@ -114,6 +131,8 @@ export function toSettingsFormValues(
     hero_subheading: settings.hero_subheading,
     hero_cta_text: settings.hero_cta_text,
     hero_cta_href: settings.hero_cta_href,
+    commission_intro: settings.commission_intro,
+    commission_steps: toCommissionSteps(settings.commission_steps),
   };
 }
 
@@ -145,6 +164,8 @@ export function toSettingsPatch(
     hero_cta_text: values.hero_cta_text,
     hero_cta_href: values.hero_cta_href,
     hero_image_url: heroImageUrl ?? "",
+    commission_intro: values.commission_intro,
+    commission_steps: toCommissionSteps(values.commission_steps),
   };
 }
 
