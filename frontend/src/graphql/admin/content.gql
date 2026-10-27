@@ -33,6 +33,11 @@ fragment AdminSiteSettingsFields on SiteSettings {
   hero_cta_text
   hero_cta_href
   hero_image_url
+  commission_intro
+  commission_steps {
+    title
+    detail
+  }
   announcement_text
   announcement_href
   updated_at

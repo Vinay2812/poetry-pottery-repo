@@ -112,6 +112,14 @@ function dayCount(label: string) {
     );
 }
 
+// Mirrors the API limits on the steps under "How a commission runs".
+export const COMMISSION_STEPS_MAX = 8;
+
+const commissionStepSchema = z.object({
+  title: requiredText("A step title", 80),
+  detail: requiredText("A step detail", 240),
+});
+
 export const siteSettingsSchema = z
   .object({
     contact_email: z
@@ -144,6 +152,14 @@ export const siteSettingsSchema = z
       .trim()
       .min(1, "Hero button link is required")
       .refine(isHref, "Use a path like /products or a full URL"),
+    commission_intro: requiredText("Commission intro", 400),
+    commission_steps: z
+      .array(commissionStepSchema)
+      .min(1, "Add at least one step")
+      .max(
+        COMMISSION_STEPS_MAX,
+        `The page shows at most ${COMMISSION_STEPS_MAX} steps`,
+      ),
   })
   // A window that ends before it starts is not a sentence anyone can read.
   .refine(

@@ -19,5 +19,10 @@ query SiteSettings {
     hero_image_url
     hero_cta_text
     hero_cta_href
+    commission_intro
+    commission_steps {
+      title
+      detail
+    }
   }
 }

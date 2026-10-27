@@ -1,6 +1,15 @@
 import { Field, Int, ObjectType } from "@nestjs/graphql";
 
 @ObjectType()
+export class CommissionStep {
+  @Field()
+  title!: string;
+
+  @Field()
+  detail!: string;
+}
+
+@ObjectType()
 export class SiteSettings {
   @Field()
   contact_phone!: string;
@@ -58,6 +67,12 @@ export class SiteSettings {
 
   @Field()
   hero_cta_href!: string;
+
+  @Field()
+  commission_intro!: string;
+
+  @Field(() => [CommissionStep])
+  commission_steps!: CommissionStep[];
 
   @Field()
   updated_at!: Date;

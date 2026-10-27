@@ -39,7 +39,7 @@ describe("SettingsService", () => {
 
     await expect(service.get()).resolves.toEqual(settingsRow);
     expect(redisMock.getOrSet).toHaveBeenCalledWith(
-      "settings:site",
+      "settings:site:v2",
       60,
       expect.any(Function),
     );
@@ -54,6 +54,6 @@ describe("SettingsService", () => {
       where: { id: 1 },
       data: { shipping_flat_fee: 200 },
     });
-    expect(redisMock.del).toHaveBeenCalledWith("settings:site");
+    expect(redisMock.del).toHaveBeenCalledWith("settings:site:v2");
   });
 });

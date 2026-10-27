@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import type { SiteSettings } from "@prisma/client";
+import { z } from "zod";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { RedisService } from "@/redis/redis.service";
@@ -24,6 +25,7 @@ import { UploadPurpose } from "@/uploads/uploads.type";
 import type {
   AdminAnnouncementInput,
   AdminSiteSettingsInput,
+  CommissionStepInput,
 } from "./content.type";
 
 // The dispatch window is one sentence to a customer, so it has to read forwards.
@@ -39,6 +41,59 @@ export function assertDispatchDays(min: number, max: number): void {
   if (max > 120) {
     throw new BadRequestException("Dispatch cannot be more than 120 days out");
   }
+}
+
+export const COMMISSION_STEPS_MAX = 8;
+
+const commissionStepsSchema = z
+  .array(
+    z.object({
+      title: z
+        .string()
+        .trim()
+        .min(1, "Every commission step needs a title")
+        .max(80, "A step title must be 80 characters or fewer"),
+      detail: z
+        .string()
+        .trim()
+        .min(1, "Every commission step needs a detail line")
+        .max(240, "A step detail must be 240 characters or fewer"),
+    }),
+  )
+  .min(1, "The commission page needs at least one step")
+  .max(
+    COMMISSION_STEPS_MAX,
+    `The commission page can show at most ${COMMISSION_STEPS_MAX} steps`,
+  );
+
+const commissionIntroSchema = z
+  .string()
+  .trim()
+  .min(1, "The commission intro cannot be empty")
+  .max(400, "The commission intro must be 400 characters or fewer");
+
+function parseOrThrow<T>(schema: z.ZodType<T>, value: unknown): T {
+  const result = schema.safeParse(value);
+  if (!result.success) {
+    throw new BadRequestException(
+      result.error.issues[0]?.message ?? "Check the commission page",
+    );
+  }
+  return result.data;
+}
+
+// Steps are stored as JSON, so this schema is the only thing standing between the form and /custom.
+export function parseCommissionSteps(
+  steps: CommissionStepInput[],
+): PrismaJson.CommissionSteps {
+  return parseOrThrow(commissionStepsSchema, steps).map((step) => ({
+    title: step.title,
+    detail: step.detail,
+  }));
+}
+
+export function parseCommissionIntro(intro: string): string {
+  return parseOrThrow(commissionIntroSchema, intro);
 }
 
 @Injectable()
@@ -107,6 +162,14 @@ export class AdminContentService {
         "The free shipping threshold cannot be negative",
       );
     }
+    const commissionSteps =
+      input.commission_steps == null
+        ? null
+        : parseCommissionSteps(input.commission_steps);
+    const commissionIntro =
+      input.commission_intro == null
+        ? null
+        : parseCommissionIntro(input.commission_intro);
     const hero = input.hero_image_url?.trim() || null;
     const stored = await this.settings.get();
     assertDispatchDays(
@@ -171,6 +234,12 @@ export class AdminContentService {
       ...(input.hero_cta_href == null
         ? {}
         : { hero_cta_href: input.hero_cta_href.trim() }),
+      ...(commissionIntro === null
+        ? {}
+        : { commission_intro: commissionIntro }),
+      ...(commissionSteps === null
+        ? {}
+        : { commission_steps: commissionSteps }),
     });
   }
 

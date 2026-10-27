@@ -4,11 +4,6 @@ import type { CommissionFormValues } from "@/lib/validations/commission";
 
 import { buildWhatsAppUrl } from "@/features/layout/types";
 
-export interface CommissionStep {
-  title: string;
-  detail: string;
-}
-
 // A glaze as the brief form shows it: the name is what gets filed, the colour is the swatch.
 export interface GlazeChoice {
   slug: string;
@@ -71,31 +66,6 @@ export function toGlazeChoices(
     colorCode: glaze.color_code,
   }));
 }
-
-// The real sequence a commission runs through, with the two waits it actually has.
-export const COMMISSION_STEPS: CommissionStep[] = [
-  {
-    title: "You send the brief",
-    detail: "The piece, the size, the glaze and the words, in the form below.",
-  },
-  {
-    title: "We sketch it, within two days",
-    detail: "A drawing and a price come back by email. Nothing is owed yet.",
-  },
-  {
-    title: "It is thrown",
-    detail: "One sitting at the wheel, then a week drying to leather-hard.",
-  },
-  {
-    title: "It is glazed and fired",
-    detail:
-      "Bisque, then the glaze firing at 1225°C. The kiln decides the rest.",
-  },
-  {
-    title: "It ships, about ten days in",
-    detail: "Packed in straw and paper, tracked, to the address you give us.",
-  },
-];
 
 export function toCommissionInput(
   values: CommissionFormValues,

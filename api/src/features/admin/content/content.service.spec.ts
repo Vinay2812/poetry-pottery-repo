@@ -149,6 +149,75 @@ describe("AdminContentService", () => {
     ).resolves.toBeDefined();
   });
 
+  it("saves the commission steps trimmed and in the order sent", async () => {
+    await service.updateSettings({
+      commission_intro: "  Tell us what to make.  ",
+      commission_steps: [
+        { title: " You send the brief ", detail: " In the form below. " },
+        { title: "It ships", detail: "Packed in straw." },
+      ],
+    });
+
+    expect(settingsMock.update).toHaveBeenCalledWith({
+      commission_intro: "Tell us what to make.",
+      commission_steps: [
+        { title: "You send the brief", detail: "In the form below." },
+        { title: "It ships", detail: "Packed in straw." },
+      ],
+    });
+  });
+
+  it("leaves the commission steps alone when they are not sent", async () => {
+    await service.updateSettings({ hero_heading: "Made by hand" });
+
+    expect(settingsMock.update).toHaveBeenCalledWith({
+      hero_heading: "Made by hand",
+    });
+  });
+
+  it("refuses an empty list of commission steps", async () => {
+    await expect(
+      service.updateSettings({ commission_steps: [] }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(settingsMock.update).not.toHaveBeenCalled();
+  });
+
+  it("refuses more than eight commission steps", async () => {
+    const step = { title: "Step", detail: "Detail" };
+
+    await expect(
+      service.updateSettings({ commission_steps: Array(9).fill(step) }),
+    ).rejects.toThrow("at most 8 steps");
+  });
+
+  it("refuses a commission step that is only whitespace", async () => {
+    await expect(
+      service.updateSettings({
+        commission_steps: [{ title: "   ", detail: "Detail" }],
+      }),
+    ).rejects.toThrow("needs a title");
+  });
+
+  it("refuses commission step text past its limits", async () => {
+    await expect(
+      service.updateSettings({
+        commission_steps: [{ title: "a".repeat(81), detail: "Detail" }],
+      }),
+    ).rejects.toThrow("80 characters");
+
+    await expect(
+      service.updateSettings({
+        commission_steps: [{ title: "Title", detail: "a".repeat(241) }],
+      }),
+    ).rejects.toThrow("240 characters");
+  });
+
+  it("refuses an empty commission intro", async () => {
+    await expect(
+      service.updateSettings({ commission_intro: "  " }),
+    ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
   it("takes the announcement bar down and drops its link", async () => {
     await service.updateAnnouncement({ text: "  ", href: "/shop" });
 

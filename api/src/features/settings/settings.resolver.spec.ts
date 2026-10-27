@@ -41,6 +41,10 @@ function makeSettings(overrides: Partial<SiteSettings> = {}): SiteSettings {
     hero_image_url: "https://images.example.com/hero.jpg",
     hero_cta_text: "Shop the shelf",
     hero_cta_href: "/shop",
+    commission_intro: "Tell us what to make.",
+    commission_steps: [
+      { title: "You send the brief", detail: "In the form below." },
+    ],
     updated_at: new Date("2026-01-01T00:00:00.000Z"),
     ...overrides,
   };

@@ -13,7 +13,7 @@ export function CommissionSteps({ steps }: CommissionStepsProps) {
     <ol className="grid gap-px bg-ash sm:grid-cols-2 lg:grid-cols-5">
       {steps.map((step, index) => (
         <li
-          key={step.title}
+          key={`${index}:${step.title}`}
           className="flex flex-col gap-2 bg-background p-5 lg:p-6"
         >
           <span className="text-[11px] tracking-[0.18em] text-muted-foreground tnum">
