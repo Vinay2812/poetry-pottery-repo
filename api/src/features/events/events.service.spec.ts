@@ -7,11 +7,13 @@ import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
 import { SearchService } from "@/features/search/search.service";
 import {
+  aheadRegistrationWhere,
   EventsService,
   eventWhenWhere,
   isPastEvent,
   splitPage,
 } from "./events.service";
+import { SEAT_HOLDING } from "./registration-status";
 import { EventWhen } from "./events.type";
 
 const containing = (value: Record<string, unknown>): unknown =>
@@ -190,6 +192,69 @@ describe("splitPage", () => {
       second: { skip: 0, take: 6 },
     });
   });
+
+  it("goes straight to the second list when the first is empty", () => {
+    expect(splitPage(page(1), 0)).toEqual({
+      first: { skip: 0, take: 0 },
+      second: { skip: 0, take: 12 },
+    });
+  });
+
+  it("points a page past both lists beyond the second list's end", () => {
+    // With 3 ahead and 14 behind there are 17 rows; page five starts at row 48.
+    expect(splitPage(page(5), 3)).toEqual({
+      first: { skip: 3, take: 0 },
+      second: { skip: 45, take: 12 },
+    });
+  });
+});
+
+describe("aheadRegistrationWhere", () => {
+  const now = new Date("2026-09-12T12:00:00Z");
+  const where = aheadRegistrationWhere(now);
+
+  // Reads the where clause the way Postgres would, for the fields it filters on.
+  function matchesWhere(row: {
+    status: RegistrationStatus;
+    eventStatus: EventStatus;
+    endsAt: Date;
+  }): boolean {
+    const clause = where as {
+      status: { in: RegistrationStatus[] };
+      event: { status: { not: EventStatus }; ends_at: { gte: Date } };
+    };
+    return (
+      clause.status.in.includes(row.status) &&
+      row.eventStatus !== clause.event.status.not &&
+      row.endsAt >= clause.event.ends_at.gte
+    );
+  }
+
+  const endings = {
+    ended: new Date("2026-09-12T11:00:00Z"),
+    endingNow: now,
+    ahead: new Date("2026-09-12T13:00:00Z"),
+  };
+  const rows = Object.values(RegistrationStatus).flatMap((status) =>
+    [EventStatus.PUBLISHED, EventStatus.COMPLETED].flatMap((eventStatus) =>
+      Object.entries(endings).map(([label, endsAt]) => ({
+        label: `${status} · ${eventStatus} · ${label}`,
+        status,
+        eventStatus,
+        endsAt,
+      })),
+    ),
+  );
+
+  it.each(rows)(
+    "agrees with isPastEvent and SEAT_HOLDING for $label",
+    (row) => {
+      const expected =
+        SEAT_HOLDING.includes(row.status) &&
+        !isPastEvent({ status: row.eventStatus, ends_at: row.endsAt }, now);
+      expect(matchesWhere(row)).toBe(expected);
+    },
+  );
 });
 
 describe("EventsService", () => {

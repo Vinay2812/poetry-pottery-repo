@@ -51,6 +51,7 @@ type RegistrationRow = Prisma.EventRegistrationGetPayload<{
   include: typeof registrationInclude;
 }>;
 
+// aheadRegistrationWhere must mirror this rule in its event clause; the spec checks the two agree.
 export function isPastEvent(
   event: Pick<EventRow, "status" | "ends_at">,
   now = new Date(),
@@ -59,7 +60,9 @@ export function isPastEvent(
 }
 
 // Ahead means a seat still held at a date that has not ended: the bookings a shopper comes to check.
-function aheadRegistrationWhere(now: Date): Prisma.EventRegistrationWhereInput {
+export function aheadRegistrationWhere(
+  now: Date,
+): Prisma.EventRegistrationWhereInput {
   return {
     status: { in: [...SEAT_HOLDING] },
     event: { status: { not: EventStatus.COMPLETED }, ends_at: { gte: now } },
