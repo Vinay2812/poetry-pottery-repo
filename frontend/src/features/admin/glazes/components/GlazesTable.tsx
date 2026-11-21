@@ -13,8 +13,7 @@ import {
 
 import { GlazeSwatch } from "@/features/admin/glazes/components/GlazeSwatch";
 import {
-  canDeleteGlaze,
-  describeGlazeInUse,
+  describeGlazeDeleteBlock,
   describePieces,
   type GlazeRow,
 } from "@/features/admin/glazes/types";
@@ -63,8 +62,9 @@ export function GlazesTable({
         {rows.length === 0 && !isNewRowOpen && (
           <AdminEmptyRow colSpan={COLUMN_COUNT} message={emptyMessage} />
         )}
-        {rows.map((row) =>
-          isEditorOpen && editorRowId === row.id ? (
+        {rows.map((row) => {
+          const inUseNote = describeGlazeDeleteBlock(row.productCount);
+          return isEditorOpen && editorRowId === row.id ? (
             <tr key={row.id}>
               <td colSpan={COLUMN_COUNT} className="border-b border-ash p-3">
                 {editor}
@@ -107,42 +107,43 @@ export function GlazesTable({
                   >
                     Edit
                   </Button>
-                  {/* The reason rides on the disabled button: hover shows it, a screen reader reads it. */}
-                  <span
-                    title={
-                      canDeleteGlaze(row.productCount)
-                        ? undefined
-                        : describeGlazeInUse(row.productCount)
+                  {/* Focusable even when in use, so a keyboard reaches the reason; the click does nothing. */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={isEditorOpen}
+                    aria-disabled={inUseNote !== null}
+                    title={inUseNote ?? undefined}
+                    className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent"
+                    aria-label={`Delete ${row.name}`}
+                    aria-describedby={
+                      inUseNote ? `glaze-${row.id}-in-use` : undefined
                     }
+                    onClick={() => {
+                      if (inUseNote === null) onDelete(row.id);
+                    }}
                   >
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={
-                        isEditorOpen || !canDeleteGlaze(row.productCount)
-                      }
-                      aria-label={`Delete ${row.name}`}
-                      aria-describedby={
-                        canDeleteGlaze(row.productCount)
-                          ? undefined
-                          : `glaze-${row.id}-in-use`
-                      }
-                      onClick={() => onDelete(row.id)}
-                    >
-                      Delete
-                    </Button>
-                    {!canDeleteGlaze(row.productCount) && (
-                      <span id={`glaze-${row.id}-in-use`} className="sr-only">
-                        {describeGlazeInUse(row.productCount)}
-                      </span>
-                    )}
-                  </span>
+                    Delete
+                  </Button>
                 </div>
+                {inUseNote && (
+                  <span id={`glaze-${row.id}-in-use`} className="sr-only">
+                    {inUseNote}
+                  </span>
+                )}
+                {inUseNote && (
+                  <span
+                    aria-hidden="true"
+                    className="mt-1 block text-center text-[12px] text-muted-foreground md:hidden"
+                  >
+                    In use
+                  </span>
+                )}
               </td>
             </tr>
-          ),
-        )}
+          );
+        })}
         {isNewRowOpen && (
           <tr>
             <td colSpan={COLUMN_COUNT} className="border-b border-ash p-3">
