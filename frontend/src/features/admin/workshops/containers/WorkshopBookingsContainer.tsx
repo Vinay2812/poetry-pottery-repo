@@ -122,7 +122,7 @@ export function WorkshopBookingsContainer({
         statusTone: registrationStatusTone(item.booking.status),
         closingNote: describeClosing(item.booking.cancel_reason),
         note: item.booking.note,
-        bookedLabel: formatDate(item.booking.created_at),
+        requestedLabel: formatDate(item.booking.created_at),
         actions: toRegistrationActions(
           item.booking.status,
           item.next_statuses,

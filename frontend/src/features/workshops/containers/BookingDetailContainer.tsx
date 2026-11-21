@@ -206,7 +206,7 @@ export function BookingDetailContainer({
       <BookingDetail
         bookingId={optimisticBooking.id}
         dateLabel={formatDayRange(optimisticBooking.slots, timezone)}
-        bookedOn={formatDateTime(optimisticBooking.created_at)}
+        requestedOn={formatDateTime(optimisticBooking.created_at)}
         statusLabel={toBookingStatusLabel(optimisticBooking.status)}
         statusTone={toBookingStatusTone(optimisticBooking.status)}
         isJustPlaced={isRequestBannerShown(

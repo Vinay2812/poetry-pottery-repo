@@ -105,7 +105,7 @@ export function EventRegistrationsContainer({
         id: entry.registration.id,
         personName: toPersonName(entry.customer.name, entry.customer.email),
         personEmail: entry.customer.email,
-        bookedLabel: formatDate(entry.registration.created_at),
+        requestedLabel: formatDate(entry.registration.created_at),
         seatsLabel: pluralize(entry.registration.seats, "seat"),
         totalLabel: formatInr(entry.registration.total),
         statusLabel: registrationStatusLabel(entry.registration.status),

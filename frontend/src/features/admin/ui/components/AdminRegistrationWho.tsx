@@ -3,14 +3,14 @@ export interface AdminRegistrationWhoProps {
   email: string;
   // The id the guest sees on their page and quotes on WhatsApp, e.g. WS-HJN2NGS3UP.
   reference: string;
-  bookedLabel: string;
+  requestedLabel: string;
 }
 
 export function AdminRegistrationWho({
   name,
   email,
   reference,
-  bookedLabel,
+  requestedLabel,
 }: AdminRegistrationWhoProps) {
   return (
     <div className="flex flex-col">
@@ -22,7 +22,7 @@ export function AdminRegistrationWho({
         {reference}
       </span>
       <span className="text-[12px] text-muted-foreground tnum">
-        Booked {bookedLabel}
+        Requested {requestedLabel}
       </span>
     </div>
   );

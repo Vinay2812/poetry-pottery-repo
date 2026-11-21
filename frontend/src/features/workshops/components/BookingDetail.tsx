@@ -16,7 +16,7 @@ import { SectionLabel } from "@/components/layout/SectionLabel";
 export interface BookingDetailProps {
   bookingId: string;
   dateLabel: string;
-  bookedOn: string;
+  requestedOn: string;
   statusLabel: string;
   statusTone: StatusTone;
   isJustPlaced: boolean;
@@ -42,7 +42,7 @@ const TEXT_BUTTON =
 export function BookingDetail({
   bookingId,
   dateLabel,
-  bookedOn,
+  requestedOn,
   statusLabel,
   statusTone,
   isJustPlaced,
@@ -71,7 +71,9 @@ export function BookingDetail({
           <h1 className="font-heading text-3xl tracking-tight md:text-5xl">
             {dateLabel}
           </h1>
-          <p className="text-[13px] text-muted-foreground">Booked {bookedOn}</p>
+          <p className="text-[13px] text-muted-foreground">
+            Requested {requestedOn}
+          </p>
         </div>
         <OrderStatusBadge tone={statusTone} label={statusLabel} />
       </header>

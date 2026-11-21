@@ -21,7 +21,7 @@ export interface WorkshopBookingRow {
   id: string;
   personName: string;
   personEmail: string;
-  bookedLabel: string;
+  requestedLabel: string;
   sessionLines: string[];
   sizeLabel: string;
   totalLabel: string;
@@ -65,7 +65,7 @@ export function WorkshopBookingsTable({
                 name={row.personName}
                 email={row.personEmail}
                 reference={row.id}
-                bookedLabel={row.bookedLabel}
+                requestedLabel={row.requestedLabel}
               />
               <WorkshopSessionSummary
                 sessionLines={row.sessionLines}
@@ -112,7 +112,7 @@ export function WorkshopBookingsTable({
                     name={row.personName}
                     email={row.personEmail}
                     reference={row.id}
-                    bookedLabel={row.bookedLabel}
+                    requestedLabel={row.requestedLabel}
                   />
                 </td>
                 <td className={ADMIN_TD}>

@@ -19,7 +19,7 @@ export interface RegistrationTableRow {
   id: string;
   personName: string;
   personEmail: string;
-  bookedLabel: string;
+  requestedLabel: string;
   seatsLabel: string;
   totalLabel: string;
   statusLabel: string;
@@ -66,7 +66,7 @@ export function EventRegistrationsTable({
                 name={row.personName}
                 email={row.personEmail}
                 reference={row.id}
-                bookedLabel={row.bookedLabel}
+                requestedLabel={row.requestedLabel}
               />
               <span className="whitespace-nowrap tnum">
                 {row.seatsLabel} · {row.totalLabel}
@@ -111,7 +111,7 @@ export function EventRegistrationsTable({
                     name={row.personName}
                     email={row.personEmail}
                     reference={row.id}
-                    bookedLabel={row.bookedLabel}
+                    requestedLabel={row.requestedLabel}
                   />
                 </td>
                 <td className={ADMIN_TD}>
