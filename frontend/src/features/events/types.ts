@@ -431,6 +431,7 @@ function byStart(a: GroupableRegistration, b: GroupableRegistration): number {
 }
 
 // Soonest first for what is ahead, latest first for the record; empty groups are left out.
+// The API pages in the same order, so the groups hold across pages.
 export function toRegistrationGroups<T extends GroupableRegistration>(
   registrations: T[],
   now: Date,
