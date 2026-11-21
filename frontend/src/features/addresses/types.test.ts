@@ -7,6 +7,7 @@ import {
   sortByDefaultFirst,
   toAddressInput,
   toAddressLines,
+  toAddressShortLabel,
   toFormValues,
   toPreferredAddressId,
   withDefaultOn,
@@ -27,6 +28,15 @@ function address(overrides: Partial<SavedAddress> = {}): SavedAddress {
     ...overrides,
   };
 }
+
+describe("toAddressShortLabel", () => {
+  it("names an address by its first line and city", () => {
+    expect(toAddressShortLabel(" 1 Kiln Lane ", "Sangli")).toBe(
+      "1 Kiln Lane, Sangli",
+    );
+    expect(toAddressShortLabel("1 Kiln Lane", "")).toBe("1 Kiln Lane");
+  });
+});
 
 describe("toAddressInput", () => {
   it("sends blank optional lines as null", () => {

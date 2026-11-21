@@ -59,6 +59,11 @@ export function toAddressLines(
     .join(", ");
 }
 
+// Names an address in a screen-reader suffix: two cards for the same person still differ.
+export function toAddressShortLabel(line1: string, city: string): string {
+  return [line1.trim(), city.trim()].filter(Boolean).join(", ");
+}
+
 // The default is what people expect to be picked; a single saved address is just as obvious.
 export function toPreferredAddressId(
   addresses: readonly SavedAddress[],

@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { toAddressLines } from "@/features/addresses/types";
+import {
+  toAddressLines,
+  toAddressShortLabel,
+} from "@/features/addresses/types";
 import { cn } from "@/lib/utils";
 
 export interface AddressCardProps {
@@ -41,6 +44,8 @@ export function AddressCard({
   onDelete,
   onMakeDefault,
 }: AddressCardProps) {
+  // Visible text stays first so voice control still matches "Edit" or "Remove".
+  const forAddress = ` for ${toAddressShortLabel(line1, city)}`;
   return (
     <div
       className={cn(
@@ -68,34 +73,19 @@ export function AddressCard({
             <span className="text-[13px]">Delivering here</span>
           ) : (
             <Button variant="outline" size="sm" onClick={onSelect}>
-              Deliver here
+              Deliver here<span className="sr-only">{forAddress}</span>
             </Button>
           ))}
-        <button
-          type="button"
-          onClick={onEdit}
-          aria-label={`Edit the address for ${name}`}
-          className={TEXT_LINK}
-        >
-          Edit
+        <button type="button" onClick={onEdit} className={TEXT_LINK}>
+          Edit<span className="sr-only">{forAddress}</span>
         </button>
         {!isDefault && (
-          <button
-            type="button"
-            onClick={onMakeDefault}
-            aria-label={`Make the address for ${name} the default`}
-            className={TEXT_LINK}
-          >
-            Make default
+          <button type="button" onClick={onMakeDefault} className={TEXT_LINK}>
+            Make default<span className="sr-only">{forAddress}</span>
           </button>
         )}
-        <button
-          type="button"
-          onClick={onDelete}
-          aria-label={`Remove the address for ${name}`}
-          className={TEXT_LINK}
-        >
-          Remove
+        <button type="button" onClick={onDelete} className={TEXT_LINK}>
+          Remove<span className="sr-only">{forAddress}</span>
         </button>
       </div>
     </div>
