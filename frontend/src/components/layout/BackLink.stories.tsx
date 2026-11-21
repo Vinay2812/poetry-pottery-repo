@@ -8,7 +8,7 @@ const meta = {
   component: BackLink,
   args: {
     href: "/workshops/bookings",
-    label: "All wheel sessions",
+    label: "Your wheel sessions",
   },
 } satisfies Meta<typeof BackLink>;
 

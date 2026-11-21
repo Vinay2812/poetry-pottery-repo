@@ -62,7 +62,7 @@ export function BookingDetail({
 }: BookingDetailProps) {
   return (
     <PageShell column="wide" className="flex flex-col gap-10 py-8 md:py-12">
-      <BackLink href="/workshops/bookings" label="All wheel sessions" />
+      <BackLink href="/workshops/bookings" label="Your wheel sessions" />
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-2">
           <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
