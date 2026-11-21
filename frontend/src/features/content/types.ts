@@ -83,12 +83,27 @@ export function sectionAt(
 // The on-this-page list earns its space only when there is somewhere to jump to.
 export const MIN_INDEX_SECTIONS = 2;
 
-// The current section is the first one, in page order, crossing the reading line.
-export function pickActiveSection(
-  orderedIds: readonly string[],
-  visibleIds: ReadonlySet<string>,
-): string | null {
-  return orderedIds.find((id) => visibleIds.has(id)) ?? null;
+export interface ActiveSectionInput {
+  orderedIds: readonly string[];
+  visibleIds: ReadonlySet<string>;
+  isAtBottom: boolean;
+  previousId: string | null;
+}
+
+// At the foot of the page the last section is current, since it may never reach the reading line;
+// otherwise the first section crossing the line wins, and between sections the last one holds.
+export function pickActiveSection({
+  orderedIds,
+  visibleIds,
+  isAtBottom,
+  previousId,
+}: ActiveSectionInput): string | null {
+  if (orderedIds.length === 0) return null;
+  if (isAtBottom) return orderedIds[orderedIds.length - 1] ?? null;
+  const crossing = orderedIds.find((id) => visibleIds.has(id));
+  if (crossing) return crossing;
+  if (previousId !== null && orderedIds.includes(previousId)) return previousId;
+  return orderedIds[0] ?? null;
 }
 
 export type GridColumns = 2 | 3 | 4;

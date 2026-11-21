@@ -17,34 +17,56 @@ export interface ContentIndexContainerProps {
 
 // A thin reading line a fifth of the way down the screen decides which section is current.
 const READING_LINE = "-20% 0px -79% 0px";
+// A couple of pixels of slack, since fractional zoom rarely lands exactly on the last pixel.
+const BOTTOM_SLACK_PX = 2;
+
+function isScrolledToBottom(): boolean {
+  const { scrollHeight } = document.documentElement;
+  return window.innerHeight + window.scrollY >= scrollHeight - BOTTOM_SLACK_PX;
+}
 
 export function ContentIndexContainer({
   label,
   entries,
 }: ContentIndexContainerProps) {
-  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(
+    entries[0]?.id ?? null,
+  );
 
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
-    const ids = entries.map((entry) => entry.id);
-    const visible = new Set<string>();
+    const orderedIds = entries.map((entry) => entry.id);
+    const visibleIds = new Set<string>();
+    const update = () =>
+      setActiveId((previousId) =>
+        pickActiveSection({
+          orderedIds,
+          visibleIds,
+          isAtBottom: isScrolledToBottom(),
+          previousId,
+        }),
+      );
+
     const observer = new IntersectionObserver(
       (records) => {
         for (const record of records) {
-          if (record.isIntersecting) visible.add(record.target.id);
-          else visible.delete(record.target.id);
+          if (record.isIntersecting) visibleIds.add(record.target.id);
+          else visibleIds.delete(record.target.id);
         }
-        // Between two sections nothing crosses the line, so the last one stays lit.
-        const next = pickActiveSection(ids, visible);
-        if (next !== null) setActiveId(next);
+        update();
       },
       { rootMargin: READING_LINE },
     );
-    for (const id of ids) {
+    for (const id of orderedIds) {
       const node = document.getElementById(id);
       if (node) observer.observe(node);
     }
-    return () => observer.disconnect();
+    // Reaching the foot of the page crosses no section, so the observer alone would miss it.
+    window.addEventListener("scroll", update, { passive: true });
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", update);
+    };
   }, [entries]);
 
   return <ContentIndex label={label} entries={entries} activeId={activeId} />;
