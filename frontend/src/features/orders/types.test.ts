@@ -5,6 +5,7 @@ import { OrderStatus } from "@/graphql/generated/graphql";
 import {
   applyOrderCancellation,
   isClosed,
+  showsPlacedBanner,
   type OrderData,
   toArrivalWindow,
   toDeliveredCareLines,
@@ -193,5 +194,22 @@ describe("toFirstName", () => {
   it("falls back to the shipping address when the account has no name", () => {
     expect(toFirstName(null, "Maya Iyer")).toBe("Maya");
     expect(toFirstName("   ", "Maya Iyer")).toBe("Maya");
+  });
+});
+
+describe("showsPlacedBanner", () => {
+  it("thanks the shopper only while the order waits for confirmation", () => {
+    expect(showsPlacedBanner(true, OrderStatus.Pending)).toBe(true);
+    expect(showsPlacedBanner(false, OrderStatus.Pending)).toBe(false);
+    for (const status of [
+      OrderStatus.Confirmed,
+      OrderStatus.Paid,
+      OrderStatus.Shipped,
+      OrderStatus.Delivered,
+      OrderStatus.Cancelled,
+      OrderStatus.Refunded,
+    ]) {
+      expect(showsPlacedBanner(true, status)).toBe(false);
+    }
   });
 });

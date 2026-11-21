@@ -19,6 +19,7 @@ import {
   applyOrderCancellation,
   isClosed,
   ORDER_STEPS,
+  showsPlacedBanner,
   toArrivalWindow,
   toDeliveredCareLines,
   toFirstName,
@@ -145,7 +146,7 @@ export function OrderDetailContainer({
         placedOn={formatDateTime(optimisticOrder.created_at)}
         statusLabel={toStatusLabel(optimisticOrder.status)}
         statusTone={toStatusTone(optimisticOrder.status)}
-        isJustPlaced={isJustPlaced && !closed}
+        isJustPlaced={showsPlacedBanner(isJustPlaced, optimisticOrder.status)}
         firstName={toFirstName(user?.firstName, address.name)}
         arrivalLine={toArrivalWindow(
           optimisticOrder.created_at,
