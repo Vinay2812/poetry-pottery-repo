@@ -176,6 +176,8 @@ export function CheckoutContainer() {
           ? "Remove the unavailable pieces from your cart first."
           : null;
 
+  const shippingFee = quote?.shipping_fee ?? cart?.shipping_fee ?? 0;
+
   if (isCartLoading || isPlaced) {
     return (
       <PageShell column="wide" className="py-8 md:py-12" isBusy>
@@ -246,9 +248,9 @@ export function CheckoutContainer() {
             subtotal={quote?.subtotal ?? cart.subtotal}
             discount={coupon.discount}
             couponCode={coupon.code}
-            shippingFee={quote?.shipping_fee ?? cart.shipping_fee}
+            shippingFee={shippingFee}
             shippingNote={toShippingNote(
-              quote?.shipping_fee ?? cart.shipping_fee,
+              shippingFee,
               cart.free_shipping_above,
               formatInr,
             )}
