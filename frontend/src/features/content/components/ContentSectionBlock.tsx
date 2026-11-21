@@ -2,13 +2,13 @@ import { cn } from "@/lib/utils";
 
 import { DefinitionRow } from "@/features/content/components/DefinitionRow";
 import { FaqAccordion } from "@/features/content/components/FaqAccordion";
-import type { ContentItemData } from "@/features/content/types";
+import type { ContentItemView } from "@/features/content/types";
 
 export interface ContentSectionBlockProps {
   id: string;
   heading: string;
   paragraphs: string[];
-  items: ContentItemData[];
+  items: ContentItemView[];
   isAccordion: boolean;
   hasRule: boolean;
 }
@@ -24,32 +24,35 @@ export function ContentSectionBlock({
   return (
     <section
       id={id}
+      aria-labelledby={`${id}-heading`}
       className={cn(
-        "flex scroll-mt-28 flex-col gap-5 pb-10 md:pb-12",
-        hasRule ? "border-t border-ash pt-10 md:pt-12" : "pt-0",
+        "flex flex-col gap-5 pb-10 md:pb-12",
+        hasRule && "border-t border-ash pt-10 md:pt-12",
       )}
     >
-      <h2 className="font-heading text-2xl leading-tight tracking-tight md:text-3xl">
+      <h2
+        id={`${id}-heading`}
+        className="font-heading text-2xl leading-tight tracking-tight md:text-3xl"
+      >
         {heading}
       </h2>
-      {paragraphs.map((paragraph) => (
-        <p
-          key={paragraph}
-          className="max-w-prose text-[15px] leading-relaxed md:text-base"
-        >
-          {paragraph}
-        </p>
-      ))}
+      {paragraphs.length > 0 && (
+        <div className="flex max-w-prose flex-col gap-4 text-[15px] leading-relaxed md:text-base">
+          {paragraphs.map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
+          ))}
+        </div>
+      )}
       {items.length > 0 &&
         (isAccordion ? (
           <FaqAccordion idPrefix={id} items={items} />
         ) : (
           <dl>
-            {items.map((item) => (
+            {items.map((item, index) => (
               <DefinitionRow
-                key={item.title}
+                key={index}
                 title={item.title}
-                body={item.body}
+                paragraphs={item.paragraphs}
               />
             ))}
           </dl>

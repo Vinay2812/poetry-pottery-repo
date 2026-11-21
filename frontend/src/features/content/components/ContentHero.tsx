@@ -2,6 +2,8 @@ import Image from "next/image";
 
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 
+import { ContentHeader } from "@/features/content/components/ContentHeader";
+
 export interface ContentHeroProps {
   title: string;
   subtitle: string | null;
@@ -10,17 +12,8 @@ export interface ContentHeroProps {
 
 export function ContentHero({ title, subtitle, imageUrl }: ContentHeroProps) {
   return (
-    <div className="flex flex-col gap-8 py-12 md:gap-10 md:py-16">
-      <div className="flex max-w-2xl flex-col gap-3">
-        <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
-          {title}
-        </h1>
-        {subtitle && (
-          <p className="text-[15px] text-muted-foreground md:text-base">
-            {subtitle}
-          </p>
-        )}
-      </div>
+    <div className="flex flex-col pb-12 md:pb-16">
+      <ContentHeader title={title} subtitle={subtitle} />
       <div className="relative aspect-16/9 overflow-hidden bg-white">
         {imageUrl ? (
           <Image

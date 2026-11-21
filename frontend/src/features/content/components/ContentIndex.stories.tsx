@@ -21,6 +21,7 @@ const meta = {
       { id: "workshops", heading: "Workshops" },
       { id: "shipping", heading: "Shipping and returns" },
     ],
+    activeId: "workshops",
   },
 } satisfies Meta<typeof ContentIndex>;
 
@@ -29,6 +30,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const NothingActive: Story = { args: { activeId: null } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

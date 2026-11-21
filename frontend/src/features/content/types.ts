@@ -2,13 +2,17 @@ import type { ContentPageQuery } from "@/graphql/generated/graphql";
 
 export type ContentSectionData =
   ContentPageQuery["contentPage"]["sections"][number];
-export type ContentItemData = ContentSectionData["items"][number];
+
+export interface ContentItemView {
+  title: string;
+  paragraphs: string[];
+}
 
 export interface ContentSectionView {
   id: string;
   heading: string;
   paragraphs: string[];
-  items: ContentItemData[];
+  items: ContentItemView[];
 }
 
 // The thank-you shows optimistically, so the form never sits in a submitting state.
@@ -61,7 +65,10 @@ export function toSectionViews(
       id: count > 1 ? `${base}-${count}` : base,
       heading: section.heading,
       paragraphs: splitParagraphs(section.body),
-      items: section.items,
+      items: section.items.map((item) => ({
+        title: item.title,
+        paragraphs: splitParagraphs(item.body),
+      })),
     };
   });
 }
@@ -71,4 +78,40 @@ export function sectionAt(
   index: number,
 ): ContentSectionData | null {
   return sections[index] ?? null;
+}
+
+// The on-this-page list earns its space only when there is somewhere to jump to.
+export const MIN_INDEX_SECTIONS = 2;
+
+// The current section is the first one, in page order, crossing the reading line.
+export function pickActiveSection(
+  orderedIds: readonly string[],
+  visibleIds: ReadonlySet<string>,
+): string | null {
+  return orderedIds.find((id) => visibleIds.has(id)) ?? null;
+}
+
+export type GridColumns = 2 | 3 | 4;
+
+// Rows of three or four, whichever leaves the last row least empty; ties go to four.
+export function toGridColumns(count: number): GridColumns {
+  if (count <= 2) return 2;
+  const emptyCells = (columns: number) =>
+    (columns - (count % columns)) % columns;
+  return emptyCells(3) < emptyCells(4) ? 3 : 4;
+}
+
+// Literal class strings, so Tailwind can see every one of them.
+const GRID_CLASSES: Record<GridColumns, string> = {
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-2 md:grid-cols-3",
+  4: "sm:grid-cols-2 lg:grid-cols-4",
+};
+
+export function toGridClass(count: number): string {
+  return GRID_CLASSES[toGridColumns(count)];
+}
+
+export function toStepNumber(index: number): string {
+  return String(index + 1).padStart(2, "0");
 }

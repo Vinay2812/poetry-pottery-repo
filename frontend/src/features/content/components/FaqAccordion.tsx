@@ -9,7 +9,7 @@ import {
 
 interface FaqAccordionItem {
   title: string;
-  body: string;
+  paragraphs: string[];
 }
 
 export interface FaqAccordionProps {
@@ -17,16 +17,23 @@ export interface FaqAccordionProps {
   items: FaqAccordionItem[];
 }
 
+// Several answers can stay open, so opening one never yanks another shut under the reader.
 export function FaqAccordion({ idPrefix, items }: FaqAccordionProps) {
   return (
-    <Accordion type="single" collapsible className="border-t border-ash">
+    <Accordion type="multiple" className="border-y border-ash">
       {items.map((item, index) => (
-        <AccordionItem key={item.title} value={`${idPrefix}-${index}`}>
-          <AccordionTrigger className="rounded-none py-4 text-[15px] font-normal hover:no-underline">
+        <AccordionItem
+          key={index}
+          value={`${idPrefix}-${index}`}
+          className="border-ash"
+        >
+          <AccordionTrigger className="min-h-12 items-center gap-4 rounded-none py-3.5 text-[15px] font-normal hover:text-primary hover:no-underline md:text-base">
             {item.title}
           </AccordionTrigger>
-          <AccordionContent className="pb-4 text-[15px] leading-relaxed text-muted-foreground">
-            {item.body}
+          <AccordionContent className="max-w-prose pb-5 text-[15px] leading-relaxed text-muted-foreground">
+            {item.paragraphs.map((paragraph, paragraphIndex) => (
+              <p key={paragraphIndex}>{paragraph}</p>
+            ))}
           </AccordionContent>
         </AccordionItem>
       ))}

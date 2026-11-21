@@ -19,11 +19,15 @@ const meta = {
     items: [
       {
         title: "How does payment work?",
-        body: "We confirm your order on WhatsApp within a day and share UPI details.",
+        paragraphs: [
+          "We confirm your order on WhatsApp within a day and share UPI details.",
+        ],
       },
       {
         title: "Can I cancel?",
-        body: "Yes, from your orders page, any time before we mark it as paid.",
+        paragraphs: [
+          "Yes, from your orders page, any time before we mark it as paid.",
+        ],
       },
     ],
   },
