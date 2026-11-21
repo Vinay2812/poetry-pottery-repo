@@ -1,6 +1,7 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
+import { useCallback, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { LoadFailed } from "@/components/layout/LoadFailed";
@@ -37,6 +38,16 @@ export function OrdersListContainer() {
   } = useOrders(page);
   const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  // The buttons sit under the list, so a new page starts back at the heading.
+  const handleTurnPage = useCallback(
+    (next: number) => {
+      goToPage(next);
+      headingRef.current?.scrollIntoView({ block: "start" });
+    },
+    [goToPage],
+  );
 
   // The wall is the whole page when it shows, so it carries the h1 rather than
   // sitting under a heading for a list that is not there.
@@ -51,7 +62,10 @@ export function OrdersListContainer() {
 
   return (
     <PageShell column="wide" className="flex flex-col gap-6 py-8 md:py-12">
-      <h1 className="font-heading text-3xl tracking-tight md:text-5xl">
+      <h1
+        ref={headingRef}
+        className="font-heading text-3xl tracking-tight md:text-5xl"
+      >
         Your orders
       </h1>
       {isLoading ? (
@@ -70,7 +84,7 @@ export function OrdersListContainer() {
           <p className="text-[15px] text-muted-foreground">
             There are no orders this far back.
           </p>
-          <Button variant="outline" onClick={() => goToPage(1)}>
+          <Button variant="outline" onClick={() => handleTurnPage(1)}>
             See your latest orders
           </Button>
         </div>
@@ -109,7 +123,7 @@ export function OrdersListContainer() {
               <Button
                 variant="outline"
                 disabled={page <= 1}
-                onClick={() => goToPage(page - 1)}
+                onClick={() => handleTurnPage(page - 1)}
               >
                 Newer
               </Button>
@@ -119,7 +133,7 @@ export function OrdersListContainer() {
               <Button
                 variant="outline"
                 disabled={page >= pageCount}
-                onClick={() => goToPage(page + 1)}
+                onClick={() => handleTurnPage(page + 1)}
               >
                 Older
               </Button>
