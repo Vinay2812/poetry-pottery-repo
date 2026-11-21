@@ -2,15 +2,113 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { useMutation } from "@apollo/client/react";
-import { CreateCustomizationUploadDocument } from "@/graphql/generated/graphql";
+import { useMutation, useQuery } from "@apollo/client/react";
+import {
+  CreateCustomizationUploadDocument,
+  ProductsDocument,
+  type ProductsQuery,
+} from "@/graphql/generated/graphql";
 
 import {
   MAX_REFERENCE_PHOTOS,
+  type ProductFilters,
   type ReferencePhoto,
   remainingReferenceSlots,
+  toFilterInput,
+  toFilterKey,
   validateReferencePhoto,
 } from "@/features/products/types";
+
+type ProductsPage = ProductsQuery["products"];
+
+export interface ShelfResults {
+  // What is on screen: the current answer, or the last one while the next loads.
+  result: ProductsPage | undefined;
+  // The current filters have their own answer, so counts and empty copy may speak.
+  isSettled: boolean;
+  isRefreshing: boolean;
+  isAppending: boolean;
+  isFailed: boolean;
+  loadMore: () => void;
+  retry: () => void;
+}
+
+// The shelf's list: the server's first page bridges the first load, old results bridge a
+// filter change, and a page only joins the list it was asked for.
+export function useShelfResults(
+  filters: ProductFilters,
+  initialProducts: ProductsPage | null,
+  initialFilterKey: string | null,
+): ShelfResults {
+  const filterInput = toFilterInput(filters, 1);
+  const filterKey = toFilterKey(filterInput);
+  const [appendingKey, setAppendingKey] = useState<string | null>(null);
+  const latestKey = useRef(filterKey);
+  useEffect(() => {
+    latestKey.current = filterKey;
+  }, [filterKey]);
+
+  const { data, previousData, loading, error, fetchMore, refetch } = useQuery(
+    ProductsDocument,
+    {
+      variables: { filter: filterInput },
+      notifyOnNetworkStatusChange: true,
+    },
+  );
+  const serverPage =
+    initialProducts && initialFilterKey === filterKey
+      ? initialProducts
+      : undefined;
+  const isAppending = appendingKey === filterKey;
+  const current = data?.products;
+  // Old results bridge a load, not a failure: they would sit under filters they do not match.
+  // The server's page stands in until the browser has a page of its own to show.
+  const bridge = error
+    ? undefined
+    : (serverPage ??
+      previousData?.products ??
+      (loading ? (initialProducts ?? undefined) : undefined));
+  const result = current ?? bridge;
+  const isSettled =
+    !error && (current ? !loading || isAppending : serverPage !== undefined);
+  const pageInfo = result?.page_info;
+
+  const loadMore = useCallback(() => {
+    if (!isSettled || isAppending || !pageInfo?.has_more) return;
+    const startedKey = filterKey;
+    setAppendingKey(startedKey);
+    void fetchMore({
+      variables: { filter: toFilterInput(filters, pageInfo.page + 1) },
+      // A page that lands after the filters moved on belongs to another list, so it is dropped.
+      updateQuery: (previous, { fetchMoreResult }) =>
+        latestKey.current !== startedKey
+          ? previous
+          : {
+              products: {
+                ...fetchMoreResult.products,
+                items: [
+                  ...previous.products.items,
+                  ...fetchMoreResult.products.items,
+                ],
+              },
+            },
+    }).finally(() =>
+      setAppendingKey((key) => (key === startedKey ? null : key)),
+    );
+  }, [fetchMore, filterKey, filters, isAppending, isSettled, pageInfo]);
+
+  const retry = useCallback(() => void refetch(), [refetch]);
+
+  return {
+    result,
+    isSettled,
+    isRefreshing: loading && Boolean(result) && !isAppending,
+    isAppending,
+    isFailed: Boolean(error) && !result,
+    loadMore,
+    retry,
+  };
+}
 
 const TOO_MANY = `You can attach up to ${MAX_REFERENCE_PHOTOS} photos`;
 const UPLOAD_FAILED = "Upload failed";

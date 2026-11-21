@@ -8,12 +8,7 @@ import {
   useState,
 } from "react";
 
-import { useQuery } from "@apollo/client/react";
-import {
-  ProductsDocument,
-  type ProductSort,
-  type ProductsQuery,
-} from "@/graphql/generated/graphql";
+import type { ProductSort, ProductsQuery } from "@/graphql/generated/graphql";
 
 import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
@@ -33,13 +28,12 @@ import { ProductToolbar } from "@/features/products/components/ProductToolbar";
 import { SearchField } from "@/features/products/components/SearchField";
 import { ShelfTabs } from "@/features/products/components/ShelfTabs";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
+import { useShelfResults } from "@/features/products/hooks";
 import {
   clampPriceRange,
   countActiveFilters,
   PRODUCT_FILTERS_CODEC,
   toCardPhotoLoading,
-  toFilterInput,
-  toFilterKey,
   toResultCountLabel,
 } from "@/features/products/types";
 
@@ -67,32 +61,22 @@ export function ProductListContainer({
     toHref,
   } = useUrlState(PRODUCT_FILTERS_CODEC);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isAppending, setIsAppending] = useState(false);
   const [priceDraft, setPriceDraft] = useState<[number, number] | null>(null);
   const [searchDraft, setSearchDraft] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const filterInput = toFilterInput(filters, 1);
-  const { data, previousData, loading, error, fetchMore, refetch } = useQuery(
-    ProductsDocument,
-    {
-      variables: { filter: filterInput },
-      notifyOnNetworkStatusChange: true,
-    },
-  );
-  // The server's first page covers the first load, but only while the filters still match it.
-  const serverPage =
-    initialProducts && initialFilterKey === toFilterKey(filterInput)
-      ? initialProducts
-      : undefined;
-  // Old results bridge a load, not a failure: they would sit under filters they do not match.
-  const result =
-    data?.products ??
-    (error ? undefined : (previousData?.products ?? serverPage));
+  const {
+    result,
+    isSettled,
+    isRefreshing,
+    isAppending,
+    isFailed,
+    loadMore: handleLoadMore,
+    retry: handleRetry,
+  } = useShelfResults(filters, initialProducts, initialFilterKey);
   const items = result?.items ?? [];
   const pageInfo = result?.page_info;
   const facets = result?.facets;
-  const isInitialLoading = loading && !result;
 
   // Typing updates the field at once and the URL after a short pause.
   const handleSearchChange = useCallback(
@@ -119,10 +103,7 @@ export function ProductListContainer({
   const deferredSearchValue = useDeferredValue(searchValue);
   const isSearchSettling = deferredSearchValue.trim() !== filters.search;
   // Results stay on screen while a new page loads; only their opacity says so.
-  const isBusy =
-    isPending ||
-    isSearchSettling ||
-    (loading && Boolean(result) && !isAppending);
+  const isBusy = isPending || isSearchSettling || isRefreshing;
   useEffect(
     () => () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -188,23 +169,6 @@ export function ProductListContainer({
     dispatch({ type: "clear" });
   }, [dispatch]);
 
-  const handleLoadMore = useCallback(() => {
-    if (!pageInfo?.has_more || loading) return;
-    setIsAppending(true);
-    void fetchMore({
-      variables: { filter: toFilterInput(filters, pageInfo.page + 1) },
-      updateQuery: (previous, { fetchMoreResult }) => ({
-        products: {
-          ...fetchMoreResult.products,
-          items: [
-            ...previous.products.items,
-            ...fetchMoreResult.products.items,
-          ],
-        },
-      }),
-    }).finally(() => setIsAppending(false));
-  }, [fetchMore, filters, loading, pageInfo]);
-
   // Load the next page when the sentinel scrolls into view.
   const loadMoreRef = useRef(handleLoadMore);
   useEffect(() => {
@@ -235,7 +199,7 @@ export function ProductListContainer({
   );
   const activeFilterCount = countActiveFilters(filters);
   // Until the current query answers, the cards on screen are the old ones, so no count is given.
-  const isCountPending = isInitialLoading || isBusy;
+  const isCountPending = !isSettled || isPending || isSearchSettling;
   const isMadeToOrderOnly = filters.customizableOnly && activeFilterCount === 1;
 
   const filterPanel = facets && (
@@ -306,12 +270,16 @@ export function ProductListContainer({
         {/* A narrow result set must not pull the footer up over the reader's scroll position. */}
         <div className="flex min-h-[60vh] flex-col gap-5">
           <ProductToolbar
-            countLabel={toResultCountLabel(
-              pageInfo?.total ?? 0,
-              filters.search,
-              filters.customizableOnly,
-            )}
-            isLoading={isCountPending}
+            countLabel={
+              isFailed
+                ? ""
+                : toResultCountLabel(
+                    pageInfo?.total ?? 0,
+                    filters.search,
+                    filters.customizableOnly,
+                  )
+            }
+            isLoading={isCountPending && !isFailed}
             sort={filters.sort}
             isRelevanceOnly={filters.search !== ""}
             activeFilterCount={activeFilterCount}
@@ -320,14 +288,15 @@ export function ProductListContainer({
             onClear={handleClear}
           />
 
-          {isInitialLoading ? (
+          {/* The empty copy speaks only for an answer to the current filters; until then, skeletons. */}
+          {isFailed ? (
+            <LoadFailed onRetry={handleRetry} />
+          ) : items.length === 0 && !isSettled ? (
             <ProductGrid>
               {Array.from({ length: 8 }, (_, index) => (
                 <ProductCardSkeleton key={index} />
               ))}
             </ProductGrid>
-          ) : error && !result ? (
-            <LoadFailed onRetry={() => void refetch()} />
           ) : items.length === 0 ? (
             <EmptyResults
               search={filters.search}
@@ -371,7 +340,7 @@ export function ProductListContainer({
       <FilterSheet
         isOpen={isSheetOpen}
         resultCount={pageInfo?.total ?? 0}
-        isLoading={isCountPending}
+        isLoading={isCountPending && !isFailed}
         activeFilterCount={activeFilterCount}
         onOpenChange={setIsSheetOpen}
         onClear={handleClear}
