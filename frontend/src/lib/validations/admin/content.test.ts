@@ -8,6 +8,7 @@ import {
   isHref,
   isHttpUrl,
   isSectionBodyOptional,
+  parseDayCount,
   siteSettingsSchema,
 } from "./content";
 
@@ -356,5 +357,28 @@ describe("siteSettingsSchema dispatch window", () => {
       siteSettingsSchema.safeParse(settings({ dispatch_days_min: "0" }))
         .success,
     ).toBe(false);
+  });
+
+  it("refuses a window longer than 120 days", () => {
+    expect(
+      siteSettingsSchema.safeParse(settings({ dispatch_days_max: "200" }))
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe("parseDayCount", () => {
+  it("reads a whole number of days from 1 to 120", () => {
+    expect(parseDayCount(" 7 ")).toBe(7);
+    expect(parseDayCount("1")).toBe(1);
+    expect(parseDayCount("120")).toBe(120);
+  });
+
+  it("refuses anything outside that", () => {
+    expect(parseDayCount("")).toBeNull();
+    expect(parseDayCount("0")).toBeNull();
+    expect(parseDayCount("121")).toBeNull();
+    expect(parseDayCount("1.5")).toBeNull();
+    expect(parseDayCount("soon")).toBeNull();
   });
 });

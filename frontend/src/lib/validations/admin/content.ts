@@ -112,15 +112,23 @@ export const contentPageSchema = z.object({
 
 export type ContentPageFormValues = z.infer<typeof contentPageSchema>;
 
+const MAX_DAYS = 120;
+
+/** A day count the window accepts: a whole number from 1 to 120, or null. */
+export function parseDayCount(value: string): number | null {
+  const trimmed = value.trim();
+  if (!/^\d+$/.test(trimmed)) return null;
+  const days = Number(trimmed);
+  return days >= 1 && days <= MAX_DAYS ? days : null;
+}
+
 function dayCount(label: string) {
   return z
     .string()
     .trim()
-    .regex(/^\d+$/, `${label} must be a whole number of days`)
-    .refine((value) => Number(value) >= 1, `${label} must be at least 1 day`)
     .refine(
-      (value) => Number(value) <= 120,
-      `${label} must be 120 days or fewer`,
+      (value) => parseDayCount(value) !== null,
+      `${label} must be a whole number of days from 1 to ${MAX_DAYS}`,
     );
 }
 

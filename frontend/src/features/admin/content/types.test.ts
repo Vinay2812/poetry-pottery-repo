@@ -196,5 +196,6 @@ describe("describeArrivalPreview", () => {
     expect(describeArrivalPreview("7", "1.5")).toBeNull();
     expect(describeArrivalPreview("0", "12")).toBeNull();
     expect(describeArrivalPreview("12", "7")).toBeNull();
+    expect(describeArrivalPreview("7", "200")).toBeNull();
   });
 });
