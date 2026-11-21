@@ -38,6 +38,11 @@ export function OrderPlacedBanner({
           We confirm every order by hand, and there is nothing to pay until we
           do.
         </p>
+        {emailedTo && (
+          <p className="text-[13px] text-muted-foreground">
+            We have emailed a copy to {emailedTo}.
+          </p>
+        )}
       </div>
 
       <ul className="flex flex-wrap gap-3">
@@ -102,11 +107,6 @@ export function OrderPlacedBanner({
       <div className="flex flex-col gap-1 border-t border-ash pt-5">
         <p className="text-[15px]">{arrivalLine}</p>
         <p className="text-[13px] text-muted-foreground">{transitLine}</p>
-        {emailedTo && (
-          <p className="text-[13px] text-muted-foreground">
-            We have emailed a copy to {emailedTo}.
-          </p>
-        )}
         <Link
           href="/care"
           className="mt-3 w-fit border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
