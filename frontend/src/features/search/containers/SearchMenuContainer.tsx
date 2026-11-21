@@ -16,6 +16,7 @@ import {
 import { useDebouncedTerm } from "@/features/search/hooks";
 import {
   addRecentSearch,
+  filterRecentSearches,
   isSuggestPending,
   MIN_SUGGEST_LENGTH,
   nextActiveIndex,
@@ -85,9 +86,14 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
       ? (data?.suggest ?? previousData?.suggest)
       : undefined;
 
+  const visibleRecents = useMemo(
+    () => filterRecentSearches(recents, value),
+    [recents, value],
+  );
+
   const lists = useMemo<SuggestOptionLists>(
     () => ({
-      recents: recents.map((entry, index) => ({
+      recents: visibleRecents.map((entry, index) => ({
         id: `recent-${index}`,
         label: entry,
         href: toSearchHref(entry),
@@ -108,23 +114,31 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
         href: `/workshops/${workshop.slug}`,
       })),
     }),
-    [recents, suggestions],
+    [visibleRecents, suggestions],
   );
   const options = useMemo(
     () => toOptionOrder(toSelectableLists(lists, isPending)),
     [lists, isPending],
   );
+  const activeOption = activeIndex >= 0 ? options[activeIndex] : undefined;
   const hint = toSearchHint({
     value,
     isPending,
     isError,
     resultCount:
       lists.pieces.length + lists.events.length + lists.workshops.length,
+    active: activeOption
+      ? {
+          label: activeOption.label,
+          isRecent: activeIndex < lists.recents.length,
+        }
+      : null,
   });
 
   const recentEntries = useMemo<SearchPanelEntry[]>(
-    () => recents.map((entry) => ({ key: entry, label: entry, note: null })),
-    [recents],
+    () =>
+      visibleRecents.map((entry) => ({ key: entry, label: entry, note: null })),
+    [visibleRecents],
   );
   const pieceEntries = useMemo<SearchPanelEntry[]>(
     () =>

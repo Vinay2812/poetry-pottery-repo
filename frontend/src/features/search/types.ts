@@ -105,11 +105,35 @@ function toExcerpt(text: string): string {
 
 const SEARCH_SHELF_LINE = "Press Enter to search the shelf.";
 
+export interface ActiveHintRow {
+  label: string;
+  isRecent: boolean;
+}
+
 export interface SearchHintInput {
   value: string;
   isPending: boolean;
   isError: boolean;
   resultCount: number;
+  active?: ActiveHintRow | null;
+}
+
+// With a row highlighted, Enter acts on that row, so the hint names it.
+export function toActiveHint({ label, isRecent }: ActiveHintRow): string {
+  const name = toExcerpt(label);
+  return isRecent
+    ? `Press Enter to search the shelf for “${name}”.`
+    : `Press Enter to open ${name}.`;
+}
+
+// Once something is typed, only the recent searches that contain it stay, so they never crowd the matches.
+export function filterRecentSearches(
+  recents: string[],
+  value: string,
+): string[] {
+  const typed = value.trim().toLowerCase();
+  if (typed.length === 0) return recents;
+  return recents.filter((entry) => entry.toLowerCase().includes(typed));
 }
 
 // The line under the list says what the panel is doing, so an empty list never looks broken.
@@ -118,7 +142,9 @@ export function toSearchHint({
   isPending,
   isError,
   resultCount,
+  active = null,
 }: SearchHintInput): string {
+  if (active) return toActiveHint(active);
   const typed = value.trim();
   if (typed.length === 0) {
     return "Type a glaze, a clay body or what you want to use it for.";

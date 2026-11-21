@@ -2,12 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   addRecentSearch,
+  filterRecentSearches,
   isSuggestPending,
   MAX_RECENT_SEARCHES,
   nextActiveIndex,
   parseRecentSearches,
   toInputId,
   toOptionId,
+  toActiveHint,
   toOptionOrder,
   toSearchHint,
   toSearchHref,
@@ -174,5 +176,45 @@ describe("toSearchHint", () => {
     expect(toSearchHint({ ...base, value: "x".repeat(160) })).toBe(
       `No suggestions for “${"x".repeat(32)}…”. Press Enter to search the shelf.`,
     );
+  });
+});
+
+describe("toActiveHint", () => {
+  it("names the piece, event or session Enter will open", () => {
+    expect(toActiveHint({ label: "The Kalyug Mug", isRecent: false })).toBe(
+      "Press Enter to open The Kalyug Mug.",
+    );
+  });
+
+  it("names the recent search Enter will run", () => {
+    expect(toActiveHint({ label: "sage green", isRecent: true })).toBe(
+      "Press Enter to search the shelf for “sage green”.",
+    );
+  });
+
+  it("wins over the shelf line once a row is highlighted", () => {
+    expect(
+      toSearchHint({
+        value: "mug",
+        isPending: false,
+        isError: false,
+        resultCount: 3,
+        active: { label: "Custom mug", isRecent: false },
+      }),
+    ).toBe("Press Enter to open Custom mug.");
+  });
+});
+
+describe("filterRecentSearches", () => {
+  const recents = ["Sage green", "zzqx", "mug rack"];
+
+  it("keeps every recent search on an empty field", () => {
+    expect(filterRecentSearches(recents, "  ")).toBe(recents);
+  });
+
+  it("keeps only the ones that contain the typed text, ignoring case", () => {
+    expect(filterRecentSearches(recents, "MUG")).toEqual(["mug rack"]);
+    expect(filterRecentSearches(recents, " green ")).toEqual(["Sage green"]);
+    expect(filterRecentSearches(recents, "bowl")).toEqual([]);
   });
 });
