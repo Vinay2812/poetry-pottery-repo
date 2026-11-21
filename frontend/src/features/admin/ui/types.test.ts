@@ -156,16 +156,7 @@ describe("toPreviewColour", () => {
 });
 
 describe("adminFieldMessageId", () => {
-  it("points at the line under the field when there is one", () => {
-    expect(adminFieldMessageId("email", "Ten digits.", undefined)).toBe(
-      "email-message",
-    );
-    expect(adminFieldMessageId("email", null, "Required")).toBe(
-      "email-message",
-    );
-  });
-
-  it("points nowhere when the field has no line under it", () => {
-    expect(adminFieldMessageId("email", null, undefined)).toBeUndefined();
+  it("names the line under a field after the field", () => {
+    expect(adminFieldMessageId("email")).toBe("email-message");
   });
 });

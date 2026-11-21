@@ -13,12 +13,10 @@ import { Input } from "@/components/ui/input";
 
 import { AdminField, adminFieldMessageId } from "@/features/admin/ui";
 
-const SLUG_HINT = "Lowercase letters, digits and dashes, like care-guide.";
-
 export interface NewPageDialogProps {
   isOpen: boolean;
   slug: string;
-  error: string | null;
+  error: string | undefined;
   onSlugChange: (slug: string) => void;
   onSubmit: () => void;
   onOpenChange: (isOpen: boolean) => void;
@@ -52,8 +50,8 @@ export function NewPageDialog({
           <AdminField
             id="new-page-slug"
             label="Slug"
-            hint={SLUG_HINT}
-            error={error ?? undefined}
+            hint="Lowercase letters, digits and dashes, like care-guide."
+            error={error}
           >
             <Input
               id="new-page-slug"
@@ -62,11 +60,7 @@ export function NewPageDialog({
               autoFocus
               value={slug}
               aria-invalid={Boolean(error)}
-              aria-describedby={adminFieldMessageId(
-                "new-page-slug",
-                SLUG_HINT,
-                error ?? undefined,
-              )}
+              aria-describedby={adminFieldMessageId("new-page-slug")}
               onChange={(event) => onSlugChange(event.target.value)}
             />
           </AdminField>

@@ -23,7 +23,7 @@ export function ContentTextField({
   isMultiline,
   registration,
 }: ContentTextFieldProps) {
-  const describedBy = adminFieldMessageId(id, hint, error);
+  const describedBy = adminFieldMessageId(id);
   return (
     <AdminField id={id} label={label} hint={hint} error={error}>
       {isMultiline ? (
