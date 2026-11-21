@@ -198,7 +198,7 @@ export function ProductDetailContainer({
   // Row, header and footer edges are read each scroll frame below lg, where the bar lives; an observer misses jumps.
   useEffect(() => {
     const node = actionsRef.current;
-    if (!node) return;
+    if (!isStickyBarOffered || !node) return;
     const wide = window.matchMedia(LG_MEDIA_QUERY);
     const header = document.querySelector(SITE_HEADER_SELECTOR);
     const footer = document.querySelector(SITE_FOOTER_SELECTOR);
@@ -258,7 +258,7 @@ export function ProductDetailContainer({
       wide.removeEventListener("change", sync);
       detach();
     };
-  }, []);
+  }, [isStickyBarOffered]);
 
   // While the bar is up, focused and scrolled-to controls stop above it rather than under it.
   const isStickyBarShown = isStickyBarOffered && isBarWanted;
