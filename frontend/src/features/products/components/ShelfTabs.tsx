@@ -7,7 +7,6 @@ export interface ShelfTabsProps {
   shelfHref: string;
   archiveHref: string;
   shelfCount: number;
-  archiveCount: number;
   isArchive: boolean;
   onSelectShelf?: () => void;
 }
@@ -31,7 +30,6 @@ export function ShelfTabs({
   shelfHref,
   archiveHref,
   shelfCount,
-  archiveCount,
   isArchive,
   onSelectShelf,
 }: ShelfTabsProps) {
@@ -75,8 +73,8 @@ export function ShelfTabs({
             )}
           >
             <ActiveMarker isActive={isArchive} />
-            Archive{" "}
-            <span className="text-muted-foreground tnum">({archiveCount})</span>
+            {/* No count: the wall is never filtered, so a number from this page would describe a different list. */}
+            Archive
           </Link>
         </li>
       </ul>

@@ -291,7 +291,6 @@ export function ProductListContainer({
           shelfHref={toHref({ ...filters, isArchive: false })}
           archiveHref={ARCHIVE_PATH}
           shelfCount={facets?.active_count ?? 0}
-          archiveCount={facets?.archive_count ?? 0}
           isArchive={filters.isArchive}
           onSelectShelf={handleSelectShelf}
         />
