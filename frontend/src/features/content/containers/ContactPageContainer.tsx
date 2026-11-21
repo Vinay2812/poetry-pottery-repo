@@ -9,7 +9,7 @@ import { ContactFormContainer } from "@/features/content/containers/ContactFormC
 import { buildWhatsAppUrl } from "@/features/layout";
 import { StudioVisitContainer, VisitIntro } from "@/features/visits";
 
-// Both rows share one grid, so the visit picker lines up under the form.
+// Both rows share one grid, so the visit picker starts where the form starts; the picker caps its own width.
 const CONTACT_ROW =
   "grid gap-10 border-t border-ash py-10 md:grid-cols-[minmax(0,20rem)_1fr] md:gap-16 md:py-12";
 

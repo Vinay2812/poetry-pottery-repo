@@ -148,6 +148,7 @@ export function StudioVisitContainer() {
     );
   }
 
+  // Capped narrower than a wide column on purpose, so the seven day cells stay close to square.
   return (
     <div className="flex max-w-xl flex-col gap-6">
       <VisitDayStrip
