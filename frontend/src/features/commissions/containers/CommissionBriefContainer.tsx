@@ -133,6 +133,10 @@ export function CommissionBriefContainer({
     [removePhoto],
   );
 
+  const handleSignIn = useCallback(() => {
+    void openSignIn();
+  }, [openSignIn]);
+
   // The confirmation is far shorter than the form, so bring it into view instead of leaving the footer there.
   useEffect(() => {
     if (!sent) return;
@@ -184,7 +188,7 @@ export function CommissionBriefContainer({
           </div>
         ) : (
           // The modal keeps the page, so whatever is typed survives signing in.
-          <ReferencePhotosSignIn onSignIn={() => openSignIn()} />
+          <ReferencePhotosSignIn onSignIn={handleSignIn} />
         )
       }
       onSubmit={(values) => void handleSubmit(values)}
