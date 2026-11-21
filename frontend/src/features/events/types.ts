@@ -9,7 +9,7 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
-import { formatDate, formatTime } from "@/lib/format";
+import { formatDate, formatShortDay, formatTime } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
 import {
@@ -68,13 +68,6 @@ export function toEventTypeLabel(eventType: EventType): string {
   return EVENT_TYPE_LABEL[eventType];
 }
 
-const WHEN_DATE = new Intl.DateTimeFormat("en-IN", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  timeZone: "Asia/Kolkata",
-});
-
 const WHEN_YEAR = new Intl.DateTimeFormat("en-IN", {
   year: "numeric",
   timeZone: "Asia/Kolkata",
@@ -96,7 +89,7 @@ export function toEventWhenLabel(
   now: Date = new Date(),
 ): string {
   const date = new Date(startsAt);
-  const day = WHEN_DATE.format(date).replace(/,/g, "").replace("Sept", "Sep");
+  const day = formatShortDay(date, "Asia/Kolkata");
   const year = WHEN_YEAR.format(date);
   const dayLabel = year === WHEN_YEAR.format(now) ? day : `${day} ${year}`;
   return `${dayLabel} · ${toHourLabel(date)}`;

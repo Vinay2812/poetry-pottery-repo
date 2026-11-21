@@ -16,8 +16,8 @@ const meta = {
   ],
   args: {
     slots: [
-      { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat, 19 Sept · 2–3 pm" },
-      { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue, 22 Sept · 3–4 pm" },
+      { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat 19 Sep · 2–3 pm" },
+      { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue 22 Sep · 3–4 pm" },
     ],
     progress: "2 of 3 hours picked",
     emptyMessage: "Pick your times from the calendar.",
@@ -45,7 +45,7 @@ export const HalfHourTimes: Story = {
     slots: [
       {
         startsAt: "2026-09-19T08:30:00.000Z",
-        label: "Sat, 19 Sept · 2–2:30 pm",
+        label: "Sat 19 Sep · 2–2:30 pm",
       },
     ],
     progress: "30 minutes of 1 hour picked",

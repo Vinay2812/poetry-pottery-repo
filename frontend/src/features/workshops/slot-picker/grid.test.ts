@@ -295,8 +295,8 @@ describe("slot helpers", () => {
       ends_at: day.slots[0]!.ends_at,
     };
     expect(toPickedSlots([later, earlier], IST)).toEqual([
-      { startsAt: earlier.starts_at, label: "Sun, 13 Sept · 2–3 pm" },
-      { startsAt: later.starts_at, label: "Sun, 13 Sept · 3–4 pm" },
+      { startsAt: earlier.starts_at, label: "Sun 13 Sep · 2–3 pm" },
+      { startsAt: later.starts_at, label: "Sun 13 Sep · 3–4 pm" },
     ]);
     expect(toPickedSlots([], IST)).toEqual([]);
   });

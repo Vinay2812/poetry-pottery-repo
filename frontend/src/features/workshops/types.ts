@@ -7,6 +7,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { buildWhatsAppUrl } from "@/features/layout/types";
+import { formatShortDay } from "@/lib/format";
 import type { TimelineStage } from "@/lib/timeline";
 
 import type { StatusTone } from "@/features/orders/types";
@@ -59,12 +60,10 @@ export function toDateKey(instant: string | Date, timezone: string): string {
 
 export function formatDateKey(dateKey: string): string {
   const [year, month, day] = dateKey.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-IN", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).format(new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1)));
+  return formatShortDay(
+    new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1)),
+    "UTC",
+  );
 }
 
 function formatSlotTime(instant: string | Date, timezone: string): string {
@@ -91,15 +90,6 @@ export function formatHourRange(
     return `${fromTime}–${toTime} ${toMeridiem}`;
   }
   return `${from}–${to}`;
-}
-
-function formatDayLabel(instant: string | Date, timezone: string): string {
-  return new Intl.DateTimeFormat("en-IN", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    timeZone: timezone,
-  }).format(new Date(instant));
 }
 
 export interface SlotInterval {
@@ -137,7 +127,7 @@ export function groupSlotsByDay(
   }
   return [...groups.entries()].map(([dateKey, stretches]) => ({
     dateKey,
-    dayLabel: formatDayLabel(`${dateKey}T12:00:00.000Z`, "UTC"),
+    dayLabel: formatShortDay(`${dateKey}T12:00:00.000Z`, "UTC"),
     timesLabel: stretches
       .map((stretch) =>
         formatHourRange(stretch.starts_at, stretch.ends_at, timezone),

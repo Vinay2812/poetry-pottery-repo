@@ -4,6 +4,7 @@ import {
   formatDate,
   formatDateTime,
   formatInr,
+  formatShortDay,
   formatTime,
   pluralize,
   toPhoneHref,
@@ -58,5 +59,25 @@ describe("toPhoneHref", () => {
   it("has nothing to offer when no number is configured", () => {
     expect(toPhoneHref("")).toBeNull();
     expect(toPhoneHref("   ")).toBeNull();
+  });
+});
+
+describe("formatShortDay", () => {
+  it("drops en-IN's comma and four-letter September", () => {
+    expect(formatShortDay("2026-09-13T06:30:00.000Z", "Asia/Kolkata")).toBe(
+      "Sun 13 Sep",
+    );
+    expect(formatShortDay("2026-11-22T06:30:00.000Z", "Asia/Kolkata")).toBe(
+      "Sun 22 Nov",
+    );
+  });
+
+  it("reads the day in the zone it is given", () => {
+    expect(formatShortDay("2026-11-21T20:00:00.000Z", "Asia/Kolkata")).toBe(
+      "Sun 22 Nov",
+    );
+    expect(formatShortDay("2026-11-21T20:00:00.000Z", "UTC")).toBe(
+      "Sat 21 Nov",
+    );
   });
 });

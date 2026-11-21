@@ -30,6 +30,26 @@ const TIME_SHORT = new Intl.DateTimeFormat("en-IN", {
   timeZone: "Asia/Kolkata",
 });
 
+const SHORT_DAY = new Map<string, Intl.DateTimeFormat>();
+
+// "Sun 22 Nov": the day every event and wheel-session line uses, without en-IN's comma or "Sept".
+export function formatShortDay(value: string | Date, timeZone: string): string {
+  let formatter = SHORT_DAY.get(timeZone);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat("en-IN", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      timeZone,
+    });
+    SHORT_DAY.set(timeZone, formatter);
+  }
+  return formatter
+    .format(new Date(value))
+    .replace(/,/g, "")
+    .replace("Sept", "Sep");
+}
+
 export function formatDate(value: string | Date): string {
   return DATE_LONG.format(new Date(value));
 }

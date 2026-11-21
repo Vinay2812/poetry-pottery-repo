@@ -73,7 +73,7 @@ describe("studio calendar keys", () => {
     expect(toDateKey("2026-09-12T20:30:00.000Z", "Asia/Kolkata")).toBe(
       "2026-09-13",
     );
-    expect(formatDateKey("2026-09-13")).toBe("Sun, 13 Sept");
+    expect(formatDateKey("2026-09-13")).toBe("Sun 13 Sep");
   });
 });
 
@@ -178,18 +178,18 @@ describe("session helpers", () => {
     expect(groupSlotsByDay(slots, IST)).toEqual([
       {
         dateKey: "2026-09-13",
-        dayLabel: "Sun, 13 Sept",
+        dayLabel: "Sun 13 Sep",
         timesLabel: "2–4 pm",
       },
-      { dateKey: "2026-09-15", dayLabel: "Tue, 15 Sept", timesLabel: "3–4 pm" },
+      { dateKey: "2026-09-15", dayLabel: "Tue 15 Sep", timesLabel: "3–4 pm" },
     ]);
-    expect(formatDayRange(slots, IST)).toBe("Sun, 13 Sept – Tue, 15 Sept");
+    expect(formatDayRange(slots, IST)).toBe("Sun 13 Sep – Tue 15 Sep");
     expect(toBookingWhenLines(slots, IST)).toEqual([
-      "Sun, 13 Sept · 2–4 pm",
-      "Tue, 15 Sept · 3–4 pm",
+      "Sun 13 Sep · 2–4 pm",
+      "Tue 15 Sep · 3–4 pm",
     ]);
     expect(toBookingWhenLines(slots.slice(0, 2), IST)).toEqual(["2–4 pm"]);
-    expect(formatDayRange(slots.slice(0, 2), IST)).toBe("Sun, 13 Sept");
+    expect(formatDayRange(slots.slice(0, 2), IST)).toBe("Sun 13 Sep");
   });
 
   it("keeps hours with a gap between them apart", () => {

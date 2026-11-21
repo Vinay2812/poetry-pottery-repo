@@ -16,8 +16,8 @@ const meta = {
   ],
   args: {
     pickedSlots: [
-      { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat, 19 Sept · 2–3 pm" },
-      { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue, 22 Sept · 3–4 pm" },
+      { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat 19 Sep · 2–3 pm" },
+      { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue 22 Sep · 3–4 pm" },
     ],
     progress: "All 2 hours picked",
     hours: 2,
@@ -65,7 +65,7 @@ export const NothingPicked: Story = {
 export const HalfPicked: Story = {
   args: {
     pickedSlots: [
-      { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat, 19 Sept · 2–3 pm" },
+      { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat 19 Sep · 2–3 pm" },
     ],
     progress: "1 of 3 hours picked",
     hours: 3,
