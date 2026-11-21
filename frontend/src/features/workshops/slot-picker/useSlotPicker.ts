@@ -10,6 +10,7 @@ import type { PickedSlot } from "@/features/workshops/components/PickedSlots";
 import type { SlotOption } from "@/features/workshops/components/SlotList";
 import {
   type SlotInterval,
+  slotsNeeded,
   toDateKey,
   type WorkshopData,
   type WorkshopDayData,
@@ -22,7 +23,6 @@ import {
   isSameSelection,
   isSlotPickable,
   shiftMonth,
-  slotsNeeded,
   spanNotice,
   suggestSlots,
   toCalendarWeeks,

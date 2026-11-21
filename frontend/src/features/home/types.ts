@@ -1,7 +1,7 @@
 import type { WorkshopsQuery } from "@/graphql/generated/graphql";
 import { formatInr } from "@/lib/format";
 
-import { slotsNeeded } from "@/features/workshops";
+import { slotsNeeded } from "@/features/workshops/types";
 
 export type StudioWheel = Pick<
   WorkshopsQuery["workshops"][number],
