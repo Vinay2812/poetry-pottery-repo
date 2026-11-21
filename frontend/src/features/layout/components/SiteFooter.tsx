@@ -77,6 +77,7 @@ export function SiteFooter({
   return (
     <footer
       data-print="hide"
+      data-site-footer=""
       className="mt-20 border-t border-ash bg-background"
     >
       <PageShell className="py-12 md:py-16">

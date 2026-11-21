@@ -189,7 +189,7 @@ export function ProductDetailContainer({
 
   // The bar steps aside at the footer, so its last line (privacy, terms) stays tappable.
   useEffect(() => {
-    const footer = document.querySelector("footer");
+    const footer = document.querySelector("[data-site-footer]");
     if (!footer) return;
     const observer = new IntersectionObserver(([entry]) =>
       setIsFooterVisible(entry?.isIntersecting ?? false),
