@@ -280,6 +280,29 @@ describe("EventsService", () => {
       );
     });
 
+    it("sends no reads for a shopper with no bookings", async () => {
+      prismaMock.eventRegistration.count.mockResolvedValue(0);
+
+      const result = await service.myRegistrations(7, 1, 12);
+
+      expect(result.items).toEqual([]);
+      expect(result.page_info).toEqual({
+        total: 0,
+        page: 1,
+        limit: 12,
+        has_more: false,
+      });
+      expect(prismaMock.eventRegistration.findMany).not.toHaveBeenCalled();
+    });
+
+    it("sends no reads for a page past both lists", async () => {
+      const beyond = await service.myRegistrations(7, 5, 12);
+
+      expect(beyond.items).toEqual([]);
+      expect(beyond.page_info.has_more).toBe(false);
+      expect(prismaMock.eventRegistration.findMany).not.toHaveBeenCalled();
+    });
+
     it("carries on through the record across the page boundary", async () => {
       const second = await service.myRegistrations(7, 2, 12);
 

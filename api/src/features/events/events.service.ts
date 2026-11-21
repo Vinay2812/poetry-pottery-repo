@@ -71,6 +71,11 @@ interface Slice {
   take: number;
 }
 
+// A read is only worth sending when its slice starts inside the list.
+function canReturnRows(slice: Slice, total: number): boolean {
+  return slice.take > 0 && slice.skip < total;
+}
+
 // One page laid over two lists read back to back: how much of it each list fills.
 export function splitPage(
   bounds: PageBounds,
@@ -372,7 +377,7 @@ export class EventsService {
     ]);
     const slices = splitPage(bounds, aheadTotal);
     const [aheadRows, behindRows] = await Promise.all([
-      slices.first.take > 0
+      canReturnRows(slices.first, aheadTotal)
         ? this.prisma.eventRegistration.findMany({
             where: ahead,
             include: registrationInclude,
@@ -381,7 +386,7 @@ export class EventsService {
             take: slices.first.take,
           })
         : [],
-      slices.second.take > 0
+      canReturnRows(slices.second, behindTotal)
         ? this.prisma.eventRegistration.findMany({
             where: behind,
             include: registrationInclude,
