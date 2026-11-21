@@ -1,5 +1,5 @@
 export interface WorkshopSessionSummaryProps {
-  // One line per day, e.g. "Wed, 25 Nov · 3–4 pm".
+  // One line per day, e.g. "Wed 25 Nov · 3–4 pm".
   sessionLines: string[];
   sizeLabel: string;
   totalLabel: string;

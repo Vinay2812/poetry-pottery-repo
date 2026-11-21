@@ -13,8 +13,8 @@ const meta = {
     emptyMessage: "No bookings match those filters",
     children: (
       <>
-        <li className={ADMIN_CARD}>Maya Iyer · Sun, 22 Nov · 3–4 pm</li>
-        <li className={ADMIN_CARD}>Arjun Rao · Tue, 24 Nov · 1–2 pm</li>
+        <li className={ADMIN_CARD}>Maya Iyer · Sun 22 Nov · 3–4 pm</li>
+        <li className={ADMIN_CARD}>Arjun Rao · Tue 24 Nov · 1–2 pm</li>
       </>
     ),
   },

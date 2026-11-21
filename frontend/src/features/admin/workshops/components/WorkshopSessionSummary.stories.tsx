@@ -7,7 +7,7 @@ const meta = {
   title: "Features/Admin/Workshops/WorkshopSessionSummary",
   component: WorkshopSessionSummary,
   args: {
-    sessionLines: ["Sun, 22 Nov · 4–5 pm"],
+    sessionLines: ["Sun 22 Nov · 4–5 pm"],
     sizeLabel: "1 hour · 1 person",
     totalLabel: "₹1,100",
   },
@@ -21,7 +21,7 @@ export const OneDay: Story = {};
 
 export const SplitAcrossDays: Story = {
   args: {
-    sessionLines: ["Wed, 25 Nov · 3–4 pm", "Sat, 28 Nov · 4–5 pm"],
+    sessionLines: ["Wed 25 Nov · 3–4 pm", "Sat 28 Nov · 4–5 pm"],
     sizeLabel: "2 hours · 2 people",
     totalLabel: "₹4,000",
   },

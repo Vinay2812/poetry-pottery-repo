@@ -5,6 +5,7 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
+import { formatShortDay } from "@/lib/format";
 import { safeTimeZone } from "@/lib/timezones";
 
 export type WorkshopConfigData = AdminWorkshopConfigFieldsFragment;
@@ -204,15 +205,6 @@ function formatClockRange(slot: SessionSlot, timezone: string): string {
   return `${from.time} ${from.period}–${to.time} ${to.period}`;
 }
 
-function formatSessionDay(instant: string, timezone: string): string {
-  return new Intl.DateTimeFormat("en-IN", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    timeZone: timezone,
-  }).format(new Date(instant));
-}
-
 /** Back-to-back hours read as one stretch, so 3–4 and 4–5 become 3–5. */
 function joinBackToBack(slots: SessionSlot[]): SessionSlot[] {
   const sorted = [...slots].sort((a, b) =>
@@ -229,7 +221,7 @@ function joinBackToBack(slots: SessionSlot[]): SessionSlot[] {
 
 /**
  * A booking can be split across days, so each day gets its own line:
- * "Wed, 25 Nov · 3–4 pm" then "Sat, 28 Nov · 4–5 pm".
+ * "Wed 25 Nov · 3–4 pm" then "Sat 28 Nov · 4–5 pm".
  */
 export function describeSessionDays(
   slots: SessionSlot[],
@@ -238,7 +230,7 @@ export function describeSessionDays(
   const zone = safeTimeZone(timezone);
   const days = new Map<string, string[]>();
   for (const run of joinBackToBack(slots)) {
-    const day = formatSessionDay(run.starts_at, zone);
+    const day = formatShortDay(run.starts_at, zone);
     days.set(day, [...(days.get(day) ?? []), formatClockRange(run, zone)]);
   }
   return [...days.entries()].map(
