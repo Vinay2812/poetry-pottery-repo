@@ -30,15 +30,15 @@ export function AdminPersonStats({
         href={ordersHref}
       />
       <AdminStatTile
-        label="Registrations"
+        label="Event seats"
         value={registrations}
-        hint="Seats at events"
+        hint="Asked for so far"
         href={registrationsHref}
       />
       <AdminStatTile
-        label="Bookings"
+        label="Wheel sessions"
         value={bookings}
-        hint="Wheel sessions"
+        hint="Booked so far"
         href={bookingsHref}
       />
       <AdminStatTile
