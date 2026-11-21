@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { SECTION_LABEL } from "@/features/orders/components/styles";
+
 export interface OrderCareGuideProps {
   lines: string[];
 }
@@ -7,10 +9,8 @@ export interface OrderCareGuideProps {
 // Shown once the parcel has landed: the care lines of the pieces that are actually in it.
 export function OrderCareGuide({ lines }: OrderCareGuideProps) {
   return (
-    <section className="flex flex-col gap-5">
-      <h3 className="border-b border-ash pb-3 font-heading text-xl tracking-tight">
-        Caring for these pieces
-      </h3>
+    <section className="flex flex-col gap-4">
+      <h2 className={SECTION_LABEL}>Caring for these pieces</h2>
       <ul className="flex flex-col gap-2">
         {lines.map((line) => (
           <li key={line} className="flex gap-3 text-[15px]">

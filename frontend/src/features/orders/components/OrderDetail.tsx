@@ -13,6 +13,7 @@ import {
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 import { Timeline } from "@/components/timeline/Timeline";
 import { OrderTotals } from "@/features/orders/components/OrderTotals";
+import { SECTION_LABEL } from "@/features/orders/components/styles";
 import {
   StudioNote,
   type StudioNoteProps,
@@ -56,9 +57,6 @@ export interface OrderDetailProps {
   onReorder: () => void;
   onPrint: () => void;
 }
-
-const SECTION_HEADING =
-  "border-b border-ash pb-3 font-heading text-xl tracking-tight";
 
 export function OrderDetail({
   orderId,
@@ -134,8 +132,8 @@ export function OrderDetail({
 
       <div className="grid gap-10 lg:grid-cols-[1fr_360px] lg:items-start">
         <div className="flex flex-col gap-10">
-          <section className="flex flex-col gap-5">
-            <h2 className={SECTION_HEADING}>Progress</h2>
+          <section className="flex flex-col gap-4">
+            <h2 className={SECTION_LABEL}>Progress</h2>
             <Timeline steps={steps} closedLabel={closedLabel} />
             {trackingNote && (
               <p className="text-[13px] text-muted-foreground">
@@ -145,8 +143,8 @@ export function OrderDetail({
           </section>
 
           <section className="flex flex-col gap-4">
-            <h2 className={SECTION_HEADING}>Pieces</h2>
-            <ul className="flex flex-col">
+            <h2 className={SECTION_LABEL}>Pieces</h2>
+            <ul className="flex flex-col border-t border-ash">
               {items.map((item) => (
                 <OrderItemRow
                   key={item.id}
@@ -166,8 +164,8 @@ export function OrderDetail({
 
           {studioNotes.length > 0 && (
             <section className="flex flex-col gap-4">
-              <h2 className={SECTION_HEADING}>From the studio</h2>
-              <ul className="flex flex-col">
+              <h2 className={SECTION_LABEL}>From the studio</h2>
+              <ul className="flex flex-col border-t border-ash">
                 {studioNotes.map((note) => (
                   <StudioNote
                     key={note.id}
@@ -185,17 +183,19 @@ export function OrderDetail({
 
         <aside className="flex flex-col gap-8 lg:sticky lg:top-24">
           <section className="flex flex-col gap-4">
-            <h2 className={SECTION_HEADING}>Summary</h2>
-            <OrderTotals
-              subtotal={subtotal}
-              discount={discount}
-              couponCode={couponCode}
-              shippingFee={shippingFee}
-              total={total}
-            />
+            <h2 className={SECTION_LABEL}>Summary</h2>
+            <div className="border-t border-ash">
+              <OrderTotals
+                subtotal={subtotal}
+                discount={discount}
+                couponCode={couponCode}
+                shippingFee={shippingFee}
+                total={total}
+              />
+            </div>
           </section>
           <section className="flex flex-col gap-4">
-            <h2 className={SECTION_HEADING}>Delivering to</h2>
+            <h2 className={SECTION_LABEL}>Delivering to</h2>
             <address className="text-sm leading-relaxed not-italic">
               {addressLines.map((line, index) => (
                 <span key={index} className="block">
@@ -211,7 +211,7 @@ export function OrderDetail({
           </section>
           {(giftNote || hasHiddenPrices) && (
             <section className="flex flex-col gap-4">
-              <h2 className={SECTION_HEADING}>Sent as a gift</h2>
+              <h2 className={SECTION_LABEL}>Sent as a gift</h2>
               {giftNote && (
                 <p className="font-script text-lg leading-relaxed italic">
                   “{giftNote}”
