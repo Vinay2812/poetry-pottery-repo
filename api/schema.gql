@@ -180,6 +180,7 @@ input AdminEventInput {
 }
 
 input AdminEventsFilterInput {
+  awaiting_approval: Boolean
   event_type: EventType
   limit: Int
   page: Int

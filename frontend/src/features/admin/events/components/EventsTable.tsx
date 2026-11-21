@@ -12,6 +12,7 @@ import {
 
 export interface EventTableRow {
   id: number;
+  href: string;
   title: string;
   imageUrl: string;
   typeLabel: string;
@@ -63,7 +64,7 @@ export function EventsTable({ rows, isBusy }: EventsTableProps) {
             </td>
             <td className={ADMIN_TD}>
               <Link
-                href={`/dashboard/events/${row.id}`}
+                href={row.href}
                 className="underline-offset-4 hover:underline"
               >
                 {row.title}

@@ -42,6 +42,7 @@ import {
 import {
   describeSeats,
   describeWhen,
+  toEventHref,
   toEventStatus,
   toEventType,
 } from "@/features/admin/events/types";
@@ -49,12 +50,14 @@ import {
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS = enumOptions(EventStatus);
 const TYPE_OPTIONS = enumOptions(EventType);
+const REQUEST_OPTIONS = [{ value: "1", label: "Awaiting approval" }];
 
 export function EventsListContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const search = values.search ?? "";
   const status = values.status ?? "";
   const eventType = values.event_type ?? "";
+  const isAwaitingFilter = values.awaiting === "1";
   const { personId, personName } = usePersonFilter(values.user);
 
   const commitSearch = useCallback(
@@ -75,6 +78,7 @@ export function EventsListContainer() {
           status: toEventStatus(status),
           event_type: toEventType(eventType),
           user_id: personId,
+          awaiting_approval: isAwaitingFilter || null,
           page,
           limit: PAGE_SIZE,
         },
@@ -89,6 +93,7 @@ export function EventsListContainer() {
     () =>
       (result?.items ?? []).map((event) => ({
         id: event.id,
+        href: toEventHref(event.id, isAwaitingFilter),
         title: event.title,
         imageUrl: event.image_url,
         typeLabel: formatEnumLabel(event.event_type),
@@ -99,7 +104,7 @@ export function EventsListContainer() {
         priceLabel: formatInr(event.price),
         seatsLabel: describeSeats(event.available_seats, event.total_seats),
       })),
-    [result],
+    [isAwaitingFilter, result],
   );
 
   const pageInfo = result?.page_info;
@@ -145,6 +150,14 @@ export function EventsListContainer() {
           options={TYPE_OPTIONS}
           value={eventType}
           onChange={(value) => patch({ event_type: value || null })}
+        />
+        <AdminSelectFilter
+          id="events-requests"
+          label="Requests"
+          anyLabel="Any requests"
+          options={REQUEST_OPTIONS}
+          value={isAwaitingFilter ? "1" : ""}
+          onChange={(value) => patch({ awaiting: value || null })}
         />
       </AdminToolbar>
       {personId !== null && (

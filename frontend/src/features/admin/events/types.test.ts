@@ -28,6 +28,7 @@ import {
   toEventFormValues,
   toEventInput,
   toEventStatus,
+  toEventHref,
   toEventType,
   toLines,
 } from "./types";
@@ -55,6 +56,13 @@ const EVENT: AdminEventDetailFragment = {
   includes: ["Tea"],
   performers: [],
 };
+
+describe("toEventHref", () => {
+  it("opens on the waiting requests only while the waiting filter is on", () => {
+    expect(toEventHref(3, false)).toBe("/dashboard/events/3");
+    expect(toEventHref(3, true)).toBe("/dashboard/events/3?reg_status=PENDING");
+  });
+});
 
 describe("datetime-local conversion", () => {
   it("shows studio time in the field", () => {

@@ -200,6 +200,7 @@ export type AdminEventInput = {
 };
 
 export type AdminEventsFilterInput = {
+  awaiting_approval?: InputMaybe<Scalars['Boolean']['input']>;
   event_type?: InputMaybe<EventType>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   page?: InputMaybe<Scalars['Int']['input']>;

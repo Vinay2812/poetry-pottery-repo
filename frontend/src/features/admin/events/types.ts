@@ -5,7 +5,7 @@ import {
   EventLevel,
   EventStatus,
   EventType,
-  type RegistrationStatus,
+  RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
@@ -63,6 +63,13 @@ export function toEventStatus(value: string): EventStatus | null {
 
 export function toEventType(value: string): EventType | null {
   return Object.values(EventType).find((member) => member === value) ?? null;
+}
+
+// With the waiting filter on, each event opens on its requests awaiting approval.
+export function toEventHref(id: number, isAwaitingFilter: boolean): string {
+  return isAwaitingFilter
+    ? `/dashboard/events/${id}?reg_status=${RegistrationStatus.Pending}`
+    : `/dashboard/events/${id}`;
 }
 
 export type EventAction = "publish" | "unpublish" | "complete" | "cancel";
