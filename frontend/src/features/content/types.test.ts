@@ -131,52 +131,41 @@ describe("sectionAt", () => {
 });
 
 describe("pickActiveSection", () => {
-  const orderedIds = ["first-wash", "everyday-use", "storing"];
-  const base = {
-    orderedIds,
-    visibleIds: new Set<string>(),
-    isAtBottom: false,
-    previousId: null,
-  };
+  // Tops are distances from the top of the screen; the reading line sits at 180px.
+  function at(...tops: number[]) {
+    return {
+      sections: ["first-wash", "everyday-use", "storing"].map((id, index) => ({
+        id,
+        top: tops[index] ?? 0,
+      })),
+      readingLine: 180,
+      isAtBottom: false,
+    };
+  }
 
-  it("starts on the first section before anything crosses the line", () => {
-    expect(pickActiveSection(base)).toBe("first-wash");
+  // There is no memory of what was lit, so jumping back to the top lands here too.
+  it("starts on the first section before any top reaches the line", () => {
+    expect(pickActiveSection(at(400, 900, 1400))).toBe("first-wash");
   });
 
-  it("returns the first visible section in page order", () => {
+  it("picks the last section whose top has passed the line", () => {
+    expect(pickActiveSection(at(-600, 120, 700))).toBe("everyday-use");
+  });
+
+  it("counts a top exactly on the line as passed", () => {
+    expect(pickActiveSection(at(-600, -100, 180))).toBe("storing");
+  });
+
+  it("picks the last section at the foot of the page", () => {
     expect(
-      pickActiveSection({
-        ...base,
-        visibleIds: new Set(["storing", "everyday-use"]),
-      }),
-    ).toBe("everyday-use");
-  });
-
-  it("keeps the previous section between two sections", () => {
-    expect(pickActiveSection({ ...base, previousId: "everyday-use" })).toBe(
-      "everyday-use",
-    );
-  });
-
-  it("picks the last section at the foot of the page, over anything stale", () => {
-    expect(
-      pickActiveSection({
-        ...base,
-        visibleIds: new Set(["everyday-use"]),
-        isAtBottom: true,
-        previousId: "everyday-use",
-      }),
+      pickActiveSection({ ...at(-1200, -600, 400), isAtBottom: true }),
     ).toBe("storing");
   });
 
-  it("ignores a previous id that is no longer on the page", () => {
-    expect(pickActiveSection({ ...base, previousId: "elsewhere" })).toBe(
-      "first-wash",
-    );
-  });
-
   it("has nothing to pick on an empty page", () => {
-    expect(pickActiveSection({ ...base, orderedIds: [] })).toBeNull();
+    expect(
+      pickActiveSection({ sections: [], readingLine: 180, isAtBottom: true }),
+    ).toBeNull();
   });
 });
 

@@ -86,27 +86,27 @@ export const ASIDE_COLUMNS = "md:grid-cols-[minmax(0,13.75rem)_1fr]";
 // The on-this-page list earns its space only when there is somewhere to jump to.
 export const MIN_INDEX_SECTIONS = 2;
 
-export interface ActiveSectionInput {
-  orderedIds: readonly string[];
-  visibleIds: ReadonlySet<string>;
-  isAtBottom: boolean;
-  previousId: string | null;
+export interface SectionPosition {
+  id: string;
+  top: number;
 }
 
-// At the foot of the page the last section is current, since it may never reach the reading line;
-// otherwise the first section crossing the line wins, and between sections the last one holds.
+export interface ActiveSectionInput {
+  sections: readonly SectionPosition[];
+  readingLine: number;
+  isAtBottom: boolean;
+}
+
+// Reads only where things are now, so nothing stale can stay lit: at the foot of the page the last
+// section wins (it may never reach the line), else the last one whose top has passed the line, else the first.
 export function pickActiveSection({
-  orderedIds,
-  visibleIds,
+  sections,
+  readingLine,
   isAtBottom,
-  previousId,
 }: ActiveSectionInput): string | null {
-  if (orderedIds.length === 0) return null;
-  if (isAtBottom) return orderedIds[orderedIds.length - 1] ?? null;
-  const crossing = orderedIds.find((id) => visibleIds.has(id));
-  if (crossing) return crossing;
-  if (previousId !== null && orderedIds.includes(previousId)) return previousId;
-  return orderedIds[0] ?? null;
+  if (isAtBottom) return sections.at(-1)?.id ?? null;
+  const passed = sections.filter((section) => section.top <= readingLine);
+  return (passed.at(-1) ?? sections[0])?.id ?? null;
 }
 
 export type GridColumns = 2 | 3 | 4;

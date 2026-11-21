@@ -15,15 +15,10 @@ export interface ContentIndexContainerProps {
   entries: ContentIndexEntry[];
 }
 
-// A thin reading line a fifth of the way down the screen decides which section is current.
-const READING_LINE = "-20% 0px -79% 0px";
+// A section is current once its top passes a line a fifth of the way down the screen.
+const READING_LINE_RATIO = 0.2;
 // A couple of pixels of slack, since fractional zoom rarely lands exactly on the last pixel.
 const BOTTOM_SLACK_PX = 2;
-
-function isScrolledToBottom(): boolean {
-  const { scrollHeight } = document.documentElement;
-  return window.innerHeight + window.scrollY >= scrollHeight - BOTTOM_SLACK_PX;
-}
 
 export function ContentIndexContainer({
   label,
@@ -32,44 +27,43 @@ export function ContentIndexContainer({
   const [activeId, setActiveId] = useState<string | null>(
     entries[0]?.id ?? null,
   );
-
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // On phones the list folds away once a section is picked, so the text is what is on screen.
   const handleJump = useCallback(() => setIsMenuOpen(false), []);
 
   useEffect(() => {
-    if (typeof IntersectionObserver === "undefined") return;
-    const orderedIds = entries.map((entry) => entry.id);
-    const visibleIds = new Set<string>();
-    const update = () =>
-      setActiveId((previousId) =>
+    let frame = 0;
+    const measure = () => {
+      frame = 0;
+      const sections = entries.map((entry) => ({
+        id: entry.id,
+        top:
+          document.getElementById(entry.id)?.getBoundingClientRect().top ??
+          Number.POSITIVE_INFINITY,
+      }));
+      const isAtBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - BOTTOM_SLACK_PX;
+      setActiveId(
         pickActiveSection({
-          orderedIds,
-          visibleIds,
-          isAtBottom: isScrolledToBottom(),
-          previousId,
+          sections,
+          readingLine: window.innerHeight * READING_LINE_RATIO,
+          isAtBottom,
         }),
       );
+    };
+    // One measurement per frame, however fast the scroll events come.
+    const schedule = () => {
+      if (frame === 0) frame = window.requestAnimationFrame(measure);
+    };
 
-    const observer = new IntersectionObserver(
-      (records) => {
-        for (const record of records) {
-          if (record.isIntersecting) visibleIds.add(record.target.id);
-          else visibleIds.delete(record.target.id);
-        }
-        update();
-      },
-      { rootMargin: READING_LINE },
-    );
-    for (const id of orderedIds) {
-      const node = document.getElementById(id);
-      if (node) observer.observe(node);
-    }
-    // Reaching the foot of the page crosses no section, so the observer alone would miss it.
-    window.addEventListener("scroll", update, { passive: true });
+    measure();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
     return () => {
-      observer.disconnect();
-      window.removeEventListener("scroll", update);
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
     };
   }, [entries]);
 
