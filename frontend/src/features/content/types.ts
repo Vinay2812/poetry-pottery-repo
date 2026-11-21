@@ -86,7 +86,7 @@ export const ASIDE_COLUMNS = "md:grid-cols-[minmax(0,13.75rem)_1fr]";
 // The on-this-page list earns its space only when there is somewhere to jump to.
 export const MIN_INDEX_SECTIONS = 2;
 
-export interface SectionPosition {
+interface SectionPosition {
   id: string;
   top: number;
 }
