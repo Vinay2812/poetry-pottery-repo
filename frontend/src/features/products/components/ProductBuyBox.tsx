@@ -110,8 +110,11 @@ export function ProductBuyBox({
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          {/* One row from 340px; narrower, the button gets its own line under the stepper and heart. */}
-          <div ref={actionsRef} className="flex flex-wrap items-center gap-2">
+          {/* Stepper, heart, button in the DOM and on screen; under 340px the button takes its own line. */}
+          <div
+            ref={actionsRef}
+            className="grid grid-cols-[auto_1fr_auto] items-center gap-2 min-[340px]:flex"
+          >
             {!isSoldOut && (
               <QuantityStepper
                 value={quantity}
@@ -120,22 +123,10 @@ export function ProductBuyBox({
               />
             )}
             <Button
-              size="lg"
-              className="order-last min-w-full flex-1 px-4 min-[340px]:order-none min-[340px]:min-w-32"
-              onClick={onAddToCart}
-              disabled={!canAddToCart || isAddingToCart || isSoldOut}
-            >
-              {isSoldOut
-                ? "Sold out"
-                : isAddingToCart
-                  ? "Adding…"
-                  : toAddToCartLabel(quantity)}
-            </Button>
-            <Button
               variant="outline"
               size="icon-lg"
               className={cn(
-                "ml-auto shrink-0 min-[340px]:ml-0",
+                "col-start-3 shrink-0",
                 isWishlisted && "bg-ink text-white",
               )}
               onClick={onToggleWishlist}
@@ -148,6 +139,18 @@ export function ProductBuyBox({
                 className={cn("size-5", isWishlisted && "fill-current")}
                 strokeWidth={1.5}
               />
+            </Button>
+            <Button
+              size="lg"
+              className="col-span-3 px-4 min-[340px]:min-w-32 min-[340px]:flex-1"
+              onClick={onAddToCart}
+              disabled={!canAddToCart || isAddingToCart || isSoldOut}
+            >
+              {isSoldOut
+                ? "Sold out"
+                : isAddingToCart
+                  ? "Adding…"
+                  : toAddToCartLabel(quantity)}
             </Button>
           </div>
 
