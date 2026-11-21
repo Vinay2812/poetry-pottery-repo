@@ -1,3 +1,5 @@
+import { SlidersHorizontal } from "lucide-react";
+
 import {
   Select,
   SelectContent,
@@ -11,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { SORT_OPTIONS } from "@/features/products/types";
 
 export interface ProductToolbarProps {
-  total: number;
+  countLabel: string;
   isLoading: boolean;
   sort: ProductSort;
   activeFilterCount: number;
@@ -20,8 +22,12 @@ export interface ProductToolbarProps {
   onClear: () => void;
 }
 
+const CONTROL_CLASS =
+  "h-10 border border-ash bg-transparent text-sm transition-colors hover:border-ink";
+
+// Phones get two equal boxes, filters and sort, with the count under them; wider screens put the count left.
 export function ProductToolbar({
-  total,
+  countLabel,
   isLoading,
   sort,
   activeFilterCount,
@@ -29,18 +35,15 @@ export function ProductToolbar({
   onOpenFilters,
   onClear,
 }: ProductToolbarProps) {
-  // Held at the height of the sort control so the count swapping words never moves the grid.
   return (
-    <div className="flex min-h-10 items-center justify-between gap-3">
+    <div className="flex flex-col gap-3 md:min-h-10 md:flex-row md:items-center md:justify-between md:gap-4">
       <p
-        className="min-h-5 text-[13px] text-muted-foreground tnum"
+        className="order-2 min-h-5 min-w-0 text-[13px] text-muted-foreground tnum md:order-1"
         aria-live="polite"
       >
-        {isLoading
-          ? "Finding pieces…"
-          : `${total} ${total === 1 ? "piece" : "pieces"}`}
+        {isLoading ? "Finding pieces…" : countLabel}
       </p>
-      <div className="flex items-center gap-4">
+      <div className="order-1 grid shrink-0 grid-cols-2 gap-3 md:order-2 md:flex md:items-center md:gap-4">
         {/* Kept in the layout so clearing never moves the sort control. */}
         <button
           type="button"
@@ -53,11 +56,30 @@ export function ProductToolbar({
         >
           Clear all
         </button>
+        <button
+          type="button"
+          onClick={onOpenFilters}
+          className={cn(
+            CONTROL_CLASS,
+            "flex items-center justify-center gap-2 px-3 lg:hidden",
+          )}
+        >
+          <SlidersHorizontal className="size-4" strokeWidth={1.5} />
+          Filters
+          {activeFilterCount > 0 && (
+            <span className="text-muted-foreground tnum">
+              ({activeFilterCount})
+            </span>
+          )}
+        </button>
         <Select
           value={sort}
           onValueChange={(value) => onSortChange(value as ProductSort)}
         >
-          <SelectTrigger aria-label="Sort by" className="h-10 bg-transparent">
+          <SelectTrigger
+            aria-label="Sort by"
+            className={cn(CONTROL_CLASS, "w-full md:w-fit")}
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -68,16 +90,6 @@ export function ProductToolbar({
             ))}
           </SelectContent>
         </Select>
-        <button
-          type="button"
-          onClick={onOpenFilters}
-          className="text-sm underline-offset-4 hover:text-primary hover:underline lg:hidden"
-        >
-          Filters{" "}
-          <span className={cn("tnum", activeFilterCount === 0 && "invisible")}>
-            ({activeFilterCount})
-          </span>
-        </button>
       </div>
     </div>
   );

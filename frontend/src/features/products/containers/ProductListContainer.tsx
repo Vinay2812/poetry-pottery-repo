@@ -40,6 +40,7 @@ import {
   toCardPhotoLoading,
   toFilterInput,
   toFilterKey,
+  toResultCountLabel,
 } from "@/features/products/types";
 
 export interface ProductListContainerProps {
@@ -233,6 +234,7 @@ export function ProductListContainer({
     priceCeiling,
   );
   const activeFilterCount = countActiveFilters(filters);
+  const isMadeToOrderOnly = filters.customizableOnly && activeFilterCount === 1;
 
   const filterPanel = facets && (
     <ProductFilters
@@ -303,7 +305,11 @@ export function ProductListContainer({
         {/* A narrow result set must not pull the footer up over the reader's scroll position. */}
         <div className="flex min-h-[60vh] flex-col gap-5">
           <ProductToolbar
-            total={pageInfo?.total ?? 0}
+            countLabel={toResultCountLabel(
+              pageInfo?.total ?? 0,
+              filters.search,
+              filters.customizableOnly,
+            )}
             isLoading={isInitialLoading}
             sort={filters.sort}
             activeFilterCount={activeFilterCount}
@@ -324,6 +330,7 @@ export function ProductListContainer({
             <EmptyResults
               search={filters.search}
               hasActiveFilters={activeFilterCount > 0}
+              isMadeToOrderOnly={isMadeToOrderOnly}
               onClear={handleClear}
             />
           ) : (

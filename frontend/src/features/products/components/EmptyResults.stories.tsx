@@ -28,6 +28,10 @@ export const WithActiveFilters: Story = {
   args: { hasActiveFilters: true },
 };
 
+export const MadeToOrderOnly: Story = {
+  args: { hasActiveFilters: true, isMadeToOrderOnly: true },
+};
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };

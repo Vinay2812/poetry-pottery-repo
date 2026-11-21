@@ -17,7 +17,7 @@ const meta = {
     ),
   ],
   args: {
-    total: 48,
+    countLabel: "48 pieces",
     isLoading: false,
     sort: ProductSort.Featured,
     activeFilterCount: 0,
@@ -38,7 +38,15 @@ export const Loading: Story = {
 };
 
 export const WithActiveFilters: Story = {
-  args: { total: 12, activeFilterCount: 3 },
+  args: { countLabel: "12 pieces", activeFilterCount: 3 },
+};
+
+export const SearchResults: Story = {
+  args: { countLabel: "4 pieces for \u201cmug\u201d" },
+};
+
+export const MadeToOrderOnly: Story = {
+  args: { countLabel: "3 made-to-order pieces", activeFilterCount: 1 },
 };
 
 export const SortedByPrice: Story = {
