@@ -393,7 +393,7 @@ export function CommissionBriefForm({
               id="commission-notes"
               rows={4}
               maxLength={MAX_NOTES}
-              placeholder="Who it is for, a colour you have in mind, a date you need it by"
+              placeholder="Who it is for, the occasion, a date you need it by"
               aria-invalid={Boolean(errors.notes)}
               aria-describedby={
                 errors.notes ? "commission-notes-error" : undefined
