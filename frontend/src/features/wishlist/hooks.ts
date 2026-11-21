@@ -21,11 +21,14 @@ export function useWishlistIds() {
 export function useWishlist() {
   const { isSignedIn, isLoaded } = useAuth();
   const { ids, adoptIds } = useWishlistContext();
-  const { data, previousData, loading, error } = useQuery(WishlistDocument, {
-    skip: !isSignedIn,
-    fetchPolicy: "cache-and-network",
-    nextFetchPolicy: "cache-first",
-  });
+  const { data, previousData, loading, error, refetch } = useQuery(
+    WishlistDocument,
+    {
+      skip: !isSignedIn,
+      fetchPolicy: "cache-and-network",
+      nextFetchPolicy: "cache-first",
+    },
+  );
   const saved = useMemo(
     () => data?.wishlist ?? previousData?.wishlist ?? null,
     [data, previousData],
@@ -46,8 +49,9 @@ export function useWishlist() {
     items:
       isSignedIn && saved ? saved.filter((item) => ids.includes(item.id)) : [],
     isLoading: !isLoaded || (loading && !data && !previousData),
-    hasError: Boolean(error),
+    hasError: Boolean(error) && !saved,
     isSignedIn: Boolean(isSignedIn),
+    refetch,
   };
 }
 
