@@ -46,6 +46,7 @@ interface R2Config {
   secretAccessKey: string;
   bucket: string;
   publicUrl: string;
+  endpoint: string | null;
 }
 
 function readR2Config(): R2Config | null {
@@ -64,6 +65,7 @@ function readR2Config(): R2Config | null {
     secretAccessKey: env.R2_SECRET_ACCESS_KEY,
     bucket: env.R2_BUCKET,
     publicUrl: env.R2_PUBLIC_URL.replace(/\/$/, ""),
+    endpoint: env.R2_ENDPOINT ?? null,
   };
 }
 
@@ -76,7 +78,11 @@ export class StorageService {
     this.client = this.config
       ? new S3Client({
           region: "auto",
-          endpoint: `https://${this.config.accountId}.r2.cloudflarestorage.com`,
+          endpoint:
+            this.config.endpoint ??
+            `https://${this.config.accountId}.r2.cloudflarestorage.com`,
+          // Local emulators serve buckets by path rather than by subdomain.
+          forcePathStyle: this.config.endpoint !== null,
           credentials: {
             accessKeyId: this.config.accessKeyId,
             secretAccessKey: this.config.secretAccessKey,
