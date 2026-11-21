@@ -99,7 +99,7 @@ export function bookingStatusMail(
       title: "Your session is approved",
       intro:
         booking.total === 0
-          ? "We have approved your session. There is nothing to pay, and we will confirm it shortly."
+          ? "We have approved your session and will confirm it shortly."
           : "We have approved your session and will send payment details next. Once payment reaches us it is confirmed.",
     },
     CONFIRMED: {

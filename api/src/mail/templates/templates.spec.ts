@@ -670,8 +670,8 @@ describe("event registration templates", () => {
     const approved = registrationStatusMail(
       registration({ status: RegistrationStatus.APPROVED, total: 0 }),
     );
-    expect(approved?.text).toContain("There is nothing to pay");
-    expect(approved?.text).not.toContain("payment details");
+    expect(approved?.text).toContain("will confirm your seat shortly");
+    expect(approved?.text).not.toMatch(/pay/i);
 
     const paid = registrationStatusMail(
       registration({ status: RegistrationStatus.APPROVED, total: 2500 }),
@@ -729,8 +729,8 @@ describe("workshop booking templates", () => {
       booking({ status: RegistrationStatus.APPROVED, total: 0 }),
       "status",
     );
-    expect(approved?.text).toContain("There is nothing to pay");
-    expect(approved?.text).not.toContain("payment details");
+    expect(approved?.text).toContain("will confirm it shortly");
+    expect(approved?.text).not.toMatch(/pay/i);
     const confirmed = bookingStatusMail(
       booking({ status: RegistrationStatus.CONFIRMED, total: 0 }),
       "status",
