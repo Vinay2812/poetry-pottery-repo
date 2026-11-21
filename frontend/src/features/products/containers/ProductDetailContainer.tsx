@@ -39,6 +39,7 @@ import { StickyBuyBar } from "@/features/products/components/StickyBuyBar";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
   computeUnitPrice,
+  FAILED_PHOTO_MESSAGE,
   hasFailedPhoto,
   isStickyBarWanted,
   isTuckedUnderHeader,
@@ -304,7 +305,7 @@ export function ProductDetailContainer({
     }
     // A failed photo would otherwise be dropped from the line without a word.
     if (hasFailedPhoto(photos)) {
-      setPhotoError("Remove the photo that did not upload, or try it again");
+      setPhotoError(FAILED_PHOTO_MESSAGE);
       return false;
     }
     addToCart(

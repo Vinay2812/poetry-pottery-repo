@@ -663,6 +663,10 @@ export function isPhotoUploadPending(photos: ReferencePhoto[]): boolean {
   return photos.some((photo) => photo.url === null && photo.error === null);
 }
 
+// Shown when a failed photo holds back a cart line or a brief; the picker has no retry, so re-adding is the way.
+export const FAILED_PHOTO_MESSAGE =
+  "Remove the photo that did not upload and add it again.";
+
 export function hasFailedPhoto(photos: ReferencePhoto[]): boolean {
   return photos.some((photo) => photo.error !== null);
 }
