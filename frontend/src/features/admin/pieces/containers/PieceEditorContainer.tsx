@@ -36,6 +36,7 @@ import { StockAdjustDialog } from "@/features/admin/pieces/components/StockAdjus
 import { OptionGroupsContainer } from "@/features/admin/pieces/containers/OptionGroupsContainer";
 import {
   applyStockDelta,
+  canFeature,
   canGoLive,
   describeKiln,
   describeKilnHint,
@@ -367,17 +368,19 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
               >
                 Change the stock
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={isBusy}
-                onClick={() => runFeatured(!state.isFeatured)}
-              >
-                {state.isFeatured
-                  ? "Take off the home page"
-                  : "Show on the home page"}
-              </Button>
+              {canFeature(state.isActive, state.isFeatured) && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={isBusy}
+                  onClick={() => runFeatured(!state.isFeatured)}
+                >
+                  {state.isFeatured
+                    ? "Take off the home page"
+                    : "Show on the home page"}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="secondary"

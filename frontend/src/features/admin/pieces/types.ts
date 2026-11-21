@@ -37,6 +37,11 @@ export function canGoLive(stock: number, isCustomizable: boolean): boolean {
   return isCustomizable || stock > 0;
 }
 
+// A retired piece is never offered for the home page, but one still there can be taken off.
+export function canFeature(isActive: boolean, isFeatured: boolean): boolean {
+  return isActive || isFeatured;
+}
+
 export const LIVE_BLOCKED_NOTE = "Add stock first, or mark it made to order";
 
 // The storefront calls an inactive piece "Retired from the shelf" and lists it in the archive.

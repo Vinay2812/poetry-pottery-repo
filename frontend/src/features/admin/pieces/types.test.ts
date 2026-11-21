@@ -8,6 +8,7 @@ import {
 
 import {
   applyStockDelta,
+  canFeature,
   canGoLive,
   clampStock,
   countFoldedFilters,
@@ -462,5 +463,16 @@ describe("folded filters", () => {
     expect(describePiecesEmpty({ search: "jar" })).toBe(
       "No pieces match those filters. Clear one to see more.",
     );
+  });
+});
+
+describe("canFeature", () => {
+  it("offers the home page only to a piece on the shelf", () => {
+    expect(canFeature(true, false)).toBe(true);
+    expect(canFeature(false, false)).toBe(false);
+  });
+
+  it("still lets a retired piece come off the home page", () => {
+    expect(canFeature(false, true)).toBe(true);
   });
 });
