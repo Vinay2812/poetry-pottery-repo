@@ -92,7 +92,7 @@ export function EventListContainer({
   return (
     <PageShell className="flex flex-col gap-8 py-8 md:py-12">
       <header className="flex flex-col gap-3">
-        <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
+        <h1 className="font-heading text-3xl leading-tight tracking-tight md:text-5xl">
           {heading}
         </h1>
         <p className="max-w-xl text-[15px] text-muted-foreground">
