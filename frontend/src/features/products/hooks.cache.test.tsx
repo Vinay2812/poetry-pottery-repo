@@ -95,7 +95,7 @@ function toName(filter: ProductsFilterInput): string {
 
 function shelfClient(answerFor: (filter: ProductsFilterInput) => Answer) {
   const log: string[] = [];
-  const held: (() => void)[] = [];
+  const held: { name: string; finish: () => void }[] = [];
   const link = new ApolloLink(
     (operation) =>
       new Observable((observer) => {
@@ -112,7 +112,7 @@ function shelfClient(answerFor: (filter: ProductsFilterInput) => Answer) {
           observer.complete();
         };
         if (answer.isHeld) {
-          held.push(finish);
+          held.push({ name, finish });
           return;
         }
         const timer = setTimeout(finish, answer.delay ?? 0);
@@ -122,8 +122,13 @@ function shelfClient(answerFor: (filter: ProductsFilterInput) => Answer) {
   return {
     client: new ApolloClient({ link, cache: new InMemoryCache() }),
     log,
-    releaseHeld: () => {
-      for (const finish of held.splice(0)) finish();
+    // Releases the held answers whose request name matches, or every one without a name.
+    releaseHeld: (name?: string) => {
+      const ready = held.filter(
+        (entry) => name === undefined || entry.name === name,
+      );
+      for (const entry of ready) held.splice(held.indexOf(entry), 1);
+      for (const entry of ready) entry.finish();
     },
   };
 }
@@ -170,9 +175,9 @@ afterEach(() => {
 
 describe("useShelfResults against a real cache", () => {
   it("waits for the browser's own first page before asking for the next", async () => {
-    const { client, log } = shelfClient((filter) =>
+    const { client, log, releaseHeld } = shelfClient((filter) =>
       filter.page === 1
-        ? { page: ALL_P1, delay: 80 }
+        ? { page: ALL_P1, isHeld: true }
         : { page: ALL_P2, delay: 10 },
     );
     const { result } = renderShelf(client, ALL_P1);
@@ -180,10 +185,10 @@ describe("useShelfResults against a real cache", () => {
     expect(result.current.phase).toBe("ready");
     expect(result.current.canAskNextPage).toBe(false);
     act(() => result.current.loadMore());
-    await pause(20);
-    expect(log).toEqual(["start all p1"]);
+    await waitFor(() => expect(log).toEqual(["start all p1"]));
     expect(result.current.result?.items).toHaveLength(24);
 
+    await act(async () => releaseHeld("all p1"));
     await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
     act(() => result.current.loadMore());
     await waitFor(() => expect(result.current.result?.items).toHaveLength(30));
@@ -209,10 +214,12 @@ describe("useShelfResults against a real cache", () => {
   });
 
   it("drops a next page that lands under other filters", async () => {
-    const { client } = shelfClient((filter) => {
+    const { client, releaseHeld } = shelfClient((filter) => {
       if (filter.category_slugs?.includes("mugs"))
-        return { page: MUGS_P1, delay: 120 };
-      return filter.page === 1 ? { page: ALL_P1 } : { page: ALL_P2, delay: 40 };
+        return { page: MUGS_P1, isHeld: true };
+      return filter.page === 1
+        ? { page: ALL_P1 }
+        : { page: ALL_P2, isHeld: true };
     });
     const { result, rerender } = renderShelf(client, ALL_P1);
     await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
@@ -220,10 +227,12 @@ describe("useShelfResults against a real cache", () => {
     act(() => result.current.loadMore());
     rerender({ filters: MUGS });
     expect(result.current.phase).toBe("pending");
-    await pause(80);
-    // The shelf's page two has landed; the mugs list is still the old one, dimmed.
+    // The shelf's page two lands while mugs are still out: nothing is joined, the old list stays.
+    await act(async () => releaseHeld("all p2"));
     expect(result.current.result?.items).toHaveLength(24);
+    expect(result.current.phase).toBe("pending");
 
+    await act(async () => releaseHeld("mugs p1"));
     await waitFor(() =>
       expect(result.current.result?.items.map((item) => item.id)).toEqual([
         101, 102,
