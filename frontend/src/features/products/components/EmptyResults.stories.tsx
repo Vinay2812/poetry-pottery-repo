@@ -10,6 +10,7 @@ const meta = {
   args: {
     search: "",
     hasActiveFilters: false,
+    onClearSearch: fn(),
     onClear: fn(),
   },
 } satisfies Meta<typeof EmptyResults>;

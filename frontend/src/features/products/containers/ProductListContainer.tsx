@@ -289,6 +289,7 @@ export function ProductListContainer({
               search={filters.search}
               hasActiveFilters={activeFilterCount > 0}
               isMadeToOrderOnly={isMadeToOrderOnly}
+              onClearSearch={handleSearchClear}
               onClear={handleClear}
             />
           ) : (

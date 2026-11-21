@@ -5,6 +5,8 @@ export interface EmptyResultsProps {
   hasActiveFilters: boolean;
   // True when the made-to-order switch is the only filter on.
   isMadeToOrderOnly?: boolean;
+  // Clears the search alone; the other filters stay as they were.
+  onClearSearch: () => void;
   onClear: () => void;
 }
 
@@ -12,6 +14,7 @@ export function EmptyResults({
   search,
   hasActiveFilters,
   isMadeToOrderOnly = false,
+  onClearSearch,
   onClear,
 }: EmptyResultsProps) {
   // Nothing is coming to a filtered result, so "yet" would be a lie here.
@@ -22,7 +25,7 @@ export function EmptyResults({
         heading={`Nothing matches “${search}”`}
         line="Try a glaze, a clay body or a simpler word."
         actionLabel="Clear the search"
-        onAction={onClear}
+        onAction={onClearSearch}
       />
     );
   }
