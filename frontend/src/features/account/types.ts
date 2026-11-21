@@ -18,8 +18,13 @@ export function toInitials(displayName: string): string {
   return `${first}${last}`.toUpperCase() || "P";
 }
 
-export function toMemberSince(createdAt: Date | string | null): string {
-  if (!createdAt) return "recently";
+// Without a usable join date the line is left out rather than guessed at.
+export function toMemberSinceLine(
+  createdAt: Date | string | null,
+): string | null {
+  if (!createdAt) return null;
   const date = new Date(createdAt);
-  return Number.isNaN(date.getTime()) ? "recently" : MEMBER_SINCE.format(date);
+  return Number.isNaN(date.getTime())
+    ? null
+    : `With us since ${MEMBER_SINCE.format(date)}`;
 }

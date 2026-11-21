@@ -20,7 +20,7 @@ const meta = {
     email: "maya.iyer@example.com",
     imageUrl:
       "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
-    memberSince: "Sep 2024",
+    memberSinceLine: "With us since September 2024",
     isAdmin: false,
     onManageProfile: fn(),
     onSignOut: fn(),
@@ -39,6 +39,14 @@ export const Admin: Story = {
 
 export const NoImage: Story = {
   args: { imageUrl: null },
+};
+
+export const NoJoinDate: Story = {
+  args: { memberSinceLine: null },
+};
+
+export const LongEmail: Story = {
+  args: { email: "maya.iyer.studio.orders+pottery@example-mail.co.in" },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

@@ -10,7 +10,7 @@ export interface AccountMenuProps {
   displayName: string;
   email: string;
   imageUrl: string | null;
-  memberSince: string;
+  memberSinceLine: string | null;
   isAdmin: boolean;
   onManageProfile: () => void;
   onSignOut: () => void;
@@ -26,9 +26,9 @@ const LINKS = [
   {
     href: "/workshops/bookings",
     label: "Wheel sessions",
-    hint: "Your studio bookings",
+    hint: "Time at the wheel",
   },
-  { href: "/wishlist", label: "Saved pieces", hint: "Pieces you kept" },
+  { href: "/wishlist", label: "Saved pieces", hint: "Pieces you saved" },
   {
     href: "/account/addresses",
     label: "Addresses",
@@ -43,7 +43,7 @@ export function AccountMenu({
   displayName,
   email,
   imageUrl,
-  memberSince,
+  memberSinceLine,
   isAdmin,
   onManageProfile,
   onSignOut,
@@ -64,9 +64,12 @@ export function AccountMenu({
             Your account
           </h1>
           <p className="truncate text-sm">{displayName}</p>
-          <p className="truncate text-[13px] text-muted-foreground">
-            {email} · with us since {memberSince}
-          </p>
+          <p className="truncate text-[13px] text-muted-foreground">{email}</p>
+          {memberSinceLine && (
+            <p className="text-[13px] text-muted-foreground">
+              {memberSinceLine}
+            </p>
+          )}
         </div>
       </div>
       <ul className="flex flex-col border-t border-ash">
