@@ -17,7 +17,10 @@ import { PageShell } from "@/components/layout/PageShell";
 
 import { toProvenance } from "@/features/archive/types";
 import { useAddToCart } from "@/features/cart/hooks";
-import { SITE_HEADER_SELECTOR } from "@/features/layout/types";
+import {
+  SITE_FOOTER_SELECTOR,
+  SITE_HEADER_SELECTOR,
+} from "@/features/layout/types";
 import { canWatchPiece, NextBatchContainer } from "@/features/notify";
 import { useReferencePhotos } from "@/features/products/hooks";
 import { ArchiveNotice } from "@/features/products/components/ArchiveNotice";
@@ -37,6 +40,7 @@ import { ProductCardContainer } from "@/features/products/containers/ProductCard
 import {
   computeUnitPrice,
   hasFailedPhoto,
+  isStickyBarWanted,
   isTuckedUnderHeader,
   LG_MEDIA_QUERY,
   STICKY_BAR_SCROLL_PADDING,
@@ -108,9 +112,8 @@ export function ProductDetailContainer({
     toDefaultSelections(product.option_groups),
   );
   const [showErrors, setShowErrors] = useState(false);
-  const [isActionsVisible, setIsActionsVisible] = useState(true);
-  const [isFooterVisible, setIsFooterVisible] = useState(false);
-  const isActionsVisibleRef = useRef(true);
+  const [isBarWanted, setIsBarWanted] = useState(false);
+  const isBarWantedRef = useRef(false);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [activeFact, setActiveFact] = useState<string | null>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
@@ -191,36 +194,42 @@ export function ProductDetailContainer({
       });
   }, [factRows, product.name]);
 
-  // Measured each scroll frame below lg, where the bar lives; an IntersectionObserver misses jumps.
+  // Row, header and footer edges are read each scroll frame below lg, where the bar lives; an observer misses jumps.
   useEffect(() => {
     const node = actionsRef.current;
     if (!node) return;
     const wide = window.matchMedia(LG_MEDIA_QUERY);
     const header = document.querySelector(SITE_HEADER_SELECTOR);
+    const footer = document.querySelector(SITE_FOOTER_SELECTOR);
     let frame = 0;
-    const show = (isVisible: boolean) => {
-      if (isActionsVisibleRef.current === isVisible) return;
-      isActionsVisibleRef.current = isVisible;
-      // The bar is about to go inert; a reader on its button lands on the main one, shown in full.
+    const want = (isWanted: boolean, isRowInView: boolean) => {
+      if (isBarWantedRef.current === isWanted) return;
+      isBarWantedRef.current = isWanted;
+      // The bar is about to go inert; a reader on its button lands on the main one.
       const main = addToCartRef.current;
       if (
-        isVisible &&
+        !isWanted &&
         main &&
         stickyBarRef.current?.contains(document.activeElement)
       ) {
         main.focus({ preventScroll: true });
-        // scroll-padding-top keeps it clear of the sticky header.
-        main.scrollIntoView({ block: "nearest" });
+        // Shown in full when the row is back (scroll-padding-top clears the header); at the footer, stay put.
+        if (isRowInView) main.scrollIntoView({ block: "nearest" });
       }
-      setIsActionsVisible(isVisible);
+      setIsBarWanted(isWanted);
     };
     const measure = () => {
       frame = 0;
-      show(
-        !isTuckedUnderHeader(
-          node.getBoundingClientRect().bottom,
-          header?.getBoundingClientRect().bottom ?? 0,
-        ),
+      const rowBottom = node.getBoundingClientRect().bottom;
+      const headerBottom = header?.getBoundingClientRect().bottom ?? 0;
+      want(
+        isStickyBarWanted({
+          rowBottom,
+          headerBottom,
+          footerTop: footer?.getBoundingClientRect().top ?? Infinity,
+          viewportHeight: window.innerHeight,
+        }),
+        !isTuckedUnderHeader(rowBottom, headerBottom),
       );
     };
     const schedule = () => {
@@ -235,7 +244,7 @@ export function ProductDetailContainer({
     const sync = () => {
       detach();
       if (wide.matches) {
-        show(true);
+        want(false, true);
         return;
       }
       measure();
@@ -250,20 +259,8 @@ export function ProductDetailContainer({
     };
   }, []);
 
-  // The bar steps aside at the footer, so its last line (privacy, terms) stays tappable.
-  useEffect(() => {
-    const footer = document.querySelector("[data-site-footer]");
-    if (!footer) return;
-    const observer = new IntersectionObserver(([entry]) =>
-      setIsFooterVisible(entry?.isIntersecting ?? false),
-    );
-    observer.observe(footer);
-    return () => observer.disconnect();
-  }, []);
-
   // While the bar is up, focused and scrolled-to controls stop above it rather than under it.
-  const isStickyBarShown =
-    !isArchived && !isActionsVisible && !isFooterVisible;
+  const isStickyBarShown = !isArchived && isBarWanted;
   useEffect(() => {
     if (!isStickyBarShown) return;
     const root = document.documentElement;

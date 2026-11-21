@@ -287,6 +287,25 @@ export function isTuckedUnderHeader(
   return rowBottom <= headerBottom;
 }
 
+export interface StickyBarEdges {
+  rowBottom: number;
+  headerBottom: number;
+  footerTop: number;
+  viewportHeight: number;
+}
+
+// The bar stands in once the buttons slide under the header, and steps aside at the footer so privacy and terms stay tappable.
+export function isStickyBarWanted({
+  rowBottom,
+  headerBottom,
+  footerTop,
+  viewportHeight,
+}: StickyBarEdges): boolean {
+  return (
+    isTuckedUnderHeader(rowBottom, headerBottom) && footerTop >= viewportHeight
+  );
+}
+
 // The price already sits above the button, so the button only says what it does.
 export function toAddToCartLabel(quantity: number): string {
   return quantity > 1 ? `Add ${quantity} to cart` : "Add to cart";

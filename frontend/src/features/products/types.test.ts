@@ -26,6 +26,7 @@ import {
   toFilterInput,
   toFilterKey,
   toSearchParams,
+  isStickyBarWanted,
   isTuckedUnderHeader,
   toAddToCartLabel,
   toBatchLabel,
@@ -751,5 +752,31 @@ describe("isTuckedUnderHeader", () => {
 
   it("keeps them in play while they are still below the fold", () => {
     expect(isTuckedUnderHeader(1200, 65)).toBe(false);
+  });
+});
+
+describe("isStickyBarWanted", () => {
+  const edges = {
+    rowBottom: 40,
+    headerBottom: 65,
+    footerTop: 2000,
+    viewportHeight: 844,
+  };
+
+  it("stands in once the buttons are under the header and the footer is still below", () => {
+    expect(isStickyBarWanted(edges)).toBe(true);
+  });
+
+  it("stays away while the buttons are on screen", () => {
+    expect(isStickyBarWanted({ ...edges, rowBottom: 300 })).toBe(false);
+  });
+
+  it("steps aside as soon as the footer reaches the screen", () => {
+    expect(isStickyBarWanted({ ...edges, footerTop: 843 })).toBe(false);
+    expect(isStickyBarWanted({ ...edges, footerTop: 844 })).toBe(true);
+  });
+
+  it("behaves as before on a page without a footer", () => {
+    expect(isStickyBarWanted({ ...edges, footerTop: Infinity })).toBe(true);
   });
 });
