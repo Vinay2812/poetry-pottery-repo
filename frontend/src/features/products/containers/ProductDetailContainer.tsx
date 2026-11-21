@@ -436,8 +436,7 @@ export function ProductDetailContainer({
       </div>
 
       <div className="grid gap-12 border-t border-ash pt-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
-        {/* The story is short beside a long fact list, so it stays in view while the facts scroll. */}
-        <div className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
+        <div className="flex flex-col gap-4">
           <h2 className="font-heading text-2xl tracking-tight">
             About this piece
           </h2>
