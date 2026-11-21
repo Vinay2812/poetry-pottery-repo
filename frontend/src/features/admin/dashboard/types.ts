@@ -60,7 +60,7 @@ export function toAgendaKindLabel(kind: AdminAgendaKind): string {
 // A wheel session ends with its status in the words the guest sees, e.g. "· Awaiting approval".
 export function toAgendaDetail(
   detail: string,
-  bookingStatus: RegistrationStatus | null | undefined,
+  bookingStatus: RegistrationStatus | null,
 ): string {
   if (!bookingStatus) return detail;
   return `${detail} · ${toRegistrationStatusLabel(bookingStatus)}`;

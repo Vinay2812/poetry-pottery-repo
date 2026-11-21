@@ -32,6 +32,11 @@ const TIME_SHORT = new Intl.DateTimeFormat("en-IN", {
 
 const SHORT_DAY = new Map<string, Intl.DateTimeFormat>();
 
+// en-IN writes September as "Sept"; every other month is three letters.
+function toThreeLetterMonth(text: string): string {
+  return text.replace("Sept", "Sep");
+}
+
 // "Sun 22 Nov": the day every event and wheel-session line uses, without en-IN's comma or "Sept".
 export function formatShortDay(value: string | Date, timeZone: string): string {
   let formatter = SHORT_DAY.get(timeZone);
@@ -44,14 +49,13 @@ export function formatShortDay(value: string | Date, timeZone: string): string {
     });
     SHORT_DAY.set(timeZone, formatter);
   }
-  return formatter
-    .format(new Date(value))
-    .replace(/,/g, "")
-    .replace("Sept", "Sep");
+  return toThreeLetterMonth(
+    formatter.format(new Date(value)).replace(/,/g, ""),
+  );
 }
 
 export function formatDate(value: string | Date): string {
-  return DATE_LONG.format(new Date(value)).replace("Sept", "Sep");
+  return toThreeLetterMonth(DATE_LONG.format(new Date(value)));
 }
 
 export function formatTime(value: string | Date): string {
