@@ -23,9 +23,7 @@ import {
   HomeHero,
   HomeSection,
   StudioTeaser,
-  toStudioNote,
-  toStudioPriceLabel,
-  toStudioSchedule,
+  toStudioSection,
 } from "@/features/home";
 import { ReviewColumn, toOneLine } from "@/features/reviews";
 import { toEventPath, toSeatsLabel } from "@/features/events";
@@ -42,11 +40,6 @@ export const metadata: Metadata = pageMetadata({
   description: SITE_DESCRIPTION,
   isTitleAbsolute: true,
 });
-
-const OPEN_WHEEL_LINE =
-  "Nothing is on the calendar this week, but the wheels keep their usual hours. Pick a time and we will set one up for you.";
-const RESTING_WHEEL_LINE =
-  "Nothing is on the calendar this week, and the wheels are resting for now. Write to us and we will tell you when they turn again.";
 
 export default async function HomePage() {
   const [
@@ -70,8 +63,8 @@ export default async function HomePage() {
   const shapes = categories.filter((category) => category.product_count > 0);
   const customPiece = customPieces[0] ?? null;
   const wheel = workshops[0] ?? null;
-  const schedule = toStudioSchedule(wheel);
   const hasEvents = upcomingEvents.length > 0;
+  const studio = toStudioSection(wheel, hasEvents);
 
   return (
     <PageShell className="flex flex-col">
@@ -130,11 +123,21 @@ export default async function HomePage() {
       {/* An empty calendar hands the note and the link to the teaser below. */}
       <HomeSection
         title="At the studio"
-        note={hasEvents && schedule ? toStudioNote(schedule) : undefined}
+        note={studio.note ?? undefined}
         linkHref={hasEvents ? "/events" : undefined}
         linkLabel={hasEvents ? "All dates" : undefined}
       >
-        {hasEvents ? (
+        {studio.teaser ? (
+          <StudioTeaser
+            imageUrl={wheel?.image_url ?? null}
+            line={studio.teaser.line}
+            hoursLabel={studio.teaser.hoursLabel}
+            daysLabel={studio.teaser.daysLabel}
+            priceLabel={studio.teaser.priceLabel}
+            href={studio.teaser.href}
+            linkLabel={studio.teaser.linkLabel}
+          />
+        ) : (
           <div className="border-t border-ash">
             {upcomingEvents.map((event) => (
               <EventRow
@@ -150,18 +153,6 @@ export default async function HomePage() {
               />
             ))}
           </div>
-        ) : (
-          <StudioTeaser
-            imageUrl={wheel?.image_url ?? null}
-            line={schedule ? OPEN_WHEEL_LINE : RESTING_WHEEL_LINE}
-            hoursLabel={schedule?.hoursLabel ?? null}
-            daysLabel={schedule?.daysLabel ?? null}
-            priceLabel={
-              schedule ? toStudioPriceLabel(wheel?.tiers ?? []) : null
-            }
-            href={schedule ? "/workshops" : "/contact"}
-            linkLabel={schedule ? "Book a wheel session" : "Write to us"}
-          />
         )}
       </HomeSection>
 

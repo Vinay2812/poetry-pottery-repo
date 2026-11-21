@@ -9,7 +9,23 @@ export type StudioWheel = Pick<
 export interface StudioSchedule {
   hoursLabel: string;
   daysLabel: string;
-  offer: string | null;
+  priceLabel: string;
+  offer: string;
+}
+
+interface StudioTeaserCopy {
+  line: string;
+  hoursLabel: string | null;
+  daysLabel: string | null;
+  priceLabel: string | null;
+  href: string;
+  linkLabel: string;
+}
+
+// The note sits under the heading beside event rows; the teaser replaces empty rows.
+export interface StudioSection {
+  note: string | null;
+  teaser: StudioTeaserCopy | null;
 }
 
 const WEEKDAYS = [
@@ -21,6 +37,9 @@ const WEEKDAYS = [
   "Friday",
   "Saturday",
 ];
+
+// Listing order: the working week first, Sunday last.
+const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 const NUMBER_WORDS = [
   "zero",
@@ -73,18 +92,17 @@ function joinWords(words: readonly string[]): string {
 export function toStudioDaysLabel(
   closedWeekdays: readonly number[],
 ): string | null {
-  const closed = new Set(
-    closedWeekdays.filter((day) => day >= 0 && day < WEEKDAYS.length),
-  );
-  const open = WEEKDAYS.filter((_, day) => !closed.has(day));
+  const closed = new Set(closedWeekdays);
+  const toName = (day: number) => WEEKDAYS[day] ?? "";
+  const open = WEEK_ORDER.filter((day) => !closed.has(day)).map(toName);
+  const shut = WEEK_ORDER.filter((day) => closed.has(day)).map(toName);
   if (open.length === 0) return null;
-  if (closed.size === 0) return "Every day";
+  if (shut.length === 0) return "Every day";
   // Name whichever list is shorter.
-  if (open.length < closed.size) {
+  if (open.length < shut.length) {
     return `${joinWords(open.map((day) => `${day}s`))} only`;
   }
-  const closedNames = WEEKDAYS.filter((_, day) => closed.has(day));
-  return `Every day except ${joinWords(closedNames)}`;
+  return `Every day except ${joinWords(shut)}`;
 }
 
 // The cheapest way onto a wheel, read off the shortest tier.
@@ -109,20 +127,23 @@ export function toStudioOffer(tiers: StudioWheel["tiers"]): string | null {
   return `Book ${first} or more.`;
 }
 
-// Hours and days come only from a wheel with at least one open day.
+// Only a wheel with an open day and a tier to book can be offered at all.
 export function toStudioSchedule(
   wheel: StudioWheel | null,
 ): StudioSchedule | null {
   if (!wheel) return null;
   const daysLabel = toStudioDaysLabel(wheel.closed_weekdays);
-  if (!daysLabel) return null;
+  const priceLabel = toStudioPriceLabel(wheel.tiers);
+  const offer = toStudioOffer(wheel.tiers);
+  if (!daysLabel || !priceLabel || !offer) return null;
   return {
     hoursLabel: toStudioHoursLabel(
       wheel.opening_minutes,
       wheel.closing_minutes,
     ),
     daysLabel,
-    offer: toStudioOffer(wheel.tiers),
+    priceLabel,
+    offer,
   };
 }
 
@@ -135,6 +156,40 @@ function toMidSentence(label: string): string {
 
 // The line under "At the studio" while events fill the rows below it.
 export function toStudioNote(schedule: StudioSchedule): string {
-  const runs = `Wheel sessions run ${schedule.hoursLabel}, ${toMidSentence(schedule.daysLabel)}.`;
-  return schedule.offer ? `${runs} ${schedule.offer}` : runs;
+  return `Wheel sessions run ${schedule.hoursLabel}, ${toMidSentence(schedule.daysLabel)}. ${schedule.offer}`;
+}
+
+// Everything the "At the studio" section says, for both calendar states.
+export function toStudioSection(
+  wheel: StudioWheel | null,
+  hasEvents: boolean,
+): StudioSection {
+  const schedule = toStudioSchedule(wheel);
+  if (hasEvents) {
+    return { note: schedule ? toStudioNote(schedule) : null, teaser: null };
+  }
+  if (!schedule) {
+    return {
+      note: null,
+      teaser: {
+        line: "Nothing coming up on the calendar, and the wheels are resting for now. Write to us and we will tell you when they turn again.",
+        hoursLabel: null,
+        daysLabel: null,
+        priceLabel: null,
+        href: "/contact",
+        linkLabel: "Write to us",
+      },
+    };
+  }
+  return {
+    note: null,
+    teaser: {
+      line: "Nothing coming up on the calendar, but the wheels keep their usual hours. Pick a time and we will set one up for you.",
+      hoursLabel: schedule.hoursLabel,
+      daysLabel: schedule.daysLabel,
+      priceLabel: schedule.priceLabel,
+      href: "/workshops",
+      linkLabel: "Book a wheel session",
+    },
+  };
 }

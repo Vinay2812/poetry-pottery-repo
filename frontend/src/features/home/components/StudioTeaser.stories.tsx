@@ -9,7 +9,7 @@ const meta = {
   parameters: { layout: "padded" },
   args: {
     imageUrl: null,
-    line: "Nothing is on the calendar this week, but the wheels keep their usual hours. Pick a time and we will set one up for you.",
+    line: "Nothing coming up on the calendar, but the wheels keep their usual hours. Pick a time and we will set one up for you.",
     hoursLabel: "1 to 7 pm",
     daysLabel: "Every day except Monday",
     priceLabel: "From ₹1,100 a person for an hour",
@@ -33,7 +33,7 @@ export const WithPhoto: Story = {
 
 export const Closed: Story = {
   args: {
-    line: "Nothing is on the calendar this week, and the wheels are resting for now. Write to us and we will tell you when they turn again.",
+    line: "Nothing coming up on the calendar, and the wheels are resting for now. Write to us and we will tell you when they turn again.",
     hoursLabel: null,
     daysLabel: null,
     priceLabel: null,
