@@ -6,11 +6,12 @@ import { type UrlCodec, useUrlState } from "./use-url-state";
 const navigation = vi.hoisted(() => ({
   search: new URLSearchParams(),
   replace: vi.fn<(href: string, options: { scroll: boolean }) => void>(),
+  push: vi.fn<(href: string, options: { scroll: boolean }) => void>(),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/shop",
-  useRouter: () => ({ replace: navigation.replace }),
+  useRouter: () => ({ replace: navigation.replace, push: navigation.push }),
   useSearchParams: () => navigation.search,
 }));
 
@@ -46,10 +47,11 @@ describe("useUrlState", () => {
   beforeEach(() => {
     navigateTo("");
     navigation.replace.mockReset();
+    navigation.push.mockReset();
     // A finished navigation lands the new query in the address bar.
-    navigation.replace.mockImplementation((href) => {
-      navigateTo(href.split("?")[1] ?? "");
-    });
+    const land = (href: string) => navigateTo(href.split("?")[1] ?? "");
+    navigation.replace.mockImplementation(land);
+    navigation.push.mockImplementation(land);
   });
 
   it("reads its value from the address bar", () => {
@@ -70,6 +72,23 @@ describe("useUrlState", () => {
     });
     expect(result.current.value).toEqual({ tags: ["mug"], sort: "new" });
     expect(result.current.isPending).toBe(false);
+  });
+
+  it("pushes a history entry when asked, so Back returns to the previous value", () => {
+    const { result } = renderHook(() => useUrlState(CODEC));
+
+    act(() =>
+      result.current.dispatch(
+        { type: "sort", sort: "price" },
+        { history: "push" },
+      ),
+    );
+
+    expect(navigation.push).toHaveBeenCalledWith("/shop?sort=price", {
+      scroll: false,
+    });
+    expect(navigation.replace).not.toHaveBeenCalled();
+    expect(result.current.value.sort).toBe("price");
   });
 
   it("stacks rapid changes instead of letting the last one win", () => {

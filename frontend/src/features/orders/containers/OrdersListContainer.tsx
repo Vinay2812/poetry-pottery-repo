@@ -54,7 +54,7 @@ export function OrdersListContainer() {
   const handleTurnPage = useCallback(
     (next: number) => {
       if (next === page) void refetch();
-      else goToPage(next);
+      else goToPage(next, { history: "push" });
       startTurn();
     },
     [goToPage, page, refetch, startTurn],

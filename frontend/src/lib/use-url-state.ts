@@ -19,10 +19,15 @@ export interface UrlCodec<T, A> {
   apply: (value: T, action: A) => T;
 }
 
+interface DispatchOptions {
+  // "push" leaves a history entry so Back returns to the previous value; the default replaces it.
+  history?: "push" | "replace";
+}
+
 export interface UrlState<T, A> {
   value: T;
   isPending: boolean;
-  dispatch: (action: A) => void;
+  dispatch: (action: A, options?: DispatchOptions) => void;
   toHref: (value: T) => string;
 }
 
@@ -53,12 +58,14 @@ export function useUrlState<T, A>(codec: UrlCodec<T, A>): UrlState<T, A> {
   );
 
   const dispatch = useCallback(
-    (action: A) => {
+    (action: A, options?: DispatchOptions) => {
       const next = codec.apply(pendingRef.current, action);
       pendingRef.current = next;
+      const navigate =
+        options?.history === "push" ? router.push : router.replace;
       startTransition(() => {
         addOptimisticAction(action);
-        router.replace(toHref(next), { scroll: false });
+        navigate(toHref(next), { scroll: false });
       });
     },
     [addOptimisticAction, codec, router, toHref],
