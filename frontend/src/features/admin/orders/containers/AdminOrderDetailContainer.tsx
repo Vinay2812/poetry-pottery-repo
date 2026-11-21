@@ -144,7 +144,13 @@ export function AdminOrderDetailContainer({
   );
 
   const statusActions = useMemo(
-    () => toStatusActions(optimisticDetail?.next_statuses ?? []),
+    () =>
+      optimisticDetail
+        ? toStatusActions(
+            optimisticDetail.order.status,
+            optimisticDetail.next_statuses,
+          )
+        : [],
     [optimisticDetail],
   );
 
