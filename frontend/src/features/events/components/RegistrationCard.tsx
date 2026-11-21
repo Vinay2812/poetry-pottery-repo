@@ -56,7 +56,7 @@ export function RegistrationCard({
           {dateLabel}
         </span>
         <span className="text-[13px] tnum">{formatInr(total)}</span>
-        <span className="col-span-2 text-[15px] leading-snug underline-offset-4 group-hover:underline">
+        <span className="col-span-2 text-[15px] leading-snug wrap-anywhere underline-offset-4 group-hover:underline">
           {eventTitle}
         </span>
         <span className="col-span-2 text-[13px] text-muted-foreground">
