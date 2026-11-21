@@ -27,6 +27,8 @@ import {
   retryQuery,
 } from "@/features/admin/ui";
 
+import { toWheelSessionsHref } from "@/features/admin/workshops";
+
 import { DashboardSection } from "@/features/admin/dashboard/components/DashboardSection";
 import { DashboardStats } from "@/features/admin/dashboard/components/DashboardStats";
 import {
@@ -234,7 +236,7 @@ export function DashboardContainer() {
       </DashboardSection>
       <DashboardSection
         title="Recent wheel sessions"
-        moreHref="/dashboard/workshops"
+        moreHref={toWheelSessionsHref()}
         moreLabel="All wheel sessions"
       >
         <RecentBookingsTable rows={bookingRows} />

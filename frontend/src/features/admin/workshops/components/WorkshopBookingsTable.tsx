@@ -22,6 +22,8 @@ export interface WorkshopBookingRow {
   personName: string;
   personEmail: string;
   requestedLabel: string;
+  // Named only when the list spans more than one setup.
+  setupName: string | null;
   sessionLines: string[];
   sizeLabel: string;
   totalLabel: string;
@@ -68,6 +70,7 @@ export function WorkshopBookingsTable({
                 requestedLabel={row.requestedLabel}
               />
               <WorkshopSessionSummary
+                setupName={row.setupName}
                 sessionLines={row.sessionLines}
                 sizeLabel={row.sizeLabel}
                 totalLabel={row.totalLabel}
@@ -117,6 +120,7 @@ export function WorkshopBookingsTable({
                 </td>
                 <td className={ADMIN_TD}>
                   <WorkshopSessionSummary
+                    setupName={row.setupName}
                     sessionLines={row.sessionLines}
                     sizeLabel={row.sizeLabel}
                     totalLabel={row.totalLabel}

@@ -50,7 +50,7 @@ describe("toPersonLinks", () => {
     expect(toPersonLinks(7)).toEqual({
       orders: "/dashboard/orders?user=7",
       registrations: "/dashboard/events?user=7",
-      bookings: "/dashboard/workshops?user=7",
+      bookings: "/dashboard/workshops?config=all&user=7",
       reviews: "/dashboard/reviews?user=7",
     });
   });

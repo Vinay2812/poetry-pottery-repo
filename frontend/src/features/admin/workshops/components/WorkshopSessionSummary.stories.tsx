@@ -7,6 +7,7 @@ const meta = {
   title: "Features/Admin/Workshops/WorkshopSessionSummary",
   component: WorkshopSessionSummary,
   args: {
+    setupName: null,
     sessionLines: ["Sun 22 Nov · 4–5 pm"],
     sizeLabel: "1 hour · 1 person",
     totalLabel: "₹1,100",
@@ -25,6 +26,10 @@ export const SplitAcrossDays: Story = {
     sizeLabel: "2 hours · 2 people",
     totalLabel: "₹4,000",
   },
+};
+
+export const NamesItsSetup: Story = {
+  args: { setupName: "Hand building" },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

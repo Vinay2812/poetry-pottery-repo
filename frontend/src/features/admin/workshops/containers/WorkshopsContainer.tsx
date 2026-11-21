@@ -28,10 +28,13 @@ import { WorkshopBlackoutsContainer } from "@/features/admin/workshops/container
 import { WorkshopBookingsContainer } from "@/features/admin/workshops/containers/WorkshopBookingsContainer";
 import { WorkshopTiersContainer } from "@/features/admin/workshops/containers/WorkshopTiersContainer";
 import {
+  ALL_SETUPS,
   applyConfigPatch,
   describeClosedDays,
   minutesToTimeInput,
+  readSetupChoice,
   timeInputToMinutes,
+  toSetupOptions,
 } from "@/features/admin/workshops/types";
 
 interface PickedImage {
@@ -84,20 +87,41 @@ export function WorkshopsContainer() {
   // The picked image is held against its studio so switching studios drops it.
   const [pickedImage, setPickedImage] = useState<PickedImage | null>(null);
 
+  const choice = useMemo(
+    () =>
+      readSetupChoice(
+        optimisticConfigs.map((config) => config.id),
+        values.config,
+      ),
+    [optimisticConfigs, values.config],
+  );
+  const isAllSetups = choice?.kind === "all";
+  // The whole queue still needs a setup for its date filter; the first one's zone stands in.
   const selected = useMemo(() => {
-    const wanted = optimisticConfigs.find(
-      (config) => String(config.id) === values.config,
+    if (!choice) return null;
+    const wantedId = choice.kind === "one" ? choice.id : null;
+    return (
+      optimisticConfigs.find((config) => config.id === wantedId) ??
+      optimisticConfigs[0] ??
+      null
     );
-    return wanted ?? optimisticConfigs[0] ?? null;
-  }, [optimisticConfigs, values.config]);
+  }, [choice, optimisticConfigs]);
 
   const options = useMemo(
-    () =>
-      optimisticConfigs.map((config) => ({
-        value: String(config.id),
-        label: config.name,
-      })),
+    () => toSetupOptions(optimisticConfigs),
     [optimisticConfigs],
+  );
+  const setupTimezones = useMemo(
+    () =>
+      isAllSetups
+        ? new Map(
+            optimisticConfigs.map((config) => [
+              config.id,
+              safeTimeZone(config.timezone),
+            ]),
+          )
+        : null,
+    [isAllSetups, optimisticConfigs],
   );
 
   const currentImage =
@@ -163,19 +187,39 @@ export function WorkshopsContainer() {
     );
   }
 
+  const picker = (
+    <WorkshopConfigPicker
+      options={options}
+      value={isAllSetups ? ALL_SETUPS : String(selected.id)}
+      onChange={(value) => patch({ config: value })}
+    />
+  );
+
+  if (isAllSetups) {
+    return (
+      <div className="flex flex-col gap-10">
+        <AdminPageHeader
+          eyebrow="Studio"
+          title="Wheel sessions"
+          description="Requests across every setup. Pick one to change its settings, sessions or closed days."
+          actions={picker}
+        />
+        <WorkshopBookingsContainer
+          configId={null}
+          timezone={timezone}
+          setupTimezones={setupTimezones}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-10">
       <AdminPageHeader
         eyebrow="Studio"
         title="Wheel sessions"
         description={describeClosedDays(selected.closed_weekdays)}
-        actions={
-          <WorkshopConfigPicker
-            options={options}
-            value={String(selected.id)}
-            onChange={(value) => patch({ config: value })}
-          />
-        }
+        actions={picker}
       />
       {hasBrokenTimezone && (
         <p role="alert" className="bg-ash px-3 py-2 text-[13px]">
@@ -184,7 +228,11 @@ export function WorkshopsContainer() {
         </p>
       )}
       {/* Requests are the daily work, so they come before the settings that rarely change. */}
-      <WorkshopBookingsContainer configId={selected.id} timezone={timezone} />
+      <WorkshopBookingsContainer
+        configId={selected.id}
+        timezone={timezone}
+        setupTimezones={null}
+      />
       <WorkshopConfigForm
         // Switching studios swaps every default, so the form starts over.
         key={selected.id}

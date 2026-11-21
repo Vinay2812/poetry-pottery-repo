@@ -8,6 +8,7 @@ const meta = {
   component: WorkshopConfigPicker,
   args: {
     options: [
+      { value: "all", label: "All setups" },
       { value: "1", label: "Wheel session" },
       { value: "2", label: "Hand building" },
     ],
@@ -24,6 +25,10 @@ export const TwoStudios: Story = {};
 
 export const SecondPicked: Story = {
   args: { value: "2" },
+};
+
+export const AllSetupsPicked: Story = {
+  args: { value: "all" },
 };
 
 export const OneStudioHidesItself: Story = {

@@ -53,8 +53,10 @@ import {
 } from "@/features/admin/workshops/types";
 
 export interface WorkshopBookingsContainerProps {
-  configId: number;
+  // Null spans every setup; each row then names its setup and reads in that setup's zone.
+  configId: number | null;
   timezone: string;
+  setupTimezones: ReadonlyMap<number, string> | null;
 }
 
 interface BookingMove {
@@ -67,6 +69,7 @@ const STATUS_OPTIONS = registrationStatusOptions();
 export function WorkshopBookingsContainer({
   configId,
   timezone,
+  setupTimezones,
 }: WorkshopBookingsContainerProps) {
   const { values, page, isPending: isNavigating, patch } = useAdminQueryState();
   const search = values.search ?? "";
@@ -115,7 +118,11 @@ export function WorkshopBookingsContainer({
         id: item.booking.id,
         personName: toPersonName(item.customer.name, item.customer.email),
         personEmail: item.customer.email,
-        sessionLines: describeSessionDays(item.booking.slots, timezone),
+        setupName: setupTimezones ? item.booking.config.name : null,
+        sessionLines: describeSessionDays(
+          item.booking.slots,
+          setupTimezones?.get(item.booking.config.id) ?? timezone,
+        ),
         sizeLabel: describeSessionSize(
           item.booking.hours,
           item.booking.participants,
@@ -136,7 +143,7 @@ export function WorkshopBookingsContainer({
           item.booking.total === 0,
         ),
       })),
-    [optimisticItems, timezone],
+    [optimisticItems, setupTimezones, timezone],
   );
 
   const move = useReasonAction({

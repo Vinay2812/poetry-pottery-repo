@@ -1,4 +1,6 @@
 export interface WorkshopSessionSummaryProps {
+  // Which setup the session is on, when the list spans several.
+  setupName: string | null;
   // One line per day, e.g. "Wed 25 Nov · 3–4 pm".
   sessionLines: string[];
   sizeLabel: string;
@@ -6,12 +8,16 @@ export interface WorkshopSessionSummaryProps {
 }
 
 export function WorkshopSessionSummary({
+  setupName,
   sessionLines,
   sizeLabel,
   totalLabel,
 }: WorkshopSessionSummaryProps) {
   return (
     <div className="flex flex-col tnum">
+      {setupName && (
+        <span className="text-[12px] text-muted-foreground">{setupName}</span>
+      )}
       {sessionLines.map((line) => (
         <span key={line} className="whitespace-nowrap">
           {line}

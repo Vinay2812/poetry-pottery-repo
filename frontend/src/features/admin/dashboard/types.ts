@@ -5,6 +5,9 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { toRegistrationStatusLabel } from "@/lib/registration-status";
+
+import { toWheelSessionsHref } from "@/features/admin/workshops/types";
+
 export function formatCount(value: number): string {
   return new Intl.NumberFormat("en-IN").format(value);
 }
@@ -38,8 +41,9 @@ export function clampDelta(value: number, stock: number): number {
 // Where each thing on today's agenda is handled in the console.
 export function toAgendaHref(kind: AdminAgendaKind, id: string): string {
   switch (kind) {
+    // The wheel list searches booking ids, so the row opens on just that booking.
     case AdminAgendaKind.Booking:
-      return "/dashboard/workshops";
+      return toWheelSessionsHref({ search: id });
     case AdminAgendaKind.Visit:
       return "/dashboard/visits";
     case AdminAgendaKind.Event:
@@ -68,7 +72,9 @@ export function toAgendaKindLabel(
 }
 
 // The request tiles open their lists already narrowed to what is waiting on the studio.
-export const WAITING_SESSIONS_HREF = `/dashboard/workshops?status=${RegistrationStatus.Pending}`;
+export const WAITING_SESSIONS_HREF = toWheelSessionsHref({
+  status: RegistrationStatus.Pending,
+});
 export const WAITING_EVENT_REQUESTS_HREF = "/dashboard/events?awaiting=1";
 
 // A wheel session ends with its status in the words the guest sees, e.g. "· Awaiting approval".
