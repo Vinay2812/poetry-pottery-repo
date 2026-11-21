@@ -102,7 +102,7 @@ function SectionFields({
       />
       <ContentTextField
         id={`section-${index}-body`}
-        label="Body"
+        label={items.fields.length > 0 ? "Body (optional)" : "Body"}
         hint="Blank lines start a new paragraph on the site."
         error={sectionErrors?.body?.message}
         isMultiline
