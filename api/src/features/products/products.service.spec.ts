@@ -17,6 +17,9 @@ import {
 } from "./products.service";
 import { ProductSort } from "./products.type";
 
+// The shelf leaves made-to-order pieces to /custom unless the toggle asks for them.
+const ON_SHELF = { is_customizable: false };
+
 const prismaMock = {
   product: {
     findMany: vi.fn(),
@@ -128,6 +131,7 @@ describe("ProductsService", () => {
         where: {
           AND: [
             availableProductWhere(),
+            ON_SHELF,
             { categories: { some: { slug: { in: ["mugs"] } } } },
             { stock: { gt: 0 } },
           ],
@@ -147,6 +151,7 @@ describe("ProductsService", () => {
         where: {
           AND: [
             availableProductWhere(),
+            ON_SHELF,
             { material: { in: ["Stoneware"] } },
             { is_second: true },
           ],
@@ -158,7 +163,11 @@ describe("ProductsService", () => {
       where: {
         AND: [
           {
-            AND: [availableProductWhere(), { material: { in: ["Stoneware"] } }],
+            AND: [
+              availableProductWhere(),
+              ON_SHELF,
+              { material: { in: ["Stoneware"] } },
+            ],
           },
           { is_second: true },
         ],
@@ -177,7 +186,9 @@ describe("ProductsService", () => {
     expect(result.page_info.has_more).toBe(true);
     expect(prismaMock.product.findMany).toHaveBeenCalledWith(
       containing({
-        where: { AND: [availableProductWhere(), { id: { in: [3, 1, 2] } }] },
+        where: {
+          AND: [availableProductWhere(), ON_SHELF, { id: { in: [3, 1, 2] } }],
+        },
       }),
     );
   });
@@ -224,14 +235,18 @@ describe("ProductsService", () => {
     // The material filter must not narrow its own facet.
     expect(prismaMock.product.groupBy).toHaveBeenCalledWith(
       containing({
-        where: { AND: [availableProductWhere()] },
+        where: { AND: [availableProductWhere(), ON_SHELF] },
       }),
     );
     // The price bounds follow the other filters, so the slider spans what is on show.
     expect(prismaMock.product.aggregate).toHaveBeenCalledWith(
       containing({
         where: {
-          AND: [availableProductWhere(), { material: { in: ["Stoneware"] } }],
+          AND: [
+            availableProductWhere(),
+            ON_SHELF,
+            { material: { in: ["Stoneware"] } },
+          ],
         },
       }),
     );
@@ -245,6 +260,7 @@ describe("ProductsService", () => {
                 where: {
                   AND: [
                     availableProductWhere(),
+                    ON_SHELF,
                     { material: { in: ["Stoneware"] } },
                   ],
                 },
@@ -254,6 +270,40 @@ describe("ProductsService", () => {
         }),
       }),
     );
+  });
+
+  it("keeps made-to-order pieces off the featured shelf", async () => {
+    prismaMock.product.findMany.mockResolvedValue([]);
+
+    await service.featured(8);
+
+    const args: unknown = prismaMock.product.findMany.mock.calls[0]?.[0];
+    expect(args).toMatchObject({ where: { is_customizable: false }, take: 8 });
+  });
+
+  it("lists only made-to-order pieces when the toggle asks for them", async () => {
+    prismaMock.product.findMany.mockResolvedValue([]);
+
+    await service.list({ customizable_only: true });
+
+    expect(prismaMock.product.findMany).toHaveBeenCalledWith(
+      containing({
+        where: { AND: [availableProductWhere(), { is_customizable: true }] },
+      }),
+    );
+  });
+
+  it("keeps made-to-order pieces out of related pieces", async () => {
+    prismaMock.product.findUnique.mockResolvedValue({
+      id: 1,
+      categories: [{ id: 4 }],
+    });
+    prismaMock.product.findMany.mockResolvedValue([]);
+
+    await service.related("p-1", 4);
+
+    const args: unknown = prismaMock.product.findMany.mock.calls[0]?.[0];
+    expect(args).toMatchObject({ where: { is_customizable: false }, take: 4 });
   });
 
   it("lists every category and collection, even empty ones", async () => {
@@ -287,6 +337,7 @@ describe("ProductsService", () => {
         where: {
           AND: [
             availableProductWhere(),
+            ON_SHELF,
             { glaze: { slug: { in: ["ocean-blue"] } } },
           ],
         },
@@ -297,7 +348,9 @@ describe("ProductsService", () => {
       containing({
         select: containing({
           _count: {
-            select: { products: { where: { AND: [availableProductWhere()] } } },
+            select: {
+              products: { where: { AND: [availableProductWhere(), ON_SHELF] } },
+            },
           },
         }),
       }),
@@ -421,7 +474,7 @@ describe("ProductsService", () => {
     const result = await service.list({ archive: true });
 
     expect(prismaMock.product.findMany).toHaveBeenCalledWith(
-      containing({ where: { AND: [archiveListingWhere()] } }),
+      containing({ where: { AND: [archiveListingWhere(), ON_SHELF] } }),
     );
     expect(result.page_info.total).toBe(15);
     expect(result.facets.active_count).toBe(9);
@@ -435,10 +488,10 @@ describe("ProductsService", () => {
 
     const narrowing = { categories: { some: { slug: { in: ["mugs"] } } } };
     expect(prismaMock.product.count).toHaveBeenCalledWith({
-      where: { AND: [availableProductWhere(), narrowing] },
+      where: { AND: [availableProductWhere(), ON_SHELF, narrowing] },
     });
     expect(prismaMock.product.count).toHaveBeenCalledWith({
-      where: { AND: [archiveListingWhere(), narrowing] },
+      where: { AND: [archiveListingWhere(), ON_SHELF, narrowing] },
     });
   });
 
@@ -451,13 +504,15 @@ describe("ProductsService", () => {
 
     const matched = { id: { in: [3, 1] } };
     expect(prismaMock.product.findMany).toHaveBeenCalledWith(
-      containing({ where: { AND: [archiveListingWhere(), matched] } }),
+      containing({
+        where: { AND: [archiveListingWhere(), ON_SHELF, matched] },
+      }),
     );
     expect(prismaMock.product.count).toHaveBeenCalledWith({
-      where: { AND: [availableProductWhere(), matched] },
+      where: { AND: [availableProductWhere(), ON_SHELF, matched] },
     });
     expect(prismaMock.product.count).toHaveBeenCalledWith({
-      where: { AND: [archiveListingWhere(), matched] },
+      where: { AND: [archiveListingWhere(), ON_SHELF, matched] },
     });
     expect(result.items.map((item) => item.id)).toEqual([1]);
     expect(result.facets.active_count).toBe(1);
