@@ -21,6 +21,7 @@ import {
   type SuggestOption,
   type SuggestOptionLists,
   toOptionOrder,
+  toSearchHint,
   toSearchHref,
 } from "@/features/search/types";
 
@@ -94,6 +95,12 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
     [recents, suggestions],
   );
   const options = useMemo(() => toOptionOrder(lists), [lists]);
+  const hint = toSearchHint({
+    value,
+    term,
+    isLoading: loading,
+    resultCount: options.length - lists.recents.length,
+  });
 
   const recentEntries = useMemo<SearchPanelEntry[]>(
     () => recents.map((entry) => ({ key: entry, label: entry, note: null })),
@@ -210,6 +217,7 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
         value={value}
         activeIndex={activeIndex}
         isLoading={loading}
+        hint={hint}
         recents={recentEntries}
         pieces={pieceEntries}
         events={eventEntries}

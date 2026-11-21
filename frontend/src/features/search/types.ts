@@ -71,3 +71,29 @@ export function nextActiveIndex(
 export function toOptionId(panelId: string, index: number): string {
   return `${panelId}-option-${index}`;
 }
+
+export interface SearchHintInput {
+  value: string;
+  term: string;
+  isLoading: boolean;
+  resultCount: number;
+}
+
+// The line under the list says what the panel is doing, so an empty list never looks broken.
+export function toSearchHint({
+  value,
+  term,
+  isLoading,
+  resultCount,
+}: SearchHintInput): string {
+  const typed = value.trim();
+  if (typed.length === 0) {
+    return "Type a glaze, a clay body or what you want to use it for.";
+  }
+  if (resultCount > 0 || typed.length < MIN_SUGGEST_LENGTH) {
+    return "Press Enter to search everything.";
+  }
+  // Until the debounced term catches up with the field, the answer is still on its way.
+  if (isLoading || term !== typed) return "Looking…";
+  return `Nothing matches “${typed}”. Try a glaze, a clay body or a shape.`;
+}

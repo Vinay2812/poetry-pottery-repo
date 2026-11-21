@@ -17,6 +17,7 @@ export interface SearchPanelProps {
   value: string;
   activeIndex: number;
   isLoading: boolean;
+  hint: string;
   recents: SearchPanelEntry[];
   pieces: SearchPanelEntry[];
   events: SearchPanelEntry[];
@@ -86,6 +87,7 @@ export function SearchPanel({
   value,
   activeIndex,
   isLoading,
+  hint,
   recents,
   pieces,
   events,
@@ -154,7 +156,8 @@ export function SearchPanel({
           role="listbox"
           aria-label="Suggestions"
           aria-busy={isLoading}
-          className="max-h-[60vh] overflow-y-auto pb-3"
+          // Rows bleed 16px past the column so their text lines up with the field's icon.
+          className="-mx-4 max-h-[60vh] overflow-y-auto pb-3"
         >
           <Section
             title="Recent searches"
@@ -176,7 +179,7 @@ export function SearchPanel({
             onHoverIndex={onHoverIndex}
           />
           <Section
-            title="Evenings"
+            title="Events"
             entries={events}
             offset={eventsOffset}
             panelId={panelId}
@@ -185,7 +188,7 @@ export function SearchPanel({
             onHoverIndex={onHoverIndex}
           />
           <Section
-            title="At the wheel"
+            title="Wheel sessions"
             entries={workshops}
             offset={workshopsOffset}
             panelId={panelId}
@@ -196,10 +199,8 @@ export function SearchPanel({
         </ul>
 
         <div className="flex items-center justify-between gap-4 border-t border-ash py-3">
-          <p className="text-[13px] text-muted-foreground">
-            {value.trim().length > 0
-              ? "Press Enter to search everything."
-              : "Type a glaze, a clay body or what you want to use it for."}
+          <p aria-live="polite" className="text-[13px] text-muted-foreground">
+            {hint}
           </p>
           {recents.length > 0 && (
             <button
