@@ -133,9 +133,7 @@ describe("session helpers", () => {
     ).toBe(
       "Pick a day on the calendar, then 3 hours from the times under it. Pick all your hours on the same day.",
     );
-    expect(toSpanRule(30).rule).toBe(
-      "Pick all your hours within a 30-day window",
-    );
+    expect(toSpanRule(30)).toBe("Pick all your hours within a 30-day window");
     expect(toSpanNotice(7)).toBe(
       "Pick all your hours within a 7-day window. Days further out are closed off.",
     );

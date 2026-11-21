@@ -228,7 +228,7 @@ export function toCalendarWeeks({
         isPast: dateKey < todayKey,
         mutedReason: isDayWithinSpan(dateKey, spanKeys, allowedSpanDays)
           ? null
-          : toSpanRule(allowedSpanDays).rule,
+          : toSpanRule(allowedSpanDays),
       };
     }),
   );

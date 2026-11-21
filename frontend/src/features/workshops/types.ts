@@ -185,30 +185,23 @@ export function quoteSession(
   };
 }
 
-interface SpanRule {
-  // What to do, as in "Pick all your hours within a 7-day window".
-  rule: string;
-  // What the calendar does about it, said the way that fits the rule.
-  closedOff: string;
+// The rule behind the days a picked set closes off, counted from the slot_span_days setting.
+export function toSpanRule(allowedSpanDays: number): string {
+  return allowedSpanDays === 1
+    ? "Pick all your hours on the same day"
+    : `Pick all your hours within a ${allowedSpanDays}-day window`;
 }
 
-// The rule behind the days a picked set closes off, counted from the slot_span_days setting.
-export function toSpanRule(allowedSpanDays: number): SpanRule {
+// What the calendar does about the rule; on a one-day studio every other day is out.
+function toClosedOffNote(allowedSpanDays: number): string {
   return allowedSpanDays === 1
-    ? {
-        rule: "Pick all your hours on the same day",
-        closedOff: "Other days are closed off",
-      }
-    : {
-        rule: `Pick all your hours within a ${allowedSpanDays}-day window`,
-        closedOff: "Days further out are closed off",
-      };
+    ? "Other days are closed off"
+    : "Days further out are closed off";
 }
 
 // The calendar's notice once a pick can close days off: the rule, then what it does.
 export function toSpanNotice(allowedSpanDays: number): string {
-  const { rule, closedOff } = toSpanRule(allowedSpanDays);
-  return `${rule}. ${closedOff}.`;
+  return `${toSpanRule(allowedSpanDays)}. ${toClosedOffNote(allowedSpanDays)}.`;
 }
 
 interface PickingGuideInput {
@@ -225,9 +218,7 @@ export function toPickingGuide({
   allowedSpanDays,
 }: PickingGuideInput): string {
   const guide = `Pick a day on the calendar, then ${formatHours(hours)} from the times under it.`;
-  return timesNeeded > 1
-    ? `${guide} ${toSpanRule(allowedSpanDays).rule}.`
-    : guide;
+  return timesNeeded > 1 ? `${guide} ${toSpanRule(allowedSpanDays)}.` : guide;
 }
 
 // A party bigger than the wheels is a special request, so the ask names the session and the size.
