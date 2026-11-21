@@ -31,11 +31,11 @@ export function Timeline({ steps, closedLabel }: TimelineProps) {
                   "size-2 shrink-0",
                   step.state === "current" && "border border-ink",
                   step.state === "done" && (isClosed ? "bg-smoke" : "bg-ink"),
-                  isUpcoming && "bg-ash",
+                  isUpcoming && "bg-smoke/60",
                 )}
               />
               {hasLine && (
-                <span aria-hidden="true" className="w-px flex-1 bg-ash" />
+                <span aria-hidden="true" className="w-px flex-1 bg-smoke/40" />
               )}
             </div>
             <div className="flex flex-col gap-0.5 pb-6">
