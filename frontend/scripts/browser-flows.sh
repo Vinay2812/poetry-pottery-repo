@@ -451,19 +451,21 @@ flow_workshops() {
     end_flow
     return
   }
-  click_matching 'wheels free$' "pick an open day" || {
+  # Day cells are named "Sun, 22 Nov, 6 wheels free"; a time chip's text also ends in
+  # "wheels free" and sits under the selected week, so the weekday prefix tells them apart.
+  click_matching '^[A-Z][a-z]{2}, .*wheels free$' "pick an open day" || {
     end_flow
     return
   }
   settle 3000
   # Slot labels are clock times, so the hours group is the stable handle.
-  click_matching '.' "pick an hour at the wheel" '[role="group"][aria-label="Hours"]' || {
+  click_matching '.' "pick an hour at the wheel" '[role="group"][aria-label="Times"]' || {
     end_flow
     return
   }
   settle 2000
   shot "workshop-picked"
-  click_matching '^Book this session$' "book the session" || {
+  click_matching '^Book this wheel session$' "book the session" || {
     end_flow
     return
   }
@@ -471,19 +473,19 @@ flow_workshops() {
   expect_url "/workshops/bookings/"
   shot "workshop-booked"
 
-  if ab read 2>/dev/null | grep -qiF "Move to another day"; then
+  if ab read 2>/dev/null | grep -qiF "Move this session"; then
     local before_day
     before_day="$(booking_day)"
     note "booked for: $before_day"
-    click_matching '^Move to another day$' "open the reschedule dialog"
+    click_matching '^Move this session$' "open the reschedule dialog"
     settle 2500
-    click_matching 'wheels free$' "pick a new day" '[role="dialog"]' || true
+    click_matching '^[A-Z][a-z]{2}, .*wheels free$' "pick a new day" '[role="dialog"]' || true
     settle 2500
     # The dialog opens on the hours already booked and the picker caps at that
     # many, so the old hour has to be dropped before a new one can be taken.
     click_matching '^Remove ' "drop the hour already held" '[role="dialog"]' || true
     settle 1000
-    click_matching '.' "pick a new hour" '[role="dialog"] [role="group"][aria-label="Hours"]' || true
+    click_matching '.' "pick a new hour" '[role="dialog"] [role="group"][aria-label="Times"]' || true
     settle 1500
     click_matching '^Move session$' "confirm the move" '[role="dialog"]' || true
     settle 5000
