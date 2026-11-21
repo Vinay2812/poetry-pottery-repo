@@ -389,8 +389,12 @@ describe("event detail helpers", () => {
   });
 
   it("words the box and gallery for the kind of evening", () => {
-    expect(toSeatPriceNote(EventType.PotteryWorkshop)).toContain("Clay");
-    expect(toSeatPriceNote(EventType.OpenMic)).toBeNull();
+    expect(toSeatPriceNote(EventType.PotteryWorkshop, [])).toContain("Clay");
+    expect(toSeatPriceNote(EventType.OpenMic, [])).toBeNull();
+    // The editor's includes list stands in for the stock line, so the two never disagree.
+    expect(
+      toSeatPriceNote(EventType.PotteryWorkshop, ["Clay and tools"]),
+    ).toBeNull();
     expect(toReserveNotePlaceholder(EventType.OpenMic)).not.toContain("wheel");
     expect(toGalleryHeading(EventType.PotteryWorkshop)).toBe(
       "From the workshop",
@@ -524,16 +528,32 @@ describe("start-time helpers", () => {
   });
 
   it("shows a seat price only while a seat is still ahead", () => {
-    const ahead = { isPast: false, hasStarted: false };
+    const ahead = { isPast: false, hasStarted: false, bookingStatus: null };
     expect(isSeatPriceShown({ ...ahead, state: "open" })).toBe(true);
     expect(isSeatPriceShown({ ...ahead, state: "soldOut" })).toBe(true);
-    expect(isSeatPriceShown({ ...ahead, state: "booked" })).toBe(true);
+    const booked = {
+      ...ahead,
+      state: "booked" as const,
+      bookingStatus: RegistrationStatus.Pending,
+    };
+    expect(isSeatPriceShown(booked)).toBe(true);
     expect(
-      isSeatPriceShown({ state: "booked", isPast: true, hasStarted: true }),
+      isSeatPriceShown({
+        ...booked,
+        bookingStatus: RegistrationStatus.Approved,
+      }),
+    ).toBe(true);
+    // Paid is paid: a confirmed seat has nothing left to price.
+    expect(
+      isSeatPriceShown({
+        ...booked,
+        bookingStatus: RegistrationStatus.Confirmed,
+      }),
     ).toBe(false);
     expect(
-      isSeatPriceShown({ state: "booked", isPast: false, hasStarted: true }),
+      isSeatPriceShown({ ...booked, isPast: true, hasStarted: true }),
     ).toBe(false);
+    expect(isSeatPriceShown({ ...booked, hasStarted: true })).toBe(false);
     expect(isSeatPriceShown({ ...ahead, state: "started" })).toBe(false);
     expect(isSeatPriceShown({ ...ahead, state: "past" })).toBe(false);
   });

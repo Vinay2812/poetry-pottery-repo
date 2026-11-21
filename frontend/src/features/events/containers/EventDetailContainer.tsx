@@ -118,11 +118,12 @@ export function EventDetailContainer({
           note={note}
           notePlaceholder={toReserveNotePlaceholder(event.event_type)}
           seatsLabel={toSeatsLabel(event.available_seats, event.total_seats)}
-          seatPriceNote={toSeatPriceNote(event.event_type)}
+          seatPriceNote={toSeatPriceNote(event.event_type, event.includes)}
           isPriceShown={isSeatPriceShown({
             state: reserveState,
             isPast: event.is_past,
             hasStarted,
+            bookingStatus: registration?.status ?? null,
           })}
           hasGallery={gallery.length > 0}
           isReserving={isReserving}

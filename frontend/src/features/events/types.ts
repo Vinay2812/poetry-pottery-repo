@@ -199,12 +199,23 @@ interface SeatPriceShownInput {
   state: ReserveState;
   isPast: boolean;
   hasStarted: boolean;
+  bookingStatus: RegistrationStatus | null;
 }
+
+const UNPAID_STATUSES = new Set<RegistrationStatus>([
+  RegistrationStatus.Pending,
+  RegistrationStatus.Approved,
+]);
 
 // A price only matters while a seat can still be had, or is still to be paid for.
 export function isSeatPriceShown(input: SeatPriceShownInput): boolean {
   if (input.state === "open" || input.state === "soldOut") return true;
-  return input.state === "booked" && !input.isPast && !input.hasStarted;
+  if (input.state !== "booked" || input.isPast || input.hasStarted) {
+    return false;
+  }
+  return (
+    input.bookingStatus !== null && UNPAID_STATUSES.has(input.bookingStatus)
+  );
 }
 
 const SEAT_PRICE_NOTE: Record<EventType, string | null> = {
@@ -213,8 +224,12 @@ const SEAT_PRICE_NOTE: Record<EventType, string | null> = {
   [EventType.OpenMic]: null,
 };
 
-export function toSeatPriceNote(eventType: EventType): string | null {
-  return SEAT_PRICE_NOTE[eventType];
+// The editor's own includes list is the truth when there is one, so the stock line steps aside.
+export function toSeatPriceNote(
+  eventType: EventType,
+  includes: string[],
+): string | null {
+  return includes.length > 0 ? null : SEAT_PRICE_NOTE[eventType];
 }
 
 const NOTE_PLACEHOLDER: Record<EventType, string> = {
