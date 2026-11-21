@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   type StudioWheel,
+  toBookableTiers,
   toStudioDaysLabel,
   toStudioHoursLabel,
   toStudioNote,
@@ -22,6 +23,8 @@ function wheel(
   return {
     opening_minutes: 780,
     closing_minutes: 1140,
+    slot_minutes: 60,
+    slot_span_days: 1,
     closed_weekdays: closedWeekdays,
     tiers: tierHours.map((hours) => tier(hours)),
   };
@@ -105,6 +108,44 @@ describe("toStudioOffer", () => {
   });
 });
 
+// 1 to 2 pm in hour slots: one slot a day.
+function shortDay(tierHours: number[], spanDays = 1): StudioWheel {
+  return {
+    opening_minutes: 780,
+    closing_minutes: 840,
+    slot_minutes: 60,
+    slot_span_days: spanDays,
+    closed_weekdays: [],
+    tiers: tierHours.map((hours) => tier(hours)),
+  };
+}
+
+describe("toBookableTiers", () => {
+  it("keeps every tier a full day can hold", () => {
+    expect(toBookableTiers(wheel([1])).map((t) => t.hours)).toEqual([1, 2, 3]);
+  });
+
+  it("drops tiers longer than a day's slots times the span", () => {
+    expect(toBookableTiers(shortDay([1, 2])).map((t) => t.hours)).toEqual([1]);
+    expect(toBookableTiers(shortDay([1, 2, 3], 2)).map((t) => t.hours)).toEqual(
+      [1, 2],
+    );
+  });
+
+  it("rounds a tier up to whole slots as the scheduler does", () => {
+    const halfHours = { ...shortDay([1, 2]), slot_minutes: 90 };
+    // 1 to 2 pm holds no 90-minute slot at all.
+    expect(toBookableTiers(halfHours)).toEqual([]);
+    const longDay = { ...wheel([]), slot_minutes: 90 };
+    // 6 hours fit four 90-minute slots: 1 hour needs one, 3 hours need two.
+    expect(toBookableTiers(longDay).map((t) => t.hours)).toEqual([1, 2, 3]);
+  });
+
+  it("holds nothing with a zero slot length", () => {
+    expect(toBookableTiers({ ...wheel([]), slot_minutes: 0 })).toEqual([]);
+  });
+});
+
 describe("toStudioSchedule", () => {
   it("reads hours, days and offer off the wheel", () => {
     expect(toStudioSchedule(wheel([1]))).toEqual({
@@ -113,6 +154,19 @@ describe("toStudioSchedule", () => {
       priceLabel: "From ₹1,100 a person for an hour",
       offer: "Book an hour or three.",
     });
+  });
+
+  it("offers and prices only the tiers that fit the day", () => {
+    expect(toStudioSchedule(shortDay([2, 1]))).toEqual({
+      hoursLabel: "1 to 2 pm",
+      daysLabel: "Every day",
+      priceLabel: "From ₹1,100 a person for an hour",
+      offer: "Book an hour.",
+    });
+  });
+
+  it("is empty when no tier fits the day", () => {
+    expect(toStudioSchedule(shortDay([2]))).toBeNull();
   });
 
   it("is empty without a wheel, an open day or a tier", () => {
@@ -147,28 +201,28 @@ describe("toStudioNote", () => {
 
 describe("toStudioSection", () => {
   const OPEN_LINE =
-    "Nothing coming up on the calendar, but the wheels keep their usual hours. Pick a time and we will set one up for you.";
+    "Nothing is coming up on the calendar, but the wheels keep their usual hours. Pick a time and we will set one up for you.";
   const RESTING_LINE =
-    "Nothing coming up on the calendar, and the wheels are resting for now. Write to us and we will tell you when they turn again.";
+    "Nothing is coming up on the calendar, and the wheels are resting for now. Write to us and we will tell you when they turn again.";
 
   it("puts the wheel's note beside listed events and no teaser", () => {
     expect(toStudioSection(wheel([1]), true)).toEqual({
+      isBookable: true,
       note: "Wheel sessions run 1 to 7 pm, every day except Monday. Book an hour or three.",
       teaser: null,
     });
   });
 
   it("drops the note beside events when the wheel cannot be booked", () => {
-    expect(toStudioSection(null, true)).toEqual({ note: null, teaser: null });
-    expect(toStudioSection(wheel([], []), true)).toEqual({
-      note: null,
-      teaser: null,
-    });
+    const unbookable = { isBookable: false, teaser: null };
+    expect(toStudioSection(null, true)).toEqual(unbookable);
+    expect(toStudioSection(wheel([], []), true)).toEqual(unbookable);
+    expect(toStudioSection(shortDay([2]), true)).toEqual(unbookable);
   });
 
   it("hands an empty calendar to the wheel's facts and booking link", () => {
     expect(toStudioSection(wheel([1]), false)).toEqual({
-      note: null,
+      isBookable: true,
       teaser: {
         line: OPEN_LINE,
         hoursLabel: "1 to 7 pm",
@@ -182,7 +236,7 @@ describe("toStudioSection", () => {
 
   it("goes quiet and points to contact when nothing can be booked", () => {
     const resting = {
-      note: null,
+      isBookable: false,
       teaser: {
         line: RESTING_LINE,
         hoursLabel: null,
@@ -194,6 +248,7 @@ describe("toStudioSection", () => {
     };
     expect(toStudioSection(null, false)).toEqual(resting);
     expect(toStudioSection(wheel([], []), false)).toEqual(resting);
+    expect(toStudioSection(shortDay([2]), false)).toEqual(resting);
     expect(toStudioSection(wheel([0, 1, 2, 3, 4, 5, 6]), false)).toEqual(
       resting,
     );

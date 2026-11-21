@@ -74,7 +74,7 @@ export default async function HomePage() {
         subheading={settings.hero_subheading}
         shopHref={settings.hero_cta_href || "/products"}
         shopLabel={settings.hero_cta_text || "Shop the shelf"}
-        sessionHref="/workshops"
+        sessionHref={studio.isBookable ? "/workshops" : undefined}
       />
 
       {shapes.length > 0 && (
@@ -123,7 +123,7 @@ export default async function HomePage() {
       {/* An empty calendar hands the note and the link to the teaser below. */}
       <HomeSection
         title="At the studio"
-        note={studio.note ?? undefined}
+        note={studio.note}
         linkHref={hasEvents ? "/events" : undefined}
         linkLabel={hasEvents ? "All dates" : undefined}
       >

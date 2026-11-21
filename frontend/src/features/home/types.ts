@@ -3,7 +3,12 @@ import { formatInr } from "@/lib/format";
 
 export type StudioWheel = Pick<
   WorkshopsQuery["workshops"][number],
-  "opening_minutes" | "closing_minutes" | "closed_weekdays" | "tiers"
+  | "opening_minutes"
+  | "closing_minutes"
+  | "slot_minutes"
+  | "slot_span_days"
+  | "closed_weekdays"
+  | "tiers"
 >;
 
 export interface StudioSchedule {
@@ -24,10 +29,12 @@ interface StudioTeaserCopy {
 
 // The note sits under the heading beside event rows; the teaser replaces empty rows.
 export interface StudioSection {
-  note: string | null;
+  isBookable: boolean;
+  note?: string;
   teaser: StudioTeaserCopy | null;
 }
 
+// Indexed like Date#getDay, so 0 is Sunday.
 const WEEKDAYS = [
   "Sunday",
   "Monday",
@@ -36,10 +43,12 @@ const WEEKDAYS = [
   "Thursday",
   "Friday",
   "Saturday",
-];
+] as const;
+
+type WeekdayIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 // Listing order: the working week first, Sunday last.
-const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const WEEK_ORDER: readonly WeekdayIndex[] = [1, 2, 3, 4, 5, 6, 0];
 
 const NUMBER_WORDS = [
   "zero",
@@ -93,7 +102,7 @@ export function toStudioDaysLabel(
   closedWeekdays: readonly number[],
 ): string | null {
   const closed = new Set(closedWeekdays);
-  const toName = (day: number) => WEEKDAYS[day] ?? "";
+  const toName = (day: WeekdayIndex) => WEEKDAYS[day];
   const open = WEEK_ORDER.filter((day) => !closed.has(day)).map(toName);
   const shut = WEEK_ORDER.filter((day) => closed.has(day)).map(toName);
   if (open.length === 0) return null;
@@ -127,14 +136,30 @@ export function toStudioOffer(tiers: StudioWheel["tiers"]): string | null {
   return `Book ${first} or more.`;
 }
 
-// Only a wheel with an open day and a tier to book can be offered at all.
+// Tiers one booking can actually hold: the slots a tier needs (rounded up, as the
+// scheduler does) must fit in a day's slots times the days a booking may span.
+export function toBookableTiers(wheel: StudioWheel): StudioWheel["tiers"] {
+  if (wheel.slot_minutes <= 0) return [];
+  const slotsPerDay = Math.floor(
+    (wheel.closing_minutes - wheel.opening_minutes) / wheel.slot_minutes,
+  );
+  const capacity = Math.max(0, slotsPerDay) * wheel.slot_span_days;
+  return wheel.tiers.filter(
+    (tier) =>
+      Math.max(1, Math.ceil((tier.hours * 60) / wheel.slot_minutes)) <=
+      capacity,
+  );
+}
+
+// Only a wheel with an open day and a tier that fits can be offered at all.
 export function toStudioSchedule(
   wheel: StudioWheel | null,
 ): StudioSchedule | null {
   if (!wheel) return null;
+  const tiers = toBookableTiers(wheel);
   const daysLabel = toStudioDaysLabel(wheel.closed_weekdays);
-  const priceLabel = toStudioPriceLabel(wheel.tiers);
-  const offer = toStudioOffer(wheel.tiers);
+  const priceLabel = toStudioPriceLabel(tiers);
+  const offer = toStudioOffer(tiers);
   if (!daysLabel || !priceLabel || !offer) return null;
   return {
     hoursLabel: toStudioHoursLabel(
@@ -166,13 +191,15 @@ export function toStudioSection(
 ): StudioSection {
   const schedule = toStudioSchedule(wheel);
   if (hasEvents) {
-    return { note: schedule ? toStudioNote(schedule) : null, teaser: null };
+    return schedule
+      ? { isBookable: true, note: toStudioNote(schedule), teaser: null }
+      : { isBookable: false, teaser: null };
   }
   if (!schedule) {
     return {
-      note: null,
+      isBookable: false,
       teaser: {
-        line: "Nothing coming up on the calendar, and the wheels are resting for now. Write to us and we will tell you when they turn again.",
+        line: "Nothing is coming up on the calendar, and the wheels are resting for now. Write to us and we will tell you when they turn again.",
         hoursLabel: null,
         daysLabel: null,
         priceLabel: null,
@@ -182,9 +209,9 @@ export function toStudioSection(
     };
   }
   return {
-    note: null,
+    isBookable: true,
     teaser: {
-      line: "Nothing coming up on the calendar, but the wheels keep their usual hours. Pick a time and we will set one up for you.",
+      line: "Nothing is coming up on the calendar, but the wheels keep their usual hours. Pick a time and we will set one up for you.",
       hoursLabel: schedule.hoursLabel,
       daysLabel: schedule.daysLabel,
       priceLabel: schedule.priceLabel,
