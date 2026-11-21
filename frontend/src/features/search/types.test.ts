@@ -145,10 +145,10 @@ describe("toSearchHint", () => {
 
   it("offers the full search once there are rows or the word is too short to suggest", () => {
     expect(toSearchHint({ ...base, value: "m" })).toBe(
-      "Press Enter to search everything.",
+      "Press Enter to search the shelf.",
     );
     expect(toSearchHint({ ...base, value: "mug", resultCount: 3 })).toBe(
-      "Press Enter to search everything.",
+      "Press Enter to search the shelf.",
     );
   });
 
@@ -160,19 +160,19 @@ describe("toSearchHint", () => {
 
   it("says the suggestions failed rather than that nothing matched", () => {
     expect(toSearchHint({ ...base, value: "mug", isError: true })).toBe(
-      "Suggestions did not load. Press Enter to search everything.",
+      "Suggestions did not load. Press Enter to search the shelf.",
     );
   });
 
-  it("names the word that found nothing", () => {
+  it("names the word that found nothing and keeps Enter on offer", () => {
     expect(toSearchHint({ ...base, value: " zzqx " })).toBe(
-      "Nothing matches “zzqx”. Try a glaze, a clay body or a shape.",
+      "No suggestions for “zzqx”. Press Enter to search the shelf.",
     );
   });
 
   it("cuts a long pasted run short", () => {
     expect(toSearchHint({ ...base, value: "x".repeat(160) })).toBe(
-      `Nothing matches “${"x".repeat(32)}…”. Try a glaze, a clay body or a shape.`,
+      `No suggestions for “${"x".repeat(32)}…”. Press Enter to search the shelf.`,
     );
   });
 });

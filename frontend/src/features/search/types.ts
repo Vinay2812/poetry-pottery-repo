@@ -103,6 +103,8 @@ function toExcerpt(text: string): string {
     : text;
 }
 
+const SEARCH_SHELF_LINE = "Press Enter to search the shelf.";
+
 export interface SearchHintInput {
   value: string;
   isPending: boolean;
@@ -121,13 +123,10 @@ export function toSearchHint({
   if (typed.length === 0) {
     return "Type a glaze, a clay body or what you want to use it for.";
   }
-  if (typed.length < MIN_SUGGEST_LENGTH) {
-    return "Press Enter to search everything.";
-  }
+  // Enter opens the piece search, so every hint names the shelf rather than promising everything.
+  if (typed.length < MIN_SUGGEST_LENGTH) return SEARCH_SHELF_LINE;
   if (isPending) return "Looking…";
-  if (isError) {
-    return "Suggestions did not load. Press Enter to search everything.";
-  }
-  if (resultCount > 0) return "Press Enter to search everything.";
-  return `Nothing matches “${toExcerpt(typed)}”. Try a glaze, a clay body or a shape.`;
+  if (isError) return `Suggestions did not load. ${SEARCH_SHELF_LINE}`;
+  if (resultCount > 0) return SEARCH_SHELF_LINE;
+  return `No suggestions for “${toExcerpt(typed)}”. ${SEARCH_SHELF_LINE}`;
 }

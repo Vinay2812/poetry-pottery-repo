@@ -43,7 +43,7 @@ const meta = {
     value: "mug",
     activeIndex: -1,
     isLoading: false,
-    hint: "Press Enter to search everything.",
+    hint: "Press Enter to search the shelf.",
     recents: [
       { key: "r1", label: "sage green", note: null },
       { key: "r2", label: "kulhad", note: null },
@@ -113,7 +113,7 @@ export const Loading: Story = {
 export const NoMatches: Story = {
   args: {
     value: "zzqx",
-    hint: "Nothing matches “zzqx”. Try a glaze, a clay body or a shape.",
+    hint: "No suggestions for “zzqx”. Press Enter to search the shelf.",
     recents: [],
     pieces: [],
     events: [],
@@ -127,7 +127,7 @@ export const StaleWhileLooking: Story = {
 
 export const SuggestionsFailed: Story = {
   args: {
-    hint: "Suggestions did not load. Press Enter to search everything.",
+    hint: "Suggestions did not load. Press Enter to search the shelf.",
     recents: [],
     pieces: [],
     events: [],
@@ -139,7 +139,7 @@ export const SuggestionsFailed: Story = {
 export const LongQuery: Story = {
   args: {
     value: "x".repeat(160),
-    hint: `Nothing matches “${"x".repeat(32)}…”. Try a glaze, a clay body or a shape.`,
+    hint: `No suggestions for “${"x".repeat(32)}…”. Press Enter to search the shelf.`,
     pieces: [],
     events: [],
     workshops: [],
