@@ -46,7 +46,8 @@ function toReachedIndex<Key extends string>({
 }
 
 // Reached stages show only their date, the furthest one also says what it means, and later
-// ones say what will happen. A closed item shows only the stages it actually reached.
+// ones say what will happen. A closed item shows only the stages it actually reached, and
+// nothing shows a stage that was skipped on the way.
 export function toTimelineSteps<Key extends string>(
   input: TimelineInput<Key>,
 ): TimelineStep[] {
@@ -54,27 +55,35 @@ export function toTimelineSteps<Key extends string>(
   const visible = input.isClosed
     ? input.stages.slice(0, reached + 1)
     : input.stages;
-  return visible.map((stage, index) => {
+  return visible.flatMap((stage, index): TimelineStep[] => {
+    // Every status change records its date, so an undated stage behind the furthest one was
+    // skipped (paid before anyone confirmed) rather than reached.
+    const isSkipped = index > 0 && index < reached && !input.dates[stage.key];
+    if (isSkipped) return [];
     if (index > reached) {
-      return {
-        key: stage.key,
-        label: stage.label,
-        date: null,
-        note: stage.upcoming ?? null,
-        state: "upcoming",
-      };
+      return [
+        {
+          key: stage.key,
+          label: stage.label,
+          date: null,
+          note: stage.upcoming ?? null,
+          state: "upcoming",
+        },
+      ];
     }
     // The furthest stage of an open item explains itself; once it is the last stage the
     // item is finished, so it reads as done rather than in progress.
     const isFurthest = index === reached && !input.isClosed;
     const isFinished = index === input.stages.length - 1;
-    return {
-      key: stage.key,
-      label: stage.label,
-      date: input.dates[stage.key] ?? null,
-      note: isFurthest ? stage.description : null,
-      state: isFurthest && !isFinished ? "current" : "done",
-    };
+    return [
+      {
+        key: stage.key,
+        label: stage.label,
+        date: input.dates[stage.key] ?? null,
+        note: isFurthest ? stage.description : null,
+        state: isFurthest && !isFinished ? "current" : "done",
+      },
+    ];
   });
 }
 
