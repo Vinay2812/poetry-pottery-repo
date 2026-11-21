@@ -38,9 +38,7 @@ export function BookingCard({
       <span className="text-[13px] text-muted-foreground tnum">
         {dateLabel}
       </span>
-      <span className={cn("text-[13px] tnum", isCancelled && "line-through")}>
-        {formatInr(total)}
-      </span>
+      <span className="text-[13px] tnum">{formatInr(total)}</span>
       <span className="col-span-2 flex flex-col text-[15px] leading-snug">
         {whenLines.map((line) => (
           <span key={line} className="underline-offset-4 group-hover:underline">
