@@ -243,6 +243,22 @@ describe("toStepNumber", () => {
 
 describe("toSectionHeadingId", () => {
   it("names the heading inside a section's anchor", () => {
-    expect(toSectionHeadingId("care-2")).toBe("care-2-heading");
+    expect(toSectionHeadingId("care-2")).toBe("care-2__heading");
+  });
+
+  it("never matches a section anchor, even for a heading that reads like one", () => {
+    const views = toSectionViews([
+      section("Care"),
+      section("Care heading"),
+      section("Care__heading"),
+      section("Care"),
+      section("Care 2 heading"),
+      section(""),
+    ]);
+    const anchors = views.map((view) => view.id);
+    const headingIds = anchors.map(toSectionHeadingId);
+    const every = [...anchors, ...headingIds];
+
+    expect(new Set(every).size).toBe(every.length);
   });
 });

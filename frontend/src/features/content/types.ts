@@ -45,8 +45,9 @@ export function splitParagraphs(body: string): string[] {
 }
 
 // The heading a jump lands focus on, so keyboard reading carries on from the section.
+// The underscore is something toAnchorId never emits, so no section anchor can take a heading's id.
 export function toSectionHeadingId(sectionId: string): string {
-  return `${sectionId}-heading`;
+  return `${sectionId}__heading`;
 }
 
 export function toAnchorId(heading: string): string {
