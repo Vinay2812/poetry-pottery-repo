@@ -68,7 +68,7 @@ export function CommissionBriefContainer({
     removePhoto,
     clearPhotos,
   } = useReferencePhotos();
-  const photoHold = isPhotoHoldShown ? toPhotoHoldMessage(photos) : null;
+  const photoHoldMessage = isPhotoHoldShown ? toPhotoHoldMessage(photos) : null;
 
   const toAskUrl = useCallback(
     (values: CommissionFormValues) =>
@@ -158,7 +158,7 @@ export function CommissionBriefContainer({
       referenceLine={referencePiece ? toReferenceLine(referencePiece) : null}
       isSubmitting={loading}
       errorMessage={errorMessage}
-      photoHoldMessage={photoHold}
+      photoHoldMessage={photoHoldMessage}
       toAskUrl={toAskUrl}
       photoPicker={
         isSignedIn ? (
@@ -174,7 +174,7 @@ export function CommissionBriefContainer({
               }))}
               maxPhotos={MAX_REFERENCE_PHOTOS}
               accept={REFERENCE_PHOTO_ACCEPT}
-              error={photoHold ?? photoError}
+              error={photoHoldMessage ?? photoError}
               onAddFiles={handleAddFiles}
               onRemove={removePhoto}
             />
