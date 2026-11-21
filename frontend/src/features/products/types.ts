@@ -232,6 +232,27 @@ export function toResultCountLabel(
   return search ? `${counted} for \u201c${search}\u201d` : counted;
 }
 
+interface PagedShelf {
+  products: { items: unknown[]; page_info: { page: number } };
+}
+
+// Joins a next page only onto the one before it, so a repeated or late answer writes nothing.
+export function appendShelfPage<Shelf extends PagedShelf>(
+  previous: Shelf | undefined,
+  next: Shelf,
+): Shelf | undefined {
+  const list = previous?.products;
+  if (!list || list.page_info.page + 1 !== next.products.page_info.page)
+    return previous;
+  return {
+    ...next,
+    products: {
+      ...next.products,
+      items: [...list.items, ...next.products.items],
+    },
+  };
+}
+
 // Where the shelf's list stands for the current filters: still finding it, showing it, or failed.
 export type ShelfPhase = "pending" | "ready" | "failed";
 
@@ -242,6 +263,27 @@ export interface ShelfPhaseInput {
   hasOwnPage: boolean;
   isOwnPageLoading: boolean;
   hasServerPage: boolean;
+}
+
+export interface ShelfResultSources<Page> {
+  current: Page | undefined;
+  serverPage: Page | undefined;
+  previous: Page | undefined;
+  initial: Page | undefined;
+  isLoading: boolean;
+}
+
+// What the list shows: the browser's answer for these filters, else the server's page for them,
+// else the last answer while the next one loads. The last arm fires only when the filters change
+// before the browser has any answer at all, so the page the server rendered stands in, not a blank.
+export function toShelfResult<Page>({
+  current,
+  serverPage,
+  previous,
+  initial,
+  isLoading,
+}: ShelfResultSources<Page>): Page | undefined {
+  return current ?? serverPage ?? previous ?? (isLoading ? initial : undefined);
 }
 
 // The one answer the toolbar, shelf tab, pagination footer and filter sheet all read.
@@ -256,6 +298,33 @@ export function toShelfPhase({
   if (isFiltersMoving) return "pending";
   if (hasOwnPage) return isOwnPageLoading ? "pending" : "ready";
   return hasServerPage ? "ready" : "pending";
+}
+
+// Counts speak only for a settled list: the tab, the footer and the toolbar all wait for one.
+export function isShelfCountable(phase: ShelfPhase): boolean {
+  return phase === "ready";
+}
+
+export function toShelfCountLine(
+  phase: ShelfPhase,
+  countLabel: string,
+): string | null {
+  if (phase === "pending") return "Finding pieces\u2026";
+  return isShelfCountable(phase) ? countLabel : null;
+}
+
+export function toShelfTabCount(
+  phase: ShelfPhase,
+  count: number | undefined,
+): number | null {
+  return isShelfCountable(phase) ? (count ?? null) : null;
+}
+
+// A failure has no count to promise, but the sheet must still close.
+export function toShowPiecesLabel(phase: ShelfPhase, total: number): string {
+  if (phase === "pending") return "Finding pieces\u2026";
+  if (phase === "failed") return "Show pieces";
+  return `Show ${total} ${total === 1 ? "piece" : "pieces"}`;
 }
 
 export type StockTone = "in_stock" | "low" | "sold_out" | "made_to_order";

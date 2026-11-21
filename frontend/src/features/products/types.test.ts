@@ -6,6 +6,7 @@ import { toUrlSearchParams } from "@/lib/search-params";
 import { FOOTER_SHOP_LINKS } from "@/features/layout/types";
 
 import {
+  appendShelfPage,
   applyFilterAction,
   clampPriceRange,
   computeUnitPrice,
@@ -30,7 +31,12 @@ import {
   toFilterInput,
   toFilterKey,
   toResultCountLabel,
+  isShelfCountable,
+  toShelfCountLine,
   toShelfPhase,
+  toShelfResult,
+  toShelfTabCount,
+  toShowPiecesLabel,
   toSearchParams,
   isStickyBarWanted,
   isTuckedUnderHeader,
@@ -192,6 +198,87 @@ describe("toFilterInput", () => {
     expect(input.in_stock_only).toBe(true);
     expect(input.customizable_only).toBe(true);
     expect(input.page).toBe(3);
+  });
+});
+
+describe("appendShelfPage", () => {
+  const shelfPage = (ids: number[], page: number) => ({
+    products: { items: ids.map((id) => ({ id })), page_info: { page } },
+  });
+  const ids = (value: ReturnType<typeof shelfPage> | undefined) =>
+    value?.products.items.map((item) => item.id);
+
+  it("joins the page that follows the list", () => {
+    const merged = appendShelfPage(shelfPage([1, 2], 1), shelfPage([3, 4], 2));
+
+    expect(ids(merged)).toEqual([1, 2, 3, 4]);
+    expect(merged?.products.page_info.page).toBe(2);
+  });
+
+  it("writes nothing for the same page twice or a page out of order", () => {
+    const once = appendShelfPage(shelfPage([1, 2], 1), shelfPage([3, 4], 2));
+
+    expect(appendShelfPage(once, shelfPage([3, 4], 2))).toBe(once);
+    const first = shelfPage([1, 2], 1);
+    expect(appendShelfPage(first, shelfPage([5, 6], 3))).toBe(first);
+  });
+
+  it("writes nothing when there is no list to join", () => {
+    expect(appendShelfPage(undefined, shelfPage([3, 4], 2))).toBeUndefined();
+  });
+});
+
+describe("toShelfResult", () => {
+  const none = {
+    current: undefined,
+    serverPage: undefined,
+    previous: undefined,
+    initial: undefined,
+    isLoading: false,
+  };
+
+  it("prefers the browser's answer, then the server's page, then the last answer", () => {
+    expect(
+      toShelfResult({ ...none, current: "own", serverPage: "server" }),
+    ).toBe("own");
+    expect(
+      toShelfResult({ ...none, serverPage: "server", previous: "last" }),
+    ).toBe("server");
+    expect(toShelfResult({ ...none, previous: "last", initial: "first" })).toBe(
+      "last",
+    );
+  });
+
+  it("falls back to the rendered page only while the browser's first answer is out", () => {
+    expect(toShelfResult({ ...none, initial: "first", isLoading: true })).toBe(
+      "first",
+    );
+    expect(toShelfResult({ ...none, initial: "first" })).toBeUndefined();
+  });
+});
+
+describe("shelf phase copy", () => {
+  it("counts only a settled list", () => {
+    expect(isShelfCountable("ready")).toBe(true);
+    expect(isShelfCountable("pending")).toBe(false);
+    expect(toShelfTabCount("ready", 7)).toBe(7);
+    expect(toShelfTabCount("pending", 7)).toBeNull();
+    expect(toShelfTabCount("failed", 7)).toBeNull();
+  });
+
+  it("says finding, the count or nothing in the toolbar", () => {
+    expect(toShelfCountLine("pending", "7 pieces")).toBe(
+      "Finding pieces\u2026",
+    );
+    expect(toShelfCountLine("ready", "7 pieces")).toBe("7 pieces");
+    expect(toShelfCountLine("failed", "7 pieces")).toBeNull();
+  });
+
+  it("always gives the sheet a way to close", () => {
+    expect(toShowPiecesLabel("ready", 1)).toBe("Show 1 piece");
+    expect(toShowPiecesLabel("ready", 7)).toBe("Show 7 pieces");
+    expect(toShowPiecesLabel("pending", 7)).toBe("Finding pieces\u2026");
+    expect(toShowPiecesLabel("failed", 7)).toBe("Show pieces");
   });
 });
 
