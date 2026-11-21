@@ -13,6 +13,7 @@ import {
   toOneLine,
   toRatingLabel,
   toReviewInput,
+  toReviewSubmitLabel,
   toSubjectHref,
   toSummaryLine,
   withReviewAdded,
@@ -233,5 +234,14 @@ describe("review drafts", () => {
       created_at: previous.created_at,
       author: previous.author,
     });
+  });
+});
+
+describe("toReviewSubmitLabel", () => {
+  it("posts a first review and saves an edit", () => {
+    expect(toReviewSubmitLabel(false, false)).toBe("Post review");
+    expect(toReviewSubmitLabel(false, true)).toBe("Posting\u2026");
+    expect(toReviewSubmitLabel(true, false)).toBe("Save changes");
+    expect(toReviewSubmitLabel(true, true)).toBe("Saving\u2026");
   });
 });

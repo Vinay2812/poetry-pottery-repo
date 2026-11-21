@@ -63,7 +63,7 @@ export function ReviewActionContainer({
           defaultPhotoUrls={defaults.image_urls}
           isSubmitting={isSaving}
           isUploading={isUploading}
-          submitLabel={hasMine ? "Save changes" : "Post review"}
+          isEditing={hasMine}
           error={error}
           onSubmit={submit}
           onUploadPhoto={upload}

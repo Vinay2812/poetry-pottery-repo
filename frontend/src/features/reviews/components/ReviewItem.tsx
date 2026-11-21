@@ -80,7 +80,7 @@ export function ReviewItem({
               onClick={onDelete}
               className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
-              Delete
+              Remove
             </button>
           )}
         </div>

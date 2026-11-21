@@ -59,14 +59,16 @@ export function ReviewsSection({
               isPending && "opacity-60",
             )}
           >
-            <ReviewSummary
-              average={average}
-              count={count}
-              distribution={distribution}
-            />
-            {quietLine && (
-              <p className="text-[13px] text-muted-foreground">{quietLine}</p>
-            )}
+            <div className="flex flex-col gap-2">
+              <ReviewSummary
+                average={average}
+                count={count}
+                distribution={distribution}
+              />
+              {quietLine && (
+                <p className="text-[13px] text-muted-foreground">{quietLine}</p>
+              )}
+            </div>
             <ul className="flex flex-col">{children}</ul>
           </div>
           {hasMore && onLoadMore && (
@@ -76,7 +78,7 @@ export function ReviewsSection({
               disabled={isLoadingMore}
               className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary disabled:opacity-50"
             >
-              {isLoadingMore ? "Loading…" : "Load more"}
+              {isLoadingMore ? "Loading…" : "More reviews"}
             </button>
           )}
         </>

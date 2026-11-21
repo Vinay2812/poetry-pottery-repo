@@ -32,6 +32,15 @@ export const PRODUCT_REVIEW_NOTE =
 export const EVENT_REVIEW_NOTE =
   "Reviews come from people who sat at the wheel";
 
+// An edit is saved, a first review is posted; the button says which while it works.
+export function toReviewSubmitLabel(
+  isEditing: boolean,
+  isSubmitting: boolean,
+): string {
+  if (isEditing) return isSubmitting ? "Saving…" : "Save changes";
+  return isSubmitting ? "Posting…" : "Post review";
+}
+
 export function toRatingLabel(rating: number): string {
   return rating === 1 ? "1 star" : `${rating} stars`;
 }
