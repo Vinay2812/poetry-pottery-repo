@@ -44,6 +44,9 @@ export function canFeature(isActive: boolean, isFeatured: boolean): boolean {
 
 export const LIVE_BLOCKED_NOTE = "Add stock first, or mark it made to order";
 
+export const NEW_FEATURE_BLOCKED_NOTE =
+  "Only a piece on the shelf can be on the home page";
+
 // The storefront calls an inactive piece "Retired from the shelf" and lists it in the archive.
 export function describeShelfState(isActive: boolean): string {
   return isActive ? "On the shelf" : "Retired";
@@ -286,6 +289,9 @@ export function toProductInput(
   values: ProductFormValues,
   imageUrls: readonly string[],
 ): AdminProductInput {
+  // What the boxes show is what is sent: never live without stock, never featured while hidden.
+  const isActive =
+    values.is_active && canGoLive(values.stock, values.is_customizable);
   return {
     name: values.name.trim(),
     description: values.description.trim(),
@@ -310,8 +316,8 @@ export function toProductInput(
     is_second: values.is_second,
     flaw_note: optionalText(values.flaw_note),
     is_commission: values.is_commission,
-    is_featured: values.is_featured,
-    is_active: values.is_active,
+    is_featured: values.is_featured && isActive,
+    is_active: isActive,
   };
 }
 

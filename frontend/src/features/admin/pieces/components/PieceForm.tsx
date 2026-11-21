@@ -20,7 +20,12 @@ import {
   toNullableNumber,
   toPreviewColour,
 } from "@/features/admin/ui";
-import { canGoLive, LIVE_BLOCKED_NOTE } from "@/features/admin/pieces/types";
+import {
+  canFeature,
+  canGoLive,
+  LIVE_BLOCKED_NOTE,
+  NEW_FEATURE_BLOCKED_NOTE,
+} from "@/features/admin/pieces/types";
 
 interface PieceTaxonomyOption {
   id: number;
@@ -90,6 +95,7 @@ export function PieceForm({
   const isActive = useWatch({ control, name: "is_active" });
 
   const isLiveAllowed = canGoLive(Number(stockValue) || 0, isCustomizable);
+  const isOnShelf = isActive && isLiveAllowed;
   const swatchColour = toPreviewColour(colorCode);
 
   useEffect(() => {
@@ -499,20 +505,24 @@ export function PieceForm({
         {isCreate && (
           <>
             <AdminCheckboxField
-              id="piece-featured"
-              label="Show on the home page"
-              hint={null}
-              isChecked={isFeatured}
-              isDisabled={false}
-              onCheckedChange={(isOn) => setFlag("is_featured", isOn)}
-            />
-            <AdminCheckboxField
               id="piece-active"
               label="Put it on the shelf"
               hint={isLiveAllowed ? null : LIVE_BLOCKED_NOTE}
-              isChecked={isActive && isLiveAllowed}
+              isChecked={isOnShelf}
               isDisabled={!isLiveAllowed}
-              onCheckedChange={(isOn) => setFlag("is_active", isOn)}
+              onCheckedChange={(isOn) => {
+                setFlag("is_active", isOn);
+                // Off the shelf means off the home page too.
+                if (!isOn) setFlag("is_featured", false);
+              }}
+            />
+            <AdminCheckboxField
+              id="piece-featured"
+              label="Show on the home page"
+              hint={isOnShelf ? null : NEW_FEATURE_BLOCKED_NOTE}
+              isChecked={isFeatured && isOnShelf}
+              isDisabled={!canFeature(isOnShelf, false)}
+              onCheckedChange={(isOn) => setFlag("is_featured", isOn)}
             />
           </>
         )}

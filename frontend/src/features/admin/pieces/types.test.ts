@@ -285,6 +285,7 @@ describe("toProductInput", () => {
         description: " Thrown on the wheel. ",
         material: " Stoneware ",
         care_notes: "Hand wash\n\nNo microwave",
+        stock: 2,
         is_featured: true,
       },
       ["https://cdn.test/one.jpg"],
@@ -294,6 +295,29 @@ describe("toProductInput", () => {
     expect(input.material).toBe("Stoneware");
     expect(input.care_notes).toEqual(["Hand wash", "No microwave"]);
     expect(input.image_urls).toEqual(["https://cdn.test/one.jpg"]);
+    expect(input.is_featured).toBe(true);
+  });
+
+  it("sends a piece that cannot go live as off the shelf and off the home page", () => {
+    const input = toProductInput(
+      { ...EMPTY_PRODUCT_FORM, stock: 0, is_active: true, is_featured: true },
+      [],
+    );
+    expect(input.is_active).toBe(false);
+    expect(input.is_featured).toBe(false);
+  });
+
+  it("keeps a made-to-order piece live and featured with no stock", () => {
+    const input = toProductInput(
+      {
+        ...EMPTY_PRODUCT_FORM,
+        stock: 0,
+        is_customizable: true,
+        is_featured: true,
+      },
+      [],
+    );
+    expect(input.is_active).toBe(true);
     expect(input.is_featured).toBe(true);
   });
 
