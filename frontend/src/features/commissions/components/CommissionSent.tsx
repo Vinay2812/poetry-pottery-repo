@@ -23,7 +23,7 @@ export function CommissionSent({
         lede={
           <>
             A sketch and a price come back to{" "}
-            <span className="break-words text-ink">{email}</span> within two
+            <span className="wrap-anywhere text-ink">{email}</span> within two
             days. Nothing is owed until you say yes.
           </>
         }
