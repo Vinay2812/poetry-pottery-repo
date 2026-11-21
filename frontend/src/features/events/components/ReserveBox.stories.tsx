@@ -85,7 +85,7 @@ export const AlreadyBooked: Story = {
   },
 };
 
-export const BookedAfterTheDate: Story = {
+export const BookedAndPaid: Story = {
   args: {
     state: "booked",
     isPriceShown: false,
