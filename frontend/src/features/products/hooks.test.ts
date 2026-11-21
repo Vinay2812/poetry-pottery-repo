@@ -195,7 +195,7 @@ describe("useShelfResults", () => {
 
     expect(result.current.phase).toBe("failed");
     expect(result.current.result?.facets.categories).toHaveLength(1);
-    expect(result.current.isNextPageBusy).toBe(true);
+    expect(result.current.canAskNextPage).toBe(false);
   });
 
   it("stays ready while Apollo reports a next page still out", () => {
@@ -207,7 +207,7 @@ describe("useShelfResults", () => {
     const { result } = renderShelf();
 
     expect(result.current.phase).toBe("ready");
-    expect(result.current.isNextPageBusy).toBe(false);
+    expect(result.current.canAskNextPage).toBe(true);
     expect(result.current.isRefreshing).toBe(false);
   });
 
@@ -234,7 +234,7 @@ describe("useShelfResults", () => {
     await act(async () => result.current.loadMore());
 
     expect(result.current.hasAppendFailed).toBe(true);
-    expect(result.current.isNextPageBusy).toBe(false);
+    expect(result.current.isNextPageLoading).toBe(false);
     expect(result.current.result?.items).toHaveLength(2);
   });
 
@@ -263,13 +263,13 @@ describe("useShelfResults", () => {
     );
 
     act(() => result.current.loadMore());
-    expect(result.current.isNextPageBusy).toBe(true);
+    expect(result.current.isNextPageLoading).toBe(true);
 
     const mugs = answer(page([7], 1, 1));
     setQuery({ data: mugs, loading: false });
     rerender({ filters: MUGS });
     // The filters changed, so the old page's spinner no longer belongs to this list.
-    expect(result.current.isNextPageBusy).toBe(false);
+    expect(result.current.isNextPageLoading).toBe(false);
 
     const call = fetchMoreMock.mock.calls[0]?.[0];
     const merged = call?.updateQuery(mugs, {

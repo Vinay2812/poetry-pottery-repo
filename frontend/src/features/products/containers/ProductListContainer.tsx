@@ -32,9 +32,9 @@ import { useSearchDraft, useShelfResults } from "@/features/products/hooks";
 import {
   clampPriceRange,
   countActiveFilters,
+  isShelfCountable,
   PRODUCT_FILTERS_CODEC,
   toCardPhotoLoading,
-  isShelfCountable,
   toPriceRangeLabel,
   toResultCountLabel,
   toShelfCountLine,
@@ -83,7 +83,8 @@ export function ProductListContainer({
     result,
     phase,
     isRefreshing,
-    isNextPageBusy,
+    isNextPageLoading,
+    canAskNextPage,
     hasAppendFailed,
     loadMore: handleLoadMore,
     retry: handleRetry,
@@ -163,18 +164,23 @@ export function ProductListContainer({
   useEffect(() => {
     loadMoreRef.current = handleLoadMore;
   }, [handleLoadMore]);
-  const sentinelRef = useCallback((node: HTMLDivElement | null) => {
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting))
-          loadMoreRef.current();
-      },
-      { rootMargin: "600px 0px" },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
+  // Observed afresh each time a next page becomes askable, so a shopper already at the
+  // bottom still sets it off: the observer reports the current position when it starts.
+  const sentinelRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node || !canAskNextPage) return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting))
+            loadMoreRef.current();
+        },
+        { rootMargin: "600px 0px" },
+      );
+      observer.observe(node);
+      return () => observer.disconnect();
+    },
+    [canAskNextPage],
+  );
 
   const priceFloor = facets?.price_min ?? 0;
   const priceCeiling = facets?.price_max ?? 0;
@@ -317,7 +323,8 @@ export function ProductListContainer({
               {pageInfo && isShelfCountable(phase) && (
                 <LoadMore
                   hasMore={pageInfo.has_more}
-                  isLoading={isNextPageBusy}
+                  isLoading={isNextPageLoading}
+                  canAsk={canAskNextPage}
                   hasFailed={hasAppendFailed}
                   loadedCount={items.length}
                   total={pageInfo.total}

@@ -17,11 +17,13 @@ import {
 } from "@/graphql/generated/graphql";
 
 import {
+  appendShelfPage,
   MAX_REFERENCE_PHOTOS,
   type ProductFilters,
   type ReferencePhoto,
   remainingReferenceSlots,
-  appendShelfPage,
+  settleAppend,
+  type ShelfAppend,
   type ShelfPhase,
   toFilterInput,
   toFilterKey,
@@ -39,11 +41,6 @@ const FIRST_PAGE_LOADING = new Set<NetworkStatus>([
   NetworkStatus.refetch,
 ]);
 
-interface AppendState {
-  page: number;
-  status: "loading" | "failed";
-}
-
 export interface ShelfResultsOptions {
   filters: ProductFilters;
   initialProducts: ProductsPage | null;
@@ -58,8 +55,10 @@ export interface ShelfResults {
   phase: ShelfPhase;
   // Old results under new filters: still shown, dimmed until the answer lands.
   isRefreshing: boolean;
-  // A next page is on its way, or the browser has no settled first page for it to join yet.
-  isNextPageBusy: boolean;
+  // A next page is on its way: the button says so.
+  isNextPageLoading: boolean;
+  // The browser holds a settled first page and nothing is on its way, so a next page may be asked.
+  canAskNextPage: boolean;
   hasAppendFailed: boolean;
   loadMore: () => void;
   retry: () => void;
@@ -75,7 +74,7 @@ export function useShelfResults({
 }: ShelfResultsOptions): ShelfResults {
   const filterInput = toFilterInput(filters, 1);
   const filterKey = toFilterKey(filterInput);
-  const [appends, setAppends] = useState<Record<string, AppendState>>({});
+  const [appends, setAppends] = useState<Record<string, ShelfAppend>>({});
   // Recorded at once, so a second call in the same frame sees the first before any re-render.
   const inFlight = useRef(new Set<string>());
   // Apollo has already moved to the new variables during render; this key follows at commit,
@@ -120,6 +119,8 @@ export function useShelfResults({
   });
 
   const ownAppend = appends[filterKey];
+  const isNextPageLoading = ownAppend?.status === "loading";
+  // Not the same as a ready phase: the server's page counts as ready, but Apollo cannot page from it.
   const hasSettledOwnPage =
     current !== undefined && !isOwnPageLoading && !error;
 
@@ -130,14 +131,8 @@ export function useShelfResults({
     const requestId = `${key}#${page}`;
     if (inFlight.current.has(requestId)) return;
     inFlight.current.add(requestId);
-    const settle = (status: AppendState["status"] | null) =>
-      setAppends((all) => {
-        if (all[key]?.page !== page) return all;
-        const rest = Object.fromEntries(
-          Object.entries(all).filter(([other]) => other !== key),
-        );
-        return status ? { ...rest, [key]: { page, status } } : rest;
-      });
+    const settle = (status: "done" | "failed") =>
+      setAppends((all) => settleAppend(all, key, page, status));
     setAppends((all) => ({ ...all, [key]: { page, status: "loading" } }));
     fetchMore({
       variables: { filter: toFilterInput(filters, page) },
@@ -148,7 +143,7 @@ export function useShelfResults({
           : previous,
     })
       .then(
-        () => settle(null),
+        () => settle("done"),
         () => settle("failed"),
       )
       .finally(() => inFlight.current.delete(requestId));
@@ -160,7 +155,8 @@ export function useShelfResults({
     result,
     phase,
     isRefreshing: phase === "pending" && result !== undefined,
-    isNextPageBusy: ownAppend?.status === "loading" || !hasSettledOwnPage,
+    isNextPageLoading,
+    canAskNextPage: hasSettledOwnPage && !isNextPageLoading,
     hasAppendFailed: ownAppend?.status === "failed",
     loadMore,
     retry,

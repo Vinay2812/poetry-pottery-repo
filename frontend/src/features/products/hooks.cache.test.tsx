@@ -178,13 +178,13 @@ describe("useShelfResults against a real cache", () => {
     const { result } = renderShelf(client, ALL_P1);
 
     expect(result.current.phase).toBe("ready");
-    expect(result.current.isNextPageBusy).toBe(true);
+    expect(result.current.canAskNextPage).toBe(false);
     act(() => result.current.loadMore());
     await pause(20);
     expect(log).toEqual(["start all p1"]);
     expect(result.current.result?.items).toHaveLength(24);
 
-    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
     act(() => result.current.loadMore());
     await waitFor(() => expect(result.current.result?.items).toHaveLength(30));
     expect(log).toEqual(["start all p1", "start all p2"]);
@@ -196,13 +196,13 @@ describe("useShelfResults against a real cache", () => {
       filter.page === 1 ? { page: ALL_P1 } : { page: ALL_P2, isFailing: true },
     );
     const { result } = renderShelf(client, ALL_P1);
-    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
 
     act(() => result.current.loadMore());
     await waitFor(() => expect(result.current.hasAppendFailed).toBe(true));
 
     expect(result.current.result?.items).toHaveLength(24);
-    expect(result.current.isNextPageBusy).toBe(false);
+    expect(result.current.isNextPageLoading).toBe(false);
     expect(result.current.phase).toBe("ready");
     await pause(10);
     expect(rejections).toEqual([]);
@@ -215,7 +215,7 @@ describe("useShelfResults against a real cache", () => {
       return filter.page === 1 ? { page: ALL_P1 } : { page: ALL_P2, delay: 40 };
     });
     const { result, rerender } = renderShelf(client, ALL_P1);
-    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
 
     act(() => result.current.loadMore());
     rerender({ filters: MUGS });
@@ -249,21 +249,21 @@ describe("useShelfResults against a real cache", () => {
     const MUG: ProductFilters = { ...EMPTY_FILTERS, search: "mug" };
     const BOWL: ProductFilters = { ...EMPTY_FILTERS, search: "bowl" };
     const { result, rerender } = renderShelf(client, null, MUG);
-    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
 
     act(() => result.current.loadMore());
-    expect(result.current.isNextPageBusy).toBe(true);
+    expect(result.current.isNextPageLoading).toBe(true);
     rerender({ filters: BOWL });
-    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
     act(() => result.current.loadMore());
     rerender({ filters: MUG });
     await waitFor(() => expect(result.current.phase).toBe("ready"));
 
     await act(async () => releaseHeld());
-    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
 
     expect(result.current.phase).toBe("ready");
-    expect(result.current.isNextPageBusy).toBe(false);
+    expect(result.current.canAskNextPage).toBe(true);
     expect(result.current.result?.items).toHaveLength(48);
     act(() => result.current.loadMore());
     expect(log).toContain("start mug p3");
@@ -284,11 +284,11 @@ describe("useShelfResults against a real cache", () => {
     const MUG: ProductFilters = { ...EMPTY_FILTERS, search: "mug" };
     const BOWL: ProductFilters = { ...EMPTY_FILTERS, search: "bowl" };
     const { result, rerender } = renderShelf(client, null, MUG);
-    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
 
     act(() => result.current.loadMore());
     rerender({ filters: BOWL });
-    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
     act(() => result.current.loadMore());
     rerender({ filters: MUG });
     await waitFor(() => expect(result.current.phase).toBe("ready"));
@@ -297,7 +297,7 @@ describe("useShelfResults against a real cache", () => {
     act(() => result.current.loadMore());
 
     await act(async () => releaseHeld());
-    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
 
     const items = result.current.result?.items ?? [];
     expect(items).toHaveLength(48);
@@ -310,7 +310,7 @@ describe("useShelfResults against a real cache", () => {
       filter.page === 1 ? { page: ALL_P1 } : { page: ALL_P2, isHeld: true },
     );
     const { result } = renderShelf(client, ALL_P1);
-    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
 
     act(() => {
       result.current.loadMore();

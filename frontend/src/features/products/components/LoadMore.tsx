@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 export interface LoadMoreProps {
   hasMore: boolean;
   isLoading: boolean;
+  // False while there is no settled page to follow on from; the button waits without saying "Loading".
+  canAsk?: boolean;
   // The last next-page request failed; the cards already loaded stay, and the button retries.
   hasFailed?: boolean;
   loadedCount: number;
@@ -14,6 +16,7 @@ export interface LoadMoreProps {
 export function LoadMore({
   hasMore,
   isLoading,
+  canAsk = true,
   hasFailed = false,
   loadedCount,
   total,
@@ -32,7 +35,11 @@ export function LoadMore({
         </p>
       )}
       {hasMore && (
-        <Button variant="outline" onClick={onLoadMore} disabled={isLoading}>
+        <Button
+          variant="outline"
+          onClick={onLoadMore}
+          disabled={isLoading || !canAsk}
+        >
           {isLoading
             ? "Loading…"
             : hasFailed
