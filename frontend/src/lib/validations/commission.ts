@@ -12,7 +12,11 @@ export const commissionSchema = z.object({
     .trim()
     .min(2, "Say which piece you have in mind")
     .max(60, "Piece must be 60 characters or fewer"),
-  size: z.string().trim().min(1, "Tell us the size"),
+  size: z
+    .string()
+    .trim()
+    .min(1, "Tell us the size")
+    .max(60, "Size must be 60 characters or fewer"),
   glaze: z.string().trim().min(1, "Pick a glaze"),
   carvedWords: z
     .string()
