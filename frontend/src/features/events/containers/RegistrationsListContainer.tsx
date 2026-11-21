@@ -115,6 +115,7 @@ export function RegistrationsListContainer({
               </section>
             ))}
           </div>
+          {/* The API pages by event date, latest first, so a page is not a date range: the labels promise no order. */}
           {pageInfo && pageInfo.total > pageInfo.limit && (
             <div className="flex items-center justify-center gap-3">
               <Button
@@ -122,7 +123,7 @@ export function RegistrationsListContainer({
                 disabled={page <= 1}
                 onClick={() => setPage((current) => current - 1)}
               >
-                Newer
+                Back
               </Button>
               <span className="text-[13px] text-muted-foreground tnum">
                 Page {page} of {pageCount}
@@ -132,7 +133,7 @@ export function RegistrationsListContainer({
                 disabled={page >= pageCount}
                 onClick={() => setPage((current) => current + 1)}
               >
-                Older
+                More bookings
               </Button>
             </div>
           )}
