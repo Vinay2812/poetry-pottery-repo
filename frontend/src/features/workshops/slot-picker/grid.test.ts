@@ -146,6 +146,18 @@ describe("slot helpers", () => {
     expect(toDaysKeptByNextPick(["2026-11-25"], 1)).toEqual([]);
   });
 
+  it("drops only one of two times on the same day", () => {
+    expect(toDaysKeptByNextPick(["2026-11-25", "2026-11-25"], 2)).toEqual([
+      "2026-11-25",
+    ]);
+    expect(
+      toDaysKeptByNextPick(["2026-11-28", "2026-11-25", "2026-11-25"], 3),
+    ).toEqual(["2026-11-25", "2026-11-28"]);
+    expect(
+      toDaysKeptByNextPick(["2026-11-25", "2026-11-28", "2026-11-28"], 3),
+    ).toEqual(["2026-11-28", "2026-11-28"]);
+  });
+
   // Matches the API's checkSlots: every final start within slot_span_days, both ends counted.
   it("says why a day is out of reach of the picks a new one would keep", () => {
     const full = ["2026-11-22", "2026-11-24"];
