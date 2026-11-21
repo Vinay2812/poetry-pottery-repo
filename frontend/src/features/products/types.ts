@@ -757,6 +757,12 @@ export function toCardPhotoLoading(index: number): CardPhotoLoading {
   return { isPriority: index < 2, isEager: index < 4 };
 }
 
+// A row of cards under other content (like the 404's) asks for no priority, and only the
+// two cards of a phone's first row skip lazy loading.
+export function toBelowFoldCardPhotoLoading(index: number): CardPhotoLoading {
+  return { isPriority: false, isEager: index < 2 };
+}
+
 export const MAX_REFERENCE_PHOTOS = 3;
 export const MAX_REFERENCE_PHOTO_BYTES = 8 * 1024 * 1024;
 const REFERENCE_PHOTO_TYPES = [
