@@ -3,11 +3,11 @@ import { fn } from "storybook/test";
 
 import { atViewport } from "@/lib/storybook/viewports";
 
-import type { VisitRow } from "@/features/admin/visits/types";
+import type { VisitTableRow } from "@/features/admin/visits/types";
 
 import { VisitsTable } from "./VisitsTable";
 
-const ROWS: VisitRow[] = [
+const ROWS: VisitTableRow[] = [
   {
     id: "VIS1",
     startsAt: "2026-09-20T06:30:00.000Z",
@@ -16,6 +16,9 @@ const ROWS: VisitRow[] = [
     phone: "9123456789",
     note: "Coming with a friend who throws.",
     cancelledAt: null,
+    statusLabel: "Booked",
+    statusTone: "live",
+    canCancel: true,
     customerEmail: "anjali@example.com",
     customerId: 7,
   },
@@ -27,6 +30,9 @@ const ROWS: VisitRow[] = [
     phone: "9876543210",
     note: null,
     cancelledAt: null,
+    statusLabel: "Booked",
+    statusTone: "live",
+    canCancel: true,
     customerEmail: null,
     customerId: null,
   },
@@ -38,6 +44,9 @@ const ROWS: VisitRow[] = [
     phone: "9998887776",
     note: "Wants to see the kiln.",
     cancelledAt: "2026-09-18T04:00:00.000Z",
+    statusLabel: "Cancelled",
+    statusTone: "quiet",
+    canCancel: false,
     customerEmail: "priya@example.com",
     customerId: 9,
   },
@@ -51,7 +60,6 @@ const meta = {
     isBusy: false,
     busyId: null,
     emptyMessage: "Nobody is coming by yet",
-    now: new Date("2026-09-19T00:00:00.000Z"),
     onCancel: fn(),
   },
 } satisfies Meta<typeof VisitsTable>;
@@ -78,9 +86,20 @@ export const Busy: Story = {
   args: { isBusy: true },
 };
 
-// Read a day after the first window, so it shows as past with no cancel button.
+// A window that has closed shows as past, with no cancel button.
 export const WithAPastVisit: Story = {
-  args: { now: new Date("2026-09-20T12:00:00.000Z") },
+  args: {
+    rows: ROWS.map((row, index) =>
+      index === 0
+        ? {
+            ...row,
+            statusLabel: "Past",
+            statusTone: "neutral",
+            canCancel: false,
+          }
+        : row,
+    ),
+  },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

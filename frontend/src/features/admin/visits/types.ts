@@ -112,6 +112,23 @@ export function canCancelVisit(state: VisitState): boolean {
   return state === "booked";
 }
 
+/** A visit as the table shows it: the state is read once, against one moment, by the container. */
+export interface VisitTableRow extends VisitRow {
+  statusLabel: string;
+  statusTone: AdminStatusTone;
+  canCancel: boolean;
+}
+
+export function toVisitTableRow(row: VisitRow, now: Date): VisitTableRow {
+  const state = toVisitState(row.cancelledAt, row.endsAt, now);
+  return {
+    ...row,
+    statusLabel: visitStatusLabel(state),
+    statusTone: visitStatusTone(state),
+    canCancel: canCancelVisit(state),
+  };
+}
+
 /** Half an hour reads better as one range than as two timestamps. */
 export function describeWindow(startLabel: string, endLabel: string): string {
   return `${startLabel} – ${endLabel}`;

@@ -8,6 +8,7 @@ import {
   toDayStartIso,
   toVisitRow,
   toVisitState,
+  toVisitTableRow,
   toVisitsFilter,
   type VisitRow,
   VISITS_PAGE_SIZE,
@@ -154,5 +155,19 @@ describe("applyVisitPatch", () => {
     });
     expect(next[0]?.cancelledAt).toBe("2026-09-18T04:00:00.000Z");
     expect(next[1]?.cancelledAt).toBeNull();
+  });
+});
+
+describe("toVisitTableRow", () => {
+  it("reads the state once and hands the table words, a tone and a yes or no", () => {
+    const now = new Date("2026-09-20T12:00:00.000Z");
+    expect(toVisitTableRow(row(), now)).toMatchObject({
+      statusLabel: "Past",
+      statusTone: "neutral",
+      canCancel: false,
+    });
+    expect(
+      toVisitTableRow(row(), new Date("2026-09-19T00:00:00.000Z")),
+    ).toMatchObject({ statusLabel: "Booked", canCancel: true });
   });
 });

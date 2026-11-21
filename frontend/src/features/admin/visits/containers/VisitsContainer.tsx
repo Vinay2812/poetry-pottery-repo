@@ -27,6 +27,7 @@ import { VisitsTable } from "@/features/admin/visits/components/VisitsTable";
 import {
   applyVisitPatch,
   toVisitRow,
+  toVisitTableRow,
   toVisitsFilter,
   type VisitRow,
 } from "@/features/admin/visits/types";
@@ -64,6 +65,10 @@ export function VisitsContainer() {
   );
 
   const [optimisticRows, patchRows] = useOptimistic(rows, applyVisitPatch);
+  const tableRows = useMemo(
+    () => optimisticRows.map((row) => toVisitTableRow(row, now)),
+    [optimisticRows, now],
+  );
 
   const cancel = useReasonAction({
     patch: ({ target }: ReasonInput<string>) =>
@@ -137,8 +142,7 @@ export function VisitsContainer() {
       </AdminToolbar>
 
       <VisitsTable
-        now={now}
-        rows={optimisticRows}
+        rows={tableRows}
         isBusy={isPending || (loading && result !== undefined)}
         busyId={cancel.pending}
         emptyMessage={
