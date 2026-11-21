@@ -29,8 +29,9 @@ export interface CartLineItemProps {
   onSaveForLater: (() => void) | null;
 }
 
+// Tall enough to tap without looking taller than a line of text.
 const TEXT_LINK =
-  "text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
+  "inline-flex min-h-10 items-center text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
 
 export function CartLineItem({
   href,
@@ -106,7 +107,8 @@ export function CartLineItem({
             {unavailableReason}
           </p>
         )}
-        <div className="mt-auto flex flex-wrap items-center gap-4">
+        {/* The text actions wrap as one group, so a narrow line never strands the divider. */}
+        <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1">
           {canAdjustQuantity && (
             <QuantityStepper
               value={quantity}
@@ -115,29 +117,30 @@ export function CartLineItem({
               size="sm"
             />
           )}
-          {/* Named per piece: a cart of three otherwise reads "Remove" three times. */}
-          <button
-            type="button"
-            onClick={onRemove}
-            aria-label={`Remove ${name}`}
-            className={TEXT_LINK}
-          >
-            Remove
-          </button>
-          {onSaveForLater && (
-            <>
-              {/* Two actions on one line read as one sentence without something between them. */}
-              <span aria-hidden="true" className="h-3 w-px bg-ash" />
-              <button
-                type="button"
-                onClick={onSaveForLater}
-                aria-label={`Save ${name} for later`}
-                className={TEXT_LINK}
-              >
-                Save for later
-              </button>
-            </>
-          )}
+          <div className="flex items-center gap-4">
+            {/* Named per piece: a cart of three otherwise reads "Remove" three times. */}
+            <button
+              type="button"
+              onClick={onRemove}
+              aria-label={`Remove ${name}`}
+              className={TEXT_LINK}
+            >
+              Remove
+            </button>
+            {onSaveForLater && (
+              <>
+                <span aria-hidden="true" className="h-3 w-px bg-ash" />
+                <button
+                  type="button"
+                  onClick={onSaveForLater}
+                  aria-label={`Save ${name} for later`}
+                  className={TEXT_LINK}
+                >
+                  Save for later
+                </button>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </li>
