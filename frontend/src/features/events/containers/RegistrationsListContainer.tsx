@@ -13,18 +13,12 @@ import { RegistrationCard } from "@/features/events/components/RegistrationCard"
 import { useMyRegistrations } from "@/features/events/hooks";
 import {
   isRegistrationClosed,
-  type RegistrationGroup,
   toEventTypeLabel,
   toEventWhenLabel,
-  toRegistrationGroup,
+  toRegistrationGroups,
   toRegistrationPath,
   toRegistrationStatusLabel,
 } from "@/features/events/types";
-
-const GROUPS: { key: RegistrationGroup; heading: string }[] = [
-  { key: "upcoming", heading: "Upcoming" },
-  { key: "past", heading: "Past and cancelled" },
-];
 
 export function RegistrationsListContainer() {
   const [page, setPage] = useState(1);
@@ -85,41 +79,33 @@ export function RegistrationsListContainer() {
               isPaging && "opacity-60",
             )}
           >
-            {GROUPS.map(({ key, heading }) => {
-              const group = registrations.filter(
-                (registration) => toRegistrationGroup(registration) === key,
-              );
-              if (group.length === 0) return null;
-              return (
-                <section key={key} className="flex flex-col gap-3">
-                  <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                    {heading}
-                  </h2>
-                  <div className="flex flex-col border-t border-ash">
-                    {group.map((registration) => (
-                      <RegistrationCard
-                        key={registration.id}
-                        href={toRegistrationPath(registration.id)}
-                        eventTitle={registration.event.title}
-                        imageUrl={registration.event.image_url}
-                        typeLabel={toEventTypeLabel(
-                          registration.event.event_type,
-                        )}
-                        dateLabel={toEventWhenLabel(
-                          registration.event.starts_at,
-                        )}
-                        seats={registration.seats}
-                        total={registration.total}
-                        statusLabel={toRegistrationStatusLabel(
-                          registration.status,
-                        )}
-                        isClosed={isRegistrationClosed(registration.status)}
-                      />
-                    ))}
-                  </div>
-                </section>
-              );
-            })}
+            {toRegistrationGroups(registrations).map((group) => (
+              <section key={group.key} className="flex flex-col gap-3">
+                <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+                  {group.heading}
+                </h2>
+                <div className="flex flex-col border-t border-ash">
+                  {group.registrations.map((registration) => (
+                    <RegistrationCard
+                      key={registration.id}
+                      href={toRegistrationPath(registration.id)}
+                      eventTitle={registration.event.title}
+                      imageUrl={registration.event.image_url}
+                      typeLabel={toEventTypeLabel(
+                        registration.event.event_type,
+                      )}
+                      dateLabel={toEventWhenLabel(registration.event.starts_at)}
+                      seats={registration.seats}
+                      total={registration.total}
+                      statusLabel={toRegistrationStatusLabel(
+                        registration.status,
+                      )}
+                      isClosed={isRegistrationClosed(registration.status)}
+                    />
+                  ))}
+                </div>
+              </section>
+            ))}
           </div>
           {pageInfo && pageInfo.total > pageInfo.limit && (
             <div className="flex items-center justify-center gap-3">
