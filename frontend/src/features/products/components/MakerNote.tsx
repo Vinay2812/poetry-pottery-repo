@@ -2,10 +2,10 @@ export interface MakerNoteProps {
   note: string;
 }
 
-// The potter's own line about this piece, in the one type style reserved for it.
+// The potter's own words, read with the description, in the one type style kept for them.
 export function MakerNote({ note }: MakerNoteProps) {
   return (
-    <p className="pt-6 font-script text-lg leading-snug whitespace-pre-line italic">
+    <p className="max-w-[46ch] pt-2 font-script text-xl leading-snug whitespace-pre-line italic">
       {note}
     </p>
   );

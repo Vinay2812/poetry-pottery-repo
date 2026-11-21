@@ -71,18 +71,16 @@ export function toArchiveYears(pieces: ArchivePieceData[]): ArchiveYear[] {
     }));
 }
 
-// Where a piece came from and where it went, in one line under its name.
+// Where a piece came from, in one line under its name; the note below it says where it went.
 export function toProvenance(
   createdAt: string,
   glaze: string | null,
   clayBody: string,
-  stock: number,
 ): string {
   return [
     toMadeLabel(createdAt),
     glaze?.trim() || null,
     clayBody.trim() || null,
-    stock <= 0 ? "has found a home" : "no longer on the shelf",
   ]
     .filter((part): part is string => Boolean(part))
     .join(" · ");

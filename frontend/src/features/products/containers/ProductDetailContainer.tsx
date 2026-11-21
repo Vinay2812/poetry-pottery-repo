@@ -20,6 +20,7 @@ import { useAddToCart } from "@/features/cart/hooks";
 import { canWatchPiece, NextBatchContainer } from "@/features/notify";
 import { useReferencePhotos } from "@/features/products/hooks";
 import { ArchiveNotice } from "@/features/products/components/ArchiveNotice";
+import { CareNotes } from "@/features/products/components/CareNotes";
 import { GlazeNote } from "@/features/products/components/GlazeNote";
 import { KilnCard } from "@/features/products/components/KilnCard";
 import { MakerNote } from "@/features/products/components/MakerNote";
@@ -103,7 +104,7 @@ export function ProductDetailContainer({
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [activeFact, setActiveFact] = useState<string | null>(null);
-  const buyBoxRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
 
   const { data: relatedData } = useQuery(RelatedProductsDocument, {
     variables: { slug: product.slug, limit: 8 },
@@ -177,12 +178,17 @@ export function ProductDetailContainer({
       });
   }, [factRows, product.name]);
 
+  // The bar stands in only once the buttons have scrolled up past the top, never
+  // while they are still below the fold on the way down.
   useEffect(() => {
-    const node = buyBoxRef.current;
+    const node = actionsRef.current;
     if (!node) return;
-    const observer = new IntersectionObserver(([entry]) =>
-      setIsBuyBoxVisible(entry?.isIntersecting ?? true),
-    );
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry) return;
+      setIsBuyBoxVisible(
+        entry.isIntersecting || entry.boundingClientRect.top > 0,
+      );
+    });
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
@@ -267,25 +273,28 @@ export function ProductDetailContainer({
   }));
 
   return (
-    <PageShell className="flex flex-col gap-16 py-8 md:py-12">
+    <PageShell className="flex flex-col gap-16 pb-8 sm:pt-8 md:py-12">
       {/* minmax(0, …) keeps a tall buy box from widening the gallery column through its square ratio. */}
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
-        <ProductGallery
-          images={product.image_urls}
-          name={product.name}
-          overlay={
-            hasKilnDiagram ? (
-              <KilnLabels
-                labels={kilnLabels}
-                isAnimated
-                activeText={activeFact}
-                onActivate={setActiveFact}
-                className="hidden text-ink lg:block"
-              />
-            ) : undefined
-          }
-        />
-        <div ref={buyBoxRef} className="lg:sticky lg:top-24 lg:self-start">
+      <div className="grid gap-6 md:gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
+        {/* On a phone the photo runs to both edges, straight under the header. */}
+        <div className="-mx-4 sm:mx-0">
+          <ProductGallery
+            images={product.image_urls}
+            name={product.name}
+            overlay={
+              hasKilnDiagram ? (
+                <KilnLabels
+                  labels={kilnLabels}
+                  isAnimated
+                  activeText={activeFact}
+                  onActivate={setActiveFact}
+                  className="hidden text-ink lg:block"
+                />
+              ) : undefined
+            }
+          />
+        </div>
+        <div className="lg:sticky lg:top-24 lg:self-start">
           {isArchived ? (
             <ArchiveNotice
               name={product.name}
@@ -295,7 +304,6 @@ export function ProductDetailContainer({
                 product.created_at,
                 product.color_name,
                 product.material,
-                product.stock,
               )}
               note={toArchiveNote(product.stock)}
               commissionHref={toArchiveCommissionPath(product.slug)}
@@ -329,6 +337,7 @@ export function ProductDetailContainer({
               onQuantityChange={setQuantity}
               onAddToCart={handleAddToCart}
               onToggleWishlist={handleToggleWishlist}
+              actionsRef={actionsRef}
               options={
                 groups.length > 0 || product.is_customizable ? (
                   <div className="flex flex-col gap-5 border-y border-ash py-6">
@@ -411,12 +420,13 @@ export function ProductDetailContainer({
         </div>
       </div>
 
-      <div className="grid gap-10 border-t border-ash pt-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
-        <div className="flex flex-col gap-4">
+      <div className="grid gap-12 border-t border-ash pt-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
+        {/* The story is short beside a long fact list, so it stays in view while the facts scroll. */}
+        <div className="flex flex-col gap-4 lg:sticky lg:top-24 lg:self-start">
           <h2 className="font-heading text-2xl tracking-tight">
             About this piece
           </h2>
-          <p className="text-[15px] leading-relaxed whitespace-pre-line">
+          <p className="max-w-[62ch] text-[15px] leading-relaxed whitespace-pre-line">
             {isDescriptionOpen ? product.description : description.short}
           </p>
           {description.hasMore && (
@@ -429,20 +439,9 @@ export function ProductDetailContainer({
               {isDescriptionOpen ? "Read less" : "Read more"}
             </button>
           )}
+          {product.maker_note && <MakerNote note={product.maker_note} />}
           {product.is_second && (
             <SecondNotice flawNote={toFlawNote(product.flaw_note)} />
-          )}
-          {product.care_notes.length > 0 && (
-            <div className="flex flex-col gap-2 pt-4">
-              <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                Care
-              </h3>
-              <ul className="flex flex-col gap-1 text-[13px] text-muted-foreground">
-                {product.care_notes.map((note) => (
-                  <li key={note}>{note}</li>
-                ))}
-              </ul>
-            </div>
           )}
         </div>
         <div className="flex flex-col">
@@ -465,7 +464,6 @@ export function ProductDetailContainer({
               />
             )}
           </div>
-          {product.maker_note && <MakerNote note={product.maker_note} />}
           {glaze && (
             <GlazeNote
               name={glaze.name}
@@ -475,6 +473,9 @@ export function ProductDetailContainer({
               variationNote={glaze.variation_note}
               href={toGlazePath(glaze.slug)}
             />
+          )}
+          {product.care_notes.length > 0 && (
+            <CareNotes notes={product.care_notes} />
           )}
         </div>
       </div>
@@ -487,17 +488,22 @@ export function ProductDetailContainer({
       />
 
       {related.length > 0 && (
-        <Reveal isGroup>
-          <ProductCarousel title="From the same shelf" viewAllHref="/products">
-            {related.map((item) => (
-              <ProductCardContainer
-                key={item.id}
-                product={item}
-                hasPhotoCarousel={false}
-              />
-            ))}
-          </ProductCarousel>
-        </Reveal>
+        <div className="border-t border-ash pt-12">
+          <Reveal isGroup>
+            <ProductCarousel
+              title="From the same shelf"
+              viewAllHref="/products"
+            >
+              {related.map((item) => (
+                <ProductCardContainer
+                  key={item.id}
+                  product={item}
+                  hasPhotoCarousel={false}
+                />
+              ))}
+            </ProductCarousel>
+          </Reveal>
+        </div>
       )}
 
       <StickyBuyBar
