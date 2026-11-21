@@ -23,7 +23,7 @@ import {
 import {
   canGoLive,
   describeNewFeatureHint,
-  findFeatureBlock,
+  findHomeShelfBlock,
   LIVE_BLOCKED_NOTE,
 } from "@/features/admin/pieces/types";
 
@@ -96,7 +96,11 @@ export function PieceForm({
 
   const isLiveAllowed = canGoLive(Number(stockValue) || 0, isCustomizable);
   const isOnShelf = isActive && isLiveAllowed;
-  const featureBlock = findFeatureBlock(isOnShelf, false, isCustomizable);
+  const featureBlock = findHomeShelfBlock({
+    isActive: isOnShelf,
+    isCustomizable,
+    stock: Number(stockValue) || 0,
+  });
   const swatchColour = toPreviewColour(colorCode);
 
   useEffect(() => {
@@ -519,7 +523,7 @@ export function PieceForm({
             />
             <AdminCheckboxField
               id="piece-featured"
-              label="Put first on the home page"
+              label="Put first among home page pieces"
               hint={describeNewFeatureHint(featureBlock)}
               isChecked={isFeatured && featureBlock === null}
               isDisabled={featureBlock !== null}

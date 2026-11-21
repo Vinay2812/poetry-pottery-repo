@@ -52,6 +52,7 @@ import {
   EMPTY_PRODUCT_FORM,
   FEATURE_BLOCK_NOTES,
   findFeatureBlock,
+  findHomeShelfBlock,
   formatStock,
   LIVE_BLOCKED_NOTE,
   type PieceDraft,
@@ -162,14 +163,18 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     state.stock,
     product?.is_customizable ?? false,
   );
-  const featureBlock = findFeatureBlock(
-    state.isActive,
-    state.isFeatured,
-    product?.is_customizable ?? false,
-  );
-  // A retired piece gets no home page button at all, so only made to order needs a reason.
+  const homeShelfFacts = {
+    isActive: state.isActive,
+    isCustomizable: product?.is_customizable ?? false,
+    stock: state.stock,
+  };
+  const homeShelfBlock = findHomeShelfBlock(homeShelfFacts);
+  const featureBlock = findFeatureBlock(homeShelfFacts, state.isFeatured);
+  // A retired piece gets no home page button at all, so only the other blocks need a reason.
   const featureBlockNote =
-    featureBlock === "made-to-order" ? FEATURE_BLOCK_NOTES[featureBlock] : null;
+    featureBlock !== null && featureBlock !== "retired"
+      ? FEATURE_BLOCK_NOTES[featureBlock]
+      : null;
 
   // The draft wins until a save clears it; before that the saved gallery is the truth.
   const imageUrls = useMemo(
@@ -420,7 +425,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
                 >
                   {state.isFeatured
                     ? "Stop putting it first"
-                    : "Put first on the home page"}
+                    : "Put first among home page pieces"}
                 </Button>
               )}
               <Button
@@ -470,6 +475,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
               state.isActive,
               isLiveAllowed,
               state.isFeatured,
+              homeShelfBlock,
             )}
           />
           <AdminStatTile

@@ -18,8 +18,8 @@ const STATE_OPTIONS: AdminFilterOption[] = [
 ];
 
 const FEATURED_OPTIONS: AdminFilterOption[] = [
-  { value: "1", label: "First on the home page" },
-  { value: "0", label: "Not first on the home page" },
+  { value: "1", label: "Marked first for the home page" },
+  { value: "0", label: "Not marked first" },
 ];
 
 const SECOND_OPTIONS: AdminFilterOption[] = [

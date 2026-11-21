@@ -80,9 +80,12 @@ export function PiecesTable({
           const shelfBlock =
             !row.isActive && !row.canGoLive ? LIVE_BLOCKED_NOTE : null;
           const featureKind = findFeatureBlock(
-            row.isActive,
+            {
+              isActive: row.isActive,
+              isCustomizable: row.isMadeToOrder,
+              stock: row.stock,
+            },
             row.isFeatured,
-            row.isMadeToOrder,
           );
           const featureBlock = featureKind
             ? FEATURE_BLOCK_NOTES[featureKind]
@@ -143,7 +146,7 @@ export function PiecesTable({
                   checked={row.isFeatured}
                   disabled={busyId === row.id || featureBlock !== null}
                   title={featureBlock ?? undefined}
-                  aria-label={`Put ${row.name} first on the home page`}
+                  aria-label={`Put ${row.name} first among the pieces on the home page`}
                   aria-describedby={
                     featureBlock ? `piece-${row.id}-feature-block` : undefined
                   }

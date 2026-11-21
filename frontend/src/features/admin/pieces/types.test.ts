@@ -24,6 +24,7 @@ import {
   describeStockAfter,
   describeUnsavedChanges,
   findFeatureBlock,
+  findHomeShelfBlock,
   EMPTY_PRODUCT_FORM,
   formatCareNotes,
   formatPriceModifier,
@@ -425,28 +426,37 @@ describe("shelf state", () => {
   });
 
   it("explains why a retired piece cannot go back yet", () => {
-    expect(describeShelfStateHint(false, false, false)).toBe(
+    expect(describeShelfStateHint(false, false, false, null)).toBe(
       "Add stock first, or mark it made to order",
     );
-    expect(describeShelfStateHint(false, true, false)).toBe(
+    expect(describeShelfStateHint(false, true, false, null)).toBe(
       "Shown in the archive",
     );
   });
 
   it("says a retired piece is still marked for the home page", () => {
-    expect(describeShelfStateHint(false, true, true)).toBe(
+    expect(describeShelfStateHint(false, true, true, null)).toBe(
       "Still marked to go first on the home page",
     );
-    expect(describeShelfStateHint(false, false, true)).toBe(
+    expect(describeShelfStateHint(false, false, true, null)).toBe(
       "Still marked to go first on the home page",
     );
   });
 
   it("mentions the home page only for a featured live piece", () => {
-    expect(describeShelfStateHint(true, true, true)).toBe(
-      "First on the home page",
+    expect(describeShelfStateHint(true, true, true, null)).toBe(
+      "Goes first among the pieces on the home page",
     );
-    expect(describeShelfStateHint(true, true, false)).toBeNull();
+    expect(describeShelfStateHint(true, true, false, null)).toBeNull();
+  });
+
+  it("says when a marked piece is left off the home page", () => {
+    expect(describeShelfStateHint(true, true, true, "sold-out")).toBe(
+      "Marked to go first, but left off the home page while sold out",
+    );
+    expect(describeShelfStateHint(true, true, true, "made-to-order")).toBe(
+      "Marked to go first, but left off the home page while made to order",
+    );
   });
 });
 
@@ -502,23 +512,50 @@ describe("folded filters", () => {
   });
 });
 
+describe("findHomeShelfBlock", () => {
+  const ready = { isActive: true, isCustomizable: false, stock: 2 };
+
+  it("lets the home page show only a piece on the shelf, in stock and ready to ship", () => {
+    expect(findHomeShelfBlock(ready)).toBeNull();
+    expect(findHomeShelfBlock({ ...ready, isActive: false })).toBe("retired");
+    expect(findHomeShelfBlock({ ...ready, isCustomizable: true })).toBe(
+      "made-to-order",
+    );
+    // A made-to-order piece has no stock to count, so it reads as made to order, not sold out.
+    expect(
+      findHomeShelfBlock({ ...ready, isCustomizable: true, stock: 0 }),
+    ).toBe("made-to-order");
+    expect(findHomeShelfBlock({ ...ready, stock: 0 })).toBe("sold-out");
+  });
+});
+
 describe("findFeatureBlock", () => {
-  it("offers the home page only to a ready-to-ship piece on the shelf", () => {
-    expect(findFeatureBlock(true, false, false)).toBeNull();
-    expect(findFeatureBlock(false, false, false)).toBe("retired");
-    expect(findFeatureBlock(true, false, true)).toBe("made-to-order");
+  const ready = { isActive: true, isCustomizable: false, stock: 2 };
+
+  it("offers the mark only where the home page can show the piece", () => {
+    expect(findFeatureBlock(ready, false)).toBeNull();
+    expect(findFeatureBlock({ ...ready, isActive: false }, false)).toBe(
+      "retired",
+    );
+    expect(findFeatureBlock({ ...ready, isCustomizable: true }, false)).toBe(
+      "made-to-order",
+    );
+    expect(findFeatureBlock({ ...ready, stock: 0 }, false)).toBe("sold-out");
   });
 
-  it("still lets a marked piece be unmarked, retired or made to order", () => {
-    expect(findFeatureBlock(false, true, false)).toBeNull();
-    expect(findFeatureBlock(true, true, true)).toBeNull();
+  it("still lets a marked piece be unmarked, retired, sold out or made to order", () => {
+    expect(findFeatureBlock({ ...ready, isActive: false }, true)).toBeNull();
+    expect(
+      findFeatureBlock({ ...ready, isCustomizable: true }, true),
+    ).toBeNull();
+    expect(findFeatureBlock({ ...ready, stock: 0 }, true)).toBeNull();
   });
 });
 
 describe("describeNewFeatureHint", () => {
   it("says what the box does, or why it cannot be ticked", () => {
     expect(describeNewFeatureHint(null)).toBe(
-      "It comes before the other pieces ready to ship.",
+      "Among the pieces the home page can show, it comes first.",
     );
     expect(describeNewFeatureHint("retired")).toBe(
       "Only a piece on the shelf can be on the home page",

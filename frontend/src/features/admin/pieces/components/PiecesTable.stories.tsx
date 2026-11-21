@@ -47,6 +47,21 @@ const ROWS: PieceRow[] = [
     categoriesLabel: "Planters",
     collectionLabel: "—",
   },
+  // Sold out: the home page leaves it off, so the mark cannot be ticked.
+  {
+    id: 4,
+    name: "Speckled tumbler",
+    imageUrl: null,
+    priceLabel: "₹650",
+    stock: 0,
+    stockLabel: "0",
+    isActive: true,
+    canGoLive: false,
+    isFeatured: false,
+    isMadeToOrder: false,
+    categoriesLabel: "Cups",
+    collectionLabel: "—",
+  },
 ];
 
 const meta = {
