@@ -224,7 +224,7 @@ describe("toShippingNote", () => {
 
   it("names the threshold while a fee applies", () => {
     expect(toShippingNote(150, 2500, rupees)).toBe(
-      "Free on orders above Rs2500.",
+      "Free on orders of Rs2500 or more.",
     );
   });
 

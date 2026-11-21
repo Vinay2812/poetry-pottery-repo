@@ -20,7 +20,7 @@ const meta = {
     itemCount: 2,
     canCheckout: true,
     checkoutHref: "/checkout",
-    shippingNote: "Free on orders above ₹2,500.",
+    shippingNote: "Free on orders of ₹2,500 or more.",
   },
 } satisfies Meta<typeof CartSummary>;
 
