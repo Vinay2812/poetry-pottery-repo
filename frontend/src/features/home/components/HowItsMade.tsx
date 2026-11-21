@@ -12,12 +12,12 @@ const DRAWINGS = [
   { key: "glaze", Icon: GlazeIcon },
 ] as const;
 
-// Decoration only: the editor's numbered steps beside it carry the words.
+// Decoration only: the editor's numbered steps below it carry the words.
 export function HowItsMade() {
   return (
     <div
       aria-hidden
-      className="flex items-center justify-center gap-10 text-ink md:gap-16"
+      className="flex items-center justify-start gap-10 text-ink md:gap-16"
     >
       {DRAWINGS.map(({ key, Icon }) => (
         <Icon key={key} className="size-8" />
