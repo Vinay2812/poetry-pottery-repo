@@ -54,10 +54,7 @@ export function BookingSummary({
     { label: "Hours", value: formatHours(hours) },
     { label: "People", value: pluralize(participants, "person", "people") },
     { label: "You take home", value: pluralize(pieces, "piece") },
-    {
-      label: `${pluralize(participants, "person", "people")} × ${formatInr(pricePerPerson)}`,
-      value: formatInr(total),
-    },
+    { label: "Per person", value: formatInr(pricePerPerson) },
   ];
 
   return (
