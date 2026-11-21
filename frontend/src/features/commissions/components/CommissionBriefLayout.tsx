@@ -17,7 +17,7 @@ export function CommissionBriefLayout({
 }: CommissionBriefLayoutProps) {
   return (
     <div className="grid gap-5 lg:grid-cols-12 lg:gap-6">
-      {/* top-28 sits just under the sticky SiteHeader; scrolling to the heading relies on the html scroll-padding-top in globals.css. */}
+      {/* top-28 clears the sticky SiteHeader; heading scroll uses html scroll-padding-top. */}
       <div className="flex min-w-0 flex-col gap-2 lg:sticky lg:top-28 lg:col-span-4 lg:self-start">
         <h2
           ref={titleRef}
