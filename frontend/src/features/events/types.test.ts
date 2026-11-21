@@ -46,6 +46,7 @@ import {
   toSeatPriceNote,
   toSeatsLabel,
   toTimeRange,
+  toRegistrationStages,
   toWhatsAppBookingMessage,
 } from "./types";
 
@@ -214,11 +215,43 @@ describe("toWhatsAppBookingMessage", () => {
       seats: 2,
       total: "₹3,600",
       guestName: "Maya",
+      isFree: false,
     });
     expect(message).toContain("Wheel Throwing for Beginners");
     expect(message).toContain("Booking: REG123");
     expect(message).toContain("Seats: 2");
     expect(message).toContain("Total: ₹3,600");
+    expect(message).toContain("share payment details");
+  });
+
+  it("asks only for a confirmation when the seat is free", () => {
+    const message = toWhatsAppBookingMessage({
+      registrationId: "REG124",
+      eventTitle: "Open mic",
+      when: "Sun, 22 Nov, 2026, 6:00 pm",
+      seats: 1,
+      total: "₹0",
+      guestName: "Maya",
+      isFree: true,
+    });
+    expect(message).toContain("Could you confirm my seat?");
+    expect(message).not.toContain("payment");
+  });
+});
+
+describe("toRegistrationStages", () => {
+  it("keeps the payment step for a paid seat", () => {
+    expect(toRegistrationStages(600)).toBe(REGISTRATION_STAGES);
+  });
+
+  it("goes straight from requested to confirmed for a free seat", () => {
+    const stages = toRegistrationStages(0);
+    expect(stages.map((stage) => stage.key)).toEqual([
+      RegistrationStatus.Pending,
+      RegistrationStatus.Confirmed,
+    ]);
+    expect(JSON.stringify(stages)).not.toMatch(/pay/i);
+    expect(toRepeatedPhrases(stages)).toEqual([]);
   });
 });
 

@@ -274,6 +274,23 @@ export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
   },
 ];
 
+// A free seat skips payment: the studio confirms the request straight away.
+const FREE_REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
+  REGISTRATION_STAGES[0],
+  {
+    key: RegistrationStatus.Confirmed,
+    label: "Confirmed",
+    description: "Your seat is confirmed. Come in ten minutes early.",
+    upcoming: "We look over each request, then confirm your seat.",
+  },
+];
+
+export function toRegistrationStages(
+  total: number,
+): TimelineStage<RegistrationStatus>[] {
+  return total === 0 ? FREE_REGISTRATION_STAGES : REGISTRATION_STAGES;
+}
+
 export type RegistrationStepDates = Partial<
   Record<RegistrationStatus, string | null>
 >;
@@ -403,6 +420,7 @@ export interface WhatsAppBookingInput {
   seats: number;
   total: string;
   guestName: string;
+  isFree: boolean;
 }
 
 export function toWhatsAppBookingMessage(input: WhatsAppBookingInput): string {
@@ -413,7 +431,9 @@ export function toWhatsAppBookingMessage(input: WhatsAppBookingInput): string {
     `Seats: ${input.seats}`,
     `Total: ${input.total}`,
     `Name: ${input.guestName}`,
-    "Could you approve my request and share payment details?",
+    input.isFree
+      ? "Could you confirm my seat?"
+      : "Could you approve my request and share payment details?",
   ].join("\n");
 }
 
