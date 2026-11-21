@@ -74,7 +74,7 @@ export function CollectionsTable({
               <td className={ADMIN_TD}>
                 {row.name}
                 {row.description !== "" && (
-                  <span className="block max-w-32 truncate text-[12px] text-muted-foreground md:max-w-80">
+                  <span className="block max-w-32 truncate text-[12px] text-muted-foreground md:max-w-60 xl:max-w-80">
                     {row.description}
                   </span>
                 )}
