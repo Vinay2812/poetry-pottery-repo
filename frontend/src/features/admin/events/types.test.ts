@@ -17,6 +17,7 @@ import {
   eventActionNeedsReason,
   eventActionStatus,
   isDestructiveEventAction,
+  isPrimaryEventAction,
   fromDateTimeLocal,
   fromLines,
   isWorkshop,
@@ -187,6 +188,13 @@ describe("event actions", () => {
   it("marks only a cancellation as destructive", () => {
     expect(isDestructiveEventAction("cancel")).toBe(true);
     expect(isDestructiveEventAction("unpublish")).toBe(false);
+  });
+
+  it("darkens only the move that takes the evening forward", () => {
+    expect(isPrimaryEventAction("publish")).toBe(true);
+    expect(isPrimaryEventAction("complete")).toBe(true);
+    expect(isPrimaryEventAction("unpublish")).toBe(false);
+    expect(isPrimaryEventAction("cancel")).toBe(false);
   });
 
   it("says what happened afterwards", () => {

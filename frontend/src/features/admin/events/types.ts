@@ -118,6 +118,11 @@ export function isDestructiveEventAction(action: EventAction): boolean {
   return action === "cancel";
 }
 
+/** One dark button per state: the move that takes the evening forward. */
+export function isPrimaryEventAction(action: EventAction): boolean {
+  return action === "publish" || action === "complete";
+}
+
 export function isWorkshop(eventType: EventType): boolean {
   return eventType === EventType.PotteryWorkshop;
 }

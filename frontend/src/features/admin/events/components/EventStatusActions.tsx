@@ -7,7 +7,7 @@ import { type AdminStatusTone, AdminStatusPill } from "@/features/admin/ui";
 import {
   type EventAction,
   eventActionLabel,
-  isDestructiveEventAction,
+  isPrimaryEventAction,
 } from "@/features/admin/events/types";
 
 export interface EventStatusActionsProps {
@@ -42,7 +42,7 @@ export function EventStatusActions({
           key={action}
           type="button"
           size="sm"
-          variant={isDestructiveEventAction(action) ? "secondary" : "default"}
+          variant={isPrimaryEventAction(action) ? "default" : "secondary"}
           disabled={busyAction !== null}
           onClick={() => onAction(action)}
         >
@@ -53,7 +53,7 @@ export function EventStatusActions({
       <Button
         type="button"
         size="sm"
-        variant="outline"
+        variant="secondary"
         disabled={busyAction !== null || isDuplicating}
         onClick={onDuplicate}
       >
