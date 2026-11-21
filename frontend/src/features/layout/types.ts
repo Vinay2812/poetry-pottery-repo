@@ -74,7 +74,19 @@ export function isFocusedPath(pathname: string): boolean {
 }
 
 export function buildWhatsAppUrl(number: string, text: string): string {
+  return toWaMeUrl(toWhatsAppDigits(number), text);
+}
+
+// The same link, or null when the number has no digits to send to, read once either way.
+export function buildOptionalWhatsAppUrl(
+  number: string,
+  text: string,
+): string | null {
   const digits = toWhatsAppDigits(number);
+  return digits ? toWaMeUrl(digits, text) : null;
+}
+
+function toWaMeUrl(digits: string, text: string): string {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 

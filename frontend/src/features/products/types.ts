@@ -8,9 +8,8 @@ import {
 
 import { formatInr } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
-import { toWhatsAppDigits } from "@/lib/whatsapp";
 
-import { buildWhatsAppUrl } from "@/features/layout/types";
+import { buildOptionalWhatsAppUrl } from "@/features/layout/types";
 
 export type ProductCardData = ProductCardFragment;
 export type ProductDetailData = ProductQuery["product"];
@@ -486,9 +485,7 @@ export function toArchiveAskUrl(
   productName: string,
   productUrl: string,
 ): string | null {
-  const digits = toWhatsAppDigits(whatsappNumber);
-  if (!digits) return null;
-  return buildWhatsAppUrl(
+  return buildOptionalWhatsAppUrl(
     whatsappNumber,
     `Hi, I saw the ${productName} in your archive (${productUrl}). Could you make one like it?`,
   );
@@ -498,10 +495,10 @@ export function toGlazeAskUrl(
   whatsappNumber: string,
   productName: string,
 ): string | null {
-  const digits = toWhatsAppDigits(whatsappNumber);
-  if (!digits) return null;
-  const text = `Hi, about the ${productName} \u2014 could I have it in another glaze or size?`;
-  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+  return buildOptionalWhatsAppUrl(
+    whatsappNumber,
+    `Hi, about the ${productName} \u2014 could I have it in another glaze or size?`,
+  );
 }
 
 type SelectionValue = { optionId: number } | { text: string };

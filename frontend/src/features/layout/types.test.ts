@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildOptionalWhatsAppUrl,
   buildWhatsAppUrl,
   formatBadgeCount,
   isActivePath,
@@ -26,6 +27,16 @@ describe("isActivePath", () => {
   it("only matches home exactly", () => {
     expect(isActivePath("/", "/")).toBe(true);
     expect(isActivePath("/cart", "/")).toBe(false);
+  });
+});
+
+describe("buildOptionalWhatsAppUrl", () => {
+  it("builds the same link, or nothing when there is no number to send to", () => {
+    expect(buildOptionalWhatsAppUrl("91234 56789", "Hi")).toBe(
+      buildWhatsAppUrl("91234 56789", "Hi"),
+    );
+    expect(buildOptionalWhatsAppUrl("", "Hi")).toBeNull();
+    expect(buildOptionalWhatsAppUrl("n/a", "Hi")).toBeNull();
   });
 });
 
