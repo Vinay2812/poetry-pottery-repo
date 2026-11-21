@@ -43,8 +43,11 @@ export function bookingPlacedCustomerMail(booking: WorkshopBooking): {
 } {
   const body = renderMail({
     title: "Wheel session requested",
+    // A free session has nothing to pay, so the mail does not promise payment details.
     intro:
-      "Thanks for booking a session. We will confirm it on WhatsApp within a day and share how to pay.",
+      booking.total === 0
+        ? "Thanks for booking a session. We will confirm it on WhatsApp within a day."
+        : "Thanks for booking a session. We will confirm it on WhatsApp within a day and share how to pay.",
     blocks: [{ heading: "Your session", lines: detailLines(booking) }],
     cta: {
       label: "View your booking",
@@ -95,7 +98,9 @@ export function bookingStatusMail(
     APPROVED: {
       title: "Your session is approved",
       intro:
-        "We have approved your session and will send payment details next. Once payment reaches us it is confirmed.",
+        booking.total === 0
+          ? "We have approved your session. There is nothing to pay, and we will confirm it shortly."
+          : "We have approved your session and will send payment details next. Once payment reaches us it is confirmed.",
     },
     CONFIRMED: {
       title: "You are confirmed",

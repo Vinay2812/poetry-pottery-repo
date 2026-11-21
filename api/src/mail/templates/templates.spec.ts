@@ -722,6 +722,22 @@ describe("workshop booking templates", () => {
     expect(bookingPlacedCustomerMail(booking())).toMatchSnapshot();
   });
 
+  it("never mentions payment for a free session", () => {
+    const placed = bookingPlacedCustomerMail(booking({ total: 0 }));
+    expect(placed.text).not.toMatch(/pay/i);
+    const approved = bookingStatusMail(
+      booking({ status: RegistrationStatus.APPROVED, total: 0 }),
+      "status",
+    );
+    expect(approved?.text).toContain("There is nothing to pay");
+    expect(approved?.text).not.toContain("payment details");
+    const confirmed = bookingStatusMail(
+      booking({ status: RegistrationStatus.CONFIRMED, total: 0 }),
+      "status",
+    );
+    expect(confirmed?.text).not.toMatch(/payment/i);
+  });
+
   it("counts a lone participant, hour and piece in the singular", () => {
     const mail = bookingPlacedCustomerMail(booking());
 
