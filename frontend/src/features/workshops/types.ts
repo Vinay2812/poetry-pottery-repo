@@ -312,7 +312,7 @@ export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
     `${input.hours} ${input.hours === 1 ? "hour" : "hours"} for ${input.participants} ${input.participants === 1 ? "person" : "people"}`,
     `Total: ${input.total}`,
     `Name: ${input.guestName}`,
-    "Could you confirm it and share payment details?",
+    "Could you approve my request and share payment details?",
   ].join("\n");
 }
 
@@ -326,7 +326,7 @@ export const BOOKING_STAGES: TimelineStage<RegistrationStatus>[] = [
   {
     key: RegistrationStatus.Approved,
     label: "Approved",
-    description: "We share payment details on WhatsApp.",
+    description: "Payment details are on WhatsApp.",
     upcoming:
       "We look over each request, then approve it and share payment details on WhatsApp.",
   },

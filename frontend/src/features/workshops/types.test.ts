@@ -319,12 +319,7 @@ describe("booking status helpers", () => {
       }),
     ).toEqual([
       ["Requested", "done", "12 Sept", null],
-      [
-        "Approved",
-        "current",
-        "13 Sept",
-        "We share payment details on WhatsApp.",
-      ],
+      ["Approved", "current", "13 Sept", "Payment details are on WhatsApp."],
       [
         "Confirmed",
         "upcoming",

@@ -22,7 +22,7 @@ export type EventDetailData = EventQuery["event"];
 const PAGE_SIZE = 12;
 export const MAX_SEATS = 4;
 export const SEAT_NOTE =
-  "We confirm every seat by hand on WhatsApp, usually within a day.";
+  "We approve each request by hand on WhatsApp, usually within a day.";
 
 export interface EventFact {
   label: string;
@@ -263,7 +263,7 @@ export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
   {
     key: RegistrationStatus.Approved,
     label: "Approved",
-    description: "We share payment details on WhatsApp.",
+    description: "Payment details are on WhatsApp.",
     upcoming:
       "We look over each request, then approve it and share payment details on WhatsApp.",
   },
@@ -275,12 +275,12 @@ export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
   },
 ];
 
-// Same words as wheel sessions: a seat is a request until the studio confirms it.
+// Same words as wheel sessions: a seat is a request until the studio approves it.
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
   [RegistrationStatus.Pending]: "Awaiting approval",
   [RegistrationStatus.Approved]: "Approved, awaiting payment",
   [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not confirmed",
+  [RegistrationStatus.Rejected]: "Not approved",
   [RegistrationStatus.Cancelled]: "Cancelled",
 };
 
@@ -375,15 +375,6 @@ export function isRequestBannerShown(
   return isJustPlaced && status === RegistrationStatus.Pending;
 }
 
-// Seats are taken off the count the moment a request lands, so the receipt says so.
-export function toRequestReceiptLine(seats: number): string {
-  const kept =
-    seats === 1
-      ? "Your seat is kept for you while we confirm."
-      : "Your seats are kept for you while we confirm.";
-  return `${kept} Send us a message and we will share payment details, or wait for ours within a day.`;
-}
-
 type RegistrationGroupKey = "underWay" | "upcoming" | "past";
 
 type GroupableRegistration = Pick<RegistrationData, "status"> & {
@@ -463,7 +454,7 @@ export function toWhatsAppBookingMessage(input: WhatsAppBookingInput): string {
     `Seats: ${input.seats}`,
     `Total: ${input.total}`,
     `Name: ${input.guestName}`,
-    "Could you confirm my seat and share payment details?",
+    "Could you approve my request and share payment details?",
   ].join("\n");
 }
 

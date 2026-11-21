@@ -41,7 +41,6 @@ import {
   isRequestBannerShown,
   isSeatPriceShown,
   toEventCardSeatsLabel,
-  toRequestReceiptLine,
   toStartDelayMs,
   toRegistrationStepDates,
   toRequestSeatsLabel,
@@ -115,13 +114,13 @@ describe("dates", () => {
 describe("registration status helpers", () => {
   it("maps statuses to labels, tones and steps", () => {
     expect(toRegistrationStatusLabel(RegistrationStatus.Pending)).toBe(
-      "Awaiting confirmation",
+      "Awaiting approval",
     );
     expect(toRegistrationStatusLabel(RegistrationStatus.Approved)).toBe(
       "Approved, awaiting payment",
     );
     expect(toRegistrationStatusLabel(RegistrationStatus.Rejected)).toBe(
-      "Not confirmed",
+      "Not approved",
     );
     expect(toRegistrationStatusTone(RegistrationStatus.Pending)).toBe(
       "pending",
@@ -188,12 +187,7 @@ describe("registration status helpers", () => {
       }),
     ).toEqual([
       ["Requested", "done", "12 Sept", null],
-      [
-        "Approved",
-        "current",
-        "13 Sept",
-        "We share payment details on WhatsApp.",
-      ],
+      ["Approved", "current", "13 Sept", "Payment details are on WhatsApp."],
       [
         "Confirmed",
         "upcoming",
@@ -518,7 +512,7 @@ describe("registration detail helpers", () => {
       toRegistrationClosedLabel(
         registration({ status: RegistrationStatus.Rejected }),
       ),
-    ).toBe("Not confirmed");
+    ).toBe("Not approved");
   });
 
   it("lists the event facts for a booking", () => {
@@ -618,12 +612,6 @@ describe("registration detail helpers", () => {
       false,
     );
     expect(isRequestBannerShown(false, RegistrationStatus.Pending)).toBe(false);
-  });
-
-  it("says the seats are kept, in the right number", () => {
-    expect(toRequestReceiptLine(1)).toMatch(/^Your seat is kept for you/);
-    expect(toRequestReceiptLine(2)).toMatch(/^Your seats are kept for you/);
-    expect(toRequestReceiptLine(2)).toContain("share payment details");
   });
 });
 

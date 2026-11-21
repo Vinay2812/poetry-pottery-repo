@@ -23,7 +23,6 @@ export interface RegistrationDetailProps {
   statusLabel: string;
   statusTone: StatusTone;
   isRequestShown: boolean;
-  requestLine: string;
   steps: TimelineStep[];
   closedLabel: string | null;
   facts: EventFact[];
@@ -47,7 +46,6 @@ export function RegistrationDetail({
   statusLabel,
   statusTone,
   isRequestShown,
-  requestLine,
   steps,
   closedLabel,
   facts,
@@ -85,7 +83,7 @@ export function RegistrationDetail({
             We have your request
           </h2>
           <p className="max-w-xl text-[15px] text-muted-foreground">
-            {requestLine}
+            Message us now, or we will write within a day.
           </p>
           {whatsappUrl && (
             <Button className="w-fit" asChild>

@@ -28,7 +28,6 @@ import {
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
   toRegistrationStepDates,
-  toRequestReceiptLine,
   toTimeRange,
   toWhatsAppBookingMessage,
 } from "@/features/events/types";
@@ -142,7 +141,6 @@ export function RegistrationDetailContainer({
           isJustPlaced,
           optimisticRegistration.status,
         )}
-        requestLine={toRequestReceiptLine(optimisticRegistration.seats)}
         steps={toTimelineSteps({
           stages: REGISTRATION_STAGES,
           status: optimisticRegistration.status,
