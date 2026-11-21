@@ -42,7 +42,7 @@ export const WithActiveFilters: Story = {
 };
 
 export const SearchResults: Story = {
-  args: { countLabel: "4 pieces for \u201cmug\u201d" },
+  args: { countLabel: "4 pieces for \u201cmug\u201d", isRelevanceOnly: true },
 };
 
 export const MadeToOrderOnly: Story = {

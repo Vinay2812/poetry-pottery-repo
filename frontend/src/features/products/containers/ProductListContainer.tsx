@@ -234,6 +234,8 @@ export function ProductListContainer({
     priceCeiling,
   );
   const activeFilterCount = countActiveFilters(filters);
+  // Until the current query answers, the cards on screen are the old ones, so no count is given.
+  const isCountPending = isInitialLoading || isBusy;
   const isMadeToOrderOnly = filters.customizableOnly && activeFilterCount === 1;
 
   const filterPanel = facets && (
@@ -309,8 +311,9 @@ export function ProductListContainer({
               filters.search,
               filters.customizableOnly,
             )}
-            isLoading={isInitialLoading}
+            isLoading={isCountPending}
             sort={filters.sort}
+            isRelevanceOnly={filters.search !== ""}
             activeFilterCount={activeFilterCount}
             onSortChange={handleSortChange}
             onOpenFilters={() => setIsSheetOpen(true)}
@@ -368,6 +371,7 @@ export function ProductListContainer({
       <FilterSheet
         isOpen={isSheetOpen}
         resultCount={pageInfo?.total ?? 0}
+        isLoading={isCountPending}
         activeFilterCount={activeFilterCount}
         onOpenChange={setIsSheetOpen}
         onClear={handleClear}

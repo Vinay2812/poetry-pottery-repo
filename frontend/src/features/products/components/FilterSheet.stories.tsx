@@ -69,6 +69,8 @@ export const Closed: Story = { args: { isOpen: false } };
 
 export const SinglePieceResult: Story = { args: { resultCount: 1 } };
 
+export const FindingPieces: Story = { args: { isLoading: true } };
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };

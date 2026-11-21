@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 export interface FilterSheetProps {
   isOpen: boolean;
   resultCount: number;
+  isLoading?: boolean;
   activeFilterCount: number;
   onOpenChange: (isOpen: boolean) => void;
   onClear: () => void;
@@ -23,6 +24,7 @@ export interface FilterSheetProps {
 export function FilterSheet({
   isOpen,
   resultCount,
+  isLoading = false,
   activeFilterCount,
   onOpenChange,
   onClear,
@@ -57,7 +59,9 @@ export function FilterSheet({
         <div className="flex-1 overflow-y-auto px-4 pb-2">{children}</div>
         <SheetFooter>
           <Button size="lg" onClick={() => onOpenChange(false)}>
-            Show {resultCount} {resultCount === 1 ? "piece" : "pieces"}
+            {isLoading
+              ? "Finding pieces\u2026"
+              : `Show ${resultCount} ${resultCount === 1 ? "piece" : "pieces"}`}
           </Button>
         </SheetFooter>
       </SheetContent>
