@@ -298,7 +298,7 @@ type ClosedLabelInput = Pick<
   "status" | "cancelled_at" | "rejected_at" | "cancel_reason"
 >;
 
-// "Cancelled on 12 Sept, 2026, 2:30 pm · Away that week", or null while the booking is open.
+// "Cancelled on 12 Sep, 2026, 2:30 pm · Away that week", or null while the booking is open.
 export function toRegistrationClosedLabel(
   registration: ClosedLabelInput,
 ): string | null {

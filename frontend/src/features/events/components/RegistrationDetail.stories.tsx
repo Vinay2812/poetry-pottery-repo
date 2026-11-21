@@ -19,7 +19,7 @@ function toSteps(reachedThrough: number, isClosed = false) {
     dates: Object.fromEntries(
       REGISTRATION_STAGES.map((stage, index) => [
         stage.key,
-        index <= reachedThrough ? "Sat, 12 Sept, 2026, 3:00 pm" : null,
+        index <= reachedThrough ? "Sat, 12 Sep, 2026, 3:00 pm" : null,
       ]),
     ),
     isClosed,
@@ -42,7 +42,7 @@ const meta = {
     closedLabel: null,
     facts: [
       { label: "Kind", value: "Pottery workshop" },
-      { label: "Date", value: "Sat, 19 Sept, 2026" },
+      { label: "Date", value: "Sat, 19 Sep, 2026" },
       { label: "Time", value: "3:00 pm – 6:00 pm" },
       {
         label: "Where",
@@ -96,7 +96,7 @@ export const Cancelled: Story = {
     statusTone: "off",
     isRequestShown: false,
     steps: toSteps(0, true),
-    closedLabel: "Cancelled on Wed, 16 Sept, 2026 · Travelling that weekend",
+    closedLabel: "Cancelled on Wed, 16 Sep, 2026 · Travelling that weekend",
     canCancel: false,
     seats: 1,
     unitPrice: 400,

@@ -83,7 +83,7 @@ export function toTimelineDate(iso: string | null | undefined): string | null {
   return iso ? formatDateTime(iso) : null;
 }
 
-// "Cancelled on 16 Sept · Travelling that week": what closed it, when, and why if we know.
+// "Cancelled on 16 Sep · Travelling that week": what closed it, when, and why if we know.
 export function toClosedLabel(
   statusLabel: string,
   closedOn: string | null,

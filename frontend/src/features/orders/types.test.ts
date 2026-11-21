@@ -38,10 +38,10 @@ describe("order status helpers", () => {
 
 describe("order timeline", () => {
   const DATES = {
-    PENDING: "12 Sept",
-    CONFIRMED: "13 Sept",
-    PAID: "14 Sept",
-    SHIPPED: "15 Sept",
+    PENDING: "12 Sep",
+    CONFIRMED: "13 Sep",
+    PAID: "14 Sep",
+    SHIPPED: "15 Sep",
     DELIVERED: null,
   };
   const reachedThrough = (index: number) =>
@@ -64,7 +64,7 @@ describe("order timeline", () => {
       [
         "Order placed",
         "current",
-        "12 Sept",
+        "12 Sep",
         "We have your order and will confirm it on WhatsApp.",
       ],
       [
@@ -91,8 +91,8 @@ describe("order timeline", () => {
 
   it("points to payment once the order is confirmed", () => {
     expect(read(OrderStatus.Confirmed, 1)).toEqual([
-      ["Order placed", "done", "12 Sept", null],
-      ["Confirmed", "current", "13 Sept", "Payment details are on WhatsApp."],
+      ["Order placed", "done", "12 Sep", null],
+      ["Confirmed", "current", "13 Sep", "Payment details are on WhatsApp."],
       [
         "Paid",
         "upcoming",
@@ -111,13 +111,13 @@ describe("order timeline", () => {
 
   it("dates what happened once the order has shipped", () => {
     expect(read(OrderStatus.Shipped, 3)).toEqual([
-      ["Order placed", "done", "12 Sept", null],
-      ["Confirmed", "done", "13 Sept", null],
-      ["Paid", "done", "14 Sept", null],
+      ["Order placed", "done", "12 Sep", null],
+      ["Confirmed", "done", "13 Sep", null],
+      ["Paid", "done", "14 Sep", null],
       [
         "Shipped",
         "current",
-        "15 Sept",
+        "15 Sep",
         "On its way, usually five to seven days.",
       ],
       ["Delivered", "upcoming", null, "We mark it here once it reaches you."],
@@ -126,9 +126,9 @@ describe("order timeline", () => {
 
   it("stops a refunded order at the last dated stage", () => {
     expect(read(OrderStatus.Refunded, 2, true)).toEqual([
-      ["Order placed", "done", "12 Sept", null],
-      ["Confirmed", "done", "13 Sept", null],
-      ["Paid", "done", "14 Sept", null],
+      ["Order placed", "done", "12 Sep", null],
+      ["Confirmed", "done", "13 Sep", null],
+      ["Paid", "done", "14 Sep", null],
     ]);
   });
 

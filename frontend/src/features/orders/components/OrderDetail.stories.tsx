@@ -55,7 +55,7 @@ function toSteps(reachedThrough: number, isClosed = false) {
     dates: Object.fromEntries(
       ORDER_STAGES.map((stage, index) => [
         stage.key,
-        index <= reachedThrough ? "Sat, 12 Sept, 2026, 3:00 pm" : null,
+        index <= reachedThrough ? "Sat, 12 Sep, 2026, 3:00 pm" : null,
       ]),
     ),
     isClosed,

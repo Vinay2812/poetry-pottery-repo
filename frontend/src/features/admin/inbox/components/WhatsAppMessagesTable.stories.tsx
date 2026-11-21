@@ -7,7 +7,7 @@ import { WhatsAppMessagesTable } from "./WhatsAppMessagesTable";
 const rows: WhatsAppRow[] = [
   {
     id: 31,
-    whenLabel: "Tue, 1 Sept, 2026, 3:30 pm",
+    whenLabel: "Tue, 1 Sep, 2026, 3:30 pm",
     directionLabel: "To studio",
     directionTone: "live",
     who: "Ira Menon",

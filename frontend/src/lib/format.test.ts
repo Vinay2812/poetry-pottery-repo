@@ -39,6 +39,10 @@ describe("dates", () => {
     expect(formatDateTime(value)).toBe("Sat, 3 Oct, 2026, 3:00 pm");
   });
 
+  it("spells September the way the short days do", () => {
+    expect(formatDate("2026-09-24T09:30:00.000Z")).toBe("Thu, 24 Sep, 2026");
+  });
+
   it("takes a Date as readily as a string", () => {
     expect(formatDate(new Date("2026-10-03T09:30:00.000Z"))).toBe(
       "Sat, 3 Oct, 2026",

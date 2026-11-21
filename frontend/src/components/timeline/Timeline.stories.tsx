@@ -33,7 +33,7 @@ const STAGES: TimelineStage<SampleStatus>[] = [
   },
 ];
 
-const DATE = "Sat, 12 Sept, 2026, 3:00 pm";
+const DATE = "Sat, 12 Sep, 2026, 3:00 pm";
 
 function toSteps(status: SampleStatus, reachedThrough: number) {
   return toTimelineSteps({
@@ -82,14 +82,14 @@ export const Finished: Story = {
 export const ClosedEarly: Story = {
   args: {
     steps: toSteps("CANCELLED", 0),
-    closedLabel: "Cancelled on Sun, 13 Sept, 2026 · Changed my mind",
+    closedLabel: "Cancelled on Sun, 13 Sep, 2026 · Changed my mind",
   },
 };
 
 export const ClosedLater: Story = {
   args: {
     steps: toSteps("CANCELLED", 2),
-    closedLabel: "Refunded on Wed, 16 Sept, 2026",
+    closedLabel: "Refunded on Wed, 16 Sep, 2026",
   },
 };
 

@@ -51,7 +51,7 @@ export function formatShortDay(value: string | Date, timeZone: string): string {
 }
 
 export function formatDate(value: string | Date): string {
-  return DATE_LONG.format(new Date(value));
+  return DATE_LONG.format(new Date(value)).replace("Sept", "Sep");
 }
 
 export function formatTime(value: string | Date): string {

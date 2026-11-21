@@ -262,12 +262,12 @@ describe("booking status helpers", () => {
 
   it("promises approval and payment while a request waits", () => {
     expect(
-      readTimeline(RegistrationStatus.Pending, { PENDING: "12 Sept" }),
+      readTimeline(RegistrationStatus.Pending, { PENDING: "12 Sep" }),
     ).toEqual([
       [
         "Requested",
         "current",
-        "12 Sept",
+        "12 Sep",
         "We have your request and are holding the wheel for you.",
       ],
       [
@@ -288,12 +288,12 @@ describe("booking status helpers", () => {
   it("asks for payment once approved", () => {
     expect(
       readTimeline(RegistrationStatus.Approved, {
-        PENDING: "12 Sept",
-        APPROVED: "13 Sept",
+        PENDING: "12 Sep",
+        APPROVED: "13 Sep",
       }),
     ).toEqual([
-      ["Requested", "done", "12 Sept", null],
-      ["Approved", "current", "13 Sept", "Payment details are on WhatsApp."],
+      ["Requested", "done", "12 Sep", null],
+      ["Approved", "current", "13 Sep", "Payment details are on WhatsApp."],
       [
         "Confirmed",
         "upcoming",
@@ -306,27 +306,27 @@ describe("booking status helpers", () => {
   it("gives the arrival instructions once confirmed, as a finished step", () => {
     expect(
       readTimeline(RegistrationStatus.Confirmed, {
-        PENDING: "12 Sept",
-        APPROVED: "13 Sept",
-        CONFIRMED: "14 Sept",
+        PENDING: "12 Sep",
+        APPROVED: "13 Sep",
+        CONFIRMED: "14 Sep",
       }).at(-1),
     ).toEqual([
       "Confirmed",
       "done",
-      "14 Sept",
+      "14 Sep",
       "Paid and confirmed. Come in ten minutes early.",
     ]);
   });
 
   it("stops a closed booking at the stage it reached", () => {
-    const dates = { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null };
+    const dates = { PENDING: "12 Sep", APPROVED: "13 Sep", CONFIRMED: null };
     for (const status of [
       RegistrationStatus.Cancelled,
       RegistrationStatus.Rejected,
     ]) {
       expect(readTimeline(status, dates, true)).toEqual([
-        ["Requested", "done", "12 Sept", null],
-        ["Approved", "done", "13 Sept", null],
+        ["Requested", "done", "12 Sep", null],
+        ["Approved", "done", "13 Sep", null],
       ]);
     }
   });
