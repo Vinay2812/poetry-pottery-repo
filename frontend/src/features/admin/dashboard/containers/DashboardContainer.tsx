@@ -207,9 +207,9 @@ export function DashboardContainer() {
         <RecentOrdersTable rows={orderRows} />
       </DashboardSection>
       <DashboardSection
-        title="Recent bookings"
+        title="Recent wheel sessions"
         moreHref="/dashboard/workshops"
-        moreLabel="All bookings"
+        moreLabel="All wheel sessions"
       >
         <RecentBookingsTable rows={bookingRows} />
       </DashboardSection>

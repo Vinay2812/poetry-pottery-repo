@@ -5,7 +5,7 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 import { RegistrationDetailContainer } from "@/features/events";
 
 export const metadata: Metadata = {
-  title: "Booking details",
+  title: "Your event",
   robots: { index: false },
 };
 
