@@ -9,7 +9,7 @@ const rows: SubscriberRow[] = [
   {
     id: 3,
     email: "ira@example.com",
-    accountLabel: "Yes",
+    accountLabel: "Has an account",
     subscribedLabel: "Tue, 1 Sep, 2026",
     unsubscribedLabel: "—",
     isActive: true,
@@ -17,7 +17,7 @@ const rows: SubscriberRow[] = [
   {
     id: 2,
     email: "raj@example.com",
-    accountLabel: "No",
+    accountLabel: "No account",
     subscribedLabel: "Thu, 20 Aug, 2026",
     unsubscribedLabel: "Sat, 29 Aug, 2026",
     isActive: false,

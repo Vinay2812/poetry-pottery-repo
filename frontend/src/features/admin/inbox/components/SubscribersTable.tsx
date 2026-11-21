@@ -51,7 +51,7 @@ export function SubscribersTable({
                 <div className="flex min-w-0 flex-col">
                   <span className="wrap-anywhere">{row.email}</span>
                   <span className="text-[12px] text-muted-foreground">
-                    Account: {row.accountLabel}
+                    {row.accountLabel}
                   </span>
                 </div>
                 <AdminStatusPill
@@ -64,9 +64,10 @@ export function SubscribersTable({
                 {row.isActive ? null : ` · Left ${row.unsubscribedLabel}`}
               </span>
               {row.isActive && (
+                // A bordered button starts on the card's text edge, as Open does on commissions.
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="secondary"
                   size="sm"
                   className="self-start"
                   disabled={busyEmail === row.email}
