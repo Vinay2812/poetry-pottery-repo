@@ -47,7 +47,9 @@ export function BookingCard({
         ))}
       </span>
       <span className="col-span-2 text-[13px] text-muted-foreground">
-        {formatHours(hours)} · {pluralize(participants, "person", "people")} ·{" "}
+        {formatHours(hours)} · {pluralize(participants, "person", "people")}
+      </span>
+      <span className="col-span-2 text-[13px] text-muted-foreground">
         {statusLabel}
       </span>
     </Link>

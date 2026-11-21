@@ -54,7 +54,7 @@ export function RegistrationsListContainer({
   if (!isLoading && !isSignedIn) {
     return (
       <SignInWall
-        message="Sign in to see your bookings"
+        message="Sign in to see your events"
         onSignIn={() => openSignIn()}
       />
     );
@@ -66,7 +66,7 @@ export function RegistrationsListContainer({
         ref={headingRef}
         className="font-heading text-4xl leading-tight tracking-tight md:text-6xl"
       >
-        Your bookings
+        Your events
       </h1>
       {isLoading ? (
         <div className="flex flex-col" aria-busy="true">
@@ -80,7 +80,7 @@ export function RegistrationsListContainer({
       ) : hasError ? (
         <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
           <h2 className="font-heading text-2xl tracking-tight">
-            Your bookings did not load
+            Your events did not load
           </h2>
           <Button variant="outline" onClick={() => void refetch()}>
             Try again
