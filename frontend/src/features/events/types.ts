@@ -124,21 +124,13 @@ export function toParagraphs(description: string): string[] {
 
 type EventFactsInput = Pick<
   EventDetailData,
-  | "starts_at"
-  | "ends_at"
-  | "location"
-  | "address"
-  | "level"
-  | "instructor"
-  | "performers"
+  "location" | "address" | "level" | "instructor" | "performers"
 >;
 
-// Date, place and who leads it. Price and seats live in the reserve box only.
+// Place and who leads it. The date sits under the title; price and seats live in the reserve box.
 export function toEventFacts(event: EventFactsInput): EventFact[] {
   const levelLabel = toLevelLabel(event.level);
   return [
-    { label: "Date", value: formatDate(event.starts_at) },
-    { label: "Time", value: toTimeRange(event.starts_at, event.ends_at) },
     { label: "Where", value: `${event.location}, ${event.address}` },
     ...(levelLabel ? [{ label: "Level", value: levelLabel }] : []),
     ...(event.instructor
@@ -150,12 +142,32 @@ export function toEventFacts(event: EventFactsInput): EventFact[] {
   ];
 }
 
-// The API stops taking seats at the start time, so the page closes the box at the same moment.
-export function hasEventStarted(
-  startsAt: string | Date,
-  now: Date = new Date(),
-): boolean {
+// The one start-time rule: the API stops taking seats at the start, so every surface closes then too.
+export function hasEventStarted(startsAt: string | Date, now: Date): boolean {
   return now.getTime() >= new Date(startsAt).getTime();
+}
+
+// setTimeout overflows past about 24.8 days and fires at once, so long waits go in steps.
+const MAX_TIMEOUT_MS = 2_147_483_647;
+
+export function toStartDelayMs(startsAt: string | Date, now: Date): number {
+  const delay = new Date(startsAt).getTime() - now.getTime();
+  return Math.min(Math.max(delay, 0), MAX_TIMEOUT_MS);
+}
+
+type EventCardTimingInput = Pick<
+  EventCardData,
+  "is_past" | "starts_at" | "available_seats" | "total_seats"
+>;
+
+// The card's second line: seats while a date is ahead, then what became of it.
+export function toEventCardSeatsLabel(
+  event: EventCardTimingInput,
+  now: Date,
+): string {
+  if (event.is_past) return "Wrapped up";
+  if (hasEventStarted(event.starts_at, now)) return "Under way";
+  return toSeatsLabel(event.available_seats, event.total_seats);
 }
 
 export type ReserveState =
@@ -181,6 +193,18 @@ export function toReserveState(input: ReserveStateInput): ReserveState {
 
 export function toRequestSeatsLabel(seats: number): string {
   return seats === 1 ? "Request a seat" : `Request ${seats} seats`;
+}
+
+interface SeatPriceShownInput {
+  state: ReserveState;
+  isPast: boolean;
+  hasStarted: boolean;
+}
+
+// A price only matters while a seat can still be had, or is still to be paid for.
+export function isSeatPriceShown(input: SeatPriceShownInput): boolean {
+  if (input.state === "open" || input.state === "soldOut") return true;
+  return input.state === "booked" && !input.isPast && !input.hasStarted;
 }
 
 const SEAT_PRICE_NOTE: Record<EventType, string | null> = {
@@ -222,7 +246,7 @@ export const REGISTRATION_STEPS: RegistrationStep[] = [
   {
     key: RegistrationStatus.Pending,
     label: "Requested",
-    description: "We have your request and will hold a seat if one is free.",
+    description: "We have your request and are keeping your seat.",
   },
   {
     key: RegistrationStatus.Approved,
@@ -342,16 +366,67 @@ export function toRegistrationFacts(
   ];
 }
 
-export type RegistrationGroup = "upcoming" | "past";
+// The receipt speaks for a request, so it goes once the studio has answered.
+export function isRequestBannerShown(
+  isJustPlaced: boolean,
+  status: RegistrationStatus,
+): boolean {
+  return isJustPlaced && status === RegistrationStatus.Pending;
+}
+
+// Seats are taken off the count the moment a request lands, so the receipt says so.
+export function toRequestReceiptLine(seats: number): string {
+  const kept =
+    seats === 1
+      ? "Your seat is kept for you while we confirm."
+      : "Your seats are kept for you while we confirm.";
+  return `${kept} Send us a message and we will share payment details, or wait for ours within a day.`;
+}
+
+type RegistrationGroupKey = "upcoming" | "past";
+
+type GroupableRegistration = Pick<RegistrationData, "status"> & {
+  event: Pick<RegistrationData["event"], "is_past" | "starts_at">;
+};
+
+export interface RegistrationGroup<T extends GroupableRegistration> {
+  key: RegistrationGroupKey;
+  heading: string;
+  registrations: T[];
+}
 
 // Like wheel sessions: a date that has run, or a seat that will never be taken, sits under Past.
-export function toRegistrationGroup(
-  registration: Pick<RegistrationData, "status"> & {
-    event: Pick<RegistrationData["event"], "is_past">;
-  },
-): RegistrationGroup {
+function toRegistrationGroupKey(
+  registration: GroupableRegistration,
+): RegistrationGroupKey {
   if (isRegistrationClosed(registration.status)) return "past";
   return registration.event.is_past ? "past" : "upcoming";
+}
+
+function byStart(a: GroupableRegistration, b: GroupableRegistration): number {
+  return (
+    new Date(a.event.starts_at).getTime() -
+    new Date(b.event.starts_at).getTime()
+  );
+}
+
+// Soonest first for what is ahead, latest first for the record; empty groups are left out.
+export function toRegistrationGroups<T extends GroupableRegistration>(
+  registrations: T[],
+): RegistrationGroup<T>[] {
+  const upcoming = registrations
+    .filter(
+      (registration) => toRegistrationGroupKey(registration) === "upcoming",
+    )
+    .sort(byStart);
+  const past = registrations
+    .filter((registration) => toRegistrationGroupKey(registration) === "past")
+    .sort((a, b) => byStart(b, a));
+  const groups: RegistrationGroup<T>[] = [
+    { key: "upcoming", heading: "Upcoming", registrations: upcoming },
+    { key: "past", heading: "Past and cancelled", registrations: past },
+  ];
+  return groups.filter((group) => group.registrations.length > 0);
 }
 
 export interface WhatsAppBookingInput {

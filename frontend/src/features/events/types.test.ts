@@ -34,7 +34,12 @@ import {
   toParagraphs,
   toRegistrationClosedLabel,
   toRegistrationFacts,
-  toRegistrationGroup,
+  toRegistrationGroups,
+  isRequestBannerShown,
+  isSeatPriceShown,
+  toEventCardSeatsLabel,
+  toRequestReceiptLine,
+  toStartDelayMs,
   toRegistrationStepDates,
   toRequestSeatsLabel,
   toReserveNotePlaceholder,
@@ -328,22 +333,16 @@ describe("event detail helpers", () => {
 
   it("lists only the facts an event has, never price or seats", () => {
     const facts = toEventFacts({
-      starts_at: STARTS_AT,
-      ends_at: ENDS_AT,
       location: "The studio",
       address: "Sangli",
       level: null,
       instructor: null,
       performers: ["Asha", "Kiran"],
     });
-    expect(facts.map((fact) => fact.label)).toEqual([
-      "Date",
-      "Time",
-      "Where",
-      "Line-up",
-    ]);
-    expect(facts[2]?.value).toBe("The studio, Sangli");
-    expect(facts[3]?.value).toBe("Asha, Kiran");
+    // The date and time sit under the title, so they are not repeated here.
+    expect(facts.map((fact) => fact.label)).toEqual(["Where", "Line-up"]);
+    expect(facts[0]?.value).toBe("The studio, Sangli");
+    expect(facts[1]?.value).toBe("Asha, Kiran");
   });
 
   it("picks one reserve state, cancelled first", () => {
@@ -431,17 +430,111 @@ describe("registration detail helpers", () => {
     ).toEqual(["Kind", "Date", "Time", "Where"]);
   });
 
-  it("files closed and finished bookings under past", () => {
-    expect(toRegistrationGroup(registration())).toBe("upcoming");
+  it("files closed and finished bookings under past and leaves out empty groups", () => {
+    const groups = toRegistrationGroups([
+      registration({ id: "open" }),
+      registration({ id: "cancelled", status: RegistrationStatus.Cancelled }),
+      registration({
+        id: "done",
+        event: { ...registration().event, is_past: true },
+      }),
+    ]);
+    expect(groups.map((group) => group.key)).toEqual(["upcoming", "past"]);
+    expect(groups[0]?.registrations.map((item) => item.id)).toEqual(["open"]);
+    expect(groups[1]?.registrations.map((item) => item.id).sort()).toEqual([
+      "cancelled",
+      "done",
+    ]);
+    expect(toRegistrationGroups([registration()]).map((g) => g.key)).toEqual([
+      "upcoming",
+    ]);
+  });
+
+  it("puts the soonest upcoming date first and the latest past date first", () => {
+    const on = (id: string, startsAt: string, isPast: boolean) =>
+      registration({
+        id,
+        event: {
+          ...registration().event,
+          starts_at: startsAt,
+          is_past: isPast,
+        },
+      });
+    // The API lists newest bookings first, which is not the order of the dates.
+    const groups = toRegistrationGroups([
+      on("dec", "2026-12-20T09:30:00.000Z", false),
+      on("oct", "2026-10-04T09:30:00.000Z", false),
+      on("aug", "2026-08-01T09:30:00.000Z", true),
+      on("sep", "2026-09-01T09:30:00.000Z", true),
+    ]);
+    expect(groups[0]?.registrations.map((item) => item.id)).toEqual([
+      "oct",
+      "dec",
+    ]);
+    expect(groups[1]?.registrations.map((item) => item.id)).toEqual([
+      "sep",
+      "aug",
+    ]);
+  });
+
+  it("shows the request receipt only while the studio has not answered", () => {
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending)).toBe(true);
+    // A reopened ?placed=1 link after approval must not ask to confirm again.
+    expect(isRequestBannerShown(true, RegistrationStatus.Approved)).toBe(false);
+    expect(isRequestBannerShown(true, RegistrationStatus.Confirmed)).toBe(
+      false,
+    );
+    expect(isRequestBannerShown(true, RegistrationStatus.Cancelled)).toBe(
+      false,
+    );
+    expect(isRequestBannerShown(false, RegistrationStatus.Pending)).toBe(false);
+  });
+
+  it("says the seats are kept, in the right number", () => {
+    expect(toRequestReceiptLine(1)).toMatch(/^Your seat is kept for you/);
+    expect(toRequestReceiptLine(2)).toMatch(/^Your seats are kept for you/);
+    expect(toRequestReceiptLine(2)).toContain("share payment details");
+  });
+});
+
+describe("start-time helpers", () => {
+  const BEFORE = new Date("2026-09-19T09:00:00.000Z");
+  const AFTER = new Date("2026-09-19T10:00:00.000Z");
+
+  it("waits until the start, never less than zero and never past the timer limit", () => {
+    expect(toStartDelayMs(STARTS_AT, BEFORE)).toBe(30 * 60 * 1000);
+    expect(toStartDelayMs(STARTS_AT, AFTER)).toBe(0);
+    expect(toStartDelayMs("2027-06-01T00:00:00.000Z", BEFORE)).toBe(
+      2_147_483_647,
+    );
+  });
+
+  it("labels a card by the same start-time rule", () => {
+    const card = {
+      is_past: false,
+      starts_at: STARTS_AT,
+      available_seats: 12,
+      total_seats: 20,
+    };
+    expect(toEventCardSeatsLabel(card, BEFORE)).toBe("12 seats left");
+    expect(toEventCardSeatsLabel(card, new Date(STARTS_AT))).toBe("Under way");
+    expect(toEventCardSeatsLabel({ ...card, is_past: true }, BEFORE)).toBe(
+      "Wrapped up",
+    );
+  });
+
+  it("shows a seat price only while a seat is still ahead", () => {
+    const ahead = { isPast: false, hasStarted: false };
+    expect(isSeatPriceShown({ ...ahead, state: "open" })).toBe(true);
+    expect(isSeatPriceShown({ ...ahead, state: "soldOut" })).toBe(true);
+    expect(isSeatPriceShown({ ...ahead, state: "booked" })).toBe(true);
     expect(
-      toRegistrationGroup(
-        registration({ status: RegistrationStatus.Cancelled }),
-      ),
-    ).toBe("past");
+      isSeatPriceShown({ state: "booked", isPast: true, hasStarted: true }),
+    ).toBe(false);
     expect(
-      toRegistrationGroup(
-        registration({ event: { ...registration().event, is_past: true } }),
-      ),
-    ).toBe("past");
+      isSeatPriceShown({ state: "booked", isPast: false, hasStarted: true }),
+    ).toBe(false);
+    expect(isSeatPriceShown({ ...ahead, state: "started" })).toBe(false);
+    expect(isSeatPriceShown({ ...ahead, state: "past" })).toBe(false);
   });
 });

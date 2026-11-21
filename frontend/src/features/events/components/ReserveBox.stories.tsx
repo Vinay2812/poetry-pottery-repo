@@ -25,6 +25,7 @@ const meta = {
       "Left-handed, coming with a friend, first time on the wheel…",
     seatsLabel: "3 seats left",
     seatPriceNote: "Clay, tools and firing are part of the seat price.",
+    isPriceShown: true,
     hasGallery: false,
     isReserving: false,
     bookingHref: null,
@@ -61,21 +62,35 @@ export const SoldOut: Story = {
   args: { state: "soldOut", seatsLabel: "Sold out" },
 };
 
-export const Past: Story = { args: { state: "past" } };
+export const Past: Story = { args: { state: "past", isPriceShown: false } };
 
 export const PastWithPhotos: Story = {
-  args: { state: "past", hasGallery: true },
+  args: { state: "past", isPriceShown: false, hasGallery: true },
 };
 
-export const UnderWay: Story = { args: { state: "started" } };
+export const UnderWay: Story = {
+  args: { state: "started", isPriceShown: false },
+};
 
-export const CalledOff: Story = { args: { state: "cancelled" } };
+export const CalledOff: Story = {
+  args: { state: "cancelled", isPriceShown: false },
+};
 
 export const AlreadyBooked: Story = {
   args: {
     state: "booked",
     bookingHref: "/registrations/REG7Q2X9M1KD",
     bookingStatusLabel: "Seat held, awaiting payment",
+    bookingSeats: 2,
+  },
+};
+
+export const BookedAfterTheDate: Story = {
+  args: {
+    state: "booked",
+    isPriceShown: false,
+    bookingHref: "/registrations/REG7Q2X9M1KD",
+    bookingStatusLabel: "Confirmed",
     bookingSeats: 2,
   },
 };

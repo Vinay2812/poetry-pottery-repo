@@ -2,7 +2,7 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -19,7 +19,9 @@ import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import { useRequireAuth } from "@/features/auth";
 import {
   type EventFilters,
+  hasEventStarted,
   toEventsFilterInput,
+  toStartDelayMs,
   toEventsFilterKey,
   toRegistrationPath,
 } from "@/features/events/types";
@@ -85,6 +87,25 @@ export function useEvents(
     loadMore,
     refetch,
   };
+}
+
+// The page's clock, seeded from the server so the first render matches, then moved on once at the start.
+export function useEventClock(initialNow: string, startsAt: string) {
+  const [now, setNow] = useState(() => new Date(initialNow));
+
+  useEffect(() => {
+    if (hasEventStarted(startsAt, now)) return;
+    // A zero delay also catches a server time that was already stale on arrival.
+    const timer = setTimeout(
+      () => setNow(new Date()),
+      toStartDelayMs(startsAt, new Date()),
+    );
+    return () => clearTimeout(timer);
+  }, [now, startsAt]);
+
+  const sync = useCallback(() => setNow(new Date()), []);
+
+  return { now, sync };
 }
 
 export function useRegisterForEvent() {

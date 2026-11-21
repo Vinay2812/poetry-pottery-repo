@@ -26,6 +26,7 @@ function reserveBoxIn(state: ReserveState, price = 1800) {
       notePlaceholder="Left-handed, coming with a friend, first time on the wheel…"
       seatsLabel="3 seats left"
       seatPriceNote="Clay, tools and firing are part of the seat price."
+      isPriceShown={state === "open"}
       hasGallery={state === "past"}
       isReserving={false}
       bookingHref={null}
@@ -49,8 +50,6 @@ const meta = {
     typeLabel: "Pottery workshop",
     whenLabel: "Sat 19 Sep · 3 pm – 6 pm",
     facts: [
-      { label: "Date", value: "Sat, 19 Sept, 2026" },
-      { label: "Time", value: "3:00 pm – 6:00 pm" },
       {
         label: "Where",
         value: "Poetry & Pottery studio, 3rd Lane, Vishrambag, Sangli",
@@ -88,8 +87,6 @@ export const OpenMic: Story = {
     typeLabel: "Open mic",
     whenLabel: "Sun 12 Jul · 7 pm – 9:30 pm",
     facts: [
-      { label: "Date", value: "Sun, 12 Jul, 2026" },
-      { label: "Time", value: "7:00 pm – 9:30 pm" },
       {
         label: "Where",
         value: "Poetry & Pottery studio, 3rd Lane, Vishrambag, Sangli",

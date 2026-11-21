@@ -40,6 +40,7 @@ export default async function EventPage({
       <EventDetailContainer
         event={event}
         whatsappNumber={settings.whatsapp_number}
+        now={new Date().toISOString()}
       />
     </>
   );

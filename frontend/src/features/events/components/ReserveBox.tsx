@@ -6,7 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 import { formatInr, pluralize } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
+import { TEXT_LINK } from "@/features/events/components/styles";
 import {
   type ReserveState,
   SEAT_NOTE,
@@ -23,6 +25,7 @@ export interface ReserveBoxProps {
   notePlaceholder: string;
   seatsLabel: string;
   seatPriceNote: string | null;
+  isPriceShown: boolean;
   hasGallery: boolean;
   isReserving: boolean;
   bookingHref: string | null;
@@ -36,8 +39,6 @@ export interface ReserveBoxProps {
 
 const STEPPER_BUTTON =
   "flex size-11 items-center justify-center transition-colors hover:text-primary disabled:opacity-40";
-const TEXT_LINK =
-  "w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary";
 
 // One box for every state of a date: open, full, under way, done, called off, or already yours.
 export function ReserveBox({
@@ -50,6 +51,7 @@ export function ReserveBox({
   notePlaceholder,
   seatsLabel,
   seatPriceNote,
+  isPriceShown,
   hasGallery,
   isReserving,
   bookingHref,
@@ -60,14 +62,12 @@ export function ReserveBox({
   onNoteChange,
   onReserve,
 }: ReserveBoxProps) {
-  const isClosed =
-    state === "cancelled" || state === "past" || state === "started";
   return (
     <section
       aria-label="Your seat"
       className="flex flex-col gap-5 border border-ash bg-white p-5 md:p-6"
     >
-      {!isClosed && (
+      {isPriceShown && (
         <div className="flex items-baseline justify-between gap-3 text-[15px]">
           <p className="tnum">
             {formatInr(price)}{" "}
@@ -119,7 +119,13 @@ export function ReserveBox({
       )}
 
       {state === "booked" && bookingHref && (
-        <div className="flex flex-col gap-3 border-t border-ash pt-4">
+        <div
+          className={cn(
+            "flex flex-col gap-3",
+            // The rule only separates the booking from a price line above it.
+            isPriceShown && "border-t border-ash pt-4",
+          )}
+        >
           <p className="flex flex-col gap-0.5 text-sm">
             <span>Your booking · {pluralize(bookingSeats, "seat")}</span>
             <span className="text-muted-foreground">{bookingStatusLabel}</span>
@@ -199,12 +205,15 @@ export function ReserveBox({
             />
           </div>
 
-          <dl className="flex items-baseline justify-between gap-3 border-t border-ash pt-4 text-[15px]">
-            <dt className="text-[13px] text-muted-foreground">
-              {pluralize(seats, "seat")} × {formatInr(price)}
-            </dt>
-            <dd className="tnum">{formatInr(price * seats)}</dd>
-          </dl>
+          {/* One seat is the price above; a total only earns a row once it differs. */}
+          {seats > 1 && (
+            <dl className="flex items-baseline justify-between gap-3 border-t border-ash pt-4 text-[15px]">
+              <dt className="text-[13px] text-muted-foreground">
+                Total for {seats} seats
+              </dt>
+              <dd className="tnum">{formatInr(price * seats)}</dd>
+            </dl>
+          )}
 
           <div className="flex flex-col gap-3">
             <Button size="lg" onClick={onReserve} disabled={isReserving}>
@@ -215,7 +224,7 @@ export function ReserveBox({
         </>
       )}
 
-      {!isClosed && seatPriceNote && (
+      {isPriceShown && seatPriceNote && (
         <p className="border-t border-ash pt-4 text-[13px] text-muted-foreground">
           {seatPriceNote}
         </p>
