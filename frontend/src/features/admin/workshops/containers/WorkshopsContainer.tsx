@@ -135,7 +135,7 @@ export function WorkshopsContainer() {
         <div className="h-64 animate-pulse bg-ash" />
       </div>
     ) : (
-      <p className="text-[13px]">No workshop is set up yet.</p>
+      <p className="text-[13px]">No wheel session is set up yet.</p>
     );
   }
 
@@ -143,7 +143,7 @@ export function WorkshopsContainer() {
     <div className="flex flex-col gap-10">
       <AdminPageHeader
         eyebrow="Studio"
-        title="Workshops"
+        title="Wheel sessions"
         description={describeClosedDays(selected.closed_weekdays)}
         actions={
           <WorkshopConfigPicker

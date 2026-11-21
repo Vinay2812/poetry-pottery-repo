@@ -11,7 +11,7 @@ export const ADMIN_NAV_LINKS: AdminNavLink[] = [
   { href: "/dashboard/orders", label: "Orders" },
   { href: "/dashboard/people", label: "People" },
   { href: "/dashboard/events", label: "Events" },
-  { href: "/dashboard/workshops", label: "Workshops" },
+  { href: "/dashboard/workshops", label: "Wheel sessions" },
   { href: "/dashboard/visits", label: "Visits" },
   { href: "/dashboard/commissions", label: "Commissions" },
   { href: "/dashboard/reviews", label: "Reviews" },
