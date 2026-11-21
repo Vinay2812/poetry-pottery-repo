@@ -19,7 +19,7 @@ export function EventRow({
   return (
     <Link
       href={href}
-      className="group grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-1 border-b border-ash py-4 transition-colors duration-200 hover:border-ink md:grid-cols-[10rem_1fr_8rem_auto] md:gap-6"
+      className="group grid grid-cols-[7.5rem_1fr] items-baseline gap-x-4 gap-y-1 border-b border-ash py-4 transition-colors duration-200 hover:border-ink md:grid-cols-[10rem_1fr_8rem_auto] md:gap-6"
     >
       <span className="text-[13px] text-muted-foreground tnum">
         {dateLabel}
