@@ -151,23 +151,40 @@ describe("productOptionSchema", () => {
 });
 
 describe("stockAdjustSchema", () => {
-  it("takes a positive or negative move", () => {
+  it("takes pieces added or taken off", () => {
     expect(
-      stockAdjustSchema.safeParse({ delta: 4, reason: "New batch" }).success,
+      stockAdjustSchema.safeParse({
+        direction: "add",
+        count: 4,
+        reason: "New batch",
+      }).success,
     ).toBe(true);
     expect(
-      stockAdjustSchema.safeParse({ delta: -2, reason: "Broken in the kiln" })
-        .success,
+      stockAdjustSchema.safeParse({
+        direction: "remove",
+        count: 2,
+        reason: "Broken in the kiln",
+      }).success,
     ).toBe(true);
   });
 
-  it("rejects a move of zero", () => {
-    const parsed = stockAdjustSchema.safeParse({ delta: 0, reason: "Nothing" });
-    expect(parsed.success).toBe(false);
+  it("rejects a count of zero or a fraction", () => {
+    for (const count of [0, 1.5]) {
+      const parsed = stockAdjustSchema.safeParse({
+        direction: "add",
+        count,
+        reason: "Nothing",
+      });
+      expect(parsed.success).toBe(false);
+    }
   });
 
   it("needs a reason", () => {
-    const parsed = stockAdjustSchema.safeParse({ delta: 2, reason: "" });
+    const parsed = stockAdjustSchema.safeParse({
+      direction: "add",
+      count: 2,
+      reason: "",
+    });
     expect(parsed.success).toBe(false);
   });
 });

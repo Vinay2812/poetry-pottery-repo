@@ -151,11 +151,13 @@ export const productOptionSchema = z.object({
 
 export type ProductOptionFormValues = z.infer<typeof productOptionSchema>;
 
+// A direction and a count, because a phone's number pad has no minus key.
 export const stockAdjustSchema = z.object({
-  delta: z
-    .number({ error: "Enter a whole number" })
+  direction: z.enum(["add", "remove"]),
+  count: z
+    .number({ error: "Enter how many pieces" })
     .int("Enter a whole number")
-    .refine((value) => value !== 0, "Enter a number other than zero"),
+    .min(1, "Enter at least one piece"),
   reason: z
     .string()
     .trim()
