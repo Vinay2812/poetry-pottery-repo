@@ -19,7 +19,7 @@ export interface ProductGalleryProps {
 const ARROW_CLASS =
   "absolute top-1/2 z-10 hidden size-8 -translate-y-1/2 items-center justify-center border border-ash bg-white text-sm leading-none text-ink transition-colors hover:border-ink disabled:opacity-30 disabled:hover:border-ash lg:flex";
 
-// Draggable main carousel with a synced thumbnail strip on desktop and dots on mobile.
+// Draggable main carousel with a synced thumbnail strip on desktop and dashes below it on smaller screens.
 export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
   const {
     carouselRef,
@@ -147,13 +147,13 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
                 aria-label={toPhotoLabel(index, images.length)}
                 aria-current={index === selectedIndex}
                 onClick={() => scrollTo(index)}
-                // A 24px target around a 6px dot, so a thumb can hit it.
-                className="grid size-6 place-items-center"
+                // A short dash inside a 32px target, so a thumb can hit it.
+                className="grid h-8 w-7 place-items-center"
               >
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "size-1.5",
+                    "h-0.5 w-5 transition-colors duration-200",
                     index === selectedIndex ? "bg-ink" : "bg-ash",
                   )}
                 />
