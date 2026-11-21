@@ -160,6 +160,10 @@
     html {
       scroll-padding-bottom: 0;
     }
+    /* A form with a sticky save bar keeps focused fields clear of it. */
+    html:has([data-sticky-save-bar]) {
+      scroll-padding-bottom: 4rem;
+    }
   }
 
   /* One focus treatment for the whole site: a 2px ink outline held 2px clear of

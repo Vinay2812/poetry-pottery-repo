@@ -333,7 +333,10 @@ export function ContentPageForm({
         </Button>
       </div>
 
-      <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-ash bg-background py-3">
+      <div
+        data-sticky-save-bar=""
+        className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-ash bg-background py-3"
+      >
         <p className="text-[12px] text-muted-foreground">{savedLabel}</p>
         <Button type="submit" size="sm" disabled={isSaving}>
           {isSaving ? "Saving…" : "Save page"}
