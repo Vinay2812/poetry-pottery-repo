@@ -1,6 +1,8 @@
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { NetworkStatus } from "@apollo/client";
+
 import type { ProductsQuery } from "@/graphql/generated/graphql";
 
 import { useShelfResults } from "./hooks";
@@ -22,6 +24,8 @@ interface QueryState {
   previousData: ProductsQuery | undefined;
   loading: boolean;
   error: Error | undefined;
+  // Left out, it follows `loading`: a first-page load or ready.
+  networkStatus?: NetworkStatus;
 }
 
 const { useQueryMock, fetchMoreMock, refetchMock } = vi.hoisted(() => ({
@@ -118,6 +122,9 @@ beforeEach(() => {
   };
   useQueryMock.mockImplementation(() => ({
     ...state,
+    networkStatus:
+      state.networkStatus ??
+      (state.loading ? NetworkStatus.setVariables : NetworkStatus.ready),
     fetchMore: fetchMoreMock,
     refetch: refetchMock,
   }));
@@ -129,7 +136,7 @@ describe("useShelfResults", () => {
     const { result } = renderShelf();
 
     expect(result.current.result).toBe(SERVER_PAGE);
-    expect(result.current.isSettled).toBe(true);
+    expect(result.current.phase).toBe("ready");
   });
 
   it("first filter change keeps the old cards and the filter panel mounted", () => {
@@ -145,7 +152,7 @@ describe("useShelfResults", () => {
 
     expect(result.current.result?.items.map((item) => item.id)).toEqual([1, 2]);
     expect(result.current.result?.facets.categories).toHaveLength(1);
-    expect(result.current.isSettled).toBe(false);
+    expect(result.current.phase).toBe("pending");
     expect(result.current.isRefreshing).toBe(true);
   });
 
@@ -155,7 +162,7 @@ describe("useShelfResults", () => {
     rerender({ filters: MUGS });
 
     expect(result.current.result).toBe(SERVER_PAGE);
-    expect(result.current.isSettled).toBe(false);
+    expect(result.current.phase).toBe("pending");
   });
 
   it("settles once the current filters have their own answer", () => {
@@ -167,17 +174,59 @@ describe("useShelfResults", () => {
     rerender({ filters: MUGS });
 
     expect(result.current.result?.items.map((item) => item.id)).toEqual([3]);
-    expect(result.current.isSettled).toBe(true);
+    expect(result.current.phase).toBe("ready");
   });
 
-  it("never settles on a failure and reports it when nothing can be shown", () => {
-    setQuery({ loading: false, error: new Error("down") });
+  it("fails without dropping the last answer, so the filter options stay", () => {
+    setQuery({ data: answer(SERVER_PAGE), loading: false });
     const { result, rerender } = renderShelf();
+
+    setQuery({
+      data: undefined,
+      previousData: answer(SERVER_PAGE),
+      loading: false,
+      error: new Error("down"),
+    });
     rerender({ filters: MUGS });
 
-    expect(result.current.isSettled).toBe(false);
-    expect(result.current.isFailed).toBe(true);
-    expect(result.current.result).toBeUndefined();
+    expect(result.current.phase).toBe("failed");
+    expect(result.current.result?.facets.categories).toHaveLength(1);
+    expect(result.current.canLoadMore).toBe(false);
+  });
+
+  it("stays ready while Apollo reports a next page still out", () => {
+    setQuery({
+      data: answer(SERVER_PAGE),
+      loading: true,
+      networkStatus: NetworkStatus.fetchMore,
+    });
+    const { result } = renderShelf();
+
+    expect(result.current.phase).toBe("ready");
+    expect(result.current.canLoadMore).toBe(true);
+    expect(result.current.isRefreshing).toBe(false);
+  });
+
+  it("is pending while the filters on screen are ahead of the list", () => {
+    setQuery({ data: answer(SERVER_PAGE), loading: false });
+    const { result } = renderHook(() =>
+      useShelfResults(EMPTY_FILTERS, SERVER_PAGE, SERVER_KEY, true),
+    );
+
+    expect(result.current.phase).toBe("pending");
+    expect(result.current.isRefreshing).toBe(true);
+  });
+
+  it("marks a failed next page and keeps the cards", async () => {
+    setQuery({ data: answer(SERVER_PAGE), loading: false });
+    fetchMoreMock.mockRejectedValue(new Error("page two down"));
+    const { result } = renderShelf();
+
+    await act(async () => result.current.loadMore());
+
+    expect(result.current.hasAppendFailed).toBe(true);
+    expect(result.current.isAppending).toBe(false);
+    expect(result.current.result?.items).toHaveLength(2);
   });
 
   it("appends the next page to the list that asked for it", async () => {

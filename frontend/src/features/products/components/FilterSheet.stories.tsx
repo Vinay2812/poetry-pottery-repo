@@ -12,6 +12,7 @@ const meta = {
   args: {
     isOpen: true,
     resultCount: 48,
+    phase: "ready",
     activeFilterCount: 1,
     onOpenChange: fn(),
     onClear: fn(),
@@ -71,7 +72,9 @@ export const Closed: Story = { args: { isOpen: false } };
 
 export const SinglePieceResult: Story = { args: { resultCount: 1 } };
 
-export const FindingPieces: Story = { args: { isLoading: true } };
+export const FindingPieces: Story = { args: { phase: "pending" } };
+
+export const Failed: Story = { args: { phase: "failed" } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

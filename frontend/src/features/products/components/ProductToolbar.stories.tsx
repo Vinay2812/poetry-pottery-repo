@@ -18,7 +18,7 @@ const meta = {
   ],
   args: {
     countLabel: "48 pieces",
-    isLoading: false,
+    phase: "ready",
     sort: ProductSort.Featured,
     activeFilterCount: 0,
     onSortChange: fn(),
@@ -34,7 +34,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Loading: Story = {
-  args: { isLoading: true },
+  args: { phase: "pending" },
 };
 
 export const WithActiveFilters: Story = {
@@ -47,6 +47,10 @@ export const SearchResults: Story = {
 
 export const MadeToOrderOnly: Story = {
   args: { countLabel: "3 made-to-order pieces", activeFilterCount: 1 },
+};
+
+export const Failed: Story = {
+  args: { phase: "failed" },
 };
 
 export const SortedByPrice: Story = {

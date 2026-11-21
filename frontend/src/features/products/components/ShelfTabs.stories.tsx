@@ -30,6 +30,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Shelf: Story = {};
 
+export const CountPending: Story = { args: { shelfCount: null } };
+
 export const Archive: Story = { args: { isArchive: true } };
 
 export const Mobile: Story = { ...atViewport("mobile") };

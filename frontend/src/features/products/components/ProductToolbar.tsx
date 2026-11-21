@@ -10,11 +10,11 @@ import {
 import type { ProductSort } from "@/graphql/generated/graphql";
 import { cn } from "@/lib/utils";
 
-import { SORT_OPTIONS } from "@/features/products/types";
+import { type ShelfPhase, SORT_OPTIONS } from "@/features/products/types";
 
 export interface ProductToolbarProps {
   countLabel: string;
-  isLoading: boolean;
+  phase: ShelfPhase;
   sort: ProductSort;
   // A search keeps its own relevance order, so no other sort is offered while one is active.
   isRelevanceOnly?: boolean;
@@ -29,7 +29,7 @@ const CONTROL_CLASS = "h-10 border border-ash bg-transparent text-sm";
 // Phones get the filters and sort boxes with the count under them; wider screens put the count left.
 export function ProductToolbar({
   countLabel,
-  isLoading,
+  phase,
   sort,
   isRelevanceOnly = false,
   activeFilterCount,
@@ -104,7 +104,11 @@ export function ProductToolbar({
         className="min-h-5 min-w-0 text-[13px] wrap-anywhere text-muted-foreground tnum md:order-first"
         aria-live="polite"
       >
-        {isLoading ? "Finding pieces…" : countLabel}
+        {phase === "pending"
+          ? "Finding pieces…"
+          : phase === "ready"
+            ? countLabel
+            : null}
       </p>
     </div>
   );

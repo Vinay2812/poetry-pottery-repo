@@ -1,7 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
+import { NetworkStatus } from "@apollo/client";
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
   CreateCustomizationUploadDocument,
@@ -14,74 +21,114 @@ import {
   type ProductFilters,
   type ReferencePhoto,
   remainingReferenceSlots,
+  type ShelfPhase,
   toFilterInput,
   toFilterKey,
+  toShelfPhase,
   validateReferencePhoto,
 } from "@/features/products/types";
 
 type ProductsPage = ProductsQuery["products"];
 
+// Only these statuses mean the first page itself is on its way; a fetchMore or a poll does not.
+const FIRST_PAGE_LOADING = new Set<NetworkStatus>([
+  NetworkStatus.loading,
+  NetworkStatus.setVariables,
+  NetworkStatus.refetch,
+]);
+
+interface AppendRequest {
+  key: string;
+  page: number;
+  status: "loading" | "failed";
+}
+
 export interface ShelfResults {
   // What is on screen: the current answer, or the last one while the next loads.
   result: ProductsPage | undefined;
-  // The current filters have their own answer, so counts and empty copy may speak.
-  isSettled: boolean;
+  phase: ShelfPhase;
+  // Old results under new filters: still shown, dimmed until the answer lands.
   isRefreshing: boolean;
+  // The browser holds its own first page, so a next page has something to join.
+  canLoadMore: boolean;
   isAppending: boolean;
-  isFailed: boolean;
+  hasAppendFailed: boolean;
   loadMore: () => void;
   retry: () => void;
 }
 
-// The shelf's list: the server's first page bridges the first load, old results bridge a
-// filter change, and a page only joins the list it was asked for.
+// The shelf's list. The server's first page bridges the first load and old results bridge a
+// filter change. A next page is tracked here, by filter key and page, and only joins the list
+// that asked for it.
 export function useShelfResults(
   filters: ProductFilters,
   initialProducts: ProductsPage | null,
   initialFilterKey: string | null,
+  isFiltersMoving = false,
 ): ShelfResults {
   const filterInput = toFilterInput(filters, 1);
   const filterKey = toFilterKey(filterInput);
-  const [appendingKey, setAppendingKey] = useState<string | null>(null);
+  const [append, setAppend] = useState<AppendRequest | null>(null);
+  // Apollo moves to new variables during render, so the key must follow before any page lands.
   const latestKey = useRef(filterKey);
-  useEffect(() => {
+  useLayoutEffect(() => {
     latestKey.current = filterKey;
   }, [filterKey]);
 
-  const { data, previousData, loading, error, fetchMore, refetch } = useQuery(
-    ProductsDocument,
-    {
-      variables: { filter: filterInput },
-      notifyOnNetworkStatusChange: true,
-    },
-  );
+  const {
+    data,
+    previousData,
+    loading,
+    error,
+    networkStatus,
+    fetchMore,
+    refetch,
+  } = useQuery(ProductsDocument, {
+    variables: { filter: filterInput },
+    notifyOnNetworkStatusChange: true,
+  });
   const serverPage =
     initialProducts && initialFilterKey === filterKey
       ? initialProducts
       : undefined;
-  const isAppending = appendingKey === filterKey;
   const current = data?.products;
-  // Old results bridge a load, not a failure: they would sit under filters they do not match.
-  // The server's page stands in until the browser has a page of its own to show.
-  const bridge = error
-    ? undefined
-    : (serverPage ??
-      previousData?.products ??
-      (loading ? (initialProducts ?? undefined) : undefined));
-  const result = current ?? bridge;
-  const isSettled =
-    !error && (current ? !loading || isAppending : serverPage !== undefined);
-  const pageInfo = result?.page_info;
+  const isOwnPageLoading = FIRST_PAGE_LOADING.has(networkStatus);
+  const phase = toShelfPhase({
+    hasFailed: Boolean(error),
+    isFiltersMoving,
+    hasOwnPage: current !== undefined,
+    isOwnPageLoading,
+    hasServerPage: serverPage !== undefined,
+  });
+  // A failure keeps the last answer on hand, so the filter options stay to recover with.
+  const result =
+    current ??
+    serverPage ??
+    previousData?.products ??
+    (loading ? (initialProducts ?? undefined) : undefined);
+
+  const ownAppend = append?.key === filterKey ? append : null;
+  const isAppending = ownAppend?.status === "loading";
+  const canLoadMore = current !== undefined && !isOwnPageLoading && !error;
 
   const loadMore = useCallback(() => {
-    if (!isSettled || isAppending || !pageInfo?.has_more) return;
-    const startedKey = filterKey;
-    setAppendingKey(startedKey);
-    void fetchMore({
-      variables: { filter: toFilterInput(filters, pageInfo.page + 1) },
-      // A page that lands after the filters moved on belongs to another list, so it is dropped.
+    if (!current || !canLoadMore || isAppending) return;
+    if (!current.page_info.has_more) return;
+    const request: AppendRequest = {
+      key: filterKey,
+      page: current.page_info.page + 1,
+      status: "loading",
+    };
+    const isThisRequest = (other: AppendRequest | null) =>
+      other?.key === request.key && other.page === request.page;
+    setAppend(request);
+    fetchMore({
+      variables: { filter: toFilterInput(filters, request.page) },
+      // A page that lands after the filters moved on, or with no first page to join, is dropped.
+      // Apollo types `previous` as always there, but it can be missing; returning it unchanged writes nothing.
       updateQuery: (previous, { fetchMoreResult }) =>
-        latestKey.current !== startedKey
+        !(previous as ProductsQuery | null | undefined)?.products ||
+        latestKey.current !== request.key
           ? previous
           : {
               products: {
@@ -92,19 +139,24 @@ export function useShelfResults(
                 ],
               },
             },
-    }).finally(() =>
-      setAppendingKey((key) => (key === startedKey ? null : key)),
+    }).then(
+      () => setAppend((other) => (isThisRequest(other) ? null : other)),
+      () =>
+        setAppend((other) =>
+          isThisRequest(other) ? { ...request, status: "failed" } : other,
+        ),
     );
-  }, [fetchMore, filterKey, filters, isAppending, isSettled, pageInfo]);
+  }, [canLoadMore, current, fetchMore, filterKey, filters, isAppending]);
 
   const retry = useCallback(() => void refetch(), [refetch]);
 
   return {
     result,
-    isSettled,
-    isRefreshing: loading && Boolean(result) && !isAppending,
+    phase,
+    isRefreshing: phase === "pending" && result !== undefined,
+    canLoadMore,
     isAppending,
-    isFailed: Boolean(error) && !result,
+    hasAppendFailed: ownAppend?.status === "failed",
     loadMore,
     retry,
   };

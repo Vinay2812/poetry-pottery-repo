@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 export interface ShelfTabsProps {
   shelfHref: string;
   archiveHref: string;
-  shelfCount: number;
+  // Null until the current filters have their own answer, so no stale number is shown.
+  shelfCount: number | null;
   isArchive: boolean;
   onSelectShelf?: () => void;
 }
@@ -58,7 +59,9 @@ export function ShelfTabs({
           >
             <ActiveMarker isActive={!isArchive} />
             On the shelf{" "}
-            <span className="text-muted-foreground tnum">({shelfCount})</span>
+            {shelfCount !== null && (
+              <span className="text-muted-foreground tnum">({shelfCount})</span>
+            )}
           </Link>
         </li>
         <li>

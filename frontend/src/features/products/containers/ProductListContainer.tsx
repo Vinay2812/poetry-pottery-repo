@@ -66,19 +66,6 @@ export function ProductListContainer({
   const [searchDraft, setSearchDraft] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const {
-    result,
-    isSettled,
-    isRefreshing,
-    isAppending,
-    isFailed,
-    loadMore: handleLoadMore,
-    retry: handleRetry,
-  } = useShelfResults(filters, initialProducts, initialFilterKey);
-  const items = result?.items ?? [];
-  const pageInfo = result?.page_info;
-  const facets = result?.facets;
-
   // Typing updates the field at once and the URL after a short pause.
   const handleSearchChange = useCallback(
     (value: string) => {
@@ -103,8 +90,24 @@ export function ProductListContainer({
   // The field paints on every keystroke; the results follow this copy at a lower priority.
   const deferredSearchValue = useDeferredValue(searchValue);
   const isSearchSettling = deferredSearchValue.trim() !== filters.search;
-  // Results stay on screen while a new page loads; only their opacity says so.
-  const isBusy = isPending || isSearchSettling || isRefreshing;
+  const {
+    result,
+    phase,
+    isRefreshing,
+    canLoadMore,
+    isAppending,
+    hasAppendFailed,
+    loadMore: handleLoadMore,
+    retry: handleRetry,
+  } = useShelfResults(
+    filters,
+    initialProducts,
+    initialFilterKey,
+    isPending || isSearchSettling,
+  );
+  const items = result?.items ?? [];
+  const pageInfo = result?.page_info;
+  const facets = result?.facets;
   useEffect(
     () => () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -203,8 +206,6 @@ export function ProductListContainer({
     priceCeiling,
   );
   const activeFilterCount = countActiveFilters(filters);
-  // Until the current query answers, the cards on screen are the old ones, so no count is given.
-  const isCountPending = !isSettled || isPending || isSearchSettling;
   const isMadeToOrderOnly = filters.customizableOnly && activeFilterCount === 1;
 
   const filterPanel = facets && (
@@ -263,7 +264,7 @@ export function ProductListContainer({
         <ShelfTabs
           shelfHref={toHref({ ...filters, isArchive: false })}
           archiveHref={ARCHIVE_PATH}
-          shelfCount={facets?.active_count ?? 0}
+          shelfCount={phase === "ready" ? (facets?.active_count ?? null) : null}
           isArchive={filters.isArchive}
           onSelectShelf={handleSelectShelf}
         />
@@ -277,16 +278,12 @@ export function ProductListContainer({
         {/* A narrow result set must not pull the footer up over the reader's scroll position. */}
         <div className="flex min-h-[60vh] flex-col gap-5">
           <ProductToolbar
-            countLabel={
-              isFailed
-                ? ""
-                : toResultCountLabel(
-                    pageInfo?.total ?? 0,
-                    filters.search,
-                    filters.customizableOnly,
-                  )
-            }
-            isLoading={isCountPending && !isFailed}
+            countLabel={toResultCountLabel(
+              pageInfo?.total ?? 0,
+              filters.search,
+              filters.customizableOnly,
+            )}
+            phase={phase}
             sort={filters.sort}
             isRelevanceOnly={filters.search !== ""}
             activeFilterCount={activeFilterCount}
@@ -296,9 +293,9 @@ export function ProductListContainer({
           />
 
           {/* The empty copy speaks only for an answer to the current filters; until then, skeletons. */}
-          {isFailed ? (
+          {phase === "failed" ? (
             <LoadFailed onRetry={handleRetry} />
-          ) : items.length === 0 && !isSettled ? (
+          ) : items.length === 0 && phase === "pending" ? (
             <ProductGrid>
               {Array.from({ length: 8 }, (_, index) => (
                 <ProductCardSkeleton key={index} />
@@ -313,10 +310,10 @@ export function ProductListContainer({
             />
           ) : (
             <div
-              aria-busy={isBusy}
+              aria-busy={isRefreshing}
               className={cn(
                 "flex flex-col gap-5 transition-opacity duration-200",
-                isBusy && "opacity-60",
+                isRefreshing && "opacity-60",
               )}
             >
               <ProductGrid>
@@ -329,10 +326,12 @@ export function ProductListContainer({
                   />
                 ))}
               </ProductGrid>
-              {pageInfo && (
+              {/* The footer counts only a settled list; a pending one has no honest number yet. */}
+              {pageInfo && phase === "ready" && (
                 <LoadMore
                   hasMore={pageInfo.has_more}
-                  isLoading={isAppending}
+                  isLoading={isAppending || !canLoadMore}
+                  hasFailed={hasAppendFailed}
                   loadedCount={items.length}
                   total={pageInfo.total}
                   onLoadMore={handleLoadMore}
@@ -347,7 +346,7 @@ export function ProductListContainer({
       <FilterSheet
         isOpen={isSheetOpen}
         resultCount={pageInfo?.total ?? 0}
-        isLoading={isCountPending && !isFailed}
+        phase={phase}
         activeFilterCount={activeFilterCount}
         onOpenChange={setIsSheetOpen}
         onClear={handleClear}
