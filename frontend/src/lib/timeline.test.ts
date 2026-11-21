@@ -41,11 +41,21 @@ describe("toTimelineSteps", () => {
     ]);
   });
 
+  it("reads a finished item as done and still says what the last stage means", () => {
+    expect(
+      read("SENT", { PLACED: "day 1", PACKED: "day 2", SENT: "day 3" }),
+    ).toEqual([
+      ["PLACED", "done", "day 1", null],
+      ["PACKED", "done", "day 2", null],
+      ["SENT", "done", "day 3", "On its way."],
+    ]);
+  });
+
   it("leaves a reached stage nobody dated as its label alone", () => {
     expect(read("SENT", { PLACED: "day 1", SENT: "day 3" })).toEqual([
       ["PLACED", "done", "day 1", null],
       ["PACKED", "done", null, null],
-      ["SENT", "current", "day 3", "On its way."],
+      ["SENT", "done", "day 3", "On its way."],
     ]);
   });
 

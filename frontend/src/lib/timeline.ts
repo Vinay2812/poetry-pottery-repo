@@ -43,7 +43,7 @@ function toReachedIndex<Key extends string>({
   );
 }
 
-// Reached stages show only their date, the current one also says what it means, and later
+// Reached stages show only their date, the furthest one also says what it means, and later
 // ones say what will happen. A closed item shows only the stages it actually reached.
 export function toTimelineSteps<Key extends string>(
   input: TimelineInput<Key>,
@@ -62,13 +62,16 @@ export function toTimelineSteps<Key extends string>(
         state: "upcoming",
       };
     }
-    const isCurrent = index === reached && !input.isClosed;
+    // The furthest stage of an open item explains itself; once it is the last stage the
+    // item is finished, so it reads as done rather than in progress.
+    const isFurthest = index === reached && !input.isClosed;
+    const isFinished = index === input.stages.length - 1;
     return {
       key: stage.key,
       label: stage.label,
       date: input.dates[stage.key] ?? null,
-      note: isCurrent ? stage.description : null,
-      state: isCurrent ? "current" : "done",
+      note: isFurthest ? stage.description : null,
+      state: isFurthest && !isFinished ? "current" : "done",
     };
   });
 }

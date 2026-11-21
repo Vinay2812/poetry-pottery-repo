@@ -14,6 +14,7 @@ const STATE_FOR_READERS: Record<TimelineStep["state"], string> = {
 };
 
 // Shared by orders, wheel sessions and event bookings; steps come from toTimelineSteps.
+// Done is a filled square, the step in progress an outlined one, and what is ahead a pale one.
 export function Timeline({ steps, closedLabel }: TimelineProps) {
   const isClosed = closedLabel !== null;
   return (
@@ -28,7 +29,9 @@ export function Timeline({ steps, closedLabel }: TimelineProps) {
                 aria-hidden="true"
                 className={cn(
                   "size-2 shrink-0",
-                  isUpcoming ? "bg-ash" : isClosed ? "bg-smoke" : "bg-ink",
+                  step.state === "current" && "border border-ink",
+                  step.state === "done" && (isClosed ? "bg-smoke" : "bg-ink"),
+                  isUpcoming && "bg-ash",
                 )}
               />
               {hasLine && (

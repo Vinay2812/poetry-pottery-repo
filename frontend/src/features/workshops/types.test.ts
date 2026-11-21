@@ -334,7 +334,7 @@ describe("booking status helpers", () => {
     ]);
   });
 
-  it("gives the arrival instructions once confirmed", () => {
+  it("gives the arrival instructions once confirmed, as a finished step", () => {
     expect(
       readTimeline(RegistrationStatus.Confirmed, {
         PENDING: "12 Sept",
@@ -343,7 +343,7 @@ describe("booking status helpers", () => {
       }).at(-1),
     ).toEqual([
       "Confirmed",
-      "current",
+      "done",
       "14 Sept",
       "Paid and confirmed. Come in ten minutes early.",
     ]);
