@@ -69,7 +69,12 @@ export function EventCard({
           <p className="text-[13px] text-muted-foreground">
             {typeLabel} · {seatsLabel}
           </p>
-          <span className="shrink-0 text-[13px] tnum">{formatInr(price)}</span>
+          {/* A date that has run has no seat to price. */}
+          {!isPast && (
+            <span className="shrink-0 text-[13px] tnum">
+              {formatInr(price)}
+            </span>
+          )}
         </div>
       </div>
     </article>

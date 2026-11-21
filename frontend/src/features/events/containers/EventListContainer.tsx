@@ -154,20 +154,18 @@ export function EventListContainer({
               />
             ))}
           </EventGrid>
-          {pageInfo && (
+          {pageInfo?.has_more && (
             <div className="flex flex-col items-center gap-4 border-t border-ash py-10">
               <p className="text-[13px] text-muted-foreground tnum">
                 Showing {events.length} of {pageInfo.total}
               </p>
-              {pageInfo.has_more && (
-                <Button
-                  variant="outline"
-                  onClick={loadMore}
-                  disabled={isFetchingMore}
-                >
-                  {isFetchingMore ? "Loading…" : "Show more dates"}
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                onClick={loadMore}
+                disabled={isFetchingMore}
+              >
+                {isFetchingMore ? "Loading…" : "Show more dates"}
+              </Button>
             </div>
           )}
         </div>

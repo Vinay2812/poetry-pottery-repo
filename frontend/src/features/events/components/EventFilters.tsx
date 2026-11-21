@@ -128,10 +128,14 @@ export function EventFilters({
         </ChoiceGroup>
       </div>
 
+      {/* Wide screens keep the level's room so the row never shifts; phones give it back. */}
       <div
         aria-hidden={!isLevelShown}
         inert={!isLevelShown}
-        className={cn("md:w-44", !isLevelShown && "invisible")}
+        className={cn(
+          "md:w-44",
+          !isLevelShown && "hidden md:invisible md:block",
+        )}
       >
         <Select
           value={level ?? ANY_LEVEL}
