@@ -1,15 +1,18 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { Toaster as Sonner } from "sonner";
 
-// Bottom-right on a desktop so a toast lands under the cart it talks about;
-// sonner goes full width on a phone, clear of the bottom nav.
+// Storefront: bottom-right on a desktop so a toast lands under the cart it talks
+// about; sonner goes full width on a phone, clear of the bottom nav.
+// Admin: top centre, because long forms pin Save and Cancel to the bottom.
 export function Toaster() {
+  const isAdmin = usePathname().startsWith("/dashboard");
   return (
     <Sonner
-      position="bottom-right"
-      offset={{ bottom: 24, right: 24 }}
-      mobileOffset={{ bottom: 80 }}
+      position={isAdmin ? "top-center" : "bottom-right"}
+      offset={isAdmin ? { top: 16 } : { bottom: 24, right: 24 }}
+      mobileOffset={isAdmin ? { top: 16 } : { bottom: 80 }}
       duration={3500}
       containerAriaLabel="Studio notices"
       toastOptions={{
