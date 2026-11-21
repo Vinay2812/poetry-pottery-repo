@@ -36,11 +36,11 @@ export function CommissionSent({
         <dl className="flex flex-col gap-2 text-[15px]">
           <div className="flex gap-3">
             <dt className="w-24 shrink-0 text-muted-foreground">Piece</dt>
-            <dd>{summary}</dd>
+            <dd className="min-w-0 wrap-anywhere">{summary}</dd>
           </div>
           <div className="flex gap-3">
             <dt className="w-24 shrink-0 text-muted-foreground">Reference</dt>
-            <dd className="tnum">{reference}</dd>
+            <dd className="min-w-0 wrap-anywhere tnum">{reference}</dd>
           </div>
         </dl>
         {askUrl && (

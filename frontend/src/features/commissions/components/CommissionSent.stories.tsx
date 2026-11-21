@@ -23,6 +23,14 @@ export const Sent: Story = {};
 
 export const WithoutWhatsApp: Story = { args: { askUrl: null } };
 
+// Both are typed by the customer, up to 60 characters each, so neither may push the page wide.
+export const LongPieceAndSize: Story = {
+  args: {
+    summary: `${"Lidded jar with a carved band and a twisted handle".padEnd(60, "s")} · ${"x".repeat(60)} · Forest Green`,
+    email: "a.very.long.address.for.wrapping.checks@example-studio-domain.com",
+  },
+};
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };
