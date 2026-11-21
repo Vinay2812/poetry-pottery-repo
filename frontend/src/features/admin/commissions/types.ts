@@ -1,5 +1,7 @@
 import { CommissionStatus } from "@/graphql/generated/graphql";
 
+import { toWhatsAppDigits } from "@/lib/whatsapp";
+
 import { formatEnumLabel } from "@/features/admin/shell";
 import type { AdminStatusTone } from "@/features/admin/ui";
 
@@ -99,9 +101,8 @@ export function toWhatsAppHref(
   name: string,
   pieceType: string,
 ): string | null {
-  const digits = phone?.replace(/\D/g, "") ?? "";
-  if (digits.length < 10) return null;
-  const number = digits.length === 10 ? `91${digits}` : digits;
+  const number = toWhatsAppDigits(phone ?? "");
+  if (number.length < 10) return null;
   const text = `Hi ${name}, thanks for the ${pieceType.toLowerCase()} brief. A few thoughts from the studio:`;
   return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
 }

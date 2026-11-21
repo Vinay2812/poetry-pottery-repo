@@ -192,14 +192,22 @@ describe("siteSettingsSchema", () => {
     ).toBe(true);
   });
 
-  it("asks for the country code on the WhatsApp number", () => {
+  it("accepts a legacy WhatsApp number without the country code", () => {
+    expect(
+      siteSettingsSchema.safeParse(
+        settingsValues({ whatsapp_number: "9876543210" }),
+      ).success,
+    ).toBe(true);
+  });
+
+  it("refuses a WhatsApp number that is not 10 digits", () => {
     expect(
       firstError(
         siteSettingsSchema.safeParse(
-          settingsValues({ whatsapp_number: "9876543210" }),
+          settingsValues({ whatsapp_number: "98765" }),
         ),
       ),
-    ).toBe("WhatsApp number needs 91 in front, like 91 98765 43210");
+    ).toBe("WhatsApp number must be a valid 10-digit phone number");
   });
 
   it("rejects an invalid email", () => {

@@ -8,6 +8,7 @@ import {
 
 import { formatInr } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
+import { toWhatsAppDigits } from "@/lib/whatsapp";
 
 import { buildWhatsAppUrl } from "@/features/layout/types";
 
@@ -485,7 +486,7 @@ export function toArchiveAskUrl(
   productName: string,
   productUrl: string,
 ): string | null {
-  const digits = whatsappNumber.replace(/\D/g, "");
+  const digits = toWhatsAppDigits(whatsappNumber);
   if (!digits) return null;
   return buildWhatsAppUrl(
     whatsappNumber,
@@ -497,7 +498,7 @@ export function toGlazeAskUrl(
   whatsappNumber: string,
   productName: string,
 ): string | null {
-  const digits = whatsappNumber.replace(/\D/g, "");
+  const digits = toWhatsAppDigits(whatsappNumber);
   if (!digits) return null;
   const text = `Hi, about the ${productName} \u2014 could I have it in another glaze or size?`;
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;

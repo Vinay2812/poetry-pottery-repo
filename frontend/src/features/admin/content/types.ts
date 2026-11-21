@@ -6,6 +6,7 @@ import type {
 } from "@/graphql/generated/graphql";
 
 import { formatDateTime } from "@/lib/format";
+import { toStoredWhatsAppNumber } from "@/lib/whatsapp";
 import {
   type AnnouncementFormValues,
   type ContentPageFormValues,
@@ -131,7 +132,7 @@ export function toSettingsPatch(
   return {
     contact_email: values.contact_email,
     contact_phone: values.contact_phone,
-    whatsapp_number: values.whatsapp_number,
+    whatsapp_number: toStoredWhatsAppNumber(values.whatsapp_number),
     address: values.address,
     opening_hours: values.opening_hours,
     instagram_url: values.instagram_url,

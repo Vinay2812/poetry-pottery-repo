@@ -35,6 +35,12 @@ describe("buildWhatsAppUrl", () => {
       "https://wa.me/919123456789?text=Hi%20there",
     );
   });
+
+  it("puts 91 in front of a legacy 10-digit number", () => {
+    expect(buildWhatsAppUrl("91234 56789", "Hi")).toBe(
+      "https://wa.me/919123456789?text=Hi",
+    );
+  });
 });
 
 describe("toWhatsAppBody", () => {

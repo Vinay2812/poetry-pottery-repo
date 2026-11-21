@@ -116,6 +116,14 @@ describe("settings form values", () => {
     expect(input.hero_image_url).toBe("https://cdn.example.com/hero.jpg");
   });
 
+  it("saves a legacy 10-digit WhatsApp number with 91 in front", () => {
+    const values = toSettingsFormValues({
+      ...settings,
+      whatsapp_number: "98765 43210",
+    });
+    expect(toSettingsInput(values, null).whatsapp_number).toBe("919876543210");
+  });
+
   it("sends an empty string when the hero image is cleared", () => {
     expect(
       toSettingsInput(toSettingsFormValues(settings), null).hero_image_url,
