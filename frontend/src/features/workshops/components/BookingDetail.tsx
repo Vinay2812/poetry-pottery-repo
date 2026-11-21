@@ -82,13 +82,13 @@ export function BookingDetail({
 
       {isJustPlaced && (
         <section className="flex flex-col gap-3 border border-ash bg-white p-6 md:p-8">
-          {/* The wheel is only held once the studio says so, which is the next step. */}
           <h2 className="font-heading text-2xl tracking-tight md:text-3xl">
             We have your request
           </h2>
           <p className="max-w-xl text-[15px] text-muted-foreground">
-            Send us a message and we will confirm your wheel and share payment
-            details, or wait for ours within a day.
+            Your hours are kept for you while we confirm. Send us a message and
+            we will confirm the session and share payment details, or wait for
+            ours within a day.
           </p>
           {whatsappUrl && (
             <Button className="w-fit" asChild>
@@ -98,7 +98,7 @@ export function BookingDetail({
                 reference={bookingId}
               >
                 <MessageCircle className="size-4" strokeWidth={1.5} />
-                Confirm on WhatsApp
+                Message us on WhatsApp
               </WhatsAppLink>
             </Button>
           )}
