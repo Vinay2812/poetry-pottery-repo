@@ -9,6 +9,7 @@ export type StudioWheel = Pick<
   | "closing_minutes"
   | "slot_minutes"
   | "slot_span_days"
+  | "booking_window_days"
   | "closed_weekdays"
   | "tiers"
 >;
@@ -138,14 +139,34 @@ export function toStudioOffer(tiers: StudioWheel["tiers"]): string | null {
   return `Book ${first} or more.`;
 }
 
-// Tiers one booking can actually hold: the slots a tier needs (rounded up, as the
-// scheduler does) must fit in a day's slots times the days a booking may span.
+// The most open weekdays in any run of consecutive days, wrapping round the week.
+export function mostOpenDaysInRun(
+  closedWeekdays: readonly number[],
+  runDays: number,
+): number {
+  const closed = new Set(closedWeekdays);
+  let most = 0;
+  for (let first = 0; first < 7; first += 1) {
+    let open = 0;
+    for (let offset = 0; offset < runDays; offset += 1) {
+      if (!closed.has((first + offset) % 7)) open += 1;
+    }
+    most = Math.max(most, open);
+  }
+  return most;
+}
+
+// Tiers one booking can actually hold: the slots a tier needs must fit in a day's
+// slots times the open days a span can reach inside the booking window.
 export function toBookableTiers(wheel: StudioWheel): StudioWheel["tiers"] {
   if (wheel.slot_minutes <= 0) return [];
   const slotsPerDay = Math.floor(
     (wheel.closing_minutes - wheel.opening_minutes) / wheel.slot_minutes,
   );
-  const capacity = Math.max(0, slotsPerDay) * wheel.slot_span_days;
+  const runDays = Math.min(wheel.slot_span_days, wheel.booking_window_days + 1);
+  const capacity =
+    Math.max(0, slotsPerDay) *
+    mostOpenDaysInRun(wheel.closed_weekdays, runDays);
   return wheel.tiers.filter(
     (tier) => slotsNeeded(tier.hours, wheel.slot_minutes) <= capacity,
   );

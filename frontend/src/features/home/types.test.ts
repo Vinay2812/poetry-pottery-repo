@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   type StudioWheel,
+  mostOpenDaysInRun,
   toBookableTiers,
   toStudioDaysLabel,
   toStudioHoursLabel,
@@ -25,6 +26,7 @@ function wheel(
     closing_minutes: 1140,
     slot_minutes: 60,
     slot_span_days: 1,
+    booking_window_days: 60,
     closed_weekdays: closedWeekdays,
     tiers: tierHours.map((hours) => tier(hours)),
   };
@@ -109,16 +111,36 @@ describe("toStudioOffer", () => {
 });
 
 // 1 to 2 pm in hour slots: one slot a day.
-function shortDay(tierHours: number[], spanDays = 1): StudioWheel {
+function shortDay(
+  tierHours: number[],
+  spanDays = 1,
+  closedWeekdays: number[] = [],
+): StudioWheel {
   return {
     opening_minutes: 780,
     closing_minutes: 840,
     slot_minutes: 60,
     slot_span_days: spanDays,
-    closed_weekdays: [],
+    booking_window_days: 60,
+    closed_weekdays: closedWeekdays,
     tiers: tierHours.map((hours) => tier(hours)),
   };
 }
+
+describe("mostOpenDaysInRun", () => {
+  it("counts open days in the best run, wrapping round the week", () => {
+    expect(mostOpenDaysInRun([], 2)).toBe(2);
+    expect(mostOpenDaysInRun([1], 3)).toBe(3);
+    // Open Saturday and Sunday only: the run from Saturday wraps into Sunday.
+    expect(mostOpenDaysInRun([1, 2, 3, 4, 5], 2)).toBe(2);
+    expect(mostOpenDaysInRun([0, 1, 2, 3, 4, 5], 2)).toBe(1);
+  });
+
+  it("counts nothing for an empty run or a shut week", () => {
+    expect(mostOpenDaysInRun([], 0)).toBe(0);
+    expect(mostOpenDaysInRun([0, 1, 2, 3, 4, 5, 6], 3)).toBe(0);
+  });
+});
 
 describe("toBookableTiers", () => {
   it("keeps every tier a full day can hold", () => {
@@ -139,6 +161,20 @@ describe("toBookableTiers", () => {
     const longDay = { ...wheel([]), slot_minutes: 90 };
     // 6 hours fit four 90-minute slots: 1 hour needs one, 3 hours need two.
     expect(toBookableTiers(longDay).map((t) => t.hours)).toEqual([1, 2, 3]);
+  });
+
+  it("counts only open days inside the span", () => {
+    // Saturdays only: a two-day span still reaches one open day.
+    const saturdays = shortDay([1, 2], 2, [0, 1, 2, 3, 4, 5]);
+    expect(toBookableTiers(saturdays).map((t) => t.hours)).toEqual([1]);
+    // A weekend wheel's span reaches both days.
+    const weekends = shortDay([1, 2], 2, [1, 2, 3, 4, 5]);
+    expect(toBookableTiers(weekends).map((t) => t.hours)).toEqual([1, 2]);
+  });
+
+  it("stops the span at the end of the booking window", () => {
+    const sameDayOnly = { ...shortDay([1, 2], 2), booking_window_days: 0 };
+    expect(toBookableTiers(sameDayOnly).map((t) => t.hours)).toEqual([1]);
   });
 
   it("holds nothing with a zero slot length", () => {
