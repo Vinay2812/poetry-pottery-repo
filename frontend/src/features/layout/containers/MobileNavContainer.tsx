@@ -5,7 +5,7 @@ import { useMemo } from "react";
 
 import { useCartCount } from "@/features/cart/hooks";
 import { MobileNav } from "@/features/layout/components/MobileNav";
-import { isActivePath, toFocusedHeader } from "@/features/layout/types";
+import { isActivePath, isFocusedPath } from "@/features/layout/types";
 
 const MOBILE_HREFS = ["/", "/products", "/workshops", "/cart"];
 
@@ -17,7 +17,12 @@ export function MobileNavContainer() {
     [pathname],
   );
 
-  // Checkout strips the header to one way back, so the tab bar steps aside too.
-  if (toFocusedHeader(pathname)) return null;
-  return <MobileNav activeHref={activeHref} cartCount={cartCount} />;
+  // Checkout strips the header to one way back, so the tab bar and the room kept for it step aside too.
+  if (isFocusedPath(pathname)) return null;
+  return (
+    <>
+      <div aria-hidden="true" className="box-content h-16 pb-safe lg:hidden" />
+      <MobileNav activeHref={activeHref} cartCount={cartCount} />
+    </>
+  );
 }

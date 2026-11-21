@@ -62,6 +62,11 @@ export function toFocusedHeader(pathname: string): NavLink | null {
   return null;
 }
 
+// Focused routes drop the nav and the phone tab bar, leaving one way back.
+export function isFocusedPath(pathname: string): boolean {
+  return toFocusedHeader(pathname) !== null;
+}
+
 export function buildWhatsAppUrl(number: string, text: string): string {
   const digits = number.replace(/\D/g, "");
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;

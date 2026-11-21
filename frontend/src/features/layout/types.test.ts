@@ -4,6 +4,7 @@ import {
   buildWhatsAppUrl,
   formatBadgeCount,
   isActivePath,
+  isFocusedPath,
   toCartAnnouncement,
   toFocusedHeader,
   toWhatsAppBody,
@@ -54,6 +55,14 @@ describe("formatBadgeCount", () => {
   it("caps at 9+", () => {
     expect(formatBadgeCount(3)).toBe("3");
     expect(formatBadgeCount(12)).toBe("9+");
+  });
+});
+
+describe("isFocusedPath", () => {
+  it("is true on checkout only", () => {
+    expect(isFocusedPath("/checkout")).toBe(true);
+    expect(isFocusedPath("/cart")).toBe(false);
+    expect(isFocusedPath("/")).toBe(false);
   });
 });
 

@@ -45,7 +45,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
         <main
           id="main"
           tabIndex={-1}
-          className="flex flex-1 flex-col pb-16 focus:outline-none lg:pb-0"
+          className="flex flex-1 flex-col focus:outline-none"
         >
           {children}
         </main>

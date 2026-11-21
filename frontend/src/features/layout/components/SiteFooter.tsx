@@ -77,7 +77,7 @@ export function SiteFooter({
   return (
     <footer
       data-print="hide"
-      className="mt-20 border-t border-ash bg-background pb-20 lg:pb-0"
+      className="mt-20 border-t border-ash bg-background"
     >
       <PageShell className="py-12 md:py-16">
         {/* The column headings are h3s; this is the h2 they hang from. */}
