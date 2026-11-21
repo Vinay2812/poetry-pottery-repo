@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { toPotteryIconKind } from "@/components/icons/pottery";
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
-import { formatInr } from "@/lib/format";
+import { formatInr, pluralize } from "@/lib/format";
 
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 import type { StatusTone } from "@/features/orders/types";
@@ -68,7 +68,7 @@ export function OrderCard({
       </div>
       <div className="flex items-center justify-between border-t border-ash pt-3 text-sm">
         <span className="text-muted-foreground">
-          {itemCount} {itemCount === 1 ? "piece" : "pieces"}
+          {pluralize(itemCount, "piece")}
         </span>
         <span className="tnum">{formatInr(total)}</span>
       </div>

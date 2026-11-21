@@ -5,6 +5,7 @@ import { OrderStatus } from "@/graphql/generated/graphql";
 import {
   applyOrderCancellation,
   ORDER_STAGES,
+  ORDERS_PAGE_CODEC,
   isClosed,
   showsPlacedBanner,
   type OrderData,
@@ -14,6 +15,7 @@ import {
   toStatusLabel,
   toStatusTone,
   toOrderPath,
+  toPageNumber,
   toClosedLabel,
   toTimelineSteps,
   toWhatsAppOrderMessage,
@@ -125,6 +127,21 @@ describe("toClosedLabel", () => {
     expect(toClosedLabel("Cancelled", "16 Sept", "  ")).toBe(
       "Cancelled on 16 Sept",
     );
+  });
+});
+
+describe("orders page in the URL", () => {
+  it("reads only whole page numbers past the first", () => {
+    expect(toPageNumber("3")).toBe(3);
+    for (const raw of [null, "", "1", "0", "-2", "2.5", "two"]) {
+      expect(toPageNumber(raw)).toBe(1);
+    }
+  });
+
+  it("leaves the first page off the query string", () => {
+    expect(ORDERS_PAGE_CODEC.serialize(1)).toBe("");
+    expect(ORDERS_PAGE_CODEC.serialize(2)).toBe("page=2");
+    expect(ORDERS_PAGE_CODEC.parse(new URLSearchParams("page=2"))).toBe(2);
   });
 });
 

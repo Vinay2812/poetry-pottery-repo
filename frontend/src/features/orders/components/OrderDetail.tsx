@@ -1,4 +1,5 @@
-import { MessageCircle } from "lucide-react";
+import { ArrowLeft, MessageCircle } from "lucide-react";
+import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
@@ -95,6 +96,14 @@ export function OrderDetail({
   const OrderHeading = isJustPlaced ? "h2" : "h1";
   return (
     <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
+      <Link
+        href="/orders"
+        data-print="hide"
+        className="-my-2 flex w-fit items-center gap-1.5 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+      >
+        <ArrowLeft aria-hidden="true" className="size-3.5" strokeWidth={1.5} />
+        All orders
+      </Link>
       {isJustPlaced && (
         <OrderPlacedBanner
           orderId={orderId}

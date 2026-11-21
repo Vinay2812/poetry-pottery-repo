@@ -3,7 +3,22 @@ import {
   OrderStatus,
 } from "@/graphql/generated/graphql";
 
+import type { UrlCodec } from "@/lib/use-url-state";
+
 export type OrderData = OrderFieldsFragment;
+
+// Anything that is not a whole page number past the first means the first page.
+export function toPageNumber(raw: string | null): number {
+  const page = Number(raw);
+  return Number.isInteger(page) && page > 1 ? page : 1;
+}
+
+// The orders list keeps its page in the address bar, so back and refresh land where you were.
+export const ORDERS_PAGE_CODEC: UrlCodec<number, number> = {
+  parse: (search) => toPageNumber(search.get("page")),
+  serialize: (page) => (page > 1 ? `page=${page}` : ""),
+  apply: (_current, next) => next,
+};
 
 // One stage of a progress timeline, worded twice: as it reads once it has happened and as
 // a promise while it is still ahead.
