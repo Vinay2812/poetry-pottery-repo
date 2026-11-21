@@ -49,6 +49,8 @@ vi.mock("@/config/env", async () => {
       R2_BUCKET: "poetry-media",
       // The trailing slash is deliberate: the service has to trim it.
       R2_PUBLIC_URL: "https://media.poetry.test/",
+      // A local .env may point at an emulator; these specs start from Cloudflare.
+      R2_ENDPOINT: "",
     }),
   };
 });
