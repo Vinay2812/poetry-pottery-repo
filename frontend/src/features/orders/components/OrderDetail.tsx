@@ -1,7 +1,7 @@
-import { ArrowLeft, MessageCircle } from "lucide-react";
-import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { BackLink } from "@/components/layout/BackLink";
 import { PageShell } from "@/components/layout/PageShell";
 import { SectionLabel } from "@/components/layout/SectionLabel";
 
@@ -94,14 +94,7 @@ export function OrderDetail({
   const OrderHeading = isJustPlaced ? "h2" : "h1";
   return (
     <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
-      <Link
-        href="/orders"
-        data-print="hide"
-        className="-my-2 flex w-fit items-center gap-1.5 py-2 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ArrowLeft aria-hidden="true" className="size-3.5" strokeWidth={1.5} />
-        All orders
-      </Link>
+      <BackLink href="/orders" label="All orders" />
       {isJustPlaced && (
         <OrderPlacedBanner
           orderId={orderId}
@@ -118,9 +111,11 @@ export function OrderDetail({
       )}
 
       <header className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <p className="text-[13px] text-muted-foreground">Placed {placedOn}</p>
-          <OrderHeading className="font-heading text-2xl tracking-tight md:text-4xl">
+        <div className="flex flex-col gap-2">
+          <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+            Placed {placedOn}
+          </p>
+          <OrderHeading className="font-heading text-3xl tracking-tight md:text-5xl">
             Order <span className="tnum">{orderId}</span>
           </OrderHeading>
         </div>

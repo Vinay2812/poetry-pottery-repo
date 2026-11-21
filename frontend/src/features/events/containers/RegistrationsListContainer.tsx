@@ -86,7 +86,7 @@ export function RegistrationsListContainer({
       <h1
         ref={headingRef}
         tabIndex={-1}
-        className="font-heading text-4xl leading-tight tracking-tight focus:outline-none md:text-6xl"
+        className="font-heading text-3xl tracking-tight focus:outline-none md:text-5xl"
       >
         Your events
       </h1>
