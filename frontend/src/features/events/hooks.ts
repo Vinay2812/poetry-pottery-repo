@@ -66,9 +66,14 @@ export function useEvents(
     data?.events ?? (error ? undefined : (previousData?.events ?? serverPage));
   const pageInfo = result?.page_info ?? null;
 
+  // A failed "show more" leaves the cards as they were, so only this hook can say it failed.
+  // It belongs to one set of filters; a new set starts clean.
+  const filterKey = toEventsFilterKey(filterInput);
+  const [failedMoreKey, setFailedMoreKey] = useState<string | null>(null);
   const loadMore = useCallback(() => {
     if (!pageInfo?.has_more || loading) return;
-    void fetchMore({
+    setFailedMoreKey(null);
+    fetchMore({
       variables: { filter: toEventsFilterInput(filters, pageInfo.page + 1) },
       updateQuery: (previous, { fetchMoreResult }) => ({
         events: {
@@ -76,8 +81,8 @@ export function useEvents(
           items: [...previous.events.items, ...fetchMoreResult.events.items],
         },
       }),
-    });
-  }, [fetchMore, filters, loading, pageInfo]);
+    }).catch(() => setFailedMoreKey(filterKey));
+  }, [fetchMore, filterKey, filters, loading, pageInfo]);
 
   return {
     events: result?.items ?? [],
@@ -85,6 +90,7 @@ export function useEvents(
     isInitialLoading: loading && !result,
     isFetchingMore: loading && Boolean(result),
     hasError: Boolean(error) && !result,
+    hasMoreFailed: failedMoreKey === filterKey,
     loadMore,
     refetch,
   };

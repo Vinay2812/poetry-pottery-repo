@@ -60,6 +60,7 @@ export function EventListContainer({
     isInitialLoading,
     isFetchingMore,
     hasError,
+    hasMoreFailed,
     loadMore,
     refetch,
   } = useEvents(filters, initialEvents, initialFilterKey);
@@ -167,12 +168,21 @@ export function EventListContainer({
               <p className="text-[13px] text-muted-foreground tnum">
                 Showing {events.length} of {pageInfo.total}
               </p>
+              {hasMoreFailed && !isFetchingMore && (
+                <p role="alert" className="text-[13px] text-muted-foreground">
+                  More dates did not load.
+                </p>
+              )}
               <Button
                 variant="outline"
                 onClick={loadMore}
                 disabled={isFetchingMore}
               >
-                {isFetchingMore ? "Loading…" : "Show more dates"}
+                {isFetchingMore
+                  ? "Loading…"
+                  : hasMoreFailed
+                    ? "Try again"
+                    : "Show more dates"}
               </Button>
             </div>
           )}
