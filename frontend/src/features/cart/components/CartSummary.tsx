@@ -25,7 +25,8 @@ export function CartSummary({
   shippingNote,
 }: CartSummaryProps) {
   return (
-    <div className="flex flex-col gap-5 border-t border-ash pt-5">
+    // Below lg the last cart line's rule already sits above the summary, so it draws its own only beside the lines.
+    <div className="flex flex-col gap-5 lg:border-t lg:border-ash lg:pt-5">
       <h2 className="font-heading text-xl tracking-tight">Summary</h2>
       <dl className="flex flex-col">
         <div className={ROW}>
