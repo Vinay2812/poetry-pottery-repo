@@ -18,9 +18,10 @@ export interface FaqAccordionProps {
 }
 
 // Several answers can stay open, so opening one never yanks another shut under the reader.
+// No rule under the last question: the next section's top rule closes the group.
 export function FaqAccordion({ idPrefix, items }: FaqAccordionProps) {
   return (
-    <Accordion type="multiple" className="border-y border-ash">
+    <Accordion type="multiple" className="border-t border-ash">
       {items.map((item, index) => (
         <AccordionItem
           key={index}
