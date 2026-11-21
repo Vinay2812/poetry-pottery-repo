@@ -36,10 +36,11 @@ function TextField({
         id={id}
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
         {...registration}
       />
       {error && (
-        <p role="alert" className="text-xs text-destructive">
+        <p id={`${id}-error`} role="alert" className="text-xs text-destructive">
           {error}
         </p>
       )}
@@ -105,10 +106,15 @@ export function VisitForm({
           rows={3}
           maxLength={MAX_VISIT_NOTE}
           aria-invalid={Boolean(errors.note)}
+          aria-describedby={errors.note ? "visit-note-error" : undefined}
           {...register("note")}
         />
         {errors.note?.message && (
-          <p role="alert" className="text-xs text-destructive">
+          <p
+            id="visit-note-error"
+            role="alert"
+            className="text-xs text-destructive"
+          >
             {errors.note.message}
           </p>
         )}

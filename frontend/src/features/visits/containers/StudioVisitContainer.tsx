@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -31,6 +31,12 @@ export function StudioVisitContainer() {
   const [pickedWindow, setPickedWindow] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const confirmationRef = useRef<HTMLDivElement>(null);
+
+  // The picker folds to one line once booked; focus keeps that line on screen, on phones too.
+  useEffect(() => {
+    if (confirmation) confirmationRef.current?.focus();
+  }, [confirmation]);
 
   const { data, previousData, loading, error, refetch } = useQuery(
     StudioVisitAvailabilityDocument,
@@ -109,7 +115,15 @@ export function StudioVisitContainer() {
   );
 
   if (confirmation) {
-    return <ConfirmationLine text={confirmation} />;
+    return (
+      <div
+        ref={confirmationRef}
+        tabIndex={-1}
+        className="max-w-xl focus:outline-none"
+      >
+        <ConfirmationLine text={confirmation} />
+      </div>
+    );
   }
 
   if (loading && days.length === 0) {

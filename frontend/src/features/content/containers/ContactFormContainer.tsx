@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMutation } from "@apollo/client/react";
 import { SendContactMessageDocument } from "@/graphql/generated/graphql";
@@ -13,6 +13,12 @@ export function ContactFormContainer() {
   const [isSent, setIsSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [send, { loading }] = useMutation(SendContactMessageDocument);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // The form folds to one line once sent; focus keeps that line on screen, on phones too.
+  useEffect(() => {
+    if (isSent) panelRef.current?.focus();
+  }, [isSent]);
 
   const handleSubmit = useCallback(
     async (values: ContactFormValues) => {
@@ -43,11 +49,13 @@ export function ContactFormContainer() {
   );
 
   return (
-    <ContactForm
-      isSent={isSent}
-      isSubmitting={loading}
-      errorMessage={errorMessage}
-      onSubmit={(values) => void handleSubmit(values)}
-    />
+    <div ref={panelRef} tabIndex={-1} className="focus:outline-none">
+      <ContactForm
+        isSent={isSent}
+        isSubmitting={loading}
+        errorMessage={errorMessage}
+        onSubmit={(values) => void handleSubmit(values)}
+      />
+    </div>
   );
 }

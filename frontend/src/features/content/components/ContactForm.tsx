@@ -36,10 +36,11 @@ function TextField({
         id={id}
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
         {...registration}
       />
       {error && (
-        <p role="alert" className="text-xs text-destructive">
+        <p id={`${id}-error`} role="alert" className="text-xs text-destructive">
           {error}
         </p>
       )}
@@ -123,10 +124,17 @@ export function ContactForm({
           className="min-h-40"
           maxLength={MAX_MESSAGE}
           aria-invalid={Boolean(errors.message)}
+          aria-describedby={
+            errors.message ? "contact-message-error" : undefined
+          }
           {...register("message")}
         />
         {errors.message?.message && (
-          <p role="alert" className="text-xs text-destructive">
+          <p
+            id="contact-message-error"
+            role="alert"
+            className="text-xs text-destructive"
+          >
             {errors.message.message}
           </p>
         )}
