@@ -1,6 +1,7 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
+import { useCallback, useEffect, useRef } from "react";
 
 import { LoadFailed } from "@/components/layout/LoadFailed";
 import { PageShell } from "@/components/layout/PageShell";
@@ -31,6 +32,29 @@ export function AddressBookContainer() {
     submit,
   } = useAddressBook();
   const { openSignIn } = useClerk();
+
+  // The card unmounts while its editor is open, so focus goes back to its Edit button on close.
+  const editButtons = useRef(new Map<number, HTMLButtonElement>());
+  const returnFocusToId = useRef<number | null>(null);
+  const handleEdit = useCallback(
+    (id: number) => {
+      returnFocusToId.current = id;
+      openEdit(id);
+    },
+    [openEdit],
+  );
+  useEffect(() => {
+    if (editingId !== null || returnFocusToId.current === null) return;
+    editButtons.current.get(returnFocusToId.current)?.focus();
+    returnFocusToId.current = null;
+  }, [editingId]);
+  const toEditButtonRef = useCallback(
+    (id: number) => (node: HTMLButtonElement | null) => {
+      if (node) editButtons.current.set(id, node);
+      else editButtons.current.delete(id);
+    },
+    [],
+  );
 
   return (
     <PageShell column="narrow" className="flex flex-col gap-6 py-8 md:py-12">
@@ -95,7 +119,8 @@ export function AddressBookContainer() {
                 isDefault={address.is_default}
                 isSelected={false}
                 isSelectable={false}
-                onEdit={() => openEdit(address.id)}
+                onEdit={() => handleEdit(address.id)}
+                editButtonRef={toEditButtonRef(address.id)}
                 onDelete={() => void remove(address.id)}
                 onMakeDefault={() => void setDefault(address.id)}
               />

@@ -23,6 +23,7 @@ interface TextFieldProps {
   registration: UseFormRegisterReturn;
   type?: "text" | "tel";
   inputMode?: "text" | "tel" | "numeric";
+  autoFocus?: boolean;
   className?: string;
 }
 
@@ -34,6 +35,7 @@ function TextField({
   registration,
   type = "text",
   inputMode,
+  autoFocus = false,
   className,
 }: TextFieldProps) {
   const errorId = `${id}-error`;
@@ -47,6 +49,7 @@ function TextField({
         type={type}
         inputMode={inputMode}
         autoComplete={autoComplete}
+        autoFocus={autoFocus}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
         {...registration}
@@ -98,6 +101,8 @@ export function AddressForm({
           id="address-name"
           label="Full name"
           autoComplete="name"
+          // The form only opens on a click, so typing can start where the button was.
+          autoFocus
           error={errors.name?.message}
           registration={register("name")}
         />
