@@ -98,7 +98,7 @@ export function EventRegistrationsTable({
                     disabled={isLocked || busyId !== null}
                     onClick={() => onAction(row.id, status)}
                   >
-                    {registrationActionLabel(status)}
+                    {registrationActionLabel(status, "seat")}
                   </Button>
                 ))}
               </div>

@@ -204,7 +204,9 @@ export function EventRegistrationsContainer({
         value={move.reason}
         error={move.error}
         confirmLabel={
-          move.target ? registrationActionLabel(move.target.status) : "Confirm"
+          move.target
+            ? registrationActionLabel(move.target.status, "seat")
+            : "Confirm"
         }
         isDestructive
         isRequired

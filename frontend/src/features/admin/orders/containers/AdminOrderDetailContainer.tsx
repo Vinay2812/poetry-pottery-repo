@@ -26,11 +26,11 @@ import { Button } from "@/components/ui/button";
 
 import { toProductPath } from "@/features/products/types";
 
-import { formatEnumLabel } from "@/features/admin/shell";
 import {
   AdminPageHeader,
   AdminReasonDialog,
   AdminStatusPill,
+  orderStatusLabel,
   orderStatusTone,
   toPersonName,
 } from "@/features/admin/ui";
@@ -184,8 +184,7 @@ export function AdminOrderDetailContainer({
     },
     requiredMessage: "Say why this order is being cancelled",
     messages: {
-      success: ({ target }) =>
-        `Order is now ${formatEnumLabel(target).toLowerCase()}`,
+      success: ({ target }) => `Order updated: ${orderStatusLabel(target)}`,
       failure: "The order could not be moved",
     },
   });
@@ -276,7 +275,7 @@ export function AdminOrderDetailContainer({
         actions={
           <>
             <AdminStatusPill
-              label={formatEnumLabel(order.status)}
+              label={orderStatusLabel(order.status)}
               tone={orderStatusTone(order.status)}
             />
             <Button asChild type="button" variant="secondary" size="sm">

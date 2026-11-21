@@ -47,6 +47,79 @@ export function eventStatusTone(status: EventStatus): AdminStatusTone {
   return EVENT_TONE[status];
 }
 
+// Each label names the same state the shopper reads, in the order things happen.
+const ORDER_LABEL: Record<OrderStatus, string> = {
+  [OrderStatus.Pending]: "Awaiting confirmation",
+  [OrderStatus.Confirmed]: "Awaiting payment",
+  [OrderStatus.Paid]: "Paid",
+  [OrderStatus.Shipped]: "Shipped",
+  [OrderStatus.Delivered]: "Delivered",
+  [OrderStatus.Cancelled]: "Cancelled",
+  [OrderStatus.Refunded]: "Refunded",
+};
+
+export function orderStatusLabel(status: OrderStatus): string {
+  return ORDER_LABEL[status];
+}
+
+/** What an approved booking holds: a wheel for a session, seats for an event. */
+export type RegistrationHold = "wheel" | "seat";
+
+const REGISTRATION_LABEL: Record<
+  Exclude<RegistrationStatus, RegistrationStatus.Approved>,
+  string
+> = {
+  [RegistrationStatus.Pending]: "Awaiting approval",
+  [RegistrationStatus.Confirmed]: "Paid, confirmed",
+  [RegistrationStatus.Rejected]: "Turned down",
+  [RegistrationStatus.Cancelled]: "Cancelled",
+};
+
+const HELD_LABEL: Record<RegistrationHold, string> = {
+  wheel: "Wheel held, awaiting payment",
+  seat: "Seat held, awaiting payment",
+};
+
+export function registrationStatusLabel(
+  status: RegistrationStatus,
+  hold: RegistrationHold,
+): string {
+  if (status === RegistrationStatus.Approved) return HELD_LABEL[hold];
+  return REGISTRATION_LABEL[status];
+}
+
+const ORDER_FLOW: OrderStatus[] = [
+  OrderStatus.Pending,
+  OrderStatus.Confirmed,
+  OrderStatus.Paid,
+  OrderStatus.Shipped,
+  OrderStatus.Delivered,
+  OrderStatus.Cancelled,
+  OrderStatus.Refunded,
+];
+
+const REGISTRATION_FLOW: RegistrationStatus[] = [
+  RegistrationStatus.Pending,
+  RegistrationStatus.Approved,
+  RegistrationStatus.Confirmed,
+  RegistrationStatus.Rejected,
+  RegistrationStatus.Cancelled,
+];
+
+/** Status filters list the states in the order they happen, in the words the pills use. */
+export function orderStatusOptions(): { value: string; label: string }[] {
+  return ORDER_FLOW.map((value) => ({ value, label: orderStatusLabel(value) }));
+}
+
+export function registrationStatusOptions(
+  hold: RegistrationHold,
+): { value: string; label: string }[] {
+  return REGISTRATION_FLOW.map((value) => ({
+    value,
+    label: registrationStatusLabel(value, hold),
+  }));
+}
+
 /** Filter dropdowns all read the same way: every member of the enum, sentence case. */
 export function enumOptions(
   members: Record<string, string>,
@@ -70,15 +143,27 @@ export function toRegistrationStatus(value: string): RegistrationStatus | null {
   );
 }
 
-const REGISTRATION_ACTION_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Move back to pending",
-  [RegistrationStatus.Approved]: "Approve",
-  [RegistrationStatus.Confirmed]: "Confirm",
-  [RegistrationStatus.Rejected]: "Reject",
+const REGISTRATION_ACTION_LABEL: Record<
+  Exclude<RegistrationStatus, RegistrationStatus.Approved>,
+  string
+> = {
+  [RegistrationStatus.Pending]: "Back to awaiting approval",
+  [RegistrationStatus.Confirmed]: "Confirm as paid",
+  [RegistrationStatus.Rejected]: "Turn down",
   [RegistrationStatus.Cancelled]: "Cancel",
 };
 
-export function registrationActionLabel(status: RegistrationStatus): string {
+const APPROVE_LABEL: Record<RegistrationHold, string> = {
+  wheel: "Approve, hold wheel",
+  seat: "Approve, hold seats",
+};
+
+/** Each button says what the move does, not just the status it lands on. */
+export function registrationActionLabel(
+  status: RegistrationStatus,
+  hold: RegistrationHold,
+): string {
+  if (status === RegistrationStatus.Approved) return APPROVE_LABEL[hold];
   return REGISTRATION_ACTION_LABEL[status];
 }
 

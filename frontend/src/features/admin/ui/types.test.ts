@@ -11,9 +11,13 @@ import {
   enumOptions,
   eventStatusTone,
   fromDateTimeLocal,
+  orderStatusLabel,
+  orderStatusOptions,
   orderStatusTone,
   registrationActionLabel,
   registrationActionNeedsReason,
+  registrationStatusLabel,
+  registrationStatusOptions,
   registrationStatusTone,
   toDateTimeLocal,
   toNullableNumber,
@@ -38,6 +42,45 @@ describe("status tones", () => {
   it("gives the good outcome the accent", () => {
     expect(orderStatusTone(OrderStatus.Delivered)).toBe("live");
     expect(eventStatusTone(EventStatus.Published)).toBe("live");
+  });
+});
+
+describe("status labels", () => {
+  it("reads an order the way the shopper does", () => {
+    expect(orderStatusLabel(OrderStatus.Pending)).toBe("Awaiting confirmation");
+    expect(orderStatusLabel(OrderStatus.Confirmed)).toBe("Awaiting payment");
+    expect(orderStatusLabel(OrderStatus.Refunded)).toBe("Refunded");
+  });
+
+  it("names what an approved booking holds", () => {
+    expect(registrationStatusLabel(RegistrationStatus.Approved, "wheel")).toBe(
+      "Wheel held, awaiting payment",
+    );
+    expect(registrationStatusLabel(RegistrationStatus.Approved, "seat")).toBe(
+      "Seat held, awaiting payment",
+    );
+    expect(registrationStatusLabel(RegistrationStatus.Pending, "wheel")).toBe(
+      "Awaiting approval",
+    );
+    expect(registrationStatusLabel(RegistrationStatus.Confirmed, "seat")).toBe(
+      "Paid, confirmed",
+    );
+  });
+
+  it("lists filter options in the order things happen", () => {
+    expect(orderStatusOptions().map((option) => option.value)).toEqual([
+      "PENDING",
+      "CONFIRMED",
+      "PAID",
+      "SHIPPED",
+      "DELIVERED",
+      "CANCELLED",
+      "REFUNDED",
+    ]);
+    expect(registrationStatusOptions("wheel")[1]).toEqual({
+      value: "APPROVED",
+      label: "Wheel held, awaiting payment",
+    });
   });
 });
 
@@ -79,18 +122,20 @@ describe("toRegistrationStatus", () => {
 });
 
 describe("registration actions", () => {
-  it("names each move in the words an admin would use", () => {
-    expect(registrationActionLabel(RegistrationStatus.Pending)).toBe(
-      "Move back to pending",
+  it("says what each move does", () => {
+    expect(registrationActionLabel(RegistrationStatus.Approved, "wheel")).toBe(
+      "Approve, hold wheel",
     );
-    expect(registrationActionLabel(RegistrationStatus.Approved)).toBe(
-      "Approve",
+    expect(registrationActionLabel(RegistrationStatus.Approved, "seat")).toBe(
+      "Approve, hold seats",
     );
-    expect(registrationActionLabel(RegistrationStatus.Confirmed)).toBe(
-      "Confirm",
+    expect(registrationActionLabel(RegistrationStatus.Confirmed, "wheel")).toBe(
+      "Confirm as paid",
     );
-    expect(registrationActionLabel(RegistrationStatus.Rejected)).toBe("Reject");
-    expect(registrationActionLabel(RegistrationStatus.Cancelled)).toBe(
+    expect(registrationActionLabel(RegistrationStatus.Rejected, "seat")).toBe(
+      "Turn down",
+    );
+    expect(registrationActionLabel(RegistrationStatus.Cancelled, "wheel")).toBe(
       "Cancel",
     );
   });

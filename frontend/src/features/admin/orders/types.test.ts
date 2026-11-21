@@ -190,6 +190,20 @@ describe("toStatusActions", () => {
     expect(actions[2].needsNote).toBe(true);
   });
 
+  it("darkens only the move that takes the order forward", () => {
+    const actions = toStatusActions([
+      OrderStatus.Shipped,
+      OrderStatus.Cancelled,
+      OrderStatus.Refunded,
+    ]);
+    expect(actions.map((action) => action.isPrimary)).toEqual([
+      true,
+      false,
+      false,
+    ]);
+    expect(toStatusActions([OrderStatus.Cancelled])[0].isPrimary).toBe(false);
+  });
+
   it("asks for a note when shipping", () => {
     const [shipped] = toStatusActions([OrderStatus.Shipped]);
     expect(shipped.label).toBe("Mark shipped");

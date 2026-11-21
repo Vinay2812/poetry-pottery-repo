@@ -126,7 +126,7 @@ export function WorkshopBookingsContainer({
         bookedLabel: formatDate(item.booking.created_at),
         actions: item.next_statuses.map((next) => ({
           status: next,
-          label: registrationActionLabel(next),
+          label: registrationActionLabel(next, "wheel"),
         })),
       })),
     [optimisticItems],
@@ -232,7 +232,9 @@ export function WorkshopBookingsContainer({
         value={move.reason}
         error={move.error}
         confirmLabel={
-          move.target ? registrationActionLabel(move.target.status) : ""
+          move.target
+            ? registrationActionLabel(move.target.status, "wheel")
+            : ""
         }
         isDestructive
         isRequired

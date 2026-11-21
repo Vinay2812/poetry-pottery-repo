@@ -31,7 +31,8 @@ export function AdminOrderActions({
           key={action.status}
           type="button"
           size="sm"
-          variant={action.isDestructive ? "destructive" : "secondary"}
+          variant={action.isPrimary ? "default" : "secondary"}
+          className={action.isDestructive ? "text-destructive" : undefined}
           disabled={isBusy}
           onClick={() => onAction(action.status)}
         >

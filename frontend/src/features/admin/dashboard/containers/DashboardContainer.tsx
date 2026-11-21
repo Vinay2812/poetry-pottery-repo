@@ -16,9 +16,13 @@ import {
 } from "@/lib/format";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
-import { formatEnumLabel } from "@/features/admin/shell";
-import { AdminPageHeader } from "@/features/admin/ui";
-import { orderStatusTone, registrationStatusTone } from "@/features/admin/ui";
+import {
+  AdminPageHeader,
+  orderStatusLabel,
+  orderStatusTone,
+  registrationStatusLabel,
+  registrationStatusTone,
+} from "@/features/admin/ui";
 
 import { DashboardSection } from "@/features/admin/dashboard/components/DashboardSection";
 import { DashboardStats } from "@/features/admin/dashboard/components/DashboardStats";
@@ -99,7 +103,7 @@ export function DashboardContainer() {
       (dashboard?.recent_orders ?? []).map((order) => ({
         id: order.id,
         customerName: order.customer.name ?? order.customer.email,
-        statusLabel: formatEnumLabel(order.status),
+        statusLabel: orderStatusLabel(order.status),
         statusTone: orderStatusTone(order.status),
         itemsLabel: describeItems(order.item_count),
         totalLabel: formatInr(order.total),
@@ -126,7 +130,7 @@ export function DashboardContainer() {
       (dashboard?.recent_bookings ?? []).map((booking) => ({
         id: booking.id,
         customerName: booking.customer.name ?? booking.customer.email,
-        statusLabel: formatEnumLabel(booking.status),
+        statusLabel: registrationStatusLabel(booking.status, "wheel"),
         statusTone: registrationStatusTone(booking.status),
         shapeLabel: describeBooking(booking.hours, booking.participants),
         totalLabel: formatInr(booking.total),

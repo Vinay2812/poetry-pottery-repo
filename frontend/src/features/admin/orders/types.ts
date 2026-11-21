@@ -137,7 +137,7 @@ export function buildOrderTimeline(
 
 const STATUS_ACTION_LABEL: Record<OrderStatus, string> = {
   [OrderStatus.Pending]: "Move back to pending",
-  [OrderStatus.Confirmed]: "Mark confirmed",
+  [OrderStatus.Confirmed]: "Confirm order",
   [OrderStatus.Paid]: "Mark paid",
   [OrderStatus.Shipped]: "Mark shipped",
   [OrderStatus.Delivered]: "Mark delivered",
@@ -149,6 +149,8 @@ export interface OrderStatusAction {
   status: OrderStatus;
   label: string;
   isDestructive: boolean;
+  // The one move that takes the order forward gets the dark button.
+  isPrimary: boolean;
   needsNote: boolean;
 }
 
@@ -170,7 +172,11 @@ export function toStatusActions(
     }))
     .sort(
       (left, right) => Number(left.isDestructive) - Number(right.isDestructive),
-    );
+    )
+    .map((action, index) => ({
+      ...action,
+      isPrimary: index === 0 && !action.isDestructive,
+    }));
 }
 
 export interface AdminOrderPatch {

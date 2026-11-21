@@ -18,20 +18,23 @@ const meta = {
     actions: [
       {
         status: OrderStatus.Confirmed,
-        label: "Mark confirmed",
+        label: "Confirm order",
         isDestructive: false,
+        isPrimary: true,
         needsNote: false,
       },
       {
         status: OrderStatus.Paid,
         label: "Mark paid",
         isDestructive: false,
+        isPrimary: false,
         needsNote: false,
       },
       {
         status: OrderStatus.Cancelled,
         label: "Cancel order",
         isDestructive: true,
+        isPrimary: false,
         needsNote: true,
       },
     ],
