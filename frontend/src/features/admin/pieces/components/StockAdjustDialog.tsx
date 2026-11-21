@@ -84,25 +84,39 @@ export function StockAdjustDialog({
         >
           <fieldset className="grid grid-cols-2 border border-ash">
             <legend className="sr-only">Add or remove</legend>
-            {DIRECTIONS.map((option) => (
-              <label
-                key={option.value}
-                className={cn(
-                  "flex min-h-11 cursor-pointer items-center justify-center px-3 text-center text-[13px] transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary has-[:focus-visible]:ring-inset",
-                  direction === option.value
-                    ? "bg-ink text-background"
-                    : "hover:bg-secondary",
-                )}
-              >
-                <input
-                  type="radio"
-                  value={option.value}
-                  className="sr-only"
-                  {...register("direction")}
-                />
-                {option.label}
-              </label>
-            ))}
+            {DIRECTIONS.map((option) => {
+              // An empty shelf has nothing to remove, so that half is off.
+              const isDisabled = option.value === "remove" && stock === 0;
+              return (
+                <label
+                  key={option.value}
+                  title={isDisabled ? "Nothing in stock to remove" : undefined}
+                  className={cn(
+                    "flex min-h-11 items-center justify-center px-3 text-center text-[13px] transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary has-[:focus-visible]:ring-inset",
+                    isDisabled
+                      ? "cursor-not-allowed text-muted-foreground"
+                      : "cursor-pointer",
+                    direction === option.value
+                      ? "bg-ink text-background"
+                      : !isDisabled && "hover:bg-secondary",
+                  )}
+                >
+                  <input
+                    type="radio"
+                    value={option.value}
+                    disabled={isDisabled}
+                    className="sr-only"
+                    {...register("direction")}
+                  />
+                  {option.label}
+                  {isDisabled && (
+                    <span className="sr-only">
+                      , nothing in stock to remove
+                    </span>
+                  )}
+                </label>
+              );
+            })}
           </fieldset>
           <AdminField
             id="stock-count"

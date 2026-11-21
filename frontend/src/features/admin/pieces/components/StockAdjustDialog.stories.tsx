@@ -23,6 +23,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const NothingInStock: Story = {
+  args: { stock: 0 },
+};
+
 export const LastOne: Story = {
   args: { stock: 1 },
 };
