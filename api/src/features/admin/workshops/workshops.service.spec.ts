@@ -15,6 +15,8 @@ import {
   assertTimezone,
 } from "./workshops.service";
 
+const NOW = new Date("2026-11-22T10:00:00.000Z");
+
 const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
 
@@ -45,8 +47,9 @@ const bookingRow = {
   id: "WS-ABC1234567",
   config_id: 1,
   user_id: 7,
-  starts_at: new Date("2026-10-01T08:00:00.000Z"),
-  ends_at: new Date("2026-10-01T10:00:00.000Z"),
+  // Far enough ahead that the session is always still to come.
+  starts_at: new Date("2030-10-01T08:00:00.000Z"),
+  ends_at: new Date("2030-10-01T10:00:00.000Z"),
   hours: 2,
   participants: 2,
   price_per_person: 1200,
@@ -328,11 +331,10 @@ describe("AdminWorkshopsService", () => {
       .mockResolvedValueOnce(0);
     prismaMock.workshopBooking.findMany.mockResolvedValue([bookingRow]);
 
-    await service.bookings({
-      config_id: 1,
-      status: RegistrationStatus.PENDING,
-      from,
-    });
+    await service.bookings(
+      { config_id: 1, status: RegistrationStatus.PENDING, from },
+      NOW,
+    );
 
     const filter = {
       config_id: 1,
@@ -342,12 +344,17 @@ describe("AdminWorkshopsService", () => {
     expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledTimes(1);
     expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledWith(
       containing({
-        where: { AND: [filter, { status: RegistrationStatus.PENDING }] },
+        where: {
+          AND: [
+            filter,
+            { status: RegistrationStatus.PENDING, starts_at: { gte: NOW } },
+          ],
+        },
       }),
     );
   });
 
-  it("lists requests waiting on the studio first, soonest first, then the rest newest first", async () => {
+  it("lists requests still ahead first, soonest first, then the rest newest first", async () => {
     const waitingRow = { ...bookingRow, id: "WAIT1" };
     const doneRow = {
       ...bookingRow,
@@ -361,7 +368,7 @@ describe("AdminWorkshopsService", () => {
       .mockResolvedValueOnce([waitingRow])
       .mockResolvedValueOnce([doneRow]);
 
-    const result = await service.bookings({ config_id: 1, limit: 20 });
+    const result = await service.bookings({ config_id: 1, limit: 20 }, NOW);
 
     expect(result.items.map((item) => item.booking.id)).toEqual([
       "WAIT1",
@@ -375,7 +382,10 @@ describe("AdminWorkshopsService", () => {
     expect(waitingCall).toEqual(
       containing({
         where: {
-          AND: [{ config_id: 1 }, { status: RegistrationStatus.PENDING }],
+          AND: [
+            { config_id: 1 },
+            { status: RegistrationStatus.PENDING, starts_at: { gte: NOW } },
+          ],
         },
         orderBy: [{ starts_at: "asc" }, { id: "asc" }],
         skip: 0,
@@ -387,7 +397,12 @@ describe("AdminWorkshopsService", () => {
         where: {
           AND: [
             { config_id: 1 },
-            { status: { not: RegistrationStatus.PENDING } },
+            {
+              NOT: {
+                status: RegistrationStatus.PENDING,
+                starts_at: { gte: NOW },
+              },
+            },
           ],
         },
         orderBy: [{ starts_at: "desc" }, { id: "asc" }],
@@ -426,6 +441,39 @@ describe("AdminWorkshopsService", () => {
     );
     expect(result.customer.email).toBe("maya@example.com");
   });
+
+  it("offers only turning down a request whose session has already happened", async () => {
+    const elapsed = {
+      ...bookingRow,
+      starts_at: new Date("2026-06-27T08:00:00.000Z"),
+      ends_at: new Date("2026-06-27T10:00:00.000Z"),
+    };
+    prismaMock.workshopBooking.count
+      .mockResolvedValueOnce(0)
+      .mockResolvedValueOnce(1);
+    prismaMock.workshopBooking.findMany.mockResolvedValueOnce([elapsed]);
+
+    const result = await service.bookings({}, NOW);
+
+    expect(result.items.map((item) => item.next_statuses)).toEqual([
+      [RegistrationStatus.REJECTED, RegistrationStatus.CANCELLED],
+    ]);
+  });
+
+  it.each([RegistrationStatus.APPROVED, RegistrationStatus.CONFIRMED])(
+    "refuses to move a request whose session has begun to %s, and mails nobody",
+    async (status) => {
+      prismaMock.workshopBooking.findUnique.mockResolvedValue({
+        ...bookingRow,
+        starts_at: new Date("2026-06-27T08:00:00.000Z"),
+      });
+
+      await expect(
+        service.setBookingStatus(bookingRow.id, status, null),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(workshopsMock.applyStatus).not.toHaveBeenCalled();
+    },
+  );
 
   it("refuses to approve a free booking, which has nothing to wait for", async () => {
     prismaMock.workshopBooking.findUnique.mockResolvedValue({

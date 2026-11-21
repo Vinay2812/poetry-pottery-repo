@@ -57,7 +57,12 @@ const registrationRow = {
   confirmed_at: null,
   rejected_at: null,
   cancelled_at: null,
-  event: eventRow,
+  // Far enough ahead that the evening is always still to come.
+  event: {
+    ...eventRow,
+    starts_at: new Date("2030-10-01T12:00:00.000Z"),
+    ends_at: new Date("2030-10-01T14:00:00.000Z"),
+  },
   user: { id: 7, name: "Maya", email: "maya@example.com", image: null },
 };
 
@@ -172,11 +177,12 @@ describe("AdminEventsService", () => {
     );
   });
 
-  it("narrows to events with requests awaiting approval, alongside one person's events", async () => {
+  it("narrows to evenings still ahead with requests awaiting approval, soonest first", async () => {
+    const now = new Date("2026-11-22T10:00:00.000Z");
     prismaMock.event.findMany.mockResolvedValue([eventRow]);
     prismaMock.event.count.mockResolvedValue(1);
 
-    await service.list({ awaiting_approval: true, user_id: 7 });
+    await service.list({ awaiting_approval: true, user_id: 7 }, now);
 
     expect(prismaMock.event.findMany).toHaveBeenCalledWith(
       containing({
@@ -184,10 +190,16 @@ describe("AdminEventsService", () => {
           AND: [
             { registrations: { some: { user_id: 7 } } },
             {
-              registrations: { some: { status: RegistrationStatus.PENDING } },
+              registrations: {
+                some: {
+                  status: RegistrationStatus.PENDING,
+                  event: { starts_at: { gte: now } },
+                },
+              },
             },
           ],
         },
+        orderBy: [{ starts_at: "asc" }, { id: "asc" }],
       }),
     );
   });
@@ -445,6 +457,34 @@ describe("AdminEventsService", () => {
     );
     expect(result.customer.email).toBe("maya@example.com");
   });
+
+  it("offers only turning down a seat request for an evening that has happened", async () => {
+    prismaMock.eventRegistration.findMany.mockResolvedValue([
+      { ...registrationRow, event: eventRow },
+    ]);
+    prismaMock.eventRegistration.count.mockResolvedValue(1);
+
+    const result = await service.registrations({});
+
+    expect(result.items.map((item) => item.next_statuses)).toEqual([
+      [RegistrationStatus.REJECTED, RegistrationStatus.CANCELLED],
+    ]);
+  });
+
+  it.each([RegistrationStatus.APPROVED, RegistrationStatus.CONFIRMED])(
+    "refuses to move a seat request for an evening that has begun to %s, and mails nobody",
+    async (status) => {
+      prismaMock.eventRegistration.findUnique.mockResolvedValue({
+        ...registrationRow,
+        event: eventRow,
+      });
+
+      await expect(
+        service.setRegistrationStatus(registrationRow.id, status, null),
+      ).rejects.toBeInstanceOf(BadRequestException);
+      expect(eventsMock.applyStatus).not.toHaveBeenCalled();
+    },
+  );
 
   it("refuses to approve a free seat, which has nothing to wait for", async () => {
     prismaMock.eventRegistration.findUnique.mockResolvedValue({

@@ -9,6 +9,8 @@ import {
 import { fromWallClock, toWallClock } from "@/features/workshops/schedule";
 import { PrismaService } from "@/prisma/prisma.service";
 import { toUserRef } from "../admin.type";
+import { waitingRegistrationWhere } from "../events/events.service";
+import { waitingBookingWhere } from "../workshops/workshops.service";
 import {
   type AdminAgendaItem,
   AdminAgendaKind,
@@ -167,11 +169,9 @@ export class AdminDashboardService {
         _sum: { total: true },
         _count: { _all: true },
       }),
-      this.prisma.workshopBooking.count({
-        where: { status: RegistrationStatus.PENDING },
-      }),
+      this.prisma.workshopBooking.count({ where: waitingBookingWhere(now) }),
       this.prisma.eventRegistration.count({
-        where: { status: RegistrationStatus.PENDING },
+        where: waitingRegistrationWhere(now),
       }),
       this.prisma.contactMessage.count({ where: { is_read: false } }),
       this.prisma.commissionRequest.count({

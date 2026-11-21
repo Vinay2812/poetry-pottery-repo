@@ -49,13 +49,32 @@ function isPaymentStepForFreeSeat(
   return to === RegistrationStatus.APPROVED && total === 0;
 }
 
-// The studio's moves are the shared ones, less Approved for a seat with nothing to pay.
+// Once a session or evening has begun, nobody can be let in after the fact; it can only be closed.
+function isLateAdmission(to: RegistrationStatus, hasStarted: boolean): boolean {
+  return (
+    hasStarted &&
+    (to === RegistrationStatus.APPROVED || to === RegistrationStatus.CONFIRMED)
+  );
+}
+
+export function hasStarted(startsAt: Date, now = new Date()): boolean {
+  return startsAt < now;
+}
+
+// The studio's moves are the shared ones, less Approved for a seat with nothing to pay, and less
+// every admission once the date has begun.
 export function nextAdminStatuses(
   from: RegistrationStatus,
   total: number,
+  startsAt: Date,
+  now = new Date(),
 ): RegistrationStatus[] {
+  const started = hasStarted(startsAt, now);
   return Object.values(RegistrationStatus).filter(
-    (to) => canTransition(from, to) && !isPaymentStepForFreeSeat(to, total),
+    (to) =>
+      canTransition(from, to) &&
+      !isPaymentStepForFreeSeat(to, total) &&
+      !isLateAdmission(to, started),
   );
 }
 
@@ -66,6 +85,18 @@ export function assertNotPaymentStepForFreeSeat(
   if (isPaymentStepForFreeSeat(to, total)) {
     throw new BadRequestException(
       "A free seat has nothing to pay for, so confirm it instead",
+    );
+  }
+}
+
+export function assertNotLateAdmission(
+  to: RegistrationStatus,
+  startsAt: Date,
+  now = new Date(),
+): void {
+  if (isLateAdmission(to, hasStarted(startsAt, now))) {
+    throw new BadRequestException(
+      "This date has already begun, so the request can only be turned down or cancelled",
     );
   }
 }

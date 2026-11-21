@@ -13,6 +13,7 @@ import {
 } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
 import {
+  assertNotLateAdmission,
   assertNotPaymentStepForFreeSeat,
   nextAdminStatuses,
 } from "@/features/events/registration-status";
@@ -57,8 +58,15 @@ export function toAdminBooking(
   return {
     booking: toBooking(row, now),
     customer: toUserRef(row.user),
-    next_statuses: nextAdminStatuses(row.status, row.total),
+    next_statuses: nextAdminStatuses(row.status, row.total, row.starts_at, now),
   };
+}
+
+// Waiting on the studio means a request whose session has not begun; the dashboard counts the same.
+export function waitingBookingWhere(
+  now: Date,
+): Prisma.WorkshopBookingWhereInput {
+  return { status: RegistrationStatus.PENDING, starts_at: { gte: now } };
 }
 
 // The studio day has to hold at least one slot, and a slot has to fit inside it.
@@ -319,6 +327,7 @@ export class AdminWorkshopsService {
 
   async bookings(
     filter: AdminWorkshopBookingsFilterInput,
+    now = new Date(),
   ): Promise<AdminWorkshopBookingsResult> {
     const bounds = clampPage(filter.page, filter.limit, MAX_LIMIT);
     const term = searchTerm(filter.search);
@@ -343,11 +352,10 @@ export class AdminWorkshopsService {
           }
         : {}),
     };
-    // Requests waiting on the studio lead, soonest first; everything else follows, newest session first.
-    const waiting = { AND: [where, { status: RegistrationStatus.PENDING }] };
-    const rest = {
-      AND: [where, { status: { not: RegistrationStatus.PENDING } }],
-    };
+    // Requests still ahead lead, soonest first; everything else follows, newest session first, so a
+    // request whose date slipped by sorts with the past rather than heading the queue for ever.
+    const waiting = { AND: [where, waitingBookingWhere(now)] };
+    const rest = { AND: [where, { NOT: waitingBookingWhere(now) }] };
     // One snapshot for the counts and both reads, so a request answered in between cannot shift the page.
     return this.prisma.withTransaction(
       async () => {
@@ -378,7 +386,7 @@ export class AdminWorkshopsService {
         ]);
         return {
           items: [...waitingRows, ...restRows].map((row) =>
-            toAdminBooking(row),
+            toAdminBooking(row, now),
           ),
           page_info: toPageInfo(bounds, waitingTotal + restTotal),
         };
@@ -400,6 +408,7 @@ export class AdminWorkshopsService {
       throw new NotFoundException("Booking not found");
     }
     assertNotPaymentStepForFreeSeat(status, current.total);
+    assertNotLateAdmission(status, current.starts_at);
     const updated = await this.workshops.applyStatus(
       current,
       status,
