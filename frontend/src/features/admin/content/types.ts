@@ -5,7 +5,7 @@ import type {
   ContentPageInput,
 } from "@/graphql/generated/graphql";
 
-import { formatDateTime } from "@/lib/format";
+import { formatDateTime, pluralize } from "@/lib/format";
 import { toStoredWhatsAppNumber } from "@/lib/whatsapp";
 import {
   type AnnouncementFormValues,
@@ -214,6 +214,8 @@ export function describeArrivalPreview(
   const latest = parseDayCount(max);
   if (earliest === null || latest === null || earliest > latest) return null;
   const days =
-    earliest === latest ? `${earliest} days` : `${earliest} to ${latest} days`;
+    earliest === latest
+      ? pluralize(earliest, "day")
+      : `${earliest} to ${latest} days`;
   return `A piece from the shelf should reach your buyer ${days} after they order.`;
 }

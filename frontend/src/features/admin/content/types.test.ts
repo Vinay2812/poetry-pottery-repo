@@ -199,6 +199,12 @@ describe("describeArrivalPreview", () => {
     expect(describeArrivalPreview("9", " 9 ")).toContain(" 9 days after");
   });
 
+  it("says one day, not one days", () => {
+    expect(describeArrivalPreview("1", "1")).toBe(
+      "A piece from the shelf should reach your buyer 1 day after they order.",
+    );
+  });
+
   it("says nothing while a box is empty, not a whole number or out of order", () => {
     expect(describeArrivalPreview("", "12")).toBeNull();
     expect(describeArrivalPreview("7", "1.5")).toBeNull();
