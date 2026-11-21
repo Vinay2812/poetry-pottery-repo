@@ -31,10 +31,11 @@ function optionalText(label: string, max: number) {
 }
 
 export const addressSchema = z.object({
-  name: requiredText("Name", "Enter a name", 2, 80),
+  name: requiredText("Full name", "Enter a name", 2, 80),
   phone: z
     .string()
     .trim()
+    .min(1, "Enter a phone number")
     .refine(
       (value) => normalisePhone(value) !== null,
       "Enter a valid 10-digit phone number",

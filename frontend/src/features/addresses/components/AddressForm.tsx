@@ -23,7 +23,6 @@ interface TextFieldProps {
   registration: UseFormRegisterReturn;
   type?: "text" | "tel";
   inputMode?: "text" | "tel" | "numeric";
-  maxLength?: number;
   className?: string;
 }
 
@@ -35,7 +34,6 @@ function TextField({
   registration,
   type = "text",
   inputMode,
-  maxLength,
   className,
 }: TextFieldProps) {
   const errorId = `${id}-error`;
@@ -48,7 +46,6 @@ function TextField({
         id={id}
         type={type}
         inputMode={inputMode}
-        maxLength={maxLength}
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
         aria-describedby={error ? errorId : undefined}
@@ -157,7 +154,6 @@ export function AddressForm({
           id="address-pincode"
           label="PIN code"
           inputMode="numeric"
-          maxLength={6}
           autoComplete="postal-code"
           error={errors.pincode?.message}
           registration={register("pincode")}

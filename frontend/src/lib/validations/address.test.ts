@@ -51,9 +51,16 @@ describe("addressSchema", () => {
     expect(result.line2).toBe("");
   });
 
+  it("trims a PIN code and checks every digit typed", () => {
+    expect(addressSchema.parse(values({ pincode: " 416416 " })).pincode).toBe(
+      "416416",
+    );
+    expect(firstError({ pincode: "4164167" })).toBe("Enter a 6-digit PIN code");
+  });
+
   it("explains what is wrong in words a person can act on", () => {
     expect(firstError({ name: "M" })).toBe(
-      "Name must be at least 2 characters",
+      "Full name must be at least 2 characters",
     );
     expect(firstError({ phone: "98765" })).toBe(
       "Enter a valid 10-digit phone number",
@@ -75,6 +82,7 @@ describe("addressSchema", () => {
 
   it("asks for an empty required field by the name on the form", () => {
     expect(firstError({ name: "" })).toBe("Enter a name");
+    expect(firstError({ phone: "" })).toBe("Enter a phone number");
     expect(firstError({ line1: "  " })).toBe(
       "Enter the flat, house or building",
     );
