@@ -32,7 +32,8 @@ export function FilterSheet({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="flex h-dvh w-full flex-col sm:max-w-sm"
+        // Full width on phones so long glaze and collection names never squeeze.
+        className="flex h-dvh flex-col data-[side=right]:w-full data-[side=right]:sm:max-w-sm"
       >
         <SheetHeader>
           <div className="flex items-baseline justify-between gap-3 pr-10">

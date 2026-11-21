@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { formatInr } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 // The shared slider ships a sage range and pill ends; the shelf wants an ash rail
 // with an ink handle, and the parts are only reachable from the root.
@@ -57,6 +58,10 @@ interface CheckGroupProps {
   onToggle: (value: string) => void;
 }
 
+// Below lg the panel lives in the phone sheet, so every row is a full 44px tap target.
+const ROW_CLASS = "flex min-h-11 items-center gap-3 lg:min-h-0 lg:gap-2.5";
+const ROW_LABEL_CLASS = "flex flex-1 self-stretch font-normal";
+
 function CheckGroup({
   title,
   idPrefix,
@@ -64,16 +69,20 @@ function CheckGroup({
   selected,
   onToggle,
 }: CheckGroupProps) {
-  if (options.length === 0) return null;
+  // An option that would empty the shelf is noise, unless it is the one already ticked.
+  const visible = options.filter(
+    (option) => option.count > 0 || selected.includes(option.value),
+  );
+  if (visible.length === 0) return null;
   return (
-    <fieldset className="flex flex-col gap-3">
-      <legend className="mb-3 text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+    <fieldset className="flex flex-col lg:gap-3">
+      <legend className="mb-1 text-[11px] tracking-[0.18em] text-muted-foreground uppercase lg:mb-3">
         {title}
       </legend>
-      {options.map((option) => {
+      {visible.map((option) => {
         const id = `${idPrefix}-${option.value}`;
         return (
-          <div key={option.value} className="flex items-center gap-2.5">
+          <div key={option.value} className={ROW_CLASS}>
             <Checkbox
               id={id}
               checked={selected.includes(option.value)}
@@ -81,7 +90,7 @@ function CheckGroup({
             />
             <Label
               htmlFor={id}
-              className="flex flex-1 justify-between font-normal"
+              className={cn(ROW_LABEL_CLASS, "justify-between")}
             >
               <span>{option.label}</span>
               <span className="text-muted-foreground tnum">{option.count}</span>
@@ -190,9 +199,12 @@ export function ProductFilters({
         onToggle={onToggleGlaze}
       />
 
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
-          <Label htmlFor={`${scope}-filter-in-stock`} className="font-normal">
+      <div className="flex flex-col lg:gap-4">
+        <div className={ROW_CLASS}>
+          <Label
+            htmlFor={`${scope}-filter-in-stock`}
+            className={ROW_LABEL_CLASS}
+          >
             Ready to ship only
           </Label>
           <Switch
@@ -201,31 +213,57 @@ export function ProductFilters({
             onCheckedChange={onInStockOnlyChange}
           />
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <Label htmlFor={`${scope}-filter-custom`} className="font-normal">
-            Made to order
-          </Label>
-          <Switch
-            id={`${scope}-filter-custom`}
-            checked={customizableOnly}
-            onCheckedChange={onCustomizableOnlyChange}
-          />
+        {/* Made-to-order pieces stay off the shelf until this is on, so it says what it brings in. */}
+        <div className="flex flex-col gap-1">
+          <div className={ROW_CLASS}>
+            <Label
+              htmlFor={`${scope}-filter-custom`}
+              className={ROW_LABEL_CLASS}
+            >
+              Made to order only
+            </Label>
+            <Switch
+              id={`${scope}-filter-custom`}
+              checked={customizableOnly}
+              onCheckedChange={onCustomizableOnlyChange}
+              aria-describedby={`${scope}-filter-custom-note`}
+            />
+          </div>
+          <p
+            id={`${scope}-filter-custom-note`}
+            className="text-[13px] text-muted-foreground"
+          >
+            Pieces we throw for you once you order, ready in about ten days.
+          </p>
         </div>
-        {/* The seconds shelf is listed on the shelf and in the archive alike, count and all. */}
-        <div className="flex items-center justify-between gap-3">
-          <Label htmlFor={`${scope}-filter-seconds`} className="font-normal">
-            Seconds{" "}
-            <span className="text-muted-foreground tnum">({secondsCount})</span>
-          </Label>
-          <Switch
-            id={`${scope}-filter-seconds`}
-            checked={secondsOnly}
-            onCheckedChange={onSecondsOnlyChange}
-          />
-        </div>
-        <p className="text-[13px] text-muted-foreground">
-          Pieces the kiln marked, sold at a lower price with the flaw named.
-        </p>
+        {/* With nothing marked down the switch could only empty the shelf, so it waits for a second. */}
+        {(secondsCount > 0 || secondsOnly) && (
+          <div className="flex flex-col gap-1">
+            <div className={ROW_CLASS}>
+              <Label
+                htmlFor={`${scope}-filter-seconds`}
+                className={ROW_LABEL_CLASS}
+              >
+                Seconds{" "}
+                <span className="text-muted-foreground tnum">
+                  ({secondsCount})
+                </span>
+              </Label>
+              <Switch
+                id={`${scope}-filter-seconds`}
+                checked={secondsOnly}
+                onCheckedChange={onSecondsOnlyChange}
+                aria-describedby={`${scope}-filter-seconds-note`}
+              />
+            </div>
+            <p
+              id={`${scope}-filter-seconds-note`}
+              className="text-[13px] text-muted-foreground"
+            >
+              Pieces the kiln marked, sold at a lower price with the flaw named.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
