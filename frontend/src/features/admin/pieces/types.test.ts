@@ -22,6 +22,7 @@ import {
   describeShelfState,
   describeShelfStateHint,
   describeStockAfter,
+  describeUnsavedChanges,
   EMPTY_PRODUCT_FORM,
   formatCareNotes,
   formatPriceModifier,
@@ -35,6 +36,7 @@ import {
   toProductFormValues,
   toProductInput,
   toProductsFilter,
+  toFormBaseline,
   toProductUpdateInput,
   toStockDelta,
 } from "./types";
@@ -474,5 +476,31 @@ describe("canFeature", () => {
 
   it("still lets a retired piece come off the home page", () => {
     expect(canFeature(false, true)).toBe(true);
+  });
+});
+
+describe("toFormBaseline", () => {
+  const submitted = {
+    values: { ...EMPTY_PRODUCT_FORM, name: "Moon jar", price: 1800 },
+    imageUrls: ["https://cdn.example/a.jpg"],
+  };
+
+  it("hands the form back to the server's copy once it was read back", () => {
+    expect(toFormBaseline(true, submitted)).toBeNull();
+  });
+
+  it("keeps what was sent when the read-back failed", () => {
+    expect(toFormBaseline(false, submitted)).toBe(submitted);
+  });
+});
+
+describe("describeUnsavedChanges", () => {
+  it("names photos only when they changed", () => {
+    expect(describeUnsavedChanges(false)).toBe(
+      "Your changes to this piece are not saved yet.",
+    );
+    expect(describeUnsavedChanges(true)).toBe(
+      "Your changes to this piece, photos included, are not saved yet.",
+    );
   });
 });

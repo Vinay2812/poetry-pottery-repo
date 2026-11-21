@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
@@ -38,7 +38,8 @@ export interface PieceFormProps {
   gallery: ReactNode;
   onSubmit: (values: ProductFormValues) => void;
   onInvalid: () => void;
-  onCancel: (hasChanges: boolean) => void;
+  onDirtyChange: (isDirty: boolean) => void;
+  onCancel: () => void;
 }
 
 const SELECT_CLASS =
@@ -63,6 +64,7 @@ export function PieceForm({
   gallery,
   onSubmit,
   onInvalid,
+  onDirtyChange,
   onCancel,
 }: PieceFormProps) {
   const {
@@ -89,6 +91,10 @@ export function PieceForm({
 
   const isLiveAllowed = canGoLive(Number(stockValue) || 0, isCustomizable);
   const swatchColour = toPreviewColour(colorCode);
+
+  useEffect(() => {
+    onDirtyChange(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const setFlag = (
     name:
@@ -551,7 +557,7 @@ export function PieceForm({
           variant="secondary"
           size="sm"
           disabled={isSubmitting}
-          onClick={() => onCancel(isDirty)}
+          onClick={onCancel}
         >
           Cancel
         </Button>

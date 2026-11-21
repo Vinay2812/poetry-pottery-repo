@@ -1,7 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useOptimistic, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useState,
+} from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -42,9 +48,12 @@ import {
   describeKilnHint,
   describeShelfState,
   describeShelfStateHint,
+  describeUnsavedChanges,
   EMPTY_PRODUCT_FORM,
   formatStock,
   LIVE_BLOCKED_NOTE,
+  type PieceDraft,
+  toFormBaseline,
   toProductFormValues,
   toProductInput,
   toProductUpdateInput,
@@ -93,11 +102,6 @@ interface StockChange {
   reason: string;
 }
 
-interface PieceSave {
-  values: ProductFormValues;
-  imageUrls: string[];
-}
-
 export interface PieceEditorContainerProps {
   productId: number | null;
 }
@@ -132,8 +136,11 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   const [isLeaveOpen, setIsLeaveOpen] = useState(false);
   const [isStockOpen, setIsStockOpen] = useState(false);
   const [imageDraft, setImageDraft] = useState<string[] | null>(null);
-  // Bumped after each save so the form remounts clean from the refetched piece.
+  // Bumped after each save so the form remounts clean from its new baseline.
   const [savedVersion, setSavedVersion] = useState(0);
+  // Set only when a save landed but its read-back failed; the form keeps what was sent.
+  const [baseline, setBaseline] = useState<PieceDraft | null>(null);
+  const [isFormDirty, setIsFormDirty] = useState(false);
 
   const product = data?.adminProduct ?? null;
 
@@ -153,9 +160,20 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
 
   // The draft wins until a save clears it; before that the saved gallery is the truth.
   const imageUrls = useMemo(
-    () => imageDraft ?? product?.image_urls ?? [],
-    [imageDraft, product],
+    () => imageDraft ?? baseline?.imageUrls ?? product?.image_urls ?? [],
+    [baseline, imageDraft, product],
   );
+  const hasUnsavedChanges = isFormDirty || imageDraft !== null;
+
+  // Reloading or closing the tab asks too; in-app links are not guarded.
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const categoryOptions = useMemo(
     () =>
@@ -183,7 +201,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   );
 
   const createPiece = useCallback(
-    async (save: PieceSave) => {
+    async (save: PieceDraft) => {
       const created = await createProduct({
         variables: { input: toProductInput(save.values, save.imageUrls) },
       });
@@ -196,7 +214,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
 
   // A new piece has no query to read back; it navigates to its own page instead.
   const { execute: savePiece, isPending: isSaving } = useOptimisticAction({
-    run: (save: PieceSave) =>
+    run: (save: PieceDraft) =>
       productId === null
         ? createPiece(save)
         : updateProduct({
@@ -210,11 +228,12 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       success: isCreate ? "Piece created" : "Piece saved",
       failure: "The piece could not be saved",
     },
-    onSuccess: (result) => {
+    onSuccess: (result, save, isRefreshed) => {
       if (typeof result === "number") {
         router.push(`/dashboard/pieces/${result}`);
         return;
       }
+      setBaseline(toFormBaseline(isRefreshed, save));
       setImageDraft(null);
       setSavedVersion((version) => version + 1);
     },
@@ -298,16 +317,13 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   const leave = useCallback(() => router.push("/dashboard/pieces"), [router]);
 
   // Unsaved fields or photos ask first; a clean form just goes back.
-  const handleCancel = useCallback(
-    (hasChanges: boolean) => {
-      if (hasChanges || imageDraft !== null) {
-        setIsLeaveOpen(true);
-        return;
-      }
-      leave();
-    },
-    [imageDraft, leave],
-  );
+  const handleCancel = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setIsLeaveOpen(true);
+      return;
+    }
+    leave();
+  }, [hasUnsavedChanges, leave]);
 
   const handleInvalid = useCallback(
     () => toast.error("Some fields need a look before this can be saved"),
@@ -438,7 +454,8 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       <PieceForm
         key={`${product?.id ?? "new"}-${savedVersion}`}
         defaultValues={
-          product ? toProductFormValues(product) : EMPTY_PRODUCT_FORM
+          baseline?.values ??
+          (product ? toProductFormValues(product) : EMPTY_PRODUCT_FORM)
         }
         isCreate={isCreate}
         isSubmitting={isSaving}
@@ -449,6 +466,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
         gallery={gallery}
         onSubmit={handleSubmit}
         onInvalid={handleInvalid}
+        onDirtyChange={setIsFormDirty}
         onCancel={handleCancel}
       />
 
@@ -472,7 +490,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       <AdminConfirmDialog
         isOpen={isLeaveOpen}
         title="Leave without saving?"
-        description="The changes on this page, photos included, are not saved yet."
+        description={describeUnsavedChanges(imageDraft !== null)}
         confirmLabel="Leave without saving"
         cancelLabel="Keep editing"
         isDestructive

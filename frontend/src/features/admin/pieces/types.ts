@@ -199,6 +199,26 @@ export function toProductsFilter(
   };
 }
 
+/** What was sent in a save: the form's values and the photo order. */
+export interface PieceDraft {
+  values: ProductFormValues;
+  imageUrls: string[];
+}
+
+// A save whose read-back failed keeps what was sent on screen, so a second save never writes old values.
+export function toFormBaseline(
+  isRefreshed: boolean,
+  submitted: PieceDraft,
+): PieceDraft | null {
+  return isRefreshed ? null : submitted;
+}
+
+export function describeUnsavedChanges(hasPhotoChanges: boolean): string {
+  return hasPhotoChanges
+    ? "Your changes to this piece, photos included, are not saved yet."
+    : "Your changes to this piece are not saved yet.";
+}
+
 export const EMPTY_PRODUCT_FORM: ProductFormValues = {
   name: "",
   description: "",

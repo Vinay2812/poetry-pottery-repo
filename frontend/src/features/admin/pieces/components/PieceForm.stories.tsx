@@ -30,6 +30,7 @@ const meta = {
     ),
     onSubmit: fn(),
     onInvalid: fn(),
+    onDirtyChange: fn(),
     onCancel: fn(),
   },
 } satisfies Meta<typeof PieceForm>;

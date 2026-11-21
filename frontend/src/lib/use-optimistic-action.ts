@@ -40,8 +40,12 @@ export interface OptimisticActionOptions<
   /** Reads the server's copy back once the write lands; usually a query's `refetch`. */
   refresh?: Refresh;
   messages: OptimisticActionMessages<TInput, TRun>;
-  /** Runs only when the write landed, whether or not the refresh did. */
-  onSuccess?: (result: Awaited<TRun>, input: TInput) => void;
+  /** Runs only when the write landed; `isRefreshed` says whether the read-back did too. */
+  onSuccess?: (
+    result: Awaited<TRun>,
+    input: TInput,
+    isRefreshed: boolean,
+  ) => void;
 }
 
 export interface OptimisticAction<TInput> {
@@ -131,7 +135,7 @@ export function useOptimisticAction<TInput, TRun extends Promise<unknown>>(
         return;
       }
       const refreshed = refresh ? await attemptRefresh(refresh) : true;
-      onSuccess?.(result, input);
+      onSuccess?.(result, input, refreshed);
       const success =
         typeof messages.success === "function"
           ? messages.success(input, result)
