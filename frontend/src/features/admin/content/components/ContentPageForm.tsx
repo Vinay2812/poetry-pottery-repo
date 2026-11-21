@@ -131,85 +131,89 @@ function SectionFields({
             Items become a list under the section. A section can have none.
           </p>
         )}
-        {items.fields.map((item, itemIndex) => {
-          const itemErrors = sectionErrors?.items?.[itemIndex];
-          const itemPosition = itemIndex + 1;
-          const itemUp = nextIndex(items.fields.length, itemIndex, -1);
-          const itemDown = nextIndex(items.fields.length, itemIndex, 1);
-          const itemLabelId = `section-${index}-item-${itemIndex}-label`;
-          return (
-            <div
-              key={item.id}
-              role="group"
-              aria-labelledby={itemLabelId}
-              className="flex flex-col gap-3 border-t border-ash pt-3"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span
-                  id={itemLabelId}
-                  className="text-[12px] text-muted-foreground"
+        {items.fields.length > 0 && (
+          <div className="flex flex-col divide-y divide-ash">
+            {items.fields.map((item, itemIndex) => {
+              const itemErrors = sectionErrors?.items?.[itemIndex];
+              const itemPosition = itemIndex + 1;
+              const itemUp = nextIndex(items.fields.length, itemIndex, -1);
+              const itemDown = nextIndex(items.fields.length, itemIndex, 1);
+              const itemLabelId = `section-${index}-item-${itemIndex}-label`;
+              return (
+                <div
+                  key={item.id}
+                  role="group"
+                  aria-labelledby={itemLabelId}
+                  className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0"
                 >
-                  Item {itemPosition}
-                </span>
-                <span className="flex gap-1">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon-sm"
-                    aria-label={`Move item ${itemPosition} of section ${position} up`}
-                    disabled={itemUp === null}
-                    onClick={() =>
-                      itemUp !== null && items.move(itemIndex, itemUp)
-                    }
-                  >
-                    ↑
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon-sm"
-                    aria-label={`Move item ${itemPosition} of section ${position} down`}
-                    disabled={itemDown === null}
-                    onClick={() =>
-                      itemDown !== null && items.move(itemIndex, itemDown)
-                    }
-                  >
-                    ↓
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`Remove item ${itemPosition} of section ${position}`}
-                    onClick={() => items.remove(itemIndex)}
-                  >
-                    Remove
-                  </Button>
-                </span>
-              </div>
-              <ContentTextField
-                id={`section-${index}-item-${itemIndex}-title`}
-                label="Item title"
-                hint={null}
-                error={itemErrors?.title?.message}
-                isMultiline={false}
-                registration={register(
-                  `sections.${index}.items.${itemIndex}.title`,
-                )}
-              />
-              <ContentTextField
-                id={`section-${index}-item-${itemIndex}-body`}
-                label="Item body"
-                hint={null}
-                error={itemErrors?.body?.message}
-                isMultiline
-                registration={register(
-                  `sections.${index}.items.${itemIndex}.body`,
-                )}
-              />
-            </div>
-          );
-        })}
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span
+                      id={itemLabelId}
+                      className="text-[12px] text-muted-foreground"
+                    >
+                      Item {itemPosition}
+                    </span>
+                    <span className="flex gap-1">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon-sm"
+                        aria-label={`Move item ${itemPosition} of section ${position} up`}
+                        disabled={itemUp === null}
+                        onClick={() =>
+                          itemUp !== null && items.move(itemIndex, itemUp)
+                        }
+                      >
+                        ↑
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon-sm"
+                        aria-label={`Move item ${itemPosition} of section ${position} down`}
+                        disabled={itemDown === null}
+                        onClick={() =>
+                          itemDown !== null && items.move(itemIndex, itemDown)
+                        }
+                      >
+                        ↓
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Remove item ${itemPosition} of section ${position}`}
+                        onClick={() => items.remove(itemIndex)}
+                      >
+                        Remove
+                      </Button>
+                    </span>
+                  </div>
+                  <ContentTextField
+                    id={`section-${index}-item-${itemIndex}-title`}
+                    label="Item title"
+                    hint={null}
+                    error={itemErrors?.title?.message}
+                    isMultiline={false}
+                    registration={register(
+                      `sections.${index}.items.${itemIndex}.title`,
+                    )}
+                  />
+                  <ContentTextField
+                    id={`section-${index}-item-${itemIndex}-body`}
+                    label="Item body"
+                    hint={null}
+                    error={itemErrors?.body?.message}
+                    isMultiline
+                    registration={register(
+                      `sections.${index}.items.${itemIndex}.body`,
+                    )}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
         <Button
           type="button"
           variant="secondary"
