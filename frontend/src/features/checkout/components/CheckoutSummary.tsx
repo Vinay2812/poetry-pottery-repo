@@ -10,6 +10,7 @@ export interface CheckoutSummaryProps {
   discount: number;
   couponCode: string | null;
   shippingFee: number;
+  shippingNote: string | null;
   total: number;
   problems: string[];
   isDiscountPending: boolean;
@@ -27,6 +28,7 @@ export function CheckoutSummary({
   discount,
   couponCode,
   shippingFee,
+  shippingNote,
   total,
   problems,
   isDiscountPending,
@@ -57,6 +59,7 @@ export function CheckoutSummary({
           discount={discount}
           couponCode={couponCode}
           shippingFee={shippingFee}
+          shippingNote={shippingNote}
           total={total}
           isDiscountPending={isDiscountPending}
         />

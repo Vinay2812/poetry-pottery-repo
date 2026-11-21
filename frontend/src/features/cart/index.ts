@@ -1,3 +1,4 @@
+export { CartLoadFailed } from "@/features/cart/components/CartLoadFailed";
 export { CartLineItem } from "@/features/cart/components/CartLineItem";
 export { CartSkeleton } from "@/features/cart/components/CartSkeleton";
 export { CartSummary } from "@/features/cart/components/CartSummary";

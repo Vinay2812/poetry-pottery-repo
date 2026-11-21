@@ -19,15 +19,14 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { describeError } from "@/lib/apollo/errors";
+import { formatInr } from "@/lib/format";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
 import { PageShell } from "@/components/layout/PageShell";
 
 import { AddressPickerContainer } from "@/features/addresses";
-import { CartLoadFailed } from "@/features/cart/components/CartLoadFailed";
-import { EmptyCart } from "@/features/cart/components/EmptyCart";
-import { useCart } from "@/features/cart/hooks";
-import { toSelectionSummary } from "@/features/cart/types";
+import { CartLoadFailed, EmptyCart, useCart } from "@/features/cart";
+import { toSelectionSummary, toShippingNote } from "@/features/cart/types";
 import { CheckoutLayout } from "@/features/checkout/components/CheckoutLayout";
 import { CheckoutLineItem } from "@/features/checkout/components/CheckoutLineItem";
 import { CheckoutSection } from "@/features/checkout/components/CheckoutSection";
@@ -226,7 +225,7 @@ export function CheckoutContainer() {
                 ))}
               </ul>
             </CheckoutSection>
-            <CheckoutSection title="Before we pack it">
+            <CheckoutSection title="Gift and notes">
               <div className="flex flex-col gap-8">
                 <GiftNoteField
                   isGift={isGift}
@@ -248,6 +247,11 @@ export function CheckoutContainer() {
             discount={coupon.discount}
             couponCode={coupon.code}
             shippingFee={quote?.shipping_fee ?? cart.shipping_fee}
+            shippingNote={toShippingNote(
+              quote?.shipping_fee ?? cart.shipping_fee,
+              cart.free_shipping_above,
+              formatInr,
+            )}
             total={quote?.total ?? cart.total}
             problems={quote?.problems ?? []}
             isDiscountPending={coupon.isPending}
