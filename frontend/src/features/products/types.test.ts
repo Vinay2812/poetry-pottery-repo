@@ -193,6 +193,18 @@ describe("toFilterInput", () => {
   });
 });
 
+describe("toFilterInput while searching", () => {
+  it("leaves the sort out, since a search keeps its relevance order", () => {
+    const filters = { ...EMPTY_FILTERS, sort: ProductSort.PriceLowToHigh };
+
+    expect(toFilterInput(filters, 1).sort).toBe(ProductSort.PriceLowToHigh);
+    expect(toFilterInput({ ...filters, search: "mug" }, 1).sort).toBeNull();
+    expect(toFilterKey(toFilterInput({ ...filters, search: "mug" }, 1))).toBe(
+      toFilterKey(toFilterInput({ ...EMPTY_FILTERS, search: "mug" }, 1)),
+    );
+  });
+});
+
 describe("toResultCountLabel", () => {
   it("counts pieces", () => {
     expect(toResultCountLabel(1, "", false)).toBe("1 piece");

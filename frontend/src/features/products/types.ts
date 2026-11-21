@@ -195,7 +195,8 @@ export function toFilterInput(
     customizable_only: filters.customizableOnly || null,
     seconds_only: filters.secondsOnly || null,
     archive: filters.isArchive,
-    sort: filters.sort,
+    // A search is ranked by relevance, so a sort would only split the cache.
+    sort: filters.search ? null : filters.sort,
     page,
     limit: PAGE_SIZE,
   };
