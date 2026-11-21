@@ -18,9 +18,10 @@ import {
   useWorkshopBooking,
 } from "@/features/workshops/hooks";
 import { useSlotPicker } from "@/features/workshops/slot-picker";
+import { toClosedLabel, toTimelineSteps } from "@/features/orders/types";
 import {
   applyBookingAction,
-  BOOKING_STEPS,
+  BOOKING_STAGES,
   formatDayRange,
   formatHours,
   groupSlotsByDay,
@@ -29,7 +30,6 @@ import {
   type SessionFact,
   toBookingStatusLabel,
   toBookingStatusTone,
-  toBookingStepIndex,
   toWhatsAppSessionMessage,
 } from "@/features/workshops/types";
 
@@ -159,7 +159,11 @@ export function BookingDetailContainer({
   const closedOn =
     optimisticBooking.cancelled_at ?? optimisticBooking.rejected_at;
   const closedLabel = closed
-    ? `${toBookingStatusLabel(optimisticBooking.status)}${closedOn ? ` on ${formatDateTime(closedOn)}` : ""}${optimisticBooking.cancel_reason ? ` · ${optimisticBooking.cancel_reason}` : ""}`
+    ? toClosedLabel(
+        toBookingStatusLabel(optimisticBooking.status),
+        closedOn ? formatDateTime(closedOn) : null,
+        optimisticBooking.cancel_reason,
+      )
     : null;
   const dayGroups = groupSlotsByDay(optimisticBooking.slots, timezone);
   const when = dayGroups
@@ -207,14 +211,12 @@ export function BookingDetailContainer({
           isJustPlaced,
           optimisticBooking.status,
         )}
-        steps={BOOKING_STEPS.map((step) => ({
-          key: step.key,
-          label: step.label,
-          description: step.description,
-          date: dates[step.key] ?? null,
-        }))}
-        currentStepIndex={toBookingStepIndex(optimisticBooking.status)}
-        isClosed={closed}
+        steps={toTimelineSteps({
+          stages: BOOKING_STAGES,
+          status: optimisticBooking.status,
+          dates,
+          isClosed: closed,
+        })}
         closedLabel={closedLabel}
         facts={facts}
         participants={optimisticBooking.participants}

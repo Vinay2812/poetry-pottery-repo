@@ -4,6 +4,7 @@ import { OrderStatus } from "@/graphql/generated/graphql";
 
 import {
   applyOrderCancellation,
+  ORDER_STAGES,
   isClosed,
   showsPlacedBanner,
   type OrderData,
@@ -13,7 +14,8 @@ import {
   toStatusLabel,
   toStatusTone,
   toOrderPath,
-  toStepIndex,
+  toClosedLabel,
+  toTimelineSteps,
   toWhatsAppOrderMessage,
 } from "./types";
 
@@ -26,23 +28,103 @@ describe("order status helpers", () => {
     expect(toStatusTone(OrderStatus.Shipped)).toBe("active");
     expect(toStatusTone(OrderStatus.Delivered)).toBe("done");
     expect(toStatusTone(OrderStatus.Refunded)).toBe("off");
-    expect(toStepIndex(OrderStatus.Paid)).toBe(2);
-    expect(toStepIndex(OrderStatus.Cancelled)).toBe(0);
     expect(isClosed(OrderStatus.Cancelled)).toBe(true);
     expect(isClosed(OrderStatus.Paid)).toBe(false);
   });
+});
 
-  it("freezes a cancelled order at the last step it actually reached", () => {
-    const dates = {
-      PENDING: "12 Sept",
-      CONFIRMED: "13 Sept",
-      PAID: "14 Sept",
-      SHIPPED: null,
-      DELIVERED: null,
-    };
-    expect(toStepIndex(OrderStatus.Cancelled, dates)).toBe(2);
-    expect(toStepIndex(OrderStatus.Refunded, dates)).toBe(2);
-    expect(toStepIndex(OrderStatus.Shipped, dates)).toBe(3);
+describe("toTimelineSteps", () => {
+  const dates = (reachedThrough: number) =>
+    Object.fromEntries(
+      ORDER_STAGES.map((stage, index) => [
+        stage.key,
+        index <= reachedThrough ? `day ${index}` : null,
+      ]),
+    );
+
+  it("dates what happened, explains the current stage and promises the rest", () => {
+    const steps = toTimelineSteps({
+      stages: ORDER_STAGES,
+      status: OrderStatus.Confirmed,
+      dates: dates(1),
+      isClosed: false,
+    });
+    expect(steps.map((step) => step.state)).toEqual([
+      "done",
+      "current",
+      "upcoming",
+      "upcoming",
+      "upcoming",
+    ]);
+    expect(steps[0]).toMatchObject({ date: "day 0", note: null });
+    expect(steps[1]).toMatchObject({
+      date: "day 1",
+      note: ORDER_STAGES[1]?.description,
+    });
+    expect(steps[2]).toMatchObject({
+      date: null,
+      note: ORDER_STAGES[2]?.upcoming,
+    });
+  });
+
+  it("never says a later stage has already happened", () => {
+    for (const stage of ORDER_STAGES.slice(1)) {
+      expect(stage.upcoming).toBeTruthy();
+      expect(stage.upcoming).not.toBe(stage.description);
+    }
+  });
+
+  it("leaves a reached stage the studio skipped dating as its label", () => {
+    const steps = toTimelineSteps({
+      stages: ORDER_STAGES,
+      status: OrderStatus.Paid,
+      dates: { ...dates(0), PAID: "day 2" },
+      isClosed: false,
+    });
+    expect(steps[1]).toMatchObject({ state: "done", date: null, note: null });
+  });
+
+  it("shows a cancelled order only up to the last dated stage", () => {
+    for (const status of [OrderStatus.Cancelled, OrderStatus.Refunded]) {
+      const steps = toTimelineSteps({
+        stages: ORDER_STAGES,
+        status,
+        dates: dates(2),
+        isClosed: true,
+      });
+      expect(steps.map((step) => step.key)).toEqual([
+        OrderStatus.Pending,
+        OrderStatus.Confirmed,
+        OrderStatus.Paid,
+      ]);
+      expect(steps.every((step) => step.state === "done")).toBe(true);
+      expect(steps.every((step) => step.note === null)).toBe(true);
+    }
+  });
+
+  it("keeps the placed stage for an order cancelled straight away", () => {
+    const steps = toTimelineSteps({
+      stages: ORDER_STAGES,
+      status: OrderStatus.Cancelled,
+      dates: dates(0),
+      isClosed: true,
+    });
+    expect(steps).toHaveLength(1);
+  });
+});
+
+describe("toClosedLabel", () => {
+  it("says what closed it, when and why", () => {
+    expect(toClosedLabel("Cancelled", "16 Sept", "Changed my mind")).toBe(
+      "Cancelled on 16 Sept · Changed my mind",
+    );
+  });
+
+  it("leaves out what it does not know", () => {
+    expect(toClosedLabel("Refunded", null, null)).toBe("Refunded");
+    expect(toClosedLabel("Cancelled", "16 Sept", "  ")).toBe(
+      "Cancelled on 16 Sept",
+    );
   });
 });
 

@@ -25,7 +25,7 @@ import {
   toRegistrationPath,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
-  toRegistrationStepIndex,
+  REGISTRATION_STAGES,
   toEventWhenLabel,
   toEventWhenRangeLabel,
   toEventFacts,
@@ -49,6 +49,7 @@ import {
   toTimeRange,
   toWhatsAppBookingMessage,
 } from "./types";
+import { toTimelineSteps } from "@/features/orders/types";
 
 const STARTS_AT = "2026-09-19T09:30:00.000Z";
 const ENDS_AT = "2026-09-19T12:30:00.000Z";
@@ -128,18 +129,45 @@ describe("registration status helpers", () => {
     );
     expect(toRegistrationStatusTone(RegistrationStatus.Confirmed)).toBe("done");
     expect(toRegistrationStatusTone(RegistrationStatus.Rejected)).toBe("off");
-    expect(toRegistrationStepIndex(RegistrationStatus.Confirmed)).toBe(2);
-    expect(toRegistrationStepIndex(RegistrationStatus.Cancelled)).toBe(0);
     expect(isRegistrationClosed(RegistrationStatus.Cancelled)).toBe(true);
     expect(isRegistrationClosed(RegistrationStatus.Approved)).toBe(false);
   });
 
-  it("freezes a cancelled booking at the last step it actually reached", () => {
-    const dates = { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null };
-    expect(toRegistrationStepIndex(RegistrationStatus.Cancelled, dates)).toBe(
-      1,
-    );
-    expect(toRegistrationStepIndex(RegistrationStatus.Rejected, dates)).toBe(1);
+  it("keys every stage by a registration status", () => {
+    expect(REGISTRATION_STAGES.map((stage) => stage.key)).toEqual([
+      RegistrationStatus.Pending,
+      RegistrationStatus.Approved,
+      RegistrationStatus.Confirmed,
+    ]);
+  });
+
+  it("promises the held seat while the request is still pending", () => {
+    const steps = toTimelineSteps({
+      stages: REGISTRATION_STAGES,
+      status: RegistrationStatus.Pending,
+      dates: { PENDING: "12 Sept", APPROVED: null, CONFIRMED: null },
+      isClosed: false,
+    });
+    expect(steps.map((step) => step.state)).toEqual([
+      "current",
+      "upcoming",
+      "upcoming",
+    ]);
+    expect(steps[1]?.note).not.toMatch(/is held/);
+    expect(steps[2]?.note).not.toMatch(/Paid and confirmed/);
+  });
+
+  it("stops a rejected request at the stage it reached", () => {
+    const steps = toTimelineSteps({
+      stages: REGISTRATION_STAGES,
+      status: RegistrationStatus.Rejected,
+      dates: { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null },
+      isClosed: true,
+    });
+    expect(steps.map((step) => step.key)).toEqual([
+      RegistrationStatus.Pending,
+      RegistrationStatus.Approved,
+    ]);
   });
 });
 

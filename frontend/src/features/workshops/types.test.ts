@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { DayClosedKind, RegistrationStatus } from "@/graphql/generated/graphql";
 
 import {
+  BOOKING_STAGES,
   applyBookingAction,
   type BookingData,
   formatDayRange,
@@ -28,7 +29,6 @@ import {
   toBookingGroup,
   toBookingStatusLabel,
   toBookingStatusTone,
-  toBookingStepIndex,
   toBookingWhenLines,
   toDateKey,
   toDayNote,
@@ -36,6 +36,7 @@ import {
   toWorkshopPath,
   type WorkshopDayData,
 } from "./types";
+import { toTimelineSteps } from "@/features/orders/types";
 
 const IST = "Asia/Kolkata";
 
@@ -272,14 +273,38 @@ describe("booking status helpers", () => {
     expect(toBookingStatusTone(RegistrationStatus.Confirmed)).toBe("done");
     expect(toBookingStatusTone(RegistrationStatus.Rejected)).toBe("off");
     expect(toBookingStatusTone(RegistrationStatus.Cancelled)).toBe("off");
-    expect(toBookingStepIndex(RegistrationStatus.Pending)).toBe(0);
-    expect(toBookingStepIndex(RegistrationStatus.Approved)).toBe(1);
-    expect(toBookingStepIndex(RegistrationStatus.Confirmed)).toBe(2);
   });
 
-  it("freezes a closed booking on the first step", () => {
-    expect(toBookingStepIndex(RegistrationStatus.Cancelled)).toBe(0);
-    expect(toBookingStepIndex(RegistrationStatus.Rejected)).toBe(0);
+  it("words the wheel and payment as promises while a booking waits", () => {
+    const steps = toTimelineSteps({
+      stages: BOOKING_STAGES,
+      status: RegistrationStatus.Pending,
+      dates: { PENDING: "12 Sept", APPROVED: null, CONFIRMED: null },
+      isClosed: false,
+    });
+    expect(steps.map((step) => step.state)).toEqual([
+      "current",
+      "upcoming",
+      "upcoming",
+    ]);
+    expect(steps[1]?.note).not.toMatch(/Your wheel is held/);
+    expect(steps[2]?.note).not.toMatch(/Paid and confirmed/);
+  });
+
+  it("shows a cancelled booking only up to the stage it reached", () => {
+    const steps = toTimelineSteps({
+      stages: BOOKING_STAGES,
+      status: RegistrationStatus.Cancelled,
+      dates: { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null },
+      isClosed: true,
+    });
+    expect(steps.map((step) => [step.key, step.state, step.note])).toEqual([
+      [RegistrationStatus.Pending, "done", null],
+      [RegistrationStatus.Approved, "done", null],
+    ]);
+  });
+
+  it("knows which bookings are closed", () => {
     expect(isBookingClosed(RegistrationStatus.Cancelled)).toBe(true);
     expect(isBookingClosed(RegistrationStatus.Rejected)).toBe(true);
     expect(isBookingClosed(RegistrationStatus.Approved)).toBe(false);

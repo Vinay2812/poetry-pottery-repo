@@ -1,18 +1,29 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
+import { RegistrationStatus } from "@/graphql/generated/graphql";
+
 import { atViewport } from "@/lib/storybook/viewports";
-import { REGISTRATION_STEPS } from "@/features/events/types";
-import type { OrderTimelineStep } from "@/features/orders/components/OrderTimeline";
+import { REGISTRATION_STAGES } from "@/features/events/types";
+import { toTimelineSteps } from "@/features/orders/types";
 import { RegistrationDetail } from "./RegistrationDetail";
 
-function toSteps(doneThrough: number): OrderTimelineStep[] {
-  return REGISTRATION_STEPS.map((step, index) => ({
-    key: step.key,
-    label: step.label,
-    description: step.description,
-    date: index <= doneThrough ? "Sat, 12 Sept, 2026, 3:00 pm" : null,
-  }));
+// Every stage up to `reachedThrough` carries a date; a closed one stops there.
+function toSteps(reachedThrough: number, isClosed = false) {
+  return toTimelineSteps({
+    stages: REGISTRATION_STAGES,
+    status: isClosed
+      ? RegistrationStatus.Cancelled
+      : (REGISTRATION_STAGES[reachedThrough]?.key ??
+        RegistrationStatus.Pending),
+    dates: Object.fromEntries(
+      REGISTRATION_STAGES.map((stage, index) => [
+        stage.key,
+        index <= reachedThrough ? "Sat, 12 Sept, 2026, 3:00 pm" : null,
+      ]),
+    ),
+    isClosed,
+  });
 }
 
 const meta = {
@@ -31,8 +42,6 @@ const meta = {
     requestLine:
       "Your seats are kept for you while we confirm. Send us a message and we will share payment details, or wait for ours within a day.",
     steps: toSteps(0),
-    currentStepIndex: 0,
-    isClosed: false,
     closedLabel: null,
     facts: [
       { label: "Kind", value: "Pottery workshop" },
@@ -67,7 +76,6 @@ export const SeatHeld: Story = {
     statusTone: "active",
     isRequestShown: false,
     steps: toSteps(1),
-    currentStepIndex: 1,
     discount: 300,
     total: 3300,
   },
@@ -79,7 +87,6 @@ export const Confirmed: Story = {
     statusTone: "done",
     isRequestShown: false,
     steps: toSteps(2),
-    currentStepIndex: 2,
     canCancel: false,
     note: null,
   },
@@ -91,9 +98,7 @@ export const Cancelled: Story = {
     statusLabel: "Cancelled",
     statusTone: "off",
     isRequestShown: false,
-    steps: toSteps(0),
-    currentStepIndex: 0,
-    isClosed: true,
+    steps: toSteps(0, true),
     closedLabel: "Cancelled on Wed, 16 Sept, 2026 · Travelling that weekend",
     canCancel: false,
     seats: 1,

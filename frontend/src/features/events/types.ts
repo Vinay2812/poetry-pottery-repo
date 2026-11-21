@@ -12,7 +12,7 @@ import {
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
-import type { StatusTone } from "@/features/orders/types";
+import type { StatusTone, TimelineStage } from "@/features/orders/types";
 
 export type EventCardData = EventCardFragment;
 export type EventDetailData = EventQuery["event"];
@@ -251,13 +251,7 @@ export function toGalleryHeading(eventType: EventType): string {
   return GALLERY_HEADING[eventType];
 }
 
-export interface RegistrationStep {
-  key: RegistrationStatus;
-  label: string;
-  description: string;
-}
-
-export const REGISTRATION_STEPS: RegistrationStep[] = [
+export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
   {
     key: RegistrationStatus.Pending,
     label: "Requested",
@@ -267,11 +261,14 @@ export const REGISTRATION_STEPS: RegistrationStep[] = [
     key: RegistrationStatus.Approved,
     label: "Seat held",
     description: "Your seat is held. We share payment details on WhatsApp.",
+    upcoming:
+      "If a seat is free we hold it and share payment details on WhatsApp.",
   },
   {
     key: RegistrationStatus.Confirmed,
     label: "Confirmed",
     description: "Paid and confirmed. Come in ten minutes early.",
+    upcoming: "Confirmed once you have paid.",
   },
 ];
 
@@ -322,20 +319,6 @@ export function toRegistrationStepDates(
       ? formatDateTime(registration.confirmed_at)
       : null,
   };
-}
-
-// Index of the current step. Cancelled and rejected bookings are not steps of their own,
-// so they freeze at the last step that actually carries a date.
-export function toRegistrationStepIndex(
-  status: RegistrationStatus,
-  stepDates: RegistrationStepDates = {},
-): number {
-  const index = REGISTRATION_STEPS.findIndex((step) => step.key === status);
-  if (index !== -1) return index;
-  return REGISTRATION_STEPS.reduce(
-    (reached, step, at) => (stepDates[step.key] ? at : reached),
-    0,
-  );
 }
 
 export function isRegistrationClosed(status: RegistrationStatus): boolean {

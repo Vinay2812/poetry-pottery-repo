@@ -5,13 +5,93 @@ import {
 
 export type OrderData = OrderFieldsFragment;
 
-export interface StatusStep {
-  key: OrderStatus;
+// One stage of a progress timeline, worded twice: as it reads once it has happened and as
+// a promise while it is still ahead.
+export interface TimelineStage<Key extends string = string> {
+  key: Key;
   label: string;
   description: string;
+  // The first stage is always reached, so it never needs one.
+  upcoming?: string;
 }
 
-export const ORDER_STEPS: StatusStep[] = [
+export interface TimelineStep {
+  key: string;
+  label: string;
+  date: string | null;
+  note: string | null;
+  state: "done" | "current" | "upcoming";
+}
+
+// The status may be one no stage carries (cancelled, refunded, rejected).
+export interface TimelineInput<Key extends string> {
+  stages: readonly TimelineStage<Key>[];
+  status: Key;
+  dates: Readonly<Record<string, string | null>>;
+  isClosed: boolean;
+}
+
+// Cancelled, refunded and rejected are not stages of their own, so a closed item stops at the
+// last stage that carries a date.
+function toReachedIndex<Key extends string>({
+  stages,
+  status,
+  dates,
+}: TimelineInput<Key>): number {
+  const index = stages.findIndex((stage) => stage.key === status);
+  if (index !== -1) return index;
+  return stages.reduce(
+    (reached, stage, at) => (dates[stage.key] ? at : reached),
+    0,
+  );
+}
+
+// Reached stages show only their date, the current one also says what it means, and later
+// ones say what will happen. A closed item shows only the stages it actually reached.
+export function toTimelineSteps<Key extends string>(
+  input: TimelineInput<Key>,
+): TimelineStep[] {
+  const reached = toReachedIndex(input);
+  const visible = input.isClosed
+    ? input.stages.slice(0, reached + 1)
+    : input.stages;
+  return visible.map((stage, index) => {
+    const date = input.dates[stage.key] ?? null;
+    if (index > reached) {
+      return {
+        key: stage.key,
+        label: stage.label,
+        date: null,
+        note: stage.upcoming ?? null,
+        state: "upcoming",
+      };
+    }
+    const isCurrent = index === reached && !input.isClosed;
+    return {
+      key: stage.key,
+      label: stage.label,
+      date,
+      note: isCurrent ? stage.description : null,
+      state: isCurrent ? "current" : "done",
+    };
+  });
+}
+
+// "Cancelled on 16 Sept · Travelling that week": what closed it, when, and why if we know.
+export function toClosedLabel(
+  statusLabel: string,
+  closedOn: string | null,
+  reason: string | null,
+): string {
+  return [
+    closedOn ? `${statusLabel} on ${closedOn}` : statusLabel,
+    reason?.trim() || null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+export const ORDER_STAGES: TimelineStage<OrderStatus>[] = [
   {
     key: OrderStatus.Pending,
     label: "Order placed",
@@ -21,21 +101,25 @@ export const ORDER_STEPS: StatusStep[] = [
     key: OrderStatus.Confirmed,
     label: "Confirmed",
     description: "Payment details shared; we start packing once it lands.",
+    upcoming: "We confirm on WhatsApp and share payment details.",
   },
   {
     key: OrderStatus.Paid,
     label: "Paid",
     description: "Payment received. Wrapping every piece by hand.",
+    upcoming: "Once payment lands, we wrap every piece by hand.",
   },
   {
     key: OrderStatus.Shipped,
     label: "Shipped",
     description: "On its way, usually five to seven days.",
+    upcoming: "Goes out by courier once it is packed.",
   },
   {
     key: OrderStatus.Delivered,
     label: "Delivered",
     description: "Enjoy. Tell us how it looks in your home.",
+    upcoming: "Usually five to seven days after it ships.",
   },
 ];
 
@@ -61,20 +145,6 @@ export function toStatusTone(status: OrderStatus): StatusTone {
   if (status === OrderStatus.Delivered) return "done";
   if (status === OrderStatus.Pending) return "pending";
   return "active";
-}
-
-// Index of the current step on the timeline. Cancelled and refunded orders are not steps of
-// their own, so they freeze at the last step that actually carries a date.
-export function toStepIndex(
-  status: OrderStatus,
-  stepDates: Record<string, string | null> = {},
-): number {
-  const index = ORDER_STEPS.findIndex((step) => step.key === status);
-  if (index !== -1) return index;
-  return ORDER_STEPS.reduce(
-    (reached, step, at) => (stepDates[step.key] ? at : reached),
-    0,
-  );
 }
 
 const ARRIVAL_DATE = new Intl.DateTimeFormat("en-IN", {

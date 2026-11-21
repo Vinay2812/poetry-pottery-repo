@@ -7,7 +7,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { buildWhatsAppUrl } from "@/features/layout/types";
-import type { StatusTone } from "@/features/orders/types";
+import type { StatusTone, TimelineStage } from "@/features/orders/types";
 
 export type WorkshopData = WorkshopConfigFieldsFragment;
 export type WorkshopTierData = WorkshopData["tiers"][number];
@@ -314,13 +314,7 @@ export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
   ].join("\n");
 }
 
-interface BookingStep {
-  key: RegistrationStatus;
-  label: string;
-  description: string;
-}
-
-export const BOOKING_STEPS: BookingStep[] = [
+export const BOOKING_STAGES: TimelineStage<RegistrationStatus>[] = [
   {
     key: RegistrationStatus.Pending,
     label: "Requested",
@@ -330,11 +324,13 @@ export const BOOKING_STEPS: BookingStep[] = [
     key: RegistrationStatus.Approved,
     label: "Wheel held",
     description: "Your wheel is held. We share payment details on WhatsApp.",
+    upcoming: "We hold your wheel and share payment details on WhatsApp.",
   },
   {
     key: RegistrationStatus.Confirmed,
     label: "Confirmed",
     description: "Paid and confirmed. Come in ten minutes early.",
+    upcoming: "Confirmed once you have paid.",
   },
 ];
 
@@ -359,12 +355,6 @@ export function toBookingStatusTone(status: RegistrationStatus): StatusTone {
   if (status === RegistrationStatus.Confirmed) return "done";
   if (status === RegistrationStatus.Pending) return "pending";
   return "active";
-}
-
-// Closed bookings freeze on the step they stopped at.
-export function toBookingStepIndex(status: RegistrationStatus): number {
-  const index = BOOKING_STEPS.findIndex((step) => step.key === status);
-  return index === -1 ? 0 : index;
 }
 
 type BookingGroup = "upcoming" | "past";

@@ -1,30 +1,26 @@
 import { cn } from "@/lib/utils";
 
-export interface OrderTimelineStep {
-  key: string;
-  label: string;
-  description: string;
-  date: string | null;
-}
+import type { TimelineStep } from "@/features/orders/types";
 
 export interface OrderTimelineProps {
-  steps: OrderTimelineStep[];
-  currentIndex: number;
-  isClosed: boolean;
+  steps: TimelineStep[];
   closedLabel: string | null;
 }
 
-export function OrderTimeline({
-  steps,
-  currentIndex,
-  isClosed,
-  closedLabel,
-}: OrderTimelineProps) {
+const STATE_FOR_READERS: Record<TimelineStep["state"], string> = {
+  done: "",
+  current: " (current)",
+  upcoming: " (not yet)",
+};
+
+// Shared by orders, wheel sessions and event bookings; each maps its own status to stages.
+export function OrderTimeline({ steps, closedLabel }: OrderTimelineProps) {
+  const isClosed = closedLabel !== null;
   return (
     <ol className="flex flex-col">
       {steps.map((step, index) => {
-        const isReached = index <= currentIndex;
-        const isCurrent = !isClosed && index === currentIndex;
+        const isUpcoming = step.state === "upcoming";
+        const hasLine = index < steps.length - 1 || isClosed;
         return (
           <li key={step.key} className="flex gap-4">
             <div className="flex w-2 flex-col items-center pt-1.5">
@@ -32,33 +28,35 @@ export function OrderTimeline({
                 aria-hidden="true"
                 className={cn(
                   "size-2 shrink-0",
-                  isClosed && isReached && "bg-smoke",
-                  !isClosed && isReached && "bg-ink",
-                  !isReached && "bg-ash",
+                  isUpcoming ? "bg-ash" : isClosed ? "bg-smoke" : "bg-ink",
                 )}
               />
-              {index < steps.length - 1 && (
+              {hasLine && (
                 <span aria-hidden="true" className="w-px flex-1 bg-ash" />
               )}
             </div>
-            <div
-              className={cn(
-                "flex flex-col gap-0.5 pb-6",
-                !isReached && "text-muted-foreground",
-              )}
-            >
-              <span className="text-sm">
+            <div className="flex flex-col gap-0.5 pb-6">
+              <span
+                className={cn("text-sm", isUpcoming && "text-muted-foreground")}
+              >
                 {step.label}
-                {isCurrent && <span className="sr-only"> (current)</span>}
+                <span className="sr-only">{STATE_FOR_READERS[step.state]}</span>
               </span>
-              <span className="text-[13px] text-muted-foreground">
-                {step.date ?? step.description}
-              </span>
+              {step.date && (
+                <span className="text-[13px] text-muted-foreground tnum">
+                  {step.date}
+                </span>
+              )}
+              {step.note && (
+                <span className="text-[13px] text-muted-foreground">
+                  {step.note}
+                </span>
+              )}
             </div>
           </li>
         );
       })}
-      {isClosed && closedLabel && (
+      {closedLabel && (
         <li className="flex gap-4">
           <div className="flex w-2 flex-col items-center pt-1.5">
             <span aria-hidden="true" className="size-2 shrink-0 bg-ink" />

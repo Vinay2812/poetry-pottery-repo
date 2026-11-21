@@ -18,14 +18,15 @@ import { useCancelOrder, useOrder, useReorder } from "@/features/orders/hooks";
 import {
   applyOrderCancellation,
   isClosed,
-  ORDER_STEPS,
+  ORDER_STAGES,
   showsPlacedBanner,
+  toClosedLabel,
   toArrivalWindow,
   toDeliveredCareLines,
   toFirstName,
   toStatusLabel,
   toStatusTone,
-  toStepIndex,
+  toTimelineSteps,
   toWhatsAppOrderMessage,
 } from "@/features/orders/types";
 import { toProductPath } from "@/features/products/types";
@@ -121,7 +122,13 @@ export function OrderDetailContainer({
   const closed = isClosed(optimisticOrder.status);
   const isDelivered = optimisticOrder.status === OrderStatus.Delivered;
   const closedLabel = closed
-    ? `${toStatusLabel(optimisticOrder.status)}${optimisticOrder.cancelled_at ? ` on ${formatDateTime(optimisticOrder.cancelled_at)}` : ""}${optimisticOrder.cancel_reason ? ` · ${optimisticOrder.cancel_reason}` : ""}`
+    ? toClosedLabel(
+        toStatusLabel(optimisticOrder.status),
+        optimisticOrder.cancelled_at
+          ? formatDateTime(optimisticOrder.cancelled_at)
+          : null,
+        optimisticOrder.cancel_reason,
+      )
     : null;
   const whatsappUrl = whatsappNumber
     ? buildWhatsAppUrl(
@@ -156,14 +163,12 @@ export function OrderDetailContainer({
         )}
         transitLine={TRANSIT_LINE}
         emailedTo={user?.primaryEmailAddress?.emailAddress ?? null}
-        steps={ORDER_STEPS.map((step) => ({
-          key: step.key,
-          label: step.label,
-          description: step.description,
-          date: dates[step.key] ?? null,
-        }))}
-        currentStepIndex={toStepIndex(optimisticOrder.status, dates)}
-        isClosed={closed}
+        steps={toTimelineSteps({
+          stages: ORDER_STAGES,
+          status: optimisticOrder.status,
+          dates,
+          isClosed: closed,
+        })}
         closedLabel={closedLabel}
         items={optimisticOrder.items.map((item) => ({
           id: item.id,
