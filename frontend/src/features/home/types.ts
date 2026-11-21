@@ -58,3 +58,51 @@ export function toStudioPriceLabel(
   const hours = shortest.hours === 1 ? "an hour" : `${shortest.hours} hours`;
   return `From ${formatInr(shortest.price_per_person)} a person for ${hours}`;
 }
+
+export interface StudioWheel {
+  opening_minutes: number;
+  closing_minutes: number;
+  closed_weekdays: readonly number[];
+  tiers: readonly { hours: number; price_per_person: number }[];
+}
+
+export interface StudioFacts {
+  hoursLabel: string;
+  daysLabel: string;
+  priceLabel: string | null;
+}
+
+// Without a wheel on the books the teaser still speaks in the studio's usual hours.
+export function toStudioFacts(wheel: StudioWheel | null): StudioFacts {
+  if (!wheel) {
+    return {
+      hoursLabel: "Afternoons",
+      daysLabel: "Every day but Monday",
+      priceLabel: null,
+    };
+  }
+  return {
+    hoursLabel: toStudioHoursLabel(
+      wheel.opening_minutes,
+      wheel.closing_minutes,
+    ),
+    daysLabel: toStudioDaysLabel(wheel.closed_weekdays),
+    priceLabel: toStudioPriceLabel(wheel.tiers),
+  };
+}
+
+// Mid-sentence the days read lower case, but a weekday keeps its capital.
+function toMidSentence(label: string): string {
+  return /^(Every|Closed|By)\b/.test(label)
+    ? `${label.charAt(0).toLowerCase()}${label.slice(1)}`
+    : label;
+}
+
+// The line under "At the studio", read off the wheel's own hours when it has them.
+export function toStudioNote(wheel: StudioWheel | null): string {
+  if (!wheel) {
+    return "Wheel sessions run every afternoon except Monday. Book an hour or three.";
+  }
+  const { hoursLabel, daysLabel } = toStudioFacts(wheel);
+  return `Wheel sessions run ${hoursLabel}, ${toMidSentence(daysLabel)}. Book an hour or three.`;
+}

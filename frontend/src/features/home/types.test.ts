@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import {
   toStudioDaysLabel,
+  toStudioFacts,
+  toStudioNote,
   toStudioHoursLabel,
   toStudioPriceLabel,
 } from "./types";
@@ -51,5 +53,49 @@ describe("toStudioPriceLabel", () => {
 
   it("has nothing to say without tiers", () => {
     expect(toStudioPriceLabel([])).toBeNull();
+  });
+});
+
+const WHEEL = {
+  opening_minutes: 780,
+  closing_minutes: 1140,
+  closed_weekdays: [1],
+  tiers: [{ hours: 1, price_per_person: 1100 }],
+};
+
+describe("toStudioFacts", () => {
+  it("reads hours, days and price off the wheel", () => {
+    expect(toStudioFacts(WHEEL)).toEqual({
+      hoursLabel: "1 to 7 pm",
+      daysLabel: "Every day but Monday",
+      priceLabel: "From ₹1,100 a person for an hour",
+    });
+  });
+
+  it("falls back to the usual afternoons without a wheel", () => {
+    expect(toStudioFacts(null)).toEqual({
+      hoursLabel: "Afternoons",
+      daysLabel: "Every day but Monday",
+      priceLabel: null,
+    });
+  });
+});
+
+describe("toStudioNote", () => {
+  it("names the wheel's hours and days mid-sentence", () => {
+    expect(toStudioNote(WHEEL)).toBe(
+      "Wheel sessions run 1 to 7 pm, every day but Monday. Book an hour or three.",
+    );
+    expect(
+      toStudioNote({ ...WHEEL, closed_weekdays: [0, 1, 2, 3, 4, 5] }),
+    ).toBe(
+      "Wheel sessions run 1 to 7 pm, Saturdays only. Book an hour or three.",
+    );
+  });
+
+  it("keeps the usual line without a wheel", () => {
+    expect(toStudioNote(null)).toBe(
+      "Wheel sessions run every afternoon except Monday. Book an hour or three.",
+    );
   });
 });

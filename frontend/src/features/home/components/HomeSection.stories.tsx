@@ -24,7 +24,7 @@ export const Default: Story = {};
 export const WithNote: Story = {
   args: {
     title: "At the studio",
-    note: "Wheel sessions run every afternoon except Monday. Book an hour or three.",
+    note: "Wheel sessions run 1 to 7 pm, every day but Monday. Book an hour or three.",
   },
 };
 

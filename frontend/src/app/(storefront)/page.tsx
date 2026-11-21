@@ -13,19 +13,18 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 import { pageMetadata, SITE_DESCRIPTION, SITE_NAME } from "@/lib/seo";
 import { serializeJsonLd, toStudioJsonLd } from "@/lib/structured-data";
 
-import { Reveal } from "@/components/motion/Reveal";
 import { PageShell } from "@/components/layout/PageShell";
 import { JsonLd } from "@/components/seo/JsonLd";
 
 import {
   AboutBlock,
   EventRow,
+  HomeBand,
   HomeHero,
   HomeSection,
   StudioTeaser,
-  toStudioDaysLabel,
-  toStudioHoursLabel,
-  toStudioPriceLabel,
+  toStudioFacts,
+  toStudioNote,
 } from "@/features/home";
 import { ReviewColumn, toOneLine } from "@/features/reviews";
 import { toEventPath, toSeatsLabel } from "@/features/events";
@@ -65,6 +64,7 @@ export default async function HomePage() {
   const shapes = categories.filter((category) => category.product_count > 0);
   const customPiece = customPieces[0] ?? null;
   const wheel = workshops[0] ?? null;
+  const studioFacts = toStudioFacts(wheel);
   const hasEvents = upcomingEvents.length > 0;
 
   return (
@@ -97,46 +97,34 @@ export default async function HomePage() {
       )}
 
       {customPiece && (
-        <section className="border-t border-ash py-16 md:py-24">
-          <Reveal isScrollLinked>
-            <MadeToOrderBanner
-              href="/custom"
-              imageUrl={customPiece.image_urls[0] ?? null}
-              priceLabel={formatInr(customPiece.price)}
-            />
-          </Reveal>
-        </section>
+        <HomeBand>
+          <MadeToOrderBanner
+            href="/custom"
+            imageUrl={customPiece.image_urls[0] ?? null}
+            priceLabel={formatInr(customPiece.price)}
+          />
+        </HomeBand>
       )}
 
       {featured.length > 0 && (
-        <div className="border-t border-ash py-16 md:py-24">
-          <Reveal isGroup>
-            <ProductCarousel
-              title="Pieces on the shelf"
-              viewAllHref="/products"
-            >
-              {featured.map((product, index) => (
-                <ProductCardContainer
-                  key={product.id}
-                  product={product}
-                  isPriority={index < 2}
-                  hasPhotoCarousel={false}
-                />
-              ))}
-            </ProductCarousel>
-          </Reveal>
-        </div>
+        <HomeBand isGroup>
+          <ProductCarousel title="Pieces on the shelf" viewAllHref="/products">
+            {featured.map((product, index) => (
+              <ProductCardContainer
+                key={product.id}
+                product={product}
+                isPriority={index < 2}
+                hasPhotoCarousel={false}
+              />
+            ))}
+          </ProductCarousel>
+        </HomeBand>
       )}
 
-      {/* With nothing on the calendar the teaser carries the facts and the only link,
-          so the heading row offers neither a note nor a second way to the same page. */}
+      {/* An empty calendar hands the note and the link to the teaser below. */}
       <HomeSection
         title="At the studio"
-        note={
-          hasEvents
-            ? "Wheel sessions run every afternoon except Monday. Book an hour or three."
-            : undefined
-        }
+        note={hasEvents ? toStudioNote(wheel) : undefined}
         linkHref={hasEvents ? "/events" : undefined}
         linkLabel={hasEvents ? "All dates" : undefined}
       >
@@ -160,20 +148,9 @@ export default async function HomePage() {
           <StudioTeaser
             imageUrl={wheel?.image_url ?? null}
             line="Nothing is on the calendar this week, but the wheels are free most afternoons. Pick an hour and we will set one up for you."
-            hoursLabel={
-              wheel
-                ? toStudioHoursLabel(
-                    wheel.opening_minutes,
-                    wheel.closing_minutes,
-                  )
-                : "Afternoons"
-            }
-            daysLabel={
-              wheel
-                ? toStudioDaysLabel(wheel.closed_weekdays)
-                : "Every day but Monday"
-            }
-            priceLabel={wheel ? toStudioPriceLabel(wheel.tiers) : null}
+            hoursLabel={studioFacts.hoursLabel}
+            daysLabel={studioFacts.daysLabel}
+            priceLabel={studioFacts.priceLabel}
             href="/workshops"
             linkLabel="Book a wheel session"
           />
