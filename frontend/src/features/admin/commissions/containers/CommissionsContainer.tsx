@@ -173,7 +173,7 @@ export function CommissionsContainer() {
         <AdminSearchField
           id="commissions-search"
           label="Search"
-          placeholder="Name, email or piece"
+          placeholder="Name, email, piece or reference"
           value={searchDraft}
           onChange={setSearchDraft}
         />
