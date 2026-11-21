@@ -49,7 +49,7 @@ export function CollectionsTable({
           <th className={ADMIN_TH}>Image</th>
           <th className={ADMIN_TH}>Name</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Window</th>
-          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Pieces</th>
+          <th className={ADMIN_TH}>Pieces</th>
           <th className={ADMIN_TH}>
             <span className="sr-only">Actions</span>
           </th>
@@ -74,7 +74,7 @@ export function CollectionsTable({
               <td className={ADMIN_TD}>
                 {row.name}
                 {row.description !== "" && (
-                  <span className="block max-w-32 truncate text-[12px] text-muted-foreground md:max-w-60 xl:max-w-80">
+                  <span className="hidden truncate text-[12px] text-muted-foreground md:block md:max-w-60 xl:max-w-80">
                     {row.description}
                   </span>
                 )}
@@ -85,7 +85,7 @@ export function CollectionsTable({
                 {describeWindow(row.startsAt, row.endsAt)}
               </td>
               <td
-                className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} text-muted-foreground tnum`}
+                className={`${ADMIN_TD} whitespace-nowrap text-muted-foreground tnum`}
               >
                 {describePieces(row.productCount)}
               </td>

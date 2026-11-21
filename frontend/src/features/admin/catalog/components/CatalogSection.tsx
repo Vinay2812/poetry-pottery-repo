@@ -30,7 +30,6 @@ export function CatalogSection({
         </div>
         <Button
           type="button"
-          variant="secondary"
           size="sm"
           disabled={isActionDisabled}
           onClick={onAction}

@@ -8,7 +8,8 @@ export interface CatalogThumbProps {
 
 const SHAPE_CLASS = {
   square: "size-10",
-  wide: "h-16 w-24",
+  // 3:2 at both sizes; the phone size only makes room for the row's buttons.
+  wide: "h-10 w-15 md:h-16 md:w-24",
 };
 
 /** Table thumbnails keep the ratio the storefront renders, so a wrong crop shows here first. */
