@@ -3,7 +3,7 @@
 import { Search, X } from "lucide-react";
 
 import { SuggestionRow } from "@/features/search/components/SuggestionRow";
-import { toOptionId } from "@/features/search/types";
+import { toInputId, toOptionId } from "@/features/search/types";
 
 export interface SearchPanelEntry {
   key: string;
@@ -113,15 +113,16 @@ export function SearchPanel({
   const total = workshopsOffset + workshops.length;
 
   return (
-    <div className="border-b border-ash bg-background">
-      <div className="mx-auto flex w-full max-w-7xl flex-col px-4 md:px-8">
+    // On a short screen the list gives up height first, so the field and the hint stay on screen.
+    <div className="flex min-h-0 flex-col border-b border-ash bg-background">
+      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-col px-4 md:px-8">
         <form
           role="search"
           onSubmit={(event) => {
             event.preventDefault();
             onSubmit();
           }}
-          className="flex h-16 items-center gap-3"
+          className="flex h-16 shrink-0 items-center gap-3"
         >
           <Search
             className="size-5 shrink-0 text-muted-foreground"
@@ -130,6 +131,7 @@ export function SearchPanel({
           />
           <input
             autoFocus
+            id={toInputId(panelId)}
             type="search"
             role="combobox"
             value={value}
@@ -163,7 +165,7 @@ export function SearchPanel({
           aria-label="Suggestions"
           aria-busy={isLoading}
           // Rows bleed 16px past the column so their text lines up with the field's icon.
-          className="-mx-4 max-h-[60vh] overflow-y-auto pb-3"
+          className="-mx-4 max-h-[60vh] min-h-0 overflow-y-auto pb-3"
         >
           <Section
             title="Recent searches"
@@ -207,7 +209,7 @@ export function SearchPanel({
           />
         </ul>
 
-        <div className="flex items-start justify-between gap-4 border-t border-ash py-3">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-t border-ash py-3">
           <p
             aria-live="polite"
             className="min-w-0 text-[13px] [overflow-wrap:anywhere] text-muted-foreground"

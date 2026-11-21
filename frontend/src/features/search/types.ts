@@ -68,6 +68,10 @@ export function nextActiveIndex(
   return (current + step + count) % count;
 }
 
+export function toInputId(panelId: string): string {
+  return `${panelId}-input`;
+}
+
 export function toOptionId(panelId: string, index: number): string {
   return `${panelId}-option-${index}`;
 }

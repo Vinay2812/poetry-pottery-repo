@@ -23,6 +23,8 @@ import {
   RECENT_SEARCH_KEY,
   type SuggestOption,
   type SuggestOptionLists,
+  toInputId,
+  toOptionId,
   toOptionOrder,
   toSearchHint,
   toSearchHref,
@@ -47,7 +49,9 @@ export function SearchMenuContainer({
         showCloseButton={false}
         aria-describedby={undefined}
         // The panel draws its own bottom rule.
-        className="gap-0 border-b-0 bg-background shadow-none"
+        // A lighter dim than the menu: the page stays readable under a panel that only hangs from the top.
+        overlayClassName="bg-ink/10"
+        className="max-h-dvh gap-0 border-b-0 bg-background shadow-none"
       >
         <SheetTitle className="sr-only">Search the studio</SheetTitle>
         <SearchMenu onClose={onClose} />
@@ -199,25 +203,29 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-        event.preventDefault();
-        setActiveIndex((current) =>
-          nextActiveIndex(
-            current,
-            options.length,
-            event.key === "ArrowDown" ? 1 : -1,
-          ),
-        );
-      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      event.preventDefault();
+      const next = nextActiveIndex(
+        activeIndex,
+        options.length,
+        event.key === "ArrowDown" ? 1 : -1,
+      );
+      setActiveIndex(next);
+      // Arrow keys can reach rows scrolled out of the list, so the chosen one is brought into view.
+      document
+        .getElementById(toOptionId(panelId, next))
+        ?.scrollIntoView({ block: "nearest" });
     },
-    [options.length],
+    [activeIndex, options.length, panelId],
   );
 
   const handleClearRecents = useCallback(() => {
+    // The button disappears with the list, so focus goes back to the field first.
+    document.getElementById(toInputId(panelId))?.focus();
     localStorage.removeItem(RECENT_SEARCH_KEY);
     setRecents([]);
     setActiveIndex(-1);
-  }, []);
+  }, [panelId]);
 
   return (
     <SearchPanel

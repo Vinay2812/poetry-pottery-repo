@@ -2,15 +2,16 @@ import { describe, expect, it } from "vitest";
 
 import {
   addRecentSearch,
+  isSuggestPending,
   MAX_RECENT_SEARCHES,
   nextActiveIndex,
   parseRecentSearches,
+  toInputId,
   toOptionId,
   toOptionOrder,
-  isSuggestPending,
   toSearchHint,
-  toSelectableLists,
   toSearchHref,
+  toSelectableLists,
 } from "./types";
 
 function option(id: string) {
@@ -91,6 +92,12 @@ describe("nextActiveIndex", () => {
   it("highlights nothing when there is nothing to highlight", () => {
     expect(nextActiveIndex(-1, 0, 1)).toBe(-1);
     expect(nextActiveIndex(2, 0, -1)).toBe(-1);
+  });
+});
+
+describe("toInputId", () => {
+  it("names the field after its panel", () => {
+    expect(toInputId("panel")).toBe("panel-input");
   });
 });
 
