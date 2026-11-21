@@ -62,26 +62,26 @@ export function assertCanBeLive(stock: number, isCustomizable: boolean): void {
   }
 }
 
-// The home page only shows pieces on the shelf, so a new piece cannot start featured and hidden.
+// Studio picks only show pieces on the shelf, so a new piece cannot start marked and hidden.
 export function assertFeaturedIsLive(
   isActive: boolean,
   isFeatured: boolean,
 ): void {
   if (isFeatured && !isActive) {
     throw new BadRequestException(
-      "Put the piece on the shelf before showing it on the home page",
+      "Put the piece on the shelf before making it a studio pick",
     );
   }
 }
 
-// The home shelf shows pieces ready to ship, so made-to-order work never takes the mark.
+// Studio picks are pieces ready to ship, so made-to-order work never takes the mark.
 export function assertFeaturedIsReadyToShip(
   isFeatured: boolean,
   isCustomizable: boolean,
 ): void {
   if (isFeatured && isCustomizable) {
     throw new BadRequestException(
-      "The home page shows pieces ready to ship, not made to order",
+      "Studio picks are pieces ready to ship, not made to order",
     );
   }
 }
@@ -293,6 +293,8 @@ export class AdminProductsService {
       return this.prisma.product.update({
         where: { id },
         data: {
+          // Made-to-order work is never a studio pick, so turning it on takes the mark off in the same write.
+          ...(input.is_customizable === true ? { is_featured: false } : {}),
           ...(input.name == null ? {} : { name: input.name.trim() }),
           ...(input.description == null
             ? {}
@@ -372,27 +374,25 @@ export class AdminProductsService {
     return this.byId(id);
   }
 
+  // Marking is conditional on the row still being ready to ship, so a concurrent made-to-order save cannot slip past it.
   async setFeatured(id: number, isFeatured: boolean): Promise<Product> {
-    const current = await this.prisma.product.findUnique({
-      where: { id },
-      select: { is_featured: true, is_customizable: true },
-    });
-    if (!current) {
-      throw new NotFoundException("Product not found");
+    if (isFeatured) {
+      const marked = await this.prisma.product.updateMany({
+        where: { id, is_customizable: false },
+        data: { is_featured: true },
+      });
+      if (marked.count === 0) {
+        await this.byId(id);
+        assertFeaturedIsReadyToShip(true, true);
+      }
+    } else {
+      // Unmarking always lands, whatever keeps the piece off the picks.
+      await this.prisma.product
+        .update({ where: { id }, data: { is_featured: false } })
+        .catch(rethrowMissing("Product not found"));
     }
-    // Only newly marking is refused, so a made-to-order piece marked before this rule can still be unmarked.
-    if (!current.is_featured) {
-      assertFeaturedIsReadyToShip(isFeatured, current.is_customizable);
-    }
-    const row = await this.prisma.product
-      .update({
-        where: { id },
-        data: { is_featured: isFeatured },
-        include: productListInclude,
-      })
-      .catch(rethrowMissing("Product not found"));
     await this.products.invalidateCatalogCache();
-    return toProduct(row);
+    return this.byId(id);
   }
 
   // The delta is applied conditionally so two admins counting the same shelf cannot drive stock negative.
