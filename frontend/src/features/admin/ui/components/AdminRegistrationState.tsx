@@ -17,9 +17,7 @@ export function AdminRegistrationState({
 }: AdminRegistrationStateProps) {
   return (
     <div className="flex flex-col items-start gap-1">
-      <span className="whitespace-nowrap">
-        <AdminStatusPill label={statusLabel} tone={statusTone} />
-      </span>
+      <AdminStatusPill label={statusLabel} tone={statusTone} />
       {closingNote && (
         <span className="text-[12px] text-muted-foreground">{closingNote}</span>
       )}
