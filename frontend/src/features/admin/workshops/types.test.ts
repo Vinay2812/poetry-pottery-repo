@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { RegistrationStatus } from "@/graphql/generated/graphql";
 
@@ -220,6 +220,61 @@ describe("booking copy", () => {
         IST,
       ),
     ).toEqual(["Wed, 25 Nov · 3–4 pm", "Sat, 28 Nov · 4–5 pm"]);
+  });
+
+  it("names both meridiems when a stretch crosses noon", () => {
+    expect(
+      describeSessionDays(
+        [
+          {
+            starts_at: "2026-11-25T05:30:00.000Z",
+            ends_at: "2026-11-25T07:30:00.000Z",
+          },
+        ],
+        IST,
+      ),
+    ).toEqual(["Wed, 25 Nov · 11 am–1 pm"]);
+  });
+
+  it("keeps the minutes of a half-hour start", () => {
+    expect(
+      describeSessionDays(
+        [
+          {
+            starts_at: "2026-11-25T09:00:00.000Z",
+            ends_at: "2026-11-25T10:00:00.000Z",
+          },
+        ],
+        IST,
+      ),
+    ).toEqual(["Wed, 25 Nov · 2:30–3:30 pm"]);
+  });
+
+  it("reads the clock from parts, whatever space ICU puts before pm", () => {
+    const real = Intl.DateTimeFormat.prototype.formatToParts;
+    const spy = vi
+      .spyOn(Intl.DateTimeFormat.prototype, "formatToParts")
+      .mockImplementation(function (this: Intl.DateTimeFormat, date) {
+        return real
+          .call(this, date)
+          .map((part) =>
+            part.type === "literal" && part.value === " "
+              ? { ...part, value: "\u202f" }
+              : part,
+          );
+      });
+    expect(
+      describeSessionDays(
+        [
+          {
+            starts_at: "2026-11-25T09:30:00.000Z",
+            ends_at: "2026-11-25T10:30:00.000Z",
+          },
+        ],
+        IST,
+      ),
+    ).toEqual(["Wed, 25 Nov · 3–4 pm"]);
+    spy.mockRestore();
   });
 
   it("keeps a gap on the same day as two times", () => {

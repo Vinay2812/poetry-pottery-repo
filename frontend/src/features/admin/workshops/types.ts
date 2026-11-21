@@ -175,26 +175,33 @@ export interface SessionSlot {
   ends_at: string;
 }
 
-function formatClock(instant: string, timezone: string): string {
-  return new Intl.DateTimeFormat("en-IN", {
+interface ClockReading {
+  time: string;
+  period: string;
+}
+
+// Read from parts, never by splitting text: ICU may put a narrow no-break space before "pm".
+function readClock(instant: string, timezone: string): ClockReading {
+  const parts = new Intl.DateTimeFormat("en-IN", {
     hour: "numeric",
     minute: "2-digit",
     timeZone: timezone,
-  })
-    .format(new Date(instant))
-    .replace(":00", "");
+  }).formatToParts(new Date(instant));
+  const read = (type: Intl.DateTimeFormatPartTypes): string =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  const minute = read("minute");
+  return {
+    time: minute === "00" ? read("hour") : `${read("hour")}:${minute}`,
+    period: read("dayPeriod").toLowerCase(),
+  };
 }
 
 // "3–5 pm" when both ends share a meridiem, "11 am–1 pm" when they do not.
 function formatClockRange(slot: SessionSlot, timezone: string): string {
-  const from = formatClock(slot.starts_at, timezone);
-  const to = formatClock(slot.ends_at, timezone);
-  const [fromTime, fromMeridiem] = from.split(" ");
-  const [toTime, toMeridiem] = to.split(" ");
-  if (fromMeridiem && fromMeridiem === toMeridiem) {
-    return `${fromTime}–${toTime} ${toMeridiem}`;
-  }
-  return `${from}–${to}`;
+  const from = readClock(slot.starts_at, timezone);
+  const to = readClock(slot.ends_at, timezone);
+  if (from.period === to.period) return `${from.time}–${to.time} ${to.period}`;
+  return `${from.time} ${from.period}–${to.time} ${to.period}`;
 }
 
 function formatSessionDay(instant: string, timezone: string): string {
