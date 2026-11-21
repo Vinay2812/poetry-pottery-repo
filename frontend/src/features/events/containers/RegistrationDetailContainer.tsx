@@ -18,13 +18,14 @@ import {
 } from "@/features/events/hooks";
 import {
   applyRegistrationCancellation,
-  type EventFact,
   isRegistrationClosed,
   REGISTRATION_STEPS,
   toEventPath,
-  toEventTypeLabel,
+  toRegistrationClosedLabel,
+  toRegistrationFacts,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
+  toRegistrationStepDates,
   toRegistrationStepIndex,
   toTimeRange,
   toWhatsAppBookingMessage,
@@ -105,21 +106,8 @@ export function RegistrationDetailContainer({
   }
 
   const event = optimisticRegistration.event;
-  const dates: Record<string, string | null> = {
-    PENDING: formatDateTime(optimisticRegistration.created_at),
-    APPROVED: optimisticRegistration.approved_at
-      ? formatDateTime(optimisticRegistration.approved_at)
-      : null,
-    CONFIRMED: optimisticRegistration.confirmed_at
-      ? formatDateTime(optimisticRegistration.confirmed_at)
-      : null,
-  };
-  const closed = isRegistrationClosed(optimisticRegistration.status);
-  const closedOn =
-    optimisticRegistration.cancelled_at ?? optimisticRegistration.rejected_at;
-  const closedLabel = closed
-    ? `${toRegistrationStatusLabel(optimisticRegistration.status)}${closedOn ? ` on ${formatDateTime(closedOn)}` : ""}${optimisticRegistration.cancel_reason ? ` · ${optimisticRegistration.cancel_reason}` : ""}`
-    : null;
+  const stepDates = toRegistrationStepDates(optimisticRegistration);
+  const isClosed = isRegistrationClosed(optimisticRegistration.status);
   const whatsappUrl = whatsappNumber
     ? buildWhatsAppUrl(
         whatsappNumber,
@@ -133,18 +121,10 @@ export function RegistrationDetailContainer({
         }),
       )
     : null;
-
   // Only a seat that was taken at a finished session can carry a review.
   const canReview =
     optimisticRegistration.status === RegistrationStatus.Confirmed &&
     event.is_past;
-
-  const facts: EventFact[] = [
-    { label: "Kind", value: toEventTypeLabel(event.event_type) },
-    { label: "Date", value: formatDate(event.starts_at) },
-    { label: "Time", value: toTimeRange(event.starts_at, event.ends_at) },
-    { label: "Where", value: `${event.location}, ${event.address}` },
-  ];
 
   return (
     <>
@@ -155,20 +135,20 @@ export function RegistrationDetailContainer({
         bookedOn={formatDateTime(optimisticRegistration.created_at)}
         statusLabel={toRegistrationStatusLabel(optimisticRegistration.status)}
         statusTone={toRegistrationStatusTone(optimisticRegistration.status)}
-        isJustPlaced={isJustPlaced && !closed}
+        isJustPlaced={isJustPlaced && !isClosed}
         steps={REGISTRATION_STEPS.map((step) => ({
           key: step.key,
           label: step.label,
           description: step.description,
-          date: dates[step.key] ?? null,
+          date: stepDates[step.key] ?? null,
         }))}
         currentStepIndex={toRegistrationStepIndex(
           optimisticRegistration.status,
-          dates,
+          stepDates,
         )}
-        isClosed={closed}
-        closedLabel={closedLabel}
-        facts={facts}
+        isClosed={isClosed}
+        closedLabel={toRegistrationClosedLabel(optimisticRegistration)}
+        facts={toRegistrationFacts(event)}
         seats={optimisticRegistration.seats}
         unitPrice={optimisticRegistration.unit_price}
         discount={optimisticRegistration.discount}

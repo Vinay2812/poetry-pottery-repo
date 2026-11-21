@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 import { formatInr, pluralize } from "@/lib/format";
+import { cn } from "@/lib/utils";
 
 export interface RegistrationCardProps {
   href: string;
@@ -13,6 +14,7 @@ export interface RegistrationCardProps {
   seats: number;
   total: number;
   statusLabel: string;
+  isClosed: boolean;
 }
 
 export function RegistrationCard({
@@ -24,11 +26,16 @@ export function RegistrationCard({
   seats,
   total,
   statusLabel,
+  isClosed,
 }: RegistrationCardProps) {
   return (
     <Link
       href={href}
-      className="group flex items-start gap-4 border-b border-ash py-4"
+      className={cn(
+        "group flex items-start gap-4 border-b border-ash py-4",
+        // A closed booking reads as a record, not as something still to turn up for.
+        isClosed && "text-muted-foreground",
+      )}
     >
       <span className="relative size-20 shrink-0 overflow-hidden bg-white">
         {imageUrl ? (
@@ -37,7 +44,7 @@ export function RegistrationCard({
             alt=""
             fill
             sizes="80px"
-            className="object-cover"
+            className={cn("object-cover", isClosed && "opacity-60")}
           />
         ) : (
           <PlaceholderImage kind="vase" />

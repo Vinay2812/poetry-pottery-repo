@@ -23,6 +23,7 @@ const meta = {
     seats: 2,
     total: 3600,
     statusLabel: "Seat held, awaiting payment",
+    isClosed: false,
   },
 } satisfies Meta<typeof RegistrationCard>;
 
@@ -35,7 +36,7 @@ export const Default: Story = {};
 export const Confirmed: Story = { args: { statusLabel: "Confirmed" } };
 
 export const Cancelled: Story = {
-  args: { statusLabel: "Cancelled", seats: 1, total: 1800 },
+  args: { statusLabel: "Cancelled", seats: 1, total: 1800, isClosed: true },
 };
 
 export const NoPhoto: Story = { args: { imageUrl: null } };

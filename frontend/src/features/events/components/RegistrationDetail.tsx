@@ -39,6 +39,9 @@ export interface RegistrationDetailProps {
   onCancel: () => void;
 }
 
+const TEXT_LINK =
+  "w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary";
+
 export function RegistrationDetail({
   registrationId,
   eventTitle,
@@ -65,11 +68,25 @@ export function RegistrationDetail({
 }: RegistrationDetailProps) {
   return (
     <PageShell column="wide" className="flex flex-col gap-10 py-8 md:py-12">
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-2">
+          <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+            Booking <span className="tnum">{registrationId}</span>
+          </p>
+          <h1 className="max-w-2xl font-heading text-3xl tracking-tight text-balance md:text-5xl">
+            {eventTitle}
+          </h1>
+          <p className="text-[13px] text-muted-foreground">Booked {bookedOn}</p>
+        </div>
+        <OrderStatusBadge tone={statusTone} label={statusLabel} />
+      </header>
+
       {isJustPlaced && (
         <section className="flex flex-col gap-3 border border-ash bg-white p-6 md:p-8">
-          <h1 className="font-heading text-3xl tracking-tight md:text-4xl">
-            We are holding your seat
-          </h1>
+          {/* The seat is only held once the studio says so, which is the next step. */}
+          <h2 className="font-heading text-2xl tracking-tight md:text-3xl">
+            We have your request
+          </h2>
           <p className="max-w-xl text-[15px] text-muted-foreground">
             Send us a message and we will confirm the seat and share payment
             details, or wait for ours within a day.
@@ -89,22 +106,12 @@ export function RegistrationDetail({
         </section>
       )}
 
-      <header className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <p className="text-[13px] text-muted-foreground">Booked {bookedOn}</p>
-          <h2 className="font-heading text-2xl tracking-tight md:text-3xl">
-            Booking <span className="tnum">{registrationId}</span>
-          </h2>
-        </div>
-        <OrderStatusBadge tone={statusTone} label={statusLabel} />
-      </header>
-
       <div className="grid gap-10 lg:grid-cols-[1fr_340px] lg:items-start">
         <div className="flex flex-col gap-10">
           <section className="flex flex-col gap-4">
-            <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+            <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
               Progress
-            </h3>
+            </h2>
             <OrderTimeline
               steps={steps}
               currentIndex={currentStepIndex}
@@ -114,12 +121,9 @@ export function RegistrationDetail({
           </section>
 
           <section className="flex flex-col gap-4">
-            <Link
-              href={eventHref}
-              className="font-heading text-2xl tracking-tight underline-offset-4 hover:underline"
-            >
-              {eventTitle}
-            </Link>
+            <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+              At the studio
+            </h2>
             <dl className="border-t border-ash">
               {facts.map((fact) => (
                 <div
@@ -136,15 +140,18 @@ export function RegistrationDetail({
                 <span className="text-foreground">Your note:</span> {note}
               </p>
             )}
+            <Link href={eventHref} className={TEXT_LINK}>
+              About this event
+            </Link>
             {reviewAction}
           </section>
         </div>
 
         <aside className="flex flex-col gap-6 lg:sticky lg:top-24">
           <section className="flex flex-col gap-3">
-            <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+            <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
               Summary
-            </h3>
+            </h2>
             <dl className="border-t border-ash text-sm">
               <div className="flex justify-between border-b border-ash py-3">
                 <dt className="text-muted-foreground">
@@ -171,7 +178,7 @@ export function RegistrationDetail({
                 href={whatsappUrl}
                 kind="event"
                 reference={registrationId}
-                className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
+                className={TEXT_LINK}
               >
                 Message us about this booking
               </WhatsAppLink>
