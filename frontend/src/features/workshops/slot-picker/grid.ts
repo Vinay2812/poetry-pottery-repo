@@ -6,6 +6,7 @@ import {
   formatHourRange,
   type SlotInterval,
   toDateKey,
+  toSpanRule,
   type WorkshopDayData,
   type WorkshopSlotData,
 } from "@/features/workshops/types";
@@ -101,12 +102,6 @@ export function isDayWithinSpan(
   return spanDays([...pickedDateKeys, dateKey]) <= allowedSpanDays;
 }
 
-export function spanNotice(allowedSpanDays: number): string {
-  return allowedSpanDays === 1
-    ? "Pick every hour on the same day"
-    : `Keep your hours within ${allowedSpanDays} days of the first one`;
-}
-
 // Picked hours are always shown and sent in the order they happen, as "Sat, 20 Sept · 3–4 pm".
 export function toPickedSlots(
   picked: readonly SlotInterval[],
@@ -200,7 +195,7 @@ export interface WeeksInput {
   todayKey: string;
 }
 
-// A day nobody has loaded reads as closed, so callers show a skeleton until the month arrives.
+// A day the API sent nothing for is unknown, never closed; only a returned day can be closed.
 export function toCalendarWeeks({
   monthKey,
   dayByKey,
@@ -223,15 +218,26 @@ export function toCalendarWeeks({
         dayLabel: formatDateKey(dateKey),
         wheelsFree,
         pickedCount: pickedDateKeys.filter((key) => key === dateKey).length,
-        isClosed: day?.is_closed ?? true,
+        isLoaded: day !== undefined,
+        isClosed: day?.is_closed ?? false,
         closedKind: day?.closed_kind ?? null,
         isPast: dateKey < todayKey,
         mutedReason: isDayWithinSpan(dateKey, pickedDateKeys, allowedSpanDays)
           ? null
-          : spanNotice(allowedSpanDays),
+          : toSpanRule(allowedSpanDays),
       };
     }),
   );
+}
+
+// Weeks already gone by push the open days down, so the month starts at the current week.
+export function toVisibleWeeks(
+  weeks: (CalendarDay | null)[][],
+): (CalendarDay | null)[][] {
+  const current = weeks.filter((week) =>
+    week.some((day) => day !== null && !day.isPast),
+  );
+  return current.length > 0 ? current : weeks;
 }
 
 export function toSlotOptions(

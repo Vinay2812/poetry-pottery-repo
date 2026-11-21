@@ -27,6 +27,7 @@ import { formatDateKey } from "@/features/workshops/types";
 export interface RescheduleDialogProps {
   isOpen: boolean;
   isLoading: boolean;
+  hasError: boolean;
   monthLabel: string;
   notice: string | null;
   weeks: (CalendarDay | null)[][];
@@ -35,7 +36,8 @@ export interface RescheduleDialogProps {
   canGoForward: boolean;
   slots: SlotOption[];
   pickedSlots: PickedSlot[];
-  slotsNeeded: number;
+  progress: string;
+  isComplete: boolean;
   isUnchanged: boolean;
   isSubmitting: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -45,11 +47,13 @@ export interface RescheduleDialogProps {
   onToggleSlot: (startsAt: string) => void;
   onRemoveSlot: (startsAt: string) => void;
   onConfirm: () => void;
+  onRetry: () => void;
 }
 
 export function RescheduleDialog({
   isOpen,
   isLoading,
+  hasError,
   monthLabel,
   weeks,
   selectedDate,
@@ -57,7 +61,8 @@ export function RescheduleDialog({
   canGoForward,
   slots,
   pickedSlots,
-  slotsNeeded,
+  progress,
+  isComplete,
   isUnchanged,
   isSubmitting,
   onOpenChange,
@@ -68,6 +73,7 @@ export function RescheduleDialog({
   onToggleSlot,
   onRemoveSlot,
   onConfirm,
+  onRetry,
 }: RescheduleDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -77,7 +83,7 @@ export function RescheduleDialog({
             Move this session
           </DialogTitle>
           <DialogDescription>
-            Pick the hours again. The session keeps its length and the same
+            Pick the times again. The session keeps its length and the same
             number of people.
           </DialogDescription>
         </DialogHeader>
@@ -90,12 +96,13 @@ export function RescheduleDialog({
           canGoBack={canGoBack}
           canGoForward={canGoForward}
           isLoading={isLoading}
+          hasError={hasError}
           // Same as the booking page: the hours open under the week of the picked day.
           slotPanel={
             selectedDate && (
               <div className="flex flex-col gap-3">
                 <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                  Hours on {formatDateKey(selectedDate)}
+                  Times on {formatDateKey(selectedDate)}
                 </h3>
                 <SlotList
                   slots={slots}
@@ -109,12 +116,13 @@ export function RescheduleDialog({
           onPreviousMonth={onPreviousMonth}
           onNextMonth={onNextMonth}
           onSelectDate={onSelectDate}
+          onRetry={onRetry}
         />
 
         <PickedSlots
           slots={pickedSlots}
-          needed={slotsNeeded}
-          emptyMessage="Pick your hours from the calendar."
+          progress={progress}
+          emptyMessage="Pick your times from the calendar."
           onRemoveSlot={onRemoveSlot}
         />
 
@@ -128,9 +136,7 @@ export function RescheduleDialog({
           </Button>
           <Button
             onClick={onConfirm}
-            disabled={
-              isSubmitting || pickedSlots.length !== slotsNeeded || isUnchanged
-            }
+            disabled={isSubmitting || !isComplete || isUnchanged}
           >
             {isSubmitting ? "Moving…" : "Move session"}
           </Button>

@@ -11,6 +11,7 @@ export interface CalendarDay {
   dayLabel: string;
   wheelsFree: number;
   pickedCount: number;
+  isLoaded: boolean;
   isClosed: boolean;
   closedKind: DayClosedKind | null;
   isPast: boolean;
@@ -25,13 +26,18 @@ export interface BookingCalendarProps {
   canGoBack: boolean;
   canGoForward: boolean;
   isLoading?: boolean;
+  hasError?: boolean;
   // Rendered straight under the week holding the selected day, so the hours sit where
   // the eye already is instead of a screen further down.
   slotPanel?: React.ReactNode;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onSelectDate: (dateKey: string) => void;
+  onRetry?: () => void;
 }
+
+// Rows the loading grid shows when it has no month to measure; most months span five weeks.
+const FALLBACK_SKELETON_WEEKS = 5;
 
 const NAV_BUTTON =
   "border-b border-transparent pb-0.5 text-[13px] text-muted-foreground transition-colors hover:border-ink hover:text-ink disabled:opacity-40 disabled:hover:border-transparent disabled:hover:text-muted-foreground";
@@ -62,8 +68,7 @@ function DayCell({ day, isSelected, onSelect }: DayCellProps) {
       <span className="text-sm tnum">{day.dayNumber}</span>
       {/* One fixed-height line under every number, so the numbers in a week line up. */}
       <span className="flex h-3.5 items-center">
-        {/* A dimmed number is enough for a day gone by; "past" under each one was noise. */}
-        {day.isPast ? null : day.pickedCount > 0 ? (
+        {day.pickedCount > 0 ? (
           <span
             aria-hidden="true"
             className={cn(
@@ -99,16 +104,15 @@ export function BookingCalendar({
   canGoBack,
   canGoForward,
   isLoading = false,
+  hasError = false,
   slotPanel,
   onPreviousMonth,
   onNextMonth,
   onSelectDate,
+  onRetry,
 }: BookingCalendarProps) {
-  // Weeks already gone by push the open days down, so the month starts at the current week.
-  const openWeeks = weeks.filter((week) =>
-    week.some((day) => day !== null && !day.isPast),
-  );
-  const shownWeeks = openWeeks.length > 0 ? openWeeks : weeks;
+  // The weeks are already the next month's while it loads, so the grid keeps its height.
+  const skeletonWeeks = weeks.length || FALLBACK_SKELETON_WEEKS;
   return (
     <section className="flex flex-col gap-4">
       <header className="flex items-baseline justify-between gap-4">
@@ -148,9 +152,28 @@ export function BookingCalendar({
       </div>
 
       {/* The month and its buttons stay put while a month loads, so keyboard focus is kept. */}
-      {isLoading ? (
+      {hasError ? (
+        // Without availability no day can be called closed or full, so the month is left blank.
+        <div
+          role="status"
+          className="flex flex-col items-start gap-2 border-b border-ash py-8"
+        >
+          <p className="text-[15px] text-muted-foreground">
+            Availability didn&apos;t load.
+          </p>
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
+            >
+              Try again
+            </button>
+          )}
+        </div>
+      ) : isLoading ? (
         <div className="grid grid-cols-7 gap-px bg-ash" aria-busy="true">
-          {Array.from({ length: (shownWeeks.length || 5) * 7 }, (_, index) => (
+          {Array.from({ length: skeletonWeeks * 7 }, (_, index) => (
             <span
               key={index}
               aria-hidden="true"
@@ -160,7 +183,7 @@ export function BookingCalendar({
         </div>
       ) : (
         <div className="flex flex-col gap-px bg-ash">
-          {shownWeeks.map((week, weekIndex) => (
+          {weeks.map((week, weekIndex) => (
             <Fragment key={weekIndex}>
               <div className="grid grid-cols-7 gap-px">
                 {week.map((day, index) =>

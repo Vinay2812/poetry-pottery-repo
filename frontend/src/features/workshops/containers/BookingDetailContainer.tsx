@@ -236,6 +236,7 @@ export function BookingDetailContainer({
       <RescheduleDialog
         isOpen={isMoveOpen}
         isLoading={picker.isLoading}
+        hasError={picker.hasError}
         monthLabel={picker.monthLabel}
         notice={picker.notice}
         weeks={picker.weeks}
@@ -244,7 +245,8 @@ export function BookingDetailContainer({
         canGoForward={picker.canGoForward}
         slots={picker.slots}
         pickedSlots={picker.pickedSlots}
-        slotsNeeded={picker.needed}
+        progress={picker.progress}
+        isComplete={isComplete}
         isUnchanged={isUnchanged}
         isSubmitting={isRescheduling}
         onOpenChange={setIsMoveOpen}
@@ -254,6 +256,7 @@ export function BookingDetailContainer({
         onToggleSlot={picker.onToggleSlot}
         onRemoveSlot={picker.onRemoveSlot}
         onConfirm={() => void handleConfirmMove()}
+        onRetry={picker.refresh}
       />
     </>
   );

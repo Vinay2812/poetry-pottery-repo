@@ -1,7 +1,5 @@
 import { X } from "lucide-react";
 
-import { formatPickedProgress } from "@/features/workshops/types";
-
 export interface PickedSlot {
   startsAt: string;
   label: string;
@@ -9,21 +7,21 @@ export interface PickedSlot {
 
 export interface PickedSlotsProps {
   slots: PickedSlot[];
-  needed: number;
+  progress: string;
   emptyMessage: string;
   onRemoveSlot: (startsAt: string) => void;
 }
 
 export function PickedSlots({
   slots,
-  needed,
+  progress,
   emptyMessage,
   onRemoveSlot,
 }: PickedSlotsProps) {
   return (
     <div className="flex flex-col gap-2">
       <p className="text-[13px] text-muted-foreground" aria-live="polite">
-        {formatPickedProgress(slots.length, needed)}
+        {progress}
       </p>
       {slots.length === 0 ? (
         <p className="text-[13px] text-muted-foreground">{emptyMessage}</p>

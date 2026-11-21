@@ -4,7 +4,10 @@ import { fn } from "storybook/test";
 import { DayClosedKind } from "@/graphql/generated/graphql";
 
 import { atViewport } from "@/lib/storybook/viewports";
-import { toMonthGrid } from "@/features/workshops/slot-picker/grid";
+import {
+  toMonthGrid,
+  toVisibleWeeks,
+} from "@/features/workshops/slot-picker/grid";
 import { formatDateKey } from "@/features/workshops/types";
 import { BookingCalendar, type CalendarDay } from "./BookingCalendar";
 
@@ -23,18 +26,21 @@ function toDay(dateKey: string): CalendarDay {
     dayLabel: formatDateKey(dateKey),
     wheelsFree: weekday === 1 ? 0 : Number(dateKey.slice(8)) % 3 === 0 ? 1 : 4,
     pickedCount: PICKED[dateKey] ?? 0,
+    isLoaded: true,
     isClosed: weekday === 1,
     closedKind: weekday === 1 ? DayClosedKind.StudioClosed : null,
     isPast: dateKey < TODAY,
     mutedReason:
       isOutsideSpan && dateKey >= TODAY
-        ? "Keep your hours within 7 days of the first one"
+        ? "Pick all your hours within a 7-day window"
         : null,
   };
 }
 
-const WEEKS: (CalendarDay | null)[][] = toMonthGrid(MONTH).map((week) =>
-  week.map((dateKey) => (dateKey ? toDay(dateKey) : null)),
+const WEEKS: (CalendarDay | null)[][] = toVisibleWeeks(
+  toMonthGrid(MONTH).map((week) =>
+    week.map((dateKey) => (dateKey ? toDay(dateKey) : null)),
+  ),
 );
 
 const meta = {
@@ -44,7 +50,7 @@ const meta = {
   args: {
     monthLabel: "September 2026",
     notice:
-      "Keep your hours within 7 days of the first one. Days further out are closed off.",
+      "Pick all your hours within a 7-day window. Days further out are closed off.",
     weeks: WEEKS,
     selectedDate: "2026-09-19",
     canGoBack: false,
@@ -52,6 +58,7 @@ const meta = {
     onPreviousMonth: fn(),
     onNextMonth: fn(),
     onSelectDate: fn(),
+    onRetry: fn(),
   },
 } satisfies Meta<typeof BookingCalendar>;
 
@@ -65,11 +72,9 @@ export const NothingPicked: Story = {
   args: {
     notice: null,
     selectedDate: null,
-    weeks: toMonthGrid(MONTH).map((week) =>
-      week.map((dateKey) =>
-        dateKey
-          ? { ...toDay(dateKey), pickedCount: 0, mutedReason: null }
-          : null,
+    weeks: WEEKS.map((week) =>
+      week.map((day) =>
+        day ? { ...day, pickedCount: 0, mutedReason: null } : null,
       ),
     ),
   },
@@ -80,6 +85,10 @@ export const LastMonthInWindow: Story = {
 };
 
 export const LoadingMonth: Story = { args: { isLoading: true } };
+
+export const AvailabilityFailed: Story = {
+  args: { hasError: true, notice: null, selectedDate: null },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

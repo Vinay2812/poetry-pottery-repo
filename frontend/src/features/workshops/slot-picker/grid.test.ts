@@ -12,12 +12,13 @@ import {
   pickableSlots,
   shiftMonth,
   spanDays,
-  spanNotice,
   suggestSlots,
   togglePicked,
+  toCalendarWeeks,
   toMonthGrid,
   toMonthKey,
   toPickedSlots,
+  toVisibleWeeks,
 } from "./grid";
 
 const IST = "Asia/Kolkata";
@@ -104,10 +105,51 @@ describe("slot helpers", () => {
     expect(isDayWithinSpan("2026-09-19", [], 7)).toBe(true);
     expect(isDayWithinSpan("2026-09-19", ["2026-09-13"], 7)).toBe(true);
     expect(isDayWithinSpan("2026-09-20", ["2026-09-13"], 7)).toBe(false);
-    expect(spanNotice(7)).toBe(
-      "Keep your hours within 7 days of the first one",
+  });
+
+  it("starts the month at the current week", () => {
+    const week = (isPast: boolean) =>
+      Array.from({ length: 7 }, (_, index) => ({
+        dateKey: `2026-09-0${index + 1}`,
+        dayNumber: index + 1,
+        dayLabel: "",
+        wheelsFree: 4,
+        pickedCount: 0,
+        isLoaded: true,
+        isClosed: false,
+        closedKind: null,
+        isPast,
+        mutedReason: null,
+      }));
+    const gone = week(true);
+    const ahead = week(false);
+    // A week with its last days still ahead stays, padding and all.
+    const straddling = [...gone.slice(0, 3), ...ahead.slice(3), null];
+    expect(toVisibleWeeks([gone, straddling, ahead])).toEqual([
+      straddling,
+      ahead,
+    ]);
+    // A month entirely behind is shown as it is rather than as nothing.
+    expect(toVisibleWeeks([gone, gone])).toEqual([gone, gone]);
+  });
+
+  it("marks only days the API returned as closed", () => {
+    const weeks = toCalendarWeeks({
+      monthKey: "2026-09",
+      dayByKey: new Map([["2026-09-13", day]]),
+      participants: 1,
+      pickedDateKeys: [],
+      allowedSpanDays: 7,
+      todayKey: "2026-09-01",
+    }).flat();
+    const returned = weeks.find((cell) => cell?.dateKey === "2026-09-13");
+    const missing = weeks.find((cell) => cell?.dateKey === "2026-09-14");
+    expect(returned).toEqual(
+      expect.objectContaining({ isLoaded: true, isClosed: false }),
     );
-    expect(spanNotice(1)).toBe("Pick every hour on the same day");
+    expect(missing).toEqual(
+      expect.objectContaining({ isLoaded: false, isClosed: false }),
+    );
   });
 
   it("adds and drops hours up to the tier's count", () => {

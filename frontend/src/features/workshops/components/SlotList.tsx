@@ -29,7 +29,7 @@ export function SlotList({
   return (
     <div
       role="group"
-      aria-label="Hours"
+      aria-label="Times"
       className="grid grid-cols-2 gap-2 sm:grid-cols-3"
     >
       {slots.map((slot) => {

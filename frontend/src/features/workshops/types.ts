@@ -185,18 +185,28 @@ export function quoteSession(
   };
 }
 
-// One sentence above the pickers that says how the hours are chosen, before anyone scrolls.
-export function toPickingGuide(
-  needed: number,
-  allowedSpanDays: number,
-): string {
-  const hours = needed === 1 ? "1 hour" : `${needed} hours`;
-  if (needed === 1) {
-    return `Pick a day on the calendar, then ${hours} from the times under it.`;
-  }
+// The rule behind the days a picked set closes off, counted from the slot_span_days setting.
+export function toSpanRule(allowedSpanDays: number): string {
   return allowedSpanDays === 1
-    ? `Pick a day on the calendar, then ${hours} from the times under it; they all sit on that one day.`
-    : `Pick a day on the calendar, then ${hours} from the times under it. They can sit on different days, within ${allowedSpanDays} days of your first one.`;
+    ? "Pick all your hours on the same day"
+    : `Pick all your hours within a ${allowedSpanDays}-day window`;
+}
+
+interface PickingGuideInput {
+  hours: number;
+  // How many times of day the hours take; with one there is no window to keep to.
+  timesNeeded: number;
+  allowedSpanDays: number;
+}
+
+// Says how the hours are chosen; the intro and the empty summary both read it.
+export function toPickingGuide({
+  hours,
+  timesNeeded,
+  allowedSpanDays,
+}: PickingGuideInput): string {
+  const guide = `Pick a day on the calendar, then ${formatHours(hours)} from the times under it.`;
+  return timesNeeded > 1 ? `${guide} ${toSpanRule(allowedSpanDays)}.` : guide;
 }
 
 // A party bigger than the wheels is a special request, so the ask names the session and the size.
@@ -240,14 +250,31 @@ export function toUnavailableMessage(
 }
 
 export const SUGGESTED_NOTE =
-  "Picked for you: the earliest free hours. Change any of them.";
+  "Picked for you: the earliest free times. Change any of them.";
 
-export function formatPickedProgress(picked: number, needed: number): string {
-  if (picked === 0) return `Pick ${formatHours(needed)}`;
-  if (picked >= needed) {
-    return needed === 1 ? "Your hour" : `All ${needed} hours picked`;
+// "90 minutes" reads as "1 hour 30 minutes"; whole hours stay "2 hours".
+export function formatDuration(minutes: number): string {
+  const wholeHours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (rest === 0) return formatHours(wholeHours);
+  if (wholeHours === 0) return `${rest} minutes`;
+  return `${formatHours(wholeHours)} ${rest} minutes`;
+}
+
+// Progress is time at the wheel, not the number of times picked, which depends on slot length.
+export function formatPickedProgress(
+  pickedMinutes: number,
+  hours: number,
+): string {
+  const neededMinutes = hours * 60;
+  if (pickedMinutes === 0) return `Pick ${formatHours(hours)}`;
+  if (pickedMinutes >= neededMinutes) {
+    return hours === 1 ? "1 hour picked" : `All ${formatHours(hours)} picked`;
   }
-  return `${picked} of ${needed} hours picked`;
+  if (pickedMinutes % 60 === 0) {
+    return `${pickedMinutes / 60} of ${formatHours(hours)} picked`;
+  }
+  return `${formatDuration(pickedMinutes)} of ${formatHours(hours)} picked`;
 }
 
 interface WhatsAppSessionInput {
@@ -359,6 +386,8 @@ export function formatWheels(remaining: number): string {
 interface CalendarDayState {
   wheelsFree: number;
   pickedCount: number;
+  // False when the API sent nothing for the day, which is not the same as closed.
+  isLoaded: boolean;
   isClosed: boolean;
   closedKind: DayClosedKind | null;
   isPast: boolean;
@@ -373,14 +402,22 @@ interface DayNote {
   isPickable: boolean;
 }
 
-// A day that cannot be booked says why on the face of it: past, closed, full, or out of
-// reach of the hours already picked. "Studio closed" was answering all four.
+// A day that cannot be booked says why: closed, full, or out of reach of the hours already
+// picked. A past day's dimmed number says enough, so only screen readers hear "past".
 export function toDayNote(day: CalendarDayState): DayNote {
   if (day.isPast) {
     return {
-      caption: "past",
-      shortCaption: "past",
+      caption: "",
+      shortCaption: "",
       description: "past",
+      isPickable: false,
+    };
+  }
+  if (!day.isLoaded) {
+    return {
+      caption: "",
+      shortCaption: "",
+      description: "availability not loaded",
       isPickable: false,
     };
   }

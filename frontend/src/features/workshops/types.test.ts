@@ -9,6 +9,7 @@ import {
   formatDateKey,
   formatHourRange,
   formatHours,
+  formatDuration,
   formatPickedProgress,
   formatWheels,
   groupSlotsByDay,
@@ -19,6 +20,7 @@ import {
   toGroupAskLine,
   toGroupAskUrl,
   toPickingGuide,
+  toSpanRule,
   toUnavailableMessage,
   toBookingPath,
   toBookingGroup,
@@ -115,22 +117,38 @@ describe("session helpers", () => {
   });
 
   it("explains the choice before the pickers, matching the span rule", () => {
-    expect(toPickingGuide(1, 1)).toBe(
-      "Pick a day on the calendar, then 1 hour from the times under it.",
+    expect(
+      toPickingGuide({ hours: 1, timesNeeded: 1, allowedSpanDays: 7 }),
+    ).toBe("Pick a day on the calendar, then 1 hour from the times under it.");
+    // One hour made of two half-hour times still has a window to keep to.
+    expect(
+      toPickingGuide({ hours: 1, timesNeeded: 2, allowedSpanDays: 7 }),
+    ).toBe(
+      "Pick a day on the calendar, then 1 hour from the times under it. Pick all your hours within a 7-day window.",
     );
-    expect(toPickingGuide(3, 1)).toBe(
-      "Pick a day on the calendar, then 3 hours from the times under it; they all sit on that one day.",
+    expect(
+      toPickingGuide({ hours: 3, timesNeeded: 3, allowedSpanDays: 1 }),
+    ).toBe(
+      "Pick a day on the calendar, then 3 hours from the times under it. Pick all your hours on the same day.",
     );
-    expect(toPickingGuide(3, 30)).toBe(
-      "Pick a day on the calendar, then 3 hours from the times under it. They can sit on different days, within 30 days of your first one.",
-    );
+    expect(toSpanRule(30)).toBe("Pick all your hours within a 30-day window");
   });
 
   it("counts picked hours against the tier", () => {
-    expect(formatPickedProgress(2, 3)).toBe("2 of 3 hours picked");
     expect(formatPickedProgress(0, 1)).toBe("Pick 1 hour");
-    expect(formatPickedProgress(1, 1)).toBe("Your hour");
-    expect(formatPickedProgress(3, 3)).toBe("All 3 hours picked");
+    expect(formatPickedProgress(60, 1)).toBe("1 hour picked");
+    expect(formatPickedProgress(120, 3)).toBe("2 of 3 hours picked");
+    expect(formatPickedProgress(180, 3)).toBe("All 3 hours picked");
+  });
+
+  it("counts half-hour times as the time they add up to", () => {
+    expect(formatPickedProgress(0, 1)).toBe("Pick 1 hour");
+    expect(formatPickedProgress(30, 1)).toBe("30 minutes of 1 hour picked");
+    expect(formatPickedProgress(60, 1)).toBe("1 hour picked");
+    expect(formatPickedProgress(90, 2)).toBe(
+      "1 hour 30 minutes of 2 hours picked",
+    );
+    expect(formatDuration(150)).toBe("2 hours 30 minutes");
   });
 
   it("labels hours and groups them by day", () => {
@@ -386,6 +404,7 @@ describe("toDayNote", () => {
   const day = {
     wheelsFree: 6,
     pickedCount: 0,
+    isLoaded: true,
     isClosed: false,
     closedKind: null,
     isPast: false,
@@ -404,10 +423,20 @@ describe("toDayNote", () => {
     );
   });
 
+  it("never calls a day closed when its availability did not load", () => {
+    expect(toDayNote({ ...day, isLoaded: false })).toEqual({
+      caption: "",
+      shortCaption: "",
+      description: "availability not loaded",
+      isPickable: false,
+    });
+  });
+
   it("tells a past day apart from a closed one", () => {
+    // The dimmed number shows it; only screen readers hear "past".
     expect(toDayNote({ ...day, isPast: true, isClosed: true })).toEqual({
-      caption: "past",
-      shortCaption: "past",
+      caption: "",
+      shortCaption: "",
       description: "past",
       isPickable: false,
     });
@@ -435,12 +464,12 @@ describe("toDayNote", () => {
     expect(
       toDayNote({
         ...day,
-        mutedReason: "Keep your hours within 7 days of the first one",
+        mutedReason: "Pick all your hours within a 7-day window",
       }),
     ).toEqual({
       caption: "too far",
       shortCaption: "too far",
-      description: "keep your hours within 7 days of the first one",
+      description: "pick all your hours within a 7-day window",
       isPickable: false,
     });
   });

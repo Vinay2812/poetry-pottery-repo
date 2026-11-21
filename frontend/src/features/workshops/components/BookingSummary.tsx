@@ -13,7 +13,7 @@ import { formatHours, SESSION_NOTE } from "@/features/workshops/types";
 
 export interface BookingSummaryProps {
   pickedSlots: PickedSlot[];
-  slotsNeeded: number;
+  progress: string;
   hours: number;
   participants: number;
   pricePerPerson: number;
@@ -33,7 +33,7 @@ export interface BookingSummaryProps {
 
 export function BookingSummary({
   pickedSlots,
-  slotsNeeded,
+  progress,
   hours,
   participants,
   pricePerPerson,
@@ -73,7 +73,7 @@ export function BookingSummary({
       </h2>
       <PickedSlots
         slots={pickedSlots}
-        needed={slotsNeeded}
+        progress={progress}
         emptyMessage={emptyMessage}
         onRemoveSlot={onRemoveSlot}
       />
