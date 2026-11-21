@@ -40,7 +40,6 @@ import {
   toShowPiecesLabel,
   toSearchParams,
   isStickyBarWanted,
-  canOfferStickyBar,
   isTuckedUnderHeader,
   toAddToCartLabel,
   toBatchLabel,
@@ -1019,36 +1018,5 @@ describe("isStickyBarWanted", () => {
 
   it("behaves as before on a page without a footer", () => {
     expect(isStickyBarWanted({ ...edges, footerTop: Infinity })).toBe(true);
-  });
-});
-
-describe("canOfferStickyBar", () => {
-  const piece = {
-    isArchived: false,
-    isActive: true,
-    stock: 3,
-    isCustomizable: false,
-  };
-
-  it("offers the bar for a listed piece in stock", () => {
-    expect(canOfferStickyBar(piece)).toBe(true);
-  });
-
-  it("offers it for made-to-order work with no stock", () => {
-    expect(
-      canOfferStickyBar({ ...piece, stock: 0, isCustomizable: true }),
-    ).toBe(true);
-  });
-
-  it("never offers it for an archived piece", () => {
-    expect(canOfferStickyBar({ ...piece, isArchived: true })).toBe(false);
-  });
-
-  it("never offers it for a retired piece", () => {
-    expect(canOfferStickyBar({ ...piece, isActive: false })).toBe(false);
-  });
-
-  it("never offers it once the batch is sold out", () => {
-    expect(canOfferStickyBar({ ...piece, stock: 0 })).toBe(false);
   });
 });

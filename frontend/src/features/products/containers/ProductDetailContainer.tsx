@@ -38,7 +38,6 @@ import { SecondNotice } from "@/features/products/components/SecondNotice";
 import { StickyBuyBar } from "@/features/products/components/StickyBuyBar";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
-  canOfferStickyBar,
   computeUnitPrice,
   isStickyBarWanted,
   isTuckedUnderHeader,
@@ -145,7 +144,9 @@ export function ProductDetailContainer({
     [product.description],
   );
   const askUrl = toGlazeAskUrl(whatsappNumber, product.name);
+  // The server archives retired and sold-out pieces, so anything else can go in the bag.
   const isArchived = product.is_archived;
+  const isStickyBarOffered = !isArchived;
   const archiveAskUrl = toArchiveAskUrl(whatsappNumber, product.name, pageUrl);
 
   // The device only reads over the drawn placeholder; a real photo keeps the frame clean
@@ -259,12 +260,6 @@ export function ProductDetailContainer({
     };
   }, []);
 
-  const isStickyBarOffered = canOfferStickyBar({
-    isArchived,
-    isActive: product.is_active,
-    stock: product.stock,
-    isCustomizable: product.is_customizable,
-  });
   // While the bar is up, focused and scrolled-to controls stop above it rather than under it.
   const isStickyBarShown = isStickyBarOffered && isBarWanted;
   useEffect(() => {
@@ -422,7 +417,6 @@ export function ProductDetailContainer({
               maxQuantity={Math.max(1, maxQuantity)}
               isWishlisted={isWishlisted(product.id)}
               isAddingToCart={isAdding}
-              canAddToCart={product.stock > 0 || product.is_customizable}
               freeShippingAbove={freeShippingAbove}
               askUrl={askUrl}
               onQuantityChange={setQuantity}

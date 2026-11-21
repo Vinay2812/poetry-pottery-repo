@@ -34,7 +34,6 @@ export interface ProductBuyBoxProps {
   maxQuantity: number;
   isWishlisted: boolean;
   isAddingToCart: boolean;
-  canAddToCart: boolean;
   freeShippingAbove: number | null;
   askUrl: string | null;
   onQuantityChange: (value: number) => void;
@@ -62,7 +61,6 @@ export function ProductBuyBox({
   maxQuantity,
   isWishlisted,
   isAddingToCart,
-  canAddToCart,
   freeShippingAbove,
   askUrl,
   onQuantityChange,
@@ -150,7 +148,7 @@ export function ProductBuyBox({
               size="lg"
               className="col-span-3 px-4 min-[340px]:min-w-32 min-[340px]:flex-1"
               onClick={onAddToCart}
-              disabled={!canAddToCart || isAddingToCart || isSoldOut}
+              disabled={isAddingToCart || isSoldOut}
             >
               {isSoldOut
                 ? "Sold out"
