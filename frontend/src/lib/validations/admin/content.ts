@@ -86,16 +86,24 @@ const contentSectionItemSchema = z.object({
 });
 
 // A section can be a list alone (a FAQ group, "What to avoid"), so the body may be empty when it has items.
+export function isSectionBodyOptional(itemCount: number): boolean {
+  return itemCount > 0;
+}
+
 const contentSectionSchema = z
   .object({
     heading: requiredText("A section heading", 120),
     body: optionalText("A section body", 4000),
     items: z.array(contentSectionItemSchema),
   })
-  .refine((section) => section.body.length > 0 || section.items.length > 0, {
-    path: ["body"],
-    message: "Write a body or add at least one item",
-  });
+  .refine(
+    (section) =>
+      section.body.length > 0 || isSectionBodyOptional(section.items.length),
+    {
+      path: ["body"],
+      message: "Write a body or add at least one item",
+    },
+  );
 
 export const contentPageSchema = z.object({
   title: requiredText("Title", 120),

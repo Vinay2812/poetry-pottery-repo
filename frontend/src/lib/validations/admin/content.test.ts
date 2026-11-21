@@ -7,6 +7,7 @@ import {
   isContentSlug,
   isHref,
   isHttpUrl,
+  isSectionBodyOptional,
   siteSettingsSchema,
 } from "./content";
 
@@ -89,6 +90,16 @@ describe("contentSlugSchema", () => {
     expect(firstError(contentSlugSchema.safeParse("Care Guide"))).toBe(
       "Use lowercase letters, digits and dashes only",
     );
+  });
+});
+
+describe("isSectionBodyOptional", () => {
+  it("lets a section with items go without a body", () => {
+    expect(isSectionBodyOptional(1)).toBe(true);
+  });
+
+  it("needs a body when a section has no items", () => {
+    expect(isSectionBodyOptional(0)).toBe(false);
   });
 });
 
