@@ -314,6 +314,34 @@ describe("useSlotPicker", () => {
     expect(result.current.isSwapHintShown).toBe(true);
   });
 
+  it("closes the times of a selected day once the picks move out of its reach", () => {
+    months["2026-10-01"] = {
+      workshopAvailability: [
+        dayOn("2026-10-02", [13]),
+        dayOn("2026-10-04", [13]),
+        dayOn("2026-10-09", [13, 14]),
+      ],
+    };
+    const { result } = renderPicker({
+      workshop: { ...WORKSHOP, slot_span_days: 7 },
+      hours: 2,
+      isSuggesting: true,
+    });
+    const [second] = result.current.pickedStarts.slice(1);
+
+    // Full pick of 2 and 4 Oct: a swap drops 2 Oct, so 9 Oct (4–9 Oct) is in reach.
+    act(() => result.current.onSelectDate("2026-10-09"));
+    expect(result.current.slots.every((slot) => !slot.isDisabled)).toBe(true);
+
+    // Without 4 Oct nothing is swapped; 2–9 Oct is eight days, which the API refuses.
+    act(() => result.current.onRemoveSlot(second!));
+    expect(result.current.slots.map((slot) => slot.reason)).toEqual([
+      "Too far",
+      "Too far",
+    ]);
+    expect(result.current.slots.every((slot) => slot.isDisabled)).toBe(true);
+  });
+
   it("counts half-hour times as the time they add up to", () => {
     months["2026-10-01"] = {
       workshopAvailability: [halfHourDay("2026-10-02", [13, 13.5])],

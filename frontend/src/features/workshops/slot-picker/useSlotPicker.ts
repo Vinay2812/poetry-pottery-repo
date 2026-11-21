@@ -30,6 +30,7 @@ import {
   togglePicked,
   toMonthKey,
   toPickedSlots,
+  toReachReason,
   toSlotOptions,
   toVisibleWeeks,
 } from "./grid";
@@ -223,8 +224,24 @@ export function useSlotPicker({
   );
   const selectedDay = selectedDate ? dayByKey.get(selectedDate) : undefined;
   const slots = useMemo(
-    () => toSlotOptions(selectedDay, participants, timezone),
-    [participants, selectedDay, timezone],
+    () =>
+      toSlotOptions(
+        selectedDay,
+        participants,
+        timezone,
+        selectedDate
+          ? toReachReason(selectedDate, pickedDateKeys, needed, spanAllowance)
+          : null,
+      ),
+    [
+      needed,
+      participants,
+      pickedDateKeys,
+      selectedDate,
+      selectedDay,
+      spanAllowance,
+      timezone,
+    ],
   );
   const pickedSlots = useMemo(
     () => toPickedSlots(picked, timezone),

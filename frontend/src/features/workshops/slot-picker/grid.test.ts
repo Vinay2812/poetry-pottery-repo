@@ -16,6 +16,8 @@ import {
   togglePicked,
   toCalendarWeeks,
   toDaysKeptByNextPick,
+  toReachReason,
+  toSlotOptions,
   toMonthGrid,
   toMonthKey,
   toPickedSlots,
@@ -142,6 +144,57 @@ describe("slot helpers", () => {
     expect(toDaysKeptByNextPick(["2026-11-25"], 2)).toEqual(["2026-11-25"]);
     // One time needed: the only pick is the one replaced.
     expect(toDaysKeptByNextPick(["2026-11-25"], 1)).toEqual([]);
+  });
+
+  // Matches the API's checkSlots: every final start within slot_span_days, both ends counted.
+  it("says why a day is out of reach of the picks a new one would keep", () => {
+    const full = ["2026-11-22", "2026-11-24"];
+    // A full pick swaps out 22 Nov, so 24–30 Nov is the reach.
+    expect(toReachReason("2026-11-30", full, 2, 7)).toBeNull();
+    expect(toReachReason("2026-12-01", full, 2, 7)).toBe(
+      "Pick all your hours within a 7-day window",
+    );
+    // With 24 Nov removed nothing is swapped, so 22 Nov holds: 29 Nov is eight days out.
+    expect(toReachReason("2026-11-28", ["2026-11-22"], 2, 7)).toBeNull();
+    expect(toReachReason("2026-11-29", ["2026-11-22"], 2, 7)).toBe(
+      "Pick all your hours within a 7-day window",
+    );
+    // Two times on 25 Nov: a swap drops one, the other still holds the window.
+    expect(
+      toReachReason("2026-12-02", ["2026-11-25", "2026-11-25"], 2, 7),
+    ).toBe("Pick all your hours within a 7-day window");
+    expect(
+      toReachReason("2026-12-01", ["2026-11-25", "2026-11-25"], 2, 7),
+    ).toBeNull();
+  });
+
+  it("offers no new times on a day out of reach but keeps picked ones removable", () => {
+    const options = toSlotOptions(
+      day,
+      1,
+      IST,
+      "Pick all your hours within a 7-day window",
+    );
+    expect(options.map((option) => option.isDisabled)).toEqual([
+      true,
+      true,
+      true,
+      true,
+    ]);
+    expect(options.map((option) => option.reason)).toEqual([
+      "Too far",
+      "Too far",
+      "Fully booked",
+      "Too far",
+    ]);
+    const inReach = toSlotOptions(day, 1, IST, null);
+    expect(inReach.map((option) => option.isDisabled)).toEqual([
+      false,
+      false,
+      true,
+      false,
+    ]);
+    expect(inReach[0]?.reason).toBeNull();
   });
 
   it("opens the days a full pick could swap into", () => {
