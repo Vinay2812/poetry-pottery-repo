@@ -357,8 +357,7 @@ export function CommissionBriefForm({
             />
             <div className="flex justify-between gap-4 text-[13px] text-muted-foreground">
               <p id="commission-words-hint">
-                Carved by hand into the clay, so {MAX_CARVED_WORDS} characters
-                at most.
+                Carved by hand, so {MAX_CARVED_WORDS} characters at most.
               </p>
               <p id="commission-words-count" className="shrink-0 tnum">
                 <span aria-hidden>
