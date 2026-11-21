@@ -288,16 +288,22 @@ describe("useSlotPicker", () => {
     expect(unsent).toEqual(
       expect.objectContaining({ isLoaded: false, isClosed: false }),
     );
-    // Only the same day is open once an hour is picked on a one-day studio.
-    expect(days.find((day) => day?.dateKey === "2026-10-03")?.mutedReason).toBe(
-      "Pick all your hours on the same day",
-    );
+    // A single hour is swapped, not added to, so other days stay open.
+    expect(
+      days.find((day) => day?.dateKey === "2026-10-03")?.mutedReason,
+    ).toBeNull();
     // A single hour has no window to keep to, so no notice.
     expect(result.current.notice).toBeNull();
   });
 
   it("states the window once more than one time is needed", () => {
     const { result } = renderPicker({ isSuggesting: true, hours: 2 });
+    const days = result.current.weeks.flat();
+
+    // Only the same day is open once an hour is picked on a one-day studio.
+    expect(days.find((day) => day?.dateKey === "2026-10-03")?.mutedReason).toBe(
+      "Pick all your hours on the same day",
+    );
 
     expect(result.current.notice).toBe(
       "Pick all your hours on the same day. Days further out are closed off.",

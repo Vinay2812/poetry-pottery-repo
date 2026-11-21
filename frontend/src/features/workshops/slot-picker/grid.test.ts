@@ -133,12 +133,37 @@ describe("slot helpers", () => {
     expect(toVisibleWeeks([gone, gone])).toEqual([gone, gone]);
   });
 
+  it("keeps any open day pickable when one time is needed", () => {
+    const open = (date: string): WorkshopDayData => ({ ...day, date });
+    const input = {
+      monthKey: "2026-09",
+      dayByKey: new Map([
+        ["2026-09-13", open("2026-09-13")],
+        ["2026-09-29", open("2026-09-29")],
+      ]),
+      participants: 1,
+      pickedDateKeys: ["2026-09-13"],
+      allowedSpanDays: 7,
+      todayKey: "2026-09-01",
+    };
+    const far = (timesNeeded: number) =>
+      toCalendarWeeks({ ...input, timesNeeded })
+        .flat()
+        .find((cell) => cell?.dateKey === "2026-09-29");
+    // A single pick is swapped, not added to, so the window never bites.
+    expect(far(1)?.mutedReason).toBeNull();
+    expect(far(2)?.mutedReason).toBe(
+      "Pick all your hours within a 7-day window",
+    );
+  });
+
   it("marks only days the API returned as closed", () => {
     const weeks = toCalendarWeeks({
       monthKey: "2026-09",
       dayByKey: new Map([["2026-09-13", day]]),
       participants: 1,
       pickedDateKeys: [],
+      timesNeeded: 1,
       allowedSpanDays: 7,
       todayKey: "2026-09-01",
     }).flat();

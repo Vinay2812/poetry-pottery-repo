@@ -204,11 +204,20 @@ export function useSlotPicker({
           dayByKey,
           participants,
           pickedDateKeys,
+          timesNeeded: needed,
           allowedSpanDays: spanAllowance,
           todayKey,
         }),
       ),
-    [dayByKey, month, participants, pickedDateKeys, spanAllowance, todayKey],
+    [
+      dayByKey,
+      month,
+      needed,
+      participants,
+      pickedDateKeys,
+      spanAllowance,
+      todayKey,
+    ],
   );
   const selectedDay = selectedDate ? dayByKey.get(selectedDate) : undefined;
   const slots = useMemo(

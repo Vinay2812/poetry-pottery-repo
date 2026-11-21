@@ -191,6 +191,8 @@ export interface WeeksInput {
   dayByKey: ReadonlyMap<string, WorkshopDayData>;
   participants: number;
   pickedDateKeys: string[];
+  // With one time needed a new pick replaces the old, so no day is out of reach.
+  timesNeeded: number;
   allowedSpanDays: number;
   todayKey: string;
 }
@@ -201,9 +203,11 @@ export function toCalendarWeeks({
   dayByKey,
   participants,
   pickedDateKeys,
+  timesNeeded,
   allowedSpanDays,
   todayKey,
 }: WeeksInput): (CalendarDay | null)[][] {
+  const spanKeys = timesNeeded > 1 ? pickedDateKeys : [];
   return toMonthGrid(monthKey).map((week) =>
     week.map((dateKey) => {
       if (!dateKey) return null;
@@ -222,7 +226,7 @@ export function toCalendarWeeks({
         isClosed: day?.is_closed ?? false,
         closedKind: day?.closed_kind ?? null,
         isPast: dateKey < todayKey,
-        mutedReason: isDayWithinSpan(dateKey, pickedDateKeys, allowedSpanDays)
+        mutedReason: isDayWithinSpan(dateKey, spanKeys, allowedSpanDays)
           ? null
           : toSpanRule(allowedSpanDays),
       };
