@@ -75,6 +75,7 @@ function Section({
           hasThumbnail={hasThumbnails}
           isActive={!isDisabled && activeIndex === offset + index}
           isDisabled={isDisabled}
+          isFirst={index === 0}
           onSelect={() => onSelectIndex(offset + index)}
           onHover={() => onHoverIndex(offset + index)}
         />
