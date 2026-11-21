@@ -28,7 +28,7 @@ function Fact({ label, value }: FactProps) {
 }
 
 // Stands in for the event rows when nothing is on the calendar: the wheel's own
-// facts beside a piece from it, so the studio's second way in never goes quiet.
+// facts beside a piece from it. Phones keep the facts and drop the picture.
 export function StudioTeaser({
   imageUrl,
   line,
@@ -56,13 +56,13 @@ export function StudioTeaser({
           {linkLabel}
         </Link>
       </div>
-      <div className="relative aspect-square bg-white">
+      <div className="relative hidden aspect-square bg-white md:block">
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt=""
             fill
-            sizes="(min-width: 768px) 22rem, 100vw"
+            sizes="22rem"
             className="object-cover"
           />
         ) : (
