@@ -182,6 +182,8 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
                   src={url}
                   alt=""
                   fill
+                  // Shares the first photo's URL, so it loads as eagerly as the photo itself.
+                  loading={index === 0 ? "eager" : undefined}
                   sizes="64px"
                   className="object-cover"
                 />
