@@ -9,10 +9,16 @@ import {
   DeleteContentPageDocument,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import { contentSlugSchema } from "@/lib/validations/admin/content";
 
-import { AdminConfirmDialog, AdminPageHeader } from "@/features/admin/ui";
+import {
+  AdminConfirmDialog,
+  AdminLoadError,
+  AdminPageHeader,
+  retryQuery,
+} from "@/features/admin/ui";
 import { Button } from "@/components/ui/button";
 
 import {
@@ -28,7 +34,7 @@ function withoutSlug(rows: ContentPageRow[], slug: string): ContentPageRow[] {
 
 export function ContentPagesContainer() {
   const router = useRouter();
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminContentPagesDocument,
     {
       fetchPolicy: "cache-and-network",
@@ -83,6 +89,12 @@ export function ContentPagesContainer() {
     router.push(`/dashboard/content/${parsed.data}`);
   }, [newSlug, router]);
 
+  // "No pages yet" only after the list has actually come back.
+  const loadError =
+    error && !data
+      ? describeError(error, "The pages could not be loaded.")
+      : null;
+
   return (
     <div className="flex flex-col gap-4">
       <AdminPageHeader
@@ -102,12 +114,22 @@ export function ContentPagesContainer() {
           </Button>
         }
       />
-      <ContentPagesTable
-        rows={optimisticRows}
-        isBusy={loading && pages === undefined}
-        busySlug={busySlug}
-        onDelete={setPendingSlug}
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : pages === undefined ? (
+        <div aria-busy="true" className="h-64 animate-pulse bg-ash" />
+      ) : (
+        <ContentPagesTable
+          rows={optimisticRows}
+          isBusy={loading}
+          busySlug={busySlug}
+          onDelete={setPendingSlug}
+        />
+      )}
       <NewPageDialog
         isOpen={isNewOpen}
         slug={newSlug}
