@@ -5,7 +5,12 @@ import {
 } from "@nestjs/common";
 import { Prisma, RegistrationStatus } from "@prisma/client";
 
-import { clampPage, toPageInfo } from "@/common/pagination/pagination";
+import {
+  canReturnRows,
+  clampPage,
+  splitPage,
+  toPageInfo,
+} from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
 import {
   assertNotPaymentStepForFreeSeat,
@@ -338,20 +343,48 @@ export class AdminWorkshopsService {
           }
         : {}),
     };
-    const [rows, total] = await Promise.all([
-      this.prisma.workshopBooking.findMany({
-        where,
-        include: adminBookingInclude,
-        orderBy: { starts_at: "desc" },
-        skip: bounds.skip,
-        take: bounds.limit,
-      }),
-      this.prisma.workshopBooking.count({ where }),
-    ]);
-    return {
-      items: rows.map((row) => toAdminBooking(row)),
-      page_info: toPageInfo(bounds, total),
+    // Requests waiting on the studio lead, soonest first; everything else follows, newest session first.
+    const waiting = { AND: [where, { status: RegistrationStatus.PENDING }] };
+    const rest = {
+      AND: [where, { status: { not: RegistrationStatus.PENDING } }],
     };
+    // One snapshot for the counts and both reads, so a request answered in between cannot shift the page.
+    return this.prisma.withTransaction(
+      async () => {
+        const [waitingTotal, restTotal] = await Promise.all([
+          this.prisma.workshopBooking.count({ where: waiting }),
+          this.prisma.workshopBooking.count({ where: rest }),
+        ]);
+        const slices = splitPage(bounds, waitingTotal);
+        const [waitingRows, restRows] = await Promise.all([
+          canReturnRows(slices.first, waitingTotal)
+            ? this.prisma.workshopBooking.findMany({
+                where: waiting,
+                include: adminBookingInclude,
+                orderBy: [{ starts_at: "asc" }, { id: "asc" }],
+                skip: slices.first.skip,
+                take: slices.first.take,
+              })
+            : [],
+          canReturnRows(slices.second, restTotal)
+            ? this.prisma.workshopBooking.findMany({
+                where: rest,
+                include: adminBookingInclude,
+                orderBy: [{ starts_at: "desc" }, { id: "asc" }],
+                skip: slices.second.skip,
+                take: slices.second.take,
+              })
+            : [],
+        ]);
+        return {
+          items: [...waitingRows, ...restRows].map((row) =>
+            toAdminBooking(row),
+          ),
+          page_info: toPageInfo(bounds, waitingTotal + restTotal),
+        };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   }
 
   async setBookingStatus(
