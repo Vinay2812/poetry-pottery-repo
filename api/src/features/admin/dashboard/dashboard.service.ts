@@ -110,7 +110,8 @@ export class AdminDashboardService {
         starts_at: slot.starts_at,
         ends_at: slot.ends_at,
         title: slot.booking.user.name ?? slot.booking.user.email,
-        detail: `${slot.booking.config.name} · ${slot.booking.participants} at the wheel · ${slot.booking.status.toLowerCase()}`,
+        detail: `${slot.booking.config.name} · ${slot.booking.participants} at the wheel`,
+        booking_status: slot.booking.status,
       })),
       ...visits.map((visit) => ({
         kind: AdminAgendaKind.VISIT,
@@ -119,6 +120,7 @@ export class AdminDashboardService {
         ends_at: visit.ends_at,
         title: visit.name,
         detail: "Studio visit",
+        booking_status: null,
       })),
       ...events.map((event) => ({
         kind: AdminAgendaKind.EVENT,
@@ -127,6 +129,7 @@ export class AdminDashboardService {
         ends_at: event.ends_at,
         title: event.title,
         detail: `${event.total_seats - event.available_seats} of ${event.total_seats} seats taken`,
+        booking_status: null,
       })),
     ];
     return items.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());

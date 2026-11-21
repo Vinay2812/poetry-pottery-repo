@@ -40,6 +40,7 @@ import {
   describeStock,
   formatCount,
   stockTone,
+  toAgendaDetail,
   toAgendaHref,
   toAgendaKindLabel,
 } from "@/features/admin/dashboard/types";
@@ -120,7 +121,7 @@ export function DashboardContainer() {
         kindLabel: toAgendaKindLabel(item.kind),
         timeLabel: formatTime(item.starts_at),
         title: item.title,
-        detail: item.detail,
+        detail: toAgendaDetail(item.detail, item.booking_status),
       })),
     [dashboard],
   );

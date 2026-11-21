@@ -1,4 +1,9 @@
-import { AdminAgendaKind } from "@/graphql/generated/graphql";
+import {
+  AdminAgendaKind,
+  type RegistrationStatus,
+} from "@/graphql/generated/graphql";
+
+import { toRegistrationStatusLabel } from "@/lib/registration-status";
 export function formatCount(value: number): string {
   return new Intl.NumberFormat("en-IN").format(value);
 }
@@ -50,4 +55,13 @@ export function toAgendaKindLabel(kind: AdminAgendaKind): string {
     case AdminAgendaKind.Event:
       return "Evening";
   }
+}
+
+// A wheel session ends with its status in the words the guest sees, e.g. "· Awaiting approval".
+export function toAgendaDetail(
+  detail: string,
+  bookingStatus: RegistrationStatus | null | undefined,
+): string {
+  if (!bookingStatus) return detail;
+  return `${detail} · ${toRegistrationStatusLabel(bookingStatus)}`;
 }
