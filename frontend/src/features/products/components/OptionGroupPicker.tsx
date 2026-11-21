@@ -78,7 +78,6 @@ export function OptionGroupPicker({
           onChange={(event) => onTextChange(event.target.value)}
           aria-invalid={error !== null}
           aria-describedby={error ? errorId : undefined}
-          placeholder="Write it just as you want it"
           className="h-11"
         />
         {(error !== null || maxLength !== null) && (
