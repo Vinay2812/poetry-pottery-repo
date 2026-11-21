@@ -6,6 +6,8 @@ export interface SearchFieldProps {
   onChange: (value: string) => void;
   onClear: () => void;
   onBlur?: () => void;
+  // Lets the page hand focus back to the field, such as after clearing from the empty state.
+  inputRef?: React.Ref<HTMLInputElement>;
   autoFocus?: boolean;
 }
 
@@ -15,6 +17,7 @@ export function SearchField({
   onChange,
   onClear,
   onBlur,
+  inputRef,
   autoFocus = false,
 }: SearchFieldProps) {
   return (
@@ -24,6 +27,7 @@ export function SearchField({
         strokeWidth={1.5}
       />
       <input
+        ref={inputRef}
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
@@ -38,6 +42,8 @@ export function SearchField({
         <button
           type="button"
           onClick={onClear}
+          // Keeps focus in the field, so clearing never blurs it and sends the draft first.
+          onMouseDown={(event) => event.preventDefault()}
           aria-label="Clear search"
           className="absolute top-1/2 right-1 flex size-9 -translate-y-1/2 items-center justify-center ghost-hover hover:text-primary"
         >

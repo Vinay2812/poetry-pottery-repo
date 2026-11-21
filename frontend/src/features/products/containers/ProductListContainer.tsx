@@ -154,6 +154,12 @@ export function ProductListContainer({
     (value: boolean) => dispatch({ type: "seconds", value }),
     [dispatch],
   );
+  // The empty state's button goes away once the search clears, so focus moves to the field.
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const handleClearSearchFromEmpty = useCallback(() => {
+    handleSearchClear();
+    searchInputRef.current?.focus();
+  }, [handleSearchClear]);
   const handleClear = useCallback(() => {
     resetSearchDraft();
     setPriceDraft(null);
@@ -246,6 +252,7 @@ export function ProductListContainer({
             onChange={handleSearchChange}
             onClear={handleSearchClear}
             onBlur={handleSearchBlur}
+            inputRef={searchInputRef}
             autoFocus={isSearchPage}
           />
         </div>
@@ -299,7 +306,7 @@ export function ProductListContainer({
               search={filters.search}
               hasActiveFilters={activeFilterCount > 0}
               isMadeToOrderOnly={isMadeToOrderOnly}
-              onClearSearch={handleSearchClear}
+              onClearSearch={handleClearSearchFromEmpty}
               onClear={handleClear}
             />
           ) : (
