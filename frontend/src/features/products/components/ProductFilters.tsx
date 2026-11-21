@@ -58,9 +58,10 @@ interface CheckGroupProps {
   onToggle: (value: string) => void;
 }
 
-// Below lg the panel lives in the phone sheet, so every row is a full 44px tap target.
-const ROW_CLASS = "flex min-h-11 items-center gap-3 lg:min-h-0 lg:gap-2.5";
-const ROW_LABEL_CLASS = "flex flex-1 self-stretch font-normal";
+// Below lg the panel lives in the phone sheet, so each row is a label 44px tall: a tap
+// anywhere on it reaches the control, which sits inside it.
+const ROW_CLASS =
+  "flex min-h-11 items-center gap-3 font-normal lg:min-h-0 lg:gap-2.5";
 
 function CheckGroup({
   title,
@@ -78,25 +79,25 @@ function CheckGroup({
       {options.map((option) => {
         const id = `${idPrefix}-${option.value}`;
         return (
-          <div key={option.value} className={ROW_CLASS}>
+          // Every option stays listed; one with nothing behind it just reads quieter.
+          <Label
+            key={option.value}
+            htmlFor={id}
+            className={cn(
+              ROW_CLASS,
+              option.count === 0 && "text-muted-foreground",
+            )}
+          >
             <Checkbox
               id={id}
               checked={selected.includes(option.value)}
               onCheckedChange={() => onToggle(option.value)}
             />
-            {/* Every option stays listed; one with nothing behind it just reads quieter. */}
-            <Label
-              htmlFor={id}
-              className={cn(
-                ROW_LABEL_CLASS,
-                "justify-between",
-                option.count === 0 && "text-muted-foreground",
-              )}
-            >
+            <span className="flex flex-1 justify-between gap-3">
               <span>{option.label}</span>
               <span className="text-muted-foreground tnum">{option.count}</span>
-            </Label>
-          </div>
+            </span>
+          </Label>
         );
       })}
     </fieldset>
@@ -201,64 +202,61 @@ export function ProductFilters({
       />
 
       <div className="flex flex-col lg:gap-4">
-        <div className={ROW_CLASS}>
-          <Label
-            htmlFor={`${scope}-filter-in-stock`}
-            className={ROW_LABEL_CLASS}
-          >
-            Ready to ship only
-          </Label>
+        <Label
+          htmlFor={`${scope}-filter-in-stock`}
+          className={cn(ROW_CLASS, "justify-between")}
+        >
+          Ready to ship only
           <Switch
             id={`${scope}-filter-in-stock`}
             checked={inStockOnly}
             onCheckedChange={onInStockOnlyChange}
           />
-        </div>
+        </Label>
         {/* Made-to-order pieces stay off the shelf until this is on, so it says what it brings in. */}
-        <div className="flex flex-col gap-1">
-          <div className={ROW_CLASS}>
-            <Label
-              htmlFor={`${scope}-filter-custom`}
-              className={ROW_LABEL_CLASS}
-            >
-              Made to order only
-            </Label>
+        <div className="flex flex-col gap-1 pb-3 lg:pb-0">
+          <Label
+            htmlFor={`${scope}-filter-custom`}
+            className={cn(ROW_CLASS, "justify-between")}
+          >
+            Made to order only
             <Switch
               id={`${scope}-filter-custom`}
               checked={customizableOnly}
               onCheckedChange={onCustomizableOnlyChange}
               aria-describedby={`${scope}-filter-custom-note`}
             />
-          </div>
+          </Label>
           <p
             id={`${scope}-filter-custom-note`}
             className="text-[13px] text-muted-foreground"
           >
-            Pieces we throw for you once you order, ready in about ten days.
+            Thrown once you order, ready in about ten days.
           </p>
         </div>
         {/* The seconds shelf is listed on the shelf and in the archive alike, count and all. */}
-        <div className="flex flex-col gap-1">
-          <div className={ROW_CLASS}>
-            <Label
-              htmlFor={`${scope}-filter-seconds`}
-              className={cn(
-                ROW_LABEL_CLASS,
-                secondsCount === 0 && "text-muted-foreground",
-              )}
-            >
+        <div className="flex flex-col gap-1 pb-3 lg:pb-0">
+          <Label
+            htmlFor={`${scope}-filter-seconds`}
+            className={cn(
+              ROW_CLASS,
+              "justify-between",
+              secondsCount === 0 && "text-muted-foreground",
+            )}
+          >
+            <span>
               Seconds{" "}
               <span className="text-muted-foreground tnum">
                 ({secondsCount})
               </span>
-            </Label>
+            </span>
             <Switch
               id={`${scope}-filter-seconds`}
               checked={secondsOnly}
               onCheckedChange={onSecondsOnlyChange}
               aria-describedby={`${scope}-filter-seconds-note`}
             />
-          </div>
+          </Label>
           <p
             id={`${scope}-filter-seconds-note`}
             className="text-[13px] text-muted-foreground"
