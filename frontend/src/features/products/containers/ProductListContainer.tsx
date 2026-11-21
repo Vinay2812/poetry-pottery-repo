@@ -34,8 +34,12 @@ import {
   countActiveFilters,
   PRODUCT_FILTERS_CODEC,
   toCardPhotoLoading,
+  isShelfCountable,
   toPriceRangeLabel,
   toResultCountLabel,
+  toShelfCountLine,
+  toShelfTabCount,
+  toShowPiecesLabel,
 } from "@/features/products/types";
 
 export interface ProductListContainerProps {
@@ -94,17 +98,16 @@ export function ProductListContainer({
     result,
     phase,
     isRefreshing,
-    canLoadMore,
-    isAppending,
+    isNextPageBusy,
     hasAppendFailed,
     loadMore: handleLoadMore,
     retry: handleRetry,
-  } = useShelfResults(
+  } = useShelfResults({
     filters,
     initialProducts,
     initialFilterKey,
-    isPending || isSearchSettling,
-  );
+    isFiltersMoving: isPending || isSearchSettling,
+  });
   const items = result?.items ?? [];
   const pageInfo = result?.page_info;
   const facets = result?.facets;
@@ -115,6 +118,7 @@ export function ProductListContainer({
     [],
   );
 
+  const handleOpenFilters = useCallback(() => setIsSheetOpen(true), []);
   const handleSortChange = useCallback(
     (sort: ProductSort) => dispatch({ type: "sort", sort }),
     [dispatch],
@@ -264,7 +268,7 @@ export function ProductListContainer({
         <ShelfTabs
           shelfHref={toHref({ ...filters, isArchive: false })}
           archiveHref={ARCHIVE_PATH}
-          shelfCount={phase === "ready" ? (facets?.active_count ?? null) : null}
+          shelfCount={toShelfTabCount(phase, facets?.active_count)}
           isArchive={filters.isArchive}
           onSelectShelf={handleSelectShelf}
         />
@@ -278,17 +282,19 @@ export function ProductListContainer({
         {/* A narrow result set must not pull the footer up over the reader's scroll position. */}
         <div className="flex min-h-[60vh] flex-col gap-5">
           <ProductToolbar
-            countLabel={toResultCountLabel(
-              pageInfo?.total ?? 0,
-              filters.search,
-              filters.customizableOnly,
+            countLine={toShelfCountLine(
+              phase,
+              toResultCountLabel(
+                pageInfo?.total ?? 0,
+                filters.search,
+                filters.customizableOnly,
+              ),
             )}
-            phase={phase}
             sort={filters.sort}
             isRelevanceOnly={filters.search !== ""}
             activeFilterCount={activeFilterCount}
             onSortChange={handleSortChange}
-            onOpenFilters={() => setIsSheetOpen(true)}
+            onOpenFilters={handleOpenFilters}
             onClear={handleClear}
           />
 
@@ -317,20 +323,23 @@ export function ProductListContainer({
               )}
             >
               <ProductGrid>
-                {items.map((product, index) => (
-                  <ProductCardContainer
-                    key={product.id}
-                    product={product}
-                    isPriority={toCardPhotoLoading(index).isPriority}
-                    isEager={toCardPhotoLoading(index).isEager}
-                  />
-                ))}
+                {items.map((product, index) => {
+                  const photoLoading = toCardPhotoLoading(index);
+                  return (
+                    <ProductCardContainer
+                      key={product.id}
+                      product={product}
+                      isPriority={photoLoading.isPriority}
+                      isEager={photoLoading.isEager}
+                    />
+                  );
+                })}
               </ProductGrid>
               {/* The footer counts only a settled list; a pending one has no honest number yet. */}
-              {pageInfo && phase === "ready" && (
+              {pageInfo && isShelfCountable(phase) && (
                 <LoadMore
                   hasMore={pageInfo.has_more}
-                  isLoading={isAppending || !canLoadMore}
+                  isLoading={isNextPageBusy}
                   hasFailed={hasAppendFailed}
                   loadedCount={items.length}
                   total={pageInfo.total}
@@ -345,8 +354,7 @@ export function ProductListContainer({
 
       <FilterSheet
         isOpen={isSheetOpen}
-        resultCount={pageInfo?.total ?? 0}
-        phase={phase}
+        showLabel={toShowPiecesLabel(phase, pageInfo?.total ?? 0)}
         activeFilterCount={activeFilterCount}
         onOpenChange={setIsSheetOpen}
         onClear={handleClear}

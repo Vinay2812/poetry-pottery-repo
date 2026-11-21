@@ -107,7 +107,11 @@ function setQuery(next: Partial<QueryState>) {
 function renderShelf() {
   return renderHook(
     ({ filters }: { filters: ProductFilters }) =>
-      useShelfResults(filters, SERVER_PAGE, SERVER_KEY),
+      useShelfResults({
+        filters,
+        initialProducts: SERVER_PAGE,
+        initialFilterKey: SERVER_KEY,
+      }),
     { initialProps: { filters: EMPTY_FILTERS } },
   );
 }
@@ -191,7 +195,7 @@ describe("useShelfResults", () => {
 
     expect(result.current.phase).toBe("failed");
     expect(result.current.result?.facets.categories).toHaveLength(1);
-    expect(result.current.canLoadMore).toBe(false);
+    expect(result.current.isNextPageBusy).toBe(true);
   });
 
   it("stays ready while Apollo reports a next page still out", () => {
@@ -203,14 +207,19 @@ describe("useShelfResults", () => {
     const { result } = renderShelf();
 
     expect(result.current.phase).toBe("ready");
-    expect(result.current.canLoadMore).toBe(true);
+    expect(result.current.isNextPageBusy).toBe(false);
     expect(result.current.isRefreshing).toBe(false);
   });
 
   it("is pending while the filters on screen are ahead of the list", () => {
     setQuery({ data: answer(SERVER_PAGE), loading: false });
     const { result } = renderHook(() =>
-      useShelfResults(EMPTY_FILTERS, SERVER_PAGE, SERVER_KEY, true),
+      useShelfResults({
+        filters: EMPTY_FILTERS,
+        initialProducts: SERVER_PAGE,
+        initialFilterKey: SERVER_KEY,
+        isFiltersMoving: true,
+      }),
     );
 
     expect(result.current.phase).toBe("pending");
@@ -225,7 +234,7 @@ describe("useShelfResults", () => {
     await act(async () => result.current.loadMore());
 
     expect(result.current.hasAppendFailed).toBe(true);
-    expect(result.current.isAppending).toBe(false);
+    expect(result.current.isNextPageBusy).toBe(false);
     expect(result.current.result?.items).toHaveLength(2);
   });
 
@@ -254,13 +263,13 @@ describe("useShelfResults", () => {
     );
 
     act(() => result.current.loadMore());
-    expect(result.current.isAppending).toBe(true);
+    expect(result.current.isNextPageBusy).toBe(true);
 
     const mugs = answer(page([7], 1, 1));
     setQuery({ data: mugs, loading: false });
     rerender({ filters: MUGS });
     // The filters changed, so the old page's spinner no longer belongs to this list.
-    expect(result.current.isAppending).toBe(false);
+    expect(result.current.isNextPageBusy).toBe(false);
 
     const call = fetchMoreMock.mock.calls[0]?.[0];
     const merged = call?.updateQuery(mugs, {

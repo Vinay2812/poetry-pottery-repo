@@ -11,29 +11,19 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-import type { ShelfPhase } from "@/features/products/types";
-
 export interface FilterSheetProps {
   isOpen: boolean;
-  resultCount: number;
-  phase: ShelfPhase;
+  // The close button's words: a count once the list settles, never a stale one.
+  showLabel: string;
   activeFilterCount: number;
   onOpenChange: (isOpen: boolean) => void;
   onClear: () => void;
   children: React.ReactNode;
 }
 
-// Only a settled answer has a count to promise; a failure still lets the sheet close.
-function toShowLabel(phase: ShelfPhase, resultCount: number): string {
-  if (phase === "pending") return "Finding pieces\u2026";
-  if (phase === "failed") return "Show pieces";
-  return `Show ${resultCount} ${resultCount === 1 ? "piece" : "pieces"}`;
-}
-
 export function FilterSheet({
   isOpen,
-  resultCount,
-  phase,
+  showLabel,
   activeFilterCount,
   onOpenChange,
   onClear,
@@ -68,7 +58,7 @@ export function FilterSheet({
         <div className="flex-1 overflow-y-auto px-4 pb-2">{children}</div>
         <SheetFooter>
           <Button size="lg" onClick={() => onOpenChange(false)}>
-            {toShowLabel(phase, resultCount)}
+            {showLabel}
           </Button>
         </SheetFooter>
       </SheetContent>

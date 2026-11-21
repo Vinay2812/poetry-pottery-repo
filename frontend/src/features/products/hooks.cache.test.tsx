@@ -144,7 +144,11 @@ function renderShelf(
   );
   return renderHook(
     ({ filters }: { filters: ProductFilters }) =>
-      useShelfResults(filters, initialProducts, SERVER_KEY),
+      useShelfResults({
+        filters,
+        initialProducts,
+        initialFilterKey: SERVER_KEY,
+      }),
     { wrapper, initialProps: { filters: initialFilters } },
   );
 }
@@ -174,13 +178,13 @@ describe("useShelfResults against a real cache", () => {
     const { result } = renderShelf(client, ALL_P1);
 
     expect(result.current.phase).toBe("ready");
-    expect(result.current.canLoadMore).toBe(false);
+    expect(result.current.isNextPageBusy).toBe(true);
     act(() => result.current.loadMore());
     await pause(20);
     expect(log).toEqual(["start all p1"]);
     expect(result.current.result?.items).toHaveLength(24);
 
-    await waitFor(() => expect(result.current.canLoadMore).toBe(true));
+    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
     act(() => result.current.loadMore());
     await waitFor(() => expect(result.current.result?.items).toHaveLength(30));
     expect(log).toEqual(["start all p1", "start all p2"]);
@@ -192,13 +196,13 @@ describe("useShelfResults against a real cache", () => {
       filter.page === 1 ? { page: ALL_P1 } : { page: ALL_P2, isFailing: true },
     );
     const { result } = renderShelf(client, ALL_P1);
-    await waitFor(() => expect(result.current.canLoadMore).toBe(true));
+    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
 
     act(() => result.current.loadMore());
     await waitFor(() => expect(result.current.hasAppendFailed).toBe(true));
 
     expect(result.current.result?.items).toHaveLength(24);
-    expect(result.current.isAppending).toBe(false);
+    expect(result.current.isNextPageBusy).toBe(false);
     expect(result.current.phase).toBe("ready");
     await pause(10);
     expect(rejections).toEqual([]);
@@ -211,7 +215,7 @@ describe("useShelfResults against a real cache", () => {
       return filter.page === 1 ? { page: ALL_P1 } : { page: ALL_P2, delay: 40 };
     });
     const { result, rerender } = renderShelf(client, ALL_P1);
-    await waitFor(() => expect(result.current.canLoadMore).toBe(true));
+    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
 
     act(() => result.current.loadMore());
     rerender({ filters: MUGS });
@@ -245,24 +249,83 @@ describe("useShelfResults against a real cache", () => {
     const MUG: ProductFilters = { ...EMPTY_FILTERS, search: "mug" };
     const BOWL: ProductFilters = { ...EMPTY_FILTERS, search: "bowl" };
     const { result, rerender } = renderShelf(client, null, MUG);
-    await waitFor(() => expect(result.current.canLoadMore).toBe(true));
+    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
 
     act(() => result.current.loadMore());
-    expect(result.current.isAppending).toBe(true);
+    expect(result.current.isNextPageBusy).toBe(true);
     rerender({ filters: BOWL });
-    await waitFor(() => expect(result.current.canLoadMore).toBe(true));
+    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
     act(() => result.current.loadMore());
     rerender({ filters: MUG });
     await waitFor(() => expect(result.current.phase).toBe("ready"));
 
     await act(async () => releaseHeld());
-    await waitFor(() => expect(result.current.isAppending).toBe(false));
+    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
 
     expect(result.current.phase).toBe("ready");
-    expect(result.current.canLoadMore).toBe(true);
+    expect(result.current.isNextPageBusy).toBe(false);
     expect(result.current.result?.items).toHaveLength(48);
     act(() => result.current.loadMore());
     expect(log).toContain("start mug p3");
     expect(rejections).toEqual([]);
+  });
+
+  it("appends a page once when it returns to a list with that page still out (A)", async () => {
+    const mugPages = [page(range(1, 24), 1, 60), page(range(25, 24), 2, 60)];
+    const bowlPages = [page(range(201, 24), 1, 70)];
+    const { client, log, releaseHeld } = shelfClient((filter) => {
+      const pages = filter.search === "bowl" ? bowlPages : mugPages;
+      const index = (filter.page ?? 1) - 1;
+      return {
+        page: pages[index] ?? page(range(225, 24), index + 1, 70),
+        isHeld: index > 0,
+      };
+    });
+    const MUG: ProductFilters = { ...EMPTY_FILTERS, search: "mug" };
+    const BOWL: ProductFilters = { ...EMPTY_FILTERS, search: "bowl" };
+    const { result, rerender } = renderShelf(client, null, MUG);
+    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+
+    act(() => result.current.loadMore());
+    rerender({ filters: BOWL });
+    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+    act(() => result.current.loadMore());
+    rerender({ filters: MUG });
+    await waitFor(() => expect(result.current.phase).toBe("ready"));
+    // Scrolling back down asks again while the first request for page two is still out.
+    act(() => result.current.loadMore());
+    act(() => result.current.loadMore());
+
+    await act(async () => releaseHeld());
+    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+
+    const items = result.current.result?.items ?? [];
+    expect(items).toHaveLength(48);
+    expect(new Set(items.map((item) => item.id)).size).toBe(48);
+    expect(log.filter((entry) => entry === "start mug p2")).toHaveLength(1);
+  });
+
+  it("sends one request for two load-mores in the same frame or before an answer (G)", async () => {
+    const { client, log, releaseHeld } = shelfClient((filter) =>
+      filter.page === 1 ? { page: ALL_P1 } : { page: ALL_P2, isHeld: true },
+    );
+    const { result } = renderShelf(client, ALL_P1);
+    await waitFor(() => expect(result.current.isNextPageBusy).toBe(false));
+
+    act(() => {
+      result.current.loadMore();
+      result.current.loadMore();
+    });
+    // And once more after the re-render, before either answer is released.
+    act(() => result.current.loadMore());
+
+    await act(async () => releaseHeld());
+    await waitFor(() => expect(result.current.result?.items).toHaveLength(30));
+    await pause(10);
+
+    const items = result.current.result?.items ?? [];
+    expect(new Set(items.map((item) => item.id)).size).toBe(30);
+    expect(result.current.result?.page_info.page).toBe(2);
+    expect(log.filter((entry) => entry === "start all p2")).toHaveLength(1);
   });
 });
