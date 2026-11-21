@@ -86,6 +86,9 @@ const LEFT_OFF_HOME: Record<Exclude<FeatureBlock, "retired">, string> = {
   "sold-out": "sold out",
 };
 
+// A held leave goes on to a link or carries on with browser Back.
+export type LeaveTarget = { kind: "link"; href: string } | { kind: "back" };
+
 export const LIVE_BLOCKED_NOTE = "Add stock first, or mark it made to order";
 
 // The storefront calls an inactive piece "Retired from the shelf" and lists it in the archive.

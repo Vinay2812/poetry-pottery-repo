@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -35,7 +34,7 @@ import {
   AdminPageHeader,
   AdminStatTile,
 } from "@/features/admin/ui";
-import { useAdminLeaveGuard } from "@/features/admin/shell";
+import { useAdminLeaveGuard, useBackGuard } from "@/features/admin/shell";
 import { ImageListUploaderContainer } from "@/features/admin/uploads";
 
 import { PieceForm } from "@/features/admin/pieces/components/PieceForm";
@@ -55,6 +54,7 @@ import {
   findHomeShelfBlock,
   formatStock,
   LIVE_BLOCKED_NOTE,
+  type LeaveTarget,
   type PieceDraft,
   toFormBaseline,
   toProductFormValues,
@@ -112,7 +112,6 @@ export interface PieceEditorContainerProps {
 }
 
 export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
-  const router = useRouter();
   const isCreate = productId === null;
 
   const { data, loading, error, refetch } = useQuery(AdminProductDocument, {
@@ -138,8 +137,8 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   const [adjustStock] = useMutation(AdjustProductStockDocument);
 
   const [isRetireOpen, setIsRetireOpen] = useState(false);
-  // Where a held leave was headed; null while the dialog is closed.
-  const [leaveHref, setLeaveHref] = useState<string | null>(null);
+  // Where a held leave was headed: a link, or browser Back; null while the dialog is closed.
+  const [leaveTarget, setLeaveTarget] = useState<LeaveTarget | null>(null);
   const [isStockOpen, setIsStockOpen] = useState(false);
   const [imageDraft, setImageDraft] = useState<string[] | null>(null);
   // Bumped after each save so the form remounts clean from its new baseline.
@@ -183,7 +182,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   );
   const hasUnsavedChanges = isFormDirty || imageDraft !== null;
 
-  // Reloading or closing the tab asks too; the admin nav asks through the leave guard below.
+  // Reloading or closing the tab asks too; the admin nav and browser Back ask through the guards below.
   useEffect(() => {
     if (!hasUnsavedChanges) return;
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -192,6 +191,22 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  const handleLinkAttempt = useCallback(
+    (href: string) => setLeaveTarget({ kind: "link", href }),
+    [],
+  );
+  const handleBackAttempt = useCallback(
+    () => setLeaveTarget({ kind: "back" }),
+    [],
+  );
+
+  // Unsaved fields or photos ask first, from Cancel, the admin nav or browser Back.
+  // Typing a new address or closing the tab is left to the beforeunload prompt above.
+  useAdminLeaveGuard(hasUnsavedChanges ? handleLinkAttempt : null);
+  const { leaveBack, leaveTo, stay } = useBackGuard(
+    hasUnsavedChanges ? handleBackAttempt : null,
+  );
 
   const categoryOptions = useMemo(
     () =>
@@ -248,7 +263,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     },
     onSuccess: (result, save, isRefreshed) => {
       if (typeof result === "number") {
-        router.push(`/dashboard/pieces/${result}`);
+        leaveTo(`/dashboard/pieces/${result}`);
         return;
       }
       setBaseline(toFormBaseline(isRefreshed, save));
@@ -333,19 +348,27 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   );
 
   const handleLeaveConfirm = useCallback(() => {
-    if (leaveHref !== null) router.push(leaveHref);
-  }, [leaveHref, router]);
+    if (leaveTarget === null) return;
+    if (leaveTarget.kind === "back") leaveBack();
+    else leaveTo(leaveTarget.href);
+  }, [leaveBack, leaveTarget, leaveTo]);
 
-  // Unsaved fields or photos ask first, from Cancel or from the admin nav.
-  useAdminLeaveGuard(hasUnsavedChanges ? setLeaveHref : null);
+  const handleLeaveOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (isOpen) return;
+      setLeaveTarget(null);
+      stay();
+    },
+    [stay],
+  );
 
   const handleCancel = useCallback(() => {
     if (hasUnsavedChanges) {
-      setLeaveHref(PIECES_HREF);
+      setLeaveTarget({ kind: "link", href: PIECES_HREF });
       return;
     }
-    router.push(PIECES_HREF);
-  }, [hasUnsavedChanges, router]);
+    leaveTo(PIECES_HREF);
+  }, [hasUnsavedChanges, leaveTo]);
 
   const handleInvalid = useCallback(
     () => toast.error("Some fields need a look before this can be saved"),
@@ -528,7 +551,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       />
 
       <AdminConfirmDialog
-        isOpen={leaveHref !== null}
+        isOpen={leaveTarget !== null}
         title="Leave without saving?"
         description={describeUnsavedChanges(imageDraft !== null)}
         confirmLabel="Leave without saving"
@@ -536,9 +559,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
         isDestructive
         isBusy={false}
         onConfirm={handleLeaveConfirm}
-        onOpenChange={(isOpen) => {
-          if (!isOpen) setLeaveHref(null);
-        }}
+        onOpenChange={handleLeaveOpenChange}
       />
 
       <StockAdjustDialog

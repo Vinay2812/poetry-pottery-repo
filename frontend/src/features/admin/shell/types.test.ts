@@ -5,10 +5,13 @@ import {
   formatEnumLabel,
   formatRange,
   toPreviousPage,
+  isBackFromGuard,
+  isBackGuardState,
   isNavLinkActive,
   readPage,
   readQueryValues,
   toPageNumber,
+  toBackGuardState,
   toGuardedNavigate,
   toQueryString,
 } from "./types";
@@ -149,5 +152,26 @@ describe("toGuardedNavigate", () => {
     });
     expect(preventDefault).toHaveBeenCalledOnce();
     expect(onGuardedLeave).toHaveBeenCalledWith("/dashboard/orders");
+  });
+});
+
+describe("back guard", () => {
+  it("tells the spare entry from Next's own history state", () => {
+    expect(isBackGuardState(toBackGuardState())).toBe(true);
+    expect(isBackGuardState({ ...toBackGuardState(), __NA: true })).toBe(true);
+    expect(isBackGuardState({ __NA: true })).toBe(false);
+    expect(isBackGuardState(null)).toBe(false);
+    expect(isBackGuardState("admin_back_guard")).toBe(false);
+  });
+
+  it("counts only a step off the spare entry onto the same page as Back", () => {
+    const href = "http://localhost/dashboard/pieces/4";
+    expect(isBackFromGuard(true, false, href, href)).toBe(true);
+    // Forward onto the spare entry, or a move to another page, is not it.
+    expect(isBackFromGuard(false, true, href, href)).toBe(false);
+    expect(
+      isBackFromGuard(true, false, "http://localhost/dashboard", href),
+    ).toBe(false);
+    expect(isBackFromGuard(false, false, href, href)).toBe(false);
   });
 });

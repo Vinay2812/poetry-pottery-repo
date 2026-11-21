@@ -9,10 +9,15 @@ import {
   useState,
 } from "react";
 
+import { useRouter } from "next/navigation";
+
 import { type UrlCodec, useUrlState } from "@/lib/use-url-state";
 
 import {
   applyQueryPatch,
+  isBackFromGuard,
+  isBackGuardState,
+  toBackGuardState,
   type QueryPatch,
   type QueryValues,
   readPage,
@@ -102,4 +107,83 @@ export function useAdminLeaveGuard(
     setGuard({ onLeaveAttempt });
     return () => setGuard(null);
   }, [onLeaveAttempt, setGuard]);
+}
+
+export interface BackGuard {
+  // Goes where Back was headed, once the editor has said yes.
+  leaveBack: () => void;
+  // Goes to a link, replacing the spare entry so history keeps one copy of this page.
+  leaveTo: (href: string) => void;
+  // Puts the spare entry back after "Keep editing".
+  stay: () => void;
+}
+
+/**
+ * While an editor has unsaved work, a spare history entry for this same page sits on top,
+ * so browser Back stays here and asks first. Uses only window.history, which Next keeps in step.
+ */
+export function useBackGuard(onBackAttempt: (() => void) | null): BackGuard {
+  const router = useRouter();
+  const isDirty = onBackAttempt !== null;
+  const onBackRef = useRef(onBackAttempt);
+  const isOnGuardRef = useRef(false);
+  const guardedHrefRef = useRef<string | null>(null);
+  const isLeavingRef = useRef(false);
+
+  useEffect(() => {
+    onBackRef.current = onBackAttempt;
+  }, [onBackAttempt]);
+
+  const stay = useCallback(() => {
+    if (isLeavingRef.current || isBackGuardState(window.history.state)) return;
+    guardedHrefRef.current = window.location.href;
+    window.history.pushState(toBackGuardState(), "", window.location.href);
+    isOnGuardRef.current = true;
+  }, []);
+
+  useEffect(() => {
+    if (isDirty) stay();
+  }, [isDirty, stay]);
+
+  useEffect(() => {
+    // A reload or a Forward can land straight on a spare entry left earlier.
+    isOnGuardRef.current = isBackGuardState(window.history.state);
+    if (isOnGuardRef.current) guardedHrefRef.current = window.location.href;
+    const handlePopState = () => {
+      const wasOnGuard = isOnGuardRef.current;
+      isOnGuardRef.current = isBackGuardState(window.history.state);
+      const isGuardedBack = isBackFromGuard(
+        wasOnGuard,
+        isOnGuardRef.current,
+        window.location.href,
+        guardedHrefRef.current,
+      );
+      if (!isGuardedBack || isLeavingRef.current) return;
+      const onBack = onBackRef.current;
+      // Saved since the entry went in, so Back carries on past this page's duplicate.
+      if (onBack === null) {
+        window.history.back();
+        return;
+      }
+      onBack();
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const leaveBack = useCallback(() => {
+    isLeavingRef.current = true;
+    window.history.back();
+  }, []);
+
+  const leaveTo = useCallback(
+    (href: string) => {
+      isLeavingRef.current = true;
+      if (isBackGuardState(window.history.state)) router.replace(href);
+      else router.push(href);
+    },
+    [router],
+  );
+
+  return { leaveBack, leaveTo, stay };
 }

@@ -117,3 +117,29 @@ export function toGuardedNavigate(
     onGuardedLeave(href);
   };
 }
+
+const BACK_GUARD_KEY = "admin_back_guard";
+
+// The spare history entry an unsaved editor sits on, so browser Back lands on this page first.
+export function toBackGuardState(): Record<string, boolean> {
+  return { [BACK_GUARD_KEY]: true };
+}
+
+export function isBackGuardState(state: unknown): boolean {
+  return (
+    typeof state === "object" &&
+    state !== null &&
+    BACK_GUARD_KEY in state &&
+    state[BACK_GUARD_KEY] === true
+  );
+}
+
+// Back from the spare entry lands on the same page; anything else is a real move elsewhere.
+export function isBackFromGuard(
+  wasOnGuard: boolean,
+  isOnGuard: boolean,
+  href: string,
+  guardedHref: string | null,
+): boolean {
+  return wasOnGuard && !isOnGuard && href === guardedHref;
+}
