@@ -34,7 +34,7 @@ export default async function EventsPage({
     <Suspense fallback={<Loading />}>
       <EventListContainer
         heading="Workshops and open mics"
-        description="Small groups at the studio. Workshop seats include clay, tools and firing, and we confirm every seat on WhatsApp."
+        description="Small groups at the studio. Most workshop seats include clay, tools and firing, and we confirm every seat on WhatsApp."
         initialEvents={firstPage}
         initialFilterKey={toEventsFilterKey(filterInput)}
         now={new Date().toISOString()}
