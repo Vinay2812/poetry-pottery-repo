@@ -186,8 +186,7 @@ export function mostOpenDaysInRun(
   return most;
 }
 
-// Tiers some week's span and window can hold: the slots a tier needs must fit in a
-// day's slots times the open days a span can reach inside the booking window.
+// Use the recurring window with the most open days to find which tiers fit.
 export function toBookableTiers(wheel: StudioWheel): StudioWheel["tiers"] {
   if (wheel.slot_minutes <= 0) return [];
   const slotsPerDay = Math.floor(
