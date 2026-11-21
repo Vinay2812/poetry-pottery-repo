@@ -83,7 +83,7 @@ export function EventFilters({
   onLevelChange,
 }: EventFiltersProps) {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
         <ChoiceGroup label="When">
           {WHEN_TABS.map((tab) => (
@@ -128,13 +128,13 @@ export function EventFilters({
         </ChoiceGroup>
       </div>
 
-      {/* Wide screens keep the level's room so the row never shifts; phones give it back. */}
+      {/* Desktops keep the level's room so the row never shifts; narrower screens give it back. */}
       <div
         aria-hidden={!isLevelShown}
         inert={!isLevelShown}
         className={cn(
-          "md:w-44",
-          !isLevelShown && "hidden md:invisible md:block",
+          "lg:w-44",
+          !isLevelShown && "hidden lg:invisible lg:block",
         )}
       >
         <Select
