@@ -59,7 +59,7 @@ export function describeKiln(isSecond: boolean): string {
 }
 
 export function describeKilnHint(isSecond: boolean): string {
-  return isSecond ? "Sold with its flaw named" : "No marks from the kiln";
+  return isSecond ? "Sold with its flaw named" : "Sold as a first";
 }
 
 export type StockDirection = "add" | "remove";

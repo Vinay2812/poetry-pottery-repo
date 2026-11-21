@@ -418,6 +418,7 @@ describe("kiln", () => {
     expect(describeKiln(false)).toBe("First");
     expect(describeKiln(true)).toBe("Second");
     expect(describeKilnHint(true)).toBe("Sold with its flaw named");
+    expect(describeKilnHint(false)).toBe("Sold as a first");
   });
 });
 
