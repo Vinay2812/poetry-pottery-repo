@@ -1,4 +1,5 @@
 import { CANCELLING_RULE } from "@/features/workshops/types";
+import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 const POLICY_POINTS = [
   {
@@ -29,9 +30,7 @@ const POLICY_POINTS = [
 export function CancellationPolicy() {
   return (
     <section className="flex flex-col gap-4 border-t border-ash pt-8">
-      <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-        Cancellation policy
-      </h2>
+      <SectionLabel>Cancellation policy</SectionLabel>
       {/* Each term sits tight on its detail so the pairs read as pairs on a phone. */}
       <dl className="flex max-w-3xl flex-col border-t border-ash text-[15px]">
         {POLICY_POINTS.map(({ term, detail }) => (

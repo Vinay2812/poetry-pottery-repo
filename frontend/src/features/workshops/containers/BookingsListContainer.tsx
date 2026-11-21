@@ -21,6 +21,7 @@ import {
   toBookingPath,
   toBookingStatusLabel,
 } from "@/features/workshops/types";
+import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 const GROUPS: { key: ReturnType<typeof toBookingGroup>; heading: string }[] = [
   { key: "upcoming", heading: "Upcoming" },
@@ -98,9 +99,7 @@ export function BookingsListContainer() {
               }
               return (
                 <section key={key} className="flex flex-col gap-3">
-                  <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                    {heading}
-                  </h2>
+                  <SectionLabel>{heading}</SectionLabel>
                   <div className="flex flex-col border-t border-ash">
                     {group.map((booking) => (
                       <BookingCard

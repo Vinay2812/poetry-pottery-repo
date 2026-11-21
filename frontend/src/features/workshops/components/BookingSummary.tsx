@@ -10,6 +10,7 @@ import {
   type PickedSlot,
 } from "@/features/workshops/components/PickedSlots";
 import { formatHours, SESSION_NOTE } from "@/features/workshops/types";
+import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 export interface BookingSummaryProps {
   pickedSlots: PickedSlot[];
@@ -62,12 +63,9 @@ export function BookingSummary({
       aria-labelledby="booking-summary-heading"
       className="flex flex-col gap-5 border border-ash bg-white p-5 md:p-6"
     >
-      <h2
-        id="booking-summary-heading"
-        className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase"
-      >
+      <SectionLabel id="booking-summary-heading">
         Your wheel session
-      </h2>
+      </SectionLabel>
       <PickedSlots
         slots={pickedSlots}
         progress={progress}

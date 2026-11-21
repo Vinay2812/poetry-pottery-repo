@@ -25,6 +25,7 @@ import {
   toUnavailableMessage,
   type WorkshopData,
 } from "@/features/workshops/types";
+import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 export interface WorkshopBookingContainerProps {
   workshop: WorkshopData;
@@ -86,9 +87,7 @@ export function WorkshopBookingContainer({
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3">
-              <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                How long
-              </h2>
+              <SectionLabel>How long</SectionLabel>
               <DurationPicker
                 tiers={workshop.tiers}
                 hours={hours}
@@ -97,9 +96,7 @@ export function WorkshopBookingContainer({
             </div>
 
             <div className="flex flex-col items-start gap-3">
-              <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                How many people
-              </h2>
+              <SectionLabel>How many people</SectionLabel>
               <ParticipantsStepper
                 value={participants}
                 max={workshop.capacity_per_slot}
@@ -130,12 +127,12 @@ export function WorkshopBookingContainer({
             hasError={picker.hasError}
             slotPanel={
               <div className="flex flex-col gap-3">
-                <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+                <SectionLabel level={3}>
                   Times on{" "}
                   {picker.selectedDate
                     ? formatDateKey(picker.selectedDate)
                     : ""}
-                </h3>
+                </SectionLabel>
                 <SlotList
                   slots={picker.slots}
                   selectedStarts={picker.pickedStarts}

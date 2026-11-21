@@ -23,6 +23,7 @@ import {
   type SlotOption,
 } from "@/features/workshops/components/SlotList";
 import { formatDateKey } from "@/features/workshops/types";
+import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 export interface RescheduleDialogProps {
   isOpen: boolean;
@@ -101,9 +102,9 @@ export function RescheduleDialog({
           slotPanel={
             selectedDate && (
               <div className="flex flex-col gap-3">
-                <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+                <SectionLabel level={3}>
                   Times on {formatDateKey(selectedDate)}
-                </h3>
+                </SectionLabel>
                 <SlotList
                   slots={slots}
                   selectedStarts={pickedSlots.map((slot) => slot.startsAt)}

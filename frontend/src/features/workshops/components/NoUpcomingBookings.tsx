@@ -1,12 +1,11 @@
 import Link from "next/link";
+import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 // Sits where upcoming sessions would be, so a list of old ones still leads back to the wheel.
 export function NoUpcomingBookings() {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-        Upcoming
-      </h2>
+      <SectionLabel>Upcoming</SectionLabel>
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-y border-ash py-4">
         <p className="text-[15px] text-muted-foreground">
           Nothing booked at the wheel just now.
