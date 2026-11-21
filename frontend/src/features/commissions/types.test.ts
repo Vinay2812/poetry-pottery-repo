@@ -16,7 +16,9 @@ import {
   toCommissionPiecesNote,
   toGlazeChoices,
   toPhotoHoldMessage,
+  OTHER_PIECE,
   toPieceChoices,
+  toPieceSelection,
   toReferenceBrief,
   toReferenceLine,
   toSizesForPiece,
@@ -247,5 +249,33 @@ describe("toCommissionPiecesNote", () => {
     expect(
       toCommissionPiecesNote([{ is_archived: false }, { is_archived: true }]),
     ).toBe("Name one in your brief below if you'd like something like it.");
+  });
+});
+
+describe("toPieceSelection", () => {
+  const pieces = [
+    { name: "Mugs", sizes: ["Short (150 ml)", "Tall (300 ml)"] },
+    { name: "Bowls", sizes: [] },
+  ];
+
+  it("shows a listed piece with its sizes", () => {
+    expect(toPieceSelection(pieces, "Mugs", false)).toEqual({
+      selectValue: "Mugs",
+      sizes: ["Short (150 ml)", "Tall (300 ml)"],
+    });
+  });
+
+  it("keeps something else chosen when the typed piece matches a listed name", () => {
+    expect(toPieceSelection(pieces, "Mugs", true)).toEqual({
+      selectValue: OTHER_PIECE,
+      sizes: [],
+    });
+  });
+
+  it("shows nothing picked before a piece is chosen", () => {
+    expect(toPieceSelection(pieces, "", false)).toEqual({
+      selectValue: "",
+      sizes: [],
+    });
   });
 });

@@ -31,12 +31,9 @@ import {
 
 import { CommissionBriefLayout } from "@/features/commissions/components/CommissionBriefLayout";
 import type { GlazeChoice, PieceChoice } from "@/features/commissions/types";
-import { toSizesForPiece } from "@/features/commissions/types";
+import { OTHER_PIECE, toPieceSelection } from "@/features/commissions/types";
 import { GlazeSwatch } from "@/features/products/components/GlazeSwatch";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
-
-// The last entry in the piece list; picking it opens a box to describe the piece instead.
-const OTHER_PIECE = "__other__";
 
 interface FieldProps {
   id: string;
@@ -139,13 +136,11 @@ export function CommissionBriefForm({
   const draft = { ...EMPTY_COMMISSION_FORM, ...values };
   const carvedLength = draft.carvedWords.length;
   const askUrl = toAskUrl(draft);
-  const isListedPiece = pieces.some((piece) => piece.name === draft.pieceType);
-  const pieceChoice = isListedPiece
-    ? draft.pieceType
-    : isOtherPiece
-      ? OTHER_PIECE
-      : "";
-  const sizes = toSizesForPiece(pieces, draft.pieceType);
+  const { selectValue: pieceChoice, sizes } = toPieceSelection(
+    pieces,
+    draft.pieceType,
+    isOtherPiece,
+  );
   const hasPiece = draft.pieceType.length > 0 || isOtherPiece;
 
   // Sizes belong to a piece, so changing the piece clears the size chosen for the last one.
