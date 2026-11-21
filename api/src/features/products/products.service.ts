@@ -549,7 +549,8 @@ export class ProductsService {
   private async countMaterials(
     where: Prisma.ProductWhereInput,
   ): Promise<Map<string, number>> {
-    // Counting against nothing needs no query: every material reads zero.
+    // Counting against nothing needs no query: every material reads zero. This is an identity
+    // check, so it relies on countWhere handing over the NOTHING object itself, not a copy.
     if (where === NOTHING) return new Map();
     const rows = await this.prisma.product.groupBy({
       by: ["material"],
