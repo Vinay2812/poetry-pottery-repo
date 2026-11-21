@@ -231,9 +231,11 @@ export function useSearchDraft(
     [cancel, send],
   );
 
-  // Leaving the field is how any other navigation starts: the header search, a link, a
+  // Leaving the field is how most other navigations start: the header search, a link, a
   // suggestion. Sending the draft then puts its replace ahead of that navigation, which
-  // therefore lands last and wins; the draft can no longer fire after it.
+  // therefore lands last and wins; the draft can no longer fire after it. Keyboard Back and
+  // iOS swipe-back leave focus where it is; those are covered by dropping the draft once
+  // the URL's query moves somewhere it never sent.
   const flush = useCallback(() => {
     const value = waiting.current;
     if (value === null) return;

@@ -1,13 +1,17 @@
 import { act, renderHook } from "@testing-library/react";
+import { useCallback } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { NetworkStatus } from "@apollo/client";
 
 import type { ProductsQuery } from "@/graphql/generated/graphql";
 
+import { useUrlState } from "@/lib/use-url-state";
+
 import { useSearchDraft, useShelfResults } from "./hooks";
 import {
   EMPTY_FILTERS,
+  PRODUCT_FILTERS_CODEC,
   type ProductFilters,
   toFilterInput,
   toFilterKey,
@@ -27,6 +31,21 @@ interface QueryState {
   // Left out, it follows `loading`: a first-page load or ready.
   networkStatus?: NetworkStatus;
 }
+
+// Every navigation the page starts, in order; the URL itself only moves when a test says so.
+const navigation = vi.hoisted(() => ({
+  calls: [] as string[],
+  search: new URLSearchParams(),
+}));
+
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/search",
+  useRouter: () => ({
+    replace: (href: string) => navigation.calls.push(`replace ${href}`),
+    push: (href: string) => navigation.calls.push(`push ${href}`),
+  }),
+  useSearchParams: () => navigation.search,
+}));
 
 const { useQueryMock, fetchMoreMock, refetchMock } = vi.hoisted(() => ({
   useQueryMock: vi.fn(),
@@ -347,26 +366,30 @@ describe("useSearchDraft", () => {
     expect(commit).not.toHaveBeenCalled();
   });
 
-  it("sends a waiting draft when the field is left, so a navigation started elsewhere lands last", () => {
-    const navigations: string[] = [];
-    const commit = vi.fn((value: string) => {
-      navigations.push(`replace ${value}`);
+  it("puts the draft's replace ahead of a navigation started after the field is left", () => {
+    navigation.calls = [];
+    navigation.search = new URLSearchParams("q=blue");
+    // The search page's own wiring: the draft sends through the URL state, as the container does.
+    const { result } = renderHook(() => {
+      const { value: filters, dispatch } = useUrlState(PRODUCT_FILTERS_CODEC);
+      const commit = useCallback(
+        (value: string) => dispatch({ type: "search", value }),
+        [dispatch],
+      );
+      return useSearchDraft(filters.search, commit);
     });
-    const { result, rerender } = renderHook(
-      ({ query }: { query: string }) => useSearchDraft(query, commit),
-      { initialProps: { query: "blue" } },
-    );
 
     act(() => result.current.change("stale slow draft"));
-    // The shopper moves to the header search inside the pause; the field loses focus first.
+    // The shopper moves to the header search inside the pause, so the field loses focus,
     act(() => result.current.flush());
-    navigations.push("push empty");
-    // The header's route answer is delayed, so the URL still reads "blue" while time passes.
+    // and the header starts its own navigation, whose route answer is slow to come back.
+    navigation.calls.push("push /search?q=empty");
     act(() => vi.advanceTimersByTime(1000));
 
-    expect(navigations).toEqual(["replace stale slow draft", "push empty"]);
-    rerender({ query: "empty" });
-    expect(result.current.value).toBe("empty");
+    expect(navigation.calls).toEqual([
+      "replace /search?q=stale+slow+draft",
+      "push /search?q=empty",
+    ]);
   });
 
   it("sends nothing on leaving the field when no draft is waiting", () => {
