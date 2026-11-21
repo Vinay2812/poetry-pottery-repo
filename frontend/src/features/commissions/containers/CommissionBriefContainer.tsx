@@ -64,6 +64,7 @@ export function CommissionBriefContainer({
   const {
     photos,
     error: photoError,
+    setError: setPhotoError,
     addFiles,
     removePhoto,
     clearPhotos,
@@ -81,6 +82,8 @@ export function CommissionBriefContainer({
       setErrorMessage(null);
       // Shown beside Send and at the picker, which scrolls into view the way a field error would.
       if (toPhotoHoldMessage(photos)) {
+        // An older picker error would otherwise sit over the hold at the picker.
+        setPhotoError(null);
         setIsPhotoHoldShown(true);
         photoPickerRef.current?.scrollIntoView({ block: "start" });
         return;
@@ -113,16 +116,16 @@ export function CommissionBriefContainer({
         );
       }
     },
-    [clearPhotos, create, photos, whatsappNumber],
+    [clearPhotos, create, photos, setPhotoError, whatsappNumber],
   );
 
-  // A new photo starts fresh, so the hold waits for the next send before it speaks again.
+  // A new photo starts fresh only once nothing is holding the brief; a failed photo still attached keeps the hold.
   const handleAddFiles = useCallback(
     (files: File[]) => {
-      setIsPhotoHoldShown(false);
+      if (!toPhotoHoldMessage(photos)) setIsPhotoHoldShown(false);
       addFiles(files);
     },
-    [addFiles],
+    [addFiles, photos],
   );
 
   const handleSignIn = useCallback(() => {
@@ -174,7 +177,8 @@ export function CommissionBriefContainer({
               }))}
               maxPhotos={MAX_REFERENCE_PHOTOS}
               accept={REFERENCE_PHOTO_ACCEPT}
-              error={photoHoldMessage ?? photoError}
+              // A refused file is the newer news at the picker; the hold stays beside Send meanwhile.
+              error={photoError ?? photoHoldMessage}
               onAddFiles={handleAddFiles}
               onRemove={removePhoto}
             />
