@@ -220,6 +220,7 @@ export class AdminEventsService {
       UploadPurpose.EVENT,
     );
     const seatDelta = input.total_seats - current.total_seats;
+    const slug = await this.followTitle(current, input.title.trim());
     const row = await this.prisma.withTransaction(async () => {
       // Predicated on the room size that was read, and on enough free seats to absorb a shrink.
       const moved = await this.prisma.event.updateMany({
@@ -230,6 +231,7 @@ export class AdminEventsService {
         },
         data: {
           title: input.title.trim(),
+          ...(slug === null ? {} : { slug }),
           description: input.description.trim(),
           ...(input.event_type ? { event_type: input.event_type } : {}),
           level: input.level ?? null,
@@ -413,10 +415,28 @@ export class AdminEventsService {
     );
   }
 
-  private async freeSlug(title: string): Promise<string> {
+  // A copy is born as "…-copy"; while it is an unseen draft its link can follow the new title.
+  // Once it has been published or anyone has booked it, the link may be out in the world.
+  private async followTitle(
+    current: { id: number; title: string; status: EventStatus },
+    title: string,
+  ): Promise<string | null> {
+    if (current.status !== EventStatus.DRAFT || title === current.title) {
+      return null;
+    }
+    const bookings = await this.prisma.eventRegistration.count({
+      where: { event_id: current.id },
+    });
+    return bookings === 0 ? this.freeSlug(title, current.id) : null;
+  }
+
+  private async freeSlug(title: string, exceptId?: number): Promise<string> {
     const base = slugify(title);
     const siblings = await this.prisma.event.findMany({
-      where: { slug: { startsWith: base } },
+      where: {
+        slug: { startsWith: base },
+        ...(exceptId === undefined ? {} : { id: { not: exceptId } }),
+      },
       select: { slug: true },
     });
     return uniqueSlug(base, new Set(siblings.map((row) => row.slug)));
