@@ -263,7 +263,7 @@ export function toUnavailableMessage(
 
 // A full pick swaps out its earliest time, so say how to swap a different one.
 export const REPLACE_TIME_HINT =
-  "All your times are picked. To change one, remove it first; otherwise a new pick replaces the earliest.";
+  "To change one, remove it first; otherwise a new pick replaces the earliest.";
 
 export const SUGGESTED_NOTE =
   "Picked for you: the earliest free times. Change any of them.";
