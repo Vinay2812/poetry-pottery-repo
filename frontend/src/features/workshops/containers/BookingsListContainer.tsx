@@ -126,7 +126,7 @@ export function BookingsListContainer() {
                         participants={booking.participants}
                         total={booking.total}
                         statusLabel={toBookingStatusLabel(booking.status)}
-                        isCancelled={isBookingClosed(booking.status)}
+                        isClosed={isBookingClosed(booking.status)}
                       />
                     ))}
                   </div>

@@ -13,7 +13,7 @@ export interface BookingCardProps {
   participants: number;
   total: number;
   statusLabel: string;
-  isCancelled: boolean;
+  isClosed: boolean;
 }
 
 export function BookingCard({
@@ -24,15 +24,15 @@ export function BookingCard({
   participants,
   total,
   statusLabel,
-  isCancelled,
+  isClosed,
 }: BookingCardProps) {
   return (
     <Link
       href={href}
       className={cn(
         "group grid grid-cols-[1fr_auto] items-baseline gap-x-4 gap-y-1 border-b border-ash py-4",
-        // A cancelled session reads as a record, not as something still to turn up for.
-        isCancelled && "text-muted-foreground",
+        // A closed booking reads as a record, not as something still to turn up for.
+        isClosed && "text-muted-foreground",
       )}
     >
       <span className="text-[13px] text-muted-foreground tnum">
