@@ -70,12 +70,8 @@ export function ProductToolbar({
           )}
         </button>
         {isRelevanceOnly ? (
-          <p
-            className={cn(
-              CONTROL_CLASS,
-              "flex items-center px-2.5 text-muted-foreground",
-            )}
-          >
+          // A label, not a control: no box, so it never reads as a select that broke.
+          <p className="flex h-10 items-center text-sm text-muted-foreground">
             <span className="sr-only">Sorted by </span>
             Most relevant
           </p>

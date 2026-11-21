@@ -278,6 +278,8 @@ export function ProductFilters({
               id={`${scope}-filter-seconds`}
               checked={secondsOnly}
               onCheckedChange={onSecondsOnlyChange}
+              // Spelt out so the count is spoken as "Seconds (0)", not run into the word.
+              aria-label={`Seconds (${secondsCount})`}
               aria-describedby={`${scope}-filter-seconds-note`}
             />
           </Label>
