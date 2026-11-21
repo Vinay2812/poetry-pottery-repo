@@ -355,17 +355,23 @@ export function CommissionBriefForm({
               aria-invalid={Boolean(errors.carvedWords)}
               aria-describedby={
                 errors.carvedWords
-                  ? "commission-words-hint commission-words-error"
-                  : "commission-words-hint"
+                  ? "commission-words-hint commission-words-count commission-words-error"
+                  : "commission-words-hint commission-words-count"
               }
               {...register("carvedWords")}
             />
             <div className="flex justify-between gap-4 text-[13px] text-muted-foreground">
               <p id="commission-words-hint">
-                Carved by hand into the clay, so keep it short.
+                Carved by hand into the clay, so {MAX_CARVED_WORDS} characters
+                at most.
               </p>
-              <p aria-hidden className="shrink-0 tnum">
-                {carvedLength}/{MAX_CARVED_WORDS}
+              <p id="commission-words-count" className="shrink-0 tnum">
+                <span aria-hidden>
+                  {carvedLength}/{MAX_CARVED_WORDS}
+                </span>
+                <span className="sr-only">
+                  {carvedLength} of {MAX_CARVED_WORDS} characters used
+                </span>
               </p>
             </div>
             {errors.carvedWords?.message && (
