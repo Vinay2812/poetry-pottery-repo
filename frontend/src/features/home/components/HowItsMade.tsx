@@ -5,22 +5,23 @@ import {
   WedgeIcon,
 } from "@/components/icons/pottery";
 
-const STEPS = [
-  { label: "Wedge", Icon: WedgeIcon },
-  { label: "Throw", Icon: ThrowIcon },
-  { label: "Fire", Icon: FireIcon },
-  { label: "Glaze", Icon: GlazeIcon },
+const DRAWINGS = [
+  { key: "wedge", Icon: WedgeIcon },
+  { key: "throw", Icon: ThrowIcon },
+  { key: "fire", Icon: FireIcon },
+  { key: "glaze", Icon: GlazeIcon },
 ] as const;
 
+// Decoration only: the editor's numbered steps beside it carry the words.
 export function HowItsMade() {
   return (
-    <ol className="grid grid-cols-4 gap-4 border-t border-ash pt-5">
-      {STEPS.map(({ label, Icon }) => (
-        <li key={label} className="flex flex-col items-start gap-2">
-          <Icon className="size-8 text-ink" />
-          <span className="text-[13px]">{label}</span>
-        </li>
+    <div
+      aria-hidden
+      className="flex items-center justify-center gap-10 text-ink md:gap-16"
+    >
+      {DRAWINGS.map(({ key, Icon }) => (
+        <Icon key={key} className="size-8" />
       ))}
-    </ol>
+    </div>
   );
 }
