@@ -35,6 +35,8 @@ export interface EventListContainerProps {
   initialFilterKey?: string | null;
 }
 
+const RESULTS_RULE = "border-t border-ash pt-8";
+
 export function EventListContainer({
   heading,
   description,
@@ -102,12 +104,15 @@ export function EventListContainer({
         onLevelChange={handleLevelChange}
       />
 
+      {/* Every result state opens on one rule under the filters; the empty and error states draw their own. */}
       {isInitialLoading ? (
-        <EventGrid>
-          {Array.from({ length: 6 }, (_, index) => (
-            <EventCardSkeleton key={index} />
-          ))}
-        </EventGrid>
+        <div className={RESULTS_RULE}>
+          <EventGrid>
+            {Array.from({ length: 6 }, (_, index) => (
+              <EventCardSkeleton key={index} />
+            ))}
+          </EventGrid>
+        </div>
       ) : hasError ? (
         <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
           <h2 className="font-heading text-2xl tracking-tight">
@@ -130,6 +135,7 @@ export function EventListContainer({
         <div
           aria-busy={isFiltering}
           className={cn(
+            RESULTS_RULE,
             "flex flex-col gap-8 transition-opacity duration-200",
             isFiltering && "opacity-60",
           )}

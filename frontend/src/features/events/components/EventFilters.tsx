@@ -83,7 +83,7 @@ export function EventFilters({
   onLevelChange,
 }: EventFiltersProps) {
   return (
-    <div className="flex flex-col gap-4 border-b border-ash pb-4 md:flex-row md:items-center md:justify-between">
+    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-6">
         <ChoiceGroup label="When">
           {WHEN_TABS.map((tab) => (
