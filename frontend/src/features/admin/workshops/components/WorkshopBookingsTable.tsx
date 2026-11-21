@@ -40,8 +40,8 @@ export interface WorkshopBookingsTableProps {
   onAction: (id: string, status: RegistrationStatus) => void;
 }
 
-const CAPTION = "Wheel bookings";
-const EMPTY_MESSAGE = "No bookings match those filters";
+const CAPTION = "Wheel sessions";
+const EMPTY_MESSAGE = "No sessions match those filters";
 
 // The table needs about a thousand pixels; anything narrower reads each booking as a card.
 export function WorkshopBookingsTable({

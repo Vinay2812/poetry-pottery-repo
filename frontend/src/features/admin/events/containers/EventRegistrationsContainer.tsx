@@ -165,10 +165,13 @@ export function EventRegistrationsContainer({
       : null;
 
   return (
-    <section className="flex flex-col gap-2">
+    <section aria-labelledby="event-seats" className="flex flex-col gap-2">
       <div className="flex flex-col gap-1 border-b border-ash pb-3">
-        <h2 className="font-display text-xl leading-none tracking-tight">
-          Registrations
+        <h2
+          id="event-seats"
+          className="font-display text-xl leading-none tracking-tight"
+        >
+          Event seats
         </h2>
         <p className="text-[13px] text-muted-foreground">
           {registrationHoldNote("seat")}

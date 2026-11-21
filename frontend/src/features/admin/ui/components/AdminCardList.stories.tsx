@@ -7,7 +7,7 @@ const meta = {
   title: "Features/Admin/AdminCardList",
   component: AdminCardList,
   args: {
-    caption: "Wheel bookings",
+    caption: "Wheel sessions",
     isBusy: false,
     isEmpty: false,
     emptyMessage: "No bookings match those filters",

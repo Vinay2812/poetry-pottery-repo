@@ -175,10 +175,13 @@ export function WorkshopBookingsContainer({
       : null;
 
   return (
-    <section className="flex flex-col gap-3">
+    <section aria-labelledby="wheel-sessions" className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <h2 className="font-display text-xl leading-none tracking-tight">
-          Bookings
+        <h2
+          id="wheel-sessions"
+          className="font-display text-xl leading-none tracking-tight"
+        >
+          Sessions
         </h2>
         <p className="text-[13px] text-muted-foreground">
           Who has asked for the wheel, and where each request stands.{" "}
