@@ -119,10 +119,11 @@ export function toGridColumns(count: number): GridColumns {
   return emptyCells(3) < emptyCells(4) ? 3 : 4;
 }
 
-// Literal class strings, so Tailwind can see every one of them.
+// Literal class strings, so Tailwind can see every one of them. Three columns wait for md:
+// at sm they would be too narrow for a few lines of body text.
 const GRID_CLASSES: Record<GridColumns, string> = {
   2: "sm:grid-cols-2",
-  3: "sm:grid-cols-3",
+  3: "md:grid-cols-3",
   4: "sm:grid-cols-2 lg:grid-cols-4",
 };
 
