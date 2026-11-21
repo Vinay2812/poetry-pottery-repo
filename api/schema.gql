@@ -1087,7 +1087,7 @@ input PlaceOrderInput {
   address_id: Int!
   coupon_code: String
   customer_note: String
-  expected_total: Int!
+  expected_total: Int
   gift_note: String
   hide_prices: Boolean
 }

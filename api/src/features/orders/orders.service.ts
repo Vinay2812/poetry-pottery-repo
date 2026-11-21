@@ -223,6 +223,7 @@ export class OrdersService {
       if (available.length === 0) {
         throw new BadRequestException("Your cart is empty");
       }
+      // A missing total (an old storefront tab) is refused the same way as a stale one.
       if (input.expected_total !== quote.total) {
         throw new ConflictException(CART_CHANGED);
       }

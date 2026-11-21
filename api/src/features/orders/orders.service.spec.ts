@@ -1,4 +1,4 @@
-import { BadRequestException } from "@nestjs/common";
+import { BadRequestException, ConflictException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { OrderStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -277,6 +277,16 @@ describe("OrdersService", () => {
       await expect(
         service.place(1, { address_id: 5, expected_total: 1850 }),
       ).resolves.toMatchObject({ total: 1850 });
+    });
+
+    it("refuses an order with no total, as an old storefront tab sends, with the cart-changed conflict", async () => {
+      for (const expected_total of [null, undefined]) {
+        await expect(
+          service.place(1, { address_id: 5, expected_total }),
+        ).rejects.toBeInstanceOf(ConflictException);
+      }
+      expect(shelfMock.take).not.toHaveBeenCalled();
+      expect(prismaMock.order.create).not.toHaveBeenCalled();
     });
 
     it("fails when another buyer took the last piece", async () => {
