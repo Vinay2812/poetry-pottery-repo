@@ -49,6 +49,7 @@ function TextField({
 }
 
 export interface VisitFormProps {
+  isDayPicked: boolean;
   pickedLabel: string | null;
   isSubmitting: boolean;
   errorMessage: string | null;
@@ -56,6 +57,7 @@ export interface VisitFormProps {
 }
 
 export function VisitForm({
+  isDayPicked,
   pickedLabel,
   isSubmitting,
   errorMessage,
@@ -80,7 +82,9 @@ export function VisitForm({
         <p className="text-[15px]">You are coming by {pickedLabel}.</p>
       ) : (
         <p className="text-[15px] text-muted-foreground">
-          Pick a day and a half hour above, then tell us who is coming.
+          {isDayPicked
+            ? "Pick a half hour above, then tell us who is coming."
+            : "Pick a day above."}
         </p>
       )}
       <div className="grid gap-4 md:grid-cols-2">

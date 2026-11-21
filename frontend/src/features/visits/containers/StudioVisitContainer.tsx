@@ -137,8 +137,8 @@ export function StudioVisitContainer() {
   if (error && days.length === 0) {
     return (
       <p role="alert" className="max-w-prose text-[15px] text-muted-foreground">
-        We could not open the calendar just now. Write to us above and we will
-        find a time.
+        We could not open the calendar just now. Write to us and we will find a
+        time.
       </p>
     );
   }
@@ -166,6 +166,7 @@ export function StudioVisitContainer() {
         onSelectWindow={handleSelectWindow}
       />
       <VisitForm
+        isDayPicked={activeDate !== null}
         pickedLabel={pickedLabel}
         isSubmitting={isBooking}
         errorMessage={errorMessage}
