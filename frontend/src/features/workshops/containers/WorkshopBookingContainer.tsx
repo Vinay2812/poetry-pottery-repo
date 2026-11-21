@@ -6,6 +6,7 @@ import { PageShell } from "@/components/layout/PageShell";
 
 import { BookingCalendar } from "@/features/workshops/components/BookingCalendar";
 import { BookingSummary } from "@/features/workshops/components/BookingSummary";
+import { CancellationPolicy } from "@/features/workshops/components/CancellationPolicy";
 import { DurationPicker } from "@/features/workshops/components/DurationPicker";
 import { GroupAskLine } from "@/features/workshops/components/GroupAskLine";
 import { ParticipantsStepper } from "@/features/workshops/components/ParticipantsStepper";
@@ -179,6 +180,8 @@ export function WorkshopBookingContainer({
           />
         </aside>
       </div>
+
+      <CancellationPolicy />
     </PageShell>
   );
 }

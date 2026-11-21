@@ -18,6 +18,7 @@ export interface EventDetailProps {
   isCancelled: boolean;
   reserveBox: React.ReactNode;
   reviews: React.ReactNode;
+  policy: React.ReactNode;
 }
 
 export function EventDetail({
@@ -33,6 +34,7 @@ export function EventDetail({
   isCancelled,
   reserveBox,
   reviews,
+  policy,
 }: EventDetailProps) {
   return (
     <PageShell className="flex flex-col gap-10 py-8 md:py-12">
@@ -148,6 +150,8 @@ export function EventDetail({
           )}
 
           {reviews}
+
+          {policy}
         </div>
 
         <aside className="order-first lg:sticky lg:top-24 lg:order-none">

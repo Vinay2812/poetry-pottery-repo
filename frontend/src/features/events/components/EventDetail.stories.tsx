@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
 import { atViewport } from "@/lib/storybook/viewports";
+import { CancellationPolicy } from "@/features/workshops";
 import { EventDetail } from "./EventDetail";
 import { ReserveBox } from "./ReserveBox";
 
@@ -89,6 +90,7 @@ const meta = {
     isCancelled: false,
     reserveBox,
     reviews: null,
+    policy: <CancellationPolicy />,
   },
 } satisfies Meta<typeof EventDetail>;
 

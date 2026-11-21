@@ -2,6 +2,7 @@ export { BookingCalendar } from "@/features/workshops/components/BookingCalendar
 export { BookingCard } from "@/features/workshops/components/BookingCard";
 export { BookingDetail } from "@/features/workshops/components/BookingDetail";
 export { BookingSummary } from "@/features/workshops/components/BookingSummary";
+export { CancellationPolicy } from "@/features/workshops/components/CancellationPolicy";
 export { CancelBookingDialog } from "@/features/workshops/components/CancelBookingDialog";
 export { DurationPicker } from "@/features/workshops/components/DurationPicker";
 export { EmptyBookings } from "@/features/workshops/components/EmptyBookings";

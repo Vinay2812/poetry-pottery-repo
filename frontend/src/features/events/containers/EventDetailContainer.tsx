@@ -8,6 +8,7 @@ import { formatDate, formatInr } from "@/lib/format";
 import { EventDetail } from "@/features/events/components/EventDetail";
 import { ReserveBox } from "@/features/events/components/ReserveBox";
 import { useRegisterForEvent } from "@/features/events/hooks";
+import { CancellationPolicy } from "@/features/workshops";
 import {
   type EventDetailData,
   type EventFact,
@@ -108,6 +109,7 @@ export function EventDetailContainer({
           subjectName={event.title}
         />
       }
+      policy={<CancellationPolicy />}
       reserveBox={
         <ReserveBox
           eventId={event.id}
