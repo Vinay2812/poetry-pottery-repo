@@ -20,15 +20,13 @@ import {
   toBriefSummary,
   toCommissionAskUrl,
   toCommissionInput,
+  toPhotoHoldMessage,
   toReferenceBrief,
   toReferenceLine,
 } from "@/features/commissions/types";
 import { ReferencePhotoPicker } from "@/features/products/components/ReferencePhotoPicker";
 import { useReferencePhotos } from "@/features/products/hooks";
 import {
-  FAILED_PHOTO_MESSAGE,
-  hasFailedPhoto,
-  isPhotoUploadPending,
   MAX_REFERENCE_PHOTOS,
   REFERENCE_PHOTO_ACCEPT,
   toConfirmedPhotoUrls,
@@ -57,6 +55,7 @@ export function CommissionBriefContainer({
   const { openSignIn } = useClerk();
   const [sent, setSent] = useState<SentBrief | null>(null);
   const sentHeadingRef = useRef<HTMLHeadingElement>(null);
+  const photoPickerRef = useRef<HTMLDivElement>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sentAskUrl, setSentAskUrl] = useState<string | null>(null);
   const [create, { loading }] = useMutation(CreateCommissionRequestDocument);
@@ -78,13 +77,12 @@ export function CommissionBriefContainer({
   const handleSubmit = useCallback(
     async (values: CommissionFormValues) => {
       setErrorMessage(null);
-      if (isPhotoUploadPending(photos)) {
-        setPhotoError("Wait for the photos to finish uploading");
-        return;
-      }
-      // Otherwise the brief would go without them and the customer would never know.
-      if (hasFailedPhoto(photos)) {
-        setPhotoError(FAILED_PHOTO_MESSAGE);
+      // Said beside Send and at the picker, which scrolls into view the way a field error would.
+      const photoHold = toPhotoHoldMessage(photos);
+      if (photoHold) {
+        setPhotoError(photoHold);
+        setErrorMessage(photoHold);
+        photoPickerRef.current?.scrollIntoView({ block: "start" });
         return;
       }
       try {
@@ -116,6 +114,23 @@ export function CommissionBriefContainer({
       }
     },
     [clearPhotos, create, photos, setPhotoError, whatsappNumber],
+  );
+
+  // A change to the photos answers the hold message, so it clears along with the picker's own error.
+  const handleAddFiles = useCallback(
+    (files: File[]) => {
+      setErrorMessage(null);
+      addFiles(files);
+    },
+    [addFiles],
+  );
+
+  const handleRemovePhoto = useCallback(
+    (id: string) => {
+      setErrorMessage(null);
+      removePhoto(id);
+    },
+    [removePhoto],
   );
 
   // The confirmation is far shorter than the form, so bring it into view instead of leaving the footer there.
@@ -150,21 +165,23 @@ export function CommissionBriefContainer({
       toAskUrl={toAskUrl}
       photoPicker={
         isSignedIn ? (
-          <ReferencePhotoPicker
-            photos={photos.map((photo) => ({
-              id: photo.id,
-              name: photo.name,
-              previewUrl: photo.previewUrl,
-              progress: photo.progress,
-              error: photo.error,
-              isUploaded: photo.url !== null,
-            }))}
-            maxPhotos={MAX_REFERENCE_PHOTOS}
-            accept={REFERENCE_PHOTO_ACCEPT}
-            error={photoError}
-            onAddFiles={addFiles}
-            onRemove={removePhoto}
-          />
+          <div ref={photoPickerRef}>
+            <ReferencePhotoPicker
+              photos={photos.map((photo) => ({
+                id: photo.id,
+                name: photo.name,
+                previewUrl: photo.previewUrl,
+                progress: photo.progress,
+                error: photo.error,
+                isUploaded: photo.url !== null,
+              }))}
+              maxPhotos={MAX_REFERENCE_PHOTOS}
+              accept={REFERENCE_PHOTO_ACCEPT}
+              error={photoError}
+              onAddFiles={handleAddFiles}
+              onRemove={handleRemovePhoto}
+            />
+          </div>
         ) : (
           // The modal keeps the page, so whatever is typed survives signing in.
           <ReferencePhotosSignIn onSignIn={() => openSignIn()} />
