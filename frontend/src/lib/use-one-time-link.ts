@@ -14,11 +14,14 @@ const MISSING_TOKEN =
 const SPENT_LINK = "That link has already been used or has expired.";
 const FAILED = "We could not do that just now. Try the link again later.";
 
+// True when the API accepted the token, false when it had already been used.
+type WasAccepted = boolean;
+
 // An emailed link that does its job once on open (unsubscribe, stop a notice) and says
-// how it went. `spend` resolves true when the token was still good.
+// how it went.
 export function useOneTimeLink(
   token: string,
-  spend: (token: string) => Promise<boolean>,
+  spend: (token: string) => Promise<WasAccepted>,
   lines: OneTimeLinkLines,
 ): string {
   const hasToken = token.length > 0;
@@ -30,7 +33,7 @@ export function useOneTimeLink(
     if (!hasToken || hasRun.current) return;
     hasRun.current = true;
     spend(token)
-      .then((isSpent) => setLine(isSpent ? lines.done : SPENT_LINK))
+      .then((wasAccepted) => setLine(wasAccepted ? lines.done : SPENT_LINK))
       .catch((error: unknown) =>
         setLine(isNotFoundError(error) ? SPENT_LINK : FAILED),
       );
