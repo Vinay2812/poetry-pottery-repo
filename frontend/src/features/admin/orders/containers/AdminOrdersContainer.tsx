@@ -16,11 +16,13 @@ import { formatDate, formatInr } from "@/lib/format";
 
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
+  AdminLoadError,
   AdminPageHeader,
   AdminPagination,
   orderStatusLabel,
   orderStatusOptions,
   orderStatusTone,
+  retryQuery,
   toPersonName,
 } from "@/features/admin/ui";
 import {
@@ -60,20 +62,23 @@ export function AdminOrdersContainer() {
     handleSearchCommit,
   );
 
-  const { data, previousData, loading, error } = useQuery(AdminOrdersDocument, {
-    variables: {
-      filter: {
-        page,
-        limit: ORDERS_PAGE_SIZE,
-        search: search || null,
-        status,
-        user_id: personId,
-        from: toDayStartIso(from),
-        to: toDayEndIso(to),
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AdminOrdersDocument,
+    {
+      variables: {
+        filter: {
+          page,
+          limit: ORDERS_PAGE_SIZE,
+          search: search || null,
+          status,
+          user_id: personId,
+          from: toDayStartIso(from),
+          to: toDayEndIso(to),
+        },
       },
+      fetchPolicy: "cache-and-network",
     },
-    fetchPolicy: "cache-and-network",
-  });
+  );
 
   const result = data?.adminOrders ?? previousData?.adminOrders;
 
@@ -123,11 +128,16 @@ export function AdminOrdersContainer() {
     [patch],
   );
 
+  // The whole page waits on its first answer, so a failure there asks again.
   if (!result && error) {
     return (
       <div className="flex flex-col gap-8">
         <AdminPageHeader eyebrow="Studio" title="Orders" description={null} />
-        <p className="text-[13px]">The orders could not be loaded.</p>
+        <AdminLoadError
+          message={describeError(error, "The orders could not be loaded.")}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
       </div>
     );
   }

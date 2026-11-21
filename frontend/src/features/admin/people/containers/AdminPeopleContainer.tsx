@@ -5,12 +5,15 @@ import { useCallback, useMemo } from "react";
 import { useQuery } from "@apollo/client/react";
 import { AdminUsersDocument } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { formatDate } from "@/lib/format";
 
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
+  AdminLoadError,
   AdminPageHeader,
   AdminPagination,
+  retryQuery,
   toPersonName,
 } from "@/features/admin/ui";
 
@@ -55,17 +58,20 @@ export function AdminPeopleContainer() {
     handleSearchCommit,
   );
 
-  const { data, previousData, loading, error } = useQuery(AdminUsersDocument, {
-    variables: {
-      filter: {
-        page,
-        limit: PEOPLE_PAGE_SIZE,
-        search: search || null,
-        role,
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AdminUsersDocument,
+    {
+      variables: {
+        filter: {
+          page,
+          limit: PEOPLE_PAGE_SIZE,
+          search: search || null,
+          role,
+        },
       },
+      fetchPolicy: "cache-and-network",
     },
-    fetchPolicy: "cache-and-network",
-  });
+  );
 
   const result = data?.adminUsers ?? previousData?.adminUsers;
 
@@ -94,11 +100,16 @@ export function AdminPeopleContainer() {
     [patch],
   );
 
+  // The whole page waits on its first answer, so a failure there asks again.
   if (!result && error) {
     return (
       <div className="flex flex-col gap-8">
         <AdminPageHeader eyebrow="Studio" title="People" description={null} />
-        <p className="text-[13px]">The people could not be loaded.</p>
+        <AdminLoadError
+          message={describeError(error, "The people could not be loaded.")}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
       </div>
     );
   }

@@ -8,7 +8,11 @@ import { AdminWhatsAppMessagesDocument } from "@/graphql/generated/graphql";
 import { describeError } from "@/lib/apollo/errors";
 
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
-import { AdminPagination } from "@/features/admin/ui";
+import {
+  AdminLoadError,
+  AdminPagination,
+  retryQuery,
+} from "@/features/admin/ui";
 
 import { WhatsAppFilters } from "@/features/admin/inbox/components/WhatsAppFilters";
 import { WhatsAppMessagesTable } from "@/features/admin/inbox/components/WhatsAppMessagesTable";
@@ -17,7 +21,7 @@ import { toWhatsAppFilter, toWhatsAppRow } from "@/features/admin/inbox/types";
 export function WhatsAppMessagesContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const filter = useMemo(() => toWhatsAppFilter(values, page), [values, page]);
-  const { data, previousData, loading, error } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminWhatsAppMessagesDocument,
     {
       variables: { filter },
@@ -61,13 +65,14 @@ export function WhatsAppMessagesContainer() {
     return <div aria-busy="true" className="h-96 animate-pulse bg-ash" />;
   }
 
+  // The whole page waits on its first answer, so a failure there asks again.
   if (!result) {
     return (
-      <p className="text-[13px]">
-        {error
-          ? describeError(error, "WhatsApp messages could not be loaded.")
-          : "WhatsApp messages could not be loaded."}
-      </p>
+      <AdminLoadError
+        message={describeError(error, "WhatsApp messages could not be loaded.")}
+        isRetrying={loading}
+        onRetry={retryQuery(refetch)}
+      />
     );
   }
 

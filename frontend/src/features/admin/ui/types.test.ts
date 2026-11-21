@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   EventStatus,
@@ -26,6 +26,7 @@ import {
   toPreviewColour,
   toRegistrationActions,
   toRegistrationStatus,
+  retryQuery,
 } from "./types";
 
 describe("status tones", () => {
@@ -307,5 +308,14 @@ describe("toPreviewColour", () => {
 describe("adminFieldMessageId", () => {
   it("names the line under a field after the field", () => {
     expect(adminFieldMessageId("email")).toBe("email-message");
+  });
+});
+
+describe("retryQuery", () => {
+  it("asks again and leaves a second failure to the query's own error", async () => {
+    const refetch = vi.fn().mockRejectedValue(new Error("offline"));
+    retryQuery(refetch)();
+    await Promise.resolve();
+    expect(refetch).toHaveBeenCalledOnce();
   });
 });

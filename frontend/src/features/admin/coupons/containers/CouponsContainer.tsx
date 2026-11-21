@@ -13,16 +13,19 @@ import {
 
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { AdminCouponFormValues } from "@/lib/validations/admin/coupon";
+import { describeError } from "@/lib/apollo/errors";
 
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
+  AdminLoadError,
   AdminPageHeader,
   AdminPagination,
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
   fromDateTimeLocal,
+  retryQuery,
   toDateTimeLocal,
 } from "@/features/admin/ui";
 
@@ -72,7 +75,7 @@ export function CouponsContainer() {
   );
   const [searchDraft, setSearchDraft] = useSearchDraft(search, commitSearch);
 
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminCouponsDocument,
     {
       variables: {
@@ -232,6 +235,12 @@ export function CouponsContainer() {
     );
   }
 
+  // Only a successful answer earns the empty message.
+  const loadError =
+    error && !data
+      ? describeError(error, "The codes could not be loaded.")
+      : null;
+
   return (
     <div className="flex flex-col gap-6">
       <AdminPageHeader
@@ -270,18 +279,26 @@ export function CouponsContainer() {
         />
       </AdminToolbar>
 
-      <CouponsTable
-        rows={optimisticRows}
-        isBusy={isPending || (loading && result !== undefined)}
-        busyId={busyId}
-        emptyMessage={
-          hasFilters ? "No codes match that search" : "No codes yet"
-        }
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : (
+        <CouponsTable
+          rows={optimisticRows}
+          isBusy={isPending || (loading && result !== undefined)}
+          busyId={busyId}
+          emptyMessage={
+            hasFilters ? "No codes match that search" : "No codes yet"
+          }
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
 
-      {pageInfo && (
+      {pageInfo && !loadError && (
         <AdminPagination
           page={pageInfo.page}
           limit={pageInfo.limit}

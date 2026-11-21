@@ -8,6 +8,7 @@ export { AdminDateFilter } from "@/features/admin/ui/components/AdminDateFilter"
 export { AdminEmptyRow } from "@/features/admin/ui/components/AdminEmptyRow";
 export { AdminField } from "@/features/admin/ui/components/AdminField";
 export { AdminFormSection } from "@/features/admin/ui/components/AdminFormSection";
+export { AdminLoadError } from "@/features/admin/ui/components/AdminLoadError";
 export { AdminPageHeader } from "@/features/admin/ui/components/AdminPageHeader";
 export { AdminPagination } from "@/features/admin/ui/components/AdminPagination";
 export { AdminReasonDialog } from "@/features/admin/ui/components/AdminReasonDialog";
@@ -43,6 +44,7 @@ export {
   orderStatusOptions,
   orderStatusTone,
   type RegistrationAction,
+  retryQuery,
   type RegistrationHold,
   registrationActionNeedsReason,
   registrationClosingDialog,

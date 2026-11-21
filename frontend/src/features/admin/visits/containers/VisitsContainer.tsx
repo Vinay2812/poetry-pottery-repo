@@ -9,6 +9,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { type ReasonInput, useReasonAction } from "@/lib/use-reason-action";
+import { describeError } from "@/lib/apollo/errors";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -16,11 +17,13 @@ import { Label } from "@/components/ui/label";
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminDateFilter,
+  AdminLoadError,
   AdminPageHeader,
   AdminPagination,
   AdminReasonDialog,
   AdminSearchField,
   AdminToolbar,
+  retryQuery,
 } from "@/features/admin/ui";
 
 import { VisitsTable } from "@/features/admin/visits/components/VisitsTable";
@@ -45,7 +48,7 @@ export function VisitsContainer() {
   );
   const [searchDraft, setSearchDraft] = useSearchDraft(search, commitSearch);
 
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminStudioVisitsDocument,
     {
       variables: { filter },
@@ -97,6 +100,12 @@ export function VisitsContainer() {
     );
   }
 
+  // Only a successful answer earns the empty message.
+  const loadError =
+    error && !data
+      ? describeError(error, "The studio visits could not be loaded.")
+      : null;
+
   return (
     <div className="flex flex-col gap-6">
       <AdminPageHeader
@@ -141,17 +150,27 @@ export function VisitsContainer() {
         </Label>
       </AdminToolbar>
 
-      <VisitsTable
-        rows={tableRows}
-        isBusy={isPending || (loading && result !== undefined)}
-        busyId={cancel.pending}
-        emptyMessage={
-          hasFilters ? "No visits match that search" : "Nobody is coming by yet"
-        }
-        onCancel={cancel.start}
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : (
+        <VisitsTable
+          rows={tableRows}
+          isBusy={isPending || (loading && result !== undefined)}
+          busyId={cancel.pending}
+          emptyMessage={
+            hasFilters
+              ? "No visits match that search"
+              : "Nobody is coming by yet"
+          }
+          onCancel={cancel.start}
+        />
+      )}
 
-      {pageInfo && (
+      {pageInfo && !loadError && (
         <AdminPagination
           page={pageInfo.page}
           limit={pageInfo.limit}

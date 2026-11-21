@@ -16,11 +16,13 @@ import { Button } from "@/components/ui/button";
 
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
+  AdminLoadError,
   AdminPageHeader,
   AdminPagination,
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
+  retryQuery,
 } from "@/features/admin/ui";
 
 import { WatchersTable } from "@/features/admin/notifications/components/WatchersTable";
@@ -64,7 +66,7 @@ export function NotificationsContainer() {
   );
   const [searchDraft, setSearchDraft] = useSearchDraft(search, commitSearch);
 
-  const { data, previousData, loading } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminBatchNotificationsDocument,
     {
       variables: { filter },
@@ -114,6 +116,12 @@ export function NotificationsContainer() {
     );
   }
 
+  // Only a successful answer earns the empty message.
+  const loadError =
+    error && !data
+      ? describeError(error, "The waiting list could not be loaded.")
+      : null;
+
   return (
     <div className="flex flex-col gap-6">
       <AdminPageHeader
@@ -151,15 +159,23 @@ export function NotificationsContainer() {
         />
       </AdminToolbar>
 
-      <WatchersTable
-        rows={rows}
-        isBusy={isPending || (loading && result !== undefined)}
-        emptyMessage={
-          hasFilters ? "Nobody matches that search" : "Nobody is waiting yet"
-        }
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : (
+        <WatchersTable
+          rows={rows}
+          isBusy={isPending || (loading && result !== undefined)}
+          emptyMessage={
+            hasFilters ? "Nobody matches that search" : "Nobody is waiting yet"
+          }
+        />
+      )}
 
-      {pageInfo && (
+      {pageInfo && !loadError && (
         <AdminPagination
           page={pageInfo.page}
           limit={pageInfo.limit}

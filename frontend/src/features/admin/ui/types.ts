@@ -281,3 +281,10 @@ export function toPreviewColour(value: string): string | null {
 export function adminFieldMessageId(id: string): string {
   return `${id}-message`;
 }
+
+// The hook's own error state shows a failed retry, so the rejected promise is not news.
+export function retryQuery(refetch: () => Promise<unknown>): () => void {
+  return () => {
+    refetch().catch(() => undefined);
+  };
+}
