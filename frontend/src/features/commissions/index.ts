@@ -8,6 +8,7 @@ export {
   toCommissionAskUrl,
   toCommissionInput,
   toCommissionMessage,
+  toCommissionPiecesNote,
   toGlazeChoices,
   toPieceChoices,
 } from "@/features/commissions/types";

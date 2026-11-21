@@ -14,6 +14,7 @@ import {
   COMMISSION_STEPS,
   CommissionBriefContainer,
   CommissionSteps,
+  toCommissionPiecesNote,
   toGlazeChoices,
   toPieceChoices,
 } from "@/features/commissions";
@@ -82,8 +83,7 @@ export default async function CustomPage({
                 Pieces we have made this way
               </h2>
               <p className="max-w-2xl text-[15px] text-muted-foreground">
-                Order one as it is, at the price shown, or describe something
-                else in the brief below.
+                {toCommissionPiecesNote(pieces)}
               </p>
             </div>
             <ProductGrid>

@@ -13,6 +13,7 @@ import {
   toCommissionAskUrl,
   toCommissionInput,
   toCommissionMessage,
+  toCommissionPiecesNote,
   toGlazeChoices,
   toPhotoHoldMessage,
   toPieceChoices,
@@ -230,5 +231,21 @@ describe("toPhotoHoldMessage", () => {
     expect(toPhotoHoldMessage([photo(null, "Upload failed")])).toBe(
       FAILED_PHOTO_MESSAGE,
     );
+  });
+});
+
+describe("toCommissionPiecesNote", () => {
+  it("offers the price shown when every piece can still be ordered", () => {
+    expect(
+      toCommissionPiecesNote([{ is_archived: false }, { is_archived: false }]),
+    ).toBe(
+      "Order one as it is, at the price shown, or describe something else in the brief below.",
+    );
+  });
+
+  it("speaks of past work once any piece is archived", () => {
+    expect(
+      toCommissionPiecesNote([{ is_archived: false }, { is_archived: true }]),
+    ).toBe("Name one in your brief below if you'd like something like it.");
   });
 });

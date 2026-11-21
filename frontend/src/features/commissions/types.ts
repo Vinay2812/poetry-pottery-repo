@@ -160,3 +160,12 @@ export function toPhotoHoldMessage(photos: ReferencePhoto[]): string | null {
   }
   return hasFailedPhoto(photos) ? FAILED_PHOTO_MESSAGE : null;
 }
+
+// Past commissions can be archived and unbuyable, so the line promises ordering only when every card allows it.
+export function toCommissionPiecesNote(
+  pieces: readonly { is_archived: boolean }[],
+): string {
+  return pieces.every((piece) => !piece.is_archived)
+    ? "Order one as it is, at the price shown, or describe something else in the brief below."
+    : "Name one in your brief below if you'd like something like it.";
+}
