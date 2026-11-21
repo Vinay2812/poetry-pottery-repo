@@ -2,7 +2,6 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { atViewport } from "@/lib/storybook/viewports";
 import { CartSummary } from "./CartSummary";
-import { FreeShippingNudge } from "./FreeShippingNudge";
 
 const meta = {
   title: "Features/Cart/CartSummary",
@@ -21,6 +20,7 @@ const meta = {
     itemCount: 2,
     canCheckout: true,
     checkoutHref: "/checkout",
+    shippingNote: "Free on orders above ₹2,500.",
   },
 } satisfies Meta<typeof CartSummary>;
 
@@ -31,13 +31,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const FreeShipping: Story = {
-  args: { shippingFee: 0, total: 2300 },
-};
-
-export const WithFreeShippingMeter: Story = {
-  args: {
-    meter: <FreeShippingNudge subtotal={2300} threshold={2500} />,
-  },
+  args: { shippingFee: 0, total: 2300, shippingNote: null },
 };
 
 export const CheckoutDisabled: Story = {

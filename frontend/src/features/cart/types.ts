@@ -45,34 +45,20 @@ export function canPredictShipping(
   return !shipsFreeNow || shipsFreeNext;
 }
 
-export interface FreeShippingProgress {
-  hasEarnedIt: boolean;
-  percent: number;
-  label: string;
-}
-
-// One sentence and one number, so the meter never has to be read off a bar.
-export function toFreeShippingProgress(
-  subtotal: number,
-  threshold: number,
+// A quiet fact under the shipping row, never a meter: the threshold is said only while a fee applies.
+export function toShippingNote(
+  shippingFee: number,
+  freeShippingAbove: number | null,
   format: (amount: number) => string,
-): FreeShippingProgress {
-  const remaining = Math.max(0, threshold - subtotal);
-  if (threshold <= 0 || remaining === 0) {
-    return {
-      hasEarnedIt: true,
-      percent: 100,
-      label: "Shipping is free on this order.",
-    };
+): string | null {
+  if (
+    shippingFee === 0 ||
+    freeShippingAbove === null ||
+    freeShippingAbove <= 0
+  ) {
+    return null;
   }
-  return {
-    hasEarnedIt: false,
-    percent: Math.min(
-      100,
-      Math.max(0, Math.round((subtotal / threshold) * 100)),
-    ),
-    label: `${format(remaining)} more for free shipping.`,
-  };
+  return `Free on orders above ${format(freeShippingAbove)}.`;
 }
 
 export type CartData = CartFieldsFragment;

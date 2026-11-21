@@ -1,33 +1,30 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 
 import { atViewport } from "@/lib/storybook/viewports";
-import { FreeShippingNudge } from "./FreeShippingNudge";
+import { CartLayout } from "./CartLayout";
 
 const meta = {
-  title: "Features/Cart/FreeShippingNudge",
-  component: FreeShippingNudge,
+  title: "Features/Cart/CartLayout",
+  component: CartLayout,
+  parameters: { layout: "fullscreen" },
   decorators: [
     (Story) => (
-      <div className="w-full max-w-sm">
+      <div className="mx-auto w-full max-w-5xl px-4 py-8 md:px-8">
         <Story />
       </div>
     ),
   ],
   args: {
-    subtotal: 1800,
-    threshold: 2500,
+    lines: <div className="h-64 border-t border-ash bg-white" />,
+    summary: <div className="h-48 border-t border-ash bg-white" />,
   },
-} satisfies Meta<typeof FreeShippingNudge>;
+} satisfies Meta<typeof CartLayout>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const Partial: Story = {};
-
-export const Unlocked: Story = {
-  args: { subtotal: 3000 },
-};
+export const Default: Story = {};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 
