@@ -182,7 +182,7 @@ export function BookingDetail({
                 onClick={onReschedule}
                 className={TEXT_BUTTON}
               >
-                Move to another day
+                Move this session
               </button>
             )}
             {canCancel && (
