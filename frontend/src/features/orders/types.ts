@@ -3,6 +3,7 @@ import {
   OrderStatus,
 } from "@/graphql/generated/graphql";
 
+import type { StatusTone } from "@/lib/status-tone";
 import type { TimelineStage } from "@/lib/timeline";
 import type { UrlCodec } from "@/lib/use-url-state";
 
@@ -66,7 +67,7 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
   [OrderStatus.Refunded]: "Refunded",
 };
 
-export type StatusTone = "pending" | "active" | "done" | "off";
+export type { StatusTone };
 
 export function toStatusLabel(status: OrderStatus): string {
   return STATUS_LABEL[status];

@@ -5,6 +5,7 @@ import { RegistrationStatus } from "@/graphql/generated/graphql";
 import {
   isRegistrationClosed,
   toRegistrationStatusLabel,
+  toRegistrationStatusTone,
 } from "./registration-status";
 
 describe("toRegistrationStatusLabel", () => {
@@ -34,5 +35,19 @@ describe("isRegistrationClosed", () => {
     expect(isRegistrationClosed(RegistrationStatus.Pending)).toBe(false);
     expect(isRegistrationClosed(RegistrationStatus.Approved)).toBe(false);
     expect(isRegistrationClosed(RegistrationStatus.Confirmed)).toBe(false);
+  });
+});
+
+describe("toRegistrationStatusTone", () => {
+  it("colours each status by how far along it is", () => {
+    expect(toRegistrationStatusTone(RegistrationStatus.Pending)).toBe(
+      "pending",
+    );
+    expect(toRegistrationStatusTone(RegistrationStatus.Approved)).toBe(
+      "active",
+    );
+    expect(toRegistrationStatusTone(RegistrationStatus.Confirmed)).toBe("done");
+    expect(toRegistrationStatusTone(RegistrationStatus.Rejected)).toBe("off");
+    expect(toRegistrationStatusTone(RegistrationStatus.Cancelled)).toBe("off");
   });
 });

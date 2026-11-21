@@ -1,5 +1,7 @@
 import { RegistrationStatus } from "@/graphql/generated/graphql";
 
+import type { StatusTone } from "./status-tone";
+
 // Wheel sessions and event seats share one status, so the shopper and the studio read the same words.
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
   [RegistrationStatus.Pending]: "Awaiting approval",
@@ -19,4 +21,13 @@ export function isRegistrationClosed(status: RegistrationStatus): boolean {
     status === RegistrationStatus.Cancelled ||
     status === RegistrationStatus.Rejected
   );
+}
+
+export function toRegistrationStatusTone(
+  status: RegistrationStatus,
+): StatusTone {
+  if (isRegistrationClosed(status)) return "off";
+  if (status === RegistrationStatus.Confirmed) return "done";
+  if (status === RegistrationStatus.Pending) return "pending";
+  return "active";
 }

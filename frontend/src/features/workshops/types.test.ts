@@ -29,7 +29,6 @@ import {
   toUnavailableMessage,
   toBookingPath,
   toBookingGroup,
-  toBookingStatusTone,
   toBookingWhenLines,
   toDateKey,
   toDayNote,
@@ -252,14 +251,6 @@ describe("session helpers", () => {
 });
 
 describe("booking status helpers", () => {
-  it("maps statuses to tones", () => {
-    expect(toBookingStatusTone(RegistrationStatus.Pending)).toBe("pending");
-    expect(toBookingStatusTone(RegistrationStatus.Approved)).toBe("active");
-    expect(toBookingStatusTone(RegistrationStatus.Confirmed)).toBe("done");
-    expect(toBookingStatusTone(RegistrationStatus.Rejected)).toBe("off");
-    expect(toBookingStatusTone(RegistrationStatus.Cancelled)).toBe("off");
-  });
-
   const readTimeline = (
     status: RegistrationStatus,
     dates: Partial<Record<RegistrationStatus, string | null>>,

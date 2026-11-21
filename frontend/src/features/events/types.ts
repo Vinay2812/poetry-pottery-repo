@@ -22,8 +22,6 @@ import {
   toRegistrationStatusLabel,
 } from "@/lib/registration-status";
 
-import type { StatusTone } from "@/features/orders/types";
-
 export type EventCardData = EventCardFragment;
 export type EventDetailData = EventQuery["event"];
 
@@ -275,15 +273,6 @@ export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
     upcoming: "Confirmed as soon as your payment lands.",
   },
 ];
-
-export function toRegistrationStatusTone(
-  status: RegistrationStatus,
-): StatusTone {
-  if (isRegistrationClosed(status)) return "off";
-  if (status === RegistrationStatus.Confirmed) return "done";
-  if (status === RegistrationStatus.Pending) return "pending";
-  return "active";
-}
 
 export type RegistrationStepDates = Partial<
   Record<RegistrationStatus, string | null>

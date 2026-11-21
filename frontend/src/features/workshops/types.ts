@@ -11,8 +11,6 @@ import { formatShortDay } from "@/lib/format";
 import type { TimelineStage } from "@/lib/timeline";
 import { isRegistrationClosed } from "@/lib/registration-status";
 
-import type { StatusTone } from "@/features/orders/types";
-
 export type WorkshopData = WorkshopConfigFieldsFragment;
 export type WorkshopTierData = WorkshopData["tiers"][number];
 export type WorkshopDayData =
@@ -328,13 +326,6 @@ export const BOOKING_STAGES: TimelineStage<RegistrationStatus>[] = [
     upcoming: "Confirmed as soon as your payment lands.",
   },
 ];
-
-export function toBookingStatusTone(status: RegistrationStatus): StatusTone {
-  if (isRegistrationClosed(status)) return "off";
-  if (status === RegistrationStatus.Confirmed) return "done";
-  if (status === RegistrationStatus.Pending) return "pending";
-  return "active";
-}
 
 type BookingGroup = "upcoming" | "past";
 

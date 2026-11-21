@@ -24,6 +24,7 @@ import { toClosedLabel, toTimelineDate, toTimelineSteps } from "@/lib/timeline";
 import {
   isRegistrationClosed,
   toRegistrationStatusLabel,
+  toRegistrationStatusTone,
 } from "@/lib/registration-status";
 import {
   applyBookingAction,
@@ -33,7 +34,6 @@ import {
   groupSlotsByDay,
   isRequestBannerShown,
   type SessionFact,
-  toBookingStatusTone,
   toWhatsAppSessionMessage,
 } from "@/features/workshops/types";
 
@@ -209,7 +209,7 @@ export function BookingDetailContainer({
         bookingId={optimisticBooking.id}
         dateLabel={formatDayRange(optimisticBooking.slots, timezone)}
         statusLabel={toRegistrationStatusLabel(optimisticBooking.status)}
-        statusTone={toBookingStatusTone(optimisticBooking.status)}
+        statusTone={toRegistrationStatusTone(optimisticBooking.status)}
         isJustPlaced={isRequestBannerShown(
           isJustPlaced,
           optimisticBooking.status,

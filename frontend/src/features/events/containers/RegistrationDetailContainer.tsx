@@ -24,7 +24,6 @@ import {
   toEventPath,
   toRegistrationClosedLabel,
   toRegistrationFacts,
-  toRegistrationStatusTone,
   toRegistrationStepDates,
   toTimeRange,
   toWhatsAppBookingMessage,
@@ -34,6 +33,7 @@ import { toTimelineSteps } from "@/lib/timeline";
 import {
   isRegistrationClosed,
   toRegistrationStatusLabel,
+  toRegistrationStatusTone,
 } from "@/lib/registration-status";
 import { ReviewActionContainer } from "@/features/reviews";
 

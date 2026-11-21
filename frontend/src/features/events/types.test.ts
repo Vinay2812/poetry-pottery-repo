@@ -25,7 +25,6 @@ import {
   toEventTypeLabel,
   toLevelLabel,
   toRegistrationPath,
-  toRegistrationStatusTone,
   REGISTRATION_STAGES,
   toEventWhenLabel,
   toEventWhenRangeLabel,
@@ -110,17 +109,6 @@ describe("dates", () => {
 });
 
 describe("registration status helpers", () => {
-  it("maps statuses to tones", () => {
-    expect(toRegistrationStatusTone(RegistrationStatus.Pending)).toBe(
-      "pending",
-    );
-    expect(toRegistrationStatusTone(RegistrationStatus.Approved)).toBe(
-      "active",
-    );
-    expect(toRegistrationStatusTone(RegistrationStatus.Confirmed)).toBe("done");
-    expect(toRegistrationStatusTone(RegistrationStatus.Rejected)).toBe("off");
-  });
-
   it("keys every stage by a registration status", () => {
     expect(REGISTRATION_STAGES.map((stage) => stage.key)).toEqual([
       RegistrationStatus.Pending,
