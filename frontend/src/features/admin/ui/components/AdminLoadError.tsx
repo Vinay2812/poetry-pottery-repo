@@ -13,10 +13,7 @@ export function AdminLoadError({
   onRetry,
 }: AdminLoadErrorProps) {
   return (
-    <div
-      role="alert"
-      className="flex flex-col items-start gap-3 border-t border-ash py-10"
-    >
+    <div role="alert" className="flex flex-col items-start gap-3 py-8">
       <p className="text-[13px]">{message}</p>
       <Button
         type="button"
