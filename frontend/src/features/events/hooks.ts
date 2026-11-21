@@ -14,6 +14,7 @@ import {
   RegistrationDocument,
 } from "@/graphql/generated/graphql";
 
+import { toPageTurn } from "@/lib/page-turn";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
 import { useRequireAuth } from "@/features/auth";
@@ -160,9 +161,16 @@ export function useMyRegistrations(page: number) {
   const result = isSignedIn
     ? (data?.myRegistrations ?? previousData?.myRegistrations)
     : undefined;
+  const { shownPage, failedPage } = toPageTurn(
+    page,
+    result?.page_info.page ?? null,
+    Boolean(error),
+  );
   return {
     registrations: result?.items ?? [],
     pageInfo: result?.page_info ?? null,
+    shownPage,
+    failedPage,
     isLoading: !isLoaded || (loading && !result),
     isPaging: loading && Boolean(result),
     hasError: Boolean(error) && !result,

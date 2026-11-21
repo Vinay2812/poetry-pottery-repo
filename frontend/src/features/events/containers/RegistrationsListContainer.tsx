@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { PageTurnFailed } from "@/components/layout/PageTurnFailed";
 import { cn } from "@/lib/utils";
 import {
   isRegistrationClosed,
@@ -34,20 +35,27 @@ export function RegistrationsListContainer({
   const [page, setPage] = useState(1);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
-  // The old page stays on screen while the next loads, so jumping to the top at once is safe.
-  const handlePageChange = useCallback((next: number) => {
-    setPage(next);
-    headingRef.current?.scrollIntoView({ block: "start" });
-  }, []);
   const {
     registrations,
     pageInfo,
+    shownPage,
+    failedPage,
     isLoading,
     isPaging,
     hasError,
     isSignedIn,
     refetch,
   } = useMyRegistrations(page);
+  // The old page stays on screen while the next loads, so jumping to the top at once is safe.
+  // Asking again for the page that failed reads it again rather than doing nothing.
+  const handlePageChange = useCallback(
+    (next: number) => {
+      if (next === page) void refetch();
+      else setPage(next);
+      headingRef.current?.scrollIntoView({ block: "start" });
+    },
+    [page, refetch],
+  );
   const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
 
@@ -132,22 +140,28 @@ export function RegistrationsListContainer({
             <div className="flex items-center justify-center gap-3">
               <Button
                 variant="outline"
-                disabled={page <= 1}
-                onClick={() => handlePageChange(page - 1)}
+                disabled={shownPage <= 1}
+                onClick={() => handlePageChange(shownPage - 1)}
               >
                 Previous
               </Button>
               <span className="text-[13px] text-muted-foreground tnum">
-                Page {page} of {pageCount}
+                Page {shownPage} of {pageCount}
               </span>
               <Button
                 variant="outline"
-                disabled={page >= pageCount}
-                onClick={() => handlePageChange(page + 1)}
+                disabled={shownPage >= pageCount}
+                onClick={() => handlePageChange(shownPage + 1)}
               >
                 Next
               </Button>
             </div>
+          )}
+          {failedPage !== null && (
+            <PageTurnFailed
+              page={failedPage}
+              onRetry={() => handlePageChange(failedPage)}
+            />
           )}
         </>
       )}
