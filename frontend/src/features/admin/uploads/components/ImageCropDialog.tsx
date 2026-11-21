@@ -18,6 +18,7 @@ export interface ImageCropDialogProps {
   cropWidth: number;
   cropHeight: number;
   isBusy: boolean;
+  error: string | null;
   onConfirm: () => void;
   onOpenChange: (isOpen: boolean) => void;
 }
@@ -30,6 +31,7 @@ export function ImageCropDialog({
   cropWidth,
   cropHeight,
   isBusy,
+  error,
   onConfirm,
   onOpenChange,
 }: ImageCropDialogProps) {
@@ -49,6 +51,12 @@ export function ImageCropDialog({
             alt="The crop that will be uploaded"
             className="max-h-72 w-full border border-ash bg-white object-contain"
           />
+        )}
+        {/* The field under the dialog is hidden while it is open, so a failed upload speaks here. */}
+        {error && (
+          <p role="alert" className="text-[13px] text-destructive">
+            {error}
+          </p>
         )}
         <DialogFooter>
           <Button

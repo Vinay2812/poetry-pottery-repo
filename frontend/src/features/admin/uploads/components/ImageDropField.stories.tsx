@@ -21,6 +21,7 @@ const meta = {
     rendersAt: "cards, gallery, cart lines",
     accept: "image/jpeg,image/png,image/webp,image/avif",
     previewUrl: null,
+    hasPreview: true,
     isBusy: false,
     error: null,
     onFilePick: fn(),
@@ -35,6 +36,8 @@ type Story = StoryObj<typeof meta>;
 export const Empty: Story = {};
 
 export const Uploading: Story = { args: { isBusy: true } };
+
+export const InAGallery: Story = { args: { hasPreview: false } };
 
 export const Rejected: Story = {
   args: {

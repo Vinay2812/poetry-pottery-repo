@@ -47,6 +47,7 @@ export function ImageListUploaderContainer({
         label={label}
         purpose={purpose}
         value={null}
+        hasPreview={false}
         onChange={handleAdd}
       />
     </div>

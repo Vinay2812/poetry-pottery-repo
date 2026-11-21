@@ -11,6 +11,8 @@ export interface ImageDropFieldProps {
   rendersAt: string;
   accept: string;
   previewUrl: string | null;
+  // A gallery shows its photos in a strip above, so its picker has no preview box.
+  hasPreview: boolean;
   isBusy: boolean;
   error: string | null;
   onFilePick: (file: File) => void;
@@ -24,6 +26,7 @@ export function ImageDropField({
   rendersAt,
   accept,
   previewUrl,
+  hasPreview,
   isBusy,
   error,
   onFilePick,
@@ -38,14 +41,18 @@ export function ImageDropField({
         {requirementLine} · shows on {rendersAt}
       </p>
       <div className="flex items-start gap-3">
-        <div className="flex size-20 shrink-0 items-center justify-center border border-ash bg-white">
-          {previewUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={previewUrl} alt="" className="size-full object-cover" />
-          ) : (
-            <span className="text-[11px] text-muted-foreground">No photo</span>
-          )}
-        </div>
+        {hasPreview && (
+          <div className="flex size-20 shrink-0 items-center justify-center border border-ash bg-white">
+            {previewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={previewUrl} alt="" className="size-full object-cover" />
+            ) : (
+              <span className="text-[11px] text-muted-foreground">
+                No photo
+              </span>
+            )}
+          </div>
+        )}
         <div className="flex min-w-0 flex-col gap-2">
           {/* The real input stays focusable but hidden; its label is the button people see. */}
           <input
