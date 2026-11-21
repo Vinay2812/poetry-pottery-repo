@@ -8,7 +8,7 @@ import { SignInPromptContainer } from "@/features/auth";
 import { CartProvider } from "@/features/cart";
 import { NewsletterFormContainer } from "@/features/content";
 import {
-  AnnouncementBar,
+  AnnouncementBarContainer,
   FOOTER_HELP_LINKS,
   FOOTER_LEGAL_LINKS,
   FOOTER_SHOP_LINKS,
@@ -33,7 +33,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
       <WishlistProvider>
         <SkipLink targetId="main" />
         {settings.announcement_text && (
-          <AnnouncementBar
+          <AnnouncementBarContainer
             text={settings.announcement_text}
             href={settings.announcement_href}
           />

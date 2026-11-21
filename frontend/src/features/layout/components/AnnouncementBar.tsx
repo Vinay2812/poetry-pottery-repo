@@ -6,9 +6,8 @@ export interface AnnouncementBarProps {
 }
 
 export function AnnouncementBar({ text, href }: AnnouncementBarProps) {
-  const content = (
-    <span className="text-[11px] tracking-[0.18em] uppercase">{text}</span>
-  );
+  // Set as the editor wrote it; capitals would make a studio note read like a shop banner.
+  const content = <span className="text-[13px]">{text}</span>;
 
   return (
     // A landmark, so the one line above the header is not content adrift of every region.
