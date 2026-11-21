@@ -18,15 +18,18 @@ import { ContentTextField } from "./ContentTextField";
 
 interface SettingsGroupProps {
   title: string;
+  note: string | null;
   children: ReactNode;
 }
 
-function SettingsGroup({ title, children }: SettingsGroupProps) {
+// The panel heading already draws a rule, so the first group does not draw its own.
+function SettingsGroup({ title, note, children }: SettingsGroupProps) {
   return (
-    <fieldset className="flex flex-col gap-4 border-t border-ash pt-4">
+    <fieldset className="flex flex-col gap-4 border-t border-ash pt-4 first-of-type:border-t-0 first-of-type:pt-0">
       <legend className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
         {title}
       </legend>
+      {note && <p className="text-[12px] text-muted-foreground">{note}</p>}
       <div className="grid gap-4 md:grid-cols-2">{children}</div>
     </fieldset>
   );
@@ -65,7 +68,7 @@ export function SiteSettingsForm({
       onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-5"
     >
-      <SettingsGroup title="Contact">
+      <SettingsGroup title="Contact" note={null}>
         <ContentTextField
           id="settings-contact-email"
           label="Email"
@@ -77,7 +80,7 @@ export function SiteSettingsForm({
         <ContentTextField
           id="settings-contact-phone"
           label="Phone"
-          hint="Ten digits."
+          hint="Ten digits. A +91 in front is fine."
           error={errors.contact_phone?.message}
           isMultiline={false}
           registration={register("contact_phone")}
@@ -108,11 +111,11 @@ export function SiteSettingsForm({
         />
       </SettingsGroup>
 
-      <SettingsGroup title="Social">
+      <SettingsGroup title="Social" note="Leave a link empty to hide it.">
         <ContentTextField
           id="settings-instagram"
           label="Instagram"
-          hint="Leave empty to hide the link."
+          hint={null}
           error={errors.instagram_url?.message}
           isMultiline={false}
           registration={register("instagram_url")}
@@ -135,7 +138,7 @@ export function SiteSettingsForm({
         />
       </SettingsGroup>
 
-      <SettingsGroup title="Shipping">
+      <SettingsGroup title="Shipping" note={null}>
         <ContentTextField
           id="settings-shipping-fee"
           label="Flat fee in rupees"
@@ -154,7 +157,7 @@ export function SiteSettingsForm({
         />
       </SettingsGroup>
 
-      <SettingsGroup title="Dispatch">
+      <SettingsGroup title="Dispatch" note={null}>
         <ContentTextField
           id="settings-dispatch-min"
           label="Earliest, in days"
@@ -179,7 +182,7 @@ export function SiteSettingsForm({
         </p>
       </SettingsGroup>
 
-      <SettingsGroup title="Hero">
+      <SettingsGroup title="Hero" note={null}>
         <ContentTextField
           id="settings-hero-heading"
           label="Heading"
