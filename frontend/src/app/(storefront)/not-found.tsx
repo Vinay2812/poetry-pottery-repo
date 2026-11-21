@@ -33,7 +33,10 @@ export default async function NotFound() {
           <Button asChild>
             <Link href="/products">Browse pieces</Link>
           </Button>
-          <Link href="/" className="link-underline text-sm">
+          <Link
+            href="/"
+            className="border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
+          >
             Back to the studio
           </Link>
         </div>
