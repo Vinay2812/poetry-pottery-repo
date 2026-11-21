@@ -164,9 +164,18 @@ describe("session helpers", () => {
 
   it("keeps hours with a gap between them apart", () => {
     const slots = [
-      { starts_at: "2026-09-13T07:30:00.000Z", ends_at: "2026-09-13T08:30:00.000Z" },
-      { starts_at: "2026-09-13T08:30:00.000Z", ends_at: "2026-09-13T09:30:00.000Z" },
-      { starts_at: "2026-09-13T11:30:00.000Z", ends_at: "2026-09-13T12:30:00.000Z" },
+      {
+        starts_at: "2026-09-13T07:30:00.000Z",
+        ends_at: "2026-09-13T08:30:00.000Z",
+      },
+      {
+        starts_at: "2026-09-13T08:30:00.000Z",
+        ends_at: "2026-09-13T09:30:00.000Z",
+      },
+      {
+        starts_at: "2026-09-13T11:30:00.000Z",
+        ends_at: "2026-09-13T12:30:00.000Z",
+      },
     ];
     expect(toBookingWhenLines(slots, IST)).toEqual(["1–3 pm, 5–6 pm"]);
   });

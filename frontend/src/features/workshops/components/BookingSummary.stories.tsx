@@ -21,8 +21,7 @@ const meta = {
     ],
     slotsNeeded: 2,
     hours: 2,
-    emptyMessage:
-      "Pick a day on the calendar, then an hour under it.",
+    emptyMessage: "Pick a day on the calendar, then an hour under it.",
     arrangementAskUrl: null,
     hint: "Picked for you: the earliest free hours. Change any of them.",
     participants: 2,
@@ -49,8 +48,7 @@ export const NothingPicked: Story = {
     pickedSlots: [],
     slotsNeeded: 1,
     hours: 1,
-    emptyMessage:
-      "Pick a day on the calendar, then an hour under it.",
+    emptyMessage: "Pick a day on the calendar, then an hour under it.",
     arrangementAskUrl: null,
     hint: null,
     participants: 1,
