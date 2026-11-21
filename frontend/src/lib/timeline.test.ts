@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  type TimelineStage,
-  toClosedLabel,
-  toRepeatedPhrases,
-  toTimelineSteps,
-} from "./timeline";
+import { type TimelineStage, toClosedLabel, toTimelineSteps } from "./timeline";
 
 type Status = "PLACED" | "PACKED" | "SENT" | "CANCELLED";
 
@@ -79,29 +74,5 @@ describe("toClosedLabel", () => {
     expect(toClosedLabel("Cancelled", "16 Sept", "  ")).toBe(
       "Cancelled on 16 Sept",
     );
-  });
-});
-
-describe("toRepeatedPhrases", () => {
-  it("finds a promise that repeats the description above it", () => {
-    expect(
-      toRepeatedPhrases([
-        {
-          key: "A",
-          label: "A",
-          description: "We will confirm it on WhatsApp.",
-        },
-        {
-          key: "B",
-          label: "B",
-          description: "Confirmed.",
-          upcoming: "We confirm it on WhatsApp soon.",
-        },
-      ]),
-    ).toEqual(["confirm it on", "it on whatsapp"]);
-  });
-
-  it("passes promises that add something new", () => {
-    expect(toRepeatedPhrases(STAGES)).toEqual([]);
   });
 });

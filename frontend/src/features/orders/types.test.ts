@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { OrderStatus } from "@/graphql/generated/graphql";
 
-import { toRepeatedPhrases, toTimelineSteps } from "@/lib/timeline";
+import { toRepeatedPhrases } from "@/lib/testing/timeline";
+import { toTimelineSteps } from "@/lib/timeline";
 
 import {
   applyOrderCancellation,
