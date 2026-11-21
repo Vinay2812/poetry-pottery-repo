@@ -81,7 +81,7 @@ describe("addressSchema", () => {
   });
 
   it("asks for an empty required field by the name on the form", () => {
-    expect(firstError({ name: "" })).toBe("Enter a name");
+    expect(firstError({ name: "" })).toBe("Enter your full name");
     expect(firstError({ phone: "" })).toBe("Enter a phone number");
     expect(firstError({ line1: "  " })).toBe(
       "Enter the flat, house or building",

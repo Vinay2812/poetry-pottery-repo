@@ -60,7 +60,7 @@ describe("parseAddressInput", () => {
       "Full name must be at least 2 characters",
     );
     expect(() => parseAddressInput(input({ name: " " }))).toThrow(
-      "Enter a name",
+      "Enter your full name",
     );
     expect(() => parseAddressInput(input({ phone: "" }))).toThrow(
       "Enter a phone number",

@@ -31,7 +31,7 @@ function optionalText(label: string, max: number) {
 }
 
 export const addressSchema = z.object({
-  name: requiredText("Full name", "Enter a name", 2, 80),
+  name: requiredText("Full name", "Enter your full name", 2, 80),
   phone: z
     .string()
     .trim()
