@@ -24,6 +24,7 @@ const meta = {
   args: {
     name: "Slate morning mug",
     images: PHOTOS.slice(0, 3),
+    hasThumbnailImages: true,
   },
 } satisfies Meta<typeof ProductGallery>;
 
@@ -35,6 +36,10 @@ export const Default: Story = {};
 
 export const SinglePhoto: Story = {
   args: { images: PHOTOS.slice(0, 1) },
+};
+
+export const BeforeTheStripShows: Story = {
+  args: { hasThumbnailImages: false },
 };
 
 export const TwoPhotos: Story = {

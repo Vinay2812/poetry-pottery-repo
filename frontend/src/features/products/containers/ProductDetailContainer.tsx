@@ -8,6 +8,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatInr } from "@/lib/format";
+import { useMediaQuery } from "@/lib/use-media-query";
 
 import { toPotteryIconKind } from "@/components/icons/pottery";
 import { REFERENCE_CUP, toDrawnVessel } from "@/components/media/vessels";
@@ -107,6 +108,7 @@ export function ProductDetailContainer({
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [activeFact, setActiveFact] = useState<string | null>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
+  const isWide = useMediaQuery("(min-width: 64rem)");
 
   const { data: relatedData } = useQuery(RelatedProductsDocument, {
     variables: { slug: product.slug, limit: 8 },
@@ -296,6 +298,7 @@ export function ProductDetailContainer({
           <ProductGallery
             images={product.image_urls}
             name={product.name}
+            hasThumbnailImages={isWide}
             overlay={
               hasKilnDiagram ? (
                 <KilnLabels

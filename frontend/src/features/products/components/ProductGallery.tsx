@@ -13,6 +13,8 @@ import { toPhotoAlt, toPhotoLabel } from "@/features/products/types";
 export interface ProductGalleryProps {
   images: string[];
   name: string;
+  // The strip only shows from lg, and hidden images still download, so the page says when to fill it.
+  hasThumbnailImages: boolean;
   overlay?: React.ReactNode;
 }
 
@@ -20,7 +22,12 @@ const ARROW_CLASS =
   "absolute top-1/2 z-10 hidden size-8 -translate-y-1/2 items-center justify-center border border-ash bg-white text-sm leading-none text-ink transition-colors hover:border-ink disabled:opacity-30 disabled:hover:border-ash lg:flex";
 
 // Draggable main carousel with a synced thumbnail strip on desktop and dashes below it on smaller screens.
-export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
+export function ProductGallery({
+  images,
+  name,
+  hasThumbnailImages,
+  overlay,
+}: ProductGalleryProps) {
   const {
     carouselRef,
     selectedIndex,
@@ -178,16 +185,15 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
                     : "border-transparent opacity-60 hover:opacity-100",
                 )}
               >
-                <Image
-                  src={url}
-                  alt=""
-                  fill
-                  // Same file as the opening photo, so it costs nothing and keeps
-                  // the LCP candidate from being recorded as lazy.
-                  loading={index === 0 ? "eager" : undefined}
-                  sizes="64px"
-                  className="object-cover"
-                />
+                {hasThumbnailImages && (
+                  <Image
+                    src={url}
+                    alt=""
+                    fill
+                    sizes="64px"
+                    className="object-cover"
+                  />
+                )}
               </button>
             ))}
           </div>
