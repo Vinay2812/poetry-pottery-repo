@@ -9,6 +9,7 @@ import {
   isDayWithinSpan,
   isSameSelection,
   isSlotPickable,
+  keepFittingPicks,
   pickableSlots,
   shiftMonth,
   spanDays,
@@ -20,6 +21,7 @@ import {
   toSlotOptions,
   toMonthGrid,
   toMonthKey,
+  toOffMonthRange,
   toPickedSlots,
   toVisibleWeeks,
 } from "./grid";
@@ -390,5 +392,43 @@ describe("suggestSlots", () => {
     expect(suggestSlots(days, 6, 1, 30, "2026-09-18")?.length).toBe(6);
     expect(suggestSlots(days, 7, 1, 30, "2026-09-18")).toBeNull();
     expect(suggestSlots(days, 0, 1, 30, "2026-09-18")).toEqual([]);
+  });
+});
+
+describe("toOffMonthRange", () => {
+  it("is null while every pick sits in the month on screen", () => {
+    expect(toOffMonthRange(["2026-10-02", "2026-10-03"], "2026-10")).toBeNull();
+    expect(toOffMonthRange([], "2026-10")).toBeNull();
+  });
+
+  it("covers only the picks outside the month on screen", () => {
+    expect(
+      toOffMonthRange(["2026-10-31", "2026-11-01", "2026-10-30"], "2026-11"),
+    ).toEqual({ from: "2026-10-30", days: 2 });
+  });
+});
+
+describe("keepFittingPicks", () => {
+  const roomy = slot(13, 4);
+  const tight = slot(14, 1);
+  const byStart = new Map([
+    [roomy.starts_at, roomy],
+    [tight.starts_at, tight],
+  ]);
+  const unread = { starts_at: "2026-12-01T08:30:00.000Z", ends_at: "x" };
+
+  it("drops a time that no longer has room for the group", () => {
+    expect(keepFittingPicks([roomy, tight], byStart, 2)).toEqual([roomy]);
+  });
+
+  it("keeps every time while the group still fits", () => {
+    expect(keepFittingPicks([roomy, tight], byStart, 1)).toEqual([
+      roomy,
+      tight,
+    ]);
+  });
+
+  it("keeps a time whose availability has not been read yet", () => {
+    expect(keepFittingPicks([unread], byStart, 3)).toEqual([unread]);
   });
 });

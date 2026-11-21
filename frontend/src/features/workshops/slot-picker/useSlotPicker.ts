@@ -23,12 +23,13 @@ import {
   daysInMonth,
   formatMonth,
   isSameSelection,
-  isSlotPickable,
+  keepFittingPicks,
   shiftMonth,
   suggestSlots,
   toCalendarWeeks,
   togglePicked,
   toMonthKey,
+  toOffMonthRange,
   toPickedSlots,
   toReachReason,
   toSlotOptions,
@@ -153,18 +154,11 @@ export function useSlotPicker({
     [days],
   );
 
-  // A new length starts over; a bigger group drops the hours it has outgrown.
-  const [pickedFor, setPickedFor] = useState({ needed, participants });
-  if (pickedFor.needed !== needed || pickedFor.participants !== participants) {
-    setPickedFor({ needed, participants });
-    setManual((previous) =>
-      !previous || pickedFor.needed !== needed
-        ? null
-        : previous.filter((picked) => {
-            const slot = slotByStart.get(picked.starts_at);
-            return !slot || isSlotPickable(slot, participants);
-          }),
-    );
+  // A new length starts over.
+  const [pickedForNeeded, setPickedForNeeded] = useState(needed);
+  if (pickedForNeeded !== needed) {
+    setPickedForNeeded(needed);
+    setManual(null);
   }
 
   // Only the opening month is picked ahead, so browsing forward never moves a pick nobody made.
@@ -188,7 +182,49 @@ export function useSlotPicker({
     ],
   );
   const isTouched = manual !== null;
-  const picked = manual ?? suggestion ?? NO_SLOTS;
+  const chosen = manual ?? suggestion ?? NO_SLOTS;
+
+  // Picks left in another month are read too, so every one is checked against the group.
+  const offMonthRange = toOffMonthRange(
+    chosen.map((slot) => toDateKey(slot.starts_at, timezone)),
+    month,
+  );
+  const { data: offMonthData, refetch: refetchOffMonth } = useQuery(
+    WorkshopAvailabilityDocument,
+    {
+      variables: {
+        input: {
+          config_slug: workshop?.slug ?? "",
+          from: offMonthRange?.from ?? "",
+          days: offMonthRange?.days ?? 0,
+          exclude_booking_id: excludeBookingId ?? null,
+        },
+      },
+      skip: isIdle || offMonthRange === null,
+      fetchPolicy: "cache-and-network",
+    },
+  );
+  const offMonthDays = offMonthRange
+    ? (offMonthData?.workshopAvailability ?? NO_DAYS)
+    : NO_DAYS;
+  const knownSlotByStart = useMemo(
+    () =>
+      new Map([
+        ...slotByStart,
+        ...offMonthDays
+          .flatMap((day) => day.slots)
+          .map((slot) => [slot.starts_at, slot] as const),
+      ]),
+    [offMonthDays, slotByStart],
+  );
+  // A bigger group or a fresh read drops the hours that no longer have room, in any month.
+  const picked = useMemo(
+    () => keepFittingPicks(chosen, knownSlotByStart, participants),
+    [chosen, knownSlotByStart, participants],
+  );
+  const isEveryPickChecked = picked.every((slot) =>
+    knownSlotByStart.has(slot.starts_at),
+  );
 
   const firstPicked = picked[0];
   const selectedDate =
@@ -306,10 +342,13 @@ export function useSlotPicker({
     [firstMonth, timezone],
   );
 
+  const hasOffMonthPicks = offMonthRange !== null;
   const refresh = useCallback(() => {
     // A skipped query reads again when it comes back, because of cache-and-network.
-    if (!isIdle) void refetch();
-  }, [isIdle, refetch]);
+    if (isIdle) return;
+    void refetch();
+    if (hasOffMonthPicks) void refetchOffMonth();
+  }, [hasOffMonthPicks, isIdle, refetch, refetchOffMonth]);
 
   return {
     monthLabel: formatMonth(month),
@@ -328,7 +367,8 @@ export function useSlotPicker({
     pickedStarts,
     needed,
     progress: formatPickedProgress(picked.length * slotMinutes, hours),
-    isComplete: picked.length === needed,
+    // Booking waits until every pick has been checked against the group size.
+    isComplete: picked.length === needed && isEveryPickChecked,
     isSuggested: !isTouched && picked.length > 0,
     isSwapHintShown: needed > 1 && picked.length === needed,
     hasNoRoom: suggestion === null,

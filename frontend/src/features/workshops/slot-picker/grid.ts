@@ -86,10 +86,37 @@ function dayDelta(later: string, earlier: string): number {
 }
 
 // Calendar days covered by a set of day keys, counting both ends.
-export function spanDays(dateKeys: string[]): number {
+export function spanDays(dateKeys: readonly string[]): number {
   if (dateKeys.length === 0) return 0;
   const sorted = [...dateKeys].sort();
   return dayDelta(sorted[sorted.length - 1] ?? "", sorted[0] ?? "") + 1;
+}
+
+export interface DateRange {
+  from: string;
+  days: number;
+}
+
+// The days holding picks outside the month on screen, so their capacity can be read too.
+export function toOffMonthRange(
+  pickedDateKeys: readonly string[],
+  monthKey: string,
+): DateRange | null {
+  const offMonth = pickedDateKeys.filter((key) => toMonthKey(key) !== monthKey);
+  const from = [...offMonth].sort()[0];
+  return from ? { from, days: spanDays(offMonth) } : null;
+}
+
+// A pick stays only while its time still has room for the group; one not read yet stays for now.
+export function keepFittingPicks(
+  picked: readonly SlotInterval[],
+  slotByStart: ReadonlyMap<string, WorkshopSlotData>,
+  participants: number,
+): SlotInterval[] {
+  return picked.filter((pick) => {
+    const slot = slotByStart.get(pick.starts_at);
+    return !slot || isSlotPickable(slot, participants);
+  });
 }
 
 // A day stays open while adding it keeps the whole set inside the allowed span.

@@ -101,7 +101,12 @@ function renderPicker(options: Partial<UseSlotPickerOptions> = {}) {
   });
 }
 
+// Each render reads the month on screen first, then the days of any picks outside it.
 function lastQuery(): QueryOptions | undefined {
+  return useQueryMock.mock.calls.at(-2)?.[1];
+}
+
+function lastOffMonthQuery(): QueryOptions | undefined {
   return useQueryMock.mock.calls.at(-1)?.[1];
 }
 
@@ -241,6 +246,67 @@ describe("useSlotPicker", () => {
     expect(result.current.isComplete).toBe(true);
 
     rerender({ workshop: WORKSHOP, hours: 2, participants: 2 });
+    expect(result.current.pickedStarts).toEqual([studioHour("2026-10-02", 13)]);
+    expect(result.current.isComplete).toBe(false);
+  });
+
+  it("checks picks left in another month against a bigger group", () => {
+    const october = {
+      workshopAvailability: [
+        {
+          ...dayOn("2026-10-02", [13]),
+          slots: [
+            ...dayOn("2026-10-02", [13], 4).slots,
+            ...dayOn("2026-10-02", [14], 1).slots,
+          ],
+        },
+      ],
+    };
+    months["2026-10-01"] = october;
+    const { result, rerender } = renderPicker({ hours: 2 });
+    act(() => result.current.onSelectDate("2026-10-02"));
+    act(() => result.current.onToggleSlot(studioHour("2026-10-02", 13)));
+    act(() => result.current.onToggleSlot(studioHour("2026-10-02", 14)));
+    expect(lastOffMonthQuery()?.skip).toBe(true);
+
+    act(() => result.current.onNextMonth());
+    expect(lastOffMonthQuery()?.skip).toBe(false);
+    expect(lastOffMonthQuery()?.variables.input).toMatchObject({
+      from: "2026-10-02",
+      days: 1,
+    });
+    // Until those days are read, nothing says the picks still fit.
+    expect(result.current.isComplete).toBe(false);
+
+    months["2026-10-02"] = october;
+    rerender({ workshop: WORKSHOP, hours: 2, participants: 1 });
+    expect(result.current.isComplete).toBe(true);
+
+    rerender({ workshop: WORKSHOP, hours: 2, participants: 2 });
+    expect(result.current.monthLabel).toBe("November 2026");
+    expect(result.current.pickedStarts).toEqual([studioHour("2026-10-02", 13)]);
+    expect(result.current.isComplete).toBe(false);
+  });
+
+  it("drops a pick a fresh read shows is now full", () => {
+    const { result, rerender } = renderPicker({ hours: 2 });
+    act(() => result.current.onSelectDate("2026-10-02"));
+    act(() => result.current.onToggleSlot(studioHour("2026-10-02", 13)));
+    act(() => result.current.onToggleSlot(studioHour("2026-10-02", 14)));
+    expect(result.current.isComplete).toBe(true);
+
+    months["2026-10-01"] = {
+      workshopAvailability: [
+        {
+          ...dayOn("2026-10-02", [13]),
+          slots: [
+            ...dayOn("2026-10-02", [13], 4).slots,
+            ...dayOn("2026-10-02", [14], 0).slots,
+          ],
+        },
+      ],
+    };
+    rerender({ workshop: WORKSHOP, hours: 2, participants: 1 });
     expect(result.current.pickedStarts).toEqual([studioHour("2026-10-02", 13)]);
     expect(result.current.isComplete).toBe(false);
   });
