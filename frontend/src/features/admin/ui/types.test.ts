@@ -145,7 +145,7 @@ describe("registration actions", () => {
         ],
         "wheel",
       ).map((action) => action.label),
-    ).toEqual(["Confirm as paid", "Turn down", "Cancel booking"]);
+    ).toEqual(["Confirm as paid", "Cancel booking"]);
     expect(
       toRegistrationActions(
         RegistrationStatus.Confirmed,
@@ -192,6 +192,30 @@ describe("registration actions", () => {
       RegistrationStatus.Confirmed,
       RegistrationStatus.Rejected,
     ]);
+  });
+
+  it("gives an approved booking one way to say no, since the guest was told", () => {
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Approved,
+        [
+          RegistrationStatus.Confirmed,
+          RegistrationStatus.Rejected,
+          RegistrationStatus.Cancelled,
+        ],
+        "seat",
+      ).map((action) => action.status),
+    ).toEqual([RegistrationStatus.Confirmed, RegistrationStatus.Cancelled]);
+  });
+
+  it("marks turning down and cancelling as destructive", () => {
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Pending,
+        [RegistrationStatus.Approved, RegistrationStatus.Rejected],
+        "wheel",
+      ).map((action) => action.isDestructive),
+    ).toEqual([false, true]);
   });
 
   it("never offers a way back to awaiting approval", () => {

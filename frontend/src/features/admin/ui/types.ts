@@ -184,12 +184,18 @@ export interface RegistrationAction {
   label: string;
   // The first move that lets someone in gets the dark button.
   isPrimary: boolean;
+  // Turning down and cancelling read in red, as Cancel and Refund do on an order.
+  isDestructive: boolean;
 }
 
-/**
- * The server says which moves are legal; each one is named and the way forward marked.
- * A request still awaiting approval is turned down rather than cancelled, so it gets one "no".
- */
+// One "no" per state: a request is turned down, an approved booking is cancelled,
+// since its guest already has the approval email.
+const SPARE_NO: Partial<Record<RegistrationStatus, RegistrationStatus>> = {
+  [RegistrationStatus.Pending]: RegistrationStatus.Cancelled,
+  [RegistrationStatus.Approved]: RegistrationStatus.Rejected,
+};
+
+/** The server says which moves are legal; each one is named and the way forward marked. */
 export function toRegistrationActions(
   current: RegistrationStatus,
   nextStatuses: RegistrationStatus[],
@@ -197,13 +203,7 @@ export function toRegistrationActions(
 ): RegistrationAction[] {
   return nextStatuses
     .filter(isMoveTarget)
-    .filter(
-      (status) =>
-        !(
-          current === RegistrationStatus.Pending &&
-          status === RegistrationStatus.Cancelled
-        ),
-    )
+    .filter((status) => status !== SPARE_NO[current])
     .map((status, index) => ({
       status,
       label: registrationActionLabel(status, hold),
@@ -211,6 +211,7 @@ export function toRegistrationActions(
         index === 0 &&
         (status === RegistrationStatus.Approved ||
           status === RegistrationStatus.Confirmed),
+      isDestructive: registrationActionNeedsReason(status),
     }));
 }
 
@@ -231,6 +232,8 @@ export function registrationClosingDialog(
 }
 
 // The API fills these in when nobody typed a reason, so they say who closed it, not why.
+// Kept word for word with features/workshops/workshops.service.ts, features/events/events.service.ts
+// and features/admin/events/events.service.ts in the api app; the test below pins them.
 const FILLED_IN_REASON: Record<string, string> = {
   "Cancelled by the guest": "Cancelled by the guest",
   "The studio called this one off": "Cancelled by the studio with the event",

@@ -33,6 +33,7 @@ export function AdminRegistrationActions({
           type="button"
           size="sm"
           variant={action.isPrimary ? "default" : "secondary"}
+          className={action.isDestructive ? "text-destructive" : undefined}
           disabled={isDisabled}
           onClick={() => onAction(action.status)}
         >
