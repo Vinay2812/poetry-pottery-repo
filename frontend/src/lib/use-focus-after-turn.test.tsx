@@ -82,6 +82,16 @@ describe("useFocusAfterTurn", () => {
     expect(screen.getByRole("button", { name: "Next" })).toHaveFocus();
   });
 
+  it("brings focus to the heading when a failed turn left it nowhere", () => {
+    const { startTurn, rerender } = setup();
+    startTurn();
+    // The pager button is disabled while the next page loads, which drops its focus.
+    screen.getByRole("button", { name: "Next" }).blur();
+    rerender(false, 2, null);
+    rerender(true, 1, 2);
+    expect(screen.getByRole("heading")).toHaveFocus();
+  });
+
   it("does not move focus on renders that were not a turn", () => {
     const { rerender } = setup();
     rerender(false, 1, null);

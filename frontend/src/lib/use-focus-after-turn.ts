@@ -8,7 +8,8 @@ export interface FocusAfterTurn<T extends HTMLElement> {
 }
 
 // After a page turn the pager that was clicked may be gone or disabled, so focus would fall to <body>.
-// Focus goes to the list heading once the new rows are in; a turn that fails leaves focus where it is.
+// Focus goes to the list heading once the new rows are in. A turn that fails leaves focus on the
+// pager when it still has it, and otherwise brings it to the heading, right above the retry notice.
 export function useFocusAfterTurn<T extends HTMLElement>(
   isSettled: boolean,
   shownPage: number,
@@ -20,7 +21,12 @@ export function useFocusAfterTurn<T extends HTMLElement>(
   useEffect(() => {
     if (!isTurningRef.current || !isSettled) return;
     isTurningRef.current = false;
-    if (failedPage === null) headingRef.current?.focus({ preventScroll: true });
+    const isFocusLost =
+      document.activeElement === null ||
+      document.activeElement === document.body;
+    if (failedPage === null || isFocusLost) {
+      headingRef.current?.focus({ preventScroll: true });
+    }
   }, [isSettled, shownPage, failedPage]);
 
   const startTurn = useCallback(() => {
