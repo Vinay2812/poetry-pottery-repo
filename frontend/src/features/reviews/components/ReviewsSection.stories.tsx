@@ -22,12 +22,13 @@ const meta = {
     distribution: [0, 0, 0, 2, 2],
     quietLine: "Reviews come from people who bought this piece",
     ctaLabel: "Write a review",
-    isLoading: false,
+    status: "ready",
     isPending: false,
     hasMore: true,
     isLoadingMore: false,
     onWriteReview: fn(),
     onLoadMore: fn(),
+    onRetry: fn(),
     children: (
       <>
         <ReviewItem
@@ -69,7 +70,9 @@ export const Empty: Story = {
   },
 };
 
-export const Loading: Story = { args: { isLoading: true } };
+export const Loading: Story = { args: { status: "loading" } };
+
+export const Failed: Story = { args: { status: "failed" } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

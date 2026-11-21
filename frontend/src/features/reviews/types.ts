@@ -32,6 +32,19 @@ export const PRODUCT_REVIEW_NOTE =
 export const EVENT_REVIEW_NOTE =
   "Reviews come from people who sat at the wheel";
 
+export type ReviewListStatus = "loading" | "failed" | "ready";
+
+// Only an answer from the server can say there are no reviews; a failed request says so instead.
+export function toReviewListStatus(
+  hasResult: boolean,
+  isLoading: boolean,
+  hasError: boolean,
+): ReviewListStatus {
+  if (hasResult) return "ready";
+  if (hasError && !isLoading) return "failed";
+  return "loading";
+}
+
 // An edit is saved, a first review is posted; the button says which while it works.
 export function toReviewSubmitLabel(
   isEditing: boolean,

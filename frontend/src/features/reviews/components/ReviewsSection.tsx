@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 
 import { ReviewSummary } from "@/features/reviews/components/ReviewSummary";
+import type { ReviewListStatus } from "@/features/reviews/types";
 
 export interface ReviewsSectionProps {
   title: string;
@@ -9,12 +10,13 @@ export interface ReviewsSectionProps {
   distribution: number[];
   quietLine: string | null;
   ctaLabel: string | null;
-  isLoading: boolean;
+  status: ReviewListStatus;
   isPending: boolean;
   hasMore: boolean;
   isLoadingMore: boolean;
   onWriteReview?: () => void;
   onLoadMore?: () => void;
+  onRetry?: () => void;
   children: React.ReactNode;
 }
 
@@ -25,12 +27,13 @@ export function ReviewsSection({
   distribution,
   quietLine,
   ctaLabel,
-  isLoading,
+  status,
   isPending,
   hasMore,
   isLoadingMore,
   onWriteReview,
   onLoadMore,
+  onRetry,
   children,
 }: ReviewsSectionProps) {
   return (
@@ -48,8 +51,21 @@ export function ReviewsSection({
         )}
       </div>
 
-      {isLoading ? (
+      {status === "loading" ? (
         <div aria-busy="true" className="h-24 animate-pulse bg-ash" />
+      ) : status === "failed" ? (
+        <p role="status" className="text-[13px] text-muted-foreground">
+          The reviews did not load.{" "}
+          {onRetry && (
+            <button
+              type="button"
+              onClick={onRetry}
+              className="border-b border-ink pb-0.5 text-foreground hover:border-primary hover:text-primary"
+            >
+              Try again
+            </button>
+          )}
+        </p>
       ) : (
         <>
           <div

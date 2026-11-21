@@ -13,6 +13,7 @@ import {
   toOneLine,
   toRatingLabel,
   toReviewInput,
+  toReviewListStatus,
   toReviewSubmitLabel,
   toSubjectHref,
   toSummaryLine,
@@ -243,5 +244,21 @@ describe("toReviewSubmitLabel", () => {
     expect(toReviewSubmitLabel(false, true)).toBe("Posting\u2026");
     expect(toReviewSubmitLabel(true, false)).toBe("Save changes");
     expect(toReviewSubmitLabel(true, true)).toBe("Saving\u2026");
+  });
+});
+
+describe("toReviewListStatus", () => {
+  it("is ready as soon as the server has answered, even with no reviews", () => {
+    expect(toReviewListStatus(true, false, false)).toBe("ready");
+    expect(toReviewListStatus(true, true, true)).toBe("ready");
+  });
+
+  it("says the request failed instead of claiming there are no reviews", () => {
+    expect(toReviewListStatus(false, false, true)).toBe("failed");
+  });
+
+  it("keeps loading while a first answer or a retry is on its way", () => {
+    expect(toReviewListStatus(false, true, false)).toBe("loading");
+    expect(toReviewListStatus(false, true, true)).toBe("loading");
   });
 });

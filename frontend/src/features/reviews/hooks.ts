@@ -29,6 +29,7 @@ import {
   type ReviewSubject,
   REVIEWS_PAGE_SIZE,
   toDraftReview,
+  toReviewListStatus,
   toReviewInput,
   toSubjectHref,
   toUploadSubject,
@@ -120,7 +121,12 @@ export function useReviewList(subject: ReviewSubject) {
     ? (productQuery.data ?? productQuery.previousData)?.productReviews
     : (eventQuery.data ?? eventQuery.previousData)?.eventReviews;
   const loading = isProduct ? productQuery.loading : eventQuery.loading;
+  const error = isProduct ? productQuery.error : eventQuery.error;
   const pageInfo = result?.page_info;
+
+  const retry = useCallback(() => {
+    void (isProduct ? productQuery.refetch() : eventQuery.refetch());
+  }, [eventQuery, isProduct, productQuery]);
 
   const loadMore = useCallback(() => {
     if (!pageInfo?.has_more || loading) return;
@@ -177,9 +183,10 @@ export function useReviewList(subject: ReviewSubject) {
 
   return {
     result: result ?? null,
-    isLoading: loading && !result,
+    status: toReviewListStatus(Boolean(result), loading, Boolean(error)),
     isLoadingMore: loading && Boolean(result),
     loadMore,
+    retry,
     refetchLoaded,
   };
 }

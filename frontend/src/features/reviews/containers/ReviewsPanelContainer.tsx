@@ -35,7 +35,7 @@ export function ReviewsPanelContainer({
     () => ({ kind, id: subjectId, slug }),
     [kind, slug, subjectId],
   );
-  const { result, isLoading, isLoadingMore, loadMore, refetchLoaded } =
+  const { result, status, isLoadingMore, loadMore, refetchLoaded, retry } =
     useReviewList(subject);
   const [optimisticResult, applyAction] = useOptimistic(
     result,
@@ -89,12 +89,13 @@ export function ReviewsPanelContainer({
         distribution={summary?.distribution ?? [0, 0, 0, 0, 0]}
         quietLine={quietLine}
         ctaLabel={ctaLabel}
-        isLoading={isLoading}
+        status={status}
         isPending={isSaving}
         hasMore={optimisticResult?.page_info.has_more ?? false}
         isLoadingMore={isLoadingMore}
         onWriteReview={open}
         onLoadMore={loadMore}
+        onRetry={retry}
       >
         {(optimisticResult?.items ?? []).map((review) => (
           <ReviewItem
