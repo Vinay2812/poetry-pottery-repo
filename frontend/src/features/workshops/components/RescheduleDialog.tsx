@@ -41,8 +41,6 @@ export interface RescheduleDialogProps {
   isComplete: boolean;
   isSwapHintShown: boolean;
   isUnchanged: boolean;
-  // The booking's hours sit on more than one day, so "the old day" would be wrong.
-  isMultiDay: boolean;
   isSubmitting: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onPreviousMonth: () => void;
@@ -69,7 +67,6 @@ export function RescheduleDialog({
   isComplete,
   isSwapHintShown,
   isUnchanged,
-  isMultiDay,
   isSubmitting,
   onOpenChange,
   onPreviousMonth,
@@ -144,7 +141,7 @@ export function RescheduleDialog({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            {isMultiDay ? "Keep current times" : "Keep the old day"}
+            Keep current times
           </Button>
           <Button
             onClick={onConfirm}

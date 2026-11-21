@@ -253,7 +253,6 @@ export function BookingDetailContainer({
         isComplete={isComplete}
         isSwapHintShown={picker.isSwapHintShown}
         isUnchanged={isUnchanged}
-        isMultiDay={dayGroups.length > 1}
         isSubmitting={isRescheduling}
         onOpenChange={setIsMoveOpen}
         onPreviousMonth={picker.onPreviousMonth}

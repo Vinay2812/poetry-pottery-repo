@@ -82,7 +82,6 @@ const meta = {
     isComplete: false,
     isSwapHintShown: false,
     isUnchanged: false,
-    isMultiDay: false,
     isSubmitting: false,
     onOpenChange: fn(),
     onPreviousMonth: fn(),
@@ -115,7 +114,7 @@ export const Moving: Story = { args: { isSubmitting: true } };
 
 export const SameHoursAsBooked: Story = { args: { isUnchanged: true } };
 
-// Every time is picked across two days: the swap hint shows and "keep" names the times.
+// Every time is picked across two days, so the swap hint shows.
 export const AllTimesPickedAcrossDays: Story = {
   args: {
     pickedSlots: [
@@ -125,7 +124,6 @@ export const AllTimesPickedAcrossDays: Story = {
     progress: "All 2 hours picked",
     isComplete: true,
     isSwapHintShown: true,
-    isMultiDay: true,
   },
 };
 
