@@ -17,7 +17,7 @@ export interface ReviewsSectionProps {
   onWriteReview?: () => void;
   onLoadMore?: () => void;
   onRetry?: () => void;
-  // The page moves focus here after a retry: back to the button on failure, the heading on success.
+  // The retry button keeps focus while it works; after a successful retry the heading takes it.
   headingRef?: React.Ref<HTMLHeadingElement>;
   retryRef?: React.Ref<HTMLButtonElement>;
   children: React.ReactNode;
