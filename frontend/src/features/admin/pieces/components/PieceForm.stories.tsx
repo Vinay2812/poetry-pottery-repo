@@ -18,7 +18,10 @@ const meta = {
       { id: 1, name: "Mugs" },
       { id: 2, name: "Bowls" },
     ],
-    collectionOptions: [{ id: 5, name: "Winter shelf" }],
+    collectionOptions: [
+      { id: 5, name: "Winter shelf", window: "open" },
+      { id: 6, name: "Monsoon glazes", window: "not-open" },
+    ],
     glazeOptions: [
       { id: 3, name: "Kiln ash" },
       { id: 4, name: "Ink well" },

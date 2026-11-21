@@ -16,6 +16,7 @@ const ROWS: PieceRow[] = [
     canGoLive: true,
     isFeatured: true,
     isMadeToOrder: false,
+    collectionWindow: "open",
     categoriesLabel: "Mugs, Everyday",
     collectionLabel: "Winter shelf",
   },
@@ -30,6 +31,7 @@ const ROWS: PieceRow[] = [
     canGoLive: true,
     isFeatured: false,
     isMadeToOrder: false,
+    collectionWindow: "open",
     categoriesLabel: "Bowls",
     collectionLabel: "—",
   },
@@ -44,10 +46,11 @@ const ROWS: PieceRow[] = [
     canGoLive: true,
     isFeatured: false,
     isMadeToOrder: true,
+    collectionWindow: "open",
     categoriesLabel: "Planters",
     collectionLabel: "—",
   },
-  // Sold out: the home page leaves it off, so the mark cannot be ticked.
+  // Sold out: studio picks leave it out, so the mark cannot be ticked.
   {
     id: 4,
     name: "Speckled tumbler",
@@ -59,8 +62,25 @@ const ROWS: PieceRow[] = [
     canGoLive: false,
     isFeatured: false,
     isMadeToOrder: false,
+    collectionWindow: "open",
     categoriesLabel: "Cups",
     collectionLabel: "—",
+  },
+  // In stock, but its collection has not opened, so the mark waits.
+  {
+    id: 5,
+    name: "Monsoon jug",
+    imageUrl: null,
+    priceLabel: "₹1,400",
+    stock: 3,
+    stockLabel: "3",
+    isActive: true,
+    canGoLive: true,
+    isFeatured: false,
+    isMadeToOrder: false,
+    collectionWindow: "not-open",
+    categoriesLabel: "Jugs",
+    collectionLabel: "Monsoon glazes",
   },
 ];
 

@@ -13,7 +13,8 @@ import {
   countFoldedFilters,
   describeCategories,
   describeMaxLength,
-  describeNewFeatureHint,
+  describeMadeToOrderHint,
+  describeNewPickHint,
   describeKiln,
   describeKilnHint,
   describeFiltersToggle,
@@ -23,8 +24,9 @@ import {
   describeShelfStateHint,
   describeStockAfter,
   describeUnsavedChanges,
-  findFeatureBlock,
-  findHomeShelfBlock,
+  findPickToggleBlock,
+  findStudioPickBlock,
+  readCollectionWindow,
   EMPTY_PRODUCT_FORM,
   formatCareNotes,
   formatPriceModifier,
@@ -77,7 +79,13 @@ const PRODUCT: AdminProductDetailFragment = {
     { id: 1, name: "Mugs", slug: "mugs" },
     { id: 2, name: "Everyday", slug: "everyday" },
   ],
-  collection: { id: 3, name: "Winter", slug: "winter" },
+  collection: {
+    id: 3,
+    name: "Winter",
+    slug: "winter",
+    starts_at: null,
+    ends_at: null,
+  },
 };
 
 function group(id: number, sortOrder: number): AdminOptionGroupFieldsFragment {
@@ -291,6 +299,7 @@ describe("toProductInput", () => {
         is_featured: true,
       },
       ["https://cdn.test/one.jpg"],
+      "open",
     );
     expect(input.name).toBe("Slate morning mug");
     expect(input.description).toBe("Thrown on the wheel.");
@@ -300,16 +309,17 @@ describe("toProductInput", () => {
     expect(input.is_featured).toBe(true);
   });
 
-  it("sends a piece that cannot go live as off the shelf and off the home page", () => {
+  it("sends a piece that cannot go live as off the shelf and not a studio pick", () => {
     const input = toProductInput(
       { ...EMPTY_PRODUCT_FORM, stock: 0, is_active: true, is_featured: true },
       [],
+      "open",
     );
     expect(input.is_active).toBe(false);
     expect(input.is_featured).toBe(false);
   });
 
-  it("keeps a made-to-order piece live with no stock, but off the home page", () => {
+  it("keeps a made-to-order piece live with no stock, but not a studio pick", () => {
     const input = toProductInput(
       {
         ...EMPTY_PRODUCT_FORM,
@@ -318,13 +328,24 @@ describe("toProductInput", () => {
         is_featured: true,
       },
       [],
+      "open",
+    );
+    expect(input.is_active).toBe(true);
+    expect(input.is_featured).toBe(false);
+  });
+
+  it("drops the mark for a piece whose collection has not opened", () => {
+    const input = toProductInput(
+      { ...EMPTY_PRODUCT_FORM, stock: 2, is_featured: true },
+      [],
+      "not-open",
     );
     expect(input.is_active).toBe(true);
     expect(input.is_featured).toBe(false);
   });
 
   it("sends nothing rather than an empty string for optional text", () => {
-    const input = toProductInput(EMPTY_PRODUCT_FORM, []);
+    const input = toProductInput(EMPTY_PRODUCT_FORM, [], "open");
     expect(input.dimensions).toBeNull();
     expect(input.color_name).toBeNull();
     expect(input.color_code).toBeNull();
@@ -434,28 +455,34 @@ describe("shelf state", () => {
     );
   });
 
-  it("says a retired piece is still marked for the home page", () => {
+  it("says a retired piece is still a studio pick", () => {
     expect(describeShelfStateHint(false, true, true, null)).toBe(
-      "Still marked to go first on the home page",
+      "Still marked as a studio pick",
     );
     expect(describeShelfStateHint(false, false, true, null)).toBe(
-      "Still marked to go first on the home page",
+      "Still marked as a studio pick",
     );
   });
 
-  it("mentions the home page only for a featured live piece", () => {
+  it("mentions studio picks only for a marked live piece", () => {
     expect(describeShelfStateHint(true, true, true, null)).toBe(
-      "Goes first among the pieces on the home page",
+      "A studio pick: leads the home page and the shop",
     );
     expect(describeShelfStateHint(true, true, false, null)).toBeNull();
   });
 
-  it("says when a marked piece is left off the home page", () => {
+  it("says why a marked piece is left out", () => {
     expect(describeShelfStateHint(true, true, true, "sold-out")).toBe(
-      "Marked to go first, but left off the home page while sold out",
+      "A studio pick, but left out while sold out",
     );
     expect(describeShelfStateHint(true, true, true, "made-to-order")).toBe(
-      "Marked to go first, but left off the home page while made to order",
+      "A studio pick, but left out while made to order",
+    );
+    expect(
+      describeShelfStateHint(true, true, true, "collection-not-open"),
+    ).toBe("A studio pick, but left out while its collection has not opened");
+    expect(describeShelfStateHint(true, true, true, "collection-closed")).toBe(
+      "A studio pick, but left out while its collection is closed",
     );
   });
 });
@@ -512,57 +539,127 @@ describe("folded filters", () => {
   });
 });
 
-describe("findHomeShelfBlock", () => {
-  const ready = { isActive: true, isCustomizable: false, stock: 2 };
+describe("readCollectionWindow", () => {
+  const now = new Date("2026-11-22T10:00:00Z");
 
-  it("lets the home page show only a piece on the shelf, in stock and ready to ship", () => {
-    expect(findHomeShelfBlock(ready)).toBeNull();
-    expect(findHomeShelfBlock({ ...ready, isActive: false })).toBe("retired");
-    expect(findHomeShelfBlock({ ...ready, isCustomizable: true })).toBe(
+  it("treats no collection and an open window as open", () => {
+    expect(readCollectionWindow(null, now)).toBe("open");
+    expect(readCollectionWindow({ starts_at: null, ends_at: null }, now)).toBe(
+      "open",
+    );
+    expect(
+      readCollectionWindow(
+        { starts_at: "2026-11-01T00:00:00Z", ends_at: "2026-11-22T10:00:00Z" },
+        now,
+      ),
+    ).toBe("open");
+  });
+
+  it("tells a collection that has not opened from one that has closed", () => {
+    expect(
+      readCollectionWindow(
+        { starts_at: "2026-12-01T00:00:00Z", ends_at: null },
+        now,
+      ),
+    ).toBe("not-open");
+    expect(
+      readCollectionWindow(
+        { starts_at: null, ends_at: "2026-11-21T00:00:00Z" },
+        now,
+      ),
+    ).toBe("closed");
+  });
+});
+
+describe("findStudioPickBlock", () => {
+  const ready = {
+    isActive: true,
+    isCustomizable: false,
+    stock: 2,
+    collectionWindow: "open" as const,
+  };
+
+  it("shows a pick only on the shelf, in an open collection, in stock and ready to ship", () => {
+    expect(findStudioPickBlock(ready)).toBeNull();
+    expect(findStudioPickBlock({ ...ready, isActive: false })).toBe("retired");
+    expect(findStudioPickBlock({ ...ready, isCustomizable: true })).toBe(
       "made-to-order",
     );
     // A made-to-order piece has no stock to count, so it reads as made to order, not sold out.
     expect(
-      findHomeShelfBlock({ ...ready, isCustomizable: true, stock: 0 }),
+      findStudioPickBlock({ ...ready, isCustomizable: true, stock: 0 }),
     ).toBe("made-to-order");
-    expect(findHomeShelfBlock({ ...ready, stock: 0 })).toBe("sold-out");
+    expect(
+      findStudioPickBlock({ ...ready, collectionWindow: "not-open" }),
+    ).toBe("collection-not-open");
+    expect(findStudioPickBlock({ ...ready, collectionWindow: "closed" })).toBe(
+      "collection-closed",
+    );
+    expect(findStudioPickBlock({ ...ready, stock: 0 })).toBe("sold-out");
   });
 });
 
-describe("findFeatureBlock", () => {
-  const ready = { isActive: true, isCustomizable: false, stock: 2 };
+describe("findPickToggleBlock", () => {
+  const ready = {
+    isActive: true,
+    isCustomizable: false,
+    stock: 2,
+    collectionWindow: "open" as const,
+  };
 
-  it("offers the mark only where the home page can show the piece", () => {
-    expect(findFeatureBlock(ready, false)).toBeNull();
-    expect(findFeatureBlock({ ...ready, isActive: false }, false)).toBe(
+  it("offers the mark only where the picks can show the piece", () => {
+    expect(findPickToggleBlock(ready, false)).toBeNull();
+    expect(findPickToggleBlock({ ...ready, isActive: false }, false)).toBe(
       "retired",
     );
-    expect(findFeatureBlock({ ...ready, isCustomizable: true }, false)).toBe(
+    expect(findPickToggleBlock({ ...ready, isCustomizable: true }, false)).toBe(
       "made-to-order",
     );
-    expect(findFeatureBlock({ ...ready, stock: 0 }, false)).toBe("sold-out");
+    expect(
+      findPickToggleBlock({ ...ready, collectionWindow: "closed" }, false),
+    ).toBe("collection-closed");
+    expect(findPickToggleBlock({ ...ready, stock: 0 }, false)).toBe("sold-out");
   });
 
-  it("still lets a marked piece be unmarked, retired, sold out or made to order", () => {
-    expect(findFeatureBlock({ ...ready, isActive: false }, true)).toBeNull();
+  it("still lets a marked piece be unmarked whatever keeps it out", () => {
+    expect(findPickToggleBlock({ ...ready, isActive: false }, true)).toBeNull();
     expect(
-      findFeatureBlock({ ...ready, isCustomizable: true }, true),
+      findPickToggleBlock({ ...ready, isCustomizable: true }, true),
     ).toBeNull();
-    expect(findFeatureBlock({ ...ready, stock: 0 }, true)).toBeNull();
+    expect(
+      findPickToggleBlock({ ...ready, collectionWindow: "not-open" }, true),
+    ).toBeNull();
+    expect(findPickToggleBlock({ ...ready, stock: 0 }, true)).toBeNull();
   });
 });
 
-describe("describeNewFeatureHint", () => {
+describe("describeNewPickHint", () => {
   it("says what the box does, or why it cannot be ticked", () => {
-    expect(describeNewFeatureHint(null)).toBe(
-      "Among the pieces the home page can show, it comes first.",
+    expect(describeNewPickHint(null)).toBe(
+      "Leads the home page and the shop's Studio picks order.",
     );
-    expect(describeNewFeatureHint("retired")).toBe(
-      "Only a piece on the shelf can be on the home page",
+    expect(describeNewPickHint("retired")).toBe(
+      "Only a piece on the shelf can be a studio pick",
     );
-    expect(describeNewFeatureHint("made-to-order")).toBe(
-      "The home page shows pieces ready to ship, not made to order",
+    expect(describeNewPickHint("made-to-order")).toBe(
+      "Studio picks are pieces ready to ship, not made to order",
     );
+    expect(describeNewPickHint("collection-not-open")).toBe(
+      "Its collection has not opened yet, so the shop leaves it out until then",
+    );
+  });
+});
+
+describe("describeMadeToOrderHint", () => {
+  const plain = "Thrown after someone orders it, so it can sell with no stock.";
+
+  it("warns only when a saved studio pick is being turned made to order", () => {
+    expect(describeMadeToOrderHint(true, false, true)).toBe(
+      `${plain} Saving takes it off the studio picks.`,
+    );
+    expect(describeMadeToOrderHint(true, false, false)).toBe(plain);
+    expect(describeMadeToOrderHint(false, false, true)).toBe(plain);
+    expect(describeMadeToOrderHint(true, true, true)).toBe(plain);
   });
 });
 

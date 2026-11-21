@@ -43,6 +43,7 @@ import {
   describeFiltersToggle,
   describePiecesEmpty,
   formatStock,
+  readCollectionWindow,
   toProductsFilter,
 } from "@/features/admin/pieces/types";
 
@@ -101,26 +102,26 @@ export function PiecesListContainer() {
 
   const result = data?.adminProducts ?? previousData?.adminProducts;
 
-  const rows = useMemo<PieceRow[]>(
-    () =>
-      (result?.items ?? []).map((piece) => ({
-        id: piece.id,
-        name: piece.name,
-        imageUrl: piece.image_urls[0] ?? null,
-        priceLabel: formatInr(piece.price),
-        stock: piece.stock,
-        stockLabel: formatStock(piece.stock),
-        isActive: piece.is_active,
-        canGoLive: canGoLive(piece.stock, piece.is_customizable),
-        isFeatured: piece.is_featured,
-        isMadeToOrder: piece.is_customizable,
-        categoriesLabel: describeCategories(
-          piece.categories.map((category) => category.name),
-        ),
-        collectionLabel: piece.collection?.name ?? "—",
-      })),
-    [result],
-  );
+  const rows = useMemo<PieceRow[]>(() => {
+    const now = new Date();
+    return (result?.items ?? []).map((piece) => ({
+      id: piece.id,
+      name: piece.name,
+      imageUrl: piece.image_urls[0] ?? null,
+      priceLabel: formatInr(piece.price),
+      stock: piece.stock,
+      stockLabel: formatStock(piece.stock),
+      isActive: piece.is_active,
+      canGoLive: canGoLive(piece.stock, piece.is_customizable),
+      isFeatured: piece.is_featured,
+      isMadeToOrder: piece.is_customizable,
+      collectionWindow: readCollectionWindow(piece.collection ?? null, now),
+      categoriesLabel: describeCategories(
+        piece.categories.map((category) => category.name),
+      ),
+      collectionLabel: piece.collection?.name ?? "—",
+    }));
+  }, [result]);
 
   const [optimisticRows, patchRow] = useOptimistic(rows, applyRowPatch);
 
@@ -168,7 +169,10 @@ export function PiecesListContainer() {
           variables: { id: change.id, is_featured: change.isFeatured },
         }),
       refresh: refetch,
-      messages: { success: null, failure: "The piece could not be featured" },
+      messages: {
+        success: null,
+        failure: "The studio pick could not be changed",
+      },
     });
 
   const runFeatured = useCallback(
