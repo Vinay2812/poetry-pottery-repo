@@ -1,7 +1,9 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 import {
   type AdminFilterOption,
@@ -11,13 +13,13 @@ import {
 } from "@/features/admin/ui";
 
 const STATE_OPTIONS: AdminFilterOption[] = [
-  { value: "1", label: "Active" },
-  { value: "0", label: "Archived" },
+  { value: "1", label: "On the shelf" },
+  { value: "0", label: "Retired" },
 ];
 
 const FEATURED_OPTIONS: AdminFilterOption[] = [
-  { value: "1", label: "Featured" },
-  { value: "0", label: "Not featured" },
+  { value: "1", label: "On the home page" },
+  { value: "0", label: "Not on the home page" },
 ];
 
 const SECOND_OPTIONS: AdminFilterOption[] = [
@@ -37,6 +39,9 @@ export interface PiecesToolbarProps {
   categoryOptions: AdminFilterOption[];
   collectionOptions: AdminFilterOption[];
   glazeOptions: AdminFilterOption[];
+  isFiltersOpen: boolean;
+  filtersLabel: string;
+  onFiltersToggle: () => void;
   onSearchChange: (value: string) => void;
   onCategoryChange: (value: string) => void;
   onCollectionChange: (value: string) => void;
@@ -59,6 +64,9 @@ export function PiecesToolbar({
   categoryOptions,
   collectionOptions,
   glazeOptions,
+  isFiltersOpen,
+  filtersLabel,
+  onFiltersToggle,
   onSearchChange,
   onCategoryChange,
   onCollectionChange,
@@ -77,65 +85,85 @@ export function PiecesToolbar({
         value={search}
         onChange={onSearchChange}
       />
-      <AdminSelectFilter
-        id="pieces-category"
-        label="Category"
-        anyLabel="Any category"
-        options={categoryOptions}
-        value={categoryId}
-        onChange={onCategoryChange}
-      />
-      <AdminSelectFilter
-        id="pieces-collection"
-        label="Collection"
-        anyLabel="Any collection"
-        options={collectionOptions}
-        value={collectionId}
-        onChange={onCollectionChange}
-      />
-      <AdminSelectFilter
-        id="pieces-state"
-        label="State"
-        anyLabel="Any state"
-        options={STATE_OPTIONS}
-        value={activeState}
-        onChange={onActiveChange}
-      />
-      <AdminSelectFilter
-        id="pieces-featured"
-        label="Featured"
-        anyLabel="Any"
-        options={FEATURED_OPTIONS}
-        value={featuredState}
-        onChange={onFeaturedChange}
-      />
-      <AdminSelectFilter
-        id="pieces-glaze"
-        label="Glaze"
-        anyLabel="Any glaze"
-        options={glazeOptions}
-        value={glazeId}
-        onChange={onGlazeChange}
-      />
-      <AdminSelectFilter
-        id="pieces-second"
-        label="Kiln"
-        anyLabel="Any"
-        options={SECOND_OPTIONS}
-        value={secondState}
-        onChange={onSecondChange}
-      />
-      <Label
-        htmlFor="pieces-low-stock"
-        className="flex h-9 items-center gap-2 text-[13px]"
+      {/* Phones fold the filters away so the list starts on the first screen. */}
+      <Button
+        type="button"
+        variant="secondary"
+        size="sm"
+        className="md:hidden"
+        aria-expanded={isFiltersOpen}
+        aria-controls="pieces-filters"
+        onClick={onFiltersToggle}
       >
-        <Checkbox
-          id="pieces-low-stock"
-          checked={isLowStockOnly}
-          onCheckedChange={(checked) => onLowStockChange(checked === true)}
+        {filtersLabel}
+      </Button>
+      <div
+        id="pieces-filters"
+        className={cn(
+          "w-full flex-wrap items-end gap-3 md:contents",
+          isFiltersOpen ? "flex" : "hidden",
+        )}
+      >
+        <AdminSelectFilter
+          id="pieces-category"
+          label="Category"
+          anyLabel="Any category"
+          options={categoryOptions}
+          value={categoryId}
+          onChange={onCategoryChange}
         />
-        Running low only
-      </Label>
+        <AdminSelectFilter
+          id="pieces-collection"
+          label="Collection"
+          anyLabel="Any collection"
+          options={collectionOptions}
+          value={collectionId}
+          onChange={onCollectionChange}
+        />
+        <AdminSelectFilter
+          id="pieces-state"
+          label="Shelf"
+          anyLabel="Any"
+          options={STATE_OPTIONS}
+          value={activeState}
+          onChange={onActiveChange}
+        />
+        <AdminSelectFilter
+          id="pieces-featured"
+          label="Home page"
+          anyLabel="Any"
+          options={FEATURED_OPTIONS}
+          value={featuredState}
+          onChange={onFeaturedChange}
+        />
+        <AdminSelectFilter
+          id="pieces-glaze"
+          label="Glaze"
+          anyLabel="Any glaze"
+          options={glazeOptions}
+          value={glazeId}
+          onChange={onGlazeChange}
+        />
+        <AdminSelectFilter
+          id="pieces-second"
+          label="Kiln"
+          anyLabel="Any"
+          options={SECOND_OPTIONS}
+          value={secondState}
+          onChange={onSecondChange}
+        />
+        <Label
+          htmlFor="pieces-low-stock"
+          className="flex h-9 items-center gap-2 text-[13px]"
+        >
+          <Checkbox
+            id="pieces-low-stock"
+            checked={isLowStockOnly}
+            onCheckedChange={(checked) => onLowStockChange(checked === true)}
+          />
+          Running low only
+        </Label>
+      </div>
     </AdminToolbar>
   );
 }

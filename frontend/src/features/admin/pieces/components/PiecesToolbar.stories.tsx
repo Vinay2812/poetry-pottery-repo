@@ -26,6 +26,9 @@ const meta = {
       { value: "3", label: "Kiln ash" },
       { value: "4", label: "Ink well" },
     ],
+    isFiltersOpen: false,
+    filtersLabel: "Filters",
+    onFiltersToggle: fn(),
     onSearchChange: fn(),
     onCategoryChange: fn(),
     onCollectionChange: fn(),
@@ -53,7 +56,13 @@ export const Filtered: Story = {
     secondState: "1",
     glazeId: "3",
     isLowStockOnly: true,
+    filtersLabel: "Filters · 7 on",
   },
+};
+
+export const FiltersOpenOnAPhone: Story = {
+  args: { isFiltersOpen: true, filtersLabel: "Hide filters" },
+  ...atViewport("mobile"),
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

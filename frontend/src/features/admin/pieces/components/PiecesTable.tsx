@@ -9,11 +9,14 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
+  ADMIN_WIDE_ONLY,
   AdminEmptyRow,
   AdminTableFrame,
 } from "@/features/admin/ui";
 
 import { LIVE_BLOCKED_NOTE } from "@/features/admin/pieces/types";
+
+const COLUMN_COUNT = 9;
 
 export interface PieceRow {
   id: number;
@@ -33,6 +36,7 @@ export interface PiecesTableProps {
   rows: PieceRow[];
   isBusy: boolean;
   busyId: number | null;
+  emptyMessage: string;
   onActiveChange: (id: number, isActive: boolean) => void;
   onFeaturedChange: (id: number, isFeatured: boolean) => void;
   onAdjustStock: (id: number) => void;
@@ -42,6 +46,7 @@ export function PiecesTable({
   rows,
   isBusy,
   busyId,
+  emptyMessage,
   onActiveChange,
   onFeaturedChange,
   onAdjustStock,
@@ -52,18 +57,20 @@ export function PiecesTable({
         <tr>
           <th className={ADMIN_TH}>Photo</th>
           <th className={ADMIN_TH}>Piece</th>
-          <th className={ADMIN_TH}>Price</th>
+          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Price</th>
           <th className={ADMIN_TH}>Stock</th>
-          <th className={ADMIN_TH}>Active</th>
-          <th className={ADMIN_TH}>Featured</th>
-          <th className={ADMIN_TH}>Categories</th>
-          <th className={ADMIN_TH}>Collection</th>
-          <th className={ADMIN_TH}>Stock move</th>
+          <th className={ADMIN_TH}>On the shelf</th>
+          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Home page</th>
+          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Categories</th>
+          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Collection</th>
+          <th className={ADMIN_TH}>
+            <span className="sr-only">Change the stock</span>
+          </th>
         </tr>
       </thead>
       <tbody>
         {rows.length === 0 && (
-          <AdminEmptyRow colSpan={9} message="No pieces match those filters" />
+          <AdminEmptyRow colSpan={COLUMN_COUNT} message={emptyMessage} />
         )}
         {rows.map((row) => (
           <tr key={row.id} className={ADMIN_TR}>
@@ -77,7 +84,13 @@ export function PiecesTable({
                   className="size-10 bg-white object-cover"
                 />
               ) : (
-                <span className="block size-10 border border-ash bg-white" />
+                <span
+                  aria-label="No photo yet"
+                  role="img"
+                  className="flex size-10 items-center justify-center border border-ash bg-white text-muted-foreground"
+                >
+                  —
+                </span>
               )}
             </td>
             <td className={ADMIN_TD}>
@@ -88,7 +101,9 @@ export function PiecesTable({
                 {row.name}
               </Link>
             </td>
-            <td className={`${ADMIN_TD} tnum`}>{row.priceLabel}</td>
+            <td className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} tnum`}>
+              {row.priceLabel}
+            </td>
             <td className={`${ADMIN_TD} tnum`}>{row.stockLabel}</td>
             <td className={ADMIN_TD}>
               <Checkbox
@@ -101,26 +116,30 @@ export function PiecesTable({
                     ? LIVE_BLOCKED_NOTE
                     : undefined
                 }
-                aria-label={`Keep ${row.name} active`}
+                aria-label={`Keep ${row.name} on the shelf`}
                 onCheckedChange={(checked) =>
                   onActiveChange(row.id, checked === true)
                 }
               />
             </td>
-            <td className={ADMIN_TD}>
+            <td className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY}`}>
               <Checkbox
                 checked={row.isFeatured}
                 disabled={busyId === row.id}
-                aria-label={`Feature ${row.name}`}
+                aria-label={`Show ${row.name} on the home page`}
                 onCheckedChange={(checked) =>
                   onFeaturedChange(row.id, checked === true)
                 }
               />
             </td>
-            <td className={`${ADMIN_TD} text-muted-foreground`}>
+            <td
+              className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground`}
+            >
               {row.categoriesLabel}
             </td>
-            <td className={`${ADMIN_TD} text-muted-foreground`}>
+            <td
+              className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground`}
+            >
               {row.collectionLabel}
             </td>
             <td className={ADMIN_TD}>
@@ -129,9 +148,10 @@ export function PiecesTable({
                 variant="secondary"
                 size="sm"
                 disabled={busyId === row.id}
+                aria-label={`Change the stock of ${row.name}`}
                 onClick={() => onAdjustStock(row.id)}
               >
-                Adjust
+                Change
               </Button>
             </td>
           </tr>

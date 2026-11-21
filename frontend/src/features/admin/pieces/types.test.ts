@@ -10,11 +10,17 @@ import {
   applyStockDelta,
   canGoLive,
   clampStock,
+  countFoldedFilters,
   describeCategories,
   describeMaxLength,
-  describeMeasurement,
-  describeSizeAndWeight,
+  describeKiln,
+  describeKilnHint,
+  describeFiltersToggle,
   describeOptionGroup,
+  describePiecesEmpty,
+  describeShelfState,
+  describeShelfStateHint,
+  describeStockAfter,
   EMPTY_PRODUCT_FORM,
   formatCareNotes,
   formatPriceModifier,
@@ -29,6 +35,7 @@ import {
   toProductInput,
   toProductsFilter,
   toProductUpdateInput,
+  toStockDelta,
 } from "./types";
 
 const PRODUCT: AdminProductDetailFragment = {
@@ -375,41 +382,91 @@ describe("toOptionGroupFormValues", () => {
   });
 });
 
-describe("describeMeasurement", () => {
-  it("shows a dash for a measurement nobody has taken", () => {
-    expect(describeMeasurement(null, "ml")).toBe("—");
-    expect(describeMeasurement(300, "ml")).toBe("300 ml");
-  });
-});
-
-describe("describeSizeAndWeight", () => {
-  it("joins only the measurements the studio has taken", () => {
-    expect(
-      describeSizeAndWeight({
-        capacityMl: 300,
-        heightCm: 9.5,
-        diameterCm: null,
-        weightG: 420,
-      }),
-    ).toBe("300 ml · 9.5 cm tall · 420 g");
-  });
-
-  it("says so when nothing has been measured", () => {
-    expect(
-      describeSizeAndWeight({
-        capacityMl: null,
-        heightCm: null,
-        diameterCm: null,
-        weightG: null,
-      }),
-    ).toBe("Not measured yet");
-  });
-});
-
 describe("canGoLive", () => {
   it("needs stock unless the piece is thrown to order", () => {
     expect(canGoLive(0, false)).toBe(false);
     expect(canGoLive(1, false)).toBe(true);
     expect(canGoLive(0, true)).toBe(true);
+  });
+});
+
+describe("shelf state", () => {
+  it("uses the storefront's words for a live and a retired piece", () => {
+    expect(describeShelfState(true)).toBe("On the shelf");
+    expect(describeShelfState(false)).toBe("Retired");
+  });
+
+  it("explains why a retired piece cannot go back yet", () => {
+    expect(describeShelfStateHint(false, false, false)).toBe(
+      "Add stock first, or mark it made to order",
+    );
+    expect(describeShelfStateHint(false, true, false)).toBe(
+      "Shown in the archive",
+    );
+  });
+
+  it("mentions the home page only for a featured live piece", () => {
+    expect(describeShelfStateHint(true, true, true)).toBe(
+      "Also on the home page",
+    );
+    expect(describeShelfStateHint(true, true, false)).toBeNull();
+  });
+});
+
+describe("kiln", () => {
+  it("names a first and a second", () => {
+    expect(describeKiln(false)).toBe("First");
+    expect(describeKiln(true)).toBe("Second");
+    expect(describeKilnHint(true)).toBe("Sold with its flaw named");
+  });
+});
+
+describe("stock changes", () => {
+  it("turns a direction and a count into a signed move", () => {
+    expect(toStockDelta("add", 3)).toBe(3);
+    expect(toStockDelta("remove", 2)).toBe(-2);
+  });
+
+  it("previews the new count", () => {
+    expect(describeStockAfter(3, "add", 2)).toBe("3 on the shelf becomes 5.");
+    expect(describeStockAfter(3, "remove", 3)).toBe(
+      "3 on the shelf becomes 0.",
+    );
+  });
+
+  it("warns before taking off more than the shelf holds", () => {
+    expect(describeStockAfter(1, "remove", 2)).toBe(
+      "Only 1 piece on the shelf to take off.",
+    );
+  });
+
+  it("falls back to the current count while the box is empty", () => {
+    expect(describeStockAfter(4, "add", Number.NaN)).toBe(
+      "4 pieces on the shelf now.",
+    );
+  });
+});
+
+describe("folded filters", () => {
+  it("counts the filters behind the phone toggle, not the search", () => {
+    expect(countFoldedFilters({ search: "mug" })).toBe(0);
+    expect(
+      countFoldedFilters({ glaze_id: "3", low_stock: "1", page: "2" }),
+    ).toBe(2);
+  });
+
+  it("labels the toggle with how many are on", () => {
+    expect(describeFiltersToggle(false, 0)).toBe("Filters");
+    expect(describeFiltersToggle(false, 2)).toBe("Filters · 2 on");
+    expect(describeFiltersToggle(true, 2)).toBe("Hide filters");
+  });
+
+  it("tells an empty shelf from an over-filtered one", () => {
+    expect(describePiecesEmpty({})).toBe(
+      "No pieces yet. Add the first with New piece.",
+    );
+    expect(describePiecesEmpty({ search: "jar" })).toBe(
+      "No pieces match those filters. Clear one to see more.",
+    );
   });
 });

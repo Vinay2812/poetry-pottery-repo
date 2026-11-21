@@ -5,9 +5,7 @@ import type { ReactNode } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 import {
@@ -15,7 +13,13 @@ import {
   productSchema,
 } from "@/lib/validations/admin/product";
 
-import { AdminField, toNullableNumber } from "@/features/admin/ui";
+import {
+  AdminCheckboxField,
+  AdminField,
+  AdminFormSection,
+  toNullableNumber,
+  toPreviewColour,
+} from "@/features/admin/ui";
 import { canGoLive, LIVE_BLOCKED_NOTE } from "@/features/admin/pieces/types";
 
 interface PieceTaxonomyOption {
@@ -33,11 +37,20 @@ export interface PieceFormProps {
   glazeOptions: PieceTaxonomyOption[];
   gallery: ReactNode;
   onSubmit: (values: ProductFormValues) => void;
-  onCancel: () => void;
+  onInvalid: () => void;
+  onCancel: (hasChanges: boolean) => void;
 }
 
 const SELECT_CLASS =
   "h-11 w-full border border-ash bg-transparent px-2.5 text-[13px] outline-none focus-visible:border-primary focus-visible:ring-1 focus-visible:ring-primary";
+
+function toSelectValue(id: number | null): string {
+  return id === null ? "" : String(id);
+}
+
+function fromSelectValue(value: string): number | null {
+  return value === "" ? null : Number(value);
+}
 
 export function PieceForm({
   defaultValues,
@@ -49,6 +62,7 @@ export function PieceForm({
   glazeOptions,
   gallery,
   onSubmit,
+  onInvalid,
   onCancel,
 }: PieceFormProps) {
   const {
@@ -56,7 +70,7 @@ export function PieceForm({
     register,
     handleSubmit,
     setValue,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues,
@@ -65,13 +79,26 @@ export function PieceForm({
   const categoryIds = useWatch({ control, name: "category_ids" });
   const collectionId = useWatch({ control, name: "collection_id" });
   const glazeId = useWatch({ control, name: "glaze_id" });
+  const colorCode = useWatch({ control, name: "color_code" });
   const isCustomizable = useWatch({ control, name: "is_customizable" });
   const stockValue = useWatch({ control, name: "stock" });
-  const isLiveAllowed = canGoLive(Number(stockValue) || 0, isCustomizable);
   const isSecond = useWatch({ control, name: "is_second" });
   const isCommission = useWatch({ control, name: "is_commission" });
   const isFeatured = useWatch({ control, name: "is_featured" });
   const isActive = useWatch({ control, name: "is_active" });
+
+  const isLiveAllowed = canGoLive(Number(stockValue) || 0, isCustomizable);
+  const swatchColour = toPreviewColour(colorCode);
+
+  const setFlag = (
+    name:
+      | "is_customizable"
+      | "is_second"
+      | "is_commission"
+      | "is_featured"
+      | "is_active",
+    isOn: boolean,
+  ) => setValue(name, isOn, { shouldDirty: true });
 
   const handleCategoryToggle = (id: number, isPicked: boolean) => {
     const next = isPicked
@@ -84,80 +111,174 @@ export function PieceForm({
     <form
       noValidate
       className="flex flex-col gap-8"
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
     >
-      <section className="grid gap-4 md:grid-cols-2">
-        <AdminField
-          id="piece-name"
-          label="Name"
-          hint="Name it like an object on a shelf."
-          error={errors.name?.message}
-        >
-          <Input
-            id="piece-name"
-            type="text"
-            aria-invalid={Boolean(errors.name)}
-            {...register("name")}
-          />
-        </AdminField>
-        <AdminField
-          id="piece-material"
-          label="Clay body"
-          hint={null}
-          error={errors.material?.message}
-        >
-          <Input
-            id="piece-material"
-            type="text"
-            placeholder="Stoneware"
-            aria-invalid={Boolean(errors.material)}
-            {...register("material")}
-          />
-        </AdminField>
-        <div className="md:col-span-2">
+      <AdminFormSection
+        title="The piece"
+        description="What a buyer reads on the product page."
+      >
+        <div className="grid gap-4 md:grid-cols-2">
           <AdminField
-            id="piece-description"
-            label="Description"
-            hint="Three sentences at most."
-            error={errors.description?.message}
+            id="piece-name"
+            label="Name"
+            hint="Name it like an object on a shelf."
+            error={errors.name?.message}
           >
-            <Textarea
-              id="piece-description"
-              rows={4}
-              aria-invalid={Boolean(errors.description)}
-              {...register("description")}
+            <Input
+              id="piece-name"
+              type="text"
+              aria-invalid={Boolean(errors.name)}
+              {...register("name")}
+            />
+          </AdminField>
+          <AdminField
+            id="piece-material"
+            label="Clay body"
+            hint={null}
+            error={errors.material?.message}
+          >
+            <Input
+              id="piece-material"
+              type="text"
+              placeholder="Stoneware"
+              aria-invalid={Boolean(errors.material)}
+              {...register("material")}
             />
           </AdminField>
         </div>
         <AdminField
-          id="piece-dimensions"
-          label="Dimensions"
-          hint={null}
-          error={errors.dimensions?.message}
+          id="piece-description"
+          label="Description"
+          hint="Three sentences at most."
+          error={errors.description?.message}
         >
-          <Input
-            id="piece-dimensions"
-            type="text"
-            placeholder="9 cm × 8 cm"
-            aria-invalid={Boolean(errors.dimensions)}
-            {...register("dimensions")}
+          <Textarea
+            id="piece-description"
+            rows={4}
+            aria-invalid={Boolean(errors.description)}
+            {...register("description")}
           />
         </AdminField>
         <AdminField
+          id="piece-maker-note"
+          label="Maker's note"
+          hint="One or two lines in the maker's own voice."
+          error={errors.maker_note?.message}
+        >
+          <Textarea
+            id="piece-maker-note"
+            rows={2}
+            aria-invalid={Boolean(errors.maker_note)}
+            {...register("maker_note")}
+          />
+        </AdminField>
+        <AdminField
+          id="piece-care-notes"
+          label="Care notes"
+          hint="One note per line."
+          error={errors.care_notes?.message}
+        >
+          <Textarea
+            id="piece-care-notes"
+            rows={3}
+            aria-invalid={Boolean(errors.care_notes)}
+            {...register("care_notes")}
+          />
+        </AdminField>
+      </AdminFormSection>
+
+      <AdminFormSection
+        title={isCreate ? "Price and stock" : "Price"}
+        description={
+          isCreate
+            ? "Whole rupees, and how many are in this batch."
+            : "Whole rupees. Stock changes through Change the stock, above."
+        }
+      >
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <AdminField
+            id="piece-price"
+            label="Price"
+            hint={null}
+            error={errors.price?.message}
+          >
+            <Input
+              id="piece-price"
+              type="number"
+              min={0}
+              step={1}
+              inputMode="numeric"
+              className="tnum"
+              aria-invalid={Boolean(errors.price)}
+              {...register("price", { valueAsNumber: true })}
+            />
+          </AdminField>
+          <AdminField
+            id="piece-compare-price"
+            label="Old price"
+            hint="Only when the piece is reduced."
+            error={errors.compare_at_price?.message}
+          >
+            <Input
+              id="piece-compare-price"
+              type="number"
+              min={0}
+              step={1}
+              inputMode="numeric"
+              className="tnum"
+              aria-invalid={Boolean(errors.compare_at_price)}
+              {...register("compare_at_price", {
+                setValueAs: toNullableNumber,
+              })}
+            />
+          </AdminField>
+          {/* On an existing piece stock only moves through the guarded adjustment. */}
+          {isCreate && (
+            <AdminField
+              id="piece-stock"
+              label="Stock"
+              hint="How many are made in this batch."
+              error={errors.stock?.message}
+            >
+              <Input
+                id="piece-stock"
+                type="number"
+                min={0}
+                step={1}
+                inputMode="numeric"
+                className="tnum"
+                aria-invalid={Boolean(errors.stock)}
+                {...register("stock", { valueAsNumber: true })}
+              />
+            </AdminField>
+          )}
+        </div>
+      </AdminFormSection>
+
+      <AdminFormSection
+        title="Photos"
+        description="The first photo leads on the card. New photos and a new order are kept once you save."
+      >
+        {gallery}
+      </AdminFormSection>
+
+      <AdminFormSection
+        title="Glaze"
+        description="Pick it from the glaze shelf so the piece links to its page."
+      >
+        <AdminField
           id="piece-glaze"
           label="Glaze"
-          hint="From the glaze shelf, so the piece links to it."
+          hint={null}
           error={errors.glaze_id?.message}
         >
           <select
             id="piece-glaze"
-            value={glazeId === null ? "" : String(glazeId)}
+            value={toSelectValue(glazeId)}
             onChange={(event) =>
-              setValue(
-                "glaze_id",
-                event.target.value === "" ? null : Number(event.target.value),
-                { shouldDirty: true },
-              )
+              setValue("glaze_id", fromSelectValue(event.target.value), {
+                shouldDirty: true,
+              })
             }
             className={SELECT_CLASS}
           >
@@ -169,59 +290,66 @@ export function PieceForm({
             ))}
           </select>
         </AdminField>
-        <AdminField
-          id="piece-color-name"
-          label="Glaze name on the card"
-          hint="Overrides the glaze name where the card is tight."
-          error={errors.color_name?.message}
-        >
-          <Input
-            id="piece-color-name"
-            type="text"
-            placeholder="Slate"
-            aria-invalid={Boolean(errors.color_name)}
-            {...register("color_name")}
-          />
-        </AdminField>
-        <AdminField
-          id="piece-color-code"
-          label="Glaze colour"
-          hint="A hex colour, or leave it empty."
-          error={errors.color_code?.message}
-        >
-          <Input
-            id="piece-color-code"
-            type="text"
-            placeholder="#4F6F52"
-            aria-invalid={Boolean(errors.color_code)}
-            {...register("color_code")}
-          />
-        </AdminField>
-        <div className="md:col-span-2">
+        <div className="grid gap-4 md:grid-cols-2">
           <AdminField
-            id="piece-care-notes"
-            label="Care notes"
-            hint="One note per line."
-            error={errors.care_notes?.message}
+            id="piece-color-name"
+            label="Shorter name for the card"
+            hint="Only when the glaze name is too long for a card."
+            error={errors.color_name?.message}
           >
-            <Textarea
-              id="piece-care-notes"
-              rows={3}
-              aria-invalid={Boolean(errors.care_notes)}
-              {...register("care_notes")}
+            <Input
+              id="piece-color-name"
+              type="text"
+              placeholder="Slate"
+              aria-invalid={Boolean(errors.color_name)}
+              {...register("color_name")}
             />
           </AdminField>
+          <AdminField
+            id="piece-color-code"
+            label="Colour"
+            hint="A hex colour like #4F6F52, or leave it empty."
+            error={errors.color_code?.message}
+          >
+            <div className="flex gap-2">
+              <Input
+                id="piece-color-code"
+                type="text"
+                placeholder="#4F6F52"
+                aria-invalid={Boolean(errors.color_code)}
+                {...register("color_code")}
+              />
+              <span
+                aria-hidden="true"
+                className="aspect-square shrink-0 self-stretch border border-ash bg-white"
+                style={
+                  swatchColour ? { backgroundColor: swatchColour } : undefined
+                }
+              />
+            </div>
+          </AdminField>
         </div>
-      </section>
+      </AdminFormSection>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
-          Size and weight
-        </h2>
-        <p className="text-[12px] text-muted-foreground">
-          Leave a box empty until the piece has actually been measured.
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <AdminFormSection
+        title="Size"
+        description="Leave a box empty until the piece has been measured."
+      >
+        <AdminField
+          id="piece-dimensions"
+          label="Dimensions"
+          hint="Shown as written, like 9 cm × 8 cm."
+          error={errors.dimensions?.message}
+        >
+          <Input
+            id="piece-dimensions"
+            type="text"
+            placeholder="9 cm × 8 cm"
+            aria-invalid={Boolean(errors.dimensions)}
+            {...register("dimensions")}
+          />
+        </AdminField>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <AdminField
             id="piece-capacity"
             label="Capacity (ml)"
@@ -291,90 +419,14 @@ export function PieceForm({
             />
           </AdminField>
         </div>
-        <AdminField
-          id="piece-maker-note"
-          label="Maker's note"
-          hint="One or two lines in the maker's own voice."
-          error={errors.maker_note?.message}
-        >
-          <Textarea
-            id="piece-maker-note"
-            rows={3}
-            aria-invalid={Boolean(errors.maker_note)}
-            {...register("maker_note")}
-          />
-        </AdminField>
-      </section>
+      </AdminFormSection>
 
-      <section className="grid gap-4 md:grid-cols-3">
-        <AdminField
-          id="piece-price"
-          label="Price"
-          hint="Whole rupees."
-          error={errors.price?.message}
-        >
-          <Input
-            id="piece-price"
-            type="number"
-            min={0}
-            step={1}
-            inputMode="numeric"
-            className="tnum"
-            aria-invalid={Boolean(errors.price)}
-            {...register("price", { valueAsNumber: true })}
-          />
-        </AdminField>
-        <AdminField
-          id="piece-compare-price"
-          label="Compare at price"
-          hint="Leave it empty unless the piece is reduced."
-          error={errors.compare_at_price?.message}
-        >
-          <Input
-            id="piece-compare-price"
-            type="number"
-            min={0}
-            step={1}
-            inputMode="numeric"
-            className="tnum"
-            aria-invalid={Boolean(errors.compare_at_price)}
-            {...register("compare_at_price", {
-              setValueAs: toNullableNumber,
-            })}
-          />
-        </AdminField>
-        {/* On an existing piece stock only moves through the guarded adjustment. */}
-        {isCreate && (
-          <AdminField
-            id="piece-stock"
-            label="Stock"
-            hint="How many are made in this batch."
-            error={errors.stock?.message}
-          >
-            <Input
-              id="piece-stock"
-              type="number"
-              min={0}
-              step={1}
-              inputMode="numeric"
-              className="tnum"
-              aria-invalid={Boolean(errors.stock)}
-              {...register("stock", { valueAsNumber: true })}
-            />
-          </AdminField>
-        )}
-      </section>
-
-      <section className="flex flex-col gap-3">
-        <h2 className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
-          Photos
-        </h2>
-        {gallery}
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2">
-        <fieldset className="flex flex-col gap-2">
-          <legend className="mb-2 text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+      <AdminFormSection
+        title="Where it sits"
+        description="The shelves it is found on, and how it is sold."
+      >
+        <fieldset className="flex flex-col gap-1">
+          <legend className="mb-1 text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
             Categories
           </legend>
           {categoryOptions.length === 0 && (
@@ -382,129 +434,96 @@ export function PieceForm({
               No categories yet.
             </p>
           )}
-          {categoryOptions.map((option) => (
-            <Label
-              key={option.id}
-              htmlFor={`piece-category-${option.id}`}
-              className="flex items-center gap-2 text-[13px]"
-            >
-              <Checkbox
+          <div className="grid grid-cols-2 gap-x-4 sm:grid-cols-3">
+            {categoryOptions.map((option) => (
+              <AdminCheckboxField
+                key={option.id}
                 id={`piece-category-${option.id}`}
-                checked={categoryIds.includes(option.id)}
-                onCheckedChange={(checked) =>
-                  handleCategoryToggle(option.id, checked === true)
+                label={option.name}
+                hint={null}
+                isChecked={categoryIds.includes(option.id)}
+                isDisabled={false}
+                onCheckedChange={(isPicked) =>
+                  handleCategoryToggle(option.id, isPicked)
                 }
               />
-              {option.name}
-            </Label>
-          ))}
+            ))}
+          </div>
         </fieldset>
-        <div className="flex flex-col gap-4">
-          <AdminField
-            id="piece-collection"
-            label="Collection"
-            hint={null}
-            error={errors.collection_id?.message}
-          >
-            <select
-              id="piece-collection"
-              value={collectionId === null ? "" : String(collectionId)}
-              onChange={(event) =>
-                setValue(
-                  "collection_id",
-                  event.target.value === "" ? null : Number(event.target.value),
-                  { shouldDirty: true },
-                )
-              }
-              className={SELECT_CLASS}
-            >
-              <option value="">No collection</option>
-              {collectionOptions.map((option) => (
-                <option key={option.id} value={option.id}>
-                  {option.name}
-                </option>
-              ))}
-            </select>
-          </AdminField>
-          <Label
-            htmlFor="piece-customizable"
-            className="flex items-center gap-2 text-[13px]"
-          >
-            <Checkbox
-              id="piece-customizable"
-              checked={isCustomizable}
-              onCheckedChange={(checked) =>
-                setValue("is_customizable", checked === true, {
-                  shouldDirty: true,
-                })
-              }
-            />
-            Made to order
-          </Label>
-          {isCreate && (
-            <>
-              <Label
-                htmlFor="piece-featured"
-                className="flex items-center gap-2 text-[13px]"
-              >
-                <Checkbox
-                  id="piece-featured"
-                  checked={isFeatured}
-                  onCheckedChange={(checked) =>
-                    setValue("is_featured", checked === true, {
-                      shouldDirty: true,
-                    })
-                  }
-                />
-                Show on the home page
-              </Label>
-              <Label
-                htmlFor="piece-active"
-                className="flex items-center gap-2 text-[13px]"
-              >
-                <Checkbox
-                  id="piece-active"
-                  checked={isActive && isLiveAllowed}
-                  disabled={!isLiveAllowed}
-                  onCheckedChange={(checked) =>
-                    setValue("is_active", checked === true, {
-                      shouldDirty: true,
-                    })
-                  }
-                />
-                Live on the shelf
-              </Label>
-              {!isLiveAllowed && (
-                <p className="text-[13px] text-muted-foreground">
-                  {LIVE_BLOCKED_NOTE}
-                </p>
-              )}
-            </>
-          )}
-        </div>
-      </section>
-
-      <section className="flex flex-col gap-3 border-t border-ash pt-6">
-        <h2 className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
-          Second
-        </h2>
-        <p className="text-[12px] text-muted-foreground">
-          A piece the kiln marked. Name the flaw and the storefront shows it
-          beside the price.
-        </p>
-        <Label
-          htmlFor="piece-second"
-          className="flex items-center gap-2 text-[13px]"
+        <AdminField
+          id="piece-collection"
+          label="Collection"
+          hint={null}
+          error={errors.collection_id?.message}
         >
-          <Checkbox
-            id="piece-second"
-            checked={isSecond}
-            onCheckedChange={(checked) =>
-              setValue("is_second", checked === true, { shouldDirty: true })
+          <select
+            id="piece-collection"
+            value={toSelectValue(collectionId)}
+            onChange={(event) =>
+              setValue("collection_id", fromSelectValue(event.target.value), {
+                shouldDirty: true,
+              })
             }
-          />
-          Sell this as a second
-        </Label>
+            className={SELECT_CLASS}
+          >
+            <option value="">No collection</option>
+            {collectionOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.name}
+              </option>
+            ))}
+          </select>
+        </AdminField>
+        <AdminCheckboxField
+          id="piece-customizable"
+          label="Made to order"
+          hint="Thrown after someone orders it, so it can sell with no stock."
+          isChecked={isCustomizable}
+          isDisabled={false}
+          onCheckedChange={(isOn) => setFlag("is_customizable", isOn)}
+        />
+        <AdminCheckboxField
+          id="piece-commission"
+          label="Show as past commission"
+          hint="Listed with past work on the made-to-order page."
+          isChecked={isCommission}
+          isDisabled={false}
+          onCheckedChange={(isOn) => setFlag("is_commission", isOn)}
+        />
+        {isCreate && (
+          <>
+            <AdminCheckboxField
+              id="piece-featured"
+              label="Show on the home page"
+              hint={null}
+              isChecked={isFeatured}
+              isDisabled={false}
+              onCheckedChange={(isOn) => setFlag("is_featured", isOn)}
+            />
+            <AdminCheckboxField
+              id="piece-active"
+              label="Put it on the shelf"
+              hint={isLiveAllowed ? null : LIVE_BLOCKED_NOTE}
+              isChecked={isActive && isLiveAllowed}
+              isDisabled={!isLiveAllowed}
+              onCheckedChange={(isOn) => setFlag("is_active", isOn)}
+            />
+          </>
+        )}
+      </AdminFormSection>
+
+      <AdminFormSection
+        title="Seconds"
+        description="A piece the kiln marked. Name the flaw and the storefront shows it beside the price."
+      >
+        <AdminCheckboxField
+          id="piece-second"
+          label="Sell this as a second"
+          hint={null}
+          isChecked={isSecond}
+          isDisabled={false}
+          onCheckedChange={(isOn) => setFlag("is_second", isOn)}
+        />
         {isSecond && (
           <AdminField
             id="piece-flaw-note"
@@ -520,26 +539,20 @@ export function PieceForm({
             />
           </AdminField>
         )}
-        <Label
-          htmlFor="piece-commission"
-          className="flex items-center gap-2 text-[13px]"
-        >
-          <Checkbox
-            id="piece-commission"
-            checked={isCommission}
-            onCheckedChange={(checked) =>
-              setValue("is_commission", checked === true, { shouldDirty: true })
-            }
-          />
-          Show as past commission
-        </Label>
-      </section>
+      </AdminFormSection>
 
-      <div className="flex flex-wrap gap-3 border-t border-ash pt-4">
+      {/* The save stays in reach on a long form, on a phone most of all. */}
+      <div className="sticky bottom-0 z-10 flex flex-wrap gap-3 border-t border-ash bg-background py-3">
         <Button type="submit" size="sm" disabled={isSubmitting}>
           {isSubmitting ? "Saving…" : submitLabel}
         </Button>
-        <Button type="button" variant="secondary" size="sm" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          disabled={isSubmitting}
+          onClick={() => onCancel(isDirty)}
+        >
           Cancel
         </Button>
       </div>

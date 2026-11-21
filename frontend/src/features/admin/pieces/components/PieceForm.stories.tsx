@@ -29,6 +29,7 @@ const meta = {
       </p>
     ),
     onSubmit: fn(),
+    onInvalid: fn(),
     onCancel: fn(),
   },
 } satisfies Meta<typeof PieceForm>;

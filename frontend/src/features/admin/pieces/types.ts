@@ -32,7 +32,6 @@ export function formatCareNotes(notes: readonly string[]): string {
   return notes.join("\n");
 }
 
-/** A count on a shelf is never negative, whatever a pending adjustment says. */
 // Only stock or a made-to-order flag can put a piece on the shelf; the API refuses otherwise.
 export function canGoLive(stock: number, isCustomizable: boolean): boolean {
   return isCustomizable || stock > 0;
@@ -40,6 +39,51 @@ export function canGoLive(stock: number, isCustomizable: boolean): boolean {
 
 export const LIVE_BLOCKED_NOTE = "Add stock first, or mark it made to order";
 
+// The storefront calls an inactive piece "Retired from the shelf" and lists it in the archive.
+export function describeShelfState(isActive: boolean): string {
+  return isActive ? "On the shelf" : "Retired";
+}
+
+export function describeShelfStateHint(
+  isActive: boolean,
+  isLiveAllowed: boolean,
+  isFeatured: boolean,
+): string | null {
+  if (!isActive)
+    return isLiveAllowed ? "Shown in the archive" : LIVE_BLOCKED_NOTE;
+  return isFeatured ? "Also on the home page" : null;
+}
+
+export function describeKiln(isSecond: boolean): string {
+  return isSecond ? "Second" : "First";
+}
+
+export function describeKilnHint(isSecond: boolean): string {
+  return isSecond ? "Sold with its flaw named" : "No marks from the kiln";
+}
+
+export type StockDirection = "add" | "remove";
+
+export function toStockDelta(direction: StockDirection, count: number): number {
+  return direction === "add" ? count : -count;
+}
+
+/** The line under the stock form, so the owner sees the new count before saving. */
+export function describeStockAfter(
+  stock: number,
+  direction: StockDirection,
+  count: number,
+): string {
+  if (!Number.isInteger(count) || count <= 0) {
+    return `${pluralize(stock, "piece")} on the shelf now.`;
+  }
+  if (direction === "remove" && count > stock) {
+    return `Only ${pluralize(stock, "piece")} on the shelf to take off.`;
+  }
+  return `${stock} on the shelf becomes ${stock + toStockDelta(direction, count)}.`;
+}
+
+/** A count on a shelf is never negative, whatever a pending adjustment says. */
 export function clampStock(stock: number): number {
   return Math.max(0, Math.round(stock));
 }
@@ -104,6 +148,33 @@ function readBooleanValue(value: string | undefined): boolean | null {
   return null;
 }
 
+// The search box stays in view on a phone; these fold behind the Filters button.
+const FOLDED_FILTER_KEYS = [
+  "category_id",
+  "collection_id",
+  "is_active",
+  "is_featured",
+  "is_second",
+  "glaze_id",
+  "low_stock",
+] as const;
+
+export function countFoldedFilters(values: QueryValues): number {
+  return FOLDED_FILTER_KEYS.filter((key) => Boolean(values[key])).length;
+}
+
+export function describeFiltersToggle(isOpen: boolean, count: number): string {
+  if (isOpen) return "Hide filters";
+  return count === 0 ? "Filters" : `Filters · ${count} on`;
+}
+
+export function describePiecesEmpty(values: QueryValues): string {
+  const isNarrowed = Boolean(values.search) || countFoldedFilters(values) > 0;
+  return isNarrowed
+    ? "No pieces match those filters. Clear one to see more."
+    : "No pieces yet. Add the first with New piece.";
+}
+
 export function toProductsFilter(
   values: QueryValues,
   page: number,
@@ -120,30 +191,6 @@ export function toProductsFilter(
     is_second: readBooleanValue(values.is_second),
     glaze_id: readNumberValue(values.glaze_id),
   };
-}
-
-/** Empty is a measurement the studio has not taken, not a zero. */
-export function describeMeasurement(
-  value: number | null,
-  unit: string,
-): string {
-  return value === null ? "—" : `${value} ${unit}`;
-}
-
-/** The one line under the photos: what the piece is in the hand. */
-export function describeSizeAndWeight(size: {
-  capacityMl: number | null;
-  heightCm: number | null;
-  diameterCm: number | null;
-  weightG: number | null;
-}): string {
-  const parts = [
-    size.capacityMl === null ? null : `${size.capacityMl} ml`,
-    size.heightCm === null ? null : `${size.heightCm} cm tall`,
-    size.diameterCm === null ? null : `${size.diameterCm} cm across`,
-    size.weightG === null ? null : `${size.weightG} g`,
-  ].filter((part): part is string => part !== null);
-  return parts.length === 0 ? "Not measured yet" : parts.join(" · ");
 }
 
 export const EMPTY_PRODUCT_FORM: ProductFormValues = {
