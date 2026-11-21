@@ -275,7 +275,7 @@ export const STUDIO_NOTE =
 // Tailwind's lg breakpoint, where the buy box sits beside the gallery and the sticky bar is hidden.
 export const LG_MEDIA_QUERY = "(min-width: 64rem)";
 
-// The bottom nav, the sticky bar above it and a little air, so a focused link never lands under them.
+// The bottom nav (64px), the sticky bar (about 69px) and a little air, so a focused link clears both.
 export const STICKY_BAR_SCROLL_PADDING =
   "calc(9rem + env(safe-area-inset-bottom))";
 

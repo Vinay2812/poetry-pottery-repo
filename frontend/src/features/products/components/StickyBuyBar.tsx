@@ -16,6 +16,7 @@ export interface StickyBuyBarProps {
 }
 
 // Phone and tablet bar that appears once the main buttons have scrolled up out of view.
+// Its height plus the bottom nav's is STICKY_BAR_SCROLL_PADDING in products/types.ts; resize both together.
 export function StickyBuyBar({
   isVisible,
   name,
