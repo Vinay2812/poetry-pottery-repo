@@ -3,10 +3,10 @@ export interface PageTurnFailedProps {
   onRetry: () => void;
 }
 
-// Sits by the pager when another page did not arrive; the rows above are still the ones it names.
+// Sits above the list when another page did not arrive; the rows under it are still the ones the pager names.
 export function PageTurnFailed({ page, onRetry }: PageTurnFailedProps) {
   return (
-    <p role="alert" className="text-center text-[13px] text-muted-foreground">
+    <p role="alert" className="text-[13px] text-muted-foreground">
       Page {page} did not load.{" "}
       <button
         type="button"

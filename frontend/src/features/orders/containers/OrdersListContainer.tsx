@@ -97,6 +97,13 @@ export function OrdersListContainer() {
         <EmptyOrders />
       ) : (
         <>
+          {/* A page turn scrolls back to the heading, so the notice sits right under it. */}
+          {failedPage !== null && (
+            <PageTurnFailed
+              page={failedPage}
+              onRetry={() => handleTurnPage(failedPage)}
+            />
+          )}
           <div
             aria-busy={isPaging || isTurning}
             className={cn(
@@ -143,12 +150,6 @@ export function OrdersListContainer() {
                 Older
               </Button>
             </nav>
-          )}
-          {failedPage !== null && (
-            <PageTurnFailed
-              page={failedPage}
-              onRetry={() => handleTurnPage(failedPage)}
-            />
           )}
         </>
       )}

@@ -100,6 +100,13 @@ export function RegistrationsListContainer({
         <EmptyRegistrations />
       ) : (
         <>
+          {/* A page turn scrolls back to the heading, so the notice sits right under it. */}
+          {failedPage !== null && (
+            <PageTurnFailed
+              page={failedPage}
+              onRetry={() => handlePageChange(failedPage)}
+            />
+          )}
           <div
             aria-busy={isPaging}
             className={cn(
@@ -156,12 +163,6 @@ export function RegistrationsListContainer({
                 Next
               </Button>
             </div>
-          )}
-          {failedPage !== null && (
-            <PageTurnFailed
-              page={failedPage}
-              onRetry={() => handlePageChange(failedPage)}
-            />
           )}
         </>
       )}
