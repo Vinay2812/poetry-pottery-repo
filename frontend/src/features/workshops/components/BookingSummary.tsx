@@ -9,7 +9,11 @@ import {
   PickedSlots,
   type PickedSlot,
 } from "@/features/workshops/components/PickedSlots";
-import { formatHours, SESSION_NOTE } from "@/features/workshops/types";
+import {
+  formatHours,
+  REPLACE_TIME_HINT,
+  SESSION_NOTE,
+} from "@/features/workshops/types";
 import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 export interface BookingSummaryProps {
@@ -25,6 +29,7 @@ export interface BookingSummaryProps {
   // A way to the studio when the month cannot hold the request.
   arrangementAskUrl: string | null;
   hint: string | null;
+  isSwapHintShown: boolean;
   canBook: boolean;
   isBooking: boolean;
   onNoteChange: (note: string) => void;
@@ -44,6 +49,7 @@ export function BookingSummary({
   emptyMessage,
   arrangementAskUrl,
   hint,
+  isSwapHintShown,
   canBook,
   isBooking,
   onNoteChange,
@@ -73,6 +79,9 @@ export function BookingSummary({
         onRemoveSlot={onRemoveSlot}
       />
       {hint && <p className="text-[13px] text-muted-foreground">{hint}</p>}
+      {isSwapHintShown && (
+        <p className="text-[13px] text-muted-foreground">{REPLACE_TIME_HINT}</p>
+      )}
       {pickedSlots.length === 0 && arrangementAskUrl && (
         <WhatsAppLink
           href={arrangementAskUrl}

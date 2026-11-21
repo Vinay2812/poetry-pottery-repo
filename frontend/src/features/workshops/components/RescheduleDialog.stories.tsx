@@ -80,6 +80,7 @@ const meta = {
     ],
     progress: "1 of 2 hours picked",
     isComplete: false,
+    isSwapHintShown: false,
     isUnchanged: false,
     isMultiDay: false,
     isSubmitting: false,
@@ -123,6 +124,7 @@ export const AllTimesPickedAcrossDays: Story = {
     ],
     progress: "All 2 hours picked",
     isComplete: true,
+    isSwapHintShown: true,
     isMultiDay: true,
   },
 };

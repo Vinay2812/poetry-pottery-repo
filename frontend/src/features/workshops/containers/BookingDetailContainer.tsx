@@ -251,6 +251,7 @@ export function BookingDetailContainer({
         pickedSlots={picker.pickedSlots}
         progress={picker.progress}
         isComplete={isComplete}
+        isSwapHintShown={picker.isSwapHintShown}
         isUnchanged={isUnchanged}
         isMultiDay={dayGroups.length > 1}
         isSubmitting={isRescheduling}

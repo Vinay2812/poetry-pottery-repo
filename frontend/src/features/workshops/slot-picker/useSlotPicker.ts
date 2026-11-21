@@ -76,6 +76,8 @@ export interface SlotPicker {
   progress: string;
   isComplete: boolean;
   isSuggested: boolean;
+  // Every time is picked, so a new pick swaps out the earliest; worth saying when there are several.
+  isSwapHintShown: boolean;
   hasNoRoom: boolean;
   isUnchanged: boolean;
   onPreviousMonth: () => void;
@@ -311,6 +313,7 @@ export function useSlotPicker({
     progress: formatPickedProgress(picked.length * slotMinutes, hours),
     isComplete: picked.length === needed,
     isSuggested: !isTouched && picked.length > 0,
+    isSwapHintShown: needed > 1 && picked.length === needed,
     hasNoRoom: suggestion === null,
     isUnchanged: baseline.length > 0 && isSameSelection(picked, baseline),
     onPreviousMonth: handlePreviousMonth,

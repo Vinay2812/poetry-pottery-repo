@@ -25,6 +25,7 @@ const meta = {
       "Pick a day on the calendar, then 1 hour from the times under it.",
     arrangementAskUrl: null,
     hint: "Picked for you: the earliest free times. Change any of them.",
+    isSwapHintShown: false,
     participants: 2,
     pricePerPerson: 1700,
     total: 3400,
@@ -70,6 +71,11 @@ export const HalfPicked: Story = {
     hours: 3,
     canBook: false,
   },
+};
+
+// Every time picked by hand: the note says how a new pick swaps one out.
+export const AllTimesPickedByHand: Story = {
+  args: { hint: null, isSwapHintShown: true },
 };
 
 export const Booking: Story = { args: { isBooking: true } };

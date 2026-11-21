@@ -174,6 +174,8 @@ export function WorkshopBookingContainer({
                 : null
             }
             hint={picker.isSuggested ? SUGGESTED_NOTE : null}
+            // The suggestion note already invites changes, so the swap hint waits for a real pick.
+            isSwapHintShown={picker.isSwapHintShown && !picker.isSuggested}
             canBook={isComplete}
             isBooking={isBooking}
             onNoteChange={setNote}

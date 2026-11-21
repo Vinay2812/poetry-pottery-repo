@@ -294,6 +294,8 @@ describe("useSlotPicker", () => {
     ).toBeNull();
     // A single hour has no window to keep to, so no notice.
     expect(result.current.notice).toBeNull();
+    // A single time is simply replaced, which needs no hint.
+    expect(result.current.isSwapHintShown).toBe(false);
   });
 
   it("states the window once more than one time is needed", () => {
@@ -309,6 +311,7 @@ describe("useSlotPicker", () => {
       "Pick all your hours on the same day. Other days are closed off.",
     );
     expect(result.current.progress).toBe("All 2 hours picked");
+    expect(result.current.isSwapHintShown).toBe(true);
   });
 
   it("counts half-hour times as the time they add up to", () => {
@@ -322,6 +325,8 @@ describe("useSlotPicker", () => {
 
     expect(result.current.needed).toBe(2);
     expect(result.current.progress).toBe("1 hour picked");
+    // Two half-hour times, all picked: a new one swaps out the earliest.
+    expect(result.current.isSwapHintShown).toBe(true);
     act(() => result.current.onRemoveSlot(result.current.pickedStarts[0]!));
     expect(result.current.progress).toBe("30 minutes of 1 hour picked");
   });

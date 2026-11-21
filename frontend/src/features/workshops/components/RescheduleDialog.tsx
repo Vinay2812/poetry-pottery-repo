@@ -39,6 +39,7 @@ export interface RescheduleDialogProps {
   pickedSlots: PickedSlot[];
   progress: string;
   isComplete: boolean;
+  isSwapHintShown: boolean;
   isUnchanged: boolean;
   // The booking's hours sit on more than one day, so "the old day" would be wrong.
   isMultiDay: boolean;
@@ -66,6 +67,7 @@ export function RescheduleDialog({
   pickedSlots,
   progress,
   isComplete,
+  isSwapHintShown,
   isUnchanged,
   isMultiDay,
   isSubmitting,
@@ -130,7 +132,7 @@ export function RescheduleDialog({
           emptyMessage="Pick your times from the calendar."
           onRemoveSlot={onRemoveSlot}
         />
-        {isComplete && pickedSlots.length > 1 && (
+        {isSwapHintShown && (
           <p className="text-[13px] text-muted-foreground">
             {REPLACE_TIME_HINT}
           </p>
