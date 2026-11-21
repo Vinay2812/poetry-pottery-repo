@@ -1,5 +1,6 @@
 import {
   AdminAgendaKind,
+  EventType,
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 import { describe, expect, it } from "vitest";
@@ -14,6 +15,8 @@ import {
   toAgendaHref,
   toAgendaDetail,
   toAgendaKindLabel,
+  WAITING_EVENT_REQUESTS_HREF,
+  WAITING_SESSIONS_HREF,
 } from "./types";
 
 describe("formatCount", () => {
@@ -70,7 +73,24 @@ describe("today's agenda", () => {
     expect(toAgendaHref(AdminAgendaKind.Event, "3")).toBe(
       "/dashboard/events/3",
     );
-    expect(toAgendaKindLabel(AdminAgendaKind.Event)).toBe("Evening");
+  });
+
+  it("names an event by its type, never by the hour", () => {
+    expect(toAgendaKindLabel(AdminAgendaKind.Event, EventType.OpenMic)).toBe(
+      "Open mic",
+    );
+    expect(
+      toAgendaKindLabel(AdminAgendaKind.Event, EventType.PotteryWorkshop),
+    ).toBe("Workshop");
+    expect(toAgendaKindLabel(AdminAgendaKind.Event, null)).toBe("Event");
+    expect(toAgendaKindLabel(AdminAgendaKind.Booking, null)).toBe("Wheel");
+  });
+});
+
+describe("request tiles", () => {
+  it("open their lists narrowed to what is waiting on the studio", () => {
+    expect(WAITING_SESSIONS_HREF).toBe("/dashboard/workshops?status=PENDING");
+    expect(WAITING_EVENT_REQUESTS_HREF).toBe("/dashboard/events?awaiting=1");
   });
 });
 

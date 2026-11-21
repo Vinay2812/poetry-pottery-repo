@@ -97,6 +97,7 @@ export class AdminDashboardService {
         select: {
           id: true,
           title: true,
+          event_type: true,
           starts_at: true,
           ends_at: true,
           total_seats: true,
@@ -114,6 +115,7 @@ export class AdminDashboardService {
         detail: `${slot.booking.config.name} · ${slot.booking.participants} at the wheel`,
         booking_status: slot.booking.status,
         booking_total: slot.booking.total,
+        event_type: null,
       })),
       ...visits.map((visit) => ({
         kind: AdminAgendaKind.VISIT,
@@ -124,6 +126,7 @@ export class AdminDashboardService {
         detail: "Studio visit",
         booking_status: null,
         booking_total: null,
+        event_type: null,
       })),
       ...events.map((event) => ({
         kind: AdminAgendaKind.EVENT,
@@ -134,6 +137,7 @@ export class AdminDashboardService {
         detail: `${event.total_seats - event.available_seats} of ${event.total_seats} seats taken`,
         booking_status: null,
         booking_total: null,
+        event_type: event.event_type,
       })),
     ];
     return items.sort((a, b) => a.starts_at.getTime() - b.starts_at.getTime());

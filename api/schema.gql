@@ -45,6 +45,7 @@ type AdminAgendaItem {
   booking_total: Int
   detail: String!
   ends_at: DateTime!
+  event_type: EventType
   id: String!
   kind: AdminAgendaKind!
   starts_at: DateTime!

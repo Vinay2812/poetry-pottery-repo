@@ -1,5 +1,5 @@
 import { Field, Int, ObjectType, registerEnumType } from "@nestjs/graphql";
-import { OrderStatus, RegistrationStatus } from "@prisma/client";
+import { EventType, OrderStatus, RegistrationStatus } from "@prisma/client";
 
 import { AdminUserRef } from "../admin.type";
 
@@ -112,6 +112,10 @@ export class AdminAgendaItem {
   // A free session has no payment step, so an approved one reads plain "Approved".
   @Field(() => Int, { nullable: true })
   booking_total!: number | null;
+
+  // Set for events only, so the console can name the kind of evening, e.g. "Open mic".
+  @Field(() => EventType, { nullable: true })
+  event_type!: EventType | null;
 }
 
 @ObjectType()

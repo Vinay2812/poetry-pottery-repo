@@ -1,6 +1,7 @@
 import {
   AdminAgendaKind,
-  type RegistrationStatus,
+  EventType,
+  RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
 import { toRegistrationStatusLabel } from "@/lib/registration-status";
@@ -46,16 +47,29 @@ export function toAgendaHref(kind: AdminAgendaKind, id: string): string {
   }
 }
 
-export function toAgendaKindLabel(kind: AdminAgendaKind): string {
+// Short enough for the agenda's tag column; an event without a type reads plain "Event".
+const AGENDA_EVENT_LABEL: Record<EventType, string> = {
+  [EventType.PotteryWorkshop]: "Workshop",
+  [EventType.OpenMic]: "Open mic",
+};
+
+export function toAgendaKindLabel(
+  kind: AdminAgendaKind,
+  eventType: EventType | null,
+): string {
   switch (kind) {
     case AdminAgendaKind.Booking:
       return "Wheel";
     case AdminAgendaKind.Visit:
       return "Visit";
     case AdminAgendaKind.Event:
-      return "Evening";
+      return eventType ? AGENDA_EVENT_LABEL[eventType] : "Event";
   }
 }
+
+// The request tiles open their lists already narrowed to what is waiting on the studio.
+export const WAITING_SESSIONS_HREF = `/dashboard/workshops?status=${RegistrationStatus.Pending}`;
+export const WAITING_EVENT_REQUESTS_HREF = "/dashboard/events?awaiting=1";
 
 // A wheel session ends with its status in the words the guest sees, e.g. "· Awaiting approval".
 export function toAgendaDetail(

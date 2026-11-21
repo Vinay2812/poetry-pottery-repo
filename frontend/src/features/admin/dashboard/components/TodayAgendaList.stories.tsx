@@ -27,7 +27,7 @@ const meta = {
       {
         id: "3",
         href: "/dashboard/events/3",
-        kindLabel: "Evening",
+        kindLabel: "Open mic",
         timeLabel: "7:00 pm",
         title: "Open mic",
         detail: "15 of 20 seats taken",

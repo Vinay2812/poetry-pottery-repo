@@ -123,7 +123,7 @@ export function DashboardContainer() {
       (dashboard?.today ?? []).map((item) => ({
         id: item.id,
         href: toAgendaHref(item.kind, item.id),
-        kindLabel: toAgendaKindLabel(item.kind),
+        kindLabel: toAgendaKindLabel(item.kind, item.event_type ?? null),
         timeLabel: formatTime(item.starts_at),
         title: item.title,
         detail: toAgendaDetail(
