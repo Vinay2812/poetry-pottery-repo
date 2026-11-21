@@ -7,7 +7,7 @@ export interface NavLink {
   label: string;
 }
 
-// Labels follow the pages they open: /workshops books a wheel session, /events lists workshops and open mics.
+// Labels follow the pages they open: /workshops books a wheel session, /events lists events (workshops and open mics).
 export const NAV_LINKS: NavLink[] = [
   { href: "/products", label: "Shop" },
   { href: "/custom", label: "Made to order" },
@@ -36,7 +36,7 @@ export const FOOTER_SHOP_LINKS: NavLink[] = [
 
 export const FOOTER_STUDIO_LINKS: NavLink[] = [
   { href: "/workshops", label: "Book a wheel session" },
-  { href: "/events", label: "Workshops and open mics" },
+  { href: "/events", label: "Events" },
   { href: "/about", label: "Our story" },
   { href: "/contact", label: "Contact" },
 ];

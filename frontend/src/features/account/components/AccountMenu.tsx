@@ -20,7 +20,7 @@ const LINKS = [
   { href: "/orders", label: "Orders", hint: "Progress and past orders" },
   {
     href: "/registrations",
-    label: "Bookings",
+    label: "Events",
     hint: "Workshops and open mics",
   },
   {
