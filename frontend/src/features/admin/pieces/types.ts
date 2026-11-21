@@ -57,9 +57,10 @@ export function describeShelfStateHint(
   isLiveAllowed: boolean,
   isFeatured: boolean,
 ): string | null {
-  if (!isActive)
-    return isLiveAllowed ? "Shown in the archive" : LIVE_BLOCKED_NOTE;
-  return isFeatured ? "Also on the home page" : null;
+  if (isActive) return isFeatured ? "Also on the home page" : null;
+  // Retired but still marked, so "Take off the home page" has something to take off.
+  if (isFeatured) return "Still marked for the home page";
+  return isLiveAllowed ? "Shown in the archive" : LIVE_BLOCKED_NOTE;
 }
 
 export function describeKiln(isSecond: boolean): string {

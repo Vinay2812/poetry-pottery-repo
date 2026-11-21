@@ -432,6 +432,15 @@ describe("shelf state", () => {
     );
   });
 
+  it("says a retired piece is still marked for the home page", () => {
+    expect(describeShelfStateHint(false, true, true)).toBe(
+      "Still marked for the home page",
+    );
+    expect(describeShelfStateHint(false, false, true)).toBe(
+      "Still marked for the home page",
+    );
+  });
+
   it("mentions the home page only for a featured live piece", () => {
     expect(describeShelfStateHint(true, true, true)).toBe(
       "Also on the home page",
