@@ -82,7 +82,8 @@ export function RescheduleDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
+        {/* Left-aligned on phones too, so the header lines up with the text under it. */}
+        <DialogHeader className="text-left">
           <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Move this session
           </DialogTitle>

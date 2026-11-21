@@ -34,7 +34,8 @@ export function CancelBookingDialog({
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+        {/* Left-aligned on phones too, so the header lines up with the text under it. */}
+        <DialogHeader className="text-left">
           <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Cancel this session?
           </DialogTitle>
