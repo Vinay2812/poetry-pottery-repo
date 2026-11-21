@@ -26,6 +26,7 @@ import {
   toFilterInput,
   toFilterKey,
   toSearchParams,
+  isTuckedUnderHeader,
   toAddToCartLabel,
   toBatchLabel,
   toQuantityTotalLine,
@@ -736,5 +737,17 @@ describe("toQuantityTotalLine", () => {
     expect(toQuantityTotalLine(2, "\u20b91,000")).toBe(
       "2 pieces, \u20b91,000 together",
     );
+  });
+});
+
+describe("isTuckedUnderHeader", () => {
+  it("counts the buttons gone once their bottom edge passes under the header", () => {
+    expect(isTuckedUnderHeader(66, 65)).toBe(false);
+    expect(isTuckedUnderHeader(65, 65)).toBe(true);
+    expect(isTuckedUnderHeader(-400, 65)).toBe(true);
+  });
+
+  it("keeps them in play while they are still below the fold", () => {
+    expect(isTuckedUnderHeader(1200, 65)).toBe(false);
   });
 });

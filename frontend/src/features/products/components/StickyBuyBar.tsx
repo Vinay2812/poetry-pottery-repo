@@ -2,9 +2,12 @@ import { Button } from "@/components/ui/button";
 import { formatInr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+import { toAddToCartLabel } from "@/features/products/types";
+
 export interface StickyBuyBarProps {
   isVisible: boolean;
   name: string;
+  quantity: number;
   total: number;
   isSoldOut: boolean;
   isAddingToCart: boolean;
@@ -16,6 +19,7 @@ export interface StickyBuyBarProps {
 export function StickyBuyBar({
   isVisible,
   name,
+  quantity,
   total,
   isSoldOut,
   isAddingToCart,
@@ -39,7 +43,11 @@ export function StickyBuyBar({
         disabled={isSoldOut || !canAddToCart || isAddingToCart}
         tabIndex={isVisible ? 0 : -1}
       >
-        {isSoldOut ? "Sold out" : isAddingToCart ? "Adding…" : "Add to cart"}
+        {isSoldOut
+          ? "Sold out"
+          : isAddingToCart
+            ? "Adding…"
+            : toAddToCartLabel(quantity)}
       </Button>
     </div>
   );

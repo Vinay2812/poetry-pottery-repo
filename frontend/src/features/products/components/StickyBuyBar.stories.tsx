@@ -11,6 +11,7 @@ const meta = {
   args: {
     isVisible: true,
     name: "Slate Morning Mug",
+    quantity: 1,
     total: 850,
     isSoldOut: false,
     isAddingToCart: false,
@@ -26,6 +27,10 @@ type Story = StoryObj<typeof meta>;
 export const Visible: Story = {};
 
 export const Hidden: Story = { args: { isVisible: false } };
+
+export const TwoPieces: Story = {
+  args: { quantity: 2, total: 1700 },
+};
 
 export const SoldOut: Story = {
   args: { isSoldOut: true, canAddToCart: false },

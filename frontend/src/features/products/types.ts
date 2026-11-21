@@ -272,6 +272,14 @@ export function toFlawNote(flawNote: string | null): string {
 export const STUDIO_NOTE =
   "Each piece is thrown by hand, so expect small differences.";
 
+// The buttons count as gone once their bottom edge has slid under the sticky header.
+export function isTuckedUnderHeader(
+  rowBottom: number,
+  headerHeight: number,
+): boolean {
+  return rowBottom <= headerHeight;
+}
+
 // The price already sits above the button, so the button only says what it does.
 export function toAddToCartLabel(quantity: number): string {
   return quantity > 1 ? `Add ${quantity} to cart` : "Add to cart";

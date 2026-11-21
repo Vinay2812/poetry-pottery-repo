@@ -17,6 +17,7 @@ import { PageShell } from "@/components/layout/PageShell";
 
 import { toProvenance } from "@/features/archive/types";
 import { useAddToCart } from "@/features/cart/hooks";
+import { SITE_HEADER_HEIGHT_PX } from "@/features/layout/types";
 import { canWatchPiece, NextBatchContainer } from "@/features/notify";
 import { useReferencePhotos } from "@/features/products/hooks";
 import { ArchiveNotice } from "@/features/products/components/ArchiveNotice";
@@ -36,6 +37,7 @@ import { ProductCardContainer } from "@/features/products/containers/ProductCard
 import {
   computeUnitPrice,
   hasFailedPhoto,
+  isTuckedUnderHeader,
   isPhotoUploadPending,
   MAX_REFERENCE_PHOTOS,
   type ProductDetailData,
@@ -100,7 +102,7 @@ export function ProductDetailContainer({
     toDefaultSelections(product.option_groups),
   );
   const [showErrors, setShowErrors] = useState(false);
-  const [isBuyBoxVisible, setIsBuyBoxVisible] = useState(true);
+  const [isActionsVisible, setIsActionsVisible] = useState(true);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [activeFact, setActiveFact] = useState<string | null>(null);
@@ -179,19 +181,31 @@ export function ProductDetailContainer({
       });
   }, [factRows, product.name]);
 
-  // The bar stands in only once the buttons have scrolled up past the top, never
-  // while they are still below the fold on the way down.
+  // Checked each scroll frame: an IntersectionObserver stays silent when a jump skips the row.
   useEffect(() => {
     const node = actionsRef.current;
     if (!node) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      if (!entry) return;
-      setIsBuyBoxVisible(
-        entry.isIntersecting || entry.boundingClientRect.top > 0,
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      setIsActionsVisible(
+        !isTuckedUnderHeader(
+          node.getBoundingClientRect().bottom,
+          SITE_HEADER_HEIGHT_PX,
+        ),
       );
-    });
-    observer.observe(node);
-    return () => observer.disconnect();
+    };
+    const schedule = () => {
+      if (frame === 0) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      window.cancelAnimationFrame(frame);
+    };
   }, []);
 
   // The bar steps aside at the footer, so its last line (privacy, terms) stays tappable.
@@ -508,8 +522,9 @@ export function ProductDetailContainer({
       )}
 
       <StickyBuyBar
-        isVisible={!isArchived && !isBuyBoxVisible && !isFooterVisible}
+        isVisible={!isArchived && !isActionsVisible && !isFooterVisible}
         name={product.name}
+        quantity={quantity}
         total={unitPrice * quantity}
         isSoldOut={stock.tone === "sold_out"}
         isAddingToCart={isAdding}
