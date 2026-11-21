@@ -1,6 +1,7 @@
 import { getSiteSettings } from "@/lib/data/site-settings";
 
 import { SkipLink } from "@/components/layout/SkipLink";
+import { Toaster } from "@/components/providers/toaster";
 
 import { SignInPromptContainer } from "@/features/auth";
 import { CartProvider } from "@/features/cart";
@@ -68,6 +69,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
         <MobileNavContainer />
         <SignInPromptContainer />
       </WishlistProvider>
+      <Toaster placement="storefront" />
     </CartProvider>
   );
 }

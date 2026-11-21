@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 
 import { UserRole } from "@/graphql/generated/graphql";
 
+import { Toaster } from "@/components/providers/toaster";
+
 import { AdminChromeContainer } from "@/features/admin/shell";
 
 export const metadata: Metadata = {
@@ -20,5 +22,10 @@ export default async function AdminLayout({
     redirect("/");
   }
 
-  return <AdminChromeContainer>{children}</AdminChromeContainer>;
+  return (
+    <>
+      <AdminChromeContainer>{children}</AdminChromeContainer>
+      <Toaster placement="admin" />
+    </>
+  );
 }
