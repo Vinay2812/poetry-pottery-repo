@@ -110,17 +110,18 @@ export function useAdminLeaveGuard(
 }
 
 export interface BackGuard {
-  // Goes where Back was headed, once the editor has said yes.
+  // Goes where Back was headed, once the editor has said yes: past the restored spare entry and this page.
   leaveBack: () => void;
   // Goes to a link, replacing the spare entry so history keeps one copy of this page.
   leaveTo: (href: string) => void;
-  // Puts the spare entry back after "Keep editing".
+  // Makes sure the spare entry is on top, e.g. after "Keep editing".
   stay: () => void;
 }
 
 /**
  * While an editor has unsaved work, a spare history entry for this same page sits on top,
- * so browser Back stays here and asks first. Uses only window.history, which Next keeps in step.
+ * so browser Back stays here and asks first. The spare goes back on before asking, so a second
+ * Back while the dialog is open asks again instead of leaving. Uses only window.history, which Next keeps in step.
  */
 export function useBackGuard(onBackAttempt: (() => void) | null): BackGuard {
   const router = useRouter();
@@ -134,12 +135,16 @@ export function useBackGuard(onBackAttempt: (() => void) | null): BackGuard {
     onBackRef.current = onBackAttempt;
   }, [onBackAttempt]);
 
-  const stay = useCallback(() => {
-    if (isLeavingRef.current || isBackGuardState(window.history.state)) return;
+  const pushGuard = useCallback(() => {
     guardedHrefRef.current = window.location.href;
     window.history.pushState(toBackGuardState(), "", window.location.href);
     isOnGuardRef.current = true;
   }, []);
+
+  const stay = useCallback(() => {
+    if (isLeavingRef.current || isBackGuardState(window.history.state)) return;
+    pushGuard();
+  }, [pushGuard]);
 
   useEffect(() => {
     if (isDirty) stay();
@@ -165,15 +170,16 @@ export function useBackGuard(onBackAttempt: (() => void) | null): BackGuard {
         window.history.back();
         return;
       }
+      pushGuard();
       onBack();
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [pushGuard]);
 
   const leaveBack = useCallback(() => {
     isLeavingRef.current = true;
-    window.history.back();
+    window.history.go(isBackGuardState(window.history.state) ? -2 : -1);
   }, []);
 
   const leaveTo = useCallback(

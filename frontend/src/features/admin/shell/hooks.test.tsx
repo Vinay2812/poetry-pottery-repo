@@ -47,14 +47,42 @@ describe("useBackGuard", () => {
     expect(window.location.pathname).toBe("/dashboard/pieces/4");
   });
 
-  it("puts the spare entry back after Keep editing", async () => {
+  it("puts the spare entry back before asking, so Keep editing leaves it in place", async () => {
     const onBack = vi.fn();
     const { result } = renderGuard(onBack);
     act(() => window.history.back());
     await waitFor(() => expect(onBack).toHaveBeenCalled());
+    expect(isBackGuardState(window.history.state)).toBe(true);
 
+    const length = window.history.length;
     act(() => result.current.stay());
     expect(isBackGuardState(window.history.state)).toBe(true);
+    expect(window.history.length).toBe(length);
+  });
+
+  it("asks again on a second Back while the dialog is open, never leaving the page", async () => {
+    const onBack = vi.fn();
+    renderGuard(onBack);
+
+    act(() => window.history.back());
+    await waitFor(() => expect(onBack).toHaveBeenCalledTimes(1));
+    act(() => window.history.back());
+    await waitFor(() => expect(onBack).toHaveBeenCalledTimes(2));
+
+    expect(window.location.pathname).toBe("/dashboard/pieces/4");
+    expect(isBackGuardState(window.history.state)).toBe(true);
+  });
+
+  it("steps past the spare entry and this page once Leave is chosen", async () => {
+    const onBack = vi.fn();
+    const go = vi.spyOn(window.history, "go");
+    const { result } = renderGuard(onBack);
+    act(() => window.history.back());
+    await waitFor(() => expect(onBack).toHaveBeenCalled());
+
+    act(() => result.current.leaveBack());
+    expect(go).toHaveBeenCalledWith(-2);
+    go.mockRestore();
   });
 
   it("replaces the spare entry when leaving for a link, so the page is not in history twice", () => {
