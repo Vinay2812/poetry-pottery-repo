@@ -237,6 +237,8 @@ export class CommissionsService {
       ...(term
         ? {
             OR: [
+              // References are case-sensitive, so they match exactly
+              { id: term },
               { name: { contains: term, mode: "insensitive" } },
               { email: { contains: term, mode: "insensitive" } },
               { piece_type: { contains: term, mode: "insensitive" } },
