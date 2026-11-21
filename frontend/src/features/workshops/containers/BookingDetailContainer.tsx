@@ -5,7 +5,7 @@ import { useCallback, useOptimistic, useState, useTransition } from "react";
 
 import { RegistrationStatus } from "@/graphql/generated/graphql";
 
-import { formatDateTime, formatInr, pluralize } from "@/lib/format";
+import { formatInr, pluralize } from "@/lib/format";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -206,7 +206,6 @@ export function BookingDetailContainer({
       <BookingDetail
         bookingId={optimisticBooking.id}
         dateLabel={formatDayRange(optimisticBooking.slots, timezone)}
-        requestedOn={formatDateTime(optimisticBooking.created_at)}
         statusLabel={toBookingStatusLabel(optimisticBooking.status)}
         statusTone={toBookingStatusTone(optimisticBooking.status)}
         isJustPlaced={isRequestBannerShown(

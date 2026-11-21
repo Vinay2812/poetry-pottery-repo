@@ -32,7 +32,6 @@ const meta = {
   args: {
     bookingId: "WSB7Q2X9M1KD",
     dateLabel: "Sat, 19 Sept – Tue, 22 Sept",
-    requestedOn: "Sat, 12 Sept, 2026, 3:00 pm",
     statusLabel: "Awaiting approval",
     statusTone: "pending",
     isJustPlaced: true,

@@ -35,7 +35,6 @@ const meta = {
     reviewAction: null,
     eventTitle: "Wheel throwing for beginners",
     eventHref: "/events/wheel-throwing-for-beginners",
-    requestedOn: "Sat, 12 Sept, 2026, 3:00 pm",
     statusLabel: "Awaiting approval",
     statusTone: "pending",
     isRequestShown: true,

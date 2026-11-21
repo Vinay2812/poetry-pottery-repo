@@ -5,7 +5,7 @@ import { useCallback, useOptimistic, useState } from "react";
 
 import { RegistrationStatus } from "@/graphql/generated/graphql";
 
-import { formatDate, formatDateTime, formatInr } from "@/lib/format";
+import { formatDate, formatInr } from "@/lib/format";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -134,7 +134,6 @@ export function RegistrationDetailContainer({
         registrationId={optimisticRegistration.id}
         eventTitle={event.title}
         eventHref={toEventPath(event.slug)}
-        requestedOn={formatDateTime(optimisticRegistration.created_at)}
         statusLabel={toRegistrationStatusLabel(optimisticRegistration.status)}
         statusTone={toRegistrationStatusTone(optimisticRegistration.status)}
         isRequestShown={isRequestBannerShown(

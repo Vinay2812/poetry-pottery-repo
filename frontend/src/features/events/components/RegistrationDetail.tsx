@@ -20,7 +20,6 @@ export interface RegistrationDetailProps {
   registrationId: string;
   eventTitle: string;
   eventHref: string;
-  requestedOn: string;
   statusLabel: string;
   statusTone: StatusTone;
   isRequestShown: boolean;
@@ -43,7 +42,6 @@ export function RegistrationDetail({
   registrationId,
   eventTitle,
   eventHref,
-  requestedOn,
   statusLabel,
   statusTone,
   isRequestShown,
@@ -71,9 +69,6 @@ export function RegistrationDetail({
           <h1 className="max-w-2xl font-heading text-3xl tracking-tight text-balance md:text-5xl">
             {eventTitle}
           </h1>
-          <p className="text-[13px] text-muted-foreground">
-            Requested {requestedOn}
-          </p>
         </div>
         <OrderStatusBadge tone={statusTone} label={statusLabel} />
       </header>
