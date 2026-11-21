@@ -37,6 +37,7 @@ export default async function EventsPage({
         description="Small groups at the studio. Workshop seats include clay, tools and firing, and we confirm every seat on WhatsApp."
         initialEvents={firstPage}
         initialFilterKey={toEventsFilterKey(filterInput)}
+        now={new Date().toISOString()}
       />
     </Suspense>
   );

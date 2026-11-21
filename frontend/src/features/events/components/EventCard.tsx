@@ -14,6 +14,7 @@ export interface EventCardProps {
   seatsLabel: string;
   price: number;
   isPast: boolean;
+  hasStarted: boolean;
   isPriority?: boolean;
 }
 
@@ -29,6 +30,7 @@ export function EventCard({
   seatsLabel,
   price,
   isPast,
+  hasStarted,
   isPriority = false,
 }: EventCardProps) {
   return (
@@ -69,8 +71,8 @@ export function EventCard({
           <p className="text-[13px] text-muted-foreground">
             {typeLabel} · {seatsLabel}
           </p>
-          {/* A date that has run has no seat to price. */}
-          {!isPast && (
+          {/* A date under way or done has no seat left to price. */}
+          {!isPast && !hasStarted && (
             <span className="shrink-0 text-[13px] tnum">
               {formatInr(price)}
             </span>

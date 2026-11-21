@@ -22,10 +22,11 @@ import { useEvents } from "@/features/events/hooks";
 import {
   DEFAULT_EVENT_FILTERS,
   EVENT_FILTERS_CODEC,
+  hasEventStarted,
+  toEventCardSeatsLabel,
   toEventPath,
   toEventTypeLabel,
   toEventWhenLabel,
-  toSeatsLabel,
 } from "@/features/events/types";
 
 export interface EventListContainerProps {
@@ -33,6 +34,8 @@ export interface EventListContainerProps {
   description: string;
   initialEvents?: EventsQuery["events"] | null;
   initialFilterKey?: string | null;
+  // ISO time the server rendered at, so cards render the same on both sides.
+  now: string;
 }
 
 const RESULTS_RULE = "border-t border-ash pt-8";
@@ -42,7 +45,9 @@ export function EventListContainer({
   description,
   initialEvents = null,
   initialFilterKey = null,
+  now: renderedAt,
 }: EventListContainerProps) {
+  const now = new Date(renderedAt);
   // The chips answer on the click; the URL and the grid catch up inside the transition.
   const {
     value: filters,
@@ -147,15 +152,12 @@ export function EventListContainer({
                 href={toEventPath(event.slug)}
                 title={event.title}
                 imageUrl={event.image_url}
-                dateLabel={toEventWhenLabel(event.starts_at)}
+                dateLabel={toEventWhenLabel(event.starts_at, now)}
                 typeLabel={toEventTypeLabel(event.event_type)}
-                seatsLabel={
-                  event.is_past
-                    ? "Wrapped up"
-                    : toSeatsLabel(event.available_seats, event.total_seats)
-                }
+                seatsLabel={toEventCardSeatsLabel(event, now)}
                 price={event.price}
                 isPast={event.is_past}
+                hasStarted={hasEventStarted(event.starts_at, now)}
                 isPriority={index < 3}
               />
             ))}

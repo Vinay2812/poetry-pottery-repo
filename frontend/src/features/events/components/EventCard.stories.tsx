@@ -23,6 +23,7 @@ const meta = {
     seatsLabel: "3 seats left",
     price: 1800,
     isPast: false,
+    hasStarted: false,
   },
 } satisfies Meta<typeof EventCard>;
 
@@ -47,8 +48,12 @@ export const OpenMic: Story = {
   },
 };
 
+export const UnderWay: Story = {
+  args: { hasStarted: true, seatsLabel: "Under way" },
+};
+
 export const Past: Story = {
-  args: { isPast: true, seatsLabel: "Wrapped up" },
+  args: { isPast: true, hasStarted: true, seatsLabel: "Wrapped up" },
 };
 
 export const NoPhoto: Story = {
