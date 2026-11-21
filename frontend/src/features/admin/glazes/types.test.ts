@@ -4,6 +4,7 @@ import {
   applyGlazePatch,
   canDeleteGlaze,
   describeGlazeDeletion,
+  describeGlazeInUse,
   describePieces,
   type GlazeRow,
   toGlazeFormValues,
@@ -174,5 +175,16 @@ describe("applyGlazePatch drafts", () => {
         row: row(0, "Moss"),
       }),
     ).toEqual([row(9, "Moss"), row(1, "Ash")]);
+  });
+});
+
+describe("describeGlazeInUse", () => {
+  it("says why a glaze on pieces cannot be deleted", () => {
+    expect(describeGlazeInUse(1)).toBe(
+      "On 1 piece, so it cannot be deleted yet",
+    );
+    expect(describeGlazeInUse(3)).toBe(
+      "On 3 pieces, so it cannot be deleted yet",
+    );
   });
 });

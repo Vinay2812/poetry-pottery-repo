@@ -14,6 +14,7 @@ import {
 import { GlazeSwatch } from "@/features/admin/glazes/components/GlazeSwatch";
 import {
   canDeleteGlaze,
+  describeGlazeInUse,
   describePieces,
   type GlazeRow,
 } from "@/features/admin/glazes/types";
@@ -106,23 +107,37 @@ export function GlazesTable({
                   >
                     Edit
                   </Button>
-                  {/* A glaze still on pieces cannot go; saying so beats a dead button. */}
-                  {canDeleteGlaze(row.productCount) ? (
+                  {/* The reason rides on the disabled button: hover shows it, a screen reader reads it. */}
+                  <span
+                    title={
+                      canDeleteGlaze(row.productCount)
+                        ? undefined
+                        : describeGlazeInUse(row.productCount)
+                    }
+                  >
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      disabled={isEditorOpen}
+                      disabled={
+                        isEditorOpen || !canDeleteGlaze(row.productCount)
+                      }
                       aria-label={`Delete ${row.name}`}
+                      aria-describedby={
+                        canDeleteGlaze(row.productCount)
+                          ? undefined
+                          : `glaze-${row.id}-in-use`
+                      }
                       onClick={() => onDelete(row.id)}
                     >
                       Delete
                     </Button>
-                  ) : (
-                    <span className="flex h-9 items-center px-4 text-[13px] whitespace-nowrap text-muted-foreground">
-                      In use
-                    </span>
-                  )}
+                    {!canDeleteGlaze(row.productCount) && (
+                      <span id={`glaze-${row.id}-in-use`} className="sr-only">
+                        {describeGlazeInUse(row.productCount)}
+                      </span>
+                    )}
+                  </span>
                 </div>
               </td>
             </tr>

@@ -83,6 +83,10 @@ export function describeGlazeDeletion(name: string, count: number): string {
   return `${pluralize(count, "piece")} still wear ${name}. Move them to another glaze first.`;
 }
 
+export function describeGlazeInUse(count: number): string {
+  return `On ${pluralize(count, "piece")}, so it cannot be deleted yet`;
+}
+
 export function canDeleteGlaze(count: number): boolean {
   return count === 0;
 }
