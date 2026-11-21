@@ -9,7 +9,10 @@ import {
 import { buildWhatsAppUrl } from "@/features/layout/types";
 import { formatShortDay } from "@/lib/format";
 import type { TimelineStage } from "@/lib/timeline";
-import { isRegistrationClosed } from "@/lib/registration-status";
+import {
+  isRegistrationClosed,
+  toRequestStages,
+} from "@/lib/registration-status";
 
 export type WorkshopData = WorkshopConfigFieldsFragment;
 export type WorkshopTierData = WorkshopData["tiers"][number];
@@ -291,6 +294,7 @@ interface WhatsAppSessionInput {
   participants: number;
   total: string;
   guestName: string;
+  isFree: boolean;
 }
 
 export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
@@ -301,31 +305,25 @@ export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
     `${input.hours} ${input.hours === 1 ? "hour" : "hours"} for ${input.participants} ${input.participants === 1 ? "person" : "people"}`,
     `Total: ${input.total}`,
     `Name: ${input.guestName}`,
-    "Could you approve my request and share payment details?",
+    input.isFree
+      ? "Could you confirm my session?"
+      : "Could you approve my request and share payment details?",
   ].join("\n");
 }
 
-// A pending request already holds the wheel, so the step after it is about payment.
-export const BOOKING_STAGES: TimelineStage<RegistrationStatus>[] = [
-  {
-    key: RegistrationStatus.Pending,
-    label: "Requested",
-    description: "We have your request and are holding the wheel for you.",
-  },
-  {
-    key: RegistrationStatus.Approved,
-    label: "Approved",
-    description: "Payment details are on WhatsApp.",
-    upcoming:
-      "We look over each request, then approve it and share payment details on WhatsApp.",
-  },
-  {
-    key: RegistrationStatus.Confirmed,
-    label: "Confirmed",
-    description: "Paid and confirmed. Come in ten minutes early.",
-    upcoming: "Confirmed as soon as your payment lands.",
-  },
-];
+const SESSION_STAGES = toRequestStages(
+  "We have your request and are holding the wheel for you.",
+  "session",
+);
+
+export const BOOKING_STAGES = SESSION_STAGES.paid;
+
+// The saved total decides the steps, so a free session never promises payment details.
+export function toBookingStages(
+  total: number,
+): TimelineStage<RegistrationStatus>[] {
+  return total === 0 ? SESSION_STAGES.free : SESSION_STAGES.paid;
+}
 
 type BookingGroup = "upcoming" | "past";
 
