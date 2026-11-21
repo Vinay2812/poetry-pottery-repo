@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { formatDate, formatInr } from "@/lib/format";
 import {
   getCategories,
+  getCommissionPieces,
   getFeaturedProducts,
   getRecentReviews,
   getUpcomingEvents,
@@ -50,6 +51,7 @@ export default async function HomePage() {
     upcomingEvents,
     recentReviews,
     workshops,
+    customPieces,
   ] = await Promise.all([
     getSiteSettings(),
     getCategories(),
@@ -57,11 +59,11 @@ export default async function HomePage() {
     getUpcomingEvents(3),
     getRecentReviews(3),
     getWorkshops(),
+    getCommissionPieces(1),
   ]);
   // A shape with nothing on the shelf would only lead to an empty page.
   const shapes = categories.filter((category) => category.product_count > 0);
-  const customPiece =
-    featured.find((product) => product.is_customizable) ?? null;
+  const customPiece = customPieces[0] ?? null;
   const wheel = workshops[0] ?? null;
   const hasEvents = upcomingEvents.length > 0;
 
@@ -197,8 +199,8 @@ export default async function HomePage() {
       <HomeSection title="A small studio in Sangli">
         <AboutBlock
           imageUrl={null}
-          firstLine="We throw stoneware and terracotta on two wheels, glaze it by hand and fire it in small batches."
-          secondLine="Because every piece is thrown one at a time, glaze and shape shift a little between them."
+          firstLine="It's not just another pottery studio."
+          secondLine="It is Poetry & Pottery, where clay meets the soul."
           href="/about"
         />
       </HomeSection>
