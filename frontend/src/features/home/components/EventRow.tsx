@@ -29,7 +29,7 @@ export function EventRow({
         {seatsLabel}
       </span>
       <span className="col-start-2 w-fit border-b border-ink pb-0.5 text-[13px] group-hover:border-primary group-hover:text-primary md:col-start-auto">
-        {isSoldOut ? "Join the list" : "Reserve"}
+        {isSoldOut ? "Event details" : "Reserve"}
       </span>
     </Link>
   );
