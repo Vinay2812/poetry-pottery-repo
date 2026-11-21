@@ -147,14 +147,14 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
                 aria-label={toPhotoLabel(index, images.length)}
                 aria-current={index === selectedIndex}
                 onClick={() => scrollTo(index)}
-                // A short dash inside a 32px target, so a thumb can hit it.
-                className="grid h-8 w-7 place-items-center"
+                // A dash in a 32px tap target; the shown photo's dash is longer and darker.
+                className="grid h-8 w-9 place-items-center"
               >
                 <span
                   aria-hidden="true"
                   className={cn(
-                    "h-0.5 w-5 transition-colors duration-200",
-                    index === selectedIndex ? "bg-ink" : "bg-ash",
+                    "h-0.5 transition-[width,background-color] duration-200",
+                    index === selectedIndex ? "w-7 bg-ink" : "w-4 bg-smoke",
                   )}
                 />
               </button>
