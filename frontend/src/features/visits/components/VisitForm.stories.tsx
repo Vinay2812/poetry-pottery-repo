@@ -16,7 +16,6 @@ const meta = {
     ),
   ],
   args: {
-    isDayPicked: true,
     pickedLabel: "12:00–12:30 pm on Saturday 19 September",
     isSubmitting: false,
     errorMessage: null,
@@ -30,11 +29,7 @@ type Story = StoryObj<typeof meta>;
 
 export const WindowPicked: Story = {};
 
-export const DayPickedNoWindow: Story = { args: { pickedLabel: null } };
-
-export const NothingPicked: Story = {
-  args: { isDayPicked: false, pickedLabel: null },
-};
+export const NoWindowPicked: Story = { args: { pickedLabel: null } };
 
 export const Submitting: Story = { args: { isSubmitting: true } };
 

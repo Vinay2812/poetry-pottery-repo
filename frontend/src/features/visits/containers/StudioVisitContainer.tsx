@@ -163,7 +163,6 @@ export function StudioVisitContainer() {
         onSelectWindow={handleSelectWindow}
       />
       <VisitForm
-        isDayPicked={activeDate !== null}
         pickedLabel={pickedLabel}
         isSubmitting={isBooking}
         errorMessage={errorMessage}
