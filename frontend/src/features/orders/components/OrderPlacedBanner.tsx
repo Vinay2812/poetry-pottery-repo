@@ -17,6 +17,28 @@ export interface OrderPlacedBannerProps {
   whatsappUrl: string | null;
 }
 
+function NextStep({
+  number,
+  title,
+  line,
+}: {
+  number: number;
+  title: string;
+  line: string;
+}) {
+  return (
+    <li className="flex gap-4">
+      <span className="w-4 shrink-0 text-[15px] text-muted-foreground tnum">
+        {number}
+      </span>
+      <div className="flex flex-col gap-0.5">
+        <p className="text-[15px]">{title}</p>
+        <p className="text-[13px] text-muted-foreground">{line}</p>
+      </div>
+    </li>
+  );
+}
+
 export function OrderPlacedBanner({
   orderId,
   firstName,
@@ -33,8 +55,8 @@ export function OrderPlacedBanner({
           Thank you, {firstName}. Your order is in.
         </h1>
         <p className="max-w-xl text-[15px] text-muted-foreground">
-          We confirm every order by hand, so send us a message or wait for ours
-          within a day.
+          We confirm every order by hand, and there is nothing to pay until we
+          do.
         </p>
       </div>
 
@@ -61,9 +83,27 @@ export function OrderPlacedBanner({
         ))}
       </ul>
 
-      <div className="flex flex-col gap-1 border-t border-ash pt-5">
-        <p className="text-[15px]">{arrivalLine}</p>
-        <p className="text-[13px] text-muted-foreground">{transitLine}</p>
+      <div className="flex flex-col gap-4 border-t border-ash pt-5">
+        <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+          What happens next
+        </h2>
+        <ol className="flex max-w-xl flex-col gap-4">
+          <NextStep
+            number={1}
+            title="We confirm on WhatsApp"
+            line={
+              whatsappUrl
+                ? "Within a day. Message us first if you would rather not wait."
+                : "Within a day."
+            }
+          />
+          <NextStep
+            number={2}
+            title="You pay by UPI"
+            line="The UPI details come with our confirmation."
+          />
+          <NextStep number={3} title={arrivalLine} line={transitLine} />
+        </ol>
         {emailedTo && (
           <p className="text-[13px] text-muted-foreground">
             We have emailed a copy to {emailedTo}.
