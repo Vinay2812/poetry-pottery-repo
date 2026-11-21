@@ -1,5 +1,6 @@
 "use client";
 
+import { useClerk } from "@clerk/nextjs";
 import { useCallback, useEffect } from "react";
 
 import { AddressCard } from "@/features/addresses/components/AddressCard";
@@ -25,6 +26,7 @@ export function AddressPickerContainer({
     editingId,
     isFormOpen,
     isLoading,
+    isSignedIn,
     isSaving,
     closeForm,
     openEdit,
@@ -33,6 +35,7 @@ export function AddressPickerContainer({
     setDefault,
     submit,
   } = useAddressBook();
+  const { openSignIn } = useClerk();
 
   const preferredId = toPreferredAddressId(addresses);
   const hasSelection = addresses.some((address) => address.id === selectedId);
@@ -63,7 +66,13 @@ export function AddressPickerContainer({
   }
 
   if (addresses.length === 0 && !isFormOpen) {
-    return <EmptyAddresses onAddClick={openNew} />;
+    return (
+      <EmptyAddresses
+        isSignedIn={isSignedIn}
+        onAddClick={openNew}
+        onSignIn={() => openSignIn()}
+      />
+    );
   }
 
   return (

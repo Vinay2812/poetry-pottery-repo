@@ -1,10 +1,27 @@
 import { EmptyState } from "@/components/empty/EmptyState";
 
 export interface EmptyAddressesProps {
+  isSignedIn: boolean;
   onAddClick: () => void;
+  onSignIn: () => void;
 }
 
-export function EmptyAddresses({ onAddClick }: EmptyAddressesProps) {
+export function EmptyAddresses({
+  isSignedIn,
+  onAddClick,
+  onSignIn,
+}: EmptyAddressesProps) {
+  if (!isSignedIn) {
+    return (
+      <EmptyState
+        kind="small-things"
+        heading="Sign in to see your addresses"
+        line="We keep where your pieces go, ready for next time."
+        actionLabel="Sign in"
+        onAction={onSignIn}
+      />
+    );
+  }
   return (
     <EmptyState
       kind="small-things"

@@ -5,7 +5,6 @@ import { useClerk } from "@clerk/nextjs";
 import { LoadFailed } from "@/components/layout/LoadFailed";
 import { PageShell } from "@/components/layout/PageShell";
 
-import { SignInWall } from "@/features/auth/components/SignInWall";
 import { AddressCard } from "@/features/addresses/components/AddressCard";
 import { AddressForm } from "@/features/addresses/components/AddressForm";
 import { AddressPicker } from "@/features/addresses/components/AddressPicker";
@@ -33,24 +32,17 @@ export function AddressBookContainer() {
   } = useAddressBook();
   const { openSignIn } = useClerk();
 
-  if (!isLoading && !isSignedIn) {
-    return (
-      <SignInWall
-        message="Sign in to see your addresses"
-        onSignIn={() => openSignIn()}
-      />
-    );
-  }
-
   return (
     <PageShell column="narrow" className="flex flex-col gap-6 py-8 md:py-12">
       <div className="flex flex-col gap-1">
         <h1 className="font-heading text-3xl tracking-tight md:text-5xl">
           Your addresses
         </h1>
-        <p className="text-[15px] text-muted-foreground">
-          The default is picked for you at checkout.
-        </p>
+        {isSignedIn && (
+          <p className="text-[15px] text-muted-foreground">
+            The default is picked for you at checkout.
+          </p>
+        )}
       </div>
       {isLoading ? (
         <div className="flex flex-col gap-4" aria-busy="true">
@@ -63,8 +55,12 @@ export function AddressBookContainer() {
           heading="Your addresses did not load"
           onRetry={() => void refetch()}
         />
-      ) : addresses.length === 0 && !isFormOpen ? (
-        <EmptyAddresses onAddClick={openNew} />
+      ) : !isSignedIn || (addresses.length === 0 && !isFormOpen) ? (
+        <EmptyAddresses
+          isSignedIn={isSignedIn}
+          onAddClick={openNew}
+          onSignIn={() => openSignIn()}
+        />
       ) : (
         <AddressPicker
           isEmpty={addresses.length === 0}
