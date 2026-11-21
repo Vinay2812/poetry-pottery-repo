@@ -543,6 +543,20 @@ describe("toPhotoHoldMessage", () => {
       toPhotoHoldMessage([photo({ url: null, error: "Upload failed" })]),
     ).toBe(FAILED_PHOTO_MESSAGE);
   });
+
+  // A held send shows this live, so it must move on as the same photo settles.
+  it("follows one photo from uploading to failed, and clears once it is uploaded", () => {
+    const uploading = photo({ url: null });
+    const failed = photo({ url: null, error: "Upload failed" });
+    const uploaded = photo({ url: "https://cdn.test/a.jpg" });
+    expect(
+      [uploading, failed, uploaded].map((p) => toPhotoHoldMessage([p])),
+    ).toEqual([
+      "Wait for the photos to finish uploading",
+      FAILED_PHOTO_MESSAGE,
+      null,
+    ]);
+  });
 });
 
 describe("clampPriceRange", () => {

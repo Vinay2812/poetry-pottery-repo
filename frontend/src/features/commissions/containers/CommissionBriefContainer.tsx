@@ -57,16 +57,18 @@ export function CommissionBriefContainer({
   const sentHeadingRef = useRef<HTMLHeadingElement>(null);
   const photoPickerRef = useRef<HTMLDivElement>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Set once a send is held back; the words then follow the photos as they finish or fail.
+  const [isPhotoHoldShown, setIsPhotoHoldShown] = useState(false);
   const [sentAskUrl, setSentAskUrl] = useState<string | null>(null);
   const [create, { loading }] = useMutation(CreateCommissionRequestDocument);
   const {
     photos,
     error: photoError,
-    setError: setPhotoError,
     addFiles,
     removePhoto,
     clearPhotos,
   } = useReferencePhotos();
+  const photoHold = isPhotoHoldShown ? toPhotoHoldMessage(photos) : null;
 
   const toAskUrl = useCallback(
     (values: CommissionFormValues) =>
@@ -77,11 +79,9 @@ export function CommissionBriefContainer({
   const handleSubmit = useCallback(
     async (values: CommissionFormValues) => {
       setErrorMessage(null);
-      // Said beside Send and at the picker, which scrolls into view the way a field error would.
-      const photoHold = toPhotoHoldMessage(photos);
-      if (photoHold) {
-        setPhotoError(photoHold);
-        setErrorMessage(photoHold);
+      // Shown beside Send and at the picker, which scrolls into view the way a field error would.
+      if (toPhotoHoldMessage(photos)) {
+        setIsPhotoHoldShown(true);
         photoPickerRef.current?.scrollIntoView({ block: "start" });
         return;
       }
@@ -113,24 +113,16 @@ export function CommissionBriefContainer({
         );
       }
     },
-    [clearPhotos, create, photos, setPhotoError, whatsappNumber],
+    [clearPhotos, create, photos, whatsappNumber],
   );
 
-  // A change to the photos answers the hold message, so it clears along with the picker's own error.
+  // A new photo starts fresh, so the hold waits for the next send before it speaks again.
   const handleAddFiles = useCallback(
     (files: File[]) => {
-      setErrorMessage(null);
+      setIsPhotoHoldShown(false);
       addFiles(files);
     },
     [addFiles],
-  );
-
-  const handleRemovePhoto = useCallback(
-    (id: string) => {
-      setErrorMessage(null);
-      removePhoto(id);
-    },
-    [removePhoto],
   );
 
   const handleSignIn = useCallback(() => {
@@ -166,6 +158,7 @@ export function CommissionBriefContainer({
       referenceLine={referencePiece ? toReferenceLine(referencePiece) : null}
       isSubmitting={loading}
       errorMessage={errorMessage}
+      photoHoldMessage={photoHold}
       toAskUrl={toAskUrl}
       photoPicker={
         isSignedIn ? (
@@ -181,9 +174,9 @@ export function CommissionBriefContainer({
               }))}
               maxPhotos={MAX_REFERENCE_PHOTOS}
               accept={REFERENCE_PHOTO_ACCEPT}
-              error={photoError}
+              error={photoHold ?? photoError}
               onAddFiles={handleAddFiles}
-              onRemove={handleRemovePhoto}
+              onRemove={removePhoto}
             />
           </div>
         ) : (

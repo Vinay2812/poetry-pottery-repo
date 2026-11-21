@@ -55,6 +55,10 @@ export const ServerRefused: Story = {
   args: { errorMessage: "We could not send that just now. Try again." },
 };
 
+export const PhotoHold: Story = {
+  args: { photoHoldMessage: "Wait for the photos to finish uploading" },
+};
+
 export const WithoutWhatsApp: Story = { args: { toAskUrl: () => null } };
 
 export const SignedOutPhotos: Story = {

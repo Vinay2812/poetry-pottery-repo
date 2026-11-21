@@ -95,6 +95,8 @@ export interface CommissionBriefFormProps {
   referenceLine?: string | null;
   isSubmitting: boolean;
   errorMessage: string | null;
+  // Why the photos hold the brief back; the picker's own alert reads it out, so this copy is silent.
+  photoHoldMessage?: string | null;
   photoPicker?: React.ReactNode;
   // Pure: turns whatever has been typed so far into a WhatsApp link, or null with no number.
   toAskUrl: (values: CommissionFormValues) => string | null;
@@ -108,6 +110,7 @@ export function CommissionBriefForm({
   referenceLine = null,
   isSubmitting,
   errorMessage,
+  photoHoldMessage = null,
   photoPicker,
   toAskUrl,
   onSubmit,
@@ -453,9 +456,10 @@ export function CommissionBriefForm({
         </div>
 
         {/* Last in the form, so the empty line never opens a gap above the buttons. */}
-        <p role="alert" className="text-[13px] text-destructive">
-          {errorMessage}
-        </p>
+        <div className="flex flex-col gap-1 text-[13px] text-destructive">
+          {photoHoldMessage && <p>{photoHoldMessage}</p>}
+          <p role="alert">{errorMessage}</p>
+        </div>
       </form>
     </CommissionBriefLayout>
   );
