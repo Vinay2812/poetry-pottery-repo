@@ -69,26 +69,23 @@ export function ReviewsPanelContainer({
   const [openPhoto, setOpenPhoto] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
-  const retryRef = useRef<HTMLButtonElement>(null);
   const previousStatus = useRef(status);
-  const isRetryFocused = useRef(false);
+  const hadRetryFocus = useRef(false);
 
-  // focusin fires when the reader moves on but not when the button is removed, so the last answer holds.
-  useEffect(() => {
-    const handleFocusIn = (event: FocusEvent) => {
-      isRetryFocused.current = event.target === retryRef.current;
+  // React detaches the ref just before it removes the button, so focus is read while it is still there.
+  const handleRetryRef = useCallback((node: HTMLButtonElement | null) => {
+    if (!node) return;
+    hadRetryFocus.current = false;
+    return () => {
+      hadRetryFocus.current = document.activeElement === node;
     };
-    document.addEventListener("focusin", handleFocusIn);
-    return () => document.removeEventListener("focusin", handleFocusIn);
   }, []);
 
   // A failed retry keeps its button and focus; a successful one hands focus to the reviews.
   useEffect(() => {
     const previous = previousStatus.current;
     previousStatus.current = status;
-    if (
-      shouldFocusReviewsAfterRetry(previous, status, isRetryFocused.current)
-    ) {
+    if (shouldFocusReviewsAfterRetry(previous, status, hadRetryFocus.current)) {
       headingRef.current?.focus();
     }
   }, [status]);
@@ -129,7 +126,7 @@ export function ReviewsPanelContainer({
         onLoadMore={loadMore}
         onRetry={retry}
         headingRef={headingRef}
-        retryRef={retryRef}
+        retryRef={handleRetryRef}
       >
         {(optimisticResult?.items ?? []).map((review) => (
           <ReviewItem
