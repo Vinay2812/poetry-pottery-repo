@@ -29,21 +29,26 @@ export function ImageStrip({
   return (
     <ul className="flex flex-wrap gap-3">
       {urls.map((url, index) => (
-        <li key={url} className="flex w-24 flex-col gap-1">
-          <div className="relative size-24 border border-ash bg-white">
+        <li key={url} className="flex w-30 flex-col gap-1">
+          <div className="relative size-30 border border-ash bg-white">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt="" className="size-full object-cover" />
+            <img
+              src={url}
+              alt={`Photo ${index + 1}`}
+              className="size-full object-cover"
+            />
             {index === 0 && (
               <span className="absolute bottom-0 left-0 bg-ink px-1 text-[10px] tracking-[0.08em] text-white uppercase">
                 Lead
               </span>
             )}
           </div>
-          <div className="flex gap-1">
+          <div className="grid grid-cols-3 gap-1">
             <Button
               type="button"
               variant="secondary"
-              size="icon-sm"
+              size="icon"
+              className="w-full"
               aria-label={`Move photo ${index + 1} earlier`}
               disabled={isBusy || index === 0}
               onClick={() => onMoveUp(index)}
@@ -53,7 +58,8 @@ export function ImageStrip({
             <Button
               type="button"
               variant="secondary"
-              size="icon-sm"
+              size="icon"
+              className="w-full"
               aria-label={`Move photo ${index + 1} later`}
               disabled={isBusy || index === urls.length - 1}
               onClick={() => onMoveDown(index)}
@@ -63,7 +69,8 @@ export function ImageStrip({
             <Button
               type="button"
               variant="secondary"
-              size="icon-sm"
+              size="icon"
+              className="w-full"
               aria-label={`Remove photo ${index + 1}`}
               disabled={isBusy}
               onClick={() => onRemove(index)}
