@@ -42,6 +42,10 @@ export const EmptyLaterPage: Story = {
   args: { page: 3, total: 0, hasMore: false },
 };
 
+export const PastLastPage: Story = {
+  args: { page: 9, total: 132, hasMore: false },
+};
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };

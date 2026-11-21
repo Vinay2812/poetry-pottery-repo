@@ -84,19 +84,23 @@ export function formatEnumLabel(value: string): string {
   return words.join(" ").replace(/^./, (first) => first.toUpperCase());
 }
 
-// An empty list says so in its own table row, so it gets no count line.
+// A page with no rows on it (an empty list, or one past the end) shows no count line.
 export function formatRange(
   page: number,
   limit: number,
   total: number,
 ): string | null {
-  if (total === 0) return null;
   const first = (page - 1) * limit + 1;
+  if (first > total) return null;
   const last = Math.min(page * limit, total);
   return `${first}–${last} of ${total}`;
 }
 
-// A later page that came back empty (say, a search narrowed under it) goes back to the start.
-export function toPreviousPage(page: number, total: number): number {
-  return total === 0 ? 1 : Math.max(1, page - 1);
+// A page past the end (rows approved away under it, or a stale link) steps back to the last real page.
+export function toPreviousPage(
+  page: number,
+  limit: number,
+  total: number,
+): number {
+  return Math.max(1, Math.min(page - 1, Math.ceil(total / limit)));
 }

@@ -35,7 +35,7 @@ export function AdminPagination({
             variant="secondary"
             size="sm"
             disabled={page <= 1}
-            onClick={() => onPageChange(toPreviousPage(page, total))}
+            onClick={() => onPageChange(toPreviousPage(page, limit, total))}
           >
             Previous
           </Button>
