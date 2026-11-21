@@ -88,6 +88,26 @@ describe("order timeline", () => {
     ]);
   });
 
+  it("points to payment once the order is confirmed", () => {
+    expect(read(OrderStatus.Confirmed, 1)).toEqual([
+      ["Order placed", "done", "12 Sept", null],
+      ["Confirmed", "current", "13 Sept", "Payment details are on WhatsApp."],
+      [
+        "Paid",
+        "upcoming",
+        null,
+        "After payment, each piece is wrapped by hand.",
+      ],
+      [
+        "Shipped",
+        "upcoming",
+        null,
+        "Goes by courier once packed, usually five to seven days on the road.",
+      ],
+      ["Delivered", "upcoming", null, "We mark it here once it reaches you."],
+    ]);
+  });
+
   it("dates what happened once the order has shipped", () => {
     expect(read(OrderStatus.Shipped, 3)).toEqual([
       ["Order placed", "done", "12 Sept", null],

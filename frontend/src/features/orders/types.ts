@@ -21,6 +21,9 @@ export const ORDERS_PAGE_CODEC: UrlCodec<number, number> = {
   apply: (_current, next) => next,
 };
 
+// How long the courier usually takes, said the same way wherever it appears.
+const TRANSIT_WINDOW = "five to seven days";
+
 export const ORDER_STAGES: TimelineStage<OrderStatus>[] = [
   {
     key: OrderStatus.Pending,
@@ -30,7 +33,7 @@ export const ORDER_STAGES: TimelineStage<OrderStatus>[] = [
   {
     key: OrderStatus.Confirmed,
     label: "Confirmed",
-    description: "Payment details shared; we start packing once it lands.",
+    description: "Payment details are on WhatsApp.",
     upcoming: "Payment details follow with the confirmation.",
   },
   {
@@ -42,9 +45,8 @@ export const ORDER_STAGES: TimelineStage<OrderStatus>[] = [
   {
     key: OrderStatus.Shipped,
     label: "Shipped",
-    description: "On its way, usually five to seven days.",
-    upcoming:
-      "Goes by courier once packed, usually five to seven days on the road.",
+    description: `On its way, usually ${TRANSIT_WINDOW}.`,
+    upcoming: `Goes by courier once packed, usually ${TRANSIT_WINDOW} on the road.`,
   },
   {
     key: OrderStatus.Delivered,
