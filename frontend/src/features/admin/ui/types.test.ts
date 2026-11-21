@@ -129,6 +129,7 @@ describe("registration actions", () => {
           RegistrationStatus.Cancelled,
         ],
         "wheel",
+        false,
       ).map((action) => action.label),
     ).toEqual(["Confirm as paid", "Cancel booking"]);
     expect(
@@ -136,8 +137,28 @@ describe("registration actions", () => {
         RegistrationStatus.Confirmed,
         [RegistrationStatus.Cancelled],
         "seat",
+        false,
       ).map((action) => action.label),
     ).toEqual(["Cancel registration"]);
+  });
+
+  it("confirms a free request straight away, with no payment step", () => {
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Pending,
+        [
+          RegistrationStatus.Approved,
+          RegistrationStatus.Confirmed,
+          RegistrationStatus.Rejected,
+          RegistrationStatus.Cancelled,
+        ],
+        "seat",
+        true,
+      ).map((action) => [action.label, action.isPrimary]),
+    ).toEqual([
+      ["Confirm seat", true],
+      ["Turn down", false],
+    ]);
   });
 
   it("marks only the first move that lets someone in", () => {
@@ -146,6 +167,7 @@ describe("registration actions", () => {
         RegistrationStatus.Pending,
         [RegistrationStatus.Approved, RegistrationStatus.Confirmed],
         "wheel",
+        false,
       ).map((action) => [action.label, action.isPrimary]),
     ).toEqual([
       ["Approve, ask for payment", true],
@@ -156,6 +178,7 @@ describe("registration actions", () => {
         RegistrationStatus.Confirmed,
         [RegistrationStatus.Cancelled],
         "seat",
+        false,
       )[0]?.isPrimary,
     ).toBe(false);
   });
@@ -171,6 +194,7 @@ describe("registration actions", () => {
           RegistrationStatus.Cancelled,
         ],
         "wheel",
+        false,
       ).map((action) => action.status),
     ).toEqual([
       RegistrationStatus.Approved,
@@ -189,6 +213,7 @@ describe("registration actions", () => {
           RegistrationStatus.Cancelled,
         ],
         "seat",
+        false,
       ).map((action) => action.status),
     ).toEqual([RegistrationStatus.Confirmed, RegistrationStatus.Cancelled]);
   });
@@ -199,6 +224,7 @@ describe("registration actions", () => {
         RegistrationStatus.Pending,
         [RegistrationStatus.Approved, RegistrationStatus.Rejected],
         "wheel",
+        false,
       ).map((action) => action.isDestructive),
     ).toEqual([false, true]);
   });
@@ -209,6 +235,7 @@ describe("registration actions", () => {
         RegistrationStatus.Approved,
         [RegistrationStatus.Pending, RegistrationStatus.Confirmed],
         "seat",
+        false,
       ).map((action) => action.status),
     ).toEqual([RegistrationStatus.Confirmed]);
   });

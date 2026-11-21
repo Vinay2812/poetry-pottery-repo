@@ -119,6 +119,7 @@ export function EventRegistrationsContainer({
           entry.registration.status,
           entry.next_statuses,
           "seat",
+          entry.registration.total === 0,
         ),
       })),
     [optimisticItems],

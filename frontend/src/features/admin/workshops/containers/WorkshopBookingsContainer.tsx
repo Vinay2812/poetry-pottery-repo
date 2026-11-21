@@ -130,6 +130,7 @@ export function WorkshopBookingsContainer({
           item.booking.status,
           item.next_statuses,
           "wheel",
+          item.booking.total === 0,
         ),
       })),
     [optimisticItems, timezone],

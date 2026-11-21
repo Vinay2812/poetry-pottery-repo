@@ -29,7 +29,11 @@ export function registrationPlacedCustomerMail(registration: Registration): {
 } {
   const body = renderMail({
     title: "Seat request received",
-    intro: `Thanks for signing up. We will confirm your place for ${registration.event.title} on WhatsApp within a day and share how to pay.`,
+    // A free seat has nothing to pay, so the mail does not promise payment details.
+    intro:
+      registration.total === 0
+        ? `Thanks for signing up. We will confirm your place for ${registration.event.title} on WhatsApp within a day.`
+        : `Thanks for signing up. We will confirm your place for ${registration.event.title} on WhatsApp within a day and share how to pay.`,
     blocks: [{ heading: "Your booking", lines: detailLines(registration) }],
     cta: {
       label: "View your booking",
@@ -72,7 +76,10 @@ export function registrationStatusMail(
   > = {
     APPROVED: {
       title: "Your booking is approved",
-      intro: `We have approved your booking for ${registration.event.title} and will send payment details next. Once payment reaches us it is confirmed.`,
+      intro:
+        registration.total === 0
+          ? `We have approved your booking for ${registration.event.title}. There is nothing to pay, and we will confirm your seat shortly.`
+          : `We have approved your booking for ${registration.event.title} and will send payment details next. Once payment reaches us it is confirmed.`,
     },
     CONFIRMED: {
       title: "You are confirmed",

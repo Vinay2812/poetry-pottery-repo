@@ -159,12 +159,21 @@ function isMoveTarget(
   return status !== RegistrationStatus.Pending;
 }
 
+const FREE_CONFIRM_LABEL: Record<RegistrationHold, string> = {
+  wheel: "Confirm booking",
+  seat: "Confirm seat",
+};
+
 /** Each button says what the move does, not just the status it lands on. */
 function registrationActionLabel(
   status: RegistrationMoveTarget,
   hold: RegistrationHold,
+  isFree: boolean,
 ): string {
   if (status === RegistrationStatus.Cancelled) return CANCEL_LABEL[hold];
+  if (status === RegistrationStatus.Confirmed && isFree) {
+    return FREE_CONFIRM_LABEL[hold];
+  }
   return REGISTRATION_ACTION_LABEL[status];
 }
 
@@ -189,19 +198,24 @@ export function toRegistrationActions(
   current: RegistrationStatus,
   nextStatuses: RegistrationStatus[],
   hold: RegistrationHold,
+  isFree: boolean,
 ): RegistrationAction[] {
-  return nextStatuses
-    .filter(isMoveTarget)
-    .filter((status) => status !== SPARE_NO[current])
-    .map((status, index) => ({
-      status,
-      label: registrationActionLabel(status, hold),
-      isPrimary:
-        index === 0 &&
-        (status === RegistrationStatus.Approved ||
-          status === RegistrationStatus.Confirmed),
-      isDestructive: registrationActionNeedsReason(status),
-    }));
+  return (
+    nextStatuses
+      .filter(isMoveTarget)
+      .filter((status) => status !== SPARE_NO[current])
+      // Nothing to pay means no payment step: a free request is confirmed straight away.
+      .filter((status) => !(isFree && status === RegistrationStatus.Approved))
+      .map((status, index) => ({
+        status,
+        label: registrationActionLabel(status, hold, isFree),
+        isPrimary:
+          index === 0 &&
+          (status === RegistrationStatus.Approved ||
+            status === RegistrationStatus.Confirmed),
+        isDestructive: registrationActionNeedsReason(status),
+      }))
+  );
 }
 
 const HOLD_NOUN: Record<RegistrationHold, string> = {

@@ -663,6 +663,22 @@ describe("event registration templates", () => {
     }
   });
 
+  it("never mentions payment for a free seat", () => {
+    const placed = registrationPlacedCustomerMail(registration({ total: 0 }));
+    expect(placed.text).not.toMatch(/pay/i);
+
+    const approved = registrationStatusMail(
+      registration({ status: RegistrationStatus.APPROVED, total: 0 }),
+    );
+    expect(approved?.text).toContain("There is nothing to pay");
+    expect(approved?.text).not.toContain("payment details");
+
+    const paid = registrationStatusMail(
+      registration({ status: RegistrationStatus.APPROVED, total: 2500 }),
+    );
+    expect(paid?.text).toContain("payment details");
+  });
+
   it("says nothing while a seat request is still pending", () => {
     expect(
       registrationStatusMail(
