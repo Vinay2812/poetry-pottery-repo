@@ -17,6 +17,7 @@ import {
   toDateTimeLocal,
   toNullableNumber,
   toPersonName,
+  toPreviewColour,
   toRegistrationStatus,
 } from "./types";
 
@@ -138,5 +139,17 @@ describe("datetime-local conversion", () => {
   it("pads every part to the shape the input wants", () => {
     const local = toDateTimeLocal("2026-01-05T00:04:00.000Z");
     expect(local).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/);
+  });
+});
+
+describe("toPreviewColour", () => {
+  it("paints a six-digit hex colour, trimmed", () => {
+    expect(toPreviewColour(" #4F6F52 ")).toBe("#4F6F52");
+  });
+
+  it("paints nothing while the value is half typed or empty", () => {
+    expect(toPreviewColour("#4F6")).toBeNull();
+    expect(toPreviewColour("")).toBeNull();
+    expect(toPreviewColour("sage")).toBeNull();
   });
 });

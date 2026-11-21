@@ -18,7 +18,7 @@ export function AdminStatusPill({ label, tone }: AdminStatusPillProps) {
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center border px-1.5 text-[11px] tracking-[0.08em] uppercase",
+        "inline-flex h-5 items-center border px-1.5 text-[11px] tracking-[0.08em] whitespace-nowrap uppercase",
         TONE_CLASS[tone],
       )}
     >
