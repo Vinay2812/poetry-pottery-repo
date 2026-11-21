@@ -275,16 +275,16 @@ export const STUDIO_NOTE =
 // Tailwind's lg breakpoint, where the buy box sits beside the gallery and the sticky bar is hidden.
 export const LG_MEDIA_QUERY = "(min-width: 64rem)";
 
-// The bottom nav (65px with its rule) and the sticky bar (69px) above the safe-area inset, plus 10px of air.
+// The bottom nav with its rule, the sticky bar and the safe-area inset, plus a little air; sizes live in globals.css.
 export const STICKY_BAR_SCROLL_PADDING =
-  "calc(9rem + env(safe-area-inset-bottom))";
+  "calc(var(--mobile-nav-height) + 1px + var(--sticky-bar-height) + env(safe-area-inset-bottom) + 0.625rem)";
 
-// The buttons count as gone once their bottom edge has slid under the sticky header.
+// The buttons count as gone once their bottom edge has slid under the sticky header's bottom edge.
 export function isTuckedUnderHeader(
   rowBottom: number,
-  headerHeight: number,
+  headerBottom: number,
 ): boolean {
-  return rowBottom <= headerHeight;
+  return rowBottom <= headerBottom;
 }
 
 // The price already sits above the button, so the button only says what it does.

@@ -187,6 +187,12 @@
   }
 }
 
+:root {
+  /* Below lg: MobileNav's bar (its 1px rule and the safe-area inset sit outside this), and the sticky buy bar on top of it. */
+  --mobile-nav-height: 4rem;
+  --sticky-bar-height: 4.3125rem;
+}
+
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }

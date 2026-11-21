@@ -24,7 +24,8 @@ export function MobileNav({ activeHref, cartCount }: MobileNavProps) {
       data-print="hide"
       className="fixed inset-x-0 bottom-0 z-40 border-t border-ash bg-background pb-safe lg:hidden"
     >
-      <ul className="flex h-16 items-stretch">
+      {/* The piece page's sticky buy bar sits on this nav, offset by the same --mobile-nav-height. */}
+      <ul className="flex h-(--mobile-nav-height) items-stretch">
         {ITEMS.map(({ href, label, Icon }) => {
           const isActive = href === activeHref;
           const count = href === "/cart" ? cartCount : 0;

@@ -17,7 +17,7 @@ export interface StickyBuyBarProps {
 }
 
 // Phone and tablet bar that appears once the main buttons have scrolled up out of view.
-// Sits on the bottom nav (64px, its rule, the safe-area inset); STICKY_BAR_SCROLL_PADDING covers both, resize together.
+// Sits on MobileNav; sized by the shared CSS variables.
 export function StickyBuyBar({
   isVisible,
   name,
@@ -32,10 +32,9 @@ export function StickyBuyBar({
   return (
     <div
       ref={barRef}
-      aria-hidden={!isVisible}
       inert={!isVisible}
       className={cn(
-        "fixed inset-x-0 bottom-[calc(4rem+1px+env(safe-area-inset-bottom))] z-30 flex items-center gap-3 border-t border-ash bg-background px-4 py-3 transition-transform duration-300 lg:hidden",
+        "fixed inset-x-0 bottom-[calc(var(--mobile-nav-height)+1px+env(safe-area-inset-bottom))] z-30 flex h-(--sticky-bar-height) items-center gap-3 border-t border-ash bg-background px-4 transition-transform duration-300 lg:hidden",
         isVisible ? "translate-y-0" : "translate-y-[120%]",
       )}
     >
