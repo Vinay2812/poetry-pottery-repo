@@ -1,7 +1,7 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
@@ -30,6 +30,13 @@ export function RegistrationsListContainer({
 }: RegistrationsListContainerProps) {
   const now = new Date(renderedAt);
   const [page, setPage] = useState(1);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  // The old page stays on screen while the next loads, so jumping to the top at once is safe.
+  const handlePageChange = useCallback((next: number) => {
+    setPage(next);
+    headingRef.current?.scrollIntoView({ block: "start" });
+  }, []);
   const {
     registrations,
     pageInfo,
@@ -55,7 +62,10 @@ export function RegistrationsListContainer({
 
   return (
     <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
-      <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
+      <h1
+        ref={headingRef}
+        className="font-heading text-4xl leading-tight tracking-tight md:text-6xl"
+      >
         Your bookings
       </h1>
       {isLoading ? (
@@ -121,7 +131,7 @@ export function RegistrationsListContainer({
               <Button
                 variant="outline"
                 disabled={page <= 1}
-                onClick={() => setPage((current) => current - 1)}
+                onClick={() => handlePageChange(page - 1)}
               >
                 Previous
               </Button>
@@ -131,9 +141,9 @@ export function RegistrationsListContainer({
               <Button
                 variant="outline"
                 disabled={page >= pageCount}
-                onClick={() => setPage((current) => current + 1)}
+                onClick={() => handlePageChange(page + 1)}
               >
-                More bookings
+                Next
               </Button>
             </div>
           )}
