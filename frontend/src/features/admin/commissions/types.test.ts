@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { CommissionStatus } from "@/graphql/generated/graphql";
 
 import {
+  commissionStatusOptions,
   applyCommissionPatch,
   type CommissionRow,
   commissionStatusTone,
@@ -131,5 +132,16 @@ describe("applyCommissionPatch", () => {
       },
     );
     expect(next[0]?.isRead).toBe(false);
+  });
+});
+
+describe("commission status order", () => {
+  it("lists a brief's states in the order they happen", () => {
+    expect(commissionStatusOptions().map((option) => option.label)).toEqual([
+      "New",
+      "Sketched",
+      "Accepted",
+      "Declined",
+    ]);
   });
 });

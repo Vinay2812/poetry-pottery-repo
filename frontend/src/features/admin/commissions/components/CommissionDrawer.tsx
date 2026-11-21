@@ -1,6 +1,6 @@
 "use client";
 
-import { CommissionStatus } from "@/graphql/generated/graphql";
+import type { CommissionStatus } from "@/graphql/generated/graphql";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,7 +13,7 @@ import {
 
 import { formatEnumLabel } from "@/features/admin/shell";
 
-const STATUSES = Object.values(CommissionStatus);
+import { COMMISSION_FLOW } from "@/features/admin/commissions/types";
 
 export interface CommissionDrawerProps {
   isOpen: boolean;
@@ -109,7 +109,7 @@ export function CommissionDrawer({
               Where this brief stands
             </h3>
             <div className="flex flex-wrap gap-2">
-              {STATUSES.map((member) => (
+              {COMMISSION_FLOW.map((member) => (
                 <Button
                   key={member}
                   type="button"

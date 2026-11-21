@@ -20,7 +20,6 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
-  enumOptions,
 } from "@/features/admin/ui";
 
 import { CommissionDrawer } from "@/features/admin/commissions/components/CommissionDrawer";
@@ -31,12 +30,13 @@ import {
   type CommissionRow,
   describeBrief,
   toCommissionRow,
+  commissionStatusOptions,
   toCommissionStatus,
   toWhatsAppHref,
 } from "@/features/admin/commissions/types";
 import { toWhatsAppBody } from "@/features/layout";
 
-const STATUS_OPTIONS = enumOptions(CommissionStatus);
+const STATUS_OPTIONS = commissionStatusOptions();
 
 interface StatusMove {
   id: string;
