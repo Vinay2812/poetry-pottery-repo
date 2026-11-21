@@ -85,7 +85,9 @@ export function CommissionBriefContainer({
         // An older picker error would otherwise sit over the hold at the picker.
         setPhotoError(null);
         setIsPhotoHoldShown(true);
+        // Focus follows the scroll, so the next Tab lands on the photos rather than past Send.
         photoPickerRef.current?.scrollIntoView({ block: "start" });
+        photoPickerRef.current?.focus({ preventScroll: true });
         return;
       }
       try {
@@ -165,7 +167,12 @@ export function CommissionBriefContainer({
       toAskUrl={toAskUrl}
       photoPicker={
         isSignedIn ? (
-          <div ref={photoPickerRef}>
+          <div
+            ref={photoPickerRef}
+            tabIndex={-1}
+            role="group"
+            aria-label="Reference photos"
+          >
             <ReferencePhotoPicker
               photos={photos.map((photo) => ({
                 id: photo.id,
