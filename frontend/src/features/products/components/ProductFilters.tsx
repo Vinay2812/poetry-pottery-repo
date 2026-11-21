@@ -69,17 +69,13 @@ function CheckGroup({
   selected,
   onToggle,
 }: CheckGroupProps) {
-  // An option that would empty the shelf is noise, unless it is the one already ticked.
-  const visible = options.filter(
-    (option) => option.count > 0 || selected.includes(option.value),
-  );
-  if (visible.length === 0) return null;
+  if (options.length === 0) return null;
   return (
     <fieldset className="flex flex-col lg:gap-3">
       <legend className="mb-1 text-[11px] tracking-[0.18em] text-muted-foreground uppercase lg:mb-3">
         {title}
       </legend>
-      {visible.map((option) => {
+      {options.map((option) => {
         const id = `${idPrefix}-${option.value}`;
         return (
           <div key={option.value} className={ROW_CLASS}>
@@ -88,9 +84,14 @@ function CheckGroup({
               checked={selected.includes(option.value)}
               onCheckedChange={() => onToggle(option.value)}
             />
+            {/* Every option stays listed; one with nothing behind it just reads quieter. */}
             <Label
               htmlFor={id}
-              className={cn(ROW_LABEL_CLASS, "justify-between")}
+              className={cn(
+                ROW_LABEL_CLASS,
+                "justify-between",
+                option.count === 0 && "text-muted-foreground",
+              )}
             >
               <span>{option.label}</span>
               <span className="text-muted-foreground tnum">{option.count}</span>
@@ -236,34 +237,35 @@ export function ProductFilters({
             Pieces we throw for you once you order, ready in about ten days.
           </p>
         </div>
-        {/* With nothing marked down the switch could only empty the shelf, so it waits for a second. */}
-        {(secondsCount > 0 || secondsOnly) && (
-          <div className="flex flex-col gap-1">
-            <div className={ROW_CLASS}>
-              <Label
-                htmlFor={`${scope}-filter-seconds`}
-                className={ROW_LABEL_CLASS}
-              >
-                Seconds{" "}
-                <span className="text-muted-foreground tnum">
-                  ({secondsCount})
-                </span>
-              </Label>
-              <Switch
-                id={`${scope}-filter-seconds`}
-                checked={secondsOnly}
-                onCheckedChange={onSecondsOnlyChange}
-                aria-describedby={`${scope}-filter-seconds-note`}
-              />
-            </div>
-            <p
-              id={`${scope}-filter-seconds-note`}
-              className="text-[13px] text-muted-foreground"
+        {/* The seconds shelf is listed on the shelf and in the archive alike, count and all. */}
+        <div className="flex flex-col gap-1">
+          <div className={ROW_CLASS}>
+            <Label
+              htmlFor={`${scope}-filter-seconds`}
+              className={cn(
+                ROW_LABEL_CLASS,
+                secondsCount === 0 && "text-muted-foreground",
+              )}
             >
-              Pieces the kiln marked, sold at a lower price with the flaw named.
-            </p>
+              Seconds{" "}
+              <span className="text-muted-foreground tnum">
+                ({secondsCount})
+              </span>
+            </Label>
+            <Switch
+              id={`${scope}-filter-seconds`}
+              checked={secondsOnly}
+              onCheckedChange={onSecondsOnlyChange}
+              aria-describedby={`${scope}-filter-seconds-note`}
+            />
           </div>
-        )}
+          <p
+            id={`${scope}-filter-seconds-note`}
+            className="text-[13px] text-muted-foreground"
+          >
+            Pieces the kiln marked, sold at a lower price with the flaw named.
+          </p>
+        </div>
       </div>
     </div>
   );
