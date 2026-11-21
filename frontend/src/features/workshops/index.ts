@@ -15,4 +15,5 @@ export { BookingDetailContainer } from "@/features/workshops/containers/BookingD
 export { BookingsListContainer } from "@/features/workshops/containers/BookingsListContainer";
 export { WorkshopBookingContainer } from "@/features/workshops/containers/WorkshopBookingContainer";
 export { useWorkshop } from "@/features/workshops/hooks";
+export { slotsNeeded } from "@/features/workshops/slot-picker/grid";
 export { toWorkshopPath, type WorkshopData } from "@/features/workshops/types";

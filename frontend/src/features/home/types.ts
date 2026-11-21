@@ -1,6 +1,8 @@
 import type { WorkshopsQuery } from "@/graphql/generated/graphql";
 import { formatInr } from "@/lib/format";
 
+import { slotsNeeded } from "@/features/workshops";
+
 export type StudioWheel = Pick<
   WorkshopsQuery["workshops"][number],
   | "opening_minutes"
@@ -145,9 +147,7 @@ export function toBookableTiers(wheel: StudioWheel): StudioWheel["tiers"] {
   );
   const capacity = Math.max(0, slotsPerDay) * wheel.slot_span_days;
   return wheel.tiers.filter(
-    (tier) =>
-      Math.max(1, Math.ceil((tier.hours * 60) / wheel.slot_minutes)) <=
-      capacity,
+    (tier) => slotsNeeded(tier.hours, wheel.slot_minutes) <= capacity,
   );
 }
 
