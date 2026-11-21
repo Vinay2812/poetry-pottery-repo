@@ -2,6 +2,7 @@ import { MessageCircle } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 import { PageShell } from "@/components/layout/PageShell";
 import { formatInr, pluralize } from "@/lib/format";
 
@@ -103,16 +104,12 @@ export function RegistrationDetail({
       <div className="grid gap-10 lg:grid-cols-[1fr_340px] lg:items-start">
         <div className="flex flex-col gap-10">
           <section className="flex flex-col gap-4">
-            <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-              Progress
-            </h2>
+            <SectionLabel>Progress</SectionLabel>
             <Timeline steps={steps} closedLabel={closedLabel} />
           </section>
 
           <section className="flex flex-col gap-4">
-            <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-              At the studio
-            </h2>
+            <SectionLabel>At the studio</SectionLabel>
             <dl className="border-t border-ash">
               {facts.map((fact) => (
                 <div
@@ -138,9 +135,7 @@ export function RegistrationDetail({
 
         <aside className="flex flex-col gap-6 lg:sticky lg:top-24">
           <section className="flex flex-col gap-3">
-            <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-              Summary
-            </h2>
+            <SectionLabel>Summary</SectionLabel>
             <dl className="border-t border-ash text-sm">
               <div className="flex justify-between border-b border-ash py-3">
                 <dt className="text-muted-foreground">

@@ -4,7 +4,7 @@ import { atViewport } from "@/lib/storybook/viewports";
 import { SectionLabel } from "./SectionLabel";
 
 const meta = {
-  title: "Features/Workshops/SectionLabel",
+  title: "Layout/SectionLabel",
   component: SectionLabel,
   parameters: { layout: "padded" },
   args: { children: "Upcoming" },

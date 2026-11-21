@@ -21,7 +21,7 @@ import {
   toBookingPath,
   toBookingStatusLabel,
 } from "@/features/workshops/types";
-import { SectionLabel } from "@/features/workshops/components/SectionLabel";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 const GROUPS: { key: ReturnType<typeof toBookingGroup>; heading: string }[] = [
   { key: "upcoming", heading: "Upcoming" },

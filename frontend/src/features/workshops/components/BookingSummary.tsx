@@ -14,7 +14,7 @@ import {
   REPLACE_TIME_HINT,
   SESSION_NOTE,
 } from "@/features/workshops/types";
-import { SectionLabel } from "@/features/workshops/components/SectionLabel";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 export interface BookingSummaryProps {
   pickedSlots: PickedSlot[];

@@ -23,7 +23,7 @@ import {
   type SlotOption,
 } from "@/features/workshops/components/SlotList";
 import { formatDateKey, REPLACE_TIME_HINT } from "@/features/workshops/types";
-import { SectionLabel } from "@/features/workshops/components/SectionLabel";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 export interface RescheduleDialogProps {
   isOpen: boolean;

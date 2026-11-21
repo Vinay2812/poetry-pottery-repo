@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { SECTION_LABEL } from "@/features/orders/components/styles";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 export interface OrderCareGuideProps {
   lines: string[];
@@ -10,7 +10,7 @@ export interface OrderCareGuideProps {
 export function OrderCareGuide({ lines }: OrderCareGuideProps) {
   return (
     <section className="flex flex-col gap-4">
-      <h2 className={SECTION_LABEL}>Caring for these pieces</h2>
+      <SectionLabel>Caring for these pieces</SectionLabel>
       <ul className="flex flex-col gap-2">
         {lines.map((line) => (
           <li key={line} className="flex gap-3 text-[15px]">

@@ -11,7 +11,7 @@ import type { TimelineStep } from "@/lib/timeline";
 import type { StatusTone } from "@/features/orders/types";
 import type { SessionFact } from "@/features/workshops/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
-import { SectionLabel } from "@/features/workshops/components/SectionLabel";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 export interface BookingDetailProps {
   bookingId: string;

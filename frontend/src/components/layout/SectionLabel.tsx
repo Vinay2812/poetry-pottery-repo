@@ -5,7 +5,7 @@ export interface SectionLabelProps {
   id?: string;
 }
 
-// The small uppercase name a section carries on every wheel session page.
+// The small uppercase name of a section on the order, wheel session and event booking pages.
 export function SectionLabel({ children, level = 2, id }: SectionLabelProps) {
   const Heading = level === 3 ? "h3" : "h2";
   return (

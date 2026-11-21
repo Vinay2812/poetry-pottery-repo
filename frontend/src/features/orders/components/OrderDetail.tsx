@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 import { OrderCareGuide } from "@/features/orders/components/OrderCareGuide";
 import { OrderPlacedBanner } from "@/features/orders/components/OrderPlacedBanner";
@@ -13,7 +14,6 @@ import {
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 import { Timeline } from "@/components/timeline/Timeline";
 import { OrderTotals } from "@/features/orders/components/OrderTotals";
-import { SECTION_LABEL } from "@/features/orders/components/styles";
 import {
   StudioNote,
   type StudioNoteProps,
@@ -133,7 +133,7 @@ export function OrderDetail({
       <div className="grid gap-10 lg:grid-cols-[1fr_360px] lg:items-start">
         <div className="flex flex-col gap-10">
           <section className="flex flex-col gap-4">
-            <h2 className={SECTION_LABEL}>Progress</h2>
+            <SectionLabel>Progress</SectionLabel>
             <Timeline steps={steps} closedLabel={closedLabel} />
             {trackingNote && (
               <p className="text-[13px] text-muted-foreground">
@@ -143,7 +143,7 @@ export function OrderDetail({
           </section>
 
           <section className="flex flex-col gap-4">
-            <h2 className={SECTION_LABEL}>Pieces</h2>
+            <SectionLabel>Pieces</SectionLabel>
             <ul className="flex flex-col border-t border-ash">
               {items.map((item) => (
                 <OrderItemRow
@@ -164,7 +164,7 @@ export function OrderDetail({
 
           {studioNotes.length > 0 && (
             <section className="flex flex-col gap-4">
-              <h2 className={SECTION_LABEL}>From the studio</h2>
+              <SectionLabel>From the studio</SectionLabel>
               <ul className="flex flex-col border-t border-ash">
                 {studioNotes.map((note) => (
                   <StudioNote
@@ -183,7 +183,7 @@ export function OrderDetail({
 
         <aside className="flex flex-col gap-8 lg:sticky lg:top-24">
           <section className="flex flex-col gap-4">
-            <h2 className={SECTION_LABEL}>Summary</h2>
+            <SectionLabel>Summary</SectionLabel>
             <div className="border-t border-ash">
               <OrderTotals
                 subtotal={subtotal}
@@ -195,7 +195,7 @@ export function OrderDetail({
             </div>
           </section>
           <section className="flex flex-col gap-4">
-            <h2 className={SECTION_LABEL}>Delivering to</h2>
+            <SectionLabel>Delivering to</SectionLabel>
             <address className="text-sm leading-relaxed not-italic">
               {addressLines.map((line, index) => (
                 <span key={index} className="block">
@@ -211,7 +211,7 @@ export function OrderDetail({
           </section>
           {(giftNote || hasHiddenPrices) && (
             <section className="flex flex-col gap-4">
-              <h2 className={SECTION_LABEL}>Sent as a gift</h2>
+              <SectionLabel>Sent as a gift</SectionLabel>
               {giftNote && (
                 <p className="font-script text-lg leading-relaxed italic">
                   “{giftNote}”
