@@ -27,8 +27,19 @@ import {
   toRegistrationStatusTone,
   toRegistrationStepIndex,
   toEventWhenLabel,
+  toEventWhenRangeLabel,
+  toEventFacts,
+  toGalleryHeading,
+  toParagraphs,
+  toRegistrationClosedLabel,
+  toRegistrationFacts,
+  toRegistrationGroup,
+  toRegistrationStepDates,
+  toRequestSeatsLabel,
+  toReserveNotePlaceholder,
+  toReserveState,
+  toSeatPriceNote,
   toSeatsLabel,
-  toSeatsOfTotalLabel,
   toTimeRange,
   toWhatsAppBookingMessage,
 } from "./types";
@@ -54,11 +65,6 @@ describe("toSeatsLabel", () => {
     expect(toSeatsLabel(0, 8)).toBe("Sold out");
     expect(toSeatsLabel(8, 8)).toBe("All 8 seats open");
   });
-
-  it("counts seats against the room", () => {
-    expect(toSeatsOfTotalLabel(3, 8)).toBe("3 of 8 seats left");
-    expect(toSeatsOfTotalLabel(0, 8)).toBe("Sold out");
-  });
 });
 
 describe("labels", () => {
@@ -73,9 +79,23 @@ describe("labels", () => {
   });
 });
 
+const NOW = new Date("2026-09-01T00:00:00.000Z");
+
 describe("dates", () => {
   it("writes the start as one plain line", () => {
-    expect(toEventWhenLabel(STARTS_AT)).toBe("Sat 19 Sep · 3 pm");
+    expect(toEventWhenLabel(STARTS_AT, NOW)).toBe("Sat 19 Sep · 3 pm");
+  });
+
+  it("names the year only when it is not this one", () => {
+    expect(toEventWhenLabel("2025-10-18T13:00:00.000Z", NOW)).toBe(
+      "Sat 18 Oct 2025 · 6:30 pm",
+    );
+  });
+
+  it("closes the line with the end hour", () => {
+    expect(toEventWhenRangeLabel(STARTS_AT, ENDS_AT, NOW)).toBe(
+      "Sat 19 Sep · 3 pm – 6 pm",
+    );
   });
 
   it("joins start and end into a time range", () => {
@@ -85,8 +105,14 @@ describe("dates", () => {
 
 describe("registration status helpers", () => {
   it("maps statuses to labels, tones and steps", () => {
+    expect(toRegistrationStatusLabel(RegistrationStatus.Pending)).toBe(
+      "Awaiting confirmation",
+    );
     expect(toRegistrationStatusLabel(RegistrationStatus.Approved)).toBe(
       "Seat held, awaiting payment",
+    );
+    expect(toRegistrationStatusLabel(RegistrationStatus.Rejected)).toBe(
+      "Not confirmed",
     );
     expect(toRegistrationStatusTone(RegistrationStatus.Pending)).toBe(
       "pending",
@@ -287,5 +313,116 @@ describe("toEventsFilterKey", () => {
       1,
     );
     expect(toEventsFilterKey(server)).toBe(toEventsFilterKey(browser));
+  });
+});
+
+describe("event detail helpers", () => {
+  it("keeps at most three paragraphs and drops blank lines", () => {
+    expect(toParagraphs("One.\n\n Two. \nThree.\nFour.")).toEqual([
+      "One.",
+      "Two.",
+      "Three.",
+    ]);
+  });
+
+  it("lists only the facts an event has, never price or seats", () => {
+    const facts = toEventFacts({
+      starts_at: STARTS_AT,
+      ends_at: ENDS_AT,
+      location: "The studio",
+      address: "Sangli",
+      level: null,
+      instructor: null,
+      performers: ["Asha", "Kiran"],
+    });
+    expect(facts.map((fact) => fact.label)).toEqual([
+      "Date",
+      "Time",
+      "Where",
+      "Line-up",
+    ]);
+    expect(facts[2]?.value).toBe("The studio, Sangli");
+    expect(facts[3]?.value).toBe("Asha, Kiran");
+  });
+
+  it("picks one reserve state, cancelled first", () => {
+    const open = {
+      isCancelled: false,
+      hasBooking: false,
+      isPast: false,
+      availableSeats: 3,
+    };
+    expect(toReserveState(open)).toBe("open");
+    expect(toReserveState({ ...open, availableSeats: 0 })).toBe("soldOut");
+    expect(toReserveState({ ...open, isPast: true, availableSeats: 0 })).toBe(
+      "past",
+    );
+    expect(toReserveState({ ...open, isPast: true, hasBooking: true })).toBe(
+      "booked",
+    );
+    expect(
+      toReserveState({ ...open, hasBooking: true, isCancelled: true }),
+    ).toBe("cancelled");
+  });
+
+  it("asks for seats rather than selling them", () => {
+    expect(toRequestSeatsLabel(1)).toBe("Request a seat");
+    expect(toRequestSeatsLabel(3)).toBe("Request 3 seats");
+  });
+
+  it("words the box and gallery for the kind of evening", () => {
+    expect(toSeatPriceNote(EventType.PotteryWorkshop)).toContain("Clay");
+    expect(toSeatPriceNote(EventType.OpenMic)).toBeNull();
+    expect(toReserveNotePlaceholder(EventType.OpenMic)).not.toContain("wheel");
+    expect(toGalleryHeading(EventType.PotteryWorkshop)).toBe(
+      "From the workshop",
+    );
+    expect(toGalleryHeading(EventType.OpenMic)).toBe("From the evening");
+  });
+});
+
+describe("registration detail helpers", () => {
+  it("dates only the steps the booking reached", () => {
+    const dates = toRegistrationStepDates(registration());
+    expect(dates[RegistrationStatus.Pending]).toBeTruthy();
+    expect(dates[RegistrationStatus.Approved]).toBeTruthy();
+    expect(dates[RegistrationStatus.Confirmed]).toBeNull();
+  });
+
+  it("says when and why a booking closed", () => {
+    expect(toRegistrationClosedLabel(registration())).toBeNull();
+    const label = toRegistrationClosedLabel(
+      registration({
+        status: RegistrationStatus.Cancelled,
+        cancelled_at: "2026-09-12T09:00:00.000Z",
+        cancel_reason: "Away that week",
+      }),
+    );
+    expect(label).toMatch(/^Cancelled on .+ · Away that week$/);
+    expect(
+      toRegistrationClosedLabel(
+        registration({ status: RegistrationStatus.Rejected }),
+      ),
+    ).toBe("Not confirmed");
+  });
+
+  it("lists the event facts for a booking", () => {
+    expect(
+      toRegistrationFacts(registration().event).map((fact) => fact.label),
+    ).toEqual(["Kind", "Date", "Time", "Where"]);
+  });
+
+  it("files closed and finished bookings under past", () => {
+    expect(toRegistrationGroup(registration())).toBe("upcoming");
+    expect(
+      toRegistrationGroup(
+        registration({ status: RegistrationStatus.Cancelled }),
+      ),
+    ).toBe("past");
+    expect(
+      toRegistrationGroup(
+        registration({ event: { ...registration().event, is_past: true } }),
+      ),
+    ).toBe("past");
   });
 });

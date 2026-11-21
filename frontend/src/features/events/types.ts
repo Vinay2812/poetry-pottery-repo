@@ -9,7 +9,7 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
-import { formatTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatTime } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
 import type { StatusTone } from "@/features/orders/types";
@@ -20,7 +20,7 @@ export type EventDetailData = EventQuery["event"];
 const PAGE_SIZE = 12;
 export const MAX_SEATS = 4;
 export const SEAT_NOTE =
-  "Seats are confirmed by hand on WhatsApp, usually within a day";
+  "We confirm every seat by hand on WhatsApp, usually within a day.";
 
 export interface EventFact {
   label: string;
@@ -69,23 +69,40 @@ const WHEN_DATE = new Intl.DateTimeFormat("en-IN", {
   timeZone: "Asia/Kolkata",
 });
 
+const WHEN_YEAR = new Intl.DateTimeFormat("en-IN", {
+  year: "numeric",
+  timeZone: "Asia/Kolkata",
+});
+
 const WHEN_HOUR = new Intl.DateTimeFormat("en-IN", {
   hour: "numeric",
   minute: "2-digit",
   timeZone: "Asia/Kolkata",
 });
 
-// "Thu 17 Sep · 4 pm": one line, no zero minutes, no comma clutter.
-export function toEventWhenLabel(startsAt: string | Date): string {
-  const date = new Date(startsAt);
-  const day = WHEN_DATE.format(date).replace(/,/g, "").replace("Sept", "Sep");
-  const time = WHEN_HOUR.format(date).replace(":00", "");
-  return `${day} · ${time}`;
+function toHourLabel(date: Date): string {
+  return WHEN_HOUR.format(date).replace(":00", "");
 }
 
-export function toSeatsOfTotalLabel(available: number, total: number): string {
-  if (available <= 0) return "Sold out";
-  return `${available} of ${total} seats left`;
+// "Thu 17 Sep · 4 pm": one line, no zero minutes, no comma clutter. Other years say which.
+export function toEventWhenLabel(
+  startsAt: string | Date,
+  now: Date = new Date(),
+): string {
+  const date = new Date(startsAt);
+  const day = WHEN_DATE.format(date).replace(/,/g, "").replace("Sept", "Sep");
+  const year = WHEN_YEAR.format(date);
+  const dayLabel = year === WHEN_YEAR.format(now) ? day : `${day} ${year}`;
+  return `${dayLabel} · ${toHourLabel(date)}`;
+}
+
+// "Sun 6 Dec · 4 pm – 7 pm": the line under an event's title.
+export function toEventWhenRangeLabel(
+  startsAt: string | Date,
+  endsAt: string | Date,
+  now: Date = new Date(),
+): string {
+  return `${toEventWhenLabel(startsAt, now)} – ${toHourLabel(new Date(endsAt))}`;
 }
 
 export function toTimeRange(
@@ -93,6 +110,95 @@ export function toTimeRange(
   endsAt: string | Date,
 ): string {
   return `${formatTime(startsAt)} – ${formatTime(endsAt)}`;
+}
+
+const MAX_PARAGRAPHS = 3;
+
+export function toParagraphs(description: string): string[] {
+  return description
+    .split(/\n+/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .slice(0, MAX_PARAGRAPHS);
+}
+
+type EventFactsInput = Pick<
+  EventDetailData,
+  | "starts_at"
+  | "ends_at"
+  | "location"
+  | "address"
+  | "level"
+  | "instructor"
+  | "performers"
+>;
+
+// Date, place and who leads it. Price and seats live in the reserve box only.
+export function toEventFacts(event: EventFactsInput): EventFact[] {
+  const levelLabel = toLevelLabel(event.level);
+  return [
+    { label: "Date", value: formatDate(event.starts_at) },
+    { label: "Time", value: toTimeRange(event.starts_at, event.ends_at) },
+    { label: "Where", value: `${event.location}, ${event.address}` },
+    ...(levelLabel ? [{ label: "Level", value: levelLabel }] : []),
+    ...(event.instructor
+      ? [{ label: "Instructor", value: event.instructor }]
+      : []),
+    ...(event.performers.length > 0
+      ? [{ label: "Line-up", value: event.performers.join(", ") }]
+      : []),
+  ];
+}
+
+export type ReserveState = "cancelled" | "booked" | "past" | "soldOut" | "open";
+
+interface ReserveStateInput {
+  isCancelled: boolean;
+  hasBooking: boolean;
+  isPast: boolean;
+  availableSeats: number;
+}
+
+// A booking outranks the date: a past evening still links to the seat you had.
+export function toReserveState(input: ReserveStateInput): ReserveState {
+  if (input.isCancelled) return "cancelled";
+  if (input.hasBooking) return "booked";
+  if (input.isPast) return "past";
+  if (input.availableSeats <= 0) return "soldOut";
+  return "open";
+}
+
+export function toRequestSeatsLabel(seats: number): string {
+  return seats === 1 ? "Request a seat" : `Request ${seats} seats`;
+}
+
+const SEAT_PRICE_NOTE: Record<EventType, string | null> = {
+  [EventType.PotteryWorkshop]:
+    "Clay, tools and firing are part of the seat price.",
+  [EventType.OpenMic]: null,
+};
+
+export function toSeatPriceNote(eventType: EventType): string | null {
+  return SEAT_PRICE_NOTE[eventType];
+}
+
+const NOTE_PLACEHOLDER: Record<EventType, string> = {
+  [EventType.PotteryWorkshop]:
+    "Left-handed, coming with a friend, first time on the wheel…",
+  [EventType.OpenMic]: "Hoping to read, coming with a friend, need a chair…",
+};
+
+export function toReserveNotePlaceholder(eventType: EventType): string {
+  return NOTE_PLACEHOLDER[eventType];
+}
+
+const GALLERY_HEADING: Record<EventType, string> = {
+  [EventType.PotteryWorkshop]: "From the workshop",
+  [EventType.OpenMic]: "From the evening",
+};
+
+export function toGalleryHeading(eventType: EventType): string {
+  return GALLERY_HEADING[eventType];
 }
 
 export interface RegistrationStep {
@@ -119,11 +225,12 @@ export const REGISTRATION_STEPS: RegistrationStep[] = [
   },
 ];
 
+// Same words as wheel sessions: a seat is a request until the studio confirms it.
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting approval",
+  [RegistrationStatus.Pending]: "Awaiting confirmation",
   [RegistrationStatus.Approved]: "Seat held, awaiting payment",
   [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not approved",
+  [RegistrationStatus.Rejected]: "Not confirmed",
   [RegistrationStatus.Cancelled]: "Cancelled",
 };
 
@@ -144,11 +251,34 @@ export function toRegistrationStatusTone(
   return "active";
 }
 
+export type RegistrationStepDates = Partial<
+  Record<RegistrationStatus, string | null>
+>;
+
+type StepDatesInput = Pick<
+  RegistrationData,
+  "created_at" | "approved_at" | "confirmed_at"
+>;
+
+export function toRegistrationStepDates(
+  registration: StepDatesInput,
+): RegistrationStepDates {
+  return {
+    [RegistrationStatus.Pending]: formatDateTime(registration.created_at),
+    [RegistrationStatus.Approved]: registration.approved_at
+      ? formatDateTime(registration.approved_at)
+      : null,
+    [RegistrationStatus.Confirmed]: registration.confirmed_at
+      ? formatDateTime(registration.confirmed_at)
+      : null,
+  };
+}
+
 // Index of the current step. Cancelled and rejected bookings are not steps of their own,
 // so they freeze at the last step that actually carries a date.
 export function toRegistrationStepIndex(
   status: RegistrationStatus,
-  stepDates: Record<string, string | null> = {},
+  stepDates: RegistrationStepDates = {},
 ): number {
   const index = REGISTRATION_STEPS.findIndex((step) => step.key === status);
   if (index !== -1) return index;
@@ -163,6 +293,54 @@ export function isRegistrationClosed(status: RegistrationStatus): boolean {
     status === RegistrationStatus.Cancelled ||
     status === RegistrationStatus.Rejected
   );
+}
+
+type ClosedLabelInput = Pick<
+  RegistrationData,
+  "status" | "cancelled_at" | "rejected_at" | "cancel_reason"
+>;
+
+// "Cancelled on 12 Sept, 2026, 2:30 pm · Away that week", or null while the booking is open.
+export function toRegistrationClosedLabel(
+  registration: ClosedLabelInput,
+): string | null {
+  if (!isRegistrationClosed(registration.status)) return null;
+  const closedOn = registration.cancelled_at ?? registration.rejected_at;
+  return [
+    toRegistrationStatusLabel(registration.status) +
+      (closedOn ? ` on ${formatDateTime(closedOn)}` : ""),
+    registration.cancel_reason,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+type RegistrationFactsInput = Pick<
+  RegistrationData["event"],
+  "event_type" | "starts_at" | "ends_at" | "location" | "address"
+>;
+
+export function toRegistrationFacts(
+  event: RegistrationFactsInput,
+): EventFact[] {
+  return [
+    { label: "Kind", value: toEventTypeLabel(event.event_type) },
+    { label: "Date", value: formatDate(event.starts_at) },
+    { label: "Time", value: toTimeRange(event.starts_at, event.ends_at) },
+    { label: "Where", value: `${event.location}, ${event.address}` },
+  ];
+}
+
+export type RegistrationGroup = "upcoming" | "past";
+
+// Like wheel sessions: a date that has run, or a seat that will never be taken, sits under Past.
+export function toRegistrationGroup(
+  registration: Pick<RegistrationData, "status"> & {
+    event: Pick<RegistrationData["event"], "is_past">;
+  },
+): RegistrationGroup {
+  if (isRegistrationClosed(registration.status)) return "past";
+  return registration.event.is_past ? "past" : "upcoming";
 }
 
 export interface WhatsAppBookingInput {

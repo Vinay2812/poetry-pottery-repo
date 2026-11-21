@@ -103,7 +103,7 @@ export function useRegisterForEvent() {
           },
         },
       }),
-    messages: { success: null, failure: "The seat could not be reserved" },
+    messages: { success: null, failure: "Your request could not be sent" },
     onSuccess: ({ data }) => {
       if (!data) return;
       // The event page is a server component; its seat count is stale until refreshed.

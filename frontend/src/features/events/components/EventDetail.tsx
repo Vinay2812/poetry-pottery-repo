@@ -9,29 +9,31 @@ export interface EventDetailProps {
   title: string;
   imageUrl: string | null;
   typeLabel: string;
+  whenLabel: string;
   facts: EventFact[];
   paragraphs: string[];
   includes: string[];
   highlights: string[];
   gallery: string[];
-  isPast: boolean;
-  isCancelled: boolean;
+  galleryHeading: string;
   reserveBox: React.ReactNode;
   reviews: React.ReactNode;
   policy: React.ReactNode;
 }
 
+const LIST_ITEM = "border-b border-ash py-3 text-[15px]";
+
 export function EventDetail({
   title,
   imageUrl,
   typeLabel,
+  whenLabel,
   facts,
   paragraphs,
   includes,
   highlights,
   gallery,
-  isPast,
-  isCancelled,
+  galleryHeading,
   reserveBox,
   reviews,
   policy,
@@ -61,6 +63,7 @@ export function EventDetail({
         <h1 className="max-w-3xl font-heading text-3xl leading-tight tracking-tight text-balance md:text-5xl">
           {title}
         </h1>
+        <p className="text-[15px] tnum">{whenLabel}</p>
       </header>
 
       <div className="grid gap-10 lg:grid-cols-[1.1fr_360px] lg:items-start">
@@ -96,10 +99,7 @@ export function EventDetail({
               </h2>
               <ul className="border-t border-ash">
                 {highlights.map((item) => (
-                  <li
-                    key={item}
-                    className="border-b border-ash py-3 text-sm text-muted-foreground"
-                  >
+                  <li key={item} className={LIST_ITEM}>
                     {item}
                   </li>
                 ))}
@@ -114,10 +114,7 @@ export function EventDetail({
               </h2>
               <ul className="border-t border-ash">
                 {includes.map((item) => (
-                  <li
-                    key={item}
-                    className="border-b border-ash py-3 text-sm text-muted-foreground"
-                  >
+                  <li key={item} className={LIST_ITEM}>
                     {item}
                   </li>
                 ))}
@@ -125,10 +122,10 @@ export function EventDetail({
             </section>
           )}
 
-          {isPast && gallery.length > 0 && (
+          {gallery.length > 0 && (
             <section className="flex flex-col gap-4">
               <h2 className="font-heading text-2xl tracking-tight">
-                From the evening
+                {galleryHeading}
               </h2>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                 {gallery.map((url) => (
@@ -155,19 +152,7 @@ export function EventDetail({
         </div>
 
         <aside className="order-first lg:sticky lg:top-24 lg:order-none">
-          {isCancelled ? (
-            <div className="flex flex-col gap-2 bg-clay-white p-6">
-              <p className="font-heading text-xl tracking-tight">
-                This one was called off
-              </p>
-              <p className="text-sm text-muted-foreground">
-                The studio cancelled this session. Anyone with a seat has been
-                told, and nothing is owed.
-              </p>
-            </div>
-          ) : (
-            reserveBox
-          )}
+          {reserveBox}
         </aside>
       </div>
     </PageShell>

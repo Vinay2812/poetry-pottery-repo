@@ -1,43 +1,36 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useState } from "react";
 
 import { EventStatus } from "@/graphql/generated/graphql";
-import { formatDate, formatInr } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 
 import { EventDetail } from "@/features/events/components/EventDetail";
 import { ReserveBox } from "@/features/events/components/ReserveBox";
 import { useRegisterForEvent } from "@/features/events/hooks";
-import { CancellationPolicy } from "@/features/workshops";
 import {
   type EventDetailData,
-  type EventFact,
   isRegistrationClosed,
   MAX_SEATS,
+  toEventFacts,
   toEventTypeLabel,
-  toLevelLabel,
+  toEventWhenRangeLabel,
+  toGalleryHeading,
+  toParagraphs,
   toRegistrationPath,
   toRegistrationStatusLabel,
+  toReserveNotePlaceholder,
+  toReserveState,
+  toSeatPriceNote,
   toSeatsLabel,
-  toSeatsOfTotalLabel,
-  toTimeRange,
 } from "@/features/events/types";
 import { buildWhatsAppUrl } from "@/features/layout/types";
 import { ReviewsPanelContainer } from "@/features/reviews";
+import { CancellationPolicy } from "@/features/workshops";
 
 export interface EventDetailContainerProps {
   event: EventDetailData;
   whatsappNumber: string;
-}
-
-const MAX_PARAGRAPHS = 3;
-
-function toParagraphs(description: string): string[] {
-  return description
-    .split(/\n+/)
-    .map((paragraph) => paragraph.trim())
-    .filter(Boolean)
-    .slice(0, MAX_PARAGRAPHS);
 }
 
 export function EventDetailContainer({
@@ -52,36 +45,20 @@ export function EventDetailContainer({
     reserve(event.id, seats, note);
   }, [event.id, note, reserve, seats]);
 
-  const facts = useMemo<EventFact[]>(() => {
-    const levelLabel = toLevelLabel(event.level);
-    const rows: EventFact[] = [
-      { label: "Date", value: formatDate(event.starts_at) },
-      { label: "Time", value: toTimeRange(event.starts_at, event.ends_at) },
-      { label: "Where", value: `${event.location}, ${event.address}` },
-    ];
-    if (levelLabel) rows.push({ label: "Level", value: levelLabel });
-    if (event.instructor)
-      rows.push({ label: "Instructor", value: event.instructor });
-    if (event.performers.length > 0)
-      rows.push({ label: "Line-up", value: event.performers.join(", ") });
-    rows.push({ label: "Price", value: `${formatInr(event.price)} a seat` });
-    rows.push({
-      label: "Seats",
-      value:
-        event.status === EventStatus.Cancelled
-          ? "Cancelled"
-          : event.is_past
-            ? "This one has wrapped up"
-            : toSeatsOfTotalLabel(event.available_seats, event.total_seats),
-    });
-    return rows;
-  }, [event]);
-
   // A cancelled or rejected row still comes back, but the studio lets you book again.
   const registration =
     event.my_registration && !isRegistrationClosed(event.my_registration.status)
       ? event.my_registration
       : null;
+  const isCancelled = event.status === EventStatus.Cancelled;
+  const reserveState = toReserveState({
+    isCancelled,
+    hasBooking: registration !== null,
+    isPast: event.is_past,
+    availableSeats: event.available_seats,
+  });
+  // Photos are a record of the day, so they wait until it has happened.
+  const gallery = event.is_past ? event.gallery : [];
   const whatsappUrl = whatsappNumber
     ? buildWhatsAppUrl(
         whatsappNumber,
@@ -94,32 +71,38 @@ export function EventDetailContainer({
       title={event.title}
       imageUrl={event.image_url}
       typeLabel={toEventTypeLabel(event.event_type)}
-      facts={facts}
+      whenLabel={toEventWhenRangeLabel(event.starts_at, event.ends_at)}
+      facts={toEventFacts(event)}
       paragraphs={toParagraphs(event.description)}
       includes={event.includes}
       highlights={event.highlights}
-      gallery={event.gallery}
-      isPast={event.is_past}
-      isCancelled={event.status === EventStatus.Cancelled}
+      gallery={gallery}
+      galleryHeading={toGalleryHeading(event.event_type)}
+      // Only people who sat through a finished date can review it.
       reviews={
-        <ReviewsPanelContainer
-          kind="event"
-          subjectId={event.id}
-          slug={event.slug}
-          subjectName={event.title}
-        />
+        event.is_past && !isCancelled ? (
+          <ReviewsPanelContainer
+            kind="event"
+            subjectId={event.id}
+            slug={event.slug}
+            subjectName={event.title}
+          />
+        ) : null
       }
-      policy={<CancellationPolicy />}
+      // The policy is about seats on a date still to come.
+      policy={!event.is_past && !isCancelled ? <CancellationPolicy /> : null}
       reserveBox={
         <ReserveBox
+          state={reserveState}
           eventId={event.id}
           price={event.price}
           seats={seats}
           maxSeats={Math.max(1, Math.min(MAX_SEATS, event.available_seats))}
           note={note}
+          notePlaceholder={toReserveNotePlaceholder(event.event_type)}
           seatsLabel={toSeatsLabel(event.available_seats, event.total_seats)}
-          isSoldOut={event.available_seats <= 0}
-          isPast={event.is_past}
+          seatPriceNote={toSeatPriceNote(event.event_type)}
+          hasGallery={gallery.length > 0}
           isReserving={isReserving}
           bookingHref={
             registration ? toRegistrationPath(registration.id) : null
