@@ -272,6 +272,19 @@ export function toFlawNote(flawNote: string | null): string {
 export const STUDIO_NOTE =
   "Each piece is thrown by hand, so expect small differences.";
 
+// The price already sits above the button, so the button only says what it does.
+export function toAddToCartLabel(quantity: number): string {
+  return quantity > 1 ? `Add ${quantity} to cart` : "Add to cart";
+}
+
+// More than one piece gets its total said once, quietly, under the button.
+export function toQuantityTotalLine(
+  quantity: number,
+  total: string,
+): string | null {
+  return quantity > 1 ? `${quantity} pieces, ${total} together` : null;
+}
+
 // Description copy is trimmed to three sentences; the rest sits behind a toggle.
 export function toShortDescription(description: string): {
   short: string;

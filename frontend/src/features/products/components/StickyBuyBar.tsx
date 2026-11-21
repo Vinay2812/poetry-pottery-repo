@@ -1,5 +1,3 @@
-import { ShoppingBag } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import { formatInr } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -14,7 +12,7 @@ export interface StickyBuyBarProps {
   onAddToCart: () => void;
 }
 
-// Mobile-only bar that appears once the main button has scrolled away.
+// Phone and tablet bar that appears once the main buttons have scrolled up out of view.
 export function StickyBuyBar({
   isVisible,
   name,
@@ -41,8 +39,7 @@ export function StickyBuyBar({
         disabled={isSoldOut || !canAddToCart || isAddingToCart}
         tabIndex={isVisible ? 0 : -1}
       >
-        <ShoppingBag className="size-4" strokeWidth={1.5} />
-        {isSoldOut ? "Sold out" : "Add to cart"}
+        {isSoldOut ? "Sold out" : isAddingToCart ? "Adding…" : "Add to cart"}
       </Button>
     </div>
   );

@@ -28,7 +28,7 @@ export function ArchiveNotice({
           {collectionName}
         </p>
       )}
-      <h1 className="font-heading text-3xl leading-tight tracking-tight text-balance md:text-4xl">
+      <h1 className="font-heading text-[34px] leading-[1.05] tracking-tight text-balance lg:text-5xl">
         {name}
       </h1>
       <p className="text-lg text-muted-foreground tnum">{priceLabel}</p>

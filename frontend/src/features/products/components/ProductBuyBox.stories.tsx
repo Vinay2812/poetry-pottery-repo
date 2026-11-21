@@ -115,6 +115,10 @@ export const MadeToOrder: Story = {
   },
 };
 
+export const TwoPieces: Story = {
+  args: { quantity: 2 },
+};
+
 export const Wishlisted: Story = {
   args: { isWishlisted: true },
 };

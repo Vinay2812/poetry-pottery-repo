@@ -9,7 +9,12 @@ import { GlazeChip } from "@/features/products/components/GlazeChip";
 import { PriceTag } from "@/features/products/components/PriceTag";
 import { QuantityStepper } from "@/features/products/components/QuantityStepper";
 import { StockBadge } from "@/features/products/components/StockBadge";
-import { STUDIO_NOTE, type StockTone } from "@/features/products/types";
+import {
+  STUDIO_NOTE,
+  type StockTone,
+  toAddToCartLabel,
+  toQuantityTotalLine,
+} from "@/features/products/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface ProductBuyBoxProps {
@@ -35,6 +40,8 @@ export interface ProductBuyBoxProps {
   onAddToCart: () => void;
   onToggleWishlist: () => void;
   options?: React.ReactNode;
+  // Lets the page tell when the buttons themselves have scrolled away.
+  actionsRef?: React.Ref<HTMLDivElement>;
 }
 
 export function ProductBuyBox({
@@ -60,9 +67,12 @@ export function ProductBuyBox({
   onAddToCart,
   onToggleWishlist,
   options,
+  actionsRef,
 }: ProductBuyBoxProps) {
   const isSoldOut = stockTone === "sold_out";
-  const total = unitPrice * quantity;
+  const totalLine = isSoldOut
+    ? null
+    : toQuantityTotalLine(quantity, formatInr(unitPrice * quantity));
 
   return (
     <div className="flex flex-col gap-6">
@@ -75,7 +85,7 @@ export function ProductBuyBox({
             {collectionName}
           </Link>
         )}
-        <h1 className="font-heading text-3xl leading-tight tracking-tight text-balance md:text-4xl">
+        <h1 className="font-heading text-[34px] leading-[1.05] tracking-tight text-balance lg:text-5xl">
           {name}
         </h1>
         <div className="flex flex-col gap-1">
@@ -99,9 +109,8 @@ export function ProductBuyBox({
       {options}
 
       <div className="flex flex-col gap-4">
-        {/* A narrow phone cannot hold a stepper, a priced button and a heart on one line,
-            so the button takes its own line there and the row never scrolls sideways. */}
-        <div className="flex flex-wrap items-center gap-2">
+        {/* One row from 340px up; narrower phones wrap the button and heart under the stepper. */}
+        <div ref={actionsRef} className="flex flex-wrap items-center gap-2">
           {!isSoldOut && (
             <QuantityStepper
               value={quantity}
@@ -111,7 +120,7 @@ export function ProductBuyBox({
           )}
           <Button
             size="lg"
-            className="order-last w-full min-w-0 sm:order-none sm:w-auto sm:flex-1"
+            className="min-w-36 flex-1"
             onClick={onAddToCart}
             disabled={!canAddToCart || isAddingToCart || isSoldOut}
           >
@@ -119,7 +128,7 @@ export function ProductBuyBox({
               ? "Sold out"
               : isAddingToCart
                 ? "Adding…"
-                : `Add to cart · ${formatInr(total)}`}
+                : toAddToCartLabel(quantity)}
           </Button>
           <Button
             variant="outline"
@@ -138,7 +147,20 @@ export function ProductBuyBox({
           </Button>
         </div>
 
-        <p className="text-[13px] text-muted-foreground">{STUDIO_NOTE}</p>
+        {totalLine && (
+          <p className="-mt-2 text-[13px] text-muted-foreground tnum">
+            {totalLine}
+          </p>
+        )}
+
+        <div className="flex flex-col gap-1.5 text-[13px] text-muted-foreground">
+          <p>{STUDIO_NOTE}</p>
+          <p>
+            {freeShippingAbove !== null
+              ? `Packed by hand in Sangli, free shipping above ${formatInr(freeShippingAbove)}.`
+              : "Packed by hand in Sangli and shipped across India."}
+          </p>
+        </div>
 
         {askUrl && (
           <WhatsAppLink
@@ -149,12 +171,6 @@ export function ProductBuyBox({
             Want it in another glaze or size? Ask us
           </WhatsAppLink>
         )}
-
-        <p className="text-[13px] text-muted-foreground">
-          {freeShippingAbove !== null
-            ? `Packed by hand in Sangli, free shipping above ${formatInr(freeShippingAbove)}.`
-            : "Packed by hand in Sangli and shipped across India."}
-        </p>
       </div>
     </div>
   );

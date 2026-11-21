@@ -26,7 +26,9 @@ import {
   toFilterInput,
   toFilterKey,
   toSearchParams,
+  toAddToCartLabel,
   toBatchLabel,
+  toQuantityTotalLine,
   toCardStatusLine,
   toFlawNote,
   toGlazeAskUrl,
@@ -707,6 +709,22 @@ describe("toFilterKey", () => {
     expect(toFilterKey(server)).toBe(toFilterKey(browser));
     expect(toFilterKey(server)).not.toBe(
       toFilterKey(toFilterInput(parseFilters(new URLSearchParams()), 1)),
+    );
+  });
+});
+
+describe("toAddToCartLabel", () => {
+  it("names the count only once there is more than one", () => {
+    expect(toAddToCartLabel(1)).toBe("Add to cart");
+    expect(toAddToCartLabel(3)).toBe("Add 3 to cart");
+  });
+});
+
+describe("toQuantityTotalLine", () => {
+  it("says the total only for more than one piece", () => {
+    expect(toQuantityTotalLine(1, "\u20b9500")).toBeNull();
+    expect(toQuantityTotalLine(2, "\u20b91,000")).toBe(
+      "2 pieces, \u20b91,000 together",
     );
   });
 });
