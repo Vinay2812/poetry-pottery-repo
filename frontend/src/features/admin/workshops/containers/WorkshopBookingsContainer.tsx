@@ -26,6 +26,7 @@ import {
   registrationStatusOptions,
   registrationStatusTone,
   toPersonName,
+  toRegistrationActions,
   toRegistrationStatus,
 } from "@/features/admin/ui";
 import {
@@ -120,10 +121,7 @@ export function WorkshopBookingsContainer({
         reason: item.booking.cancel_reason,
         note: item.booking.note,
         bookedLabel: formatDate(item.booking.created_at),
-        actions: item.next_statuses.map((next) => ({
-          status: next,
-          label: registrationActionLabel(next, "wheel"),
-        })),
+        actions: toRegistrationActions(item.next_statuses, "wheel"),
       })),
     [optimisticItems, timezone],
   );

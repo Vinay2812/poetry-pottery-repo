@@ -26,9 +26,18 @@ const meta = {
           {
             status: RegistrationStatus.Approved,
             label: "Approve, hold wheel",
+            isPrimary: true,
           },
-          { status: RegistrationStatus.Confirmed, label: "Confirm as paid" },
-          { status: RegistrationStatus.Rejected, label: "Turn down" },
+          {
+            status: RegistrationStatus.Confirmed,
+            label: "Confirm as paid",
+            isPrimary: false,
+          },
+          {
+            status: RegistrationStatus.Rejected,
+            label: "Turn down",
+            isPrimary: false,
+          },
         ],
       },
       {
@@ -45,8 +54,16 @@ const meta = {
         note: null,
         bookedLabel: "Wed, 2 Sept, 2026",
         actions: [
-          { status: RegistrationStatus.Confirmed, label: "Confirm as paid" },
-          { status: RegistrationStatus.Cancelled, label: "Cancel" },
+          {
+            status: RegistrationStatus.Confirmed,
+            label: "Confirm as paid",
+            isPrimary: true,
+          },
+          {
+            status: RegistrationStatus.Cancelled,
+            label: "Cancel",
+            isPrimary: false,
+          },
         ],
       },
       {

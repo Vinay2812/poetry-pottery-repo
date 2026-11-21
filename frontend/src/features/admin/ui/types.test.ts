@@ -23,6 +23,7 @@ import {
   toNullableNumber,
   toPersonName,
   toPreviewColour,
+  toRegistrationActions,
   toRegistrationStatus,
 } from "./types";
 
@@ -138,6 +139,27 @@ describe("registration actions", () => {
     expect(registrationActionLabel(RegistrationStatus.Cancelled, "wheel")).toBe(
       "Cancel",
     );
+  });
+
+  it("marks only the first move that lets someone in", () => {
+    expect(
+      toRegistrationActions(
+        [
+          RegistrationStatus.Approved,
+          RegistrationStatus.Confirmed,
+          RegistrationStatus.Cancelled,
+        ],
+        "wheel",
+      ).map((action) => [action.label, action.isPrimary]),
+    ).toEqual([
+      ["Approve, hold wheel", true],
+      ["Confirm as paid", false],
+      ["Cancel", false],
+    ]);
+    expect(
+      toRegistrationActions([RegistrationStatus.Cancelled], "seat")[0]
+        ?.isPrimary,
+    ).toBe(false);
   });
 
   it("asks for a reason only when someone is turned away", () => {

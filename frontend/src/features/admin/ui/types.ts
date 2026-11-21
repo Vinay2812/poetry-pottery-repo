@@ -167,6 +167,28 @@ export function registrationActionLabel(
   return REGISTRATION_ACTION_LABEL[status];
 }
 
+export interface RegistrationAction {
+  status: RegistrationStatus;
+  label: string;
+  // The first move that lets someone in gets the dark button.
+  isPrimary: boolean;
+}
+
+/** The server says which moves are legal; each one is named and the way forward marked. */
+export function toRegistrationActions(
+  nextStatuses: RegistrationStatus[],
+  hold: RegistrationHold,
+): RegistrationAction[] {
+  return nextStatuses.map((status, index) => ({
+    status,
+    label: registrationActionLabel(status, hold),
+    isPrimary:
+      index === 0 &&
+      (status === RegistrationStatus.Approved ||
+        status === RegistrationStatus.Confirmed),
+  }));
+}
+
 /** Turning someone away is worth a sentence; letting them in is not. */
 export function registrationActionNeedsReason(
   status: RegistrationStatus,

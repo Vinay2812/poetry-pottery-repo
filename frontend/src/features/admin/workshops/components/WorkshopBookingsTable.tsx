@@ -10,12 +10,8 @@ import {
   type AdminStatusTone,
   AdminStatusPill,
   AdminTableFrame,
+  type RegistrationAction,
 } from "@/features/admin/ui";
-
-interface WorkshopBookingAction {
-  status: RegistrationStatus;
-  label: string;
-}
 
 export interface WorkshopBookingRow {
   id: string;
@@ -30,7 +26,7 @@ export interface WorkshopBookingRow {
   reason: string | null;
   note: string | null;
   bookedLabel: string;
-  actions: WorkshopBookingAction[];
+  actions: RegistrationAction[];
 }
 
 export interface WorkshopBookingsTableProps {
@@ -55,23 +51,25 @@ export function WorkshopBookingsTable({
           <th className={ADMIN_TH}>Total</th>
           <th className={ADMIN_TH}>Status</th>
           <th className={ADMIN_TH}>Note</th>
-          <th className={ADMIN_TH}>Booked</th>
           <th className={`${ADMIN_TH} text-right`}>Actions</th>
         </tr>
       </thead>
       <tbody>
         {rows.length === 0 && (
           <AdminEmptyRow
-            colSpan={7}
+            colSpan={6}
             message="No bookings match those filters"
           />
         )}
         {rows.map((row) => (
           <tr key={row.id} className={ADMIN_TR}>
-            <td className={`${ADMIN_TD} min-w-48`}>
+            <td className={`${ADMIN_TD} min-w-56`}>
               <span className="block">{row.personName}</span>
               <span className="block text-[12px] wrap-anywhere text-muted-foreground">
                 {row.personEmail}
+              </span>
+              <span className="block text-[12px] text-muted-foreground tnum">
+                Booked {row.bookedLabel}
               </span>
             </td>
             <td className={`${ADMIN_TD} whitespace-nowrap tnum`}>
@@ -85,32 +83,27 @@ export function WorkshopBookingsTable({
               </span>
             </td>
             <td className={`${ADMIN_TD} tnum`}>{row.totalLabel}</td>
-            <td className={`${ADMIN_TD} max-w-60 min-w-44`}>
+            <td className={`${ADMIN_TD} whitespace-nowrap`}>
               <AdminStatusPill label={row.statusLabel} tone={row.statusTone} />
               {row.reason && (
-                <span className="mt-1 block text-[12px] text-muted-foreground">
+                <span className="mt-1 block max-w-56 text-[12px] whitespace-normal text-muted-foreground">
                   Reason: {row.reason}
                 </span>
               )}
             </td>
             <td
-              className={`${ADMIN_TD} max-w-60 min-w-40 text-muted-foreground`}
+              className={`${ADMIN_TD} max-w-60 min-w-36 text-muted-foreground`}
             >
               {row.note ?? "—"}
             </td>
-            <td
-              className={`${ADMIN_TD} whitespace-nowrap text-muted-foreground tnum`}
-            >
-              {row.bookedLabel}
-            </td>
             <td className={`${ADMIN_TD} text-right`}>
-              <div className="flex flex-wrap justify-end gap-1.5">
+              <div className="flex flex-col items-end gap-1.5">
                 {row.actions.map((action) => (
                   <Button
                     key={action.status}
                     type="button"
                     size="sm"
-                    variant="secondary"
+                    variant={action.isPrimary ? "default" : "secondary"}
                     disabled={busyId === row.id}
                     onClick={() => onAction(row.id, action.status)}
                   >

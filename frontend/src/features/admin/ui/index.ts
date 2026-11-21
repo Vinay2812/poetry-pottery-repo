@@ -34,6 +34,7 @@ export {
   orderStatusLabel,
   orderStatusOptions,
   orderStatusTone,
+  type RegistrationAction,
   type RegistrationHold,
   registrationActionLabel,
   registrationActionNeedsReason,
@@ -44,5 +45,6 @@ export {
   toNullableNumber,
   toPersonName,
   toPreviewColour,
+  toRegistrationActions,
   toRegistrationStatus,
 } from "@/features/admin/ui/types";

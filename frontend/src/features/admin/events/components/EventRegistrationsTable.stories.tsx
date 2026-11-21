@@ -19,8 +19,16 @@ const ROWS = [
     note: "Coming with my sister",
     bookedLabel: "Mon, 14 Sep, 2026",
     actions: [
-      { status: RegistrationStatus.Approved, label: "Approve, hold seats" },
-      { status: RegistrationStatus.Rejected, label: "Turn down" },
+      {
+        status: RegistrationStatus.Approved,
+        label: "Approve, hold seats",
+        isPrimary: true,
+      },
+      {
+        status: RegistrationStatus.Rejected,
+        label: "Turn down",
+        isPrimary: false,
+      },
     ],
   },
   {
@@ -36,8 +44,16 @@ const ROWS = [
     note: null,
     bookedLabel: "Sun, 13 Sep, 2026",
     actions: [
-      { status: RegistrationStatus.Confirmed, label: "Confirm as paid" },
-      { status: RegistrationStatus.Cancelled, label: "Cancel" },
+      {
+        status: RegistrationStatus.Confirmed,
+        label: "Confirm as paid",
+        isPrimary: true,
+      },
+      {
+        status: RegistrationStatus.Cancelled,
+        label: "Cancel",
+        isPrimary: false,
+      },
     ],
   },
   {
@@ -52,7 +68,13 @@ const ROWS = [
     reason: null,
     note: null,
     bookedLabel: "Fri, 11 Sep, 2026",
-    actions: [{ status: RegistrationStatus.Cancelled, label: "Cancel" }],
+    actions: [
+      {
+        status: RegistrationStatus.Cancelled,
+        label: "Cancel",
+        isPrimary: false,
+      },
+    ],
   },
   {
     id: "reg_d4",

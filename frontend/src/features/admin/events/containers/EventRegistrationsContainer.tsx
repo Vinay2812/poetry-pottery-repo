@@ -29,6 +29,7 @@ import {
   registrationStatusOptions,
   registrationStatusTone,
   toPersonName,
+  toRegistrationActions,
   toRegistrationStatus,
 } from "@/features/admin/ui";
 
@@ -119,10 +120,7 @@ export function EventRegistrationsContainer({
         reason: entry.registration.cancel_reason,
         note: entry.registration.note,
         bookedLabel: formatDate(entry.registration.created_at),
-        actions: entry.next_statuses.map((next) => ({
-          status: next,
-          label: registrationActionLabel(next, "seat"),
-        })),
+        actions: toRegistrationActions(entry.next_statuses, "seat"),
       })),
     [result],
   );
