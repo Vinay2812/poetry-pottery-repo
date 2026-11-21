@@ -51,6 +51,7 @@ const meta = {
     isBusy: false,
     busyId: null,
     emptyMessage: "Nobody is coming by yet",
+    now: new Date("2026-09-19T00:00:00.000Z"),
     onCancel: fn(),
   },
 } satisfies Meta<typeof VisitsTable>;
@@ -75,6 +76,11 @@ export const RowBusy: Story = {
 
 export const Busy: Story = {
   args: { isBusy: true },
+};
+
+// Read a day after the first window, so it shows as past with no cancel button.
+export const WithAPastVisit: Story = {
+  args: { now: new Date("2026-09-20T12:00:00.000Z") },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

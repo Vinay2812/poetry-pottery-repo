@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useOptimistic } from "react";
+import { useCallback, useMemo, useOptimistic, useState } from "react";
 
 import { useMutation, useQuery } from "@apollo/client/react";
 import {
@@ -53,6 +53,8 @@ export function VisitsContainer() {
   );
 
   const [cancelVisit] = useMutation(CancelStudioVisitDocument);
+  // Read once per visit to the page; a window that closes while it is open waits for a reload.
+  const [now] = useState(() => new Date());
 
   const result = data?.adminStudioVisits ?? previousData?.adminStudioVisits;
 
@@ -135,6 +137,7 @@ export function VisitsContainer() {
       </AdminToolbar>
 
       <VisitsTable
+        now={now}
         rows={optimisticRows}
         isBusy={isPending || (loading && result !== undefined)}
         busyId={cancel.pending}
@@ -158,7 +161,7 @@ export function VisitsContainer() {
         isOpen={cancel.target !== null}
         title="Cancel this visit?"
         description="The window goes back on offer and the visitor is told, if they left an address."
-        fieldLabel="Why"
+        fieldLabel="Reason"
         hint="Optional. It goes into the email."
         placeholder="The kiln is running that morning"
         value={cancel.reason}

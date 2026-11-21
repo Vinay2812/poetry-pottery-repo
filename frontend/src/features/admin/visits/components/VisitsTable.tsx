@@ -14,6 +14,7 @@ import {
 import {
   canCancelVisit,
   describeWindow,
+  toVisitState,
   type VisitRow,
   visitStatusLabel,
   visitStatusTone,
@@ -26,6 +27,8 @@ export interface VisitsTableProps {
   isBusy: boolean;
   busyId: string | null;
   emptyMessage: string;
+  // Read once by the container, so every row is judged against the same moment.
+  now: Date;
   onCancel: (id: string) => void;
 }
 
@@ -34,6 +37,7 @@ export function VisitsTable({
   isBusy,
   busyId,
   emptyMessage,
+  now,
   onCancel,
 }: VisitsTableProps) {
   return (
@@ -51,49 +55,52 @@ export function VisitsTable({
         {rows.length === 0 && (
           <AdminEmptyRow colSpan={COLUMN_COUNT} message={emptyMessage} />
         )}
-        {rows.map((row) => (
-          <tr key={row.id} className={ADMIN_TR}>
-            <td className={`${ADMIN_TD} tnum`}>
-              {describeWindow(
-                formatDateTime(row.startsAt),
-                formatTime(row.endsAt),
-              )}
-            </td>
-            <td className={ADMIN_TD}>
-              {row.name}
-              <span className="block text-[12px] text-muted-foreground tnum">
-                {row.phone}
-              </span>
-              {row.customerEmail !== null && (
-                <span className="block text-[12px] wrap-anywhere text-muted-foreground">
-                  {row.customerEmail}
+        {rows.map((row) => {
+          const state = toVisitState(row.cancelledAt, row.endsAt, now);
+          return (
+            <tr key={row.id} className={ADMIN_TR}>
+              <td className={`${ADMIN_TD} tnum`}>
+                {describeWindow(
+                  formatDateTime(row.startsAt),
+                  formatTime(row.endsAt),
+                )}
+              </td>
+              <td className={ADMIN_TD}>
+                {row.name}
+                <span className="block text-[12px] text-muted-foreground tnum">
+                  {row.phone}
                 </span>
-              )}
-            </td>
-            <td className={`${ADMIN_TD} max-w-72 text-muted-foreground`}>
-              {row.note === null ? "—" : row.note}
-            </td>
-            <td className={ADMIN_TD}>
-              <AdminStatusPill
-                label={visitStatusLabel(row.cancelledAt)}
-                tone={visitStatusTone(row.cancelledAt)}
-              />
-            </td>
-            <td className={ADMIN_TD}>
-              {canCancelVisit(row.cancelledAt) && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  disabled={busyId === row.id}
-                  onClick={() => onCancel(row.id)}
-                >
-                  Cancel
-                </Button>
-              )}
-            </td>
-          </tr>
-        ))}
+                {row.customerEmail !== null && (
+                  <span className="block text-[12px] wrap-anywhere text-muted-foreground">
+                    {row.customerEmail}
+                  </span>
+                )}
+              </td>
+              <td className={`${ADMIN_TD} max-w-72 text-muted-foreground`}>
+                {row.note === null ? "—" : row.note}
+              </td>
+              <td className={ADMIN_TD}>
+                <AdminStatusPill
+                  label={visitStatusLabel(state)}
+                  tone={visitStatusTone(state)}
+                />
+              </td>
+              <td className={ADMIN_TD}>
+                {canCancelVisit(state) && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={busyId === row.id}
+                    onClick={() => onCancel(row.id)}
+                  >
+                    Cancel
+                  </Button>
+                )}
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </AdminTableFrame>
   );
