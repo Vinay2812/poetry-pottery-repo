@@ -59,8 +59,8 @@ export const productSchema = z
     material: z
       .string()
       .trim()
-      .min(1, "Material is required")
-      .max(80, "Material must be 80 characters or fewer"),
+      .min(1, "Clay body is required")
+      .max(80, "Clay body must be 80 characters or fewer"),
     dimensions: z
       .string()
       .trim()
