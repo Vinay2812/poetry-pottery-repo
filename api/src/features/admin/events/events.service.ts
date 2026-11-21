@@ -45,6 +45,9 @@ type AdminRegistrationRow = Prisma.EventRegistrationGetPayload<{
   include: typeof adminRegistrationInclude;
 }>;
 
+// What duplicate() leaves on a fresh copy: "<title>-copy", or "-copy-2" when that is taken.
+const COPY_SLUG = /-copy(-\d+)?$/;
+
 export function nextRegistrationStatuses(
   from: RegistrationStatus,
 ): RegistrationStatus[] {
@@ -415,13 +418,18 @@ export class AdminEventsService {
     );
   }
 
-  // A copy is born as "…-copy"; while it is an unseen draft its link can follow the new title.
-  // Once it has been published or anyone has booked it, the link may be out in the world.
+  // Only an untouched duplicate renames its link: its slug still ends in the copy suffix, it is
+  // a draft, and nobody has booked it. A draft that was once published keeps its slug even if it
+  // is renamed, because that link may already be out in the world.
   private async followTitle(
-    current: { id: number; title: string; status: EventStatus },
+    current: { id: number; title: string; slug: string; status: EventStatus },
     title: string,
   ): Promise<string | null> {
-    if (current.status !== EventStatus.DRAFT || title === current.title) {
+    if (
+      current.status !== EventStatus.DRAFT ||
+      title === current.title ||
+      !COPY_SLUG.test(current.slug)
+    ) {
       return null;
     }
     const bookings = await this.prisma.eventRegistration.count({

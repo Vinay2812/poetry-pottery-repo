@@ -243,18 +243,43 @@ describe("AdminEventsService", () => {
     });
   });
 
-  it("keeps the link of a published or booked event when it is renamed", async () => {
-    prismaMock.event.findUnique.mockResolvedValueOnce({
+  it("keeps the link of a published or booked copy when it is renamed", async () => {
+    const copy = {
       ...eventRow,
+      title: "Wheel evening (copy)",
+      slug: "wheel-evening-copy-2",
+    };
+    prismaMock.event.findUnique.mockResolvedValueOnce({
+      ...copy,
       status: EventStatus.PUBLISHED,
     });
     await service.update(3, input({ title: "Diwali wheel" }));
+    prismaMock.event.findUnique.mockResolvedValueOnce(copy);
     prismaMock.eventRegistration.count.mockResolvedValueOnce(2);
     await service.update(3, input({ title: "Diwali wheel" }));
 
     for (const [call] of prismaMock.event.updateMany.mock.calls) {
       expect((call as { data: object }).data).not.toHaveProperty("slug");
     }
+  });
+
+  it("keeps the link of an event that was published, unpublished and then renamed", async () => {
+    // Published under its own slug, then pulled back to a draft before the rename.
+    prismaMock.event.findUnique.mockResolvedValue({
+      ...eventRow,
+      status: EventStatus.DRAFT,
+      title: "Wheel evening",
+      slug: "wheel-evening",
+    });
+
+    await service.update(3, input({ title: "Wheel evening, December" }));
+
+    expect(prismaMock.eventRegistration.count).not.toHaveBeenCalled();
+    const call = prismaMock.event.updateMany.mock.calls[0]?.[0] as {
+      data: Record<string, unknown>;
+    };
+    expect(call.data).toMatchObject({ title: "Wheel evening, December" });
+    expect(call.data).not.toHaveProperty("slug");
   });
 
   it("leaves the link alone when the title does not change", async () => {
