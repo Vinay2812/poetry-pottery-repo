@@ -7,7 +7,12 @@ import {
 import { Prisma, RegistrationStatus } from "@prisma/client";
 
 import { newPublicId } from "@/common/ids/public-id";
-import { clampPage, toPageInfo } from "@/common/pagination/pagination";
+import {
+  canReturnRows,
+  clampPage,
+  splitPage,
+  toPageInfo,
+} from "@/common/pagination/pagination";
 import { env } from "@/config/env";
 import { MailService } from "@/mail/mail.service";
 import {
@@ -42,6 +47,12 @@ import type {
 } from "./workshops.type";
 
 const MAX_AVAILABILITY_DAYS = 31;
+
+// Ahead means the wheel is still held and the last hour has not ended; the shop's
+// Upcoming group (toBookingGroup) reads the same rule, and the spec ties the two together.
+export function aheadBookingWhere(now: Date): Prisma.WorkshopBookingWhereInput {
+  return { status: { in: [...SEAT_HOLDING] }, ends_at: { gt: now } };
+}
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
 
 export const configInclude = {
@@ -293,20 +304,39 @@ export class WorkshopsService {
     limit: number | null,
   ): Promise<WorkshopBookingsResult> {
     const bounds = clampPage(page, limit, 20);
-    const where = { user_id: userId };
-    const [rows, total] = await Promise.all([
-      this.prisma.workshopBooking.findMany({
-        where,
-        include: bookingInclude,
-        orderBy: { starts_at: "desc" },
-        skip: bounds.skip,
-        take: bounds.limit,
-      }),
-      this.prisma.workshopBooking.count({ where }),
+    const now = new Date();
+    // Sessions still ahead come first, soonest first; the record follows, latest first.
+    // Two reads keep that order whole across pages, so page one always holds what is next.
+    const ahead = { user_id: userId, ...aheadBookingWhere(now) };
+    const behind = { user_id: userId, NOT: aheadBookingWhere(now) };
+    const [aheadTotal, behindTotal] = await Promise.all([
+      this.prisma.workshopBooking.count({ where: ahead }),
+      this.prisma.workshopBooking.count({ where: behind }),
+    ]);
+    const slices = splitPage(bounds, aheadTotal);
+    const [aheadRows, behindRows] = await Promise.all([
+      canReturnRows(slices.first, aheadTotal)
+        ? this.prisma.workshopBooking.findMany({
+            where: ahead,
+            include: bookingInclude,
+            orderBy: [{ starts_at: "asc" }, { id: "asc" }],
+            skip: slices.first.skip,
+            take: slices.first.take,
+          })
+        : [],
+      canReturnRows(slices.second, behindTotal)
+        ? this.prisma.workshopBooking.findMany({
+            where: behind,
+            include: bookingInclude,
+            orderBy: [{ starts_at: "desc" }, { id: "asc" }],
+            skip: slices.second.skip,
+            take: slices.second.take,
+          })
+        : [],
     ]);
     return {
-      items: rows.map((row) => toBooking(row)),
-      page_info: toPageInfo(bounds, total),
+      items: [...aheadRows, ...behindRows].map((row) => toBooking(row, now)),
+      page_info: toPageInfo(bounds, aheadTotal + behindTotal),
     };
   }
 
