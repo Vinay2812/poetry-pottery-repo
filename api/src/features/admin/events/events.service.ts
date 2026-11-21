@@ -289,6 +289,7 @@ export class AdminEventsService {
   // guest reaching for a seat is refused rather than left holding one on a cancelled evening, and
   // a second admin waits on the lock and is then told there is nothing left to call off.
   async cancel(id: number, reason: string | null): Promise<Event> {
+    // The admin console reads this exact text as who cancelled (frontend admin/ui/types.ts).
     const note = trimmed(reason, 300) ?? "The studio called this one off";
     const row = await this.prisma.withTransaction(async () => {
       await this.prisma
@@ -419,8 +420,9 @@ export class AdminEventsService {
   }
 
   // Only an untouched duplicate renames its link: its slug still ends in the copy suffix, it is
-  // a draft, and nobody has booked it. A draft that was once published keeps its slug even if it
-  // is renamed, because that link may already be out in the world.
+  // a draft, and nobody has booked it. A draft that was once published under its own slug keeps
+  // it when renamed. One exception: a copy published under its "-copy" slug, then unpublished
+  // and renamed, still follows the title, since nothing here records that it was ever live.
   private async followTitle(
     current: { id: number; title: string; slug: string; status: EventStatus },
     title: string,

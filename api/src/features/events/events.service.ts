@@ -412,6 +412,7 @@ export class EventsService {
       return this.applyStatus(
         current,
         RegistrationStatus.CANCELLED,
+        // The admin console reads this exact text as who cancelled (frontend admin/ui/types.ts).
         reason?.trim().slice(0, 300) || "Cancelled by the guest",
       );
     });
