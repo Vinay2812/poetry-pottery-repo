@@ -20,13 +20,14 @@ const PAGE_SIZE = 24;
 const LOW_STOCK_THRESHOLD = 3;
 const MAX_DESCRIPTION_SENTENCES = 3;
 
+// Studio words for the shop sorts; the footer links to two of them by the same names.
 export const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
-  { value: ProductSort.Featured, label: "Featured" },
-  { value: ProductSort.Newest, label: "New arrivals" },
-  { value: ProductSort.BestSelling, label: "Best sellers" },
-  { value: ProductSort.PriceLowToHigh, label: "Price: low to high" },
-  { value: ProductSort.PriceHighToLow, label: "Price: high to low" },
-  { value: ProductSort.TopRated, label: "Top rated" },
+  { value: ProductSort.Featured, label: "Studio picks" },
+  { value: ProductSort.Newest, label: "Newest from the kiln" },
+  { value: ProductSort.BestSelling, label: "Most taken home" },
+  { value: ProductSort.PriceLowToHigh, label: "Price, low to high" },
+  { value: ProductSort.PriceHighToLow, label: "Price, high to low" },
+  { value: ProductSort.TopRated, label: "Best reviewed" },
 ];
 
 export interface ProductFilters {
@@ -218,6 +219,17 @@ export function countActiveFilters(filters: ProductFilters): number {
   );
 }
 
+// The count names what the list is: a search term or the made-to-order shelf changes what was counted.
+export function toResultCountLabel(
+  total: number,
+  search: string,
+  isMadeToOrderOnly: boolean,
+): string {
+  const noun = total === 1 ? "piece" : "pieces";
+  const counted = `${total} ${isMadeToOrderOnly ? `made-to-order ${noun}` : noun}`;
+  return search ? `${counted} for \u201c${search}\u201d` : counted;
+}
+
 export type StockTone = "in_stock" | "low" | "sold_out" | "made_to_order";
 
 export interface StockStatus {
@@ -234,7 +246,7 @@ export function toStockStatus(
   if (stock <= 0)
     return { tone: "sold_out", label: "Sold out \u00b7 next batch soon" };
   if (stock <= LOW_STOCK_THRESHOLD)
-    return { tone: "low", label: `Only ${stock}` };
+    return { tone: "low", label: `${stock} left in this batch` };
   return { tone: "in_stock", label: "Ready to ship" };
 }
 

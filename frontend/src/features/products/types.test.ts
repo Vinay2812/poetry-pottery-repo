@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import { OptionGroupKind, ProductSort } from "@/graphql/generated/graphql";
 import { toUrlSearchParams } from "@/lib/search-params";
 
+import { FOOTER_SHOP_LINKS } from "@/features/layout/types";
+
 import {
   applyFilterAction,
   clampPriceRange,
@@ -48,8 +50,10 @@ import {
   toProductPath,
   toShortDescription,
   toSizeLine,
+  toResultCountLabel,
   toStockStatus,
   validateSelections,
+  SORT_OPTIONS,
   type ProductOptionGroupData,
 } from "./types";
 
@@ -189,6 +193,36 @@ describe("toFilterInput", () => {
   });
 });
 
+describe("toResultCountLabel", () => {
+  it("counts pieces", () => {
+    expect(toResultCountLabel(1, "", false)).toBe("1 piece");
+    expect(toResultCountLabel(7, "", false)).toBe("7 pieces");
+  });
+
+  it("names the made-to-order shelf and the search term", () => {
+    expect(toResultCountLabel(3, "", true)).toBe("3 made-to-order pieces");
+    expect(toResultCountLabel(4, "mug", false)).toBe(
+      "4 pieces for \u201cmug\u201d",
+    );
+    expect(toResultCountLabel(1, "bowl", true)).toBe(
+      "1 made-to-order piece for \u201cbowl\u201d",
+    );
+  });
+});
+
+describe("SORT_OPTIONS", () => {
+  it("shares its names with the footer links that open a sort", () => {
+    for (const link of FOOTER_SHOP_LINKS) {
+      const sort = new URLSearchParams(link.href.split("?")[1] ?? "").get(
+        "sort",
+      );
+      if (!sort) continue;
+      const option = SORT_OPTIONS.find((candidate) => candidate.value === sort);
+      expect(option?.label).toBe(link.label);
+    }
+  });
+});
+
 describe("toStockStatus", () => {
   it("labels stock levels as batch state", () => {
     expect(toStockStatus(0, false)).toEqual({
@@ -197,7 +231,7 @@ describe("toStockStatus", () => {
     });
     expect(toStockStatus(3, false)).toEqual({
       tone: "low",
-      label: "Only 3",
+      label: "3 left in this batch",
     });
     expect(toStockStatus(20, false)).toEqual({
       tone: "in_stock",
@@ -713,10 +747,12 @@ describe("toCardStatusLine", () => {
 
   it("names the second on its own and alongside the batch line", () => {
     expect(toCardStatusLine(true, "in_stock", "Ready to ship")).toBe("Second");
-    expect(toCardStatusLine(true, "low", "Only 2")).toBe(
-      "Second \u00b7 Only 2",
+    expect(toCardStatusLine(true, "low", "2 left in this batch")).toBe(
+      "Second \u00b7 2 left in this batch",
     );
-    expect(toCardStatusLine(false, "low", "Only 2")).toBe("Only 2");
+    expect(toCardStatusLine(false, "low", "2 left in this batch")).toBe(
+      "2 left in this batch",
+    );
   });
 });
 
