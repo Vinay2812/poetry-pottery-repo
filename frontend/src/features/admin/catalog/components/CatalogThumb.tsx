@@ -24,7 +24,13 @@ export function CatalogThumb({ url, alt, shape }: CatalogThumbProps) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt={alt} className="size-full object-cover" />
       ) : (
-        <span className="text-[10px] text-muted-foreground">No photo</span>
+        <span
+          role="img"
+          aria-label="No photo yet"
+          className="text-muted-foreground"
+        >
+          —
+        </span>
       )}
     </span>
   );

@@ -6,6 +6,7 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
+  ADMIN_WIDE_ONLY,
   AdminEmptyRow,
   AdminTableFrame,
 } from "@/features/admin/ui";
@@ -49,10 +50,12 @@ export function GlazesTable({
         <tr>
           <th className={ADMIN_TH}>Swatch</th>
           <th className={ADMIN_TH}>Name</th>
-          <th className={ADMIN_TH}>Description</th>
-          <th className={ADMIN_TH}>Variation</th>
+          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Description</th>
+          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Variation</th>
           <th className={ADMIN_TH}>Pieces</th>
-          <th className={ADMIN_TH}>Actions</th>
+          <th className={ADMIN_TH}>
+            <span className="sr-only">Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -76,17 +79,23 @@ export function GlazesTable({
                 />
               </td>
               <td className={ADMIN_TD}>{row.name}</td>
-              <td className={`${ADMIN_TD} max-w-80 text-muted-foreground`}>
+              <td
+                className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} max-w-80 text-muted-foreground`}
+              >
                 {row.description}
               </td>
-              <td className={`${ADMIN_TD} max-w-64 text-muted-foreground`}>
+              <td
+                className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} max-w-64 text-muted-foreground`}
+              >
                 {row.variationNote === "" ? "—" : row.variationNote}
               </td>
-              <td className={`${ADMIN_TD} text-muted-foreground tnum`}>
+              <td
+                className={`${ADMIN_TD} whitespace-nowrap text-muted-foreground tnum`}
+              >
                 {describePieces(row.productCount)}
               </td>
               <td className={ADMIN_TD}>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 md:flex-row">
                   <Button
                     type="button"
                     variant="secondary"
@@ -96,15 +105,22 @@ export function GlazesTable({
                   >
                     Edit
                   </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    disabled={isEditorOpen || !canDeleteGlaze(row.productCount)}
-                    onClick={() => onDelete(row.id)}
-                  >
-                    Delete
-                  </Button>
+                  {/* A glaze still on pieces cannot go; saying so beats a dead button. */}
+                  {canDeleteGlaze(row.productCount) ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      disabled={isEditorOpen}
+                      onClick={() => onDelete(row.id)}
+                    >
+                      Delete
+                    </Button>
+                  ) : (
+                    <span className="flex h-9 items-center px-4 text-[13px] whitespace-nowrap text-muted-foreground">
+                      In use
+                    </span>
+                  )}
                 </div>
               </td>
             </tr>

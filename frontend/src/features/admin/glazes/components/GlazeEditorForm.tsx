@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +14,7 @@ import {
   adminGlazeSchema,
 } from "@/lib/validations/admin/glaze";
 
-import { AdminField } from "@/features/admin/ui";
+import { AdminField, toPreviewColour } from "@/features/admin/ui";
 
 import { EMPTY_GLAZE_FORM } from "@/features/admin/glazes/types";
 
@@ -38,6 +38,7 @@ export function GlazeEditorForm({
   onCancel,
 }: GlazeEditorFormProps) {
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
@@ -45,6 +46,10 @@ export function GlazeEditorForm({
     resolver: zodResolver(adminGlazeSchema),
     defaultValues: defaultValues ?? EMPTY_GLAZE_FORM,
   });
+
+  const swatchColour = toPreviewColour(
+    useWatch({ control, name: "color_code" }),
+  );
 
   return (
     <form
@@ -72,13 +77,22 @@ export function GlazeEditorForm({
           hint="A hex colour for the swatch, or leave it empty."
           error={errors.color_code?.message}
         >
-          <Input
-            id={`${idPrefix}-color-code`}
-            placeholder="#6F7D6B"
-            className="h-9 text-[13px]"
-            aria-invalid={Boolean(errors.color_code)}
-            {...register("color_code")}
-          />
+          <div className="flex gap-2">
+            <Input
+              id={`${idPrefix}-color-code`}
+              placeholder="#6F7D6B"
+              className="h-9 text-[13px]"
+              aria-invalid={Boolean(errors.color_code)}
+              {...register("color_code")}
+            />
+            <span
+              aria-hidden="true"
+              className="aspect-square shrink-0 self-stretch border border-ash bg-white"
+              style={
+                swatchColour ? { backgroundColor: swatchColour } : undefined
+              }
+            />
+          </div>
         </AdminField>
         <div className="md:col-span-2">
           <AdminField

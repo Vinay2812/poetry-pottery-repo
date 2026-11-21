@@ -6,6 +6,7 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
+  ADMIN_WIDE_ONLY,
   AdminEmptyRow,
   AdminTableFrame,
 } from "@/features/admin/ui";
@@ -46,10 +47,12 @@ export function CategoriesTable({
         <tr>
           <th className={ADMIN_TH}>Image</th>
           <th className={ADMIN_TH}>Name</th>
-          <th className={ADMIN_TH}>Icon</th>
-          <th className={ADMIN_TH}>Sort order</th>
+          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Icon</th>
+          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Sort order</th>
           <th className={ADMIN_TH}>Pieces</th>
-          <th className={ADMIN_TH}>Actions</th>
+          <th className={ADMIN_TH}>
+            <span className="sr-only">Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -73,15 +76,21 @@ export function CategoriesTable({
                 />
               </td>
               <td className={ADMIN_TD}>{row.name}</td>
-              <td className={`${ADMIN_TD} text-muted-foreground`}>
+              <td
+                className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground`}
+              >
                 {row.icon === "" ? "—" : row.icon}
               </td>
-              <td className={`${ADMIN_TD} tnum`}>{row.sortOrder}</td>
-              <td className={`${ADMIN_TD} text-muted-foreground tnum`}>
+              <td className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} tnum`}>
+                {row.sortOrder}
+              </td>
+              <td
+                className={`${ADMIN_TD} whitespace-nowrap text-muted-foreground tnum`}
+              >
                 {describePieces(row.productCount)}
               </td>
               <td className={ADMIN_TD}>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 md:flex-row">
                   <Button
                     type="button"
                     variant="secondary"

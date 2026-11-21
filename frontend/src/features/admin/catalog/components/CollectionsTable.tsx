@@ -6,6 +6,7 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
+  ADMIN_WIDE_ONLY,
   AdminEmptyRow,
   AdminTableFrame,
 } from "@/features/admin/ui";
@@ -47,9 +48,11 @@ export function CollectionsTable({
         <tr>
           <th className={ADMIN_TH}>Image</th>
           <th className={ADMIN_TH}>Name</th>
-          <th className={ADMIN_TH}>Window</th>
-          <th className={ADMIN_TH}>Pieces</th>
-          <th className={ADMIN_TH}>Actions</th>
+          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Window</th>
+          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Pieces</th>
+          <th className={ADMIN_TH}>
+            <span className="sr-only">Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -71,19 +74,23 @@ export function CollectionsTable({
               <td className={ADMIN_TD}>
                 {row.name}
                 {row.description !== "" && (
-                  <span className="block max-w-80 truncate text-[11px] text-muted-foreground">
+                  <span className="block max-w-32 truncate text-[12px] text-muted-foreground md:max-w-80">
                     {row.description}
                   </span>
                 )}
               </td>
-              <td className={`${ADMIN_TD} text-muted-foreground tnum`}>
+              <td
+                className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground tnum`}
+              >
                 {describeWindow(row.startsAt, row.endsAt)}
               </td>
-              <td className={`${ADMIN_TD} text-muted-foreground tnum`}>
+              <td
+                className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground tnum`}
+              >
                 {describePieces(row.productCount)}
               </td>
               <td className={ADMIN_TD}>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 md:flex-row">
                   <Button
                     type="button"
                     variant="secondary"

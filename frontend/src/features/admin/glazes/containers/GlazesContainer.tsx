@@ -231,7 +231,6 @@ export function GlazesContainer() {
         actions={
           <Button
             type="button"
-            variant="secondary"
             size="sm"
             disabled={isEditorOpen}
             onClick={handleNew}
@@ -245,7 +244,7 @@ export function GlazesContainer() {
         <AdminSearchField
           id="glazes-search"
           label="Search"
-          placeholder="Name"
+          placeholder="Name of a glaze"
           value={searchDraft}
           onChange={setSearchDraft}
         />
