@@ -23,10 +23,11 @@ import {
   HomeHero,
   HomeSection,
   StudioTeaser,
+  toEventRowLabels,
   toStudioSection,
 } from "@/features/home";
 import { ReviewColumn, toOneLine } from "@/features/reviews";
-import { toEventPath, toSeatsLabel } from "@/features/events";
+import { toEventPath } from "@/features/events";
 import {
   CategoryTile,
   MadeToOrderBanner,
@@ -64,6 +65,7 @@ export default async function HomePage() {
   const customPiece = customPieces[0] ?? null;
   const hasEvents = upcomingEvents.length > 0;
   const studio = toStudioSection(workshops, hasEvents);
+  const now = new Date();
 
   return (
     <PageShell className="flex flex-col">
@@ -138,19 +140,19 @@ export default async function HomePage() {
           />
         ) : (
           <div className="border-t border-ash">
-            {upcomingEvents.map((event) => (
-              <EventRow
-                key={event.id}
-                href={toEventPath(event.slug)}
-                dateLabel={formatDate(event.starts_at)}
-                title={event.title}
-                seatsLabel={toSeatsLabel(
-                  event.available_seats,
-                  event.total_seats,
-                )}
-                isSoldOut={event.available_seats <= 0}
-              />
-            ))}
+            {upcomingEvents.map((event) => {
+              const labels = toEventRowLabels(event, now);
+              return (
+                <EventRow
+                  key={event.id}
+                  href={toEventPath(event.slug)}
+                  dateLabel={formatDate(event.starts_at)}
+                  title={event.title}
+                  statusLabel={labels.statusLabel}
+                  actionLabel={labels.actionLabel}
+                />
+              );
+            })}
           </div>
         )}
       </HomeSection>

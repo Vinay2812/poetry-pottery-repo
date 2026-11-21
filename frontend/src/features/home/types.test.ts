@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   type StudioWheel,
   mostOpenDaysInRun,
+  toEventRowLabels,
   toBookableTiers,
   toStudioDaysLabel,
   toStudioHoursLabel,
@@ -326,6 +327,42 @@ describe("toStudioSection", () => {
     expect(toStudioSection([shortDay([2])], false)).toEqual(resting);
     expect(toStudioSection([wheel([0, 1, 2, 3, 4, 5, 6])], false)).toEqual(
       resting,
+    );
+  });
+});
+
+describe("toEventRowLabels", () => {
+  const now = new Date("2026-11-21T10:00:00Z");
+  const event = (startsAt: string, available: number) => ({
+    starts_at: startsAt,
+    available_seats: available,
+    total_seats: 8,
+  });
+
+  it("offers a reservation while seats are open before the start", () => {
+    expect(toEventRowLabels(event("2026-11-22T10:00:00Z", 3), now)).toEqual({
+      statusLabel: "3 seats left",
+      actionLabel: "Reserve",
+    });
+  });
+
+  it("sends a sold-out event to its details", () => {
+    expect(toEventRowLabels(event("2026-11-22T10:00:00Z", 0), now)).toEqual({
+      statusLabel: "Sold out",
+      actionLabel: "Event details",
+    });
+  });
+
+  it("closes registration once the event has started, seats or not", () => {
+    const closed = {
+      statusLabel: "Registration closed",
+      actionLabel: "Event details",
+    };
+    expect(toEventRowLabels(event("2026-11-21T09:00:00Z", 3), now)).toEqual(
+      closed,
+    );
+    expect(toEventRowLabels(event("2026-11-21T10:00:00Z", 3), now)).toEqual(
+      closed,
     );
   });
 });

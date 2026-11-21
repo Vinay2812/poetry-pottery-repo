@@ -11,8 +11,8 @@ const meta = {
     href: "/events/wheel-throwing-for-beginners",
     dateLabel: "Thu, 17 Sep 2026",
     title: "Wheel throwing for beginners",
-    seatsLabel: "3 seats left",
-    isSoldOut: false,
+    statusLabel: "3 seats left",
+    actionLabel: "Reserve",
   },
 } satisfies Meta<typeof EventRow>;
 
@@ -23,7 +23,11 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const SoldOut: Story = {
-  args: { seatsLabel: "Sold out", isSoldOut: true },
+  args: { statusLabel: "Sold out", actionLabel: "Event details" },
+};
+
+export const RegistrationClosed: Story = {
+  args: { statusLabel: "Registration closed", actionLabel: "Event details" },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

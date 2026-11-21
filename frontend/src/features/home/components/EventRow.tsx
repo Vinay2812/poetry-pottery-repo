@@ -4,8 +4,8 @@ export interface EventRowProps {
   href: string;
   dateLabel: string;
   title: string;
-  seatsLabel: string;
-  isSoldOut: boolean;
+  statusLabel: string;
+  actionLabel: string;
 }
 
 // The whole row is the way in, so a thumb never has to find a 13px word.
@@ -13,8 +13,8 @@ export function EventRow({
   href,
   dateLabel,
   title,
-  seatsLabel,
-  isSoldOut,
+  statusLabel,
+  actionLabel,
 }: EventRowProps) {
   return (
     <Link
@@ -26,10 +26,10 @@ export function EventRow({
       </span>
       <span className="text-[15px] group-hover:text-primary">{title}</span>
       <span className="col-start-2 text-[13px] text-muted-foreground md:col-start-auto">
-        {seatsLabel}
+        {statusLabel}
       </span>
       <span className="col-start-2 w-fit border-b border-ink pb-0.5 text-[13px] group-hover:border-primary group-hover:text-primary md:col-start-auto">
-        {isSoldOut ? "Event details" : "Reserve"}
+        {actionLabel}
       </span>
     </Link>
   );

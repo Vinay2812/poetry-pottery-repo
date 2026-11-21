@@ -1,6 +1,7 @@
 import type { WorkshopsQuery } from "@/graphql/generated/graphql";
 import { formatInr } from "@/lib/format";
 
+import { type EventCardData, toSeatsLabel } from "@/features/events/types";
 import { slotsNeeded, toWorkshopPath } from "@/features/workshops/types";
 
 export type StudioWheel = Pick<
@@ -39,6 +40,25 @@ export interface StudioSection {
   bookingHref?: string;
   note?: string;
   teaser: StudioTeaserCopy | null;
+}
+
+export interface EventRowLabels {
+  statusLabel: string;
+  actionLabel: string;
+}
+
+// Registration closes when an event starts, though the feed lists it until it ends.
+export function toEventRowLabels(
+  event: Pick<EventCardData, "starts_at" | "available_seats" | "total_seats">,
+  now: Date,
+): EventRowLabels {
+  if (new Date(event.starts_at) <= now) {
+    return { statusLabel: "Registration closed", actionLabel: "Event details" };
+  }
+  return {
+    statusLabel: toSeatsLabel(event.available_seats, event.total_seats),
+    actionLabel: event.available_seats > 0 ? "Reserve" : "Event details",
+  };
 }
 
 // Indexed like Date#getDay, so 0 is Sunday.
