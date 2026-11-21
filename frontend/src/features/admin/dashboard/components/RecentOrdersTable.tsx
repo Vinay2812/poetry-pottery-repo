@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import {
+  ADMIN_FROM_TABLET,
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
@@ -31,7 +32,7 @@ export function RecentOrdersTable({ rows }: RecentOrdersTableProps) {
       <thead>
         <tr>
           <th className={ADMIN_TH}>Order</th>
-          <th className={ADMIN_TH}>Customer</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_TABLET}`}>Customer</th>
           <th className={ADMIN_TH}>Status</th>
           <th className={ADMIN_TH}>Total</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Placed</th>
@@ -54,7 +55,9 @@ export function RecentOrdersTable({ rows }: RecentOrdersTableProps) {
                 {row.itemsLabel}
               </span>
             </td>
-            <td className={ADMIN_TD}>{row.customerName}</td>
+            <td className={`${ADMIN_TD} ${ADMIN_FROM_TABLET}`}>
+              {row.customerName}
+            </td>
             <td className={ADMIN_TD}>
               <AdminStatusPill label={row.statusLabel} tone={row.statusTone} />
             </td>
