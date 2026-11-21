@@ -25,7 +25,7 @@ interface SettingsGroupProps {
 // The panel heading already draws a rule, so the first group does not draw its own.
 function SettingsGroup({ title, note, children }: SettingsGroupProps) {
   return (
-    <fieldset className="flex flex-col gap-4 border-t border-ash pt-4 first-of-type:border-t-0 first-of-type:pt-0">
+    <fieldset className="flex flex-col gap-4 border-t border-ash pt-4 first-of-type:border-t-0">
       <legend className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
         {title}
       </legend>
