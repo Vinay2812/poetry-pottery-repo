@@ -17,7 +17,7 @@ import { PageShell } from "@/components/layout/PageShell";
 
 import { toProvenance } from "@/features/archive/types";
 import { useAddToCart } from "@/features/cart/hooks";
-import { SITE_HEADER_HEIGHT_PX } from "@/features/layout/types";
+import { SITE_HEADER_SELECTOR } from "@/features/layout/types";
 import { canWatchPiece, NextBatchContainer } from "@/features/notify";
 import { useReferencePhotos } from "@/features/products/hooks";
 import { ArchiveNotice } from "@/features/products/components/ArchiveNotice";
@@ -191,13 +191,21 @@ export function ProductDetailContainer({
     const node = actionsRef.current;
     if (!node) return;
     const wide = window.matchMedia(LG_MEDIA_QUERY);
+    const header = document.querySelector(SITE_HEADER_SELECTOR);
     let frame = 0;
     const show = (isVisible: boolean) => {
       if (isActionsVisibleRef.current === isVisible) return;
       isActionsVisibleRef.current = isVisible;
-      // The bar is about to go inert; a reader on its button lands on the main one instead.
-      if (isVisible && stickyBarRef.current?.contains(document.activeElement)) {
-        addToCartRef.current?.focus({ preventScroll: true });
+      // The bar is about to go inert; a reader on its button lands on the main one, shown in full.
+      const main = addToCartRef.current;
+      if (
+        isVisible &&
+        main &&
+        stickyBarRef.current?.contains(document.activeElement)
+      ) {
+        main.focus({ preventScroll: true });
+        // scroll-padding-top keeps it clear of the sticky header.
+        main.scrollIntoView({ block: "nearest" });
       }
       setIsActionsVisible(isVisible);
     };
@@ -206,7 +214,7 @@ export function ProductDetailContainer({
       show(
         !isTuckedUnderHeader(
           node.getBoundingClientRect().bottom,
-          SITE_HEADER_HEIGHT_PX,
+          header?.getBoundingClientRect().bottom ?? 0,
         ),
       );
     };

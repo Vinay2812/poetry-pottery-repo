@@ -745,6 +745,8 @@ describe("isTuckedUnderHeader", () => {
     expect(isTuckedUnderHeader(66, 65)).toBe(false);
     expect(isTuckedUnderHeader(65, 65)).toBe(true);
     expect(isTuckedUnderHeader(-400, 65)).toBe(true);
+    // A larger root font makes a taller header, and the edge moves with it.
+    expect(isTuckedUnderHeader(70, 81)).toBe(true);
   });
 
   it("keeps them in play while they are still below the fold", () => {

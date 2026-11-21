@@ -83,6 +83,7 @@ export function SiteHeader({
   return (
     <header
       data-print="hide"
+      data-site-header=""
       className={cn(
         "sticky top-0 z-40 border-b bg-background",
         isHome ? "border-kiln" : "border-ash",

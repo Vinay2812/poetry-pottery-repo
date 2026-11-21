@@ -1,5 +1,5 @@
-// What the sticky SiteHeader covers once stuck: its h-16 bar plus the 1px hairline under it.
-export const SITE_HEADER_HEIGHT_PX = 65;
+// Pages that sit content under the sticky SiteHeader find its live edge through this.
+export const SITE_HEADER_SELECTOR = "[data-site-header]";
 
 export interface NavLink {
   href: string;
