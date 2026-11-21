@@ -12,6 +12,7 @@ import {
   toDraftReview,
   toOneLine,
   toRatingLabel,
+  shouldFocusReviewsAfterRetry,
   toReviewInput,
   toReviewListStatus,
   toReviewSubmitLabel,
@@ -287,5 +288,24 @@ describe("toReviewListStatus", () => {
     expect(
       toReviewListStatus({ ...idle, isLoading: true, hasError: true }),
     ).toBe("loading");
+  });
+});
+
+describe("shouldFocusReviewsAfterRetry", () => {
+  it("moves focus to the reviews when a retry lands while the button still has it", () => {
+    expect(shouldFocusReviewsAfterRetry("retrying", "ready", true)).toBe(true);
+  });
+
+  it("leaves focus alone once the reader has moved on", () => {
+    expect(shouldFocusReviewsAfterRetry("retrying", "ready", false)).toBe(
+      false,
+    );
+  });
+
+  it("does nothing on a failure or outside a retry", () => {
+    expect(shouldFocusReviewsAfterRetry("retrying", "failed", true)).toBe(
+      false,
+    );
+    expect(shouldFocusReviewsAfterRetry("loading", "ready", true)).toBe(false);
   });
 });

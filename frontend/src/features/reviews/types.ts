@@ -54,6 +54,15 @@ export function toReviewListStatus({
   return "loading";
 }
 
+// A successful retry hands focus to the reviews only if the reader was still on the retry button.
+export function shouldFocusReviewsAfterRetry(
+  previous: ReviewListStatus,
+  next: ReviewListStatus,
+  isRetryFocused: boolean,
+): boolean {
+  return previous === "retrying" && next === "ready" && isRetryFocused;
+}
+
 // An edit is saved, a first review is posted; the button says which while it works.
 export function toReviewSubmitLabel(
   isEditing: boolean,

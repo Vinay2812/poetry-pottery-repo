@@ -21,6 +21,7 @@ import {
   EVENT_REVIEW_NOTE,
   PRODUCT_REVIEW_NOTE,
   type ReviewSubjectKind,
+  shouldFocusReviewsAfterRetry,
   toFormValues,
   toReviewDate,
 } from "@/features/reviews/types";
@@ -66,19 +67,31 @@ export function ReviewsPanelContainer({
     upload,
   } = useReviewComposer(subject, subjectName, list);
   const [openPhoto, setOpenPhoto] = useState<string | null>(null);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const retryRef = useRef<HTMLButtonElement>(null);
   const previousStatus = useRef(status);
+  const isRetryFocused = useRef(false);
 
-  // A retry ends with focus where the answer is: on the button again, or on the reviews.
+  // focusin fires when the reader moves on but not when the button is removed, so the last answer holds.
   useEffect(() => {
-    const wasRetrying = previousStatus.current === "retrying";
+    const handleFocusIn = (event: FocusEvent) => {
+      isRetryFocused.current = event.target === retryRef.current;
+    };
+    document.addEventListener("focusin", handleFocusIn);
+    return () => document.removeEventListener("focusin", handleFocusIn);
+  }, []);
+
+  // A failed retry keeps its button and focus; a successful one hands focus to the reviews.
+  useEffect(() => {
+    const previous = previousStatus.current;
     previousStatus.current = status;
-    if (!wasRetrying) return;
-    if (status === "failed") retryRef.current?.focus();
-    if (status === "ready") headingRef.current?.focus();
+    if (
+      shouldFocusReviewsAfterRetry(previous, status, isRetryFocused.current)
+    ) {
+      headingRef.current?.focus();
+    }
   }, [status]);
-  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const handleClose = useCallback(() => setIsOpen(false), [setIsOpen]);
   const handleClosePhoto = useCallback(() => setOpenPhoto(null), []);
