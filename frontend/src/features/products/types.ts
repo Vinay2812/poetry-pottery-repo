@@ -232,48 +232,6 @@ export function toResultCountLabel(
   return search ? `${counted} for \u201c${search}\u201d` : counted;
 }
 
-// A next-page request the shelf is waiting on, or one that failed and can be retried.
-export interface ShelfAppend {
-  page: number;
-  status: "loading" | "failed";
-}
-
-// Records how a next-page request ended, per filter key. An answer for a page the key is no
-// longer waiting on changes nothing; success forgets the entry, failure keeps it for a retry.
-export function settleAppend(
-  all: Record<string, ShelfAppend>,
-  key: string,
-  page: number,
-  status: "done" | "failed",
-): Record<string, ShelfAppend> {
-  if (all[key]?.page !== page) return all;
-  const rest = Object.fromEntries(
-    Object.entries(all).filter(([other]) => other !== key),
-  );
-  return status === "failed" ? { ...rest, [key]: { page, status } } : rest;
-}
-
-interface PagedShelf {
-  products: { items: unknown[]; page_info: { page: number } };
-}
-
-// Joins a next page only onto the one before it, so a repeated or late answer writes nothing.
-export function appendShelfPage<Shelf extends PagedShelf>(
-  previous: Shelf | undefined,
-  next: Shelf,
-): Shelf | undefined {
-  const list = previous?.products;
-  if (!list || list.page_info.page + 1 !== next.products.page_info.page)
-    return previous;
-  return {
-    ...next,
-    products: {
-      ...next.products,
-      items: [...list.items, ...next.products.items],
-    },
-  };
-}
-
 // Where the shelf's list stands for the current filters: still finding it, showing it, or failed.
 export type ShelfPhase = "pending" | "ready" | "failed";
 
