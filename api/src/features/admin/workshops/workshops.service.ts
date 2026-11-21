@@ -7,7 +7,10 @@ import { Prisma, RegistrationStatus } from "@prisma/client";
 
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
-import { canTransition } from "@/features/events/registration-status";
+import {
+  assertNotPaymentStepForFreeSeat,
+  nextAdminStatuses,
+} from "@/features/events/registration-status";
 import {
   bookingInclude,
   configInclude,
@@ -49,9 +52,7 @@ export function toAdminBooking(
   return {
     booking: toBooking(row, now),
     customer: toUserRef(row.user),
-    next_statuses: Object.values(RegistrationStatus).filter((to) =>
-      canTransition(row.status, to),
-    ),
+    next_statuses: nextAdminStatuses(row.status, row.total),
   };
 }
 
@@ -365,6 +366,7 @@ export class AdminWorkshopsService {
     if (!current) {
       throw new NotFoundException("Booking not found");
     }
+    assertNotPaymentStepForFreeSeat(status, current.total);
     const updated = await this.workshops.applyStatus(
       current,
       status,

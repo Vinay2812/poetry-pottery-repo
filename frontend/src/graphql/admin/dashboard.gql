@@ -47,6 +47,7 @@ query AdminDashboard {
       title
       detail
       booking_status
+      booking_total
     }
   }
 }

@@ -80,11 +80,22 @@ describe("toAgendaDetail", () => {
       toAgendaDetail(
         "Open studio · 2 at the wheel",
         RegistrationStatus.Pending,
+        false,
       ),
     ).toBe("Open studio · 2 at the wheel · Awaiting approval");
   });
 
+  it("drops the payment wording for a free session already approved", () => {
+    expect(
+      toAgendaDetail(
+        "Open studio · 2 at the wheel",
+        RegistrationStatus.Approved,
+        true,
+      ),
+    ).toBe("Open studio · 2 at the wheel · Approved");
+  });
+
   it("leaves visits and events as they are", () => {
-    expect(toAgendaDetail("Studio visit", null)).toBe("Studio visit");
+    expect(toAgendaDetail("Studio visit", null, false)).toBe("Studio visit");
   });
 });

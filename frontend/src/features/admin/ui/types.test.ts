@@ -143,11 +143,11 @@ describe("registration actions", () => {
   });
 
   it("confirms a free request straight away, with no payment step", () => {
+    // The server leaves Approved out for a free seat, so the moves arrive without it.
     expect(
       toRegistrationActions(
         RegistrationStatus.Pending,
         [
-          RegistrationStatus.Approved,
           RegistrationStatus.Confirmed,
           RegistrationStatus.Rejected,
           RegistrationStatus.Cancelled,

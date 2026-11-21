@@ -106,7 +106,8 @@ export function registrationStatusOptions(): {
 }[] {
   return REGISTRATION_FLOW.map((value) => ({
     value,
-    label: toRegistrationStatusLabel(value),
+    // A filter names the status itself, so it keeps the paid wording.
+    label: toRegistrationStatusLabel(value, false),
   }));
 }
 
@@ -200,22 +201,18 @@ export function toRegistrationActions(
   hold: RegistrationHold,
   isFree: boolean,
 ): RegistrationAction[] {
-  return (
-    nextStatuses
-      .filter(isMoveTarget)
-      .filter((status) => status !== SPARE_NO[current])
-      // Nothing to pay means no payment step: a free request is confirmed straight away.
-      .filter((status) => !(isFree && status === RegistrationStatus.Approved))
-      .map((status, index) => ({
-        status,
-        label: registrationActionLabel(status, hold, isFree),
-        isPrimary:
-          index === 0 &&
-          (status === RegistrationStatus.Approved ||
-            status === RegistrationStatus.Confirmed),
-        isDestructive: registrationActionNeedsReason(status),
-      }))
-  );
+  return nextStatuses
+    .filter(isMoveTarget)
+    .filter((status) => status !== SPARE_NO[current])
+    .map((status, index) => ({
+      status,
+      label: registrationActionLabel(status, hold, isFree),
+      isPrimary:
+        index === 0 &&
+        (status === RegistrationStatus.Approved ||
+          status === RegistrationStatus.Confirmed),
+      isDestructive: registrationActionNeedsReason(status),
+    }));
 }
 
 const HOLD_NOUN: Record<RegistrationHold, string> = {

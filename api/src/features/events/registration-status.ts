@@ -1,3 +1,4 @@
+import { BadRequestException } from "@nestjs/common";
 import { RegistrationStatus } from "@prisma/client";
 
 // Seats stay held for these; leaving them gives the seats back.
@@ -38,6 +39,35 @@ export function canTransition(
   to: RegistrationStatus,
 ): boolean {
   return ADMIN_TRANSITIONS[from].includes(to);
+}
+
+// Approved means waiting on payment, so a free seat skips it and is confirmed straight away.
+function isPaymentStepForFreeSeat(
+  to: RegistrationStatus,
+  total: number,
+): boolean {
+  return to === RegistrationStatus.APPROVED && total === 0;
+}
+
+// The studio's moves are the shared ones, less Approved for a seat with nothing to pay.
+export function nextAdminStatuses(
+  from: RegistrationStatus,
+  total: number,
+): RegistrationStatus[] {
+  return Object.values(RegistrationStatus).filter(
+    (to) => canTransition(from, to) && !isPaymentStepForFreeSeat(to, total),
+  );
+}
+
+export function assertNotPaymentStepForFreeSeat(
+  to: RegistrationStatus,
+  total: number,
+): void {
+  if (isPaymentStepForFreeSeat(to, total)) {
+    throw new BadRequestException(
+      "A free seat has nothing to pay for, so confirm it instead",
+    );
+  }
 }
 
 export const STATUS_TIMESTAMP: Partial<

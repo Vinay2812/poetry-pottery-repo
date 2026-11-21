@@ -355,4 +355,20 @@ describe("AdminWorkshopsService", () => {
     );
     expect(result.customer.email).toBe("maya@example.com");
   });
+
+  it("refuses to approve a free booking, which has nothing to wait for", async () => {
+    prismaMock.workshopBooking.findUnique.mockResolvedValue({
+      ...bookingRow,
+      total: 0,
+    });
+
+    await expect(
+      service.setBookingStatus(
+        bookingRow.id,
+        RegistrationStatus.APPROVED,
+        null,
+      ),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(workshopsMock.applyStatus).not.toHaveBeenCalled();
+  });
 });

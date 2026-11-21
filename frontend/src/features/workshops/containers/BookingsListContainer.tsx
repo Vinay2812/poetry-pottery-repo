@@ -142,7 +142,10 @@ export function BookingsListContainer() {
                         hours={booking.hours}
                         participants={booking.participants}
                         total={booking.total}
-                        statusLabel={toRegistrationStatusLabel(booking.status)}
+                        statusLabel={toRegistrationStatusLabel(
+                          booking.status,
+                          booking.total === 0,
+                        )}
                         isClosed={isRegistrationClosed(booking.status)}
                       />
                     ))}

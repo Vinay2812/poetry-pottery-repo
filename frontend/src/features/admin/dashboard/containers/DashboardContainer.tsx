@@ -121,7 +121,11 @@ export function DashboardContainer() {
         kindLabel: toAgendaKindLabel(item.kind),
         timeLabel: formatTime(item.starts_at),
         title: item.title,
-        detail: toAgendaDetail(item.detail, item.booking_status),
+        detail: toAgendaDetail(
+          item.detail,
+          item.booking_status,
+          item.booking_total === 0,
+        ),
       })),
     [dashboard],
   );
@@ -131,7 +135,10 @@ export function DashboardContainer() {
       (dashboard?.recent_bookings ?? []).map((booking) => ({
         id: booking.id,
         customerName: booking.customer.name ?? booking.customer.email,
-        statusLabel: toRegistrationStatusLabel(booking.status),
+        statusLabel: toRegistrationStatusLabel(
+          booking.status,
+          booking.total === 0,
+        ),
         statusTone: registrationStatusTone(booking.status),
         shapeLabel: describeBooking(booking.hours, booking.participants),
         totalLabel: formatInr(booking.total),

@@ -111,7 +111,10 @@ export function EventRegistrationsContainer({
         requestedLabel: formatDate(entry.registration.created_at),
         seatsLabel: pluralize(entry.registration.seats, "seat"),
         totalLabel: formatInr(entry.registration.total),
-        statusLabel: toRegistrationStatusLabel(entry.registration.status),
+        statusLabel: toRegistrationStatusLabel(
+          entry.registration.status,
+          entry.registration.total === 0,
+        ),
         statusTone: registrationStatusTone(entry.registration.status),
         closingNote: describeClosing(entry.registration.cancel_reason),
         note: entry.registration.note,
@@ -140,7 +143,8 @@ export function EventRegistrationsContainer({
     requiredMessage: "Say why, in a sentence the person can read",
     messages: {
       success: ({ target }) =>
-        `Registration updated: ${toRegistrationStatusLabel(target.status)}`,
+        // A free seat is never moved to Approved, so the paid wording always fits here.
+        `Registration updated: ${toRegistrationStatusLabel(target.status, false)}`,
       failure: "The registration could not be moved",
     },
   });

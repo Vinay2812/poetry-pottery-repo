@@ -134,6 +134,7 @@ export function RegistrationsListContainer({
                       total={registration.total}
                       statusLabel={toRegistrationStatusLabel(
                         registration.status,
+                        registration.total === 0,
                       )}
                       isClosed={isRegistrationClosed(registration.status)}
                     />

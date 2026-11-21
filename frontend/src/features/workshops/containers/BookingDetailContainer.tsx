@@ -164,7 +164,10 @@ export function BookingDetailContainer({
     optimisticBooking.cancelled_at ?? optimisticBooking.rejected_at;
   const closedLabel = closed
     ? toClosedLabel(
-        toRegistrationStatusLabel(optimisticBooking.status),
+        toRegistrationStatusLabel(
+          optimisticBooking.status,
+          optimisticBooking.total === 0,
+        ),
         toTimelineDate(closedOn),
         optimisticBooking.cancel_reason,
       )
@@ -208,7 +211,10 @@ export function BookingDetailContainer({
       <BookingDetail
         bookingId={optimisticBooking.id}
         dateLabel={formatDayRange(optimisticBooking.slots, timezone)}
-        statusLabel={toRegistrationStatusLabel(optimisticBooking.status)}
+        statusLabel={toRegistrationStatusLabel(
+          optimisticBooking.status,
+          optimisticBooking.total === 0,
+        )}
         statusTone={toRegistrationStatusTone(optimisticBooking.status)}
         isJustPlaced={isRequestBannerShown(
           isJustPlaced,

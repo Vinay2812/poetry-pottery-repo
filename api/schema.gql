@@ -42,6 +42,7 @@ input AddressInput {
 
 type AdminAgendaItem {
   booking_status: RegistrationStatus
+  booking_total: Int
   detail: String!
   ends_at: DateTime!
   id: String!

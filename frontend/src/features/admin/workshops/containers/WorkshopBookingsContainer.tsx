@@ -121,7 +121,10 @@ export function WorkshopBookingsContainer({
           item.booking.participants,
         ),
         totalLabel: formatInr(item.booking.total),
-        statusLabel: toRegistrationStatusLabel(item.booking.status),
+        statusLabel: toRegistrationStatusLabel(
+          item.booking.status,
+          item.booking.total === 0,
+        ),
         statusTone: registrationStatusTone(item.booking.status),
         closingNote: describeClosing(item.booking.cancel_reason),
         note: item.booking.note,
@@ -150,7 +153,8 @@ export function WorkshopBookingsContainer({
     requiredMessage: "Tell them why, in a line",
     messages: {
       success: ({ target }) =>
-        `Booking updated: ${toRegistrationStatusLabel(target.status)}`,
+        // A free seat is never moved to Approved, so the paid wording always fits here.
+        `Booking updated: ${toRegistrationStatusLabel(target.status, false)}`,
       failure: "The booking could not be moved",
     },
   });

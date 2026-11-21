@@ -108,6 +108,10 @@ export class AdminAgendaItem {
   // Set for wheel sessions only, so the console can word it the way the guest reads it.
   @Field(() => RegistrationStatus, { nullable: true })
   booking_status!: RegistrationStatus | null;
+
+  // A free session has no payment step, so an approved one reads plain "Approved".
+  @Field(() => Int, { nullable: true })
+  booking_total!: number | null;
 }
 
 @ObjectType()

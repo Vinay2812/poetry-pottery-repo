@@ -134,7 +134,12 @@ export function EventDetailContainer({
             registration ? toRegistrationPath(registration.id) : null
           }
           bookingStatusLabel={
-            registration ? toRegistrationStatusLabel(registration.status) : ""
+            registration
+              ? toRegistrationStatusLabel(
+                  registration.status,
+                  registration.total === 0,
+                )
+              : ""
           }
           bookingSeats={registration?.seats ?? 0}
           bookingTotal={registration?.total ?? 0}
