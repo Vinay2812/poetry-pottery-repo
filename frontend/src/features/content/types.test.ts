@@ -101,6 +101,22 @@ describe("toSectionViews", () => {
     ]);
   });
 
+  it("never hands out an anchor a later heading already reads as", () => {
+    const views = toSectionViews([
+      section("Care"),
+      section("Care"),
+      section("Care 2"),
+      section("Care 2"),
+    ]);
+
+    expect(views.map((view) => view.id)).toEqual([
+      "care",
+      "care-2",
+      "care-2-2",
+      "care-2-3",
+    ]);
+  });
+
   it("splits each item body into paragraphs", () => {
     const items = [
       {

@@ -52,25 +52,31 @@ export function toAnchorId(heading: string): string {
   return slug.length > 0 ? slug : "section";
 }
 
-// Two sections can share a heading, so repeated anchors get a counter suffix.
+// Two sections can share a heading, and a heading can already read like a suffixed one
+// ("Care 2"), so the suffix climbs until the anchor is free.
+function toUniqueAnchorId(heading: string, taken: Set<string>): string {
+  const base = toAnchorId(heading);
+  let id = base;
+  for (let suffix = 2; taken.has(id); suffix += 1) {
+    id = `${base}-${suffix}`;
+  }
+  taken.add(id);
+  return id;
+}
+
 export function toSectionViews(
   sections: readonly ContentSectionData[],
 ): ContentSectionView[] {
-  const seen = new Map<string, number>();
-  return sections.map((section) => {
-    const base = toAnchorId(section.heading);
-    const count = (seen.get(base) ?? 0) + 1;
-    seen.set(base, count);
-    return {
-      id: count > 1 ? `${base}-${count}` : base,
-      heading: section.heading,
-      paragraphs: splitParagraphs(section.body),
-      items: section.items.map((item) => ({
-        title: item.title,
-        paragraphs: splitParagraphs(item.body),
-      })),
-    };
-  });
+  const taken = new Set<string>();
+  return sections.map((section) => ({
+    id: toUniqueAnchorId(section.heading, taken),
+    heading: section.heading,
+    paragraphs: splitParagraphs(section.body),
+    items: section.items.map((item) => ({
+      title: item.title,
+      paragraphs: splitParagraphs(item.body),
+    })),
+  }));
 }
 
 export function sectionAt(
