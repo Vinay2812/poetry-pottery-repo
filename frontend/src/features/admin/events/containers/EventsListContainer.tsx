@@ -154,7 +154,7 @@ export function EventsListContainer() {
         <AdminSelectFilter
           id="events-requests"
           label="Requests"
-          anyLabel="Any requests"
+          anyLabel="All events"
           options={REQUEST_OPTIONS}
           value={isAwaitingFilter ? "1" : ""}
           onChange={(value) => patch({ awaiting: value || null })}
