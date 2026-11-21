@@ -38,7 +38,7 @@ export function ReviewsFilters({
       <AdminSearchField
         id="reviews-search"
         label="Search"
-        placeholder="Review text, author or subject"
+        placeholder="Text, author or title"
         value={search}
         onChange={onSearchChange}
       />
