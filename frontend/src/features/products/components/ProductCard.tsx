@@ -156,7 +156,8 @@ export function ProductCard({
                 onClick={() => handlePickPhoto(index)}
                 aria-label={toPhotoLabel(index, photos.length)}
                 aria-current={index === selectedIndex}
-                className="pointer-events-auto p-1.5"
+                // Each dot gets a 24px hit area so neighbouring dots are not overlapping tiny targets.
+                className="pointer-events-auto flex size-6 items-center justify-center"
               >
                 <span
                   className={cn(

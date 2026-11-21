@@ -39,7 +39,8 @@ export function PickedSlots({
                 type="button"
                 aria-label={`Remove ${slot.label}`}
                 onClick={() => onRemoveSlot(slot.startsAt)}
-                className="text-muted-foreground transition-colors hover:text-ink"
+                // A 24px hit area around the 16px cross; the negative margins keep the row and edge where they were.
+                className="-my-1 -mr-1 flex size-6 items-center justify-center text-muted-foreground transition-colors hover:text-ink"
               >
                 <X className="size-4" strokeWidth={1.5} />
               </button>
