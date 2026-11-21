@@ -45,7 +45,7 @@ export function AddressCard({
   onMakeDefault,
 }: AddressCardProps) {
   // Visible text stays first so voice control still matches "Edit" or "Remove".
-  const forAddress = ` for ${toAddressShortLabel(line1, city)}`;
+  const addressSuffix = `: ${toAddressShortLabel(line1, city)}`;
   return (
     <div
       className={cn(
@@ -73,19 +73,19 @@ export function AddressCard({
             <span className="text-[13px]">Delivering here</span>
           ) : (
             <Button variant="outline" size="sm" onClick={onSelect}>
-              Deliver here<span className="sr-only">{forAddress}</span>
+              Deliver here<span className="sr-only">{addressSuffix}</span>
             </Button>
           ))}
         <button type="button" onClick={onEdit} className={TEXT_LINK}>
-          Edit<span className="sr-only">{forAddress}</span>
+          Edit<span className="sr-only">{addressSuffix}</span>
         </button>
         {!isDefault && (
           <button type="button" onClick={onMakeDefault} className={TEXT_LINK}>
-            Make default<span className="sr-only">{forAddress}</span>
+            Make default<span className="sr-only">{addressSuffix}</span>
           </button>
         )}
         <button type="button" onClick={onDelete} className={TEXT_LINK}>
-          Remove<span className="sr-only">{forAddress}</span>
+          Remove<span className="sr-only">{addressSuffix}</span>
         </button>
       </div>
     </div>
