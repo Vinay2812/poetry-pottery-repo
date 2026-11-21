@@ -61,7 +61,7 @@ export function LowStockList({ rows, busyId, onAdjust }: LowStockListProps) {
                 <Button
                   type="button"
                   variant="secondary"
-                  size="icon-sm"
+                  size="icon"
                   aria-label={`Remove one ${row.name}`}
                   disabled={busyId === row.id || row.stock === 0}
                   onClick={() => onAdjust(row.id, -1)}
@@ -71,7 +71,7 @@ export function LowStockList({ rows, busyId, onAdjust }: LowStockListProps) {
                 <Button
                   type="button"
                   variant="secondary"
-                  size="icon-sm"
+                  size="icon"
                   aria-label={`Add one ${row.name}`}
                   disabled={busyId === row.id}
                   onClick={() => onAdjust(row.id, 1)}
@@ -81,7 +81,8 @@ export function LowStockList({ rows, busyId, onAdjust }: LowStockListProps) {
                 <Button
                   type="button"
                   variant="secondary"
-                  size="sm"
+                  size="icon"
+                  aria-label={`Add five ${row.name}`}
                   disabled={busyId === row.id}
                   onClick={() => onAdjust(row.id, 5)}
                 >
