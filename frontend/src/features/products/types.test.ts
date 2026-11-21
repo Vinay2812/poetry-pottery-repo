@@ -30,6 +30,7 @@ import {
   toFilterInput,
   toFilterKey,
   toResultCountLabel,
+  toShelfPhase,
   toSearchParams,
   isStickyBarWanted,
   isTuckedUnderHeader,
@@ -191,6 +192,37 @@ describe("toFilterInput", () => {
     expect(input.in_stock_only).toBe(true);
     expect(input.customizable_only).toBe(true);
     expect(input.page).toBe(3);
+  });
+});
+
+describe("toShelfPhase", () => {
+  const settled = {
+    hasFailed: false,
+    isFiltersMoving: false,
+    hasOwnPage: true,
+    isOwnPageLoading: false,
+    hasServerPage: false,
+  };
+
+  it("is ready with the browser's own page or a matching server page", () => {
+    expect(toShelfPhase(settled)).toBe("ready");
+    expect(
+      toShelfPhase({ ...settled, hasOwnPage: false, hasServerPage: true }),
+    ).toBe("ready");
+  });
+
+  it("is pending while the first page loads or the filters are ahead of it", () => {
+    expect(toShelfPhase({ ...settled, isOwnPageLoading: true })).toBe(
+      "pending",
+    );
+    expect(toShelfPhase({ ...settled, isFiltersMoving: true })).toBe("pending");
+    expect(toShelfPhase({ ...settled, hasOwnPage: false })).toBe("pending");
+  });
+
+  it("lets a failure win over everything else", () => {
+    expect(
+      toShelfPhase({ ...settled, hasFailed: true, isFiltersMoving: true }),
+    ).toBe("failed");
   });
 });
 

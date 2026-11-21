@@ -232,6 +232,32 @@ export function toResultCountLabel(
   return search ? `${counted} for \u201c${search}\u201d` : counted;
 }
 
+// Where the shelf's list stands for the current filters: still finding it, showing it, or failed.
+export type ShelfPhase = "pending" | "ready" | "failed";
+
+export interface ShelfPhaseInput {
+  hasFailed: boolean;
+  // The filters on screen are ahead of the list: a URL change or a search still being typed.
+  isFiltersMoving: boolean;
+  hasOwnPage: boolean;
+  isOwnPageLoading: boolean;
+  hasServerPage: boolean;
+}
+
+// The one answer the toolbar, shelf tab, pagination footer and filter sheet all read.
+export function toShelfPhase({
+  hasFailed,
+  isFiltersMoving,
+  hasOwnPage,
+  isOwnPageLoading,
+  hasServerPage,
+}: ShelfPhaseInput): ShelfPhase {
+  if (hasFailed) return "failed";
+  if (isFiltersMoving) return "pending";
+  if (hasOwnPage) return isOwnPageLoading ? "pending" : "ready";
+  return hasServerPage ? "ready" : "pending";
+}
+
 export type StockTone = "in_stock" | "low" | "sold_out" | "made_to_order";
 
 export interface StockStatus {
