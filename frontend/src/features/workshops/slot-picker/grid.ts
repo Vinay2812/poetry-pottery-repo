@@ -176,6 +176,16 @@ export function togglePicked(
   return [...kept, { starts_at: slot.starts_at, ends_at: slot.ends_at }];
 }
 
+// The days a new pick is measured against. A full pick drops its earliest time to make room
+// (see togglePicked), so that day no longer holds the window; with one time needed none does.
+export function toDaysKeptByNextPick(
+  pickedDateKeys: readonly string[],
+  timesNeeded: number,
+): string[] {
+  const sorted = [...pickedDateKeys].sort();
+  return sorted.length >= timesNeeded ? sorted.slice(1) : sorted;
+}
+
 export function isSameSelection(
   picked: readonly SlotInterval[],
   current: readonly SlotInterval[],
@@ -191,7 +201,6 @@ export interface WeeksInput {
   dayByKey: ReadonlyMap<string, WorkshopDayData>;
   participants: number;
   pickedDateKeys: string[];
-  // With one time needed a new pick replaces the old, so no day is out of reach.
   timesNeeded: number;
   allowedSpanDays: number;
   todayKey: string;
@@ -207,7 +216,7 @@ export function toCalendarWeeks({
   allowedSpanDays,
   todayKey,
 }: WeeksInput): (CalendarDay | null)[][] {
-  const spanKeys = timesNeeded > 1 ? pickedDateKeys : [];
+  const spanKeys = toDaysKeptByNextPick(pickedDateKeys, timesNeeded);
   return toMonthGrid(monthKey).map((week) =>
     week.map((dateKey) => {
       if (!dateKey) return null;

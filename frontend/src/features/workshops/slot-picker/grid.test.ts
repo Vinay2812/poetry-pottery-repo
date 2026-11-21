@@ -15,6 +15,7 @@ import {
   suggestSlots,
   togglePicked,
   toCalendarWeeks,
+  toDaysKeptByNextPick,
   toMonthGrid,
   toMonthKey,
   toPickedSlots,
@@ -133,28 +134,49 @@ describe("slot helpers", () => {
     expect(toVisibleWeeks([gone, gone])).toEqual([gone, gone]);
   });
 
-  it("keeps any open day pickable when one time is needed", () => {
+  it("measures a new pick against the times a swap would keep", () => {
+    expect(toDaysKeptByNextPick(["2026-11-28", "2026-11-25"], 2)).toEqual([
+      "2026-11-28",
+    ]);
+    // Until the pick is full nothing is dropped.
+    expect(toDaysKeptByNextPick(["2026-11-25"], 2)).toEqual(["2026-11-25"]);
+    // One time needed: the only pick is the one replaced.
+    expect(toDaysKeptByNextPick(["2026-11-25"], 1)).toEqual([]);
+  });
+
+  it("opens the days a full pick could swap into", () => {
     const open = (date: string): WorkshopDayData => ({ ...day, date });
-    const input = {
-      monthKey: "2026-09",
-      dayByKey: new Map([
-        ["2026-09-13", open("2026-09-13")],
-        ["2026-09-29", open("2026-09-29")],
-      ]),
-      participants: 1,
-      pickedDateKeys: ["2026-09-13"],
-      allowedSpanDays: 7,
-      todayKey: "2026-09-01",
-    };
-    const far = (timesNeeded: number) =>
-      toCalendarWeeks({ ...input, timesNeeded })
+    const mutedIn = (
+      monthKey: string,
+      dateKey: string,
+      pickedDateKeys: string[],
+      timesNeeded: number,
+    ) =>
+      toCalendarWeeks({
+        monthKey,
+        dayByKey: new Map([[dateKey, open(dateKey)]]),
+        participants: 1,
+        pickedDateKeys,
+        timesNeeded,
+        allowedSpanDays: 7,
+        todayKey: "2026-11-01",
+      })
         .flat()
-        .find((cell) => cell?.dateKey === "2026-09-29");
-    // A single pick is swapped, not added to, so the window never bites.
-    expect(far(1)?.mutedReason).toBeNull();
-    expect(far(2)?.mutedReason).toBe(
+        .find((cell) => cell?.dateKey === dateKey)?.mutedReason ?? null;
+    const full = ["2026-11-25", "2026-11-28"];
+    // Swapping out 25 Nov leaves 28 Nov–2 Dec, five days.
+    expect(mutedIn("2026-12", "2026-12-02", full, 2)).toBeNull();
+    // 28 Nov–4 Dec is exactly the 7-day window; 5 Dec is one day over.
+    expect(mutedIn("2026-12", "2026-12-04", full, 2)).toBeNull();
+    expect(mutedIn("2026-12", "2026-12-05", full, 2)).toBe(
       "Pick all your hours within a 7-day window",
     );
+    // With a time still to pick, both picks hold the window: 25 Nov–2 Dec is eight days.
+    expect(mutedIn("2026-12", "2026-12-02", full, 3)).toBe(
+      "Pick all your hours within a 7-day window",
+    );
+    // A single time is always swapped, so any open day stays pickable.
+    expect(mutedIn("2026-12", "2026-12-29", ["2026-11-25"], 1)).toBeNull();
   });
 
   it("marks only days the API returned as closed", () => {
