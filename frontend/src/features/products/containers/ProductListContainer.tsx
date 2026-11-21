@@ -167,9 +167,11 @@ export function ProductListContainer({
   }, [handleLoadMore]);
   // Observed afresh each time a next page becomes askable, so a shopper already at the
   // bottom still sets it off: the observer reports the current position when it starts.
+  // After a failure only "Try again" asks; re-arming then would retry in a tight loop.
+  const isSentinelArmed = canAskNextPage && !hasAppendFailed;
   const sentinelRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (!node || !canAskNextPage) return;
+      if (!node || !isSentinelArmed) return;
       const observer = new IntersectionObserver(
         (entries) => {
           if (entries.some((entry) => entry.isIntersecting))
@@ -180,7 +182,7 @@ export function ProductListContainer({
       observer.observe(node);
       return () => observer.disconnect();
     },
-    [canAskNextPage],
+    [isSentinelArmed],
   );
 
   const priceFloor = facets?.price_min ?? 0;
