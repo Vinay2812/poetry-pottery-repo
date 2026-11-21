@@ -16,6 +16,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { describeError } from "@/lib/apollo/errors";
+import { toPageTurn } from "@/lib/page-turn";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
 import { useRequireAuth } from "@/features/auth";
@@ -90,9 +91,16 @@ export function useMyWorkshopBookings(page: number) {
     },
   );
   const result = data?.myWorkshopBookings ?? previousData?.myWorkshopBookings;
+  const { shownPage, failedPage } = toPageTurn(
+    page,
+    result?.page_info.page ?? null,
+    Boolean(error),
+  );
   return {
     bookings: isSignedIn ? (result?.items ?? []) : [],
     pageInfo: result?.page_info ?? null,
+    shownPage,
+    failedPage,
     isLoading: !isLoaded || (loading && !result),
     isPaging: loading && Boolean(result),
     hasError: Boolean(error) && !result,
