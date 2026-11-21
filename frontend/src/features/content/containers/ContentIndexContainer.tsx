@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useState } from "react";
 
 import { ContentIndex } from "@/features/content/components/ContentIndex";
-import { pickActiveSection } from "@/features/content/types";
+import {
+  pickActiveSection,
+  toSectionHeadingId,
+} from "@/features/content/types";
 
 interface ContentIndexEntry {
   id: string;
@@ -29,7 +32,16 @@ export function ContentIndexContainer({
   );
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   // On phones the list folds away once a section is picked, so the text is what is on screen.
-  const handleJump = useCallback(() => setIsMenuOpen(false), []);
+  // The link that had focus folds away with it, so focus moves to the section it opened;
+  // the link still sets the fragment and scrolls.
+  const handleJump = useCallback((id: string) => {
+    setIsMenuOpen(false);
+    window.requestAnimationFrame(() =>
+      document
+        .getElementById(toSectionHeadingId(id))
+        ?.focus({ preventScroll: true }),
+    );
+  }, []);
 
   useEffect(() => {
     let frame = 0;

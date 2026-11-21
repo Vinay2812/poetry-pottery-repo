@@ -44,6 +44,11 @@ export function splitParagraphs(body: string): string[] {
     .filter((paragraph) => paragraph.length > 0);
 }
 
+// The heading a jump lands focus on, so keyboard reading carries on from the section.
+export function toSectionHeadingId(sectionId: string): string {
+  return `${sectionId}-heading`;
+}
+
 export function toAnchorId(heading: string): string {
   const slug = heading
     .toLowerCase()

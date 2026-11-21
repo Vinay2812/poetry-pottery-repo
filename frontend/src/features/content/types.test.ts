@@ -9,6 +9,7 @@ import {
   splitParagraphs,
   toAboutSections,
   toAnchorId,
+  toSectionHeadingId,
   toGridClass,
   toGridColumns,
   toSectionViews,
@@ -237,5 +238,11 @@ describe("toStepNumber", () => {
   it("counts from one with a leading zero", () => {
     expect(toStepNumber(0)).toBe("01");
     expect(toStepNumber(11)).toBe("12");
+  });
+});
+
+describe("toSectionHeadingId", () => {
+  it("names the heading inside a section's anchor", () => {
+    expect(toSectionHeadingId("care-2")).toBe("care-2-heading");
   });
 });

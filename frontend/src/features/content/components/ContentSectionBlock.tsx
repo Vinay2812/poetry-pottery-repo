@@ -2,7 +2,10 @@ import { cn } from "@/lib/utils";
 
 import { DefinitionRow } from "@/features/content/components/DefinitionRow";
 import { FaqAccordion } from "@/features/content/components/FaqAccordion";
-import type { ContentItemView } from "@/features/content/types";
+import {
+  type ContentItemView,
+  toSectionHeadingId,
+} from "@/features/content/types";
 
 export interface ContentSectionBlockProps {
   id: string;
@@ -24,14 +27,15 @@ export function ContentSectionBlock({
   return (
     <section
       id={id}
-      aria-labelledby={`${id}-heading`}
+      aria-labelledby={toSectionHeadingId(id)}
       className={cn(
         "flex flex-col gap-5 pb-10 md:pb-12",
         hasRule && "border-t border-ash pt-10 md:pt-12",
       )}
     >
       <h2
-        id={`${id}-heading`}
+        id={toSectionHeadingId(id)}
+        tabIndex={-1}
         className="font-heading text-2xl leading-tight tracking-tight md:text-3xl"
       >
         {heading}
