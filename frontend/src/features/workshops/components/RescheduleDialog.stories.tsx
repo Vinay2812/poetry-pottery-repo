@@ -81,6 +81,7 @@ const meta = {
     progress: "1 of 2 hours picked",
     isComplete: false,
     isUnchanged: false,
+    isMultiDay: false,
     isSubmitting: false,
     onOpenChange: fn(),
     onPreviousMonth: fn(),
@@ -112,6 +113,19 @@ export const AvailabilityFailed: Story = {
 export const Moving: Story = { args: { isSubmitting: true } };
 
 export const SameHoursAsBooked: Story = { args: { isUnchanged: true } };
+
+// Every time is picked across two days: the swap hint shows and "keep" names the times.
+export const AllTimesPickedAcrossDays: Story = {
+  args: {
+    pickedSlots: [
+      { startsAt: "2026-09-19T09:30:00.000Z", label: "Sat, 19 Sept · 3–4 pm" },
+      { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue, 22 Sept · 3–4 pm" },
+    ],
+    progress: "All 2 hours picked",
+    isComplete: true,
+    isMultiDay: true,
+  },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

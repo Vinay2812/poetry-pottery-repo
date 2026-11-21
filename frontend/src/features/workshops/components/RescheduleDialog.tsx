@@ -22,7 +22,7 @@ import {
   SlotList,
   type SlotOption,
 } from "@/features/workshops/components/SlotList";
-import { formatDateKey } from "@/features/workshops/types";
+import { formatDateKey, REPLACE_TIME_HINT } from "@/features/workshops/types";
 import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 export interface RescheduleDialogProps {
@@ -40,6 +40,8 @@ export interface RescheduleDialogProps {
   progress: string;
   isComplete: boolean;
   isUnchanged: boolean;
+  // The booking's hours sit on more than one day, so "the old day" would be wrong.
+  isMultiDay: boolean;
   isSubmitting: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onPreviousMonth: () => void;
@@ -65,6 +67,7 @@ export function RescheduleDialog({
   progress,
   isComplete,
   isUnchanged,
+  isMultiDay,
   isSubmitting,
   onOpenChange,
   onPreviousMonth,
@@ -126,6 +129,11 @@ export function RescheduleDialog({
           emptyMessage="Pick your times from the calendar."
           onRemoveSlot={onRemoveSlot}
         />
+        {isComplete && pickedSlots.length > 1 && (
+          <p className="text-[13px] text-muted-foreground">
+            {REPLACE_TIME_HINT}
+          </p>
+        )}
 
         <DialogFooter className="gap-2 sm:gap-2">
           <Button
@@ -133,7 +141,7 @@ export function RescheduleDialog({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Keep the old day
+            {isMultiDay ? "Keep current times" : "Keep the old day"}
           </Button>
           <Button
             onClick={onConfirm}
