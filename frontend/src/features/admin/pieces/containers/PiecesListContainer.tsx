@@ -110,6 +110,7 @@ export function PiecesListContainer() {
         isActive: piece.is_active,
         canGoLive: canGoLive(piece.stock, piece.is_customizable),
         isFeatured: piece.is_featured,
+        isMadeToOrder: piece.is_customizable,
         categoriesLabel: describeCategories(
           piece.categories.map((category) => category.name),
         ),

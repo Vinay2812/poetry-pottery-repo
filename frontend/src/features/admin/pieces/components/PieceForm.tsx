@@ -21,10 +21,10 @@ import {
   toPreviewColour,
 } from "@/features/admin/ui";
 import {
-  canFeature,
   canGoLive,
+  describeNewFeatureHint,
+  findFeatureBlock,
   LIVE_BLOCKED_NOTE,
-  NEW_FEATURE_BLOCKED_NOTE,
 } from "@/features/admin/pieces/types";
 
 interface PieceTaxonomyOption {
@@ -96,6 +96,7 @@ export function PieceForm({
 
   const isLiveAllowed = canGoLive(Number(stockValue) || 0, isCustomizable);
   const isOnShelf = isActive && isLiveAllowed;
+  const featureBlock = findFeatureBlock(isOnShelf, false, isCustomizable);
   const swatchColour = toPreviewColour(colorCode);
 
   useEffect(() => {
@@ -518,10 +519,10 @@ export function PieceForm({
             />
             <AdminCheckboxField
               id="piece-featured"
-              label="Show on the home page"
-              hint={isOnShelf ? null : NEW_FEATURE_BLOCKED_NOTE}
-              isChecked={isFeatured && isOnShelf}
-              isDisabled={!canFeature(isOnShelf, false)}
+              label="Put first on the home page"
+              hint={describeNewFeatureHint(featureBlock)}
+              isChecked={isFeatured && featureBlock === null}
+              isDisabled={featureBlock !== null}
               onCheckedChange={(isOn) => setFlag("is_featured", isOn)}
             />
           </>

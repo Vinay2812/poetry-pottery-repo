@@ -42,7 +42,6 @@ import { StockAdjustDialog } from "@/features/admin/pieces/components/StockAdjus
 import { OptionGroupsContainer } from "@/features/admin/pieces/containers/OptionGroupsContainer";
 import {
   applyStockDelta,
-  canFeature,
   canGoLive,
   describeKiln,
   describeKilnHint,
@@ -50,6 +49,8 @@ import {
   describeShelfStateHint,
   describeUnsavedChanges,
   EMPTY_PRODUCT_FORM,
+  FEATURE_BLOCK_NOTES,
+  findFeatureBlock,
   formatStock,
   LIVE_BLOCKED_NOTE,
   type PieceDraft,
@@ -157,6 +158,14 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     state.stock,
     product?.is_customizable ?? false,
   );
+  const featureBlock = findFeatureBlock(
+    state.isActive,
+    state.isFeatured,
+    product?.is_customizable ?? false,
+  );
+  // A retired piece gets no home page button at all, so only made to order needs a reason.
+  const featureBlockNote =
+    featureBlock === "made-to-order" ? FEATURE_BLOCK_NOTES[featureBlock] : null;
 
   // The draft wins until a save clears it; before that the saved gallery is the truth.
   const imageUrls = useMemo(
@@ -384,17 +393,26 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
               >
                 Change the stock
               </Button>
-              {canFeature(state.isActive, state.isFeatured) && (
+              {featureBlock !== "retired" && (
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
                   disabled={isBusy}
-                  onClick={() => runFeatured(!state.isFeatured)}
+                  aria-disabled={featureBlockNote !== null}
+                  aria-describedby={
+                    featureBlockNote ? "piece-feature-block" : undefined
+                  }
+                  className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent"
+                  onClick={() => {
+                    if (featureBlockNote === null) {
+                      runFeatured(!state.isFeatured);
+                    }
+                  }}
                 >
                   {state.isFeatured
-                    ? "Take off the home page"
-                    : "Show on the home page"}
+                    ? "Stop putting it first"
+                    : "Put first on the home page"}
                 </Button>
               )}
               <Button
@@ -417,6 +435,14 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
               >
                 {state.isActive ? "Retire" : "Put back on the shelf"}
               </Button>
+              {featureBlockNote && (
+                <p
+                  id="piece-feature-block"
+                  className="basis-full text-[12px] text-muted-foreground"
+                >
+                  {featureBlockNote}
+                </p>
+              )}
             </>
           )
         }

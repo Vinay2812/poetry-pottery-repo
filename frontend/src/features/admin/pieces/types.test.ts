@@ -8,12 +8,12 @@ import {
 
 import {
   applyStockDelta,
-  canFeature,
   canGoLive,
   clampStock,
   countFoldedFilters,
   describeCategories,
   describeMaxLength,
+  describeNewFeatureHint,
   describeKiln,
   describeKilnHint,
   describeFiltersToggle,
@@ -23,6 +23,7 @@ import {
   describeShelfStateHint,
   describeStockAfter,
   describeUnsavedChanges,
+  findFeatureBlock,
   EMPTY_PRODUCT_FORM,
   formatCareNotes,
   formatPriceModifier,
@@ -307,7 +308,7 @@ describe("toProductInput", () => {
     expect(input.is_featured).toBe(false);
   });
 
-  it("keeps a made-to-order piece live and featured with no stock", () => {
+  it("keeps a made-to-order piece live with no stock, but off the home page", () => {
     const input = toProductInput(
       {
         ...EMPTY_PRODUCT_FORM,
@@ -318,7 +319,7 @@ describe("toProductInput", () => {
       [],
     );
     expect(input.is_active).toBe(true);
-    expect(input.is_featured).toBe(true);
+    expect(input.is_featured).toBe(false);
   });
 
   it("sends nothing rather than an empty string for optional text", () => {
@@ -434,16 +435,16 @@ describe("shelf state", () => {
 
   it("says a retired piece is still marked for the home page", () => {
     expect(describeShelfStateHint(false, true, true)).toBe(
-      "Still marked for the home page",
+      "Still marked to go first on the home page",
     );
     expect(describeShelfStateHint(false, false, true)).toBe(
-      "Still marked for the home page",
+      "Still marked to go first on the home page",
     );
   });
 
   it("mentions the home page only for a featured live piece", () => {
     expect(describeShelfStateHint(true, true, true)).toBe(
-      "Also on the home page",
+      "First on the home page",
     );
     expect(describeShelfStateHint(true, true, false)).toBeNull();
   });
@@ -501,14 +502,30 @@ describe("folded filters", () => {
   });
 });
 
-describe("canFeature", () => {
-  it("offers the home page only to a piece on the shelf", () => {
-    expect(canFeature(true, false)).toBe(true);
-    expect(canFeature(false, false)).toBe(false);
+describe("findFeatureBlock", () => {
+  it("offers the home page only to a ready-to-ship piece on the shelf", () => {
+    expect(findFeatureBlock(true, false, false)).toBeNull();
+    expect(findFeatureBlock(false, false, false)).toBe("retired");
+    expect(findFeatureBlock(true, false, true)).toBe("made-to-order");
   });
 
-  it("still lets a retired piece come off the home page", () => {
-    expect(canFeature(false, true)).toBe(true);
+  it("still lets a marked piece be unmarked, retired or made to order", () => {
+    expect(findFeatureBlock(false, true, false)).toBeNull();
+    expect(findFeatureBlock(true, true, true)).toBeNull();
+  });
+});
+
+describe("describeNewFeatureHint", () => {
+  it("says what the box does, or why it cannot be ticked", () => {
+    expect(describeNewFeatureHint(null)).toBe(
+      "It comes before the other pieces ready to ship.",
+    );
+    expect(describeNewFeatureHint("retired")).toBe(
+      "Only a piece on the shelf can be on the home page",
+    );
+    expect(describeNewFeatureHint("made-to-order")).toBe(
+      "The home page shows pieces ready to ship, not made to order",
+    );
   });
 });
 

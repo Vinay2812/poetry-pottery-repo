@@ -16,8 +16,8 @@ import {
 } from "@/features/admin/ui";
 
 import {
-  canFeature,
-  FEATURE_BLOCKED_NOTE,
+  FEATURE_BLOCK_NOTES,
+  findFeatureBlock,
   LIVE_BLOCKED_NOTE,
 } from "@/features/admin/pieces/types";
 
@@ -33,6 +33,7 @@ export interface PieceRow {
   isActive: boolean;
   canGoLive: boolean;
   isFeatured: boolean;
+  isMadeToOrder: boolean;
   categoriesLabel: string;
   collectionLabel: string;
 }
@@ -64,7 +65,7 @@ export function PiecesTable({
           <th className={ADMIN_TH}>Piece</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_TABLET}`}>Price</th>
           <th className={ADMIN_TH}>On the shelf</th>
-          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Home page</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>First on home</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Categories</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Collection</th>
           <th className={ADMIN_TH}>Stock</th>
@@ -78,9 +79,14 @@ export function PiecesTable({
           // Why a box cannot be ticked, said on hover and to a screen reader.
           const shelfBlock =
             !row.isActive && !row.canGoLive ? LIVE_BLOCKED_NOTE : null;
-          const featureBlock = canFeature(row.isActive, row.isFeatured)
-            ? null
-            : FEATURE_BLOCKED_NOTE;
+          const featureKind = findFeatureBlock(
+            row.isActive,
+            row.isFeatured,
+            row.isMadeToOrder,
+          );
+          const featureBlock = featureKind
+            ? FEATURE_BLOCK_NOTES[featureKind]
+            : null;
           return (
             <tr key={row.id} className={ADMIN_TR}>
               <td className={ADMIN_TD}>
@@ -137,7 +143,7 @@ export function PiecesTable({
                   checked={row.isFeatured}
                   disabled={busyId === row.id || featureBlock !== null}
                   title={featureBlock ?? undefined}
-                  aria-label={`Show ${row.name} on the home page`}
+                  aria-label={`Put ${row.name} first on the home page`}
                   aria-describedby={
                     featureBlock ? `piece-${row.id}-feature-block` : undefined
                   }
