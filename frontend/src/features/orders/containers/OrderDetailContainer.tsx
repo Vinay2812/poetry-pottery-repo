@@ -217,7 +217,7 @@ export function OrderDetailContainer({
         customerNote={optimisticOrder.customer_note}
         giftNote={optimisticOrder.gift_note}
         hasHiddenPrices={optimisticOrder.hide_prices}
-        trackingNote={optimisticOrder.tracking_note}
+        trackingNote={closed ? null : optimisticOrder.tracking_note}
         whatsappUrl={whatsappUrl}
         canCancel={optimisticOrder.can_cancel}
         isCancelling={isCancelling}
