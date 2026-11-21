@@ -71,6 +71,10 @@ export interface ProductDetailContainerProps {
 
 const MAX_QUANTITY = 10;
 
+// The first control a reader needs to fix: an invalid text field, an unanswered choice, or the photo picker.
+const FIRST_ISSUE_SELECTOR =
+  '[aria-invalid="true"], [role="radiogroup"][aria-describedby] [tabindex="0"], button[aria-describedby]';
+
 // The drawing names three facts. Each leader leaves its dot at the same 25 degrees,
 // and each dot is read off the piece itself so "Clay body" never lands on the glaze.
 const LEADER_TAN = 0.4663;
@@ -112,6 +116,7 @@ export function ProductDetailContainer({
   const actionsRef = useRef<HTMLDivElement>(null);
   const addToCartRef = useRef<HTMLButtonElement>(null);
   const stickyBarRef = useRef<HTMLDivElement>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
 
   const { data: relatedData } = useQuery(RelatedProductsDocument, {
     variables: { slug: product.slug, limit: 8 },
@@ -278,19 +283,32 @@ export function ProductDetailContainer({
     setSelections((current) => ({ ...current, [groupId]: { text } }));
   }, []);
 
-  const handleAddToCart = useCallback(() => {
+  // The message sits beside the field, which can be a screen away from the button pressed.
+  const revealFirstIssue = useCallback((block: ScrollLogicalPosition) => {
+    window.requestAnimationFrame(() => {
+      const options = optionsRef.current;
+      if (!options) return;
+      options.scrollIntoView({ block });
+      options
+        .querySelector<HTMLElement>(FIRST_ISSUE_SELECTOR)
+        ?.focus({ preventScroll: true });
+    });
+  }, []);
+
+  // False when something in the options has to be fixed first.
+  const tryAddToCart = useCallback((): boolean => {
     if (issues.length > 0) {
       setShowErrors(true);
-      return;
+      return false;
     }
     if (isPhotoUploadPending(photos)) {
       setPhotoError("Wait for the photos to finish uploading");
-      return;
+      return false;
     }
     // A failed photo would otherwise be dropped from the line without a word.
     if (hasFailedPhoto(photos)) {
       setPhotoError("Remove the photo that did not upload, or try it again");
-      return;
+      return false;
     }
     addToCart(
       {
@@ -306,6 +324,7 @@ export function ProductDetailContainer({
       product.name,
     );
     clearPhotos();
+    return true;
   }, [
     addToCart,
     clearPhotos,
@@ -317,6 +336,14 @@ export function ProductDetailContainer({
     selections,
     setPhotoError,
   ]);
+
+  const handleAddToCart = useCallback(() => {
+    if (!tryAddToCart()) revealFirstIssue("nearest");
+  }, [revealFirstIssue, tryAddToCart]);
+
+  const handleStickyAddToCart = useCallback(() => {
+    if (!tryAddToCart()) revealFirstIssue("center");
+  }, [revealFirstIssue, tryAddToCart]);
 
   const handleToggleWishlist = useCallback(() => {
     toggle(product.id, product.name);
@@ -405,7 +432,10 @@ export function ProductDetailContainer({
               addToCartRef={addToCartRef}
               options={
                 groups.length > 0 || product.is_customizable ? (
-                  <div className="flex flex-col gap-5 border-y border-ash py-6">
+                  <div
+                    ref={optionsRef}
+                    className="flex flex-col gap-5 border-y border-ash py-6"
+                  >
                     {groups.map((group) => {
                       const selection = selections[group.id];
                       const issue = showErrors
@@ -579,7 +609,7 @@ export function ProductDetailContainer({
         isSoldOut={stock.tone === "sold_out"}
         isAddingToCart={isAdding}
         canAddToCart={product.stock > 0 || product.is_customizable}
-        onAddToCart={handleAddToCart}
+        onAddToCart={handleStickyAddToCart}
       />
     </PageShell>
   );
