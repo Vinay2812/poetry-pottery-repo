@@ -15,7 +15,7 @@ export function PageError({
 }: PageErrorProps) {
   return (
     <div className="flex flex-col items-start gap-4 border-t border-ash py-20 md:py-28">
-      <p className="text-[13px] tracking-[0.18em] text-muted-foreground uppercase">
+      <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
         Something broke
       </p>
       <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
