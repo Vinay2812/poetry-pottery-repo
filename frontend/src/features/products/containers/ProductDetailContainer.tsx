@@ -38,6 +38,8 @@ import {
   computeUnitPrice,
   hasFailedPhoto,
   isTuckedUnderHeader,
+  LG_MEDIA_QUERY,
+  STICKY_BAR_SCROLL_PADDING,
   isPhotoUploadPending,
   MAX_REFERENCE_PHOTOS,
   type ProductDetailData,
@@ -104,6 +106,7 @@ export function ProductDetailContainer({
   const [showErrors, setShowErrors] = useState(false);
   const [isActionsVisible, setIsActionsVisible] = useState(true);
   const [isFooterVisible, setIsFooterVisible] = useState(false);
+  const isActionsVisibleRef = useRef(true);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [activeFact, setActiveFact] = useState<string | null>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
@@ -181,14 +184,20 @@ export function ProductDetailContainer({
       });
   }, [factRows, product.name]);
 
-  // Checked each scroll frame: an IntersectionObserver stays silent when a jump skips the row.
+  // Measured each scroll frame below lg, where the bar lives; an IntersectionObserver misses jumps.
   useEffect(() => {
     const node = actionsRef.current;
     if (!node) return;
+    const wide = window.matchMedia(LG_MEDIA_QUERY);
     let frame = 0;
-    const update = () => {
+    const show = (isVisible: boolean) => {
+      if (isActionsVisibleRef.current === isVisible) return;
+      isActionsVisibleRef.current = isVisible;
+      setIsActionsVisible(isVisible);
+    };
+    const measure = () => {
       frame = 0;
-      setIsActionsVisible(
+      show(
         !isTuckedUnderHeader(
           node.getBoundingClientRect().bottom,
           SITE_HEADER_HEIGHT_PX,
@@ -196,15 +205,29 @@ export function ProductDetailContainer({
       );
     };
     const schedule = () => {
-      if (frame === 0) frame = window.requestAnimationFrame(update);
+      if (frame === 0) frame = window.requestAnimationFrame(measure);
     };
-    update();
-    window.addEventListener("scroll", schedule, { passive: true });
-    window.addEventListener("resize", schedule);
-    return () => {
+    const detach = () => {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
       window.cancelAnimationFrame(frame);
+      frame = 0;
+    };
+    const sync = () => {
+      detach();
+      if (wide.matches) {
+        show(true);
+        return;
+      }
+      measure();
+      window.addEventListener("scroll", schedule, { passive: true });
+      window.addEventListener("resize", schedule);
+    };
+    sync();
+    wide.addEventListener("change", sync);
+    return () => {
+      wide.removeEventListener("change", sync);
+      detach();
     };
   }, []);
 
@@ -218,6 +241,18 @@ export function ProductDetailContainer({
     observer.observe(footer);
     return () => observer.disconnect();
   }, []);
+
+  // While the bar is up, focused and scrolled-to controls stop above it rather than under it.
+  const isStickyBarShown =
+    !isArchived && !isActionsVisible && !isFooterVisible;
+  useEffect(() => {
+    if (!isStickyBarShown) return;
+    const root = document.documentElement;
+    root.style.scrollPaddingBottom = STICKY_BAR_SCROLL_PADDING;
+    return () => {
+      root.style.scrollPaddingBottom = "";
+    };
+  }, [isStickyBarShown]);
 
   const handleSelectOption = useCallback(
     (groupId: number, optionId: number) => {
@@ -521,7 +556,7 @@ export function ProductDetailContainer({
       )}
 
       <StickyBuyBar
-        isVisible={!isArchived && !isActionsVisible && !isFooterVisible}
+        isVisible={isStickyBarShown}
         name={product.name}
         quantity={quantity}
         total={unitPrice * quantity}

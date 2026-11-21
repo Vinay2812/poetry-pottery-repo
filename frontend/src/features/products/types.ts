@@ -272,6 +272,13 @@ export function toFlawNote(flawNote: string | null): string {
 export const STUDIO_NOTE =
   "Each piece is thrown by hand, so expect small differences.";
 
+// Tailwind's lg breakpoint, where the buy box sits beside the gallery and the sticky bar is hidden.
+export const LG_MEDIA_QUERY = "(min-width: 64rem)";
+
+// The bottom nav, the sticky bar above it and a little air, so a focused link never lands under them.
+export const STICKY_BAR_SCROLL_PADDING =
+  "calc(9rem + env(safe-area-inset-bottom))";
+
 // The buttons count as gone once their bottom edge has slid under the sticky header.
 export function isTuckedUnderHeader(
   rowBottom: number,
