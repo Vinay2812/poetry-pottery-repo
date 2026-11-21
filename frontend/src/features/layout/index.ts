@@ -8,7 +8,6 @@ export { MobileMenuContainer } from "@/features/layout/containers/MobileMenuCont
 export { MobileNavContainer } from "@/features/layout/containers/MobileNavContainer";
 export { SiteHeaderContainer } from "@/features/layout/containers/SiteHeaderContainer";
 export {
-  buildWhatsAppUrl,
   FOOTER_HELP_LINKS,
   FOOTER_LEGAL_LINKS,
   FOOTER_SHOP_LINKS,

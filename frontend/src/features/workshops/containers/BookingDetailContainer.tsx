@@ -10,7 +10,7 @@ import { formatInr, pluralize } from "@/lib/format";
 import { PageShell } from "@/components/layout/PageShell";
 
 import { SignInWall } from "@/features/auth";
-import { buildWhatsAppUrl } from "@/features/layout/types";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { BookingDetail } from "@/features/workshops/components/BookingDetail";
 import { CancelBookingDialog } from "@/features/workshops/components/CancelBookingDialog";
 import { RescheduleDialog } from "@/features/workshops/components/RescheduleDialog";

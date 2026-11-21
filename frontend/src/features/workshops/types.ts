@@ -6,7 +6,7 @@ import {
   type WorkshopConfigFieldsFragment,
 } from "@/graphql/generated/graphql";
 
-import { buildWhatsAppUrl } from "@/features/layout/types";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatShortDay } from "@/lib/format";
 import type { TimelineStage } from "@/lib/timeline";
 import {

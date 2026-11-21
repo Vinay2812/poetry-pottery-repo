@@ -1,4 +1,5 @@
 import { getSiteSettings } from "@/lib/data/site-settings";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 import { SkipLink } from "@/components/layout/SkipLink";
 import { Toaster } from "@/components/providers/toaster";
@@ -8,7 +9,6 @@ import { CartProvider } from "@/features/cart";
 import { NewsletterFormContainer } from "@/features/content";
 import {
   AnnouncementBar,
-  buildWhatsAppUrl,
   FOOTER_HELP_LINKS,
   FOOTER_LEGAL_LINKS,
   FOOTER_SHOP_LINKS,

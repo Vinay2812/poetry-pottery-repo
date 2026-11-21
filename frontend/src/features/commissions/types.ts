@@ -5,7 +5,7 @@ import type {
 
 import type { CommissionFormValues } from "@/lib/validations/commission";
 
-import { buildWhatsAppUrl } from "@/features/layout/types";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export interface CommissionStep {
   title: string;
