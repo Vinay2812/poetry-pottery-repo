@@ -72,28 +72,58 @@ export function toOptionId(panelId: string, index: number): string {
   return `${panelId}-option-${index}`;
 }
 
+// Suggestions belong to the term they were asked for; until the field and the answer agree they are stale.
+export function isSuggestPending(
+  value: string,
+  term: string,
+  isLoading: boolean,
+): boolean {
+  return isLoading || value.trim() !== term;
+}
+
+// Stale suggestions stay painted but drop out of what arrow keys, Enter and clicks can reach.
+export function toSelectableLists(
+  lists: SuggestOptionLists,
+  isPending: boolean,
+): SuggestOptionLists {
+  if (!isPending) return lists;
+  return { recents: lists.recents, pieces: [], events: [], workshops: [] };
+}
+
+// Enough of a pasted run to recognise it, short enough that the hint never pushes the row wide.
+const HINT_EXCERPT_LENGTH = 32;
+
+function toExcerpt(text: string): string {
+  return text.length > HINT_EXCERPT_LENGTH
+    ? `${text.slice(0, HINT_EXCERPT_LENGTH)}…`
+    : text;
+}
+
 export interface SearchHintInput {
   value: string;
-  term: string;
-  isLoading: boolean;
+  isPending: boolean;
+  isError: boolean;
   resultCount: number;
 }
 
 // The line under the list says what the panel is doing, so an empty list never looks broken.
 export function toSearchHint({
   value,
-  term,
-  isLoading,
+  isPending,
+  isError,
   resultCount,
 }: SearchHintInput): string {
   const typed = value.trim();
   if (typed.length === 0) {
     return "Type a glaze, a clay body or what you want to use it for.";
   }
-  if (resultCount > 0 || typed.length < MIN_SUGGEST_LENGTH) {
+  if (typed.length < MIN_SUGGEST_LENGTH) {
     return "Press Enter to search everything.";
   }
-  // Until the debounced term catches up with the field, the answer is still on its way.
-  if (isLoading || term !== typed) return "Looking…";
-  return `Nothing matches “${typed}”. Try a glaze, a clay body or a shape.`;
+  if (isPending) return "Looking…";
+  if (isError) {
+    return "Suggestions did not load. Press Enter to search everything.";
+  }
+  if (resultCount > 0) return "Press Enter to search everything.";
+  return `Nothing matches “${toExcerpt(typed)}”. Try a glaze, a clay body or a shape.`;
 }

@@ -35,6 +35,9 @@ export const Piece: Story = {};
 
 export const Highlighted: Story = { args: { isActive: true } };
 
+// An answer to the previous word, shown while the new one is looked up.
+export const Stale: Story = { args: { isDisabled: true } };
+
 export const NoPhoto: Story = {
   args: { imageUrl: null, note: "In the archive" },
 };

@@ -17,6 +17,8 @@ export interface SearchPanelProps {
   value: string;
   activeIndex: number;
   isLoading: boolean;
+  // Rows answer an older word while the new one is looked up; they show but cannot be picked.
+  isStale?: boolean;
   hint: string;
   recents: SearchPanelEntry[];
   pieces: SearchPanelEntry[];
@@ -38,6 +40,7 @@ interface SectionProps {
   panelId: string;
   activeIndex: number;
   hasThumbnails?: boolean;
+  isDisabled?: boolean;
   onSelectIndex: (index: number) => void;
   onHoverIndex: (index: number) => void;
 }
@@ -49,6 +52,7 @@ function Section({
   panelId,
   activeIndex,
   hasThumbnails = false,
+  isDisabled = false,
   onSelectIndex,
   onHoverIndex,
 }: SectionProps) {
@@ -69,7 +73,8 @@ function Section({
           note={entry.note}
           imageUrl={entry.imageUrl}
           hasThumbnail={hasThumbnails}
-          isActive={activeIndex === offset + index}
+          isActive={!isDisabled && activeIndex === offset + index}
+          isDisabled={isDisabled}
           onSelect={() => onSelectIndex(offset + index)}
           onHover={() => onHoverIndex(offset + index)}
         />
@@ -87,6 +92,7 @@ export function SearchPanel({
   value,
   activeIndex,
   isLoading,
+  isStale = false,
   hint,
   recents,
   pieces,
@@ -170,6 +176,7 @@ export function SearchPanel({
           />
           <Section
             title="Pieces"
+            isDisabled={isStale}
             entries={pieces}
             offset={piecesOffset}
             panelId={panelId}
@@ -180,6 +187,7 @@ export function SearchPanel({
           />
           <Section
             title="Events"
+            isDisabled={isStale}
             entries={events}
             offset={eventsOffset}
             panelId={panelId}
@@ -189,6 +197,7 @@ export function SearchPanel({
           />
           <Section
             title="Wheel sessions"
+            isDisabled={isStale}
             entries={workshops}
             offset={workshopsOffset}
             panelId={panelId}
@@ -198,8 +207,11 @@ export function SearchPanel({
           />
         </ul>
 
-        <div className="flex items-center justify-between gap-4 border-t border-ash py-3">
-          <p aria-live="polite" className="text-[13px] text-muted-foreground">
+        <div className="flex items-start justify-between gap-4 border-t border-ash py-3">
+          <p
+            aria-live="polite"
+            className="min-w-0 text-[13px] [overflow-wrap:anywhere] text-muted-foreground"
+          >
             {hint}
           </p>
           {recents.length > 0 && (
@@ -207,7 +219,7 @@ export function SearchPanel({
               type="button"
               onMouseDown={(event) => event.preventDefault()}
               onClick={onClearRecents}
-              className="link-underline text-[13px] text-muted-foreground"
+              className="shrink-0 link-underline text-[13px] text-muted-foreground"
             >
               Clear recent searches
             </button>

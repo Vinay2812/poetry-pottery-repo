@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useId, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 
 import { useQuery } from "@apollo/client/react";
 import { SuggestDocument } from "@/graphql/generated/graphql";
 import { formatDate, formatInr } from "@/lib/format";
+
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
 import {
   SearchPanel,
@@ -14,6 +16,7 @@ import {
 import { useDebouncedTerm } from "@/features/search/hooks";
 import {
   addRecentSearch,
+  isSuggestPending,
   MIN_SUGGEST_LENGTH,
   nextActiveIndex,
   parseRecentSearches,
@@ -23,6 +26,7 @@ import {
   toOptionOrder,
   toSearchHint,
   toSearchHref,
+  toSelectableLists,
 } from "@/features/search/types";
 
 export interface SearchMenuContainerProps {
@@ -30,13 +34,26 @@ export interface SearchMenuContainerProps {
   onClose: () => void;
 }
 
-// The panel mounts only while it is open, so its state starts from the stored list each time.
+// A top sheet, so focus stays inside, Escape and outside clicks close it, and focus goes back
+// to whatever opened it. Its content unmounts on close, so each open starts from the stored list.
 export function SearchMenuContainer({
   isOpen,
   onClose,
 }: SearchMenuContainerProps) {
-  if (!isOpen) return null;
-  return <SearchMenu onClose={onClose} />;
+  return (
+    <Sheet open={isOpen} onOpenChange={(next) => !next && onClose()}>
+      <SheetContent
+        side="top"
+        showCloseButton={false}
+        aria-describedby={undefined}
+        // The panel draws its own bottom rule.
+        className="gap-0 border-b-0 bg-background shadow-none"
+      >
+        <SheetTitle className="sr-only">Search the studio</SheetTitle>
+        <SearchMenu onClose={onClose} />
+      </SheetContent>
+    </Sheet>
+  );
 }
 
 function SearchMenu({ onClose }: { onClose: () => void }) {
@@ -51,23 +68,18 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
   const term = useDebouncedTerm(value);
   const isTermReady = term.length >= MIN_SUGGEST_LENGTH;
 
-  // Escape closes from anywhere, not just from the field.
-  useEffect(() => {
-    const handle = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handle);
-    return () => document.removeEventListener("keydown", handle);
-  }, [onClose]);
-
-  const { data, previousData, loading } = useQuery(SuggestDocument, {
+  const { data, previousData, loading, error } = useQuery(SuggestDocument, {
     variables: { q: term },
     skip: !isTermReady,
   });
-  // Previous rows stay up while the next ones load, so the list never blinks empty.
-  const suggestions = isTermReady
-    ? (data?.suggest ?? previousData?.suggest)
-    : undefined;
+  const isError = error !== undefined;
+  const isPending = isSuggestPending(value, term, loading);
+  // Previous rows stay up while the next ones load, so the list never blinks empty;
+  // a failed lookup clears them so the panel does not offer answers to another word.
+  const suggestions =
+    isTermReady && !isError
+      ? (data?.suggest ?? previousData?.suggest)
+      : undefined;
 
   const lists = useMemo<SuggestOptionLists>(
     () => ({
@@ -94,12 +106,16 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
     }),
     [recents, suggestions],
   );
-  const options = useMemo(() => toOptionOrder(lists), [lists]);
+  const options = useMemo(
+    () => toOptionOrder(toSelectableLists(lists, isPending)),
+    [lists, isPending],
+  );
   const hint = toSearchHint({
     value,
-    term,
-    isLoading: loading,
-    resultCount: options.length - lists.recents.length,
+    isPending,
+    isError,
+    resultCount:
+      lists.pieces.length + lists.events.length + lists.workshops.length,
   });
 
   const recentEntries = useMemo<SearchPanelEntry[]>(
@@ -192,14 +208,9 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
             event.key === "ArrowDown" ? 1 : -1,
           ),
         );
-        return;
-      }
-      if (event.key === "Escape") {
-        event.preventDefault();
-        onClose();
       }
     },
-    [onClose, options.length],
+    [options.length],
   );
 
   const handleClearRecents = useCallback(() => {
@@ -209,35 +220,24 @@ function SearchMenu({ onClose }: { onClose: () => void }) {
   }, []);
 
   return (
-    // The overlay starts at the top of the viewport, so the panel lands in the same place
-    // whether or not the announcement bar has scrolled away and nothing under it moves.
-    <div className="fixed inset-0 z-50">
-      <SearchPanel
-        panelId={panelId}
-        value={value}
-        activeIndex={activeIndex}
-        isLoading={loading}
-        hint={hint}
-        recents={recentEntries}
-        pieces={pieceEntries}
-        events={eventEntries}
-        workshops={workshopEntries}
-        onChange={handleChange}
-        onSubmit={handleSubmit}
-        onSelectIndex={handleSelectIndex}
-        onHoverIndex={setActiveIndex}
-        onKeyDown={handleKeyDown}
-        onClose={onClose}
-        onClearRecents={handleClearRecents}
-      />
-      {/* Anything outside the panel dismisses it, the way a menu does. */}
-      <button
-        type="button"
-        tabIndex={-1}
-        aria-hidden
-        onMouseDown={onClose}
-        className="size-full cursor-default bg-ink/10"
-      />
-    </div>
+    <SearchPanel
+      panelId={panelId}
+      value={value}
+      activeIndex={activeIndex}
+      isLoading={loading}
+      isStale={isPending}
+      hint={hint}
+      recents={recentEntries}
+      pieces={pieceEntries}
+      events={eventEntries}
+      workshops={workshopEntries}
+      onChange={handleChange}
+      onSubmit={handleSubmit}
+      onSelectIndex={handleSelectIndex}
+      onHoverIndex={setActiveIndex}
+      onKeyDown={handleKeyDown}
+      onClose={onClose}
+      onClearRecents={handleClearRecents}
+    />
   );
 }

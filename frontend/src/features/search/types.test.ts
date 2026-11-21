@@ -7,7 +7,9 @@ import {
   parseRecentSearches,
   toOptionId,
   toOptionOrder,
+  isSuggestPending,
   toSearchHint,
+  toSelectableLists,
   toSearchHref,
 } from "./types";
 
@@ -98,8 +100,35 @@ describe("toOptionId", () => {
   });
 });
 
+describe("isSuggestPending", () => {
+  it("is pending from the first keystroke until the answer for that term lands", () => {
+    expect(isSuggestPending("zzqx", "mug", false)).toBe(true);
+    expect(isSuggestPending("zzqx", "zzqx", true)).toBe(true);
+    expect(isSuggestPending(" zzqx ", "zzqx", false)).toBe(false);
+  });
+});
+
+describe("toSelectableLists", () => {
+  const lists = {
+    recents: [option("r1")],
+    pieces: [option("p1")],
+    events: [option("e1")],
+    workshops: [option("w1")],
+  };
+
+  it("keeps every row once the answer matches the field", () => {
+    expect(toSelectableLists(lists, false)).toBe(lists);
+  });
+
+  it("leaves only recents reachable while the answer is stale", () => {
+    // Typing "mug", then replacing it and pressing Down and Enter must not land on a mug.
+    const order = toOptionOrder(toSelectableLists(lists, true));
+    expect(order.map((entry) => entry.id)).toEqual(["r1"]);
+  });
+});
+
 describe("toSearchHint", () => {
-  const base = { value: "", term: "", isLoading: false, resultCount: 0 };
+  const base = { value: "", isPending: false, isError: false, resultCount: 0 };
 
   it("invites a first word on an empty field", () => {
     expect(toSearchHint(base)).toBe(
@@ -111,23 +140,32 @@ describe("toSearchHint", () => {
     expect(toSearchHint({ ...base, value: "m" })).toBe(
       "Press Enter to search everything.",
     );
-    expect(
-      toSearchHint({ ...base, value: "mug", term: "mug", resultCount: 3 }),
-    ).toBe("Press Enter to search everything.");
+    expect(toSearchHint({ ...base, value: "mug", resultCount: 3 })).toBe(
+      "Press Enter to search everything.",
+    );
   });
 
-  it("waits while the answer is on its way", () => {
-    expect(toSearchHint({ ...base, value: "mug", term: "mu" })).toBe(
-      "Looking…",
-    );
+  it("waits while the answer is on its way, even with old rows showing", () => {
     expect(
-      toSearchHint({ ...base, value: "mug", term: "mug", isLoading: true }),
+      toSearchHint({ ...base, value: "mug", isPending: true, resultCount: 3 }),
     ).toBe("Looking…");
   });
 
+  it("says the suggestions failed rather than that nothing matched", () => {
+    expect(toSearchHint({ ...base, value: "mug", isError: true })).toBe(
+      "Suggestions did not load. Press Enter to search everything.",
+    );
+  });
+
   it("names the word that found nothing", () => {
-    expect(toSearchHint({ ...base, value: " zzqx ", term: "zzqx" })).toBe(
+    expect(toSearchHint({ ...base, value: " zzqx " })).toBe(
       "Nothing matches “zzqx”. Try a glaze, a clay body or a shape.",
+    );
+  });
+
+  it("cuts a long pasted run short", () => {
+    expect(toSearchHint({ ...base, value: "x".repeat(160) })).toBe(
+      `Nothing matches “${"x".repeat(32)}…”. Try a glaze, a clay body or a shape.`,
     );
   });
 });

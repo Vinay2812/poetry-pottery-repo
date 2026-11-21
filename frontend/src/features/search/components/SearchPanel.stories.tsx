@@ -121,6 +121,32 @@ export const NoMatches: Story = {
   },
 };
 
+export const StaleWhileLooking: Story = {
+  args: { value: "mugs", isStale: true, isLoading: true, hint: "Looking…" },
+};
+
+export const SuggestionsFailed: Story = {
+  args: {
+    hint: "Suggestions did not load. Press Enter to search everything.",
+    recents: [],
+    pieces: [],
+    events: [],
+    workshops: [],
+  },
+};
+
+// A pasted run with no spaces must wrap, not push "Clear recent searches" off a phone.
+export const LongQuery: Story = {
+  args: {
+    value: "x".repeat(160),
+    hint: `Nothing matches “${"x".repeat(32)}…”. Try a glaze, a clay body or a shape.`,
+    pieces: [],
+    events: [],
+    workshops: [],
+  },
+  ...atViewport("mobile"),
+};
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };

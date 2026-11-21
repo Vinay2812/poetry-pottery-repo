@@ -13,6 +13,7 @@ export interface SuggestionRowProps {
   imageUrl?: string | null;
   hasThumbnail?: boolean;
   isActive: boolean;
+  isDisabled?: boolean;
   onSelect: () => void;
   onHover: () => void;
 }
@@ -25,6 +26,7 @@ export function SuggestionRow({
   imageUrl,
   hasThumbnail = false,
   isActive,
+  isDisabled = false,
   onSelect,
   onHover,
 }: SuggestionRowProps) {
@@ -33,13 +35,15 @@ export function SuggestionRow({
       id={id}
       role="option"
       aria-selected={isActive}
+      aria-disabled={isDisabled || undefined}
       onMouseDown={(event) => {
         event.preventDefault();
-        onSelect();
+        if (!isDisabled) onSelect();
       }}
-      onMouseEnter={onHover}
+      onMouseEnter={isDisabled ? undefined : onHover}
       className={cn(
-        "flex cursor-pointer items-center gap-3 px-4 py-2.5",
+        "flex items-center gap-3 px-4 py-2.5 transition-opacity",
+        isDisabled ? "opacity-50" : "cursor-pointer",
         isActive && "bg-ash/60",
       )}
     >
