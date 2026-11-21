@@ -406,12 +406,15 @@ export function toWhatsAppBookingMessage(input: WhatsAppBookingInput): string {
     `Booking: ${input.registrationId}`,
     `When: ${input.when}`,
     `Seats: ${input.seats}`,
-    `Total: ${input.total}`,
+    // A free booking has nothing to pay, so a ₹0 total line would only read like a bill.
+    input.isFree ? null : `Total: ${input.total}`,
     `Name: ${input.guestName}`,
     input.isFree
       ? "Could you confirm my seat?"
       : "Could you approve my request and share payment details?",
-  ].join("\n");
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
 }
 
 export interface EventFilters {

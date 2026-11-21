@@ -236,6 +236,7 @@ describe("toWhatsAppBookingMessage", () => {
     });
     expect(message).toContain("Could you confirm my seat?");
     expect(message).not.toContain("payment");
+    expect(message).not.toContain("Total");
   });
 });
 
