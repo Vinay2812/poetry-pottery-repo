@@ -62,7 +62,8 @@ function DayCell({ day, isSelected, onSelect }: DayCellProps) {
       <span className="text-sm tnum">{day.dayNumber}</span>
       {/* One fixed-height line under every number, so the numbers in a week line up. */}
       <span className="flex h-3.5 items-center">
-        {day.pickedCount > 0 ? (
+        {/* A dimmed number is enough for a day gone by; "past" under each one was noise. */}
+        {day.isPast ? null : day.pickedCount > 0 ? (
           <span
             aria-hidden="true"
             className={cn(
@@ -103,6 +104,11 @@ export function BookingCalendar({
   onNextMonth,
   onSelectDate,
 }: BookingCalendarProps) {
+  // Weeks already gone by push the open days down, so the month starts at the current week.
+  const openWeeks = weeks.filter((week) =>
+    week.some((day) => day !== null && !day.isPast),
+  );
+  const shownWeeks = openWeeks.length > 0 ? openWeeks : weeks;
   return (
     <section className="flex flex-col gap-4">
       <header className="flex items-baseline justify-between gap-4">
@@ -144,7 +150,7 @@ export function BookingCalendar({
       {/* The month and its buttons stay put while a month loads, so keyboard focus is kept. */}
       {isLoading ? (
         <div className="grid grid-cols-7 gap-px bg-ash" aria-busy="true">
-          {Array.from({ length: 35 }, (_, index) => (
+          {Array.from({ length: (shownWeeks.length || 5) * 7 }, (_, index) => (
             <span
               key={index}
               aria-hidden="true"
@@ -154,7 +160,7 @@ export function BookingCalendar({
         </div>
       ) : (
         <div className="flex flex-col gap-px bg-ash">
-          {weeks.map((week, weekIndex) => (
+          {shownWeeks.map((week, weekIndex) => (
             <Fragment key={weekIndex}>
               <div className="grid grid-cols-7 gap-px">
                 {week.map((day, index) =>
