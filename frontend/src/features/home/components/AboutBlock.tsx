@@ -10,8 +10,7 @@ export interface AboutBlockProps {
   href: string;
 }
 
-// The landscape frame sits beside the studio's two lines, the first said in
-// the heading voice so it reads as the owner speaking, not a caption.
+// The first line takes the heading voice so it reads as the owner speaking.
 export function AboutBlock({
   imageUrl,
   firstLine,

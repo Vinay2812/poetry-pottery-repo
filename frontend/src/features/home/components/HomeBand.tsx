@@ -6,8 +6,7 @@ export interface HomeBandProps {
   children: React.ReactNode;
 }
 
-// One room of the home page: a full-bleed hairline above, generous air around.
-// A group band only starts its children's stagger; a plain band fades as one.
+// A home section under a hairline; a group band only starts its children's stagger.
 export function HomeBand({
   isGroup = false,
   className,

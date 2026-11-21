@@ -15,8 +15,7 @@ export function MadeToOrderBanner({
   priceLabel,
 }: MadeToOrderBannerProps) {
   return (
-    // Halves on tablets, then the square is held to a column the copy stands
-    // beside, centred so the heading sits level with the piece.
+    // Halves on tablets, a fixed square column beside the copy from lg.
     <div className="grid gap-8 md:grid-cols-2 md:items-center md:gap-10 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-16">
       <div className="relative aspect-square bg-white">
         {imageUrl ? (

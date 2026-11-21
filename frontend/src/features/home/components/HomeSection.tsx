@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { HomeBand } from "@/features/home/components/HomeBand";
+import { HomeBand } from "./HomeBand";
 
 export interface HomeSectionProps {
   title: string;
