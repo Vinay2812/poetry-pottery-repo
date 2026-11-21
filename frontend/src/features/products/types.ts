@@ -232,6 +232,27 @@ export function toResultCountLabel(
   return search ? `${counted} for \u201c${search}\u201d` : counted;
 }
 
+// A next-page request the shelf is waiting on, or one that failed and can be retried.
+export interface ShelfAppend {
+  page: number;
+  status: "loading" | "failed";
+}
+
+// Records how a next-page request ended, per filter key. An answer for a page the key is no
+// longer waiting on changes nothing; success forgets the entry, failure keeps it for a retry.
+export function settleAppend(
+  all: Record<string, ShelfAppend>,
+  key: string,
+  page: number,
+  status: "done" | "failed",
+): Record<string, ShelfAppend> {
+  if (all[key]?.page !== page) return all;
+  const rest = Object.fromEntries(
+    Object.entries(all).filter(([other]) => other !== key),
+  );
+  return status === "failed" ? { ...rest, [key]: { page, status } } : rest;
+}
+
 interface PagedShelf {
   products: { items: unknown[]; page_info: { page: number } };
 }

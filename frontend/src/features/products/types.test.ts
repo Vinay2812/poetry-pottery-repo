@@ -32,6 +32,7 @@ import {
   toFilterKey,
   toResultCountLabel,
   isShelfCountable,
+  settleAppend,
   toShelfCountLine,
   toShelfPhase,
   toShelfResult,
@@ -198,6 +199,31 @@ describe("toFilterInput", () => {
     expect(input.in_stock_only).toBe(true);
     expect(input.customizable_only).toBe(true);
     expect(input.page).toBe(3);
+  });
+});
+
+describe("settleAppend", () => {
+  const waiting = {
+    mug: { page: 2, status: "loading" as const },
+    bowl: { page: 3, status: "loading" as const },
+  };
+
+  it("ignores an answer for a page the filter key is no longer waiting on", () => {
+    expect(settleAppend(waiting, "mug", 3, "done")).toBe(waiting);
+    expect(settleAppend(waiting, "cup", 2, "failed")).toBe(waiting);
+  });
+
+  it("forgets a page once it has landed", () => {
+    expect(settleAppend(waiting, "mug", 2, "done")).toEqual({
+      bowl: { page: 3, status: "loading" },
+    });
+  });
+
+  it("keeps a failed page so it can be retried", () => {
+    expect(settleAppend(waiting, "mug", 2, "failed")).toEqual({
+      mug: { page: 2, status: "failed" },
+      bowl: { page: 3, status: "loading" },
+    });
   });
 });
 
