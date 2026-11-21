@@ -9,6 +9,7 @@ import {
   AnnouncementBar,
   buildWhatsAppUrl,
   FOOTER_HELP_LINKS,
+  FOOTER_LEGAL_LINKS,
   FOOTER_SHOP_LINKS,
   FOOTER_STUDIO_LINKS,
   MobileNavContainer,
@@ -52,6 +53,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
           shopLinks={FOOTER_SHOP_LINKS}
           studioLinks={FOOTER_STUDIO_LINKS}
           helpLinks={FOOTER_HELP_LINKS}
+          legalLinks={FOOTER_LEGAL_LINKS}
           address={settings.address}
           openingHours={settings.opening_hours}
           contactEmail={settings.contact_email}

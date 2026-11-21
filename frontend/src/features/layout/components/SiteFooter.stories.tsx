@@ -3,6 +3,7 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { atViewport } from "@/lib/storybook/viewports";
 import {
   FOOTER_HELP_LINKS,
+  FOOTER_LEGAL_LINKS,
   FOOTER_SHOP_LINKS,
   FOOTER_STUDIO_LINKS,
   buildWhatsAppUrl,
@@ -17,6 +18,7 @@ const meta = {
     shopLinks: FOOTER_SHOP_LINKS,
     studioLinks: FOOTER_STUDIO_LINKS,
     helpLinks: FOOTER_HELP_LINKS,
+    legalLinks: FOOTER_LEGAL_LINKS,
     address: "12 Kala Nagar, Sangli, Maharashtra 416416",
     openingHours: "Mon–Sat, 10am–6pm",
     contactEmail: "hello@poetryandpottery.in",
