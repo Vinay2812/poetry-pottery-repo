@@ -334,12 +334,13 @@ describe("CommissionsService", () => {
 
     await service.list({ search: ` ${row.id} ` });
 
-    const call = prismaMock.commissionRequest.findMany.mock.calls.at(
-      -1,
-    )?.[0] as {
-      where: { OR: unknown[] };
-    };
-    expect(call.where.OR).toContainEqual({ id: row.id });
+    expect(prismaMock.commissionRequest.findMany).toHaveBeenCalledWith(
+      containing({
+        where: containing({
+          OR: expect.arrayContaining([{ id: row.id }]),
+        }),
+      }),
+    );
   });
 
   it("counts a brief as read once it leaves NEW", async () => {
