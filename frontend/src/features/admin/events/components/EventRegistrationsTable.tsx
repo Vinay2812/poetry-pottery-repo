@@ -11,8 +11,12 @@ import {
   type AdminStatusTone,
   AdminStatusPill,
   AdminTableFrame,
-  registrationActionLabel,
 } from "@/features/admin/ui";
+
+interface RegistrationAction {
+  status: RegistrationStatus;
+  label: string;
+}
 
 export interface RegistrationTableRow {
   id: string;
@@ -23,9 +27,11 @@ export interface RegistrationTableRow {
   totalLabel: string;
   statusLabel: string;
   statusTone: AdminStatusTone;
-  note: string;
+  // Why it was cancelled or turned down, by the guest or the studio.
+  reason: string | null;
+  note: string | null;
   bookedLabel: string;
-  nextStatuses: RegistrationStatus[];
+  actions: RegistrationAction[];
 }
 
 export interface EventRegistrationsTableProps {
@@ -69,36 +75,45 @@ export function EventRegistrationsTable({
         )}
         {rows.map((row) => (
           <tr key={row.id} className={ADMIN_TR}>
-            <td className={ADMIN_TD}>
+            <td className={`${ADMIN_TD} min-w-48`}>
               <span className="block">{row.personName}</span>
-              <span className="block text-[12px] text-muted-foreground">
+              <span className="block text-[12px] wrap-anywhere text-muted-foreground">
                 {row.personEmail}
               </span>
             </td>
             <td className={`${ADMIN_TD} tnum`}>{row.seatsLabel}</td>
             <td className={`${ADMIN_TD} tnum`}>{row.unitPriceLabel}</td>
             <td className={`${ADMIN_TD} tnum`}>{row.totalLabel}</td>
-            <td className={ADMIN_TD}>
+            <td className={`${ADMIN_TD} max-w-60 min-w-44`}>
               <AdminStatusPill label={row.statusLabel} tone={row.statusTone} />
+              {row.reason && (
+                <span className="mt-1 block text-[12px] text-muted-foreground">
+                  Reason: {row.reason}
+                </span>
+              )}
             </td>
-            <td className={`${ADMIN_TD} max-w-56 text-muted-foreground`}>
-              {row.note}
+            <td
+              className={`${ADMIN_TD} max-w-60 min-w-40 text-muted-foreground`}
+            >
+              {row.note ?? "—"}
             </td>
-            <td className={`${ADMIN_TD} text-muted-foreground`}>
+            <td
+              className={`${ADMIN_TD} whitespace-nowrap text-muted-foreground`}
+            >
               {row.bookedLabel}
             </td>
             <td className={ADMIN_TD}>
-              <div className="flex flex-wrap gap-1.5">
-                {row.nextStatuses.map((status) => (
+              <div className="flex flex-wrap justify-end gap-1.5">
+                {row.actions.map((action) => (
                   <Button
-                    key={status}
+                    key={action.status}
                     type="button"
                     size="sm"
                     variant="secondary"
                     disabled={isLocked || busyId !== null}
-                    onClick={() => onAction(row.id, status)}
+                    onClick={() => onAction(row.id, action.status)}
                   >
-                    {registrationActionLabel(status, "seat")}
+                    {action.label}
                   </Button>
                 ))}
               </div>

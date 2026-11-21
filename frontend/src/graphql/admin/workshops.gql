@@ -43,7 +43,12 @@ fragment AdminWorkshopBookingRow on AdminWorkshopBooking {
     total
     status
     note
+    cancel_reason
     created_at
+    slots {
+      starts_at
+      ends_at
+    }
     config {
       id
       name

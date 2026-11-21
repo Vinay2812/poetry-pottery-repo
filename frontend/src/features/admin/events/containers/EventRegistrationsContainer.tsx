@@ -13,7 +13,6 @@ import { formatDate, formatInr } from "@/lib/format";
 import { useReasonAction } from "@/lib/use-reason-action";
 
 import {
-  formatEnumLabel,
   toPageNumber,
   useAdminQueryState,
   useSearchDraft,
@@ -24,9 +23,10 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
-  enumOptions,
   registrationActionLabel,
   registrationActionNeedsReason,
+  registrationStatusLabel,
+  registrationStatusOptions,
   registrationStatusTone,
   toPersonName,
   toRegistrationStatus,
@@ -37,7 +37,7 @@ import {
   type RegistrationTableRow,
 } from "@/features/admin/events/components/EventRegistrationsTable";
 const PAGE_SIZE = 20;
-const STATUS_OPTIONS = enumOptions(RegistrationStatus);
+const STATUS_OPTIONS = registrationStatusOptions("seat");
 
 interface StatusPatch {
   id: string;
@@ -53,9 +53,9 @@ function applyStatusPatch(
     if (row.id !== patch.id) return row;
     return {
       ...row,
-      statusLabel: formatEnumLabel(patch.status),
+      statusLabel: registrationStatusLabel(patch.status, "seat"),
       statusTone: registrationStatusTone(patch.status),
-      nextStatuses: [],
+      actions: [],
     };
   });
 }
@@ -114,11 +114,15 @@ export function EventRegistrationsContainer({
         seatsLabel: String(entry.registration.seats),
         unitPriceLabel: formatInr(entry.registration.unit_price),
         totalLabel: formatInr(entry.registration.total),
-        statusLabel: formatEnumLabel(entry.registration.status),
+        statusLabel: registrationStatusLabel(entry.registration.status, "seat"),
         statusTone: registrationStatusTone(entry.registration.status),
-        note: entry.registration.note ?? "—",
+        reason: entry.registration.cancel_reason,
+        note: entry.registration.note,
         bookedLabel: formatDate(entry.registration.created_at),
-        nextStatuses: entry.next_statuses,
+        actions: entry.next_statuses.map((next) => ({
+          status: next,
+          label: registrationActionLabel(next, "seat"),
+        })),
       })),
     [result],
   );
@@ -139,7 +143,7 @@ export function EventRegistrationsContainer({
     requiredMessage: "Say why, in a sentence the person can read",
     messages: {
       success: ({ target }) =>
-        `Registration ${formatEnumLabel(target.status).toLowerCase()}`,
+        `Registration updated: ${registrationStatusLabel(target.status, "seat")}`,
       failure: "The registration could not be moved",
     },
   });
@@ -194,7 +198,7 @@ export function EventRegistrationsContainer({
         isOpen={move.target !== null}
         title={
           move.target?.status === RegistrationStatus.Rejected
-            ? "Reject this registration?"
+            ? "Turn this registration down?"
             : "Cancel this registration?"
         }
         description="The seats go back and the person is told."
@@ -204,9 +208,7 @@ export function EventRegistrationsContainer({
         value={move.reason}
         error={move.error}
         confirmLabel={
-          move.target
-            ? registrationActionLabel(move.target.status, "seat")
-            : "Confirm"
+          move.target ? registrationActionLabel(move.target.status, "seat") : ""
         }
         isDestructive
         isRequired

@@ -8,7 +8,8 @@ import {
   applyConfigPatch,
   applyTierPatch,
   describeClosedDays,
-  describeSession,
+  describeSessionDays,
+  describeSessionSize,
   formatHoursLabel,
   formatParticipantsLabel,
   fromDateTimeLocal,
@@ -181,16 +182,62 @@ describe("booking copy", () => {
     expect(formatParticipantsLabel(2)).toBe("2 people");
   });
 
-  it("writes a session as one day and two times", () => {
-    expect(
-      describeSession("2026-09-14T03:30:00.000Z", "2026-09-14T05:30:00.000Z"),
-    ).toBe("Mon, 14 Sept, 2026, 9:00 am → 11:00 am");
+  it("puts hours and people on one line", () => {
+    expect(describeSessionSize(2, 1)).toBe("2 hours · 1 person");
   });
 
-  it("names both days when a session spans two", () => {
+  it("joins back-to-back hours into one stretch", () => {
     expect(
-      describeSession("2026-09-14T03:30:00.000Z", "2026-09-15T05:30:00.000Z"),
-    ).toBe("Mon, 14 Sept, 2026, 9:00 am → Tue, 15 Sept, 2026, 11:00 am");
+      describeSessionDays(
+        [
+          {
+            starts_at: "2026-11-25T10:30:00.000Z",
+            ends_at: "2026-11-25T11:30:00.000Z",
+          },
+          {
+            starts_at: "2026-11-25T09:30:00.000Z",
+            ends_at: "2026-11-25T10:30:00.000Z",
+          },
+        ],
+        IST,
+      ),
+    ).toEqual(["Wed, 25 Nov · 3–5 pm"]);
+  });
+
+  it("lists each day of a split booking on its own line", () => {
+    expect(
+      describeSessionDays(
+        [
+          {
+            starts_at: "2026-11-25T09:30:00.000Z",
+            ends_at: "2026-11-25T10:30:00.000Z",
+          },
+          {
+            starts_at: "2026-11-28T10:30:00.000Z",
+            ends_at: "2026-11-28T11:30:00.000Z",
+          },
+        ],
+        IST,
+      ),
+    ).toEqual(["Wed, 25 Nov · 3–4 pm", "Sat, 28 Nov · 4–5 pm"]);
+  });
+
+  it("keeps a gap on the same day as two times", () => {
+    expect(
+      describeSessionDays(
+        [
+          {
+            starts_at: "2026-11-25T06:30:00.000Z",
+            ends_at: "2026-11-25T07:30:00.000Z",
+          },
+          {
+            starts_at: "2026-11-25T10:30:00.000Z",
+            ends_at: "2026-11-25T11:30:00.000Z",
+          },
+        ],
+        IST,
+      ),
+    ).toEqual(["Wed, 25 Nov · 12–1 pm, 4–5 pm"]);
   });
 });
 
@@ -215,7 +262,14 @@ function bookingRow(id: string, status: RegistrationStatus) {
       total: 2_400,
       status,
       note: null,
+      cancel_reason: null,
       created_at: "2026-09-01T06:00:00.000Z",
+      slots: [
+        {
+          starts_at: "2026-09-14T03:30:00.000Z",
+          ends_at: "2026-09-14T05:30:00.000Z",
+        },
+      ],
       config: { id: 1, name: "Wheel session", slug: "wheel-session" },
     },
   } satisfies WorkshopBookingData;

@@ -12,11 +12,7 @@ import {
 import { formatDate, formatInr } from "@/lib/format";
 import { useReasonAction } from "@/lib/use-reason-action";
 
-import {
-  formatEnumLabel,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminDateFilter,
   AdminPagination,
@@ -24,9 +20,10 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
-  enumOptions,
   registrationActionLabel,
   registrationActionNeedsReason,
+  registrationStatusLabel,
+  registrationStatusOptions,
   registrationStatusTone,
   toPersonName,
   toRegistrationStatus,
@@ -43,9 +40,8 @@ import {
 import {
   applyBookingStatus,
   BOOKINGS_PAGE_SIZE,
-  describeSession,
-  formatHoursLabel,
-  formatParticipantsLabel,
+  describeSessionDays,
+  describeSessionSize,
   toRangeEnd,
   toRangeStart,
 } from "@/features/admin/workshops/types";
@@ -60,7 +56,7 @@ interface BookingMove {
   status: RegistrationStatus;
 }
 
-const STATUS_OPTIONS = enumOptions(RegistrationStatus);
+const STATUS_OPTIONS = registrationStatusOptions("wheel");
 
 export function WorkshopBookingsContainer({
   configId,
@@ -113,23 +109,23 @@ export function WorkshopBookingsContainer({
         id: item.booking.id,
         personName: toPersonName(item.customer.name, item.customer.email),
         personEmail: item.customer.email,
-        sessionLabel: describeSession(
-          item.booking.starts_at,
-          item.booking.ends_at,
+        sessionLines: describeSessionDays(item.booking.slots, timezone),
+        sizeLabel: describeSessionSize(
+          item.booking.hours,
+          item.booking.participants,
         ),
-        hoursLabel: formatHoursLabel(item.booking.hours),
-        participantsLabel: formatParticipantsLabel(item.booking.participants),
         totalLabel: formatInr(item.booking.total),
-        statusLabel: formatEnumLabel(item.booking.status),
+        statusLabel: registrationStatusLabel(item.booking.status, "wheel"),
         statusTone: registrationStatusTone(item.booking.status),
-        noteLabel: item.booking.note ?? "—",
+        reason: item.booking.cancel_reason,
+        note: item.booking.note,
         bookedLabel: formatDate(item.booking.created_at),
         actions: item.next_statuses.map((next) => ({
           status: next,
           label: registrationActionLabel(next, "wheel"),
         })),
       })),
-    [optimisticItems],
+    [optimisticItems, timezone],
   );
 
   const move = useReasonAction({
@@ -145,7 +141,7 @@ export function WorkshopBookingsContainer({
     requiredMessage: "Tell them why, in a line",
     messages: {
       success: ({ target }) =>
-        `Booking ${formatEnumLabel(target.status).toLowerCase()}`,
+        `Booking updated: ${registrationStatusLabel(target.status, "wheel")}`,
       failure: "The booking could not be moved",
     },
   });
