@@ -191,7 +191,7 @@ describe("buildOrderTimeline", () => {
 
 describe("toStatusActions", () => {
   it("offers exactly what the server allows, cancelling last", () => {
-    const actions = toStatusActions(OrderStatus.Pending, [
+    const actions = toStatusActions([
       OrderStatus.Cancelled,
       OrderStatus.Confirmed,
       OrderStatus.Paid,
@@ -206,9 +206,7 @@ describe("toStatusActions", () => {
   });
 
   it("treats a refund as undoing the sale and asks for a note", () => {
-    const [refund] = toStatusActions(OrderStatus.Delivered, [
-      OrderStatus.Refunded,
-    ]);
+    const [refund] = toStatusActions([OrderStatus.Refunded]);
     expect(refund).toMatchObject({
       label: "Mark refunded",
       isDestructive: true,
@@ -219,43 +217,26 @@ describe("toStatusActions", () => {
 
   it("never offers a way back to pending", () => {
     expect(
-      toStatusActions(OrderStatus.Confirmed, [
-        OrderStatus.Pending,
-        OrderStatus.Paid,
-      ]).map((action) => action.status),
+      toStatusActions([OrderStatus.Pending, OrderStatus.Paid]).map(
+        (action) => action.status,
+      ),
     ).toEqual([OrderStatus.Paid]);
   });
 
   it("darkens only the move that takes the order forward", () => {
-    const actions = toStatusActions(OrderStatus.Pending, [
-      OrderStatus.Paid,
-      OrderStatus.Cancelled,
-    ]);
+    const actions = toStatusActions([OrderStatus.Paid, OrderStatus.Cancelled]);
     expect(actions.map((action) => action.isPrimary)).toEqual([true, false]);
-    expect(
-      toStatusActions(OrderStatus.Confirmed, [OrderStatus.Cancelled])[0]
-        .isPrimary,
-    ).toBe(false);
-  });
-
-  it("keeps Cancel for unpaid orders and offers a paid one only the refund", () => {
-    expect(
-      toStatusActions(OrderStatus.Paid, [
-        OrderStatus.Shipped,
-        OrderStatus.Cancelled,
-        OrderStatus.Refunded,
-      ]).map((action) => action.status),
-    ).toEqual([OrderStatus.Shipped, OrderStatus.Refunded]);
+    expect(toStatusActions([OrderStatus.Cancelled])[0].isPrimary).toBe(false);
   });
 
   it("asks for a note when shipping", () => {
-    const [shipped] = toStatusActions(OrderStatus.Paid, [OrderStatus.Shipped]);
+    const [shipped] = toStatusActions([OrderStatus.Shipped]);
     expect(shipped.label).toBe("Mark shipped");
     expect(shipped.needsNote).toBe(true);
   });
 
   it("offers nothing once an order is closed", () => {
-    expect(toStatusActions(OrderStatus.Refunded, [])).toEqual([]);
+    expect(toStatusActions([])).toEqual([]);
   });
 });
 
@@ -367,7 +348,7 @@ describe("describeUndoChoice", () => {
   it("sends a paid order through a refund outside the site", () => {
     expect(
       describeUndoChoice(
-        toStatusActions(OrderStatus.Paid, [
+        toStatusActions([
           OrderStatus.Shipped,
           OrderStatus.Cancelled,
           OrderStatus.Refunded,
@@ -381,10 +362,7 @@ describe("describeUndoChoice", () => {
   it("says nothing for an unpaid order, which simply cancels", () => {
     expect(
       describeUndoChoice(
-        toStatusActions(OrderStatus.Pending, [
-          OrderStatus.Paid,
-          OrderStatus.Cancelled,
-        ]),
+        toStatusActions([OrderStatus.Paid, OrderStatus.Cancelled]),
       ),
     ).toBeNull();
   });

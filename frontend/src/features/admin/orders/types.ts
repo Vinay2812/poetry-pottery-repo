@@ -171,25 +171,12 @@ function isUndoingMove(status: OrderStatus): boolean {
   return status === OrderStatus.Cancelled || status === OrderStatus.Refunded;
 }
 
-const PAID_STATUSES: readonly OrderStatus[] = [
-  OrderStatus.Paid,
-  OrderStatus.Shipped,
-  OrderStatus.Delivered,
-];
-
-// Once money has changed hands the way out is a refund; cancelling would close it with no path to Refunded.
-function isOfferedFrom(current: OrderStatus, next: OrderStatus): boolean {
-  if (!isMoveTarget(next)) return false;
-  return !(next === OrderStatus.Cancelled && PAID_STATUSES.includes(current));
-}
-
-/** The server says which moves are legal; the console offers those, keeping Cancel for unpaid orders. */
+/** The server says which moves are legal, Cancel only before payment; the console offers those and nothing else. */
 export function toStatusActions(
-  current: OrderStatus,
   nextStatuses: OrderStatus[],
 ): OrderStatusAction[] {
   return nextStatuses
-    .filter((next): next is OrderMoveTarget => isOfferedFrom(current, next))
+    .filter(isMoveTarget)
     .map((status) => ({
       status,
       label: STATUS_ACTION_LABEL[status],

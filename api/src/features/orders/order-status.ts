@@ -15,6 +15,7 @@ export const STOCK_HOLDING: readonly OrderStatus[] = [
   OrderStatus.DELIVERED,
 ];
 
+// Once paid, the only way back is a refund, so a paid, shipped or delivered order never cancels.
 const ADMIN_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
   [OrderStatus.PENDING]: [
     OrderStatus.CONFIRMED,
@@ -22,11 +23,7 @@ const ADMIN_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
     OrderStatus.CANCELLED,
   ],
   [OrderStatus.CONFIRMED]: [OrderStatus.PAID, OrderStatus.CANCELLED],
-  [OrderStatus.PAID]: [
-    OrderStatus.SHIPPED,
-    OrderStatus.CANCELLED,
-    OrderStatus.REFUNDED,
-  ],
+  [OrderStatus.PAID]: [OrderStatus.SHIPPED, OrderStatus.REFUNDED],
   [OrderStatus.SHIPPED]: [OrderStatus.DELIVERED, OrderStatus.REFUNDED],
   [OrderStatus.DELIVERED]: [OrderStatus.REFUNDED],
   [OrderStatus.CANCELLED]: [],
