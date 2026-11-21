@@ -20,12 +20,11 @@ export function PickedSlots({
 }: PickedSlotsProps) {
   return (
     <div className="flex flex-col gap-2">
+      {/* With nothing picked the guidance alone is enough; a "Pick 1 hour" line on top repeats it. */}
       <p className="text-[13px] text-muted-foreground" aria-live="polite">
-        {progress}
+        {slots.length === 0 ? emptyMessage : progress}
       </p>
-      {slots.length === 0 ? (
-        <p className="text-[13px] text-muted-foreground">{emptyMessage}</p>
-      ) : (
+      {slots.length > 0 && (
         <ul className="flex flex-col border-t border-ash">
           {slots.map((slot) => (
             <li
