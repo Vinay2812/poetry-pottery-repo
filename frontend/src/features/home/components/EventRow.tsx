@@ -19,7 +19,7 @@ export function EventRow({
   return (
     <Link
       href={href}
-      className="group grid grid-cols-[7.5rem_1fr] items-baseline gap-x-4 gap-y-1 border-b border-ash py-4 transition-colors duration-200 hover:border-ink md:grid-cols-[10rem_1fr_8rem_auto] md:gap-6"
+      className="group grid grid-cols-[7.5rem_1fr] items-baseline gap-x-4 gap-y-1 border-b border-ash py-4 transition-colors duration-200 hover:border-ink md:grid-cols-[10rem_1fr_8rem_6.5rem] md:gap-6"
     >
       <span className="text-[13px] text-muted-foreground tnum">
         {dateLabel}
@@ -28,7 +28,7 @@ export function EventRow({
       <span className="col-start-2 text-[13px] text-muted-foreground md:col-start-auto">
         {statusLabel}
       </span>
-      <span className="col-start-2 w-fit border-b border-ink pb-0.5 text-[13px] group-hover:border-primary group-hover:text-primary md:col-start-auto">
+      <span className="col-start-2 w-fit border-b border-ink pb-0.5 text-[13px] group-hover:border-primary group-hover:text-primary md:col-start-auto md:justify-self-end">
         {actionLabel}
       </span>
     </Link>
