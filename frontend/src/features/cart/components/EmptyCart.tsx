@@ -20,8 +20,8 @@ export function EmptyCart({ isSignedIn, onSignIn }: EmptyCartProps) {
   return (
     <EmptyState
       kind="mug"
-      heading="Your cart is empty"
-      line="Nothing in here yet."
+      heading="Nothing here yet"
+      line="Pieces you add wait here until you are ready."
       actionLabel="Browse pieces"
       actionHref="/products"
     />

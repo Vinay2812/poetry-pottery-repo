@@ -346,7 +346,7 @@ flow_product_to_order() {
   settle 2500
   goto "/cart"
   expect_text "Your cart" "the cart page renders"
-  expect_no_text "Your cart is empty" "the cart holds the piece"
+  expect_no_text "Nothing here yet" "the cart holds the piece"
   shot "cart"
 
   act "continue to checkout" find role link click --name "Continue to checkout"

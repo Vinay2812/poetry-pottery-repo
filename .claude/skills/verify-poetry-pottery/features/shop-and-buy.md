@@ -44,7 +44,7 @@ Preconditions:
 - **Open a piece.** Click the product name. The URL becomes `/products/<slug>`
   and the buy box offers `Add to cart · ₹<price>`.
 - **Add to cart.** Click that button, then open `/cart`. The page reads
-  `Your cart` and no longer reads `Your cart is empty`, and the header bag shows
+  `Your cart` and no longer reads `Nothing here yet`, and the header bag shows
   a count in its `aria-label`.
 - **Checkout.** `find role link click --name "Continue to checkout"`. If the
   page says `No addresses saved yet`, click `Add an address` and fill
