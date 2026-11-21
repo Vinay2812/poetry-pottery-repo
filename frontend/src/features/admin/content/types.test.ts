@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { AdminSiteSettingsFieldsFragment } from "@/graphql/generated/graphql";
 
 import {
+  describeArrivalPreview,
   describeSaved,
   emptyPageValues,
   formatRupeeField,
@@ -18,8 +19,6 @@ import {
   toSettingsFormValues,
   toSettingsInput,
 } from "./types";
-
-import { describeDispatchWindow } from "./types";
 
 const settings: AdminSiteSettingsFieldsFragment = {
   contact_email: "studio@poetryandpottery.in",
@@ -181,12 +180,21 @@ describe("isMissingPage", () => {
   });
 });
 
-describe("describeDispatchWindow", () => {
+describe("describeArrivalPreview", () => {
   it("reads as a range when the ends differ", () => {
-    expect(describeDispatchWindow(7, 12)).toBe("Ships in 7 to 12 days");
+    expect(describeArrivalPreview("7", "12")).toBe(
+      "A piece from the shelf should reach the customer 7 to 12 days after they order.",
+    );
   });
 
   it("reads as one number when both ends match", () => {
-    expect(describeDispatchWindow(9, 9)).toBe("Ships in about 9 days");
+    expect(describeArrivalPreview("9", " 9 ")).toContain(" 9 days after");
+  });
+
+  it("says nothing while a box is empty, not a whole number or out of order", () => {
+    expect(describeArrivalPreview("", "12")).toBeNull();
+    expect(describeArrivalPreview("7", "1.5")).toBeNull();
+    expect(describeArrivalPreview("0", "12")).toBeNull();
+    expect(describeArrivalPreview("12", "7")).toBeNull();
   });
 });

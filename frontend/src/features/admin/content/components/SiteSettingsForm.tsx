@@ -12,7 +12,7 @@ import {
   type SiteSettingsFormValues,
 } from "@/lib/validations/admin/content";
 
-import { describeDispatchWindow } from "@/features/admin/content/types";
+import { describeArrivalPreview } from "@/features/admin/content/types";
 
 import { ContentTextField } from "./ContentTextField";
 
@@ -57,10 +57,7 @@ export function SiteSettingsForm({
 
   const dispatchMin = useWatch({ control, name: "dispatch_days_min" });
   const dispatchMax = useWatch({ control, name: "dispatch_days_max" });
-  const dispatchLine = describeDispatchWindow(
-    Number(dispatchMin),
-    Number(dispatchMax),
-  );
+  const arrivalLine = describeArrivalPreview(dispatchMin, dispatchMax);
 
   return (
     <form
@@ -161,7 +158,7 @@ export function SiteSettingsForm({
         <ContentTextField
           id="settings-dispatch-min"
           label="Earliest, in days"
-          hint="The first number in “ships in 7 to 12 days”."
+          hint="Days after ordering, at the soonest."
           error={errors.dispatch_days_min?.message}
           isMultiline={false}
           registration={register("dispatch_days_min")}
@@ -174,8 +171,11 @@ export function SiteSettingsForm({
           isMultiline={false}
           registration={register("dispatch_days_max")}
         />
-        <p className="text-[12px] text-muted-foreground md:col-span-2">
-          The shelf will read: {dispatchLine}
+        <p
+          aria-live="polite"
+          className="text-[12px] text-muted-foreground md:col-span-2"
+        >
+          {arrivalLine}
         </p>
       </SettingsGroup>
 
