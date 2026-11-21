@@ -156,17 +156,20 @@ export function mostOpenDaysInRun(
   return most;
 }
 
-// Tiers one booking can actually hold: the slots a tier needs must fit in a day's
-// slots times the open days a span can reach inside the booking window.
+// Tiers some week's span and window can hold: the slots a tier needs must fit in a
+// day's slots times the open days a span can reach inside the booking window.
 export function toBookableTiers(wheel: StudioWheel): StudioWheel["tiers"] {
   if (wheel.slot_minutes <= 0) return [];
   const slotsPerDay = Math.floor(
     (wheel.closing_minutes - wheel.opening_minutes) / wheel.slot_minutes,
   );
-  const runDays = Math.min(wheel.slot_span_days, wheel.booking_window_days + 1);
+  const reachableSpanDays = Math.min(
+    wheel.slot_span_days,
+    wheel.booking_window_days + 1,
+  );
   const capacity =
     Math.max(0, slotsPerDay) *
-    mostOpenDaysInRun(wheel.closed_weekdays, runDays);
+    mostOpenDaysInRun(wheel.closed_weekdays, reachableSpanDays);
   return wheel.tiers.filter(
     (tier) => slotsNeeded(tier.hours, wheel.slot_minutes) <= capacity,
   );
