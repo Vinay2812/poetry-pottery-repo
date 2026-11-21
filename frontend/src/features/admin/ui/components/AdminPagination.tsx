@@ -19,6 +19,8 @@ export function AdminPagination({
   hasMore,
   onPageChange,
 }: AdminPaginationProps) {
+  // An empty list already says so in its own table row.
+  if (total === 0) return null;
   return (
     <div className="flex items-center justify-between gap-3 py-3">
       <p className="text-[13px] text-muted-foreground tnum">

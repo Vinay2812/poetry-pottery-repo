@@ -89,7 +89,6 @@ export function formatRange(
   limit: number,
   total: number,
 ): string {
-  if (total === 0) return "Nothing here yet";
   const first = (page - 1) * limit + 1;
   const last = Math.min(page * limit, total);
   return `${first}–${last} of ${total}`;

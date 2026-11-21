@@ -33,8 +33,6 @@ export const MiddlePage: Story = { args: { page: 4 } };
 
 export const LastPage: Story = { args: { page: 7, hasMore: false } };
 
-export const Empty: Story = { args: { total: 0, hasMore: false } };
-
 export const OnePage: Story = { args: { page: 1, total: 14, hasMore: false } };
 
 export const Mobile: Story = { ...atViewport("mobile") };

@@ -95,6 +95,5 @@ describe("formatRange", () => {
   it("describes the slice on screen", () => {
     expect(formatRange(1, 20, 132)).toBe("1–20 of 132");
     expect(formatRange(7, 20, 132)).toBe("121–132 of 132");
-    expect(formatRange(1, 20, 0)).toBe("Nothing here yet");
   });
 });
