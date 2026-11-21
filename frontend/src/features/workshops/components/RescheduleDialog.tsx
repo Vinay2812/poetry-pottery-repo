@@ -22,6 +22,7 @@ import {
   SlotList,
   type SlotOption,
 } from "@/features/workshops/components/SlotList";
+import { formatDateKey } from "@/features/workshops/types";
 
 export interface RescheduleDialogProps {
   isOpen: boolean;
@@ -70,7 +71,7 @@ export function RescheduleDialog({
 }: RescheduleDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Move this session
@@ -89,23 +90,26 @@ export function RescheduleDialog({
           canGoBack={canGoBack}
           canGoForward={canGoForward}
           isLoading={isLoading}
+          // Same as the booking page: the hours open under the week of the picked day.
+          slotPanel={
+            selectedDate && (
+              <div className="flex flex-col gap-3">
+                <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+                  Hours on {formatDateKey(selectedDate)}
+                </h3>
+                <SlotList
+                  slots={slots}
+                  selectedStarts={pickedSlots.map((slot) => slot.startsAt)}
+                  emptyMessage="Nothing is free that day."
+                  onToggleSlot={onToggleSlot}
+                />
+              </div>
+            )
+          }
           onPreviousMonth={onPreviousMonth}
           onNextMonth={onNextMonth}
           onSelectDate={onSelectDate}
         />
-
-        {!isLoading && (
-          <SlotList
-            slots={slots}
-            selectedStarts={pickedSlots.map((slot) => slot.startsAt)}
-            emptyMessage={
-              selectedDate
-                ? "Nothing is free that day."
-                : "Pick a day to see its hours."
-            }
-            onToggleSlot={onToggleSlot}
-          />
-        )}
 
         <PickedSlots
           slots={pickedSlots}
