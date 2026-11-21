@@ -17,7 +17,7 @@ const meta = {
   args: {
     id: "story-upload",
     label: "Photo",
-    requirementLine: "1:1 · at least 1000 × 1000 · up to 8 MB",
+    requirementLine: "1:1 · up to 8 MB",
     rendersAt: "cards, gallery, cart lines",
     accept: "image/jpeg,image/png,image/webp,image/avif",
     previewUrl: null,
@@ -38,7 +38,7 @@ export const Uploading: Story = { args: { isBusy: true } };
 
 export const Rejected: Story = {
   args: {
-    error: "That image is 800 × 600. It has to be at least 1000 × 1000.",
+    error: "That image is 800 × 600, which is not 1:1.",
   },
 };
 

@@ -3,8 +3,6 @@ query ImageSpecs {
     purpose
     ratio
     ratio_label
-    min_width
-    min_height
     max_bytes
     content_types
     renders_at

@@ -117,15 +117,15 @@ describe("checkImage", () => {
     ).toBeNull();
   });
 
-  it("rejects a product photo that is too small", () => {
+  it("accepts a small product photo of the right shape", () => {
     expect(
       checkImage(UploadPurpose.PRODUCT, {
-        width: 800,
-        height: 800,
+        width: 700,
+        height: 700,
         format: "jpeg",
         bytes: 1000,
       }),
-    ).toMatch(/at least 1000 × 1000/);
+    ).toBeNull();
   });
 
   it("allows a ratio two percent off the spec", () => {
@@ -150,15 +150,7 @@ describe("checkImage", () => {
     ).toMatch(/must be 3:2/);
   });
 
-  it("only checks the shortest side for review photos", () => {
-    expect(
-      checkImage(UploadPurpose.REVIEW, {
-        width: 2000,
-        height: 400,
-        format: "png",
-        bytes: 1000,
-      }),
-    ).toBeNull();
+  it("accepts review photos of any shape and size", () => {
     expect(
       checkImage(UploadPurpose.REVIEW, {
         width: 2000,
@@ -166,7 +158,7 @@ describe("checkImage", () => {
         format: "png",
         bytes: 1000,
       }),
-    ).toMatch(/shortest side/);
+    ).toBeNull();
   });
 
   it("swaps the sides for a quarter-turn exif orientation", () => {

@@ -4,8 +4,6 @@ export interface ImageRequirement {
   purpose: UploadPurpose;
   ratio: number | null;
   ratioLabel: string;
-  minWidth: number;
-  minHeight: number;
   maxBytes: number;
   contentTypes: string[];
   rendersAt: string;
@@ -22,12 +20,10 @@ export function formatBytes(bytes: number): string {
 /** The one line shown above the file input, before anything is picked. */
 export function describeRequirement(
   ratioLabel: string,
-  minWidth: number,
-  minHeight: number,
   maxBytes: number,
 ): string {
   const shape = ratioLabel === "any" ? "Any shape" : `${ratioLabel}`;
-  return `${shape} · at least ${minWidth} × ${minHeight} · up to ${formatBytes(maxBytes)}`;
+  return `${shape} · up to ${formatBytes(maxBytes)}`;
 }
 
 export function describeFileType(contentTypes: readonly string[]): string {
@@ -55,24 +51,15 @@ export function checkFile(
 }
 
 export type DimensionVerdict =
-  | { kind: "ok" }
-  | { kind: "too-small"; message: string }
-  | { kind: "wrong-ratio"; message: string };
+  { kind: "ok" } | { kind: "wrong-ratio"; message: string };
 
+// Only the shape is checked; next/image scales whatever size arrives.
 export function checkDimensions(
   ratio: number | null,
-  minWidth: number,
-  minHeight: number,
   ratioLabel: string,
   width: number,
   height: number,
 ): DimensionVerdict {
-  if (width < minWidth || height < minHeight) {
-    return {
-      kind: "too-small",
-      message: `That image is ${width} × ${height}. It has to be at least ${minWidth} × ${minHeight}.`,
-    };
-  }
   if (
     ratio !== null &&
     Math.abs(width / height - ratio) > ratio * RATIO_TOLERANCE

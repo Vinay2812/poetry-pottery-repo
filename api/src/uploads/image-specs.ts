@@ -29,8 +29,6 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     purpose: UploadPurpose.PRODUCT,
     ratio_label: "1:1",
     ratio: 1,
-    min_width: 1000,
-    min_height: 1000,
     max_bytes: MAX_IMAGE_BYTES,
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "cards, gallery, cart lines",
@@ -39,8 +37,6 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     purpose: UploadPurpose.CATEGORY,
     ratio_label: "1:1",
     ratio: 1,
-    min_width: 600,
-    min_height: 600,
     max_bytes: MAX_IMAGE_BYTES,
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "category tiles",
@@ -49,8 +45,6 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     purpose: UploadPurpose.GLAZE,
     ratio_label: "1:1",
     ratio: 1,
-    min_width: 600,
-    min_height: 600,
     max_bytes: MAX_IMAGE_BYTES,
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "glaze swatches",
@@ -59,8 +53,6 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     purpose: UploadPurpose.COLLECTION,
     ratio_label: "3:2",
     ratio: 3 / 2,
-    min_width: 1200,
-    min_height: 800,
     max_bytes: MAX_IMAGE_BYTES,
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "collection rows",
@@ -69,8 +61,6 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     purpose: UploadPurpose.EVENT,
     ratio_label: "4:3",
     ratio: 4 / 3,
-    min_width: 1200,
-    min_height: 900,
     max_bytes: MAX_IMAGE_BYTES,
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "event cards and detail",
@@ -79,8 +69,6 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     purpose: UploadPurpose.HERO,
     ratio_label: "16:9",
     ratio: 16 / 9,
-    min_width: 1600,
-    min_height: 900,
     max_bytes: MAX_IMAGE_BYTES,
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "home hero, about landscape, workshop intro",
@@ -90,8 +78,6 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     purpose: UploadPurpose.CONTENT,
     ratio_label: "16:9",
     ratio: 16 / 9,
-    min_width: 1600,
-    min_height: 900,
     max_bytes: MAX_IMAGE_BYTES,
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "content page heroes",
@@ -101,8 +87,6 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     purpose: UploadPurpose.ORDER_NOTE,
     ratio_label: "4:3",
     ratio: 4 / 3,
-    min_width: 1200,
-    min_height: 900,
     max_bytes: MAX_IMAGE_BYTES,
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "studio notes on an order",
@@ -111,8 +95,6 @@ export const IMAGE_SPECS: Record<UploadPurpose, ImageSpec> = {
     purpose: UploadPurpose.REVIEW,
     ratio_label: "any",
     ratio: null,
-    min_width: 400,
-    min_height: 400,
     max_bytes: MAX_IMAGE_BYTES,
     content_types: ALLOWED_CONTENT_TYPES,
     renders_at: "review photos",
@@ -183,15 +165,8 @@ export function checkImage(
   if (!meta.width || !meta.height) {
     return "That file does not read as an image";
   }
-  if (spec.ratio === null) {
-    const shortest = Math.min(meta.width, meta.height);
-    return shortest < spec.min_width
-      ? `Review photos need at least ${spec.min_width} px on the shortest side, this one has ${shortest}`
-      : null;
-  }
-  if (meta.width < spec.min_width || meta.height < spec.min_height) {
-    return `A ${purpose.toLowerCase()} image needs at least ${spec.min_width} × ${spec.min_height} px, this one is ${meta.width} × ${meta.height}`;
-  }
+  // Only the shape matters; next/image scales whatever size arrives.
+  if (spec.ratio === null) return null;
   const ratio = meta.width / meta.height;
   if (Math.abs(ratio - spec.ratio) / spec.ratio > RATIO_TOLERANCE) {
     return `A ${purpose.toLowerCase()} image must be ${spec.ratio_label}, this one is ${meta.width} × ${meta.height}`;

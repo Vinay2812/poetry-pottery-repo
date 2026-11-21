@@ -30,11 +30,11 @@ import {
 const storage = new StorageRecorder();
 const queue = new QueueRecorder();
 
-function squarePng(side: number): Promise<Buffer> {
+function solidPng(width: number, height: number): Promise<Buffer> {
   return sharp({
     create: {
-      width: side,
-      height: side,
+      width,
+      height,
       channels: 3,
       background: { r: 200, g: 190, b: 175 },
     },
@@ -112,24 +112,24 @@ describe("the upload lifecycle", () => {
     const good = await upload(
       admin.id,
       UploadPurpose.PRODUCT,
-      await squarePng(1000),
+      await solidPng(1000, 1000),
     );
-    const small = await upload(
+    const wide = await upload(
       admin.id,
       UploadPurpose.PRODUCT,
-      await squarePng(300),
+      await solidPng(900, 600),
     );
     const unconfirmed = await upload(admin.id, UploadPurpose.PRODUCT);
 
-    // The wrong purpose is refused before the bytes are read; the wrong size is deleted outright.
+    // The wrong purpose is refused before the bytes are read; the wrong shape is deleted outright.
     await expect(
       harness.uploads.confirm(good.key, ConsolePurpose.EVENT),
     ).rejects.toThrow("does not belong to this purpose");
     await expect(
-      harness.uploads.confirm(small.key, ConsolePurpose.PRODUCT),
-    ).rejects.toThrow("at least 1000");
-    expect(storage.deleted).toEqual([small.key]);
-    expect(await rowCount(small.key)).toBe(0);
+      harness.uploads.confirm(wide.key, ConsolePurpose.PRODUCT),
+    ).rejects.toThrow("must be 1:1");
+    expect(storage.deleted).toEqual([wide.key]);
+    expect(await rowCount(wide.key)).toBe(0);
 
     const confirmed = await harness.uploads.confirm(
       good.key,

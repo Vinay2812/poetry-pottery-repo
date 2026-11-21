@@ -103,17 +103,10 @@ export function ImageUploaderContainer({
 
       const verdict = checkDimensions(
         requirement.ratio,
-        requirement.minWidth,
-        requirement.minHeight,
         requirement.ratioLabel,
         measured.width,
         measured.height,
       );
-
-      if (verdict.kind === "too-small") {
-        setError(verdict.message);
-        return;
-      }
 
       if (verdict.kind === "ok") {
         await send(measured.blob);
@@ -128,15 +121,6 @@ export function ImageUploaderContainer({
         return;
       }
 
-      if (
-        cropped.width < requirement.minWidth ||
-        cropped.height < requirement.minHeight
-      ) {
-        setError(
-          `Cropped to ${requirement.ratioLabel} that image is ${cropped.width} × ${cropped.height}, under the ${requirement.minWidth} × ${requirement.minHeight} minimum.`,
-        );
-        return;
-      }
       setPending({
         file,
         reason: verdict.message,
@@ -173,8 +157,6 @@ export function ImageUploaderContainer({
         label={label}
         requirementLine={describeRequirement(
           requirement.ratioLabel,
-          requirement.minWidth,
-          requirement.minHeight,
           requirement.maxBytes,
         )}
         rendersAt={requirement.rendersAt}
