@@ -52,7 +52,7 @@ export function StudioTeaser({
         </p>
         {hasSchedule && (
           <dl className="flex max-w-md flex-col border-t border-ash">
-            <Fact label="Hours" value={hoursLabel} />
+            <Fact label="Wheel hours" value={hoursLabel} />
             <Fact label="Days" value={daysLabel} />
             {priceLabel && <Fact label="Price" value={priceLabel} />}
           </dl>
