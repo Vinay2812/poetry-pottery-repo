@@ -49,12 +49,6 @@ export class ImageSpec {
   ratio!: number | null;
 
   @Field(() => Int)
-  min_width!: number;
-
-  @Field(() => Int)
-  min_height!: number;
-
-  @Field(() => Int)
   max_bytes!: number;
 
   @Field(() => [String])

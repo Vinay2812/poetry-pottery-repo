@@ -18,9 +18,9 @@ export function HomeHero({
   sessionHref,
 }: HomeHeroProps) {
   return (
-    <section className="grid items-center gap-10 py-16 md:grid-cols-2 md:gap-16 md:py-24">
+    <section className="grid items-center gap-2 pt-6 pb-12 md:grid-cols-2 md:gap-16 md:py-24">
       <div className="relative aspect-square bg-clay-white md:order-2">
-        <HeroIllustration isAnimated finish="grain" />
+        <HeroIllustration isAnimated />
       </div>
 
       <div className="animate-fade-up flex flex-col gap-6">

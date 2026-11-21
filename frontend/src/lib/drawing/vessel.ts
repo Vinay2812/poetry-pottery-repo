@@ -317,13 +317,3 @@ export function ellipsePath(
     `C${pointD([cx + rx, cy + k])} ${pointD([cx - rx, cy + k])} ${pointD(left)}Z`
   );
 }
-
-/** A point on the surface, for anchoring a label or hanging a drip. */
-export function surfacePoint(
-  axisX: number,
-  y: number,
-  radius: number,
-  angle: number,
-): Point {
-  return onRing(axisX, y, radius, angle);
-}

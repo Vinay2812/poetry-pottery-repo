@@ -14,21 +14,14 @@ const meta = {
       </div>
     ),
   ],
-  args: { isAnimated: true, finish: "clay" },
+  args: { isAnimated: true },
 } satisfies Meta<typeof HeroIllustration>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A: line and hatching only, no clay fill. */
-export const VariantAHatching: Story = { args: { finish: "hatching" } };
-
-/** B: warm clay fill under the hatching. */
-export const VariantBClay: Story = { args: { finish: "clay" } };
-
-/** C: warm clay fill, hatching and a fine grain. */
-export const VariantCGrain: Story = { args: { finish: "grain" } };
+export const Animated: Story = {};
 
 export const Static: Story = { args: { isAnimated: false } };
 

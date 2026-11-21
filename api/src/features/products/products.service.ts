@@ -197,9 +197,10 @@ export class ProductsService {
       ? archiveListingWhere(now)
       : availableProductWhere(now);
     // The pool both tabs share; a search term or the made-to-order toggle never gets counted as a facet.
+    // Made-to-order pieces live on /custom, so the shelf lists them only when asked for.
     const pool: Prisma.ProductWhereInput[] = [
+      { is_customizable: filter.customizable_only ?? false },
       ...(rankedIds ? [{ id: { in: rankedIds } }] : []),
-      ...(filter.customizable_only ? [{ is_customizable: true }] : []),
     ];
     const narrowing: Record<NarrowKey, Prisma.ProductWhereInput[]> = {
       category: filter.category_slugs?.length
@@ -324,6 +325,7 @@ export class ProductsService {
     const rows = await this.prisma.product.findMany({
       where: {
         ...availableProductWhere(),
+        is_customizable: false,
         id: { not: product.id },
         categories: {
           some: { id: { in: product.categories.map((c) => c.id) } },
@@ -336,10 +338,11 @@ export class ProductsService {
     return rows.map(toProduct);
   }
 
+  // The home shelf shows pieces that are ready to ship; made-to-order work has its own banner.
   async featured(limit: number): Promise<Product[]> {
     const take = Math.min(12, Math.max(1, limit));
     const rows = await this.prisma.product.findMany({
-      where: availableProductWhere(),
+      where: { ...availableProductWhere(), is_customizable: false },
       include: productListInclude,
       orderBy: SORT_ORDER[ProductSort.FEATURED],
       take,

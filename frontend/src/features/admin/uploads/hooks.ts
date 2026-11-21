@@ -23,8 +23,6 @@ export function useImageRequirement(
       purpose: spec.purpose,
       ratio: spec.ratio ?? null,
       ratioLabel: spec.ratio_label,
-      minWidth: spec.min_width,
-      minHeight: spec.min_height,
       maxBytes: spec.max_bytes,
       contentTypes: spec.content_types,
       rendersAt: spec.renders_at,

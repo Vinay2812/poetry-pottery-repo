@@ -21,16 +21,12 @@ describe("formatBytes", () => {
 });
 
 describe("describeRequirement", () => {
-  it("states shape, size and weight in one line", () => {
-    expect(describeRequirement("1:1", 1000, 1000, EIGHT_MB)).toBe(
-      "1:1 · at least 1000 × 1000 · up to 8 MB",
-    );
+  it("states shape and weight in one line", () => {
+    expect(describeRequirement("1:1", EIGHT_MB)).toBe("1:1 · up to 8 MB");
   });
 
   it("says any shape when the purpose has no ratio", () => {
-    expect(describeRequirement("any", 400, 400, EIGHT_MB)).toBe(
-      "Any shape · at least 400 × 400 · up to 8 MB",
-    );
+    expect(describeRequirement("any", EIGHT_MB)).toBe("Any shape · up to 8 MB");
   });
 });
 
@@ -62,28 +58,25 @@ describe("checkFile", () => {
 });
 
 describe("checkDimensions", () => {
-  it("passes a square that clears the minimum", () => {
-    expect(checkDimensions(1, 1000, 1000, "1:1", 1200, 1200)).toEqual({
-      kind: "ok",
-    });
+  it("passes a square of any size", () => {
+    expect(checkDimensions(1, "1:1", 700, 700)).toEqual({ kind: "ok" });
+    expect(checkDimensions(1, "1:1", 2400, 2400)).toEqual({ kind: "ok" });
   });
 
   it("allows the same two percent of slack the API allows", () => {
-    expect(checkDimensions(1, 1000, 1000, "1:1", 1010, 1000).kind).toBe("ok");
-    expect(checkDimensions(1, 1000, 1000, "1:1", 1100, 1000).kind).toBe(
-      "wrong-ratio",
-    );
+    expect(checkDimensions(1, "1:1", 1010, 1000).kind).toBe("ok");
+    expect(checkDimensions(1, "1:1", 1100, 1000).kind).toBe("wrong-ratio");
   });
 
-  it("reports too small before it reports the ratio", () => {
-    expect(checkDimensions(1, 1000, 1000, "1:1", 800, 600)).toEqual({
-      kind: "too-small",
-      message: "That image is 800 × 600. It has to be at least 1000 × 1000.",
+  it("names the size when the shape is wrong", () => {
+    expect(checkDimensions(1, "1:1", 800, 600)).toEqual({
+      kind: "wrong-ratio",
+      message: "That image is 800 × 600, which is not 1:1.",
     });
   });
 
   it("skips the ratio when the purpose has none", () => {
-    expect(checkDimensions(null, 400, 400, "any", 900, 400).kind).toBe("ok");
+    expect(checkDimensions(null, "any", 900, 400).kind).toBe("ok");
   });
 });
 
