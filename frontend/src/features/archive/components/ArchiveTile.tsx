@@ -19,7 +19,7 @@ export interface ArchiveTileProps {
 
 const SIZES = "(min-width: 1024px) 32vw, 50vw";
 
-// Bigger than a shelf card and carrying no price: the photograph is the point here.
+// A shelf-sized tile with no price: the photograph and where it went are the point here.
 export function ArchiveTile({
   href,
   name,

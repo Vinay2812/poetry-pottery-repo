@@ -15,6 +15,7 @@ import {
   MAX_REFERENCE_PHOTO_BYTES,
   type ReferencePhoto,
   remainingReferenceSlots,
+  SORT_OPTIONS,
   toConfirmedPhotoUrls,
   toDefaultSelections,
   validateReferencePhoto,
@@ -28,6 +29,7 @@ import {
   toArchiveNote,
   toFilterInput,
   toFilterKey,
+  toResultCountLabel,
   toSearchParams,
   isStickyBarWanted,
   isTuckedUnderHeader,
@@ -50,10 +52,8 @@ import {
   toProductPath,
   toShortDescription,
   toSizeLine,
-  toResultCountLabel,
   toStockStatus,
   validateSelections,
-  SORT_OPTIONS,
   type ProductOptionGroupData,
 } from "./types";
 

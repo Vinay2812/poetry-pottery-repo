@@ -218,7 +218,7 @@ export function ProductCard({
         ) : null}
       </div>
 
-      {/* The stock line sits under the name it belongs to; the grid row keeps neighbours level. */}
+      {/* The stock line stays with its name, so a name that wraps carries its line down with it. */}
       <div className="flex min-w-0 flex-col gap-1">
         <div className="flex items-start justify-between gap-3">
           <span className="flex min-w-0 items-start gap-2">
