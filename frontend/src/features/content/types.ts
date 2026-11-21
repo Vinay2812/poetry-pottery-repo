@@ -95,8 +95,13 @@ export interface AboutSectionView {
   itemLayout: AboutItemLayout;
 }
 
-// The third section tells how a piece is made, so its items read as numbered steps.
-const ABOUT_STEPS_INDEX = 2;
+// Sections carry no id, so the heading says which one is a process: "How a piece is made",
+// "Our process" or "Steps" read as numbered steps wherever the editor moves them.
+const PROCESS_HEADING = /^how\b|\bprocess\b|\bsteps?\b/i;
+
+export function toAboutItemLayout(heading: string): AboutItemLayout {
+  return PROCESS_HEADING.test(heading.trim()) ? "steps" : "values";
+}
 
 // Every section shows whatever the editor saved, body and items alike, in the editor's order.
 export function toAboutSections(
@@ -107,7 +112,7 @@ export function toAboutSections(
     heading: section.heading,
     paragraphs: splitParagraphs(section.body),
     items: section.items,
-    itemLayout: index === ABOUT_STEPS_INDEX ? "steps" : "values",
+    itemLayout: toAboutItemLayout(section.heading),
   }));
 }
 
