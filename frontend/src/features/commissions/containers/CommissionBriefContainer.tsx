@@ -55,7 +55,7 @@ export function CommissionBriefContainer({
   const { isSignedIn } = useAuth();
   const { openSignIn } = useClerk();
   const [sent, setSent] = useState<SentBrief | null>(null);
-  const sentRef = useRef<HTMLDivElement>(null);
+  const sentHeadingRef = useRef<HTMLHeadingElement>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sentAskUrl, setSentAskUrl] = useState<string | null>(null);
   const [create, { loading }] = useMutation(CreateCommissionRequestDocument);
@@ -120,20 +120,19 @@ export function CommissionBriefContainer({
   // The confirmation is far shorter than the form, so bring it into view instead of leaving the footer there.
   useEffect(() => {
     if (!sent) return;
-    sentRef.current?.scrollIntoView({ block: "start" });
-    sentRef.current?.focus({ preventScroll: true });
+    sentHeadingRef.current?.scrollIntoView({ block: "start" });
+    sentHeadingRef.current?.focus({ preventScroll: true });
   }, [sent]);
 
   if (sent) {
     return (
-      <div ref={sentRef} tabIndex={-1} className="scroll-mt-28 outline-none">
-        <CommissionSent
-          reference={sent.reference}
-          summary={sent.summary}
-          email={sent.email}
-          askUrl={sentAskUrl}
-        />
-      </div>
+      <CommissionSent
+        reference={sent.reference}
+        summary={sent.summary}
+        email={sent.email}
+        askUrl={sentAskUrl}
+        headingRef={sentHeadingRef}
+      />
     );
   }
 
