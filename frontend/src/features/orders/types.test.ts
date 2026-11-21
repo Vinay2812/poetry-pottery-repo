@@ -8,7 +8,6 @@ import { toTimelineSteps } from "@/lib/timeline";
 import {
   applyOrderCancellation,
   ORDER_STAGES,
-  ORDERS_PAGE_CODEC,
   isClosed,
   showsPlacedBanner,
   type OrderData,
@@ -18,7 +17,6 @@ import {
   toStatusLabel,
   toStatusTone,
   toOrderPath,
-  toPageNumber,
   toWhatsAppOrderMessage,
 } from "./types";
 
@@ -134,21 +132,6 @@ describe("order timeline", () => {
 
   it("never repeats the line above it in a promise", () => {
     expect(toRepeatedPhrases(ORDER_STAGES)).toEqual([]);
-  });
-});
-
-describe("orders page in the URL", () => {
-  it("reads only whole page numbers past the first", () => {
-    expect(toPageNumber("3")).toBe(3);
-    for (const raw of [null, "", "1", "0", "-2", "2.5", "two"]) {
-      expect(toPageNumber(raw)).toBe(1);
-    }
-  });
-
-  it("leaves the first page off the query string", () => {
-    expect(ORDERS_PAGE_CODEC.serialize(1)).toBe("");
-    expect(ORDERS_PAGE_CODEC.serialize(2)).toBe("page=2");
-    expect(ORDERS_PAGE_CODEC.parse(new URLSearchParams("page=2"))).toBe(2);
   });
 });
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toPageTurn } from "./page-turn";
+import { PAGE_CODEC, toPageNumber, toPageTurn } from "./page-turn";
 
 describe("toPageTurn", () => {
   it("names the requested page while it loads over the old rows", () => {
@@ -20,5 +20,20 @@ describe("toPageTurn", () => {
       shownPage: 1,
       failedPage: null,
     });
+  });
+});
+
+describe("page in the URL", () => {
+  it("reads only whole page numbers past the first", () => {
+    expect(toPageNumber("3")).toBe(3);
+    for (const raw of [null, "", "1", "0", "-2", "2.5", "two"]) {
+      expect(toPageNumber(raw)).toBe(1);
+    }
+  });
+
+  it("leaves the first page off the query string", () => {
+    expect(PAGE_CODEC.serialize(1)).toBe("");
+    expect(PAGE_CODEC.serialize(2)).toBe("page=2");
+    expect(PAGE_CODEC.parse(new URLSearchParams("page=2"))).toBe(2);
   });
 });
