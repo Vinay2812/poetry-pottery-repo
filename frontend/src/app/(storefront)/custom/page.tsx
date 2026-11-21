@@ -82,7 +82,8 @@ export default async function CustomPage({
                 Pieces we have made this way
               </h2>
               <p className="max-w-2xl text-[15px] text-muted-foreground">
-                Open one to see it up close, or name it in your brief below.
+                Order one as it is, at the price shown, or describe something
+                else in the brief below.
               </p>
             </div>
             <ProductGrid>
