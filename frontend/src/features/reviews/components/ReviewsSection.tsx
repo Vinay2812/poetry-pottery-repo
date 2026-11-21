@@ -17,6 +17,9 @@ export interface ReviewsSectionProps {
   onWriteReview?: () => void;
   onLoadMore?: () => void;
   onRetry?: () => void;
+  // The page moves focus here after a retry: back to the button on failure, the heading on success.
+  headingRef?: React.Ref<HTMLHeadingElement>;
+  retryRef?: React.Ref<HTMLButtonElement>;
   children: React.ReactNode;
 }
 
@@ -34,12 +37,22 @@ export function ReviewsSection({
   onWriteReview,
   onLoadMore,
   onRetry,
+  headingRef,
+  retryRef,
   children,
 }: ReviewsSectionProps) {
+  const isRetrying = status === "retrying";
+
   return (
     <section className="flex flex-col gap-6 border-t border-ash pt-12">
       <div className="flex flex-wrap items-baseline justify-between gap-4">
-        <h2 className="font-heading text-2xl tracking-tight">{title}</h2>
+        <h2
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-heading text-2xl tracking-tight outline-none"
+        >
+          {title}
+        </h2>
         {ctaLabel && onWriteReview && (
           <button
             type="button"
@@ -53,16 +66,19 @@ export function ReviewsSection({
 
       {status === "loading" ? (
         <div aria-busy="true" className="h-24 animate-pulse bg-ash" />
-      ) : status === "failed" ? (
+      ) : status === "failed" || isRetrying ? (
         <p role="status" className="text-[13px] text-muted-foreground">
           The reviews did not load.{" "}
           {onRetry && (
+            // aria-disabled rather than disabled, so a keyboard user's focus stays on it.
             <button
+              ref={retryRef}
               type="button"
-              onClick={onRetry}
-              className="border-b border-ink pb-0.5 text-foreground hover:border-primary hover:text-primary"
+              onClick={isRetrying ? undefined : onRetry}
+              aria-disabled={isRetrying}
+              className="border-b border-ink pb-0.5 text-foreground hover:border-primary hover:text-primary aria-disabled:opacity-50 aria-disabled:hover:border-ink aria-disabled:hover:text-foreground"
             >
-              Try again
+              {isRetrying ? "Loading…" : "Try again"}
             </button>
           )}
         </p>

@@ -32,15 +32,24 @@ export const PRODUCT_REVIEW_NOTE =
 export const EVENT_REVIEW_NOTE =
   "Reviews come from people who sat at the wheel";
 
-export type ReviewListStatus = "loading" | "failed" | "ready";
+export type ReviewListStatus = "loading" | "failed" | "retrying" | "ready";
 
-// Only an answer from the server can say there are no reviews; a failed request says so instead.
-export function toReviewListStatus(
-  hasResult: boolean,
-  isLoading: boolean,
-  hasError: boolean,
-): ReviewListStatus {
+interface ReviewListState {
+  hasResult: boolean;
+  isLoading: boolean;
+  hasError: boolean;
+  isRetrying: boolean;
+}
+
+// Only an answer can say there are no reviews; a failure says so, and stays up while a retry runs.
+export function toReviewListStatus({
+  hasResult,
+  isLoading,
+  hasError,
+  isRetrying,
+}: ReviewListState): ReviewListStatus {
   if (hasResult) return "ready";
+  if (isRetrying) return "retrying";
   if (hasError && !isLoading) return "failed";
   return "loading";
 }

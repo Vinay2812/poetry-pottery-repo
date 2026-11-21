@@ -248,17 +248,44 @@ describe("toReviewSubmitLabel", () => {
 });
 
 describe("toReviewListStatus", () => {
+  const idle = {
+    hasResult: false,
+    isLoading: false,
+    hasError: false,
+    isRetrying: false,
+  };
+
   it("is ready as soon as the server has answered, even with no reviews", () => {
-    expect(toReviewListStatus(true, false, false)).toBe("ready");
-    expect(toReviewListStatus(true, true, true)).toBe("ready");
+    expect(toReviewListStatus({ ...idle, hasResult: true })).toBe("ready");
+    expect(
+      toReviewListStatus({
+        hasResult: true,
+        isLoading: true,
+        hasError: true,
+        isRetrying: true,
+      }),
+    ).toBe("ready");
   });
 
   it("says the request failed instead of claiming there are no reviews", () => {
-    expect(toReviewListStatus(false, false, true)).toBe("failed");
+    expect(toReviewListStatus({ ...idle, hasError: true })).toBe("failed");
   });
 
-  it("keeps loading while a first answer or a retry is on its way", () => {
-    expect(toReviewListStatus(false, true, false)).toBe("loading");
-    expect(toReviewListStatus(false, true, true)).toBe("loading");
+  it("keeps the failed line up, marked as retrying, while a retry runs", () => {
+    expect(
+      toReviewListStatus({
+        ...idle,
+        isLoading: true,
+        hasError: true,
+        isRetrying: true,
+      }),
+    ).toBe("retrying");
+  });
+
+  it("loads while the first answer is on its way", () => {
+    expect(toReviewListStatus({ ...idle, isLoading: true })).toBe("loading");
+    expect(
+      toReviewListStatus({ ...idle, isLoading: true, hasError: true }),
+    ).toBe("loading");
   });
 });

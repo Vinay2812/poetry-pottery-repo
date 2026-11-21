@@ -74,6 +74,8 @@ export const Loading: Story = { args: { status: "loading" } };
 
 export const Failed: Story = { args: { status: "failed" } };
 
+export const Retrying: Story = { args: { status: "retrying" } };
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };

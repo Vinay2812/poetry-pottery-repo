@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useOptimistic, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useRef,
+  useState,
+} from "react";
 
 import { DeleteReviewDialog } from "@/features/reviews/components/DeleteReviewDialog";
 import { ReviewDialog } from "@/features/reviews/components/ReviewDialog";
@@ -59,6 +66,18 @@ export function ReviewsPanelContainer({
     upload,
   } = useReviewComposer(subject, subjectName, list);
   const [openPhoto, setOpenPhoto] = useState<string | null>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const retryRef = useRef<HTMLButtonElement>(null);
+  const previousStatus = useRef(status);
+
+  // A retry ends with focus where the answer is: on the button again, or on the reviews.
+  useEffect(() => {
+    const wasRetrying = previousStatus.current === "retrying";
+    previousStatus.current = status;
+    if (!wasRetrying) return;
+    if (status === "failed") retryRef.current?.focus();
+    if (status === "ready") headingRef.current?.focus();
+  }, [status]);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const handleClose = useCallback(() => setIsOpen(false), [setIsOpen]);
@@ -96,6 +115,8 @@ export function ReviewsPanelContainer({
         onWriteReview={open}
         onLoadMore={loadMore}
         onRetry={retry}
+        headingRef={headingRef}
+        retryRef={retryRef}
       >
         {(optimisticResult?.items ?? []).map((review) => (
           <ReviewItem
