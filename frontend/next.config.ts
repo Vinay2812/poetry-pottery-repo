@@ -8,6 +8,12 @@ const contentSecurityPolicy = [
   "form-action 'self'",
 ].join("; ");
 
+// Dev only: uploads can go to a local S3 emulator (Floci on :4566) instead of the production bucket.
+const isDev = process.env.NODE_ENV === "development";
+const localStoragePatterns = isDev
+  ? [{ protocol: "http" as const, hostname: "localhost", port: "4566" }]
+  : [];
+
 const securityHeaders = [
   { key: "Content-Security-Policy", value: contentSecurityPolicy },
   { key: "X-Frame-Options", value: "DENY" },
@@ -35,7 +41,10 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "cdn.poetryandpottery.prodapp.club" },
       { protocol: "https", hostname: "img.clerk.com" },
+      ...localStoragePatterns,
     ],
+    // The optimiser refuses local addresses unless told otherwise; only ever in dev.
+    dangerouslyAllowLocalIP: isDev,
   },
   // Keeps winston resolved by Node at runtime instead of bundled.
   serverExternalPackages: ["winston"],
