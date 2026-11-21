@@ -306,7 +306,7 @@ describe("useSlotPicker", () => {
     );
 
     expect(result.current.notice).toBe(
-      "Pick all your hours on the same day. Days further out are closed off.",
+      "Pick all your hours on the same day. Other days are closed off.",
     );
     expect(result.current.progress).toBe("All 2 hours picked");
   });

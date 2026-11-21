@@ -13,7 +13,7 @@ import {
   type SlotInterval,
   slotsNeeded,
   toDateKey,
-  toSpanRule,
+  toSpanNotice,
   type WorkshopData,
   type WorkshopDayData,
 } from "@/features/workshops/types";
@@ -302,9 +302,7 @@ export function useSlotPicker({
     hasError,
     // A single time has no window to keep to, so the rule only shows once it can bite.
     notice:
-      needed > 1 && picked.length > 0
-        ? `${toSpanRule(spanAllowance)}. Days further out are closed off.`
-        : null,
+      needed > 1 && picked.length > 0 ? toSpanNotice(spanAllowance) : null,
     slots,
     picked: pickedInOrder,
     pickedSlots,

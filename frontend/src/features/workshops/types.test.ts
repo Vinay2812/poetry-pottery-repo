@@ -20,6 +20,7 @@ import {
   toGroupAskLine,
   toGroupAskUrl,
   toPickingGuide,
+  toSpanNotice,
   toSpanRule,
   toUnavailableMessage,
   toBookingPath,
@@ -131,7 +132,16 @@ describe("session helpers", () => {
     ).toBe(
       "Pick a day on the calendar, then 3 hours from the times under it. Pick all your hours on the same day.",
     );
-    expect(toSpanRule(30)).toBe("Pick all your hours within a 30-day window");
+    expect(toSpanRule(30).rule).toBe(
+      "Pick all your hours within a 30-day window",
+    );
+    expect(toSpanNotice(7)).toBe(
+      "Pick all your hours within a 7-day window. Days further out are closed off.",
+    );
+    // On a one-day studio every other day is out, not only the far ones.
+    expect(toSpanNotice(1)).toBe(
+      "Pick all your hours on the same day. Other days are closed off.",
+    );
   });
 
   it("counts picked hours against the tier", () => {
