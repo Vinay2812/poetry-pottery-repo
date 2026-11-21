@@ -8,6 +8,8 @@ import {
   describeCurrentRole,
   describeRoleChange,
   describeRoleOffer,
+  roleLabel,
+  roleOptions,
   roleTone,
   toInitials,
   toOppositeRole,
@@ -78,6 +80,17 @@ describe("roleTone", () => {
   it("lights up admins only", () => {
     expect(roleTone(UserRole.Admin)).toBe("live");
     expect(roleTone(UserRole.User)).toBe("quiet");
+  });
+});
+
+describe("roleLabel", () => {
+  it("calls a shopper a customer, as the access copy does", () => {
+    expect(roleLabel(UserRole.User)).toBe("Customer");
+    expect(roleLabel(UserRole.Admin)).toBe("Admin");
+    expect(roleOptions().map((option) => option.label)).toEqual([
+      "Customer",
+      "Admin",
+    ]);
   });
 });
 

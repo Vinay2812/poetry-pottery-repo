@@ -3,19 +3,14 @@
 import { useCallback, useMemo } from "react";
 
 import { useQuery } from "@apollo/client/react";
-import { AdminUsersDocument, UserRole } from "@/graphql/generated/graphql";
+import { AdminUsersDocument } from "@/graphql/generated/graphql";
 
 import { formatDate } from "@/lib/format";
 
-import {
-  formatEnumLabel,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminPageHeader,
   AdminPagination,
-  enumOptions,
   toPersonName,
 } from "@/features/admin/ui";
 
@@ -26,13 +21,15 @@ import {
 import { AdminPeopleToolbar } from "@/features/admin/people/components/AdminPeopleToolbar";
 import {
   PEOPLE_PAGE_SIZE,
+  roleLabel,
+  roleOptions,
   roleTone,
   toInitials,
   toPersonLinks,
   toUserRole,
 } from "@/features/admin/people/types";
 
-const ROLE_OPTIONS = enumOptions(UserRole);
+const ROLE_OPTIONS = roleOptions();
 
 function toPersonHrefs(personId: number) {
   const links = toPersonLinks(personId);
@@ -81,7 +78,7 @@ export function AdminPeopleContainer() {
         email: person.user.email,
         imageUrl: person.user.image,
         initials: toInitials(person.user.name, person.user.email),
-        roleLabel: formatEnumLabel(person.role),
+        roleLabel: roleLabel(person.role),
         roleTone: roleTone(person.role),
         ordersCount: person.orders_count,
         registrationsCount: person.registrations_count,

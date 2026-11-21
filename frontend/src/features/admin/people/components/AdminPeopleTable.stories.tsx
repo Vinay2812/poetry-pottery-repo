@@ -35,7 +35,7 @@ const meta = {
         email: "arjun@example.com",
         imageUrl: null,
         initials: "AE",
-        roleLabel: "User",
+        roleLabel: "Customer",
         roleTone: "quiet" as const,
         ordersCount: 1,
         registrationsCount: 0,

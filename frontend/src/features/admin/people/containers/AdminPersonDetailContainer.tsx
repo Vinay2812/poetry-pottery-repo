@@ -13,7 +13,6 @@ import {
 import { formatDate } from "@/lib/format";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
-import { formatEnumLabel } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
   AdminPageHeader,
@@ -28,6 +27,7 @@ import {
   describeCurrentRole,
   describeRoleChange,
   describeRoleOffer,
+  roleLabel,
   isOnlyAdmin,
   ONLY_ADMIN_NOTE,
   roleTone,
@@ -80,7 +80,7 @@ export function AdminPersonDetailContainer({
     run: (role) => setUserRole({ variables: { id: personId, role } }),
     refresh: refetch,
     messages: {
-      success: (role) => `Role changed to ${formatEnumLabel(role)}`,
+      success: (role) => `Role changed to ${roleLabel(role)}`,
       failure: "The role could not be changed",
     },
   });
@@ -131,7 +131,7 @@ export function AdminPersonDetailContainer({
           optimisticPerson.user.name,
           optimisticPerson.user.email,
         )}
-        roleLabel={formatEnumLabel(optimisticPerson.role)}
+        roleLabel={roleLabel(optimisticPerson.role)}
         roleTone={roleTone(optimisticPerson.role)}
         joinedLabel={formatDate(optimisticPerson.created_at)}
       />

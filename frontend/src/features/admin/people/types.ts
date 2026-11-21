@@ -46,6 +46,23 @@ export function toInitials(name: string | null, email: string): string {
   return letters.join("").toUpperCase() || "?";
 }
 
+// The access copy says "customer", so the pill and filter do too.
+const ROLE_LABEL: Record<UserRole, string> = {
+  [UserRole.Admin]: "Admin",
+  [UserRole.User]: "Customer",
+};
+
+export function roleLabel(role: UserRole): string {
+  return ROLE_LABEL[role];
+}
+
+export function roleOptions(): { value: string; label: string }[] {
+  return [UserRole.User, UserRole.Admin].map((value) => ({
+    value,
+    label: roleLabel(value),
+  }));
+}
+
 export function roleTone(role: UserRole): AdminStatusTone {
   return role === UserRole.Admin ? "live" : "quiet";
 }
