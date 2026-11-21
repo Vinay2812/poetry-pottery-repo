@@ -16,6 +16,7 @@ import {
   toDayStartIso,
   toOrderStatus,
   toSelectionLabel,
+  toOrderMoveDialog,
   toStatusActions,
 } from "./types";
 
@@ -190,6 +191,24 @@ describe("toStatusActions", () => {
     expect(actions[2].needsNote).toBe(true);
   });
 
+  it("treats a refund as undoing the sale and asks for a note", () => {
+    const [refund] = toStatusActions([OrderStatus.Refunded]);
+    expect(refund).toMatchObject({
+      label: "Mark refunded",
+      isDestructive: true,
+      needsNote: true,
+      isPrimary: false,
+    });
+  });
+
+  it("never offers a way back to pending", () => {
+    expect(
+      toStatusActions([OrderStatus.Pending, OrderStatus.Paid]).map(
+        (action) => action.status,
+      ),
+    ).toEqual([OrderStatus.Paid]);
+  });
+
   it("darkens only the move that takes the order forward", () => {
     const actions = toStatusActions([
       OrderStatus.Shipped,
@@ -301,6 +320,20 @@ describe("toPackingSlipHref", () => {
   it("points at the printable slip for the order", () => {
     expect(toPackingSlipHref("ORD123")).toBe(
       "/dashboard/orders/ORD123/packing-slip",
+    );
+  });
+});
+
+describe("toOrderMoveDialog", () => {
+  it("requires a reason to cancel but not to refund", () => {
+    expect(toOrderMoveDialog(OrderStatus.Cancelled).isRequired).toBe(true);
+    expect(toOrderMoveDialog(OrderStatus.Refunded)).toMatchObject({
+      confirmLabel: "Mark refunded",
+      isDestructive: true,
+      isRequired: false,
+    });
+    expect(toOrderMoveDialog(OrderStatus.Shipped).fieldLabel).toBe(
+      "Tracking note",
     );
   });
 });

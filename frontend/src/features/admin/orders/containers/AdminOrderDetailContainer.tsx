@@ -58,6 +58,7 @@ import {
   toAdminNoteValue,
   toPackingSlipHref,
   toSelectionLabel,
+  toOrderMoveDialog,
   toStatusActions,
 } from "@/features/admin/orders/types";
 
@@ -156,7 +157,7 @@ export function AdminOrderDetailContainer({
         ...(target === OrderStatus.Shipped
           ? { trackingNote: reason ?? "" }
           : {}),
-        ...(target === OrderStatus.Cancelled
+        ...(target === OrderStatus.Cancelled || target === OrderStatus.Refunded
           ? { cancelReason: reason ?? "" }
           : {}),
       }),
@@ -172,15 +173,16 @@ export function AdminOrderDetailContainer({
           id: orderId,
           status: target,
           tracking_note: target === OrderStatus.Shipped ? reason : null,
-          cancel_reason: null,
+          cancel_reason: target === OrderStatus.Refunded ? reason : null,
         },
       });
     },
     refresh: refetch,
-    // A cancellation always tells the customer why; a tracking note can wait.
+    // A cancellation always tells the customer why; a refund reason or tracking note can wait.
     policy: (target: OrderStatus) => {
-      if (target === OrderStatus.Cancelled) return "required";
-      return target === OrderStatus.Shipped ? "optional" : "none";
+      const action = statusActions.find((entry) => entry.status === target);
+      if (!action?.needsNote) return "none";
+      return toOrderMoveDialog(target).isRequired ? "required" : "optional";
     },
     requiredMessage: "Say why this order is being cancelled",
     messages: {
@@ -265,6 +267,8 @@ export function AdminOrderDetailContainer({
     address.landmark ?? "",
     `${address.city}, ${address.state} ${address.pincode}`,
   ].filter((line) => line.length > 0);
+
+  const dialog = toOrderMoveDialog(move.target ?? OrderStatus.Shipped);
 
   return (
     <div className="flex flex-col gap-8">
@@ -370,38 +374,16 @@ export function AdminOrderDetailContainer({
 
       <AdminReasonDialog
         isOpen={move.target !== null}
-        title={
-          move.target === OrderStatus.Cancelled
-            ? "Cancel this order"
-            : "Mark this order shipped"
-        }
-        description={
-          move.target === OrderStatus.Cancelled
-            ? "The pieces go back on the shelf straight away."
-            : "The customer sees this note on their order page."
-        }
-        fieldLabel={
-          move.target === OrderStatus.Cancelled ? "Reason" : "Tracking note"
-        }
-        hint={
-          move.target === OrderStatus.Cancelled
-            ? "The customer reads this, so keep it kind"
-            : "Courier and tracking number"
-        }
-        placeholder={
-          move.target === OrderStatus.Cancelled
-            ? "The batch cracked in the kiln"
-            : "Delhivery 7712445901"
-        }
+        title={dialog.title}
+        description={dialog.description}
+        fieldLabel={dialog.fieldLabel}
+        hint={dialog.hint}
+        placeholder={dialog.placeholder}
         value={move.reason}
         error={move.error}
-        confirmLabel={
-          move.target === OrderStatus.Cancelled
-            ? "Cancel order"
-            : "Mark shipped"
-        }
-        isDestructive={move.target === OrderStatus.Cancelled}
-        isRequired={move.target === OrderStatus.Cancelled}
+        confirmLabel={dialog.confirmLabel}
+        isDestructive={dialog.isDestructive}
+        isRequired={dialog.isRequired}
         isBusy={move.isPending}
         onValueChange={move.setReason}
         onConfirm={move.confirm}
