@@ -7,21 +7,20 @@ import { EventRegistrationsTable } from "./EventRegistrationsTable";
 
 const ROWS = [
   {
-    id: "reg_a1",
+    id: "EV-FJ3CER77MU",
     personName: "Asha Kulkarni",
     personEmail: "asha@example.com",
-    seatsLabel: "2",
-    unitPriceLabel: "₹1,200",
+    bookedLabel: "Mon, 14 Sep, 2026",
+    seatsLabel: "2 seats",
     totalLabel: "₹2,400",
     statusLabel: "Awaiting approval",
     statusTone: "warn" as const,
-    reason: null,
+    closingNote: null,
     note: "Coming with my sister",
-    bookedLabel: "Mon, 14 Sep, 2026",
     actions: [
       {
         status: RegistrationStatus.Approved,
-        label: "Approve, hold seats",
+        label: "Approve, ask for payment",
         isPrimary: true,
       },
       {
@@ -32,17 +31,16 @@ const ROWS = [
     ],
   },
   {
-    id: "reg_b2",
+    id: "EV-2HQ8ZP6NWX",
     personName: "Rohan Patil",
     personEmail: "rohan@example.com",
-    seatsLabel: "1",
-    unitPriceLabel: "₹1,200",
-    totalLabel: "₹1,200",
-    statusLabel: "Seat held, awaiting payment",
-    statusTone: "neutral" as const,
-    reason: null,
-    note: null,
     bookedLabel: "Sun, 13 Sep, 2026",
+    seatsLabel: "1 seat",
+    totalLabel: "₹1,200",
+    statusLabel: "Approved, awaiting payment",
+    statusTone: "neutral" as const,
+    closingNote: null,
+    note: null,
     actions: [
       {
         status: RegistrationStatus.Confirmed,
@@ -51,44 +49,22 @@ const ROWS = [
       },
       {
         status: RegistrationStatus.Cancelled,
-        label: "Cancel",
+        label: "Cancel registration",
         isPrimary: false,
       },
     ],
   },
   {
-    id: "reg_c3",
-    personName: "meera@example.com",
-    personEmail: "meera@example.com",
-    seatsLabel: "1",
-    unitPriceLabel: "₹1,200",
-    totalLabel: "₹1,200",
-    statusLabel: "Paid, confirmed",
-    statusTone: "live" as const,
-    reason: null,
-    note: null,
-    bookedLabel: "Fri, 11 Sep, 2026",
-    actions: [
-      {
-        status: RegistrationStatus.Cancelled,
-        label: "Cancel",
-        isPrimary: false,
-      },
-    ],
-  },
-  {
-    id: "reg_d4",
+    id: "EV-K7TT3M1QRC",
     personName: "Kabir Shah",
-    personEmail:
-      "kabir.shah.longform.address.for.testing@example-studio-mail.com",
-    seatsLabel: "2",
-    unitPriceLabel: "₹1,200",
+    personEmail: "kabir.shah.longform.address.for.testing@example.com",
+    bookedLabel: "Thu, 10 Sep, 2026",
+    seatsLabel: "2 seats",
     totalLabel: "₹2,400",
     statusLabel: "Cancelled",
     statusTone: "quiet" as const,
-    reason: "Travelling that weekend after all",
+    closingNote: "Reason: Travelling that weekend after all",
     note: null,
-    bookedLabel: "Thu, 10 Sep, 2026",
     actions: [],
   },
 ];
@@ -112,7 +88,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Working: Story = { args: { busyId: "reg_a1", isBusy: true } };
+export const Working: Story = {
+  args: { busyId: "EV-FJ3CER77MU", isBusy: true },
+};
 
 export const Empty: Story = { args: { rows: [] } };
 

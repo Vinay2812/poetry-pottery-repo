@@ -20,8 +20,10 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
-  registrationActionLabel,
+  describeClosing,
   registrationActionNeedsReason,
+  registrationClosingDialog,
+  registrationHoldNote,
   registrationStatusLabel,
   registrationStatusOptions,
   registrationStatusTone,
@@ -57,7 +59,7 @@ interface BookingMove {
   status: RegistrationStatus;
 }
 
-const STATUS_OPTIONS = registrationStatusOptions("wheel");
+const STATUS_OPTIONS = registrationStatusOptions();
 
 export function WorkshopBookingsContainer({
   configId,
@@ -116,12 +118,16 @@ export function WorkshopBookingsContainer({
           item.booking.participants,
         ),
         totalLabel: formatInr(item.booking.total),
-        statusLabel: registrationStatusLabel(item.booking.status, "wheel"),
+        statusLabel: registrationStatusLabel(item.booking.status),
         statusTone: registrationStatusTone(item.booking.status),
-        reason: item.booking.cancel_reason,
+        closingNote: describeClosing(item.booking.cancel_reason),
         note: item.booking.note,
         bookedLabel: formatDate(item.booking.created_at),
-        actions: toRegistrationActions(item.next_statuses, "wheel"),
+        actions: toRegistrationActions(
+          item.booking.status,
+          item.next_statuses,
+          "wheel",
+        ),
       })),
     [optimisticItems, timezone],
   );
@@ -139,7 +145,7 @@ export function WorkshopBookingsContainer({
     requiredMessage: "Tell them why, in a line",
     messages: {
       success: ({ target }) =>
-        `Booking updated: ${registrationStatusLabel(target.status, "wheel")}`,
+        `Booking updated: ${registrationStatusLabel(target.status)}`,
       failure: "The booking could not be moved",
     },
   });
@@ -151,6 +157,11 @@ export function WorkshopBookingsContainer({
   );
 
   const pageInfo = result?.page_info;
+  const closingStatus = move.target?.status;
+  const closing =
+    closingStatus && registrationActionNeedsReason(closingStatus)
+      ? registrationClosingDialog(closingStatus, "wheel")
+      : null;
 
   return (
     <section className="flex flex-col gap-3">
@@ -159,14 +170,15 @@ export function WorkshopBookingsContainer({
           Bookings
         </h2>
         <p className="text-[13px] text-muted-foreground">
-          Who has asked for the wheel, and where each request stands.
+          Who has asked for the wheel, and where each request stands.{" "}
+          {registrationHoldNote("wheel")}
         </p>
       </div>
       <AdminToolbar>
         <AdminSearchField
           id="bookings-search"
           label="Search"
-          placeholder="Name or email"
+          placeholder="Email or booking ID"
           value={searchDraft}
           onChange={onSearchChange}
         />
@@ -213,23 +225,15 @@ export function WorkshopBookingsContainer({
         onPageChange={(next) => patch({ page: String(next) })}
       />
       <AdminReasonDialog
-        isOpen={move.target !== null}
-        title={
-          move.target?.status === RegistrationStatus.Rejected
-            ? "Turn this booking down?"
-            : "Cancel this booking?"
-        }
+        isOpen={closing !== null}
+        title={closing?.title ?? ""}
         description="Tell them why, in a line."
         fieldLabel="Reason"
         hint="The guest reads this, so keep it kind"
         placeholder="The wheel is booked that afternoon"
         value={move.reason}
         error={move.error}
-        confirmLabel={
-          move.target
-            ? registrationActionLabel(move.target.status, "wheel")
-            : ""
-        }
+        confirmLabel={closing?.confirmLabel ?? ""}
         isDestructive
         isRequired
         isBusy={move.isPending}

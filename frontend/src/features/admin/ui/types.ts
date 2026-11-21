@@ -47,10 +47,10 @@ export function eventStatusTone(status: EventStatus): AdminStatusTone {
   return EVENT_TONE[status];
 }
 
-// Each label names the same state the shopper reads, in the order things happen.
+// The shopper's own words for each order state, so both sides name it the same way.
 const ORDER_LABEL: Record<OrderStatus, string> = {
   [OrderStatus.Pending]: "Awaiting confirmation",
-  [OrderStatus.Confirmed]: "Awaiting payment",
+  [OrderStatus.Confirmed]: "Confirmed, awaiting payment",
   [OrderStatus.Paid]: "Paid",
   [OrderStatus.Shipped]: "Shipped",
   [OrderStatus.Delivered]: "Delivered",
@@ -62,30 +62,30 @@ export function orderStatusLabel(status: OrderStatus): string {
   return ORDER_LABEL[status];
 }
 
-/** What an approved booking holds: a wheel for a session, seats for an event. */
+/** What a request holds from the moment it is made: a wheel for a session, seats for an event. */
 export type RegistrationHold = "wheel" | "seat";
 
-const REGISTRATION_LABEL: Record<
-  Exclude<RegistrationStatus, RegistrationStatus.Approved>,
-  string
-> = {
+// A request already holds its wheel or seats, so approving only asks for payment.
+const REGISTRATION_LABEL: Record<RegistrationStatus, string> = {
   [RegistrationStatus.Pending]: "Awaiting approval",
-  [RegistrationStatus.Confirmed]: "Paid, confirmed",
-  [RegistrationStatus.Rejected]: "Turned down",
+  [RegistrationStatus.Approved]: "Approved, awaiting payment",
+  [RegistrationStatus.Confirmed]: "Confirmed",
+  [RegistrationStatus.Rejected]: "Not approved",
   [RegistrationStatus.Cancelled]: "Cancelled",
 };
 
-const HELD_LABEL: Record<RegistrationHold, string> = {
-  wheel: "Wheel held, awaiting payment",
-  seat: "Seat held, awaiting payment",
+export function registrationStatusLabel(status: RegistrationStatus): string {
+  return REGISTRATION_LABEL[status];
+}
+
+const HOLD_NOTE: Record<RegistrationHold, string> = {
+  wheel:
+    "A request holds its wheel from the moment it's made; turning it down frees it.",
+  seat: "A request holds its seats from the moment it's made; turning it down frees them.",
 };
 
-export function registrationStatusLabel(
-  status: RegistrationStatus,
-  hold: RegistrationHold,
-): string {
-  if (status === RegistrationStatus.Approved) return HELD_LABEL[hold];
-  return REGISTRATION_LABEL[status];
+export function registrationHoldNote(hold: RegistrationHold): string {
+  return HOLD_NOTE[hold];
 }
 
 const ORDER_FLOW: OrderStatus[] = [
@@ -111,12 +111,13 @@ export function orderStatusOptions(): { value: string; label: string }[] {
   return ORDER_FLOW.map((value) => ({ value, label: orderStatusLabel(value) }));
 }
 
-export function registrationStatusOptions(
-  hold: RegistrationHold,
-): { value: string; label: string }[] {
+export function registrationStatusOptions(): {
+  value: string;
+  label: string;
+}[] {
   return REGISTRATION_FLOW.map((value) => ({
     value,
-    label: registrationStatusLabel(value, hold),
+    label: registrationStatusLabel(value),
   }));
 }
 
@@ -143,27 +144,38 @@ export function toRegistrationStatus(value: string): RegistrationStatus | null {
   );
 }
 
+// No move ever leads back to pending, so it has no button.
+type RegistrationMoveTarget = Exclude<
+  RegistrationStatus,
+  RegistrationStatus.Pending
+>;
+
 const REGISTRATION_ACTION_LABEL: Record<
-  Exclude<RegistrationStatus, RegistrationStatus.Approved>,
+  Exclude<RegistrationMoveTarget, RegistrationStatus.Cancelled>,
   string
 > = {
-  [RegistrationStatus.Pending]: "Back to awaiting approval",
+  [RegistrationStatus.Approved]: "Approve, ask for payment",
   [RegistrationStatus.Confirmed]: "Confirm as paid",
   [RegistrationStatus.Rejected]: "Turn down",
-  [RegistrationStatus.Cancelled]: "Cancel",
 };
 
-const APPROVE_LABEL: Record<RegistrationHold, string> = {
-  wheel: "Approve, hold wheel",
-  seat: "Approve, hold seats",
+const CANCEL_LABEL: Record<RegistrationHold, string> = {
+  wheel: "Cancel booking",
+  seat: "Cancel registration",
 };
+
+function isMoveTarget(
+  status: RegistrationStatus,
+): status is RegistrationMoveTarget {
+  return status !== RegistrationStatus.Pending;
+}
 
 /** Each button says what the move does, not just the status it lands on. */
-export function registrationActionLabel(
-  status: RegistrationStatus,
+function registrationActionLabel(
+  status: RegistrationMoveTarget,
   hold: RegistrationHold,
 ): string {
-  if (status === RegistrationStatus.Approved) return APPROVE_LABEL[hold];
+  if (status === RegistrationStatus.Cancelled) return CANCEL_LABEL[hold];
   return REGISTRATION_ACTION_LABEL[status];
 }
 
@@ -174,25 +186,67 @@ export interface RegistrationAction {
   isPrimary: boolean;
 }
 
-/** The server says which moves are legal; each one is named and the way forward marked. */
+/**
+ * The server says which moves are legal; each one is named and the way forward marked.
+ * A request still awaiting approval is turned down rather than cancelled, so it gets one "no".
+ */
 export function toRegistrationActions(
+  current: RegistrationStatus,
   nextStatuses: RegistrationStatus[],
   hold: RegistrationHold,
 ): RegistrationAction[] {
-  return nextStatuses.map((status, index) => ({
-    status,
-    label: registrationActionLabel(status, hold),
-    isPrimary:
-      index === 0 &&
-      (status === RegistrationStatus.Approved ||
-        status === RegistrationStatus.Confirmed),
-  }));
+  return nextStatuses
+    .filter(isMoveTarget)
+    .filter(
+      (status) =>
+        !(
+          current === RegistrationStatus.Pending &&
+          status === RegistrationStatus.Cancelled
+        ),
+    )
+    .map((status, index) => ({
+      status,
+      label: registrationActionLabel(status, hold),
+      isPrimary:
+        index === 0 &&
+        (status === RegistrationStatus.Approved ||
+          status === RegistrationStatus.Confirmed),
+    }));
+}
+
+const HOLD_NOUN: Record<RegistrationHold, string> = {
+  wheel: "booking",
+  seat: "registration",
+};
+
+/** Turning someone away goes through a dialog; its title and button name the move. */
+export function registrationClosingDialog(
+  status: RegistrationStatus.Rejected | RegistrationStatus.Cancelled,
+  hold: RegistrationHold,
+): { title: string; confirmLabel: string } {
+  const noun = HOLD_NOUN[hold];
+  return status === RegistrationStatus.Rejected
+    ? { title: `Turn this ${noun} down?`, confirmLabel: "Turn down" }
+    : { title: `Cancel this ${noun}?`, confirmLabel: CANCEL_LABEL[hold] };
+}
+
+// The API fills these in when nobody typed a reason, so they say who closed it, not why.
+const FILLED_IN_REASON: Record<string, string> = {
+  "Cancelled by the guest": "Cancelled by the guest",
+  "The studio called this one off": "Cancelled by the studio with the event",
+};
+
+/** One line under a closed booking: who closed it when that is all we know, else why. */
+export function describeClosing(reason: string | null): string | null {
+  const trimmed = reason?.trim() ?? "";
+  if (trimmed === "") return null;
+  return FILLED_IN_REASON[trimmed] ?? `Reason: ${trimmed}`;
 }
 
 /** Turning someone away is worth a sentence; letting them in is not. */
 export function registrationActionNeedsReason(
   status: RegistrationStatus,
-): boolean {
+): status is RegistrationStatus.Rejected | RegistrationStatus.Cancelled {
   return (
     status === RegistrationStatus.Rejected ||
     status === RegistrationStatus.Cancelled

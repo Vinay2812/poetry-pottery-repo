@@ -130,7 +130,7 @@ export function DashboardContainer() {
       (dashboard?.recent_bookings ?? []).map((booking) => ({
         id: booking.id,
         customerName: booking.customer.name ?? booking.customer.email,
-        statusLabel: registrationStatusLabel(booking.status, "wheel"),
+        statusLabel: registrationStatusLabel(booking.status),
         statusTone: registrationStatusTone(booking.status),
         shapeLabel: describeBooking(booking.hours, booking.participants),
         totalLabel: formatInr(booking.total),

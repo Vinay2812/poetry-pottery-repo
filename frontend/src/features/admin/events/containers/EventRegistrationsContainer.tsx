@@ -9,7 +9,7 @@ import {
   SetRegistrationStatusDocument,
 } from "@/graphql/generated/graphql";
 
-import { formatDate, formatInr } from "@/lib/format";
+import { formatDate, formatInr, pluralize } from "@/lib/format";
 import { useReasonAction } from "@/lib/use-reason-action";
 
 import {
@@ -23,8 +23,10 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
-  registrationActionLabel,
+  describeClosing,
   registrationActionNeedsReason,
+  registrationClosingDialog,
+  registrationHoldNote,
   registrationStatusLabel,
   registrationStatusOptions,
   registrationStatusTone,
@@ -38,7 +40,7 @@ import {
   type RegistrationTableRow,
 } from "@/features/admin/events/components/EventRegistrationsTable";
 const PAGE_SIZE = 20;
-const STATUS_OPTIONS = registrationStatusOptions("seat");
+const STATUS_OPTIONS = registrationStatusOptions();
 
 interface StatusPatch {
   id: string;
@@ -54,7 +56,7 @@ function applyStatusPatch(
     if (row.id !== patch.id) return row;
     return {
       ...row,
-      statusLabel: registrationStatusLabel(patch.status, "seat"),
+      statusLabel: registrationStatusLabel(patch.status),
       statusTone: registrationStatusTone(patch.status),
       actions: [],
     };
@@ -112,15 +114,18 @@ export function EventRegistrationsContainer({
         id: entry.registration.id,
         personName: toPersonName(entry.customer.name, entry.customer.email),
         personEmail: entry.customer.email,
-        seatsLabel: String(entry.registration.seats),
-        unitPriceLabel: formatInr(entry.registration.unit_price),
-        totalLabel: formatInr(entry.registration.total),
-        statusLabel: registrationStatusLabel(entry.registration.status, "seat"),
-        statusTone: registrationStatusTone(entry.registration.status),
-        reason: entry.registration.cancel_reason,
-        note: entry.registration.note,
         bookedLabel: formatDate(entry.registration.created_at),
-        actions: toRegistrationActions(entry.next_statuses, "seat"),
+        seatsLabel: pluralize(entry.registration.seats, "seat"),
+        totalLabel: formatInr(entry.registration.total),
+        statusLabel: registrationStatusLabel(entry.registration.status),
+        statusTone: registrationStatusTone(entry.registration.status),
+        closingNote: describeClosing(entry.registration.cancel_reason),
+        note: entry.registration.note,
+        actions: toRegistrationActions(
+          entry.registration.status,
+          entry.next_statuses,
+          "seat",
+        ),
       })),
     [result],
   );
@@ -141,7 +146,7 @@ export function EventRegistrationsContainer({
     requiredMessage: "Say why, in a sentence the person can read",
     messages: {
       success: ({ target }) =>
-        `Registration updated: ${registrationStatusLabel(target.status, "seat")}`,
+        `Registration updated: ${registrationStatusLabel(target.status)}`,
       failure: "The registration could not be moved",
     },
   });
@@ -153,17 +158,27 @@ export function EventRegistrationsContainer({
   );
 
   const pageInfo = result?.page_info;
+  const closingStatus = move.target?.status;
+  const closing =
+    closingStatus && registrationActionNeedsReason(closingStatus)
+      ? registrationClosingDialog(closingStatus, "seat")
+      : null;
 
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="border-b border-ash pb-3 font-display text-xl leading-none tracking-tight">
-        Registrations
-      </h2>
+      <div className="flex flex-col gap-1 border-b border-ash pb-3">
+        <h2 className="font-display text-xl leading-none tracking-tight">
+          Registrations
+        </h2>
+        <p className="text-[13px] text-muted-foreground">
+          {registrationHoldNote("seat")}
+        </p>
+      </div>
       <AdminToolbar>
         <AdminSearchField
           id="registrations-search"
           label="Search"
-          placeholder="Name or email"
+          placeholder="Email or registration ID"
           value={searchDraft}
           onChange={handleSearchChange}
         />
@@ -193,21 +208,15 @@ export function EventRegistrationsContainer({
         onPageChange={(next) => patch({ reg_page: String(next) })}
       />
       <AdminReasonDialog
-        isOpen={move.target !== null}
-        title={
-          move.target?.status === RegistrationStatus.Rejected
-            ? "Turn this registration down?"
-            : "Cancel this registration?"
-        }
+        isOpen={closing !== null}
+        title={closing?.title ?? ""}
         description="The seats go back and the person is told."
         fieldLabel="Reason"
         hint="The person reads this, so keep it kind"
         placeholder="The session is full"
         value={move.reason}
         error={move.error}
-        confirmLabel={
-          move.target ? registrationActionLabel(move.target.status, "seat") : ""
-        }
+        confirmLabel={closing?.confirmLabel ?? ""}
         isDestructive
         isRequired
         isBusy={move.isPending}

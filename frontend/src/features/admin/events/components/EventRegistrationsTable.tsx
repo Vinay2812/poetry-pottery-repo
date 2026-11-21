@@ -1,15 +1,16 @@
-"use client";
-
-import { Button } from "@/components/ui/button";
 import type { RegistrationStatus } from "@/graphql/generated/graphql";
 
 import {
+  ADMIN_CARD,
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
+  AdminCardList,
   AdminEmptyRow,
+  AdminRegistrationActions,
+  AdminRegistrationState,
+  AdminRegistrationWho,
   type AdminStatusTone,
-  AdminStatusPill,
   AdminTableFrame,
   type RegistrationAction,
 } from "@/features/admin/ui";
@@ -18,15 +19,14 @@ export interface RegistrationTableRow {
   id: string;
   personName: string;
   personEmail: string;
+  bookedLabel: string;
   seatsLabel: string;
-  unitPriceLabel: string;
   totalLabel: string;
   statusLabel: string;
   statusTone: AdminStatusTone;
-  // Why it was cancelled or turned down, by the guest or the studio.
-  reason: string | null;
+  // Who closed it, or why, once it is cancelled or turned down.
+  closingNote: string | null;
   note: string | null;
-  bookedLabel: string;
   actions: RegistrationAction[];
 }
 
@@ -39,6 +39,18 @@ export interface EventRegistrationsTableProps {
   onAction: (id: string, status: RegistrationStatus) => void;
 }
 
+const CAPTION = "Everyone booked on this event";
+const EMPTY_MESSAGE = "No registrations match those filters";
+
+function SeatsLine({ row }: { row: RegistrationTableRow }) {
+  return (
+    <span className="whitespace-nowrap tnum">
+      {row.seatsLabel} · {row.totalLabel}
+    </span>
+  );
+}
+
+// The table needs about a thousand pixels; anything narrower reads each registration as a card.
 export function EventRegistrationsTable({
   rows,
   isBusy,
@@ -46,75 +58,96 @@ export function EventRegistrationsTable({
   busyId,
   onAction,
 }: EventRegistrationsTableProps) {
+  const isDisabled = isLocked || busyId !== null;
   return (
-    <AdminTableFrame caption="Everyone booked on this event" isBusy={isBusy}>
-      <thead>
-        <tr>
-          <th className={ADMIN_TH}>Person</th>
-          <th className={ADMIN_TH}>Seats</th>
-          <th className={ADMIN_TH}>Total</th>
-          <th className={ADMIN_TH}>Status</th>
-          <th className={ADMIN_TH}>Note</th>
-          <th className={`${ADMIN_TH} text-right`}>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.length === 0 && (
-          <AdminEmptyRow
-            colSpan={6}
-            message="No registrations match those filters"
-          />
-        )}
-        {rows.map((row) => (
-          <tr key={row.id} className={ADMIN_TR}>
-            <td className={`${ADMIN_TD} min-w-56`}>
-              <span className="block">{row.personName}</span>
-              <span className="block text-[12px] wrap-anywhere text-muted-foreground">
-                {row.personEmail}
-              </span>
-              <span className="block text-[12px] text-muted-foreground tnum">
-                Booked {row.bookedLabel}
-              </span>
-            </td>
-            <td className={`${ADMIN_TD} whitespace-nowrap tnum`}>
-              {row.seatsLabel}
-              <span className="block text-[12px] text-muted-foreground">
-                {row.unitPriceLabel} each
-              </span>
-            </td>
-            <td className={`${ADMIN_TD} tnum`}>{row.totalLabel}</td>
-            <td className={`${ADMIN_TD} whitespace-nowrap`}>
-              <AdminStatusPill label={row.statusLabel} tone={row.statusTone} />
-              {row.reason && (
-                <span className="mt-1 block max-w-56 text-[12px] whitespace-normal text-muted-foreground">
-                  Reason: {row.reason}
-                </span>
+    <>
+      <div className="xl:hidden">
+        <AdminCardList
+          caption={CAPTION}
+          isBusy={isBusy}
+          isEmpty={rows.length === 0}
+          emptyMessage={EMPTY_MESSAGE}
+        >
+          {rows.map((row) => (
+            <li key={row.id} className={ADMIN_CARD}>
+              <AdminRegistrationWho
+                name={row.personName}
+                email={row.personEmail}
+                reference={row.id}
+                bookedLabel={row.bookedLabel}
+              />
+              <SeatsLine row={row} />
+              <AdminRegistrationState
+                statusLabel={row.statusLabel}
+                statusTone={row.statusTone}
+                closingNote={row.closingNote}
+              />
+              {row.note && (
+                <p className="text-muted-foreground">Note: {row.note}</p>
               )}
-            </td>
-            <td
-              className={`${ADMIN_TD} max-w-60 min-w-36 text-muted-foreground`}
-            >
-              {row.note ?? "—"}
-            </td>
-            <td className={`${ADMIN_TD} text-right`}>
-              <div className="flex flex-col items-end gap-1.5">
-                {row.actions.map((action) => (
-                  <Button
-                    key={action.status}
-                    type="button"
-                    size="sm"
-                    variant={action.isPrimary ? "default" : "secondary"}
-                    disabled={isLocked || busyId !== null}
-                    onClick={() => onAction(row.id, action.status)}
-                  >
-                    {action.label}
-                  </Button>
-                ))}
-              </div>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </AdminTableFrame>
+              <AdminRegistrationActions
+                actions={row.actions}
+                isDisabled={isDisabled}
+                isStacked={false}
+                onAction={(status) => onAction(row.id, status)}
+              />
+            </li>
+          ))}
+        </AdminCardList>
+      </div>
+      <div className="hidden xl:block">
+        <AdminTableFrame caption={CAPTION} isBusy={isBusy}>
+          <thead>
+            <tr>
+              <th className={ADMIN_TH}>Person</th>
+              <th className={ADMIN_TH}>Seats</th>
+              <th className={ADMIN_TH}>Status</th>
+              <th className={ADMIN_TH}>Note</th>
+              <th className={`${ADMIN_TH} text-right`}>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.length === 0 && (
+              <AdminEmptyRow colSpan={5} message={EMPTY_MESSAGE} />
+            )}
+            {rows.map((row) => (
+              <tr key={row.id} className={ADMIN_TR}>
+                <td className={`${ADMIN_TD} xl:min-w-56`}>
+                  <AdminRegistrationWho
+                    name={row.personName}
+                    email={row.personEmail}
+                    reference={row.id}
+                    bookedLabel={row.bookedLabel}
+                  />
+                </td>
+                <td className={ADMIN_TD}>
+                  <SeatsLine row={row} />
+                </td>
+                <td className={ADMIN_TD}>
+                  <AdminRegistrationState
+                    statusLabel={row.statusLabel}
+                    statusTone={row.statusTone}
+                    closingNote={row.closingNote}
+                  />
+                </td>
+                <td
+                  className={`${ADMIN_TD} max-w-60 text-muted-foreground xl:min-w-36`}
+                >
+                  {row.note ?? "—"}
+                </td>
+                <td className={`${ADMIN_TD} text-right`}>
+                  <AdminRegistrationActions
+                    actions={row.actions}
+                    isDisabled={isDisabled}
+                    isStacked
+                    onAction={(status) => onAction(row.id, status)}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </AdminTableFrame>
+      </div>
+    </>
   );
 }

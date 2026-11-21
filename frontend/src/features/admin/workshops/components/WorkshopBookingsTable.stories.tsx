@@ -11,21 +11,21 @@ const meta = {
   args: {
     rows: [
       {
-        id: "bk_01",
+        id: "WS-HJN2NGS3UP",
         personName: "Maya Iyer",
         personEmail: "maya@example.com",
+        bookedLabel: "Tue, 1 Sept, 2026",
         sessionLines: ["Mon, 14 Sept · 9–11 am"],
         sizeLabel: "2 hours · 1 person",
         totalLabel: "₹1,400",
         statusLabel: "Awaiting approval",
         statusTone: "warn",
-        reason: null,
+        closingNote: null,
         note: "First time on a wheel",
-        bookedLabel: "Tue, 1 Sept, 2026",
         actions: [
           {
             status: RegistrationStatus.Approved,
-            label: "Approve, hold wheel",
+            label: "Approve, ask for payment",
             isPrimary: true,
           },
           {
@@ -41,18 +41,17 @@ const meta = {
         ],
       },
       {
-        id: "bk_02",
+        id: "WS-8KD2LQ0PZA",
         personName: "Arjun Rao",
-        personEmail:
-          "arjun.rao.weekend.pottery.club.member@example-studio-mail.com",
+        personEmail: "arjun.rao.weekend.pottery.club.member@example.com",
+        bookedLabel: "Wed, 2 Sept, 2026",
         sessionLines: ["Wed, 25 Nov · 3–4 pm", "Sat, 28 Nov · 4–5 pm"],
         sizeLabel: "2 hours · 2 people",
         totalLabel: "₹4,000",
-        statusLabel: "Wheel held, awaiting payment",
+        statusLabel: "Approved, awaiting payment",
         statusTone: "neutral",
-        reason: null,
+        closingNote: null,
         note: null,
-        bookedLabel: "Wed, 2 Sept, 2026",
         actions: [
           {
             status: RegistrationStatus.Confirmed,
@@ -60,24 +59,29 @@ const meta = {
             isPrimary: true,
           },
           {
+            status: RegistrationStatus.Rejected,
+            label: "Turn down",
+            isPrimary: false,
+          },
+          {
             status: RegistrationStatus.Cancelled,
-            label: "Cancel",
+            label: "Cancel booking",
             isPrimary: false,
           },
         ],
       },
       {
-        id: "bk_03",
+        id: "WS-M3XC91TT0B",
         personName: "Leela Menon",
         personEmail: "leela@example.com",
+        bookedLabel: "Thu, 3 Sept, 2026",
         sessionLines: ["Fri, 27 Nov · 4–5 pm"],
         sizeLabel: "1 hour · 1 person",
         totalLabel: "₹1,100",
         statusLabel: "Cancelled",
         statusTone: "quiet",
-        reason: "Work came up that afternoon, sorry",
+        closingNote: "Cancelled by the guest",
         note: null,
-        bookedLabel: "Thu, 3 Sept, 2026",
         actions: [],
       },
     ],
@@ -98,7 +102,7 @@ export const Empty: Story = {
 };
 
 export const Working: Story = {
-  args: { isBusy: true, busyId: "bk_01" },
+  args: { isBusy: true, busyId: "WS-HJN2NGS3UP" },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };
