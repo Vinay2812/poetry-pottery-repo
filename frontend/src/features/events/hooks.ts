@@ -2,9 +2,15 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client/react";
 import {
   CancelRegistrationDocument,
   EventsDocument,
@@ -14,6 +20,16 @@ import {
   RegistrationDocument,
 } from "@/graphql/generated/graphql";
 
+import {
+  abandonPage,
+  dropTrail,
+  joinPages,
+  type PageTrails,
+  settlePage,
+  startPage,
+  toNextPageNumber,
+  toPageTrail,
+} from "@/lib/page-trail";
 import { toPageTurn } from "@/lib/page-turn";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
@@ -26,6 +42,8 @@ import {
   toEventsFilterKey,
   toRegistrationPath,
 } from "@/features/events/types";
+
+type EventsPage = EventsQuery["events"];
 
 interface ReserveRequest {
   eventId: number;
@@ -43,56 +61,91 @@ interface CancelRegistrationOptions {
   refresh?: () => Promise<unknown>;
 }
 
+// Apollo fetches page one through the query and each "show more" page on its own; the later
+// pages live in this hook's state per filter key, so they only ever join the list that asked.
 export function useEvents(
   filters: EventFilters,
-  initialEvents: EventsQuery["events"] | null = null,
+  initialEvents: EventsPage | null = null,
   initialFilterKey: string | null = null,
 ) {
+  const client = useApolloClient();
   const filterInput = toEventsFilterInput(filters, 1);
-  const { data, previousData, loading, error, fetchMore, refetch } = useQuery(
+  const filterKey = toEventsFilterKey(filterInput);
+  const [trails, setTrails] = useState<PageTrails<EventsPage>>({});
+  // Follows the filters at commit, before any page can land.
+  const latestKey = useRef(filterKey);
+  useLayoutEffect(() => {
+    latestKey.current = filterKey;
+  }, [filterKey]);
+  const { data, previousData, loading, error, refetch } = useQuery(
     EventsDocument,
     {
       variables: { filter: filterInput },
       notifyOnNetworkStatusChange: true,
     },
   );
+  const current = data?.events;
+  // Apollo's previous answer belongs to the last filters that had one, so it keeps their pages too.
+  const [answeredKey, setAnsweredKey] = useState(filterKey);
+  if (current !== undefined && answeredKey !== filterKey) {
+    setAnsweredKey(filterKey);
+  }
   // The server's first page covers the first load, but only while the filters still match it.
   const serverPage =
-    initialEvents && initialFilterKey === toEventsFilterKey(filterInput)
-      ? initialEvents
-      : undefined;
+    initialEvents && initialFilterKey === filterKey ? initialEvents : undefined;
+  const trail = toPageTrail(trails, filterKey);
   // Old results bridge a load, not a failure: they would sit under filters they do not match.
   const result =
-    data?.events ?? (error ? undefined : (previousData?.events ?? serverPage));
+    joinPages(current, trail) ??
+    (error
+      ? undefined
+      : (joinPages(previousData?.events, toPageTrail(trails, answeredKey)) ??
+        serverPage));
   const pageInfo = result?.page_info ?? null;
+  const isNextPageLoading = trail.next?.status === "loading";
 
-  // A failed "show more" leaves the cards as they were, so only this hook can say it failed.
-  // It belongs to one set of filters; a new set starts clean.
-  const filterKey = toEventsFilterKey(filterInput);
-  const [failedMoreKey, setFailedMoreKey] = useState<string | null>(null);
   const loadMore = useCallback(() => {
-    if (!pageInfo?.has_more || loading) return;
-    setFailedMoreKey(null);
-    fetchMore({
-      variables: { filter: toEventsFilterInput(filters, pageInfo.page + 1) },
-      updateQuery: (previous, { fetchMoreResult }) => ({
-        events: {
-          ...fetchMoreResult.events,
-          items: [...previous.events.items, ...fetchMoreResult.events.items],
-        },
-      }),
-    }).catch(() => setFailedMoreKey(filterKey));
-  }, [fetchMore, filterKey, filters, loading, pageInfo]);
+    const page = toNextPageNumber(current, toPageTrail(trails, filterKey));
+    if (page === null || loading || error) return;
+    const key = filterKey;
+    if (toPageTrail(trails, key).next?.status === "loading") return;
+    setTrails((all) => startPage(all, key, page));
+    client
+      .query({
+        query: EventsDocument,
+        variables: { filter: toEventsFilterInput(filters, page) },
+        fetchPolicy: "network-only",
+      })
+      .then(
+        ({ data: answer }) => answer?.events ?? null,
+        () => null,
+      )
+      // Only the list still on screen takes the page; one that lands under other filters is let go.
+      .then((answer) =>
+        setTrails((all) =>
+          latestKey.current === key
+            ? settlePage(all, key, page, answer)
+            : abandonPage(all, key, page),
+        ),
+      );
+  }, [client, current, error, filterKey, filters, loading, trails]);
+
+  // Page one reads again, so the pages after it start again from the fresh answer.
+  const retry = useCallback(() => {
+    setTrails((all) => dropTrail(all, filterKey));
+    return refetch();
+  }, [filterKey, refetch]);
 
   return {
     events: result?.items ?? [],
     pageInfo,
     isInitialLoading: loading && !result,
-    isFetchingMore: loading && Boolean(result),
+    // The button waits on a next page, and on new filters still loading under the old cards.
+    isFetchingMore: isNextPageLoading || (loading && Boolean(result)),
     hasError: Boolean(error) && !result,
-    hasMoreFailed: failedMoreKey === filterKey,
+    hasMoreFailed: trail.next?.status === "failed",
     loadMore,
-    refetch,
+    refetch: retry,
   };
 }
 
