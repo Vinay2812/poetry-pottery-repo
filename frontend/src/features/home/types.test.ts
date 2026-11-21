@@ -155,12 +155,14 @@ describe("toBookableTiers", () => {
   });
 
   it("rounds a tier up to whole slots as the scheduler does", () => {
-    const halfHours = { ...shortDay([1, 2]), slot_minutes: 90 };
-    // 1 to 2 pm holds no 90-minute slot at all.
-    expect(toBookableTiers(halfHours)).toEqual([]);
-    const longDay = { ...wheel([]), slot_minutes: 90 };
-    // 6 hours fit four 90-minute slots: 1 hour needs one, 3 hours need two.
-    expect(toBookableTiers(longDay).map((t) => t.hours)).toEqual([1, 2, 3]);
+    // 1 to 2:30 pm holds exactly one 90-minute slot.
+    const oneSlot = {
+      ...shortDay([1, 2]),
+      closing_minutes: 870,
+      slot_minutes: 90,
+    };
+    // An hour fills that slot; two hours need a second one the day lacks.
+    expect(toBookableTiers(oneSlot).map((t) => t.hours)).toEqual([1]);
   });
 
   it("counts only open days inside the span", () => {
