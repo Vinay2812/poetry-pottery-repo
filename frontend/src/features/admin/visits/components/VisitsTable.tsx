@@ -61,11 +61,11 @@ export function VisitsTable({
             </td>
             <td className={ADMIN_TD}>
               {row.name}
-              <span className="block text-[11px] text-muted-foreground tnum">
+              <span className="block text-[12px] text-muted-foreground tnum">
                 {row.phone}
               </span>
               {row.customerEmail !== null && (
-                <span className="block text-[11px] text-muted-foreground">
+                <span className="block text-[12px] wrap-anywhere text-muted-foreground">
                   {row.customerEmail}
                 </span>
               )}
@@ -80,15 +80,17 @@ export function VisitsTable({
               />
             </td>
             <td className={ADMIN_TD}>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={busyId === row.id || !canCancelVisit(row.cancelledAt)}
-                onClick={() => onCancel(row.id)}
-              >
-                Cancel
-              </Button>
+              {canCancelVisit(row.cancelledAt) && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={busyId === row.id}
+                  onClick={() => onCancel(row.id)}
+                >
+                  Cancel
+                </Button>
+              )}
             </td>
           </tr>
         ))}
