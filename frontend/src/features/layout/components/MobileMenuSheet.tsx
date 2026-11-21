@@ -110,7 +110,7 @@ export function MobileMenuSheet({
                 onClick={onNavigate}
                 className={cn(ROW_CLASS, "text-muted-foreground")}
               >
-                Your cart
+                Cart
               </Link>
             </li>
             {isSignedIn && (
