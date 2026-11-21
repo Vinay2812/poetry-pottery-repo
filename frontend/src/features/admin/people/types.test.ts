@@ -7,6 +7,7 @@ import {
   applyPersonRolePatch,
   describeCurrentRole,
   describeRoleChange,
+  describeRoleOffer,
   roleTone,
   toInitials,
   toOppositeRole,
@@ -83,10 +84,21 @@ describe("roleTone", () => {
 describe("describeCurrentRole", () => {
   it("keeps the article right for both roles", () => {
     expect(describeCurrentRole(UserRole.Admin)).toBe(
-      "They are an admin today.",
+      "They are an admin and can open the studio admin.",
     );
     expect(describeCurrentRole(UserRole.User)).toBe(
-      "They are a customer today.",
+      "They are a customer and cannot open the studio admin.",
+    );
+  });
+});
+
+describe("describeRoleOffer", () => {
+  it("says only what the change would do", () => {
+    expect(describeRoleOffer(UserRole.Admin)).toBe(
+      "Making them an admin lets them in.",
+    );
+    expect(describeRoleOffer(UserRole.User)).toBe(
+      "Making them a customer takes that away.",
     );
   });
 });

@@ -27,6 +27,7 @@ import {
   applyPersonRolePatch,
   describeCurrentRole,
   describeRoleChange,
+  describeRoleOffer,
   isOnlyAdmin,
   ONLY_ADMIN_NOTE,
   roleTone,
@@ -151,7 +152,7 @@ export function AdminPersonDetailContainer({
       <section className="border-t border-ash pt-6">
         <AdminPersonRole
           currentRoleSentence={describeCurrentRole(optimisticPerson.role)}
-          explanation={describeRoleChange(nextRole)}
+          explanation={describeRoleOffer(nextRole)}
           actionLabel={toRoleConfirmLabel(nextRole)}
           isBusy={isSaving}
           isDisabled={isLastAdmin}

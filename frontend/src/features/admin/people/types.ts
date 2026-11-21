@@ -53,8 +53,15 @@ export function roleTone(role: UserRole): AdminStatusTone {
 /** "Admin" needs "an", so the whole sentence is built here rather than glued in the view. */
 export function describeCurrentRole(role: UserRole): string {
   return role === UserRole.Admin
-    ? "They are an admin today."
-    : "They are a customer today.";
+    ? "They are an admin and can open the studio admin."
+    : "They are a customer and cannot open the studio admin.";
+}
+
+/** The page reads the current role first, so the offer only says what would change. */
+export function describeRoleOffer(nextRole: UserRole): string {
+  return nextRole === UserRole.Admin
+    ? "Making them an admin lets them in."
+    : "Making them a customer takes that away.";
 }
 
 /** The one sentence the confirm dialog needs: what this change actually does. */
