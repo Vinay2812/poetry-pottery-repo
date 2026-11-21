@@ -3,7 +3,7 @@ import type { UseFormRegisterReturn } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-import { AdminField } from "@/features/admin/ui";
+import { AdminField, adminFieldMessageId } from "@/features/admin/ui";
 
 export interface ContentTextFieldProps {
   id: string;
@@ -23,6 +23,7 @@ export function ContentTextField({
   isMultiline,
   registration,
 }: ContentTextFieldProps) {
+  const describedBy = adminFieldMessageId(id, hint, error);
   return (
     <AdminField id={id} label={label} hint={hint} error={error}>
       {isMultiline ? (
@@ -30,6 +31,7 @@ export function ContentTextField({
           id={id}
           className="min-h-24 text-[13px] md:text-[13px]"
           aria-invalid={Boolean(error)}
+          aria-describedby={describedBy}
           {...registration}
         />
       ) : (
@@ -37,6 +39,7 @@ export function ContentTextField({
           id={id}
           className="h-9 text-[13px] md:text-[13px]"
           aria-invalid={Boolean(error)}
+          aria-describedby={describedBy}
           {...registration}
         />
       )}

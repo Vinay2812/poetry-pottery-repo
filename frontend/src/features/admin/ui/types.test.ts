@@ -7,6 +7,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import {
+  adminFieldMessageId,
   enumOptions,
   eventStatusTone,
   fromDateTimeLocal,
@@ -151,5 +152,20 @@ describe("toPreviewColour", () => {
     expect(toPreviewColour("#4F6")).toBeNull();
     expect(toPreviewColour("")).toBeNull();
     expect(toPreviewColour("sage")).toBeNull();
+  });
+});
+
+describe("adminFieldMessageId", () => {
+  it("points at the line under the field when there is one", () => {
+    expect(adminFieldMessageId("email", "Ten digits.", undefined)).toBe(
+      "email-message",
+    );
+    expect(adminFieldMessageId("email", null, "Required")).toBe(
+      "email-message",
+    );
+  });
+
+  it("points nowhere when the field has no line under it", () => {
+    expect(adminFieldMessageId("email", null, undefined)).toBeUndefined();
   });
 });

@@ -27,6 +27,7 @@ export {
 } from "@/features/admin/ui/components/AdminTableFrame";
 export { AdminToolbar } from "@/features/admin/ui/components/AdminToolbar";
 export {
+  adminFieldMessageId,
   enumOptions,
   eventStatusTone,
   fromDateTimeLocal,

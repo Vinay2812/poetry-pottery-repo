@@ -123,3 +123,12 @@ export function toPreviewColour(value: string): string | null {
   const trimmed = value.trim();
   return HEX_COLOUR.test(trimmed) ? trimmed : null;
 }
+
+/** The id of the hint or error under a field, for the control's aria-describedby. */
+export function adminFieldMessageId(
+  id: string,
+  hint: string | null,
+  error: string | undefined,
+): string | undefined {
+  return hint || error ? `${id}-message` : undefined;
+}
