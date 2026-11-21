@@ -1,12 +1,17 @@
 import { ConflictException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { EventStatus, Prisma, RegistrationStatus } from "@prisma/client";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MailService } from "@/mail/mail.service";
 import { PrismaService } from "@/prisma/prisma.service";
 import { SearchService } from "@/features/search/search.service";
-import { EventsService, eventWhenWhere, isPastEvent } from "./events.service";
+import {
+  EventsService,
+  eventWhenWhere,
+  isPastEvent,
+  splitPage,
+} from "./events.service";
 import { EventWhen } from "./events.type";
 
 const containing = (value: Record<string, unknown>): unknown =>
@@ -154,6 +159,39 @@ describe("event helpers", () => {
   });
 });
 
+describe("splitPage", () => {
+  const page = (number: number) => ({
+    page: number,
+    limit: 12,
+    skip: (number - 1) * 12,
+  });
+
+  it("fills a page from the first list, then tops it up from the second", () => {
+    expect(splitPage(page(1), 3)).toEqual({
+      first: { skip: 0, take: 3 },
+      second: { skip: 0, take: 9 },
+    });
+  });
+
+  it("picks the second list up where the first page left it", () => {
+    expect(splitPage(page(2), 3)).toEqual({
+      first: { skip: 3, take: 0 },
+      second: { skip: 9, take: 12 },
+    });
+  });
+
+  it("stays in the first list while it still has a full page", () => {
+    expect(splitPage(page(1), 30)).toEqual({
+      first: { skip: 0, take: 12 },
+      second: { skip: 0, take: 0 },
+    });
+    expect(splitPage(page(3), 30)).toEqual({
+      first: { skip: 24, take: 6 },
+      second: { skip: 0, take: 6 },
+    });
+  });
+});
+
 describe("EventsService", () => {
   let service: EventsService;
 
@@ -178,6 +216,87 @@ describe("EventsService", () => {
       ],
     }).compile();
     service = moduleRef.get(EventsService);
+  });
+
+  describe("myRegistrations", () => {
+    const ahead = Array.from({ length: 3 }, (_, index) =>
+      registrationRow({ id: `EV-A${index + 1}` }),
+    );
+    const behind = Array.from({ length: 14 }, (_, index) =>
+      registrationRow({
+        id: `EV-P${index + 1}`,
+        status: RegistrationStatus.CONFIRMED,
+        event: eventRow({ status: EventStatus.COMPLETED }),
+      }),
+    );
+    type Query = {
+      where: Record<string, unknown>;
+      skip: number;
+      take: number;
+    };
+    const isBehind = (query: { where: Record<string, unknown> }) =>
+      "NOT" in query.where;
+
+    beforeEach(() => {
+      prismaMock.eventRegistration.count.mockImplementation(
+        (query: { where: Record<string, unknown> }) =>
+          Promise.resolve(isBehind(query) ? behind.length : ahead.length),
+      );
+      prismaMock.eventRegistration.findMany.mockImplementation((query: Query) =>
+        Promise.resolve(
+          (isBehind(query) ? behind : ahead).slice(
+            query.skip,
+            query.skip + query.take,
+          ),
+        ),
+      );
+    });
+
+    // clearAllMocks keeps implementations, so these would leak into later tests.
+    afterEach(() => {
+      prismaMock.eventRegistration.count.mockReset();
+      prismaMock.eventRegistration.findMany.mockReset();
+    });
+
+    it("puts every booking still ahead on page one, then the record", async () => {
+      const first = await service.myRegistrations(7, 1, 12);
+
+      expect(first.items.map((item) => item.id)).toEqual([
+        "EV-A1",
+        "EV-A2",
+        "EV-A3",
+        ...behind.slice(0, 9).map((row) => row.id),
+      ]);
+      expect(first.page_info).toEqual({
+        total: 17,
+        page: 1,
+        limit: 12,
+        has_more: true,
+      });
+      expect(prismaMock.eventRegistration.findMany).toHaveBeenCalledWith(
+        containing({
+          orderBy: [{ event: { starts_at: "asc" } }, { id: "asc" }],
+        }),
+      );
+    });
+
+    it("carries on through the record across the page boundary", async () => {
+      const second = await service.myRegistrations(7, 2, 12);
+
+      expect(second.items.map((item) => item.id)).toEqual(
+        behind.slice(9).map((row) => row.id),
+      );
+      expect(second.page_info.has_more).toBe(false);
+      // Page two never reads the ahead list, which page one already used up.
+      expect(prismaMock.eventRegistration.findMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.eventRegistration.findMany).toHaveBeenCalledWith(
+        containing({
+          orderBy: [{ event: { starts_at: "desc" } }, { id: "asc" }],
+          skip: 9,
+          take: 12,
+        }),
+      );
+    });
   });
 
   it("reads a visitor's bookings for many events in one query, null where there is none", async () => {
