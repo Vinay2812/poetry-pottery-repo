@@ -44,6 +44,8 @@ export function canFeature(isActive: boolean, isFeatured: boolean): boolean {
 
 export const LIVE_BLOCKED_NOTE = "Add stock first, or mark it made to order";
 
+export const FEATURE_BLOCKED_NOTE = "Put it back on the shelf first";
+
 export const NEW_FEATURE_BLOCKED_NOTE =
   "Only a piece on the shelf can be on the home page";
 
