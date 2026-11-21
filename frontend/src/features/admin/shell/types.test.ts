@@ -4,6 +4,7 @@ import {
   applyQueryPatch,
   formatEnumLabel,
   formatRange,
+  toPreviousPage,
   isNavLinkActive,
   readPage,
   readQueryValues,
@@ -95,5 +96,21 @@ describe("formatRange", () => {
   it("describes the slice on screen", () => {
     expect(formatRange(1, 20, 132)).toBe("1–20 of 132");
     expect(formatRange(7, 20, 132)).toBe("121–132 of 132");
+  });
+
+  it("has no count line for an empty list", () => {
+    expect(formatRange(1, 20, 0)).toBeNull();
+    expect(formatRange(3, 20, 0)).toBeNull();
+  });
+});
+
+describe("toPreviousPage", () => {
+  it("steps back one page", () => {
+    expect(toPreviousPage(4, 132)).toBe(3);
+    expect(toPreviousPage(1, 132)).toBe(1);
+  });
+
+  it("goes back to the start from an empty later page", () => {
+    expect(toPreviousPage(3, 0)).toBe(1);
   });
 });

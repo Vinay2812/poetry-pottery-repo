@@ -35,6 +35,13 @@ export const LastPage: Story = { args: { page: 7, hasMore: false } };
 
 export const OnePage: Story = { args: { page: 1, total: 14, hasMore: false } };
 
+// Renders nothing: the table's own empty row says it.
+export const Empty: Story = { args: { page: 1, total: 0, hasMore: false } };
+
+export const EmptyLaterPage: Story = {
+  args: { page: 3, total: 0, hasMore: false },
+};
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };
