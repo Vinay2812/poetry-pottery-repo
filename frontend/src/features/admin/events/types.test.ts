@@ -190,11 +190,15 @@ describe("event actions", () => {
     expect(isDestructiveEventAction("unpublish")).toBe(false);
   });
 
-  it("darkens only the move that takes the evening forward", () => {
-    expect(isPrimaryEventAction("publish")).toBe(true);
-    expect(isPrimaryEventAction("complete")).toBe(true);
-    expect(isPrimaryEventAction("unpublish")).toBe(false);
-    expect(isPrimaryEventAction("cancel")).toBe(false);
+  it("darkens publish, and complete only once the evening has ended", () => {
+    const endsAt = "2026-11-23T18:08:00.000Z";
+    const before = new Date("2026-11-23T17:00:00.000Z");
+    const after = new Date("2026-11-23T19:00:00.000Z");
+    expect(isPrimaryEventAction("publish", endsAt, before)).toBe(true);
+    expect(isPrimaryEventAction("complete", endsAt, before)).toBe(false);
+    expect(isPrimaryEventAction("complete", endsAt, after)).toBe(true);
+    expect(isPrimaryEventAction("unpublish", endsAt, after)).toBe(false);
+    expect(isPrimaryEventAction("cancel", endsAt, after)).toBe(false);
   });
 
   it("says what happened afterwards", () => {

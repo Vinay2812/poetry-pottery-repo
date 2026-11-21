@@ -118,9 +118,14 @@ export function isDestructiveEventAction(action: EventAction): boolean {
   return action === "cancel";
 }
 
-/** One dark button per state: the move that takes the evening forward. */
-export function isPrimaryEventAction(action: EventAction): boolean {
-  return action === "publish" || action === "complete";
+/** One dark button at most: publishing a draft, or completing an evening once it has ended. */
+export function isPrimaryEventAction(
+  action: EventAction,
+  endsAt: string,
+  now: Date,
+): boolean {
+  if (action === "publish") return true;
+  return action === "complete" && Date.parse(endsAt) <= now.getTime();
 }
 
 export function isWorkshop(eventType: EventType): boolean {

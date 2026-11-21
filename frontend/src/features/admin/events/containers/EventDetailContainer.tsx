@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useOptimistic } from "react";
+import { useCallback, useOptimistic, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -36,6 +36,7 @@ import {
   eventActionDoneMessage,
   eventActionNeedsReason,
   eventActionStatus,
+  isPrimaryEventAction,
   toEventFormValues,
 } from "@/features/admin/events/types";
 
@@ -56,6 +57,8 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
     DuplicateEventDocument,
   );
   const router = useRouter();
+  // Read once per visit; the page is reopened long before "has it ended" drifts.
+  const [now] = useState(() => new Date());
 
   const handleDuplicate = useCallback(async () => {
     try {
@@ -136,6 +139,11 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
             statusLabel={formatEnumLabel(status)}
             statusTone={eventStatusTone(status)}
             actions={allowedEventActions(status)}
+            primaryAction={
+              allowedEventActions(status).find((action) =>
+                isPrimaryEventAction(action, event.ends_at, now),
+              ) ?? null
+            }
             busyAction={move.pending}
             isDuplicating={isDuplicating}
             onAction={move.start}
