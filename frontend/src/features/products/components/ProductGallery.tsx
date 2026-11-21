@@ -96,7 +96,7 @@ export function ProductGallery({ images, name, overlay }: ProductGalleryProps) {
                   fill
                   loading={index === 0 ? "eager" : undefined}
                   fetchPriority={index === 0 ? "high" : undefined}
-                  sizes="(min-width: 1024px) 50vw, 100vw"
+                  sizes="(min-width: 768px) 50vw, 100vw"
                   className={cn(
                     "object-cover",
                     index === 0 && "animate-clip-reveal",
