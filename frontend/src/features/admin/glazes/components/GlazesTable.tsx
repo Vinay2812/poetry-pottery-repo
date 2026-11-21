@@ -101,6 +101,7 @@ export function GlazesTable({
                     variant="secondary"
                     size="sm"
                     disabled={isEditorOpen}
+                    aria-label={`Edit ${row.name}`}
                     onClick={() => onEdit(row.id)}
                   >
                     Edit
@@ -112,6 +113,7 @@ export function GlazesTable({
                       variant="ghost"
                       size="sm"
                       disabled={isEditorOpen}
+                      aria-label={`Delete ${row.name}`}
                       onClick={() => onDelete(row.id)}
                     >
                       Delete
