@@ -23,7 +23,8 @@ export interface TimelineStep {
 export interface TimelineInput<Key extends string> {
   stages: readonly TimelineStage<Key>[];
   status: Key;
-  dates: Readonly<Record<string, string | null>>;
+  // Keyed by the same status enum as the stages, so a misspelt key fails to compile.
+  dates: Readonly<Partial<Record<Key, string | null>>>;
   isClosed: boolean;
 }
 

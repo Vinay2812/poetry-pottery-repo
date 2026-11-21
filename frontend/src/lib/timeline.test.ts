@@ -27,7 +27,7 @@ const STAGES: TimelineStage<Status>[] = [
 
 const read = (
   status: Status,
-  dates: Record<string, string | null>,
+  dates: Partial<Record<Status, string | null>>,
   isClosed = false,
 ) =>
   toTimelineSteps({ stages: STAGES, status, dates, isClosed }).map((step) => [

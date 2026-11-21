@@ -103,18 +103,18 @@ export function OrderDetailContainer({
     );
   }
 
-  const dates: Record<string, string | null> = {
-    PENDING: formatDateTime(optimisticOrder.created_at),
-    CONFIRMED: optimisticOrder.confirmed_at
+  const dates: Partial<Record<OrderStatus, string | null>> = {
+    [OrderStatus.Pending]: formatDateTime(optimisticOrder.created_at),
+    [OrderStatus.Confirmed]: optimisticOrder.confirmed_at
       ? formatDateTime(optimisticOrder.confirmed_at)
       : null,
-    PAID: optimisticOrder.paid_at
+    [OrderStatus.Paid]: optimisticOrder.paid_at
       ? formatDateTime(optimisticOrder.paid_at)
       : null,
-    SHIPPED: optimisticOrder.shipped_at
+    [OrderStatus.Shipped]: optimisticOrder.shipped_at
       ? formatDateTime(optimisticOrder.shipped_at)
       : null,
-    DELIVERED: optimisticOrder.delivered_at
+    [OrderStatus.Delivered]: optimisticOrder.delivered_at
       ? formatDateTime(optimisticOrder.delivered_at)
       : null,
   };

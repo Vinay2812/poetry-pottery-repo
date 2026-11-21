@@ -3,6 +3,8 @@
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 
+import { RegistrationStatus } from "@/graphql/generated/graphql";
+
 import { formatDateTime, formatInr, pluralize } from "@/lib/format";
 
 import { PageShell } from "@/components/layout/PageShell";
@@ -146,12 +148,12 @@ export function BookingDetailContainer({
     );
   }
 
-  const dates: Record<string, string | null> = {
-    PENDING: formatDateTime(optimisticBooking.created_at),
-    APPROVED: optimisticBooking.approved_at
+  const dates: Partial<Record<RegistrationStatus, string | null>> = {
+    [RegistrationStatus.Pending]: formatDateTime(optimisticBooking.created_at),
+    [RegistrationStatus.Approved]: optimisticBooking.approved_at
       ? formatDateTime(optimisticBooking.approved_at)
       : null,
-    CONFIRMED: optimisticBooking.confirmed_at
+    [RegistrationStatus.Confirmed]: optimisticBooking.confirmed_at
       ? formatDateTime(optimisticBooking.confirmed_at)
       : null,
   };

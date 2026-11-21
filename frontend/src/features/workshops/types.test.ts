@@ -278,7 +278,7 @@ describe("booking status helpers", () => {
 
   const readTimeline = (
     status: RegistrationStatus,
-    dates: Record<string, string | null>,
+    dates: Partial<Record<RegistrationStatus, string | null>>,
     isClosed = false,
   ) =>
     toTimelineSteps({ stages: BOOKING_STAGES, status, dates, isClosed }).map(
