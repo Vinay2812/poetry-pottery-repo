@@ -140,23 +140,26 @@ export function BookingCalendar({
       {/* The rule that closes days off is on the calendar, not only in a tooltip. */}
       {notice && <p className="text-[13px] text-muted-foreground">{notice}</p>}
 
-      <div className="grid grid-cols-7 border-t border-ash">
-        {WEEKDAY_LABELS.map((label) => (
-          <span
-            key={label}
-            className="py-2 text-center text-[11px] tracking-[0.18em] text-muted-foreground uppercase"
-          >
-            {label}
-          </span>
-        ))}
-      </div>
+      {/* Weekday names head a grid; with no grid to head they are dropped. */}
+      {!hasError && (
+        <div className="grid grid-cols-7 border-t border-ash">
+          {WEEKDAY_LABELS.map((label) => (
+            <span
+              key={label}
+              className="py-2 text-center text-[11px] tracking-[0.18em] text-muted-foreground uppercase"
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* The month and its buttons stay put while a month loads, so keyboard focus is kept. */}
       {hasError ? (
         // Without availability no day can be called closed or full, so the month is left blank.
         <div
           role="status"
-          className="flex flex-col items-start gap-2 border-b border-ash py-8"
+          className="flex flex-col items-start gap-2 border-y border-ash py-8"
         >
           <p className="text-[15px] text-muted-foreground">
             Availability didn&apos;t load.
