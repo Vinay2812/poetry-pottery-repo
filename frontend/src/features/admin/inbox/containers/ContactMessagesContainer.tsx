@@ -146,6 +146,7 @@ export function ContactMessagesContainer() {
         title="Delete this message?"
         description="It leaves the inbox for good. This cannot be undone."
         confirmLabel="Delete message"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={busyId !== null && busyId === pendingDeleteId}
         onConfirm={handleConfirmDelete}

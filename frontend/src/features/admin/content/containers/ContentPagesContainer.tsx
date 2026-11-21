@@ -124,6 +124,7 @@ export function ContentPagesContainer() {
         title="Delete this page"
         description={`/${pendingSlug ?? ""} will stop working on the site. This cannot be undone.`}
         confirmLabel="Delete page"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={busySlug !== null}
         onConfirm={handleDelete}

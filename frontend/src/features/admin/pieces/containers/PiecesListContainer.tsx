@@ -305,6 +305,7 @@ export function PiecesListContainer() {
         title="Retire this piece?"
         description={`${retireRow?.name ?? "This piece"} comes off the shelf and moves to the archive. You can put it back later.`}
         confirmLabel="Retire"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={busyId === retireId}
         onConfirm={() => {

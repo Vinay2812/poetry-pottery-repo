@@ -188,6 +188,7 @@ export function WorkshopBlackoutsContainer({
         title="Reopen this stretch?"
         description="People will be able to book the wheel during it again."
         confirmLabel="Remove"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={busyId !== null}
         onConfirm={handleDelete}

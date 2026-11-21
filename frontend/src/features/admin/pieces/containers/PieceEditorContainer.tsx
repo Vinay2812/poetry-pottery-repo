@@ -453,6 +453,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
         title="Retire this piece?"
         description="It comes off the shelf and moves to the archive. You can put it back later."
         confirmLabel="Retire"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={isBusy}
         onConfirm={() => {
@@ -467,6 +468,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
         title="Leave without saving?"
         description="The changes on this page, photos included, are not saved yet."
         confirmLabel="Leave without saving"
+        cancelLabel="Keep editing"
         isDestructive
         isBusy={false}
         onConfirm={leave}

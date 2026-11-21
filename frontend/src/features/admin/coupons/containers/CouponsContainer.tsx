@@ -322,6 +322,7 @@ export function CouponsContainer() {
             : ""
         }
         confirmLabel="Delete"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={isDeleting}
         onConfirm={handleDeleteConfirm}

@@ -285,6 +285,7 @@ export function GlazesContainer() {
             : ""
         }
         confirmLabel="Delete"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={isDeleting}
         onConfirm={handleDeleteConfirm}

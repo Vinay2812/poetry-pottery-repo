@@ -182,6 +182,7 @@ export function ReviewsContainer() {
         title="Delete this review?"
         description="It leaves the storefront and this list for good. This cannot be undone."
         confirmLabel="Delete review"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={busyId !== null && busyId === pendingDeleteId}
         onConfirm={handleConfirmDelete}

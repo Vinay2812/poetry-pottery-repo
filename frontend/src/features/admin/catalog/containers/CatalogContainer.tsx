@@ -458,6 +458,7 @@ export function CatalogContainer() {
         }
         description={deleteDescription}
         confirmLabel="Delete"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={isDeleting}
         onConfirm={handleDeleteConfirm}
