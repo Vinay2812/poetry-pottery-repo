@@ -134,7 +134,7 @@ export const ORDER_STAGES: TimelineStage<OrderStatus>[] = [
     key: OrderStatus.Delivered,
     label: "Delivered",
     description: "Enjoy. Tell us how it looks in your home.",
-    upcoming: "Usually five to seven days after it ships.",
+    upcoming: "We mark it here once it reaches you.",
   },
 ];
 

@@ -120,13 +120,15 @@ export function OrderDetailContainer({
       : null,
   };
   const closed = isClosed(optimisticOrder.status);
+  const closedAt =
+    optimisticOrder.status === OrderStatus.Refunded
+      ? optimisticOrder.refunded_at
+      : optimisticOrder.cancelled_at;
   const isDelivered = optimisticOrder.status === OrderStatus.Delivered;
   const closedLabel = closed
     ? toClosedLabel(
         toStatusLabel(optimisticOrder.status),
-        optimisticOrder.cancelled_at
-          ? formatDateTime(optimisticOrder.cancelled_at)
-          : null,
+        closedAt ? formatDateTime(closedAt) : null,
         optimisticOrder.cancel_reason,
       )
     : null;
