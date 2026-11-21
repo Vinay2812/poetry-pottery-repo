@@ -148,6 +148,7 @@ export function ProductDetailContainer({
         capacityMl: product.capacity_ml,
         weightG: product.weight_g,
         isCustomizable: product.is_customizable,
+        isArchived: product.is_archived,
         sizeChoices: groups.flatMap((group) =>
           group.options.map((option) => option.name),
         ),

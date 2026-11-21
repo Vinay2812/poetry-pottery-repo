@@ -480,7 +480,17 @@ export interface PieceFacts {
   capacityMl: number | null;
   weightG: number | null;
   isCustomizable: boolean;
+  isArchived: boolean;
   sizeChoices: string[];
+}
+
+function toShipsIn(
+  isCustomizable: boolean,
+  isArchived: boolean,
+): string | null {
+  // An archived piece is not for sale, so it has nothing to ship.
+  if (isArchived) return null;
+  return isCustomizable ? "About ten days" : "Three working days";
 }
 
 // The kiln card: clay body, glaze and size always have something to say, the
@@ -498,10 +508,7 @@ export function toFactRows(facts: PieceFacts): FactRow[] {
     ["Capacity", formatCapacity(facts.capacityMl)],
     ["Weight", formatWeight(facts.weightG)],
     ["Made in", "Sangli, Maharashtra"],
-    [
-      "Ships in",
-      facts.isCustomizable ? "About ten days" : "Three working days",
-    ],
+    ["Ships in", toShipsIn(facts.isCustomizable, facts.isArchived)],
   ];
   return rows.flatMap(([label, value]) => (value ? [{ label, value }] : []));
 }

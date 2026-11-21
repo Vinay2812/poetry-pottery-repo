@@ -556,6 +556,7 @@ const FACTS: PieceFacts = {
   capacityMl: 250,
   weightG: 320,
   isCustomizable: false,
+  isArchived: false,
   sizeChoices: [],
 };
 
@@ -627,6 +628,15 @@ describe("toFactRows", () => {
     expect(rows).toContainEqual({
       label: "Ships in",
       value: "About ten days",
+    });
+  });
+
+  it("leaves shipping out for an archived piece that is no longer for sale", () => {
+    const rows = toFactRows({ ...FACTS, isArchived: true });
+    expect(rows.map((row) => row.label)).not.toContain("Ships in");
+    expect(rows).toContainEqual({
+      label: "Made in",
+      value: "Sangli, Maharashtra",
     });
   });
 });
