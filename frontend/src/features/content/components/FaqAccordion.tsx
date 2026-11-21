@@ -18,7 +18,7 @@ export interface FaqAccordionProps {
 }
 
 // Several answers can stay open, so opening one never yanks another shut under the reader.
-// No rule under the last question: the next section's top rule closes the group.
+// No rule under the last question: the next section's top rule, or the page's closing rule, ends the group.
 export function FaqAccordion({ idPrefix, items }: FaqAccordionProps) {
   return (
     <Accordion type="multiple" className="border-t border-ash">

@@ -64,7 +64,13 @@ export async function ContentPageContainer({
             }))}
           />
         )}
-        <div className="flex min-w-0 flex-col">
+        <div
+          className={cn(
+            "flex min-w-0 flex-col",
+            // The last FAQ group closes on the same rule that separates the groups above it.
+            isAccordion && sections.length > 0 && "border-b border-ash",
+          )}
+        >
           {sections.length === 0 && (
             <p className="text-[15px] text-muted-foreground">
               We are still writing this page. In the meantime,{" "}
