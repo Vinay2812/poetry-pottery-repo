@@ -647,7 +647,7 @@ describe("event registration templates", () => {
 
   it("writes one status mail per decision the studio takes", () => {
     const titles: [RegistrationStatus, string][] = [
-      [RegistrationStatus.APPROVED, "Your seat is held"],
+      [RegistrationStatus.APPROVED, "Your booking is approved"],
       [RegistrationStatus.CONFIRMED, "You are confirmed"],
       [RegistrationStatus.REJECTED, "We could not fit you in"],
       [RegistrationStatus.CANCELLED, "Booking cancelled"],
@@ -828,7 +828,7 @@ describe("workshop booking templates", () => {
 
   it("writes one status mail per decision the studio takes", () => {
     const titles: [RegistrationStatus, string][] = [
-      [RegistrationStatus.APPROVED, "Your wheel is held"],
+      [RegistrationStatus.APPROVED, "Your session is approved"],
       [RegistrationStatus.CONFIRMED, "You are confirmed"],
       [RegistrationStatus.REJECTED, "We could not fit you in"],
       [RegistrationStatus.CANCELLED, "Session cancelled"],
