@@ -310,35 +310,44 @@ export class WorkshopsService {
     // Two reads keep that order whole across pages, so page one always holds what is next.
     const ahead = { user_id: userId, ...aheadBookingWhere(now) };
     const behind = { user_id: userId, NOT: aheadBookingWhere(now) };
-    const [aheadTotal, behindTotal] = await Promise.all([
-      this.prisma.workshopBooking.count({ where: ahead }),
-      this.prisma.workshopBooking.count({ where: behind }),
-    ]);
-    const slices = splitPage(bounds, aheadTotal);
-    const [aheadRows, behindRows] = await Promise.all([
-      canReturnRows(slices.first, aheadTotal)
-        ? this.prisma.workshopBooking.findMany({
-            where: ahead,
-            include: bookingInclude,
-            orderBy: [{ starts_at: "asc" }, { id: "asc" }],
-            skip: slices.first.skip,
-            take: slices.first.take,
-          })
-        : [],
-      canReturnRows(slices.second, behindTotal)
-        ? this.prisma.workshopBooking.findMany({
-            where: behind,
-            include: bookingInclude,
-            orderBy: [{ starts_at: "desc" }, { id: "asc" }],
-            skip: slices.second.skip,
-            take: slices.second.take,
-          })
-        : [],
-    ]);
-    return {
-      items: [...aheadRows, ...behindRows].map((row) => toBooking(row, now)),
-      page_info: toPageInfo(bounds, aheadTotal + behindTotal),
-    };
+    // One snapshot for the counts and both reads, so a booking that moves in between
+    // cannot shift the page boundary inside a single answer.
+    return this.prisma.withTransaction(
+      async () => {
+        const [aheadTotal, behindTotal] = await Promise.all([
+          this.prisma.workshopBooking.count({ where: ahead }),
+          this.prisma.workshopBooking.count({ where: behind }),
+        ]);
+        const slices = splitPage(bounds, aheadTotal);
+        const [aheadRows, behindRows] = await Promise.all([
+          canReturnRows(slices.first, aheadTotal)
+            ? this.prisma.workshopBooking.findMany({
+                where: ahead,
+                include: bookingInclude,
+                orderBy: [{ starts_at: "asc" }, { id: "asc" }],
+                skip: slices.first.skip,
+                take: slices.first.take,
+              })
+            : [],
+          canReturnRows(slices.second, behindTotal)
+            ? this.prisma.workshopBooking.findMany({
+                where: behind,
+                include: bookingInclude,
+                orderBy: [{ starts_at: "desc" }, { id: "asc" }],
+                skip: slices.second.skip,
+                take: slices.second.take,
+              })
+            : [],
+        ]);
+        return {
+          items: [...aheadRows, ...behindRows].map((row) =>
+            toBooking(row, now),
+          ),
+          page_info: toPageInfo(bounds, aheadTotal + behindTotal),
+        };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   }
 
   async bookingById(userId: number, id: string): Promise<WorkshopBooking> {
