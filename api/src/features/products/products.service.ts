@@ -183,11 +183,25 @@ export class ProductsService {
       ? await this.search.rankProducts(term, SEARCH_CANDIDATES)
       : null;
 
+    // A search that finds nothing still lists every filter option, each counted at zero.
     if (rankedIds && rankedIds.length === 0) {
+      const none: Prisma.ProductWhereInput = { id: { in: [] } };
+      const facets = await this.facets({
+        categories: none,
+        collections: none,
+        materials: none,
+        glazes: none,
+        prices: none,
+      });
       return {
         items: [],
         page_info: toPageInfo(bounds, 0),
-        facets: emptyFacets(),
+        facets: {
+          ...facets,
+          active_count: 0,
+          archive_count: 0,
+          seconds_count: 0,
+        },
       };
     }
 
@@ -541,20 +555,6 @@ export class ProductsService {
       price_max: prices._max.price ?? 0,
     };
   }
-}
-
-function emptyFacets(): ProductFacets {
-  return {
-    categories: [],
-    collections: [],
-    materials: [],
-    glazes: [],
-    price_min: 0,
-    price_max: 0,
-    active_count: 0,
-    archive_count: 0,
-    seconds_count: 0,
-  };
 }
 
 function sortByRank<T extends { id: number }>(

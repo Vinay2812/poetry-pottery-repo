@@ -203,6 +203,45 @@ describe("ProductsService", () => {
     expect(prismaMock.product.findMany).not.toHaveBeenCalled();
   });
 
+  it("lists every filter option at zero when search matches nothing", async () => {
+    searchMock.rankProducts.mockResolvedValue([]);
+    prismaMock.category.findMany.mockResolvedValue([
+      { slug: "mugs", name: "Mugs", _count: { products: 0 } },
+    ]);
+    prismaMock.collection.findMany.mockResolvedValue([
+      { slug: "spring-2025", name: "Spring 2025", _count: { products: 0 } },
+    ]);
+    prismaMock.product.groupBy.mockImplementation(
+      (args: { _count?: unknown }) =>
+        Promise.resolve(args._count ? [] : [{ material: "Stoneware" }]),
+    );
+    prismaMock.glaze.findMany.mockResolvedValue([
+      { slug: "sage", name: "Sage", _count: { products: 0 } },
+    ]);
+
+    const result = await service.list({ search: "zzz" });
+
+    expect(result.facets).toEqual({
+      categories: [{ value: "mugs", label: "Mugs", count: 0 }],
+      collections: [{ value: "spring-2025", label: "Spring 2025", count: 0 }],
+      materials: [{ value: "Stoneware", label: "Stoneware", count: 0 }],
+      glazes: [{ value: "sage", label: "Sage", count: 0 }],
+      price_min: 0,
+      price_max: 0,
+      active_count: 0,
+      archive_count: 0,
+      seconds_count: 0,
+    });
+    // Every count runs against nothing, so no option reports a piece the search did not find.
+    expect(prismaMock.category.findMany).toHaveBeenCalledWith(
+      containing({
+        select: containing({
+          _count: { select: { products: { where: { id: { in: [] } } } } },
+        }),
+      }),
+    );
+  });
+
   it("counts a facet against the other filters but not itself", async () => {
     prismaMock.product.findMany.mockResolvedValue([]);
     prismaMock.category.findMany.mockResolvedValue([
