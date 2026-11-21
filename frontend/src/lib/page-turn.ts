@@ -19,6 +19,15 @@ export function toPageTurn(
   return { shownPage: requestedPage, failedPage: null };
 }
 
+// An empty page past the first when the list does hold records, e.g. ?page=99 from an old link.
+export function isPastLastPage(
+  page: number,
+  rowCount: number,
+  total: number | undefined,
+): boolean {
+  return page > 1 && rowCount === 0 && (total ?? 0) > 0;
+}
+
 // Anything that is not a whole page number past the first means the first page.
 export function toPageNumber(raw: string | null): number {
   const page = Number(raw);

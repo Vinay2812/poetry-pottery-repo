@@ -5,8 +5,9 @@ import { useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { PastLastPage } from "@/components/layout/PastLastPage";
 import { PageTurnFailed } from "@/components/layout/PageTurnFailed";
-import { PAGE_CODEC } from "@/lib/page-turn";
+import { isPastLastPage, PAGE_CODEC } from "@/lib/page-turn";
 import { useFocusAfterTurn } from "@/lib/use-focus-after-turn";
 import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
@@ -108,6 +109,12 @@ export function RegistrationsListContainer({
             Try again
           </Button>
         </div>
+      ) : isPastLastPage(page, registrations.length, pageInfo?.total) ? (
+        <PastLastPage
+          message="There are no events this far back."
+          actionLabel="See your latest events"
+          onLatest={() => handlePageChange(1)}
+        />
       ) : registrations.length === 0 ? (
         <EmptyRegistrations />
       ) : (

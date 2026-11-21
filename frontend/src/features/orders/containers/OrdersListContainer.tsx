@@ -6,9 +6,10 @@ import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadFailed } from "@/components/layout/LoadFailed";
 import { PageShell } from "@/components/layout/PageShell";
+import { PastLastPage } from "@/components/layout/PastLastPage";
 import { PageTurnFailed } from "@/components/layout/PageTurnFailed";
 import { formatDate } from "@/lib/format";
-import { PAGE_CODEC } from "@/lib/page-turn";
+import { isPastLastPage, PAGE_CODEC } from "@/lib/page-turn";
 import { useFocusAfterTurn } from "@/lib/use-focus-after-turn";
 import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
@@ -90,15 +91,12 @@ export function OrdersListContainer() {
           heading="Your orders did not load"
           onRetry={() => void refetch()}
         />
-      ) : orders.length === 0 && page > 1 ? (
-        <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
-          <p className="text-[15px] text-muted-foreground">
-            There are no orders this far back.
-          </p>
-          <Button variant="outline" onClick={() => handleTurnPage(1)}>
-            See your latest orders
-          </Button>
-        </div>
+      ) : isPastLastPage(page, orders.length, pageInfo?.total) ? (
+        <PastLastPage
+          message="There are no orders this far back."
+          actionLabel="See your latest orders"
+          onLatest={() => handleTurnPage(1)}
+        />
       ) : orders.length === 0 ? (
         <EmptyOrders />
       ) : (

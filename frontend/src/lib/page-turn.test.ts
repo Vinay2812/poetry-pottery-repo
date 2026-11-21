@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { PAGE_CODEC, toPageNumber, toPageTurn } from "./page-turn";
+import {
+  isPastLastPage,
+  PAGE_CODEC,
+  toPageNumber,
+  toPageTurn,
+} from "./page-turn";
 
 describe("toPageTurn", () => {
   it("names the requested page while it loads over the old rows", () => {
@@ -20,6 +25,19 @@ describe("toPageTurn", () => {
       shownPage: 1,
       failedPage: null,
     });
+  });
+});
+
+describe("isPastLastPage", () => {
+  it("is an empty later page of a list that has records", () => {
+    expect(isPastLastPage(99, 0, 12)).toBe(true);
+  });
+
+  it("is not a page with rows, the first page, or a list with none", () => {
+    expect(isPastLastPage(2, 4, 12)).toBe(false);
+    expect(isPastLastPage(1, 0, 12)).toBe(false);
+    expect(isPastLastPage(99, 0, 0)).toBe(false);
+    expect(isPastLastPage(99, 0, undefined)).toBe(false);
   });
 });
 

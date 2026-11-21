@@ -5,8 +5,9 @@ import { useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { PastLastPage } from "@/components/layout/PastLastPage";
 import { PageTurnFailed } from "@/components/layout/PageTurnFailed";
-import { PAGE_CODEC } from "@/lib/page-turn";
+import { isPastLastPage, PAGE_CODEC } from "@/lib/page-turn";
 import { useFocusAfterTurn } from "@/lib/use-focus-after-turn";
 import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
@@ -104,6 +105,12 @@ export function BookingsListContainer() {
             Try again
           </Button>
         </div>
+      ) : isPastLastPage(page, bookings.length, pageInfo?.total) ? (
+        <PastLastPage
+          message="There are no wheel sessions this far back."
+          actionLabel="See your latest wheel sessions"
+          onLatest={() => handlePageChange(1)}
+        />
       ) : bookings.length === 0 ? (
         <EmptyBookings />
       ) : (
