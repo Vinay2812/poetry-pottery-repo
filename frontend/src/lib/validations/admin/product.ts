@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { OptionGroupKind } from "@/graphql/generated/graphql";
 
+import { pluralize } from "@/lib/format";
+
 const MAX_CARE_NOTES = 2000;
 const MAX_MAKER_NOTE = 500;
 const MAX_DESCRIPTION = 4000;
@@ -152,7 +154,7 @@ export const productOptionSchema = z.object({
 export type ProductOptionFormValues = z.infer<typeof productOptionSchema>;
 
 // A direction and a count, because a phone's number pad has no minus key.
-export const stockAdjustSchema = z.object({
+const stockAdjustSchema = z.object({
   direction: z.enum(["add", "remove"]),
   count: z
     .number({ error: "Enter how many pieces" })
@@ -166,3 +168,16 @@ export const stockAdjustSchema = z.object({
 });
 
 export type StockAdjustFormValues = z.infer<typeof stockAdjustSchema>;
+
+// Built from the count in stock, so removing more than there is fails like any other field.
+export function stockAdjustSchemaFor(stock: number) {
+  return stockAdjustSchema.superRefine((values, context) => {
+    if (values.direction === "remove" && values.count > stock) {
+      context.addIssue({
+        code: "custom",
+        path: ["count"],
+        message: `Only ${pluralize(stock, "piece")} in stock to remove`,
+      });
+    }
+  });
+}

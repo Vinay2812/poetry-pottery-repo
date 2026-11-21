@@ -74,13 +74,14 @@ export function describeStockAfter(
   direction: StockDirection,
   count: number,
 ): string {
-  if (!Number.isInteger(count) || count <= 0) {
-    return `${pluralize(stock, "piece")} on the shelf now.`;
+  if (
+    !Number.isInteger(count) ||
+    count <= 0 ||
+    (direction === "remove" && count > stock)
+  ) {
+    return `${pluralize(stock, "piece")} in stock now.`;
   }
-  if (direction === "remove" && count > stock) {
-    return `Only ${pluralize(stock, "piece")} on the shelf to take off.`;
-  }
-  return `${stock} on the shelf becomes ${stock + toStockDelta(direction, count)}.`;
+  return `Stock goes from ${stock} to ${stock + toStockDelta(direction, count)}.`;
 }
 
 /** A count on a shelf is never negative, whatever a pending adjustment says. */

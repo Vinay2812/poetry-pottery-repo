@@ -428,22 +428,15 @@ describe("stock changes", () => {
   });
 
   it("previews the new count", () => {
-    expect(describeStockAfter(3, "add", 2)).toBe("3 on the shelf becomes 5.");
-    expect(describeStockAfter(3, "remove", 3)).toBe(
-      "3 on the shelf becomes 0.",
-    );
+    expect(describeStockAfter(3, "add", 2)).toBe("Stock goes from 3 to 5.");
+    expect(describeStockAfter(3, "remove", 3)).toBe("Stock goes from 3 to 0.");
   });
 
-  it("warns before taking off more than the shelf holds", () => {
-    expect(describeStockAfter(1, "remove", 2)).toBe(
-      "Only 1 piece on the shelf to take off.",
-    );
-  });
-
-  it("falls back to the current count while the box is empty", () => {
+  it("shows the current count while the box is empty or too high", () => {
     expect(describeStockAfter(4, "add", Number.NaN)).toBe(
-      "4 pieces on the shelf now.",
+      "4 pieces in stock now.",
     );
+    expect(describeStockAfter(1, "remove", 2)).toBe("1 piece in stock now.");
   });
 });
 

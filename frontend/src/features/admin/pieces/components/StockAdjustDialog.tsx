@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 import {
   type StockAdjustFormValues,
-  stockAdjustSchema,
+  stockAdjustSchemaFor,
 } from "@/lib/validations/admin/product";
 
 import { AdminField } from "@/features/admin/ui";
@@ -29,8 +29,8 @@ import {
 } from "@/features/admin/pieces/types";
 
 const DIRECTIONS: { value: StockDirection; label: string }[] = [
-  { value: "add", label: "Add to the shelf" },
-  { value: "remove", label: "Take off the shelf" },
+  { value: "add", label: "Add pieces" },
+  { value: "remove", label: "Remove pieces" },
 ];
 
 export interface StockAdjustDialogProps {
@@ -54,28 +54,21 @@ export function StockAdjustDialog({
     control,
     register,
     handleSubmit,
-    setError,
     formState: { errors },
   } = useForm<StockAdjustFormValues>({
-    resolver: zodResolver(stockAdjustSchema),
+    // The dialog remounts each time it opens, so the stock it was built from is current.
+    resolver: zodResolver(stockAdjustSchemaFor(stock)),
     defaultValues: { direction: "add", count: 1, reason: "" },
   });
 
   const direction = useWatch({ control, name: "direction" });
   const count = useWatch({ control, name: "count" });
 
-  const handleValid = (values: StockAdjustFormValues) => {
-    if (values.direction === "remove" && values.count > stock) {
-      setError("count", {
-        message: describeStockAfter(stock, values.direction, values.count),
-      });
-      return;
-    }
+  const handleValid = (values: StockAdjustFormValues) =>
     onSubmit(
       toStockDelta(values.direction, values.count),
       values.reason.trim(),
     );
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -90,7 +83,7 @@ export function StockAdjustDialog({
           onSubmit={handleSubmit(handleValid)}
         >
           <fieldset className="grid grid-cols-2 border border-ash">
-            <legend className="sr-only">Add or take off</legend>
+            <legend className="sr-only">Add or remove</legend>
             {DIRECTIONS.map((option) => (
               <label
                 key={option.value}
@@ -152,7 +145,7 @@ export function StockAdjustDialog({
               Cancel
             </Button>
             <Button type="submit" size="sm" disabled={isBusy}>
-              {isBusy ? "Saving…" : "Save the count"}
+              {isBusy ? "Saving…" : "Update stock"}
             </Button>
           </DialogFooter>
         </form>
