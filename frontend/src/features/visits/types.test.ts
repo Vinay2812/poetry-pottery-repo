@@ -8,8 +8,10 @@ import {
   toDateKey,
   toDayLabel,
   toDayNumber,
+  toDayOptions,
   toLongDayLabel,
   toWindowLabel,
+  toWindowOptions,
   windowsFor,
 } from "./types";
 
@@ -112,5 +114,24 @@ describe("toConfirmationLine", () => {
     ).toBe(
       "Thanks Maya, we have you down for 12:00–12:30 pm on Thursday, 17 September. Come to the gate and ring the bell.",
     );
+  });
+});
+
+describe("toDayOptions", () => {
+  it("labels each day and counts what is still free", () => {
+    expect(
+      toDayOptions([day("2026-09-17", ["2026-09-17T06:30:00.000Z"], 2)]),
+    ).toEqual([
+      { date: "2026-09-17", dayLabel: "Thu", dayNumber: "17", openCount: 1 },
+    ]);
+  });
+});
+
+describe("toWindowOptions", () => {
+  it("offers only free windows, labelled for the picker", () => {
+    const { windows } = day("2026-09-17", ["2026-09-17T06:30:00.000Z"], 2);
+    expect(toWindowOptions(windows)).toEqual([
+      { startsAt: "2026-09-17T06:30:00.000Z", label: "12:00–12:30 pm" },
+    ]);
   });
 });

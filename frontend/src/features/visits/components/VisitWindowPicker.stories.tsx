@@ -14,8 +14,6 @@ const WINDOWS = [
 ].map((label, index) => ({
   startsAt: `2026-09-19T0${index + 6}:30:00.000Z`,
   label,
-  isAvailable: true,
-  reason: null,
 }));
 
 const meta = {
@@ -47,15 +45,7 @@ export const OnePicked: Story = {
   args: { selectedStartsAt: WINDOWS[2]?.startsAt ?? null },
 };
 
-export const DayIsFull: Story = {
-  args: {
-    windows: WINDOWS.map((window) => ({
-      ...window,
-      isAvailable: false,
-      reason: "Fully booked",
-    })),
-  },
-};
+export const DayIsFull: Story = { args: { windows: [] } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

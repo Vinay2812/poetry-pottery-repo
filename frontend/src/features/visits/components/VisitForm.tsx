@@ -75,10 +75,13 @@ export function VisitForm({
       onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-4 border-t border-ash pt-6"
     >
-      {/* The line holds its height before a window is picked, so the fields never jump. */}
-      <p className="min-h-5 text-[15px]">
-        {pickedLabel ? `You are coming by ${pickedLabel}.` : null}
-      </p>
+      {pickedLabel ? (
+        <p className="text-[15px]">You are coming by {pickedLabel}.</p>
+      ) : (
+        <p className="text-[15px] text-muted-foreground">
+          Pick a day and a half hour above, then tell us who is coming.
+        </p>
+      )}
       <div className="grid gap-4 md:grid-cols-2">
         <TextField
           id="visit-name"
