@@ -20,8 +20,9 @@ export interface AddressCardProps {
   onMakeDefault: () => void;
 }
 
+// The padding gives each action a full-height tap target; the negative margin keeps the row tight.
 const TEXT_LINK =
-  "text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
+  "-my-2 py-2 text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
 
 export function AddressCard({
   name,
