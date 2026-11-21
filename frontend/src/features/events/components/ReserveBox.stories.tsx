@@ -67,6 +67,8 @@ export const PastWithPhotos: Story = {
   args: { state: "past", hasGallery: true },
 };
 
+export const UnderWay: Story = { args: { state: "started" } };
+
 export const CalledOff: Story = { args: { state: "cancelled" } };
 
 export const AlreadyBooked: Story = {

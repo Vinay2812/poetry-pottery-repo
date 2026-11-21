@@ -150,12 +150,22 @@ export function toEventFacts(event: EventFactsInput): EventFact[] {
   ];
 }
 
-export type ReserveState = "cancelled" | "booked" | "past" | "soldOut" | "open";
+// The API stops taking seats at the start time, so the page closes the box at the same moment.
+export function hasEventStarted(
+  startsAt: string | Date,
+  now: Date = new Date(),
+): boolean {
+  return now.getTime() >= new Date(startsAt).getTime();
+}
+
+export type ReserveState =
+  "cancelled" | "booked" | "past" | "started" | "soldOut" | "open";
 
 interface ReserveStateInput {
   isCancelled: boolean;
   hasBooking: boolean;
   isPast: boolean;
+  hasStarted: boolean;
   availableSeats: number;
 }
 
@@ -164,6 +174,7 @@ export function toReserveState(input: ReserveStateInput): ReserveState {
   if (input.isCancelled) return "cancelled";
   if (input.hasBooking) return "booked";
   if (input.isPast) return "past";
+  if (input.hasStarted) return "started";
   if (input.availableSeats <= 0) return "soldOut";
   return "open";
 }

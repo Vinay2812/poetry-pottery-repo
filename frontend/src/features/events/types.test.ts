@@ -30,6 +30,7 @@ import {
   toEventWhenRangeLabel,
   toEventFacts,
   toGalleryHeading,
+  hasEventStarted,
   toParagraphs,
   toRegistrationClosedLabel,
   toRegistrationFacts,
@@ -350,9 +351,17 @@ describe("event detail helpers", () => {
       isCancelled: false,
       hasBooking: false,
       isPast: false,
+      hasStarted: false,
       availableSeats: 3,
     };
     expect(toReserveState(open)).toBe("open");
+    expect(toReserveState({ ...open, hasStarted: true })).toBe("started");
+    expect(
+      toReserveState({ ...open, hasStarted: true, availableSeats: 0 }),
+    ).toBe("started");
+    expect(
+      toReserveState({ ...open, hasStarted: true, hasBooking: true }),
+    ).toBe("booked");
     expect(toReserveState({ ...open, availableSeats: 0 })).toBe("soldOut");
     expect(toReserveState({ ...open, isPast: true, availableSeats: 0 })).toBe(
       "past",
@@ -363,6 +372,16 @@ describe("event detail helpers", () => {
     expect(
       toReserveState({ ...open, hasBooking: true, isCancelled: true }),
     ).toBe("cancelled");
+  });
+
+  it("closes registration from the start time, as the API does", () => {
+    expect(
+      hasEventStarted(STARTS_AT, new Date("2026-09-19T09:29:59.000Z")),
+    ).toBe(false);
+    expect(hasEventStarted(STARTS_AT, new Date(STARTS_AT))).toBe(true);
+    expect(
+      hasEventStarted(STARTS_AT, new Date("2026-09-19T11:00:00.000Z")),
+    ).toBe(true);
   });
 
   it("asks for seats rather than selling them", () => {

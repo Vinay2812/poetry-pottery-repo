@@ -10,6 +10,7 @@ import { ReserveBox } from "@/features/events/components/ReserveBox";
 import { useRegisterForEvent } from "@/features/events/hooks";
 import {
   type EventDetailData,
+  hasEventStarted,
   isRegistrationClosed,
   MAX_SEATS,
   toEventFacts,
@@ -51,10 +52,12 @@ export function EventDetailContainer({
       ? event.my_registration
       : null;
   const isCancelled = event.status === EventStatus.Cancelled;
+  const hasStarted = hasEventStarted(event.starts_at);
   const reserveState = toReserveState({
     isCancelled,
     hasBooking: registration !== null,
     isPast: event.is_past,
+    hasStarted,
     availableSeats: event.available_seats,
   });
   // Photos are a record of the day, so they wait until it has happened.
@@ -90,7 +93,7 @@ export function EventDetailContainer({
         ) : null
       }
       // The policy is about seats on a date still to come.
-      policy={!event.is_past && !isCancelled ? <CancellationPolicy /> : null}
+      policy={!hasStarted && !isCancelled ? <CancellationPolicy /> : null}
       reserveBox={
         <ReserveBox
           state={reserveState}

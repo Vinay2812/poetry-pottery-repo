@@ -39,7 +39,7 @@ const STEPPER_BUTTON =
 const TEXT_LINK =
   "w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary";
 
-// One box for every state of a date: open, full, done, called off, or already yours.
+// One box for every state of a date: open, full, under way, done, called off, or already yours.
 export function ReserveBox({
   state,
   eventId,
@@ -60,7 +60,8 @@ export function ReserveBox({
   onNoteChange,
   onReserve,
 }: ReserveBoxProps) {
-  const isClosed = state === "cancelled" || state === "past";
+  const isClosed =
+    state === "cancelled" || state === "past" || state === "started";
   return (
     <section
       aria-label="Your seat"
@@ -99,6 +100,17 @@ export function ReserveBox({
           <p className="text-sm text-muted-foreground">
             This date is done.
             {hasGallery && " The photographs below are from the day."}
+          </p>
+          <Link href="/events" className={TEXT_LINK}>
+            See upcoming dates
+          </Link>
+        </div>
+      )}
+
+      {state === "started" && (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">
+            Registration closed when this one began.
           </p>
           <Link href="/events" className={TEXT_LINK}>
             See upcoming dates
