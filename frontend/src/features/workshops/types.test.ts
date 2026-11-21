@@ -128,7 +128,9 @@ describe("session helpers", () => {
 
   it("counts picked hours against the tier", () => {
     expect(formatPickedProgress(2, 3)).toBe("2 of 3 hours picked");
-    expect(formatPickedProgress(0, 1)).toBe("0 of 1 hour picked");
+    expect(formatPickedProgress(0, 1)).toBe("Pick 1 hour");
+    expect(formatPickedProgress(1, 1)).toBe("Your hour");
+    expect(formatPickedProgress(3, 3)).toBe("All 3 hours picked");
   });
 
   it("labels hours and groups them by day", () => {
@@ -147,19 +149,26 @@ describe("session helpers", () => {
       {
         dateKey: "2026-09-13",
         dayLabel: "Sun, 13 Sept",
-        timesLabel: "2–3 pm, 3–4 pm",
+        timesLabel: "2–4 pm",
       },
       { dateKey: "2026-09-15", dayLabel: "Tue, 15 Sept", timesLabel: "3–4 pm" },
     ]);
     expect(formatDayRange(slots, IST)).toBe("Sun, 13 Sept – Tue, 15 Sept");
     expect(toBookingWhenLines(slots, IST)).toEqual([
-      "Sun, 13 Sept · 2–3 pm, 3–4 pm",
+      "Sun, 13 Sept · 2–4 pm",
       "Tue, 15 Sept · 3–4 pm",
     ]);
-    expect(toBookingWhenLines(slots.slice(0, 2), IST)).toEqual([
-      "2–3 pm, 3–4 pm",
-    ]);
+    expect(toBookingWhenLines(slots.slice(0, 2), IST)).toEqual(["2–4 pm"]);
     expect(formatDayRange(slots.slice(0, 2), IST)).toBe("Sun, 13 Sept");
+  });
+
+  it("keeps hours with a gap between them apart", () => {
+    const slots = [
+      { starts_at: "2026-09-13T07:30:00.000Z", ends_at: "2026-09-13T08:30:00.000Z" },
+      { starts_at: "2026-09-13T08:30:00.000Z", ends_at: "2026-09-13T09:30:00.000Z" },
+      { starts_at: "2026-09-13T11:30:00.000Z", ends_at: "2026-09-13T12:30:00.000Z" },
+    ];
+    expect(toBookingWhenLines(slots, IST)).toEqual(["1–3 pm, 5–6 pm"]);
   });
 
   it("spells out both meridiems when an hour crosses noon", () => {
@@ -417,12 +426,12 @@ describe("toDayNote", () => {
     expect(
       toDayNote({
         ...day,
-        mutedReason: "Pick within 7 days of your first slot",
+        mutedReason: "Keep your hours within 7 days of the first one",
       }),
     ).toEqual({
       caption: "too far",
       shortCaption: "too far",
-      description: "pick within 7 days of your first slot",
+      description: "keep your hours within 7 days of the first one",
       isPickable: false,
     });
   });

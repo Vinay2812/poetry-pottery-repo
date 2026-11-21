@@ -17,7 +17,7 @@ export type WorkshopSlotData = WorkshopDayData["slots"][number];
 export type BookingData = WorkshopBookingFieldsFragment;
 
 export const SESSION_NOTE =
-  "Everything you make is fired and glazed by us, ready in about two weeks";
+  "Everything you make is fired and glazed by us, ready in about two weeks.";
 
 export interface SessionFact {
   label: string;
@@ -107,24 +107,36 @@ interface SlotDayGroup {
   timesLabel: string;
 }
 
-// Booked hours read as one line per day: "Sat 20 Sep · 3–4 pm, 4–5 pm".
+// Booked hours read as one line per day, back-to-back hours as one stretch: "Sat 20 Sep · 1–3 pm, 5–6 pm".
 export function groupSlotsByDay(
   slots: SlotInterval[],
   timezone: string,
 ): SlotDayGroup[] {
-  const groups = new Map<string, string[]>();
+  const groups = new Map<string, SlotInterval[]>();
   for (const slot of [...slots].sort((a, b) =>
     a.starts_at.localeCompare(b.starts_at),
   )) {
     const dateKey = toDateKey(slot.starts_at, timezone);
-    const times = groups.get(dateKey) ?? [];
-    times.push(formatHourRange(slot.starts_at, slot.ends_at, timezone));
-    groups.set(dateKey, times);
+    const stretches = groups.get(dateKey) ?? [];
+    const last = stretches[stretches.length - 1];
+    if (
+      last &&
+      new Date(last.ends_at).getTime() === new Date(slot.starts_at).getTime()
+    ) {
+      stretches[stretches.length - 1] = { ...last, ends_at: slot.ends_at };
+    } else {
+      stretches.push({ starts_at: slot.starts_at, ends_at: slot.ends_at });
+    }
+    groups.set(dateKey, stretches);
   }
-  return [...groups.entries()].map(([dateKey, times]) => ({
+  return [...groups.entries()].map(([dateKey, stretches]) => ({
     dateKey,
     dayLabel: formatDayLabel(`${dateKey}T12:00:00.000Z`, "UTC"),
-    timesLabel: times.join(", "),
+    timesLabel: stretches
+      .map((stretch) =>
+        formatHourRange(stretch.starts_at, stretch.ends_at, timezone),
+      )
+      .join(", "),
   }));
 }
 
@@ -227,7 +239,11 @@ export const SUGGESTED_NOTE =
   "Picked for you: the earliest free hours. Change any of them.";
 
 export function formatPickedProgress(picked: number, needed: number): string {
-  return `${picked} of ${needed} ${needed === 1 ? "hour" : "hours"} picked`;
+  if (picked === 0) return `Pick ${formatHours(needed)}`;
+  if (picked >= needed) {
+    return needed === 1 ? "Your hour" : `All ${needed} hours picked`;
+  }
+  return `${picked} of ${needed} hours picked`;
 }
 
 interface WhatsAppSessionInput {
