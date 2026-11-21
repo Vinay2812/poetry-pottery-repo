@@ -78,14 +78,14 @@ export function WishlistProvider({ children }: PropsWithChildren) {
         },
       }),
     refresh: () => client.refetchQueries({ include: WISHLIST_QUERIES }),
-    messages: { success: null, failure: "Could not update your wishlist" },
+    messages: { success: null, failure: "Could not update your saved pieces" },
     onSuccess: ({ data: reply }, change) => {
       const isSaved =
         reply?.toggleWishlist.is_wishlisted ?? change.isWishlisted;
       toast(
         isSaved
-          ? `${change.productName} saved to your wishlist`
-          : `${change.productName} removed from your wishlist`,
+          ? `${change.productName} added to your saved pieces`
+          : `${change.productName} removed from your saved pieces`,
       );
     },
   });
