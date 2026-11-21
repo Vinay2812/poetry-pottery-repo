@@ -389,6 +389,14 @@ export function toBookingGroup(
   return last && new Date(last) > now ? "upcoming" : "past";
 }
 
+// The "we have your request" note is only true until the studio answers, however the page was reached.
+export function isRequestBannerShown(
+  isJustPlaced: boolean,
+  status: RegistrationStatus,
+): boolean {
+  return isJustPlaced && status === RegistrationStatus.Pending;
+}
+
 export function isBookingClosed(status: RegistrationStatus): boolean {
   return (
     status === RegistrationStatus.Cancelled ||

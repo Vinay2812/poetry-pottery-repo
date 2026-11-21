@@ -14,6 +14,7 @@ import {
   formatWheels,
   groupSlotsByDay,
   isBookingClosed,
+  isRequestBannerShown,
   pickTier,
   quoteSession,
   toArrangementAskUrl,
@@ -407,6 +408,21 @@ describe("applyBookingAction", () => {
         at: "2026-09-12T09:00:00.000Z",
       }),
     ).toBeNull();
+  });
+});
+
+describe("isRequestBannerShown", () => {
+  it("shows the request note only while the studio has not answered", () => {
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending)).toBe(true);
+    // A reopened ?placed=1 link after the studio confirms must not say "while we confirm".
+    expect(isRequestBannerShown(true, RegistrationStatus.Confirmed)).toBe(
+      false,
+    );
+    expect(isRequestBannerShown(true, RegistrationStatus.Approved)).toBe(false);
+    expect(isRequestBannerShown(true, RegistrationStatus.Cancelled)).toBe(
+      false,
+    );
+    expect(isRequestBannerShown(false, RegistrationStatus.Pending)).toBe(false);
   });
 });
 

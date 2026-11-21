@@ -25,6 +25,7 @@ import {
   formatHours,
   groupSlotsByDay,
   isBookingClosed,
+  isRequestBannerShown,
   type SessionFact,
   toBookingStatusLabel,
   toBookingStatusTone,
@@ -202,7 +203,10 @@ export function BookingDetailContainer({
         bookedOn={formatDateTime(optimisticBooking.created_at)}
         statusLabel={toBookingStatusLabel(optimisticBooking.status)}
         statusTone={toBookingStatusTone(optimisticBooking.status)}
-        isJustPlaced={isJustPlaced && !closed}
+        isJustPlaced={isRequestBannerShown(
+          isJustPlaced,
+          optimisticBooking.status,
+        )}
         steps={BOOKING_STEPS.map((step) => ({
           key: step.key,
           label: step.label,
