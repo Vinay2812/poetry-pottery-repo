@@ -131,6 +131,8 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   const [isLeaveOpen, setIsLeaveOpen] = useState(false);
   const [isStockOpen, setIsStockOpen] = useState(false);
   const [imageDraft, setImageDraft] = useState<string[] | null>(null);
+  // Bumped after each save so the form remounts clean from the refetched piece.
+  const [savedVersion, setSavedVersion] = useState(0);
 
   const product = data?.adminProduct ?? null;
 
@@ -213,6 +215,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
         return;
       }
       setImageDraft(null);
+      setSavedVersion((version) => version + 1);
     },
   });
 
@@ -430,7 +433,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       )}
 
       <PieceForm
-        key={product?.id ?? "new"}
+        key={`${product?.id ?? "new"}-${savedVersion}`}
         defaultValues={
           product ? toProductFormValues(product) : EMPTY_PRODUCT_FORM
         }
