@@ -6,7 +6,7 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
-  ADMIN_WIDE_ONLY,
+  ADMIN_FROM_LAPTOP,
   AdminEmptyRow,
   AdminTableFrame,
 } from "@/features/admin/ui";
@@ -48,8 +48,8 @@ export function CollectionsTable({
         <tr>
           <th className={ADMIN_TH}>Image</th>
           <th className={ADMIN_TH}>Name</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Window</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Pieces</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Window</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Pieces</th>
           <th className={ADMIN_TH}>
             <span className="sr-only">Actions</span>
           </th>
@@ -80,12 +80,12 @@ export function CollectionsTable({
                 )}
               </td>
               <td
-                className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground tnum`}
+                className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} text-muted-foreground tnum`}
               >
                 {describeWindow(row.startsAt, row.endsAt)}
               </td>
               <td
-                className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground tnum`}
+                className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} text-muted-foreground tnum`}
               >
                 {describePieces(row.productCount)}
               </td>

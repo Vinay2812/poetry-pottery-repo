@@ -6,7 +6,7 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
-  ADMIN_WIDE_ONLY,
+  ADMIN_FROM_LAPTOP,
   AdminEmptyRow,
   AdminTableFrame,
 } from "@/features/admin/ui";
@@ -47,8 +47,8 @@ export function CategoriesTable({
         <tr>
           <th className={ADMIN_TH}>Image</th>
           <th className={ADMIN_TH}>Name</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Icon</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Sort order</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Icon</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Sort order</th>
           <th className={ADMIN_TH}>Pieces</th>
           <th className={ADMIN_TH}>
             <span className="sr-only">Actions</span>
@@ -77,11 +77,11 @@ export function CategoriesTable({
               </td>
               <td className={ADMIN_TD}>{row.name}</td>
               <td
-                className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground`}
+                className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} text-muted-foreground`}
               >
                 {row.icon === "" ? "—" : row.icon}
               </td>
-              <td className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} tnum`}>
+              <td className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} tnum`}>
                 {row.sortOrder}
               </td>
               <td

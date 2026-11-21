@@ -49,5 +49,7 @@ export const ADMIN_TD = "border-b border-ash px-2 py-2 align-middle md:px-3";
 
 export const ADMIN_TR = "transition-colors hover:bg-secondary/60";
 
-// Secondary columns drop below laptop width so the row actions stay in view.
-export const ADMIN_WIDE_ONLY = "hidden lg:table-cell";
+// Secondary columns drop on narrow screens so the row actions stay in view.
+export const ADMIN_FROM_TABLET = "hidden md:table-cell";
+
+export const ADMIN_FROM_LAPTOP = "hidden lg:table-cell";

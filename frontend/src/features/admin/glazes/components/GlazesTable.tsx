@@ -6,7 +6,7 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
-  ADMIN_WIDE_ONLY,
+  ADMIN_FROM_LAPTOP,
   AdminEmptyRow,
   AdminTableFrame,
 } from "@/features/admin/ui";
@@ -50,8 +50,8 @@ export function GlazesTable({
         <tr>
           <th className={ADMIN_TH}>Swatch</th>
           <th className={ADMIN_TH}>Name</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Description</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Variation</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Description</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Variation</th>
           <th className={ADMIN_TH}>Pieces</th>
           <th className={ADMIN_TH}>
             <span className="sr-only">Actions</span>
@@ -80,12 +80,12 @@ export function GlazesTable({
               </td>
               <td className={ADMIN_TD}>{row.name}</td>
               <td
-                className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} max-w-80 text-muted-foreground`}
+                className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} max-w-80 text-muted-foreground`}
               >
                 {row.description}
               </td>
               <td
-                className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} max-w-64 text-muted-foreground`}
+                className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} max-w-64 text-muted-foreground`}
               >
                 {row.variationNote === "" ? "—" : row.variationNote}
               </td>

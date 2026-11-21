@@ -2,7 +2,7 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
-  ADMIN_WIDE_ONLY,
+  ADMIN_FROM_LAPTOP,
   AdminEmptyRow,
   AdminStatusPill,
   AdminTableFrame,
@@ -29,7 +29,7 @@ export function RecentBookingsTable({ rows }: RecentBookingsTableProps) {
       <thead>
         <tr>
           <th className={ADMIN_TH}>Customer</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Session</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Session</th>
           <th className={ADMIN_TH}>Status</th>
           <th className={ADMIN_TH}>Total</th>
           <th className={ADMIN_TH}>Starts</th>
@@ -43,7 +43,7 @@ export function RecentBookingsTable({ rows }: RecentBookingsTableProps) {
           <tr key={row.id} className={ADMIN_TR}>
             <td className={ADMIN_TD}>{row.customerName}</td>
             <td
-              className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground`}
+              className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} text-muted-foreground`}
             >
               {row.shapeLabel}
             </td>

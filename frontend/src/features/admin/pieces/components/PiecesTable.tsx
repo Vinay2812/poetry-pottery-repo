@@ -9,7 +9,7 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
-  ADMIN_WIDE_ONLY,
+  ADMIN_FROM_LAPTOP,
   AdminEmptyRow,
   AdminTableFrame,
 } from "@/features/admin/ui";
@@ -57,12 +57,12 @@ export function PiecesTable({
         <tr>
           <th className={ADMIN_TH}>Photo</th>
           <th className={ADMIN_TH}>Piece</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Price</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Price</th>
           <th className={ADMIN_TH}>Stock</th>
           <th className={ADMIN_TH}>On the shelf</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Home page</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Categories</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Collection</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Home page</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Categories</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Collection</th>
           <th className={ADMIN_TH}>
             <span className="sr-only">Change the stock</span>
           </th>
@@ -101,7 +101,7 @@ export function PiecesTable({
                 {row.name}
               </Link>
             </td>
-            <td className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} tnum`}>
+            <td className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} tnum`}>
               {row.priceLabel}
             </td>
             <td className={`${ADMIN_TD} tnum`}>{row.stockLabel}</td>
@@ -122,7 +122,7 @@ export function PiecesTable({
                 }
               />
             </td>
-            <td className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY}`}>
+            <td className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP}`}>
               <Checkbox
                 checked={row.isFeatured}
                 disabled={busyId === row.id}
@@ -133,12 +133,12 @@ export function PiecesTable({
               />
             </td>
             <td
-              className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground`}
+              className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} text-muted-foreground`}
             >
               {row.categoriesLabel}
             </td>
             <td
-              className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground`}
+              className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} text-muted-foreground`}
             >
               {row.collectionLabel}
             </td>

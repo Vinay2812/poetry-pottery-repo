@@ -4,7 +4,7 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
-  ADMIN_WIDE_ONLY,
+  ADMIN_FROM_LAPTOP,
   AdminEmptyRow,
   AdminStatusPill,
   AdminTableFrame,
@@ -34,7 +34,7 @@ export function RecentOrdersTable({ rows }: RecentOrdersTableProps) {
           <th className={ADMIN_TH}>Customer</th>
           <th className={ADMIN_TH}>Status</th>
           <th className={ADMIN_TH}>Total</th>
-          <th className={`${ADMIN_TH} ${ADMIN_WIDE_ONLY}`}>Placed</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Placed</th>
         </tr>
       </thead>
       <tbody>
@@ -60,7 +60,7 @@ export function RecentOrdersTable({ rows }: RecentOrdersTableProps) {
             </td>
             <td className={`${ADMIN_TD} tnum`}>{row.totalLabel}</td>
             <td
-              className={`${ADMIN_TD} ${ADMIN_WIDE_ONLY} text-muted-foreground`}
+              className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} text-muted-foreground`}
             >
               {row.placedLabel}
             </td>

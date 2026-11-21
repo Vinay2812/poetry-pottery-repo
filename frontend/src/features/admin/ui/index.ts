@@ -18,16 +18,16 @@ export {
   type AdminStatusTone,
 } from "@/features/admin/ui/components/AdminStatusPill";
 export {
+  ADMIN_FROM_LAPTOP,
+  ADMIN_FROM_TABLET,
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
-  ADMIN_WIDE_ONLY,
   AdminTableFrame,
 } from "@/features/admin/ui/components/AdminTableFrame";
 export { AdminToolbar } from "@/features/admin/ui/components/AdminToolbar";
 export {
   enumOptions,
-  toPreviewColour,
   eventStatusTone,
   fromDateTimeLocal,
   orderStatusTone,
@@ -37,5 +37,6 @@ export {
   toDateTimeLocal,
   toNullableNumber,
   toPersonName,
+  toPreviewColour,
   toRegistrationStatus,
 } from "@/features/admin/ui/types";
