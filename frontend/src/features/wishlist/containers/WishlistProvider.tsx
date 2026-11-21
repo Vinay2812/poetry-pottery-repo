@@ -27,11 +27,12 @@ interface WishlistValue {
   ids: readonly number[];
   isSignedIn: boolean;
   isSaving: boolean;
-  // Pass `wishlisted` to set a state rather than flip it.
+  // Pass `wishlisted` to set a state rather than flip it; `onSaved` runs only once the write lands.
   toggle: (
     productId: number,
     productName: string,
     wishlisted?: boolean,
+    onSaved?: () => void,
   ) => void;
   // The saved pieces page already holds every id, so it lends them and the second query stops.
   adoptIds: (ids: readonly number[] | null) => void;
@@ -41,6 +42,7 @@ interface WishlistToggle {
   productId: number;
   productName: string;
   isWishlisted: boolean;
+  onSaved?: () => void;
 }
 
 // The reply only carries a count, so the refetched lists become the new baseline.
@@ -87,14 +89,20 @@ export function WishlistProvider({ children }: PropsWithChildren) {
           ? `${change.productName} added to your saved pieces`
           : `${change.productName} removed from your saved pieces`,
       );
+      change.onSaved?.();
     },
   });
 
   const toggle = useCallback(
-    (productId: number, productName: string, wishlisted?: boolean) => {
+    (
+      productId: number,
+      productName: string,
+      wishlisted?: boolean,
+      onSaved?: () => void,
+    ) => {
       requireAuth(() => {
         const isWishlisted = wishlisted ?? !optimisticIds.includes(productId);
-        execute({ productId, productName, isWishlisted });
+        execute({ productId, productName, isWishlisted, onSaved });
       });
     },
     [execute, optimisticIds, requireAuth],
