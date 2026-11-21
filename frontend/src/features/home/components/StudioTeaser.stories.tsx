@@ -9,9 +9,9 @@ const meta = {
   parameters: { layout: "padded" },
   args: {
     imageUrl: null,
-    line: "Nothing is on the calendar this week, but the wheels are free most afternoons. Pick an hour and we will set one up for you.",
+    line: "Nothing is on the calendar this week, but the wheels keep their usual hours. Pick a time and we will set one up for you.",
     hoursLabel: "1 to 7 pm",
-    daysLabel: "Every day but Monday",
+    daysLabel: "Every day except Monday",
     priceLabel: "From ₹1,100 a person for an hour",
     href: "/workshops",
     linkLabel: "Book a wheel session",
@@ -28,6 +28,17 @@ export const WithPhoto: Story = {
   args: {
     imageUrl:
       "https://images.pexels.com/photos/4207892/pexels-photo-4207892.jpeg",
+  },
+};
+
+export const Closed: Story = {
+  args: {
+    line: "Nothing is on the calendar this week, and the wheels are resting for now. Write to us and we will tell you when they turn again.",
+    hoursLabel: null,
+    daysLabel: null,
+    priceLabel: null,
+    href: "/contact",
+    linkLabel: "Write to us",
   },
 };
 

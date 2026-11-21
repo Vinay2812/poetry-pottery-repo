@@ -23,8 +23,9 @@ import {
   HomeHero,
   HomeSection,
   StudioTeaser,
-  toStudioFacts,
   toStudioNote,
+  toStudioPriceLabel,
+  toStudioSchedule,
 } from "@/features/home";
 import { ReviewColumn, toOneLine } from "@/features/reviews";
 import { toEventPath, toSeatsLabel } from "@/features/events";
@@ -41,6 +42,11 @@ export const metadata: Metadata = pageMetadata({
   description: SITE_DESCRIPTION,
   isTitleAbsolute: true,
 });
+
+const OPEN_WHEEL_LINE =
+  "Nothing is on the calendar this week, but the wheels keep their usual hours. Pick a time and we will set one up for you.";
+const RESTING_WHEEL_LINE =
+  "Nothing is on the calendar this week, and the wheels are resting for now. Write to us and we will tell you when they turn again.";
 
 export default async function HomePage() {
   const [
@@ -64,7 +70,7 @@ export default async function HomePage() {
   const shapes = categories.filter((category) => category.product_count > 0);
   const customPiece = customPieces[0] ?? null;
   const wheel = workshops[0] ?? null;
-  const studioFacts = toStudioFacts(wheel);
+  const schedule = toStudioSchedule(wheel);
   const hasEvents = upcomingEvents.length > 0;
 
   return (
@@ -124,7 +130,7 @@ export default async function HomePage() {
       {/* An empty calendar hands the note and the link to the teaser below. */}
       <HomeSection
         title="At the studio"
-        note={hasEvents ? toStudioNote(wheel) : undefined}
+        note={hasEvents && schedule ? toStudioNote(schedule) : undefined}
         linkHref={hasEvents ? "/events" : undefined}
         linkLabel={hasEvents ? "All dates" : undefined}
       >
@@ -147,12 +153,14 @@ export default async function HomePage() {
         ) : (
           <StudioTeaser
             imageUrl={wheel?.image_url ?? null}
-            line="Nothing is on the calendar this week, but the wheels are free most afternoons. Pick an hour and we will set one up for you."
-            hoursLabel={studioFacts.hoursLabel}
-            daysLabel={studioFacts.daysLabel}
-            priceLabel={studioFacts.priceLabel}
-            href="/workshops"
-            linkLabel="Book a wheel session"
+            line={schedule ? OPEN_WHEEL_LINE : RESTING_WHEEL_LINE}
+            hoursLabel={schedule?.hoursLabel ?? null}
+            daysLabel={schedule?.daysLabel ?? null}
+            priceLabel={
+              schedule ? toStudioPriceLabel(wheel?.tiers ?? []) : null
+            }
+            href={schedule ? "/workshops" : "/contact"}
+            linkLabel={schedule ? "Book a wheel session" : "Write to us"}
           />
         )}
       </HomeSection>
