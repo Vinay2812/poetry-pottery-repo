@@ -1,7 +1,6 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { useCallback, useEffect, useRef } from "react";
 
 import { LoadFailed } from "@/components/layout/LoadFailed";
 import { PageShell } from "@/components/layout/PageShell";
@@ -12,6 +11,7 @@ import { AddressPicker } from "@/features/addresses/components/AddressPicker";
 import { EmptyAddresses } from "@/features/addresses/components/EmptyAddresses";
 import { useAddressBook } from "@/features/addresses/hooks";
 import { toFormValues } from "@/features/addresses/types";
+import { useEditorReturnFocus } from "@/features/addresses/useEditorReturnFocus";
 
 export function AddressBookContainer() {
   const {
@@ -33,28 +33,8 @@ export function AddressBookContainer() {
   } = useAddressBook();
   const { openSignIn } = useClerk();
 
-  // The card unmounts while its editor is open, so focus goes back to its Edit button on close.
-  const editButtons = useRef(new Map<number, HTMLButtonElement>());
-  const returnFocusToId = useRef<number | null>(null);
-  const handleEdit = useCallback(
-    (id: number) => {
-      returnFocusToId.current = id;
-      openEdit(id);
-    },
-    [openEdit],
-  );
-  useEffect(() => {
-    if (editingId !== null || returnFocusToId.current === null) return;
-    editButtons.current.get(returnFocusToId.current)?.focus();
-    returnFocusToId.current = null;
-  }, [editingId]);
-  const toEditButtonRef = useCallback(
-    (id: number) => (node: HTMLButtonElement | null) => {
-      if (node) editButtons.current.set(id, node);
-      else editButtons.current.delete(id);
-    },
-    [],
-  );
+  const { addButtonRef, toEditButtonRef, handleEdit, handleAddNew } =
+    useEditorReturnFocus(isFormOpen, openEdit, openNew);
 
   return (
     <PageShell column="narrow" className="flex flex-col gap-6 py-8 md:py-12">
@@ -89,7 +69,8 @@ export function AddressBookContainer() {
         <AddressPicker
           isEmpty={addresses.length === 0}
           isAdding={isFormOpen}
-          onAddClick={openNew}
+          onAddClick={handleAddNew}
+          addButtonRef={addButtonRef}
           form={
             isFormOpen ? (
               <AddressForm

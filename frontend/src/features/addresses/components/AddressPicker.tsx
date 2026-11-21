@@ -1,10 +1,12 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 export interface AddressPickerProps {
   children: ReactNode;
   isEmpty: boolean;
   isAdding: boolean;
   onAddClick: () => void;
+  // Lets the container hand focus back here when a new address is cancelled.
+  addButtonRef?: Ref<HTMLButtonElement>;
   form: ReactNode;
 }
 
@@ -13,6 +15,7 @@ export function AddressPicker({
   isEmpty,
   isAdding,
   onAddClick,
+  addButtonRef,
   form,
 }: AddressPickerProps) {
   return (
@@ -22,6 +25,7 @@ export function AddressPicker({
         form
       ) : (
         <button
+          ref={addButtonRef}
           type="button"
           onClick={onAddClick}
           className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
