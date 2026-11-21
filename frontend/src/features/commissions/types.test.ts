@@ -212,29 +212,11 @@ describe("toCommissionPiecesNote", () => {
     );
   });
 
+  // The API's isProductArchived sets is_archived for sold-out, inactive or out-of-window pieces alike.
   it("speaks of past work once any piece is archived", () => {
     expect(
       toCommissionPiecesNote([{ is_archived: false }, { is_archived: true }]),
     ).toBe("Name one in your brief below if you'd like something like it.");
-  });
-
-  // A flagged past commission that has sold out comes back from the API already archived.
-  it("speaks of past work when a flagged piece has sold out", () => {
-    const madeToOrder = {
-      stock: 0,
-      is_customizable: true,
-      is_active: true,
-      is_archived: false,
-    };
-    const soldOutCommission = {
-      stock: 0,
-      is_customizable: false,
-      is_active: true,
-      is_archived: true,
-    };
-    expect(toCommissionPiecesNote([madeToOrder, soldOutCommission])).toBe(
-      "Name one in your brief below if you'd like something like it.",
-    );
   });
 });
 
