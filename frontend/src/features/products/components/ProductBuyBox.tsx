@@ -109,49 +109,51 @@ export function ProductBuyBox({
       {options}
 
       <div className="flex flex-col gap-4">
-        {/* One row from 340px up; narrower phones wrap the button and heart under the stepper. */}
-        <div ref={actionsRef} className="flex flex-wrap items-center gap-2">
-          {!isSoldOut && (
-            <QuantityStepper
-              value={quantity}
-              max={maxQuantity}
-              onChange={onQuantityChange}
-            />
-          )}
-          <Button
-            size="lg"
-            className="min-w-36 flex-1"
-            onClick={onAddToCart}
-            disabled={!canAddToCart || isAddingToCart || isSoldOut}
-          >
-            {isSoldOut
-              ? "Sold out"
-              : isAddingToCart
-                ? "Adding…"
-                : toAddToCartLabel(quantity)}
-          </Button>
-          <Button
-            variant="outline"
-            size="icon-lg"
-            className={cn("shrink-0", isWishlisted && "bg-ink text-white")}
-            onClick={onToggleWishlist}
-            aria-pressed={isWishlisted}
-            aria-label={
-              isWishlisted ? "Remove from wishlist" : "Save to wishlist"
-            }
-          >
-            <Heart
-              className={cn("size-5", isWishlisted && "fill-current")}
-              strokeWidth={1.5}
-            />
-          </Button>
-        </div>
+        <div className="flex flex-col gap-2">
+          {/* One row from 340px up; narrower phones wrap the button and heart. */}
+          <div ref={actionsRef} className="flex flex-wrap items-center gap-2">
+            {!isSoldOut && (
+              <QuantityStepper
+                value={quantity}
+                max={maxQuantity}
+                onChange={onQuantityChange}
+              />
+            )}
+            <Button
+              size="lg"
+              className="min-w-32 flex-1 px-4"
+              onClick={onAddToCart}
+              disabled={!canAddToCart || isAddingToCart || isSoldOut}
+            >
+              {isSoldOut
+                ? "Sold out"
+                : isAddingToCart
+                  ? "Adding…"
+                  : toAddToCartLabel(quantity)}
+            </Button>
+            <Button
+              variant="outline"
+              size="icon-lg"
+              className={cn("shrink-0", isWishlisted && "bg-ink text-white")}
+              onClick={onToggleWishlist}
+              aria-pressed={isWishlisted}
+              aria-label={
+                isWishlisted ? "Remove from wishlist" : "Save to wishlist"
+              }
+            >
+              <Heart
+                className={cn("size-5", isWishlisted && "fill-current")}
+                strokeWidth={1.5}
+              />
+            </Button>
+          </div>
 
-        {totalLine && (
-          <p className="-mt-2 text-[13px] text-muted-foreground tnum">
-            {totalLine}
-          </p>
-        )}
+          {totalLine && (
+            <p className="text-[13px] text-muted-foreground tnum">
+              {totalLine}
+            </p>
+          )}
+        </div>
 
         <div className="flex flex-col gap-1.5 text-[13px] text-muted-foreground">
           <p>{STUDIO_NOTE}</p>
