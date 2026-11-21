@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { type TimelineStage, toClosedLabel, toTimelineSteps } from "./timeline";
+import { formatDateTime } from "@/lib/format";
+
+import {
+  type TimelineStage,
+  toClosedLabel,
+  toTimelineDate,
+  toTimelineSteps,
+} from "./timeline";
 
 type Status = "PLACED" | "PACKED" | "SENT" | "CANCELLED";
 
@@ -69,6 +76,20 @@ describe("toTimelineSteps", () => {
     expect(read("CANCELLED", { PLACED: "day 1" }, true)).toEqual([
       ["PLACED", "done", "day 1", null],
     ]);
+  });
+});
+
+describe("toTimelineDate", () => {
+  it("formats a timestamp the way the rest of the site does", () => {
+    expect(toTimelineDate("2026-09-12T09:30:00.000Z")).toBe(
+      formatDateTime("2026-09-12T09:30:00.000Z"),
+    );
+  });
+
+  it("leaves a stage that has not happened without a date", () => {
+    expect(toTimelineDate(null)).toBeNull();
+    expect(toTimelineDate(undefined)).toBeNull();
+    expect(toTimelineDate("")).toBeNull();
   });
 });
 

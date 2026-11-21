@@ -1,3 +1,5 @@
+import { formatDateTime } from "@/lib/format";
+
 // The progress timeline shared by orders, wheel sessions and event bookings. Each feature
 // owns its stage list; this file only knows how stages turn into what the visitor reads.
 
@@ -74,6 +76,11 @@ export function toTimelineSteps<Key extends string>(
       state: isFurthest && !isFinished ? "current" : "done",
     };
   });
+}
+
+// How a stage's timestamp reads on the timeline; a stage that has not happened has none.
+export function toTimelineDate(iso: string | null | undefined): string | null {
+  return iso ? formatDateTime(iso) : null;
 }
 
 // "Cancelled on 16 Sept · Travelling that week": what closed it, when, and why if we know.

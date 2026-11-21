@@ -6,7 +6,7 @@ import { useCallback, useOptimistic, useState } from "react";
 import { OrderStatus } from "@/graphql/generated/graphql";
 
 import { formatDateTime, formatInr } from "@/lib/format";
-import { toClosedLabel, toTimelineSteps } from "@/lib/timeline";
+import { toClosedLabel, toTimelineDate, toTimelineSteps } from "@/lib/timeline";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -104,19 +104,11 @@ export function OrderDetailContainer({
   }
 
   const dates: Partial<Record<OrderStatus, string | null>> = {
-    [OrderStatus.Pending]: formatDateTime(optimisticOrder.created_at),
-    [OrderStatus.Confirmed]: optimisticOrder.confirmed_at
-      ? formatDateTime(optimisticOrder.confirmed_at)
-      : null,
-    [OrderStatus.Paid]: optimisticOrder.paid_at
-      ? formatDateTime(optimisticOrder.paid_at)
-      : null,
-    [OrderStatus.Shipped]: optimisticOrder.shipped_at
-      ? formatDateTime(optimisticOrder.shipped_at)
-      : null,
-    [OrderStatus.Delivered]: optimisticOrder.delivered_at
-      ? formatDateTime(optimisticOrder.delivered_at)
-      : null,
+    [OrderStatus.Pending]: toTimelineDate(optimisticOrder.created_at),
+    [OrderStatus.Confirmed]: toTimelineDate(optimisticOrder.confirmed_at),
+    [OrderStatus.Paid]: toTimelineDate(optimisticOrder.paid_at),
+    [OrderStatus.Shipped]: toTimelineDate(optimisticOrder.shipped_at),
+    [OrderStatus.Delivered]: toTimelineDate(optimisticOrder.delivered_at),
   };
   const closed = isClosed(optimisticOrder.status);
   const closedAt =
@@ -127,7 +119,7 @@ export function OrderDetailContainer({
   const closedLabel = closed
     ? toClosedLabel(
         toStatusLabel(optimisticOrder.status),
-        closedAt ? formatDateTime(closedAt) : null,
+        toTimelineDate(closedAt),
         optimisticOrder.cancel_reason,
       )
     : null;

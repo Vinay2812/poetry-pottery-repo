@@ -20,7 +20,7 @@ import {
   useWorkshopBooking,
 } from "@/features/workshops/hooks";
 import { useSlotPicker } from "@/features/workshops/slot-picker";
-import { toClosedLabel, toTimelineSteps } from "@/lib/timeline";
+import { toClosedLabel, toTimelineDate, toTimelineSteps } from "@/lib/timeline";
 import {
   applyBookingAction,
   BOOKING_STAGES,
@@ -149,13 +149,13 @@ export function BookingDetailContainer({
   }
 
   const dates: Partial<Record<RegistrationStatus, string | null>> = {
-    [RegistrationStatus.Pending]: formatDateTime(optimisticBooking.created_at),
-    [RegistrationStatus.Approved]: optimisticBooking.approved_at
-      ? formatDateTime(optimisticBooking.approved_at)
-      : null,
-    [RegistrationStatus.Confirmed]: optimisticBooking.confirmed_at
-      ? formatDateTime(optimisticBooking.confirmed_at)
-      : null,
+    [RegistrationStatus.Pending]: toTimelineDate(optimisticBooking.created_at),
+    [RegistrationStatus.Approved]: toTimelineDate(
+      optimisticBooking.approved_at,
+    ),
+    [RegistrationStatus.Confirmed]: toTimelineDate(
+      optimisticBooking.confirmed_at,
+    ),
   };
   const closed = isBookingClosed(optimisticBooking.status);
   const closedOn =
@@ -163,7 +163,7 @@ export function BookingDetailContainer({
   const closedLabel = closed
     ? toClosedLabel(
         toBookingStatusLabel(optimisticBooking.status),
-        closedOn ? formatDateTime(closedOn) : null,
+        toTimelineDate(closedOn),
         optimisticBooking.cancel_reason,
       )
     : null;

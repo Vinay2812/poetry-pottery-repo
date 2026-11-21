@@ -9,10 +9,14 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
-import { formatDate, formatDateTime, formatTime } from "@/lib/format";
+import { formatDate, formatTime } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
-import type { TimelineStage } from "@/lib/timeline";
+import {
+  type TimelineStage,
+  toClosedLabel,
+  toTimelineDate,
+} from "@/lib/timeline";
 
 import type { StatusTone } from "@/features/orders/types";
 
@@ -314,13 +318,9 @@ export function toRegistrationStepDates(
   registration: StepDatesInput,
 ): RegistrationStepDates {
   return {
-    [RegistrationStatus.Pending]: formatDateTime(registration.created_at),
-    [RegistrationStatus.Approved]: registration.approved_at
-      ? formatDateTime(registration.approved_at)
-      : null,
-    [RegistrationStatus.Confirmed]: registration.confirmed_at
-      ? formatDateTime(registration.confirmed_at)
-      : null,
+    [RegistrationStatus.Pending]: toTimelineDate(registration.created_at),
+    [RegistrationStatus.Approved]: toTimelineDate(registration.approved_at),
+    [RegistrationStatus.Confirmed]: toTimelineDate(registration.confirmed_at),
   };
 }
 
@@ -341,14 +341,11 @@ export function toRegistrationClosedLabel(
   registration: ClosedLabelInput,
 ): string | null {
   if (!isRegistrationClosed(registration.status)) return null;
-  const closedOn = registration.cancelled_at ?? registration.rejected_at;
-  return [
-    toRegistrationStatusLabel(registration.status) +
-      (closedOn ? ` on ${formatDateTime(closedOn)}` : ""),
+  return toClosedLabel(
+    toRegistrationStatusLabel(registration.status),
+    toTimelineDate(registration.cancelled_at ?? registration.rejected_at),
     registration.cancel_reason,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  );
 }
 
 type RegistrationFactsInput = Pick<
