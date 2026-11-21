@@ -210,6 +210,7 @@ export function CommissionsContainer() {
       {openRow && (
         <CommissionDrawer
           isOpen
+          reference={openRow.id}
           name={openRow.name}
           email={openRow.email}
           phone={openRow.phone}

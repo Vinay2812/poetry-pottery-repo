@@ -13,6 +13,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     isOpen: true,
+    reference: "6IDobbwQ9CMU",
     name: "Anjali Rao",
     email: "anjali@example.com",
     phone: "9123456789",
