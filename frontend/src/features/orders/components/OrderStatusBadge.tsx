@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-import type { StatusTone } from "@/features/orders/types";
+import type { StatusTone } from "@/lib/status-tone";
 
 export interface OrderStatusBadgeProps {
   tone: StatusTone;

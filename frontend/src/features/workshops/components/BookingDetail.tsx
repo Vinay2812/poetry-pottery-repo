@@ -8,7 +8,7 @@ import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge"
 import { Timeline } from "@/components/timeline/Timeline";
 import type { TimelineStep } from "@/lib/timeline";
 
-import type { StatusTone } from "@/features/orders/types";
+import type { StatusTone } from "@/lib/status-tone";
 import type { SessionFact } from "@/features/workshops/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 import { SectionLabel } from "@/components/layout/SectionLabel";

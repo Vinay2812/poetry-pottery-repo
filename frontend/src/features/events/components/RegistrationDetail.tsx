@@ -11,7 +11,7 @@ import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge"
 import { Timeline } from "@/components/timeline/Timeline";
 import type { TimelineStep } from "@/lib/timeline";
 
-import type { StatusTone } from "@/features/orders/types";
+import type { StatusTone } from "@/lib/status-tone";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 import { TEXT_LINK } from "@/features/events/components/styles";

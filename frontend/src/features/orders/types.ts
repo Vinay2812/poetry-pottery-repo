@@ -67,8 +67,6 @@ const STATUS_LABEL: Record<OrderStatus, string> = {
   [OrderStatus.Refunded]: "Refunded",
 };
 
-export type { StatusTone };
-
 export function toStatusLabel(status: OrderStatus): string {
   return STATUS_LABEL[status];
 }
