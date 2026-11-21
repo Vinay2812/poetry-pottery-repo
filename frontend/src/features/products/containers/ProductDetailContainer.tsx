@@ -326,8 +326,8 @@ export function ProductDetailContainer({
     <PageShell className="flex flex-col gap-16 pb-8 sm:pt-8 md:py-12">
       {/* minmax(0, …) keeps a tall buy box from widening the gallery column through its square ratio. */}
       <div className="grid gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
-        {/* On a phone the photo runs to both edges, straight under the header. */}
-        <div className="-mx-4 sm:mx-0">
+        {/* Edge to edge on a phone; on a tablet the photo, the shorter column, stays put. */}
+        <div className="-mx-4 sm:mx-0 md:sticky md:top-24 md:self-start lg:static lg:self-auto">
           <ProductGallery
             images={product.image_urls}
             name={product.name}
@@ -344,7 +344,7 @@ export function ProductDetailContainer({
             }
           />
         </div>
-        <div className="md:sticky md:top-24 md:self-start">
+        <div className="lg:sticky lg:top-24 lg:self-start">
           {isArchived ? (
             <ArchiveNotice
               name={product.name}
