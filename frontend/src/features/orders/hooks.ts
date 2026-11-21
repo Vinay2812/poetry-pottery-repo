@@ -13,6 +13,7 @@ import {
   ReorderDocument,
 } from "@/graphql/generated/graphql";
 
+import { toPageTurn } from "@/lib/page-turn";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
 import { CART_QUERIES } from "@/features/cart/types";
@@ -42,9 +43,16 @@ export function useOrders(page: number) {
   const result = isSignedIn
     ? (data?.orders ?? previousData?.orders)
     : undefined;
+  const { shownPage, failedPage } = toPageTurn(
+    page,
+    result?.page_info.page ?? null,
+    Boolean(error),
+  );
   return {
     orders: result?.items ?? [],
     pageInfo: result?.page_info ?? null,
+    shownPage,
+    failedPage,
     isLoading: !isLoaded || (loading && !result),
     isPaging: loading && Boolean(result),
     hasError: Boolean(error) && !result,
