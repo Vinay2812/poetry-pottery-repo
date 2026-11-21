@@ -58,6 +58,7 @@ import {
   toAdminNoteValue,
   toPackingSlipHref,
   toSelectionLabel,
+  describeUndoChoice,
   toOrderMoveDialog,
   toStatusActions,
 } from "@/features/admin/orders/types";
@@ -314,6 +315,7 @@ export function AdminOrderDetailContainer({
               busyStatus={move.pending}
               isBusy={move.isPending}
               emptyMessage="This order is closed. Nothing left to move."
+              hint={describeUndoChoice(statusActions)}
               onAction={move.start}
             />
           </section>

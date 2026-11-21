@@ -134,8 +134,8 @@ export function buildOrderTimeline(
       key: "refunded",
       label: "Refunded",
       at: order.refunded_at,
-      // A refund after a cancel shares the one reason, so it is shown once.
-      note: order.cancelled_at === null ? order.cancel_reason : null,
+      // A cancelled order cannot be refunded, so a refund owns the reason outright.
+      note: order.cancel_reason,
     },
   ];
   return steps.filter((step): step is OrderTimelineEntry => step.at !== null);
@@ -190,6 +190,17 @@ export function toStatusActions(
       ...action,
       isPrimary: index === 0 && !action.isDestructive,
     }));
+}
+
+/** Cancel and refund both undo a paid sale, so the console says which is which. */
+export function describeUndoChoice(
+  actions: OrderStatusAction[],
+): string | null {
+  const offers = (status: OrderStatus) =>
+    actions.some((action) => action.status === status);
+  return offers(OrderStatus.Cancelled) && offers(OrderStatus.Refunded)
+    ? "Cancel before it ships; mark refunded once their money is back."
+    : null;
 }
 
 export interface OrderMoveDialog {

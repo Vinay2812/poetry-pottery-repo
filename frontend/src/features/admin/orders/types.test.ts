@@ -16,6 +16,7 @@ import {
   toDayStartIso,
   toOrderStatus,
   toSelectionLabel,
+  describeUndoChoice,
   toOrderMoveDialog,
   toStatusActions,
 } from "./types";
@@ -149,6 +150,19 @@ describe("toSelectionLabel", () => {
 });
 
 describe("buildOrderTimeline", () => {
+  it("puts the refund reason on the refund line", () => {
+    const entries = buildOrderTimeline({
+      ...TIMELINE,
+      paid_at: "2026-09-02T06:00:00.000Z",
+      refunded_at: "2026-09-05T06:00:00.000Z",
+      cancel_reason: "The mug arrived chipped",
+    });
+    expect(entries.at(-1)).toMatchObject({
+      key: "refunded",
+      note: "The mug arrived chipped",
+    });
+  });
+
   it("keeps only the steps that happened, in order", () => {
     const entries = buildOrderTimeline({
       ...TIMELINE,
@@ -335,5 +349,24 @@ describe("toOrderMoveDialog", () => {
     expect(toOrderMoveDialog(OrderStatus.Shipped).fieldLabel).toBe(
       "Tracking note",
     );
+  });
+});
+
+describe("describeUndoChoice", () => {
+  it("tells cancel from refund only when both are offered", () => {
+    expect(
+      describeUndoChoice(
+        toStatusActions([
+          OrderStatus.Shipped,
+          OrderStatus.Cancelled,
+          OrderStatus.Refunded,
+        ]),
+      ),
+    ).toBe("Cancel before it ships; mark refunded once their money is back.");
+    expect(
+      describeUndoChoice(
+        toStatusActions([OrderStatus.Delivered, OrderStatus.Refunded]),
+      ),
+    ).toBeNull();
   });
 });

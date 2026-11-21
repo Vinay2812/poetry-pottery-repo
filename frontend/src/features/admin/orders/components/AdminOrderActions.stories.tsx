@@ -14,6 +14,7 @@ const meta = {
     busyStatus: null,
     isBusy: false,
     emptyMessage: "This order is closed",
+    hint: null,
     onAction: fn(),
     actions: [
       {
@@ -52,6 +53,13 @@ export const Working: Story = {
 };
 
 export const Closed: Story = { args: { actions: [] } };
+
+// Paid but not shipped: cancel and refund both undo the sale, so a line says which is which.
+export const PaidWithBothUndos: Story = {
+  args: {
+    hint: "Cancel before it ships; mark refunded once their money is back.",
+  },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 
