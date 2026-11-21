@@ -17,6 +17,10 @@ import {
   toClosedLabel,
   toTimelineDate,
 } from "@/lib/timeline";
+import {
+  isRegistrationClosed,
+  toRegistrationStatusLabel,
+} from "@/lib/registration-status";
 
 import type { StatusTone } from "@/features/orders/types";
 
@@ -272,27 +276,10 @@ export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
   },
 ];
 
-// Same words as wheel sessions: a seat is a request until the studio approves it.
-const STATUS_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting approval",
-  [RegistrationStatus.Approved]: "Approved, awaiting payment",
-  [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not approved",
-  [RegistrationStatus.Cancelled]: "Cancelled",
-};
-
-export function toRegistrationStatusLabel(status: RegistrationStatus): string {
-  return STATUS_LABEL[status];
-}
-
 export function toRegistrationStatusTone(
   status: RegistrationStatus,
 ): StatusTone {
-  if (
-    status === RegistrationStatus.Cancelled ||
-    status === RegistrationStatus.Rejected
-  )
-    return "off";
+  if (isRegistrationClosed(status)) return "off";
   if (status === RegistrationStatus.Confirmed) return "done";
   if (status === RegistrationStatus.Pending) return "pending";
   return "active";
@@ -315,13 +302,6 @@ export function toRegistrationStepDates(
     [RegistrationStatus.Approved]: toTimelineDate(registration.approved_at),
     [RegistrationStatus.Confirmed]: toTimelineDate(registration.confirmed_at),
   };
-}
-
-export function isRegistrationClosed(status: RegistrationStatus): boolean {
-  return (
-    status === RegistrationStatus.Cancelled ||
-    status === RegistrationStatus.Rejected
-  );
 }
 
 type ClosedLabelInput = Pick<

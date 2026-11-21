@@ -9,6 +9,7 @@ import {
 import { buildWhatsAppUrl } from "@/features/layout/types";
 import { formatShortDay } from "@/lib/format";
 import type { TimelineStage } from "@/lib/timeline";
+import { isRegistrationClosed } from "@/lib/registration-status";
 
 import type { StatusTone } from "@/features/orders/types";
 
@@ -328,24 +329,8 @@ export const BOOKING_STAGES: TimelineStage<RegistrationStatus>[] = [
   },
 ];
 
-const STATUS_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting approval",
-  [RegistrationStatus.Approved]: "Approved, awaiting payment",
-  [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not approved",
-  [RegistrationStatus.Cancelled]: "Cancelled",
-};
-
-export function toBookingStatusLabel(status: RegistrationStatus): string {
-  return STATUS_LABEL[status];
-}
-
 export function toBookingStatusTone(status: RegistrationStatus): StatusTone {
-  if (
-    status === RegistrationStatus.Cancelled ||
-    status === RegistrationStatus.Rejected
-  )
-    return "off";
+  if (isRegistrationClosed(status)) return "off";
   if (status === RegistrationStatus.Confirmed) return "done";
   if (status === RegistrationStatus.Pending) return "pending";
   return "active";
@@ -360,7 +345,7 @@ export function toBookingGroup(
   status: RegistrationStatus,
   now = new Date(),
 ): BookingGroup {
-  if (isBookingClosed(status)) return "past";
+  if (isRegistrationClosed(status)) return "past";
   const last = slots.reduce(
     (latest, slot) => (slot.ends_at > latest ? slot.ends_at : latest),
     "",
@@ -374,13 +359,6 @@ export function isRequestBannerShown(
   status: RegistrationStatus,
 ): boolean {
   return isJustPlaced && status === RegistrationStatus.Pending;
-}
-
-export function isBookingClosed(status: RegistrationStatus): boolean {
-  return (
-    status === RegistrationStatus.Cancelled ||
-    status === RegistrationStatus.Rejected
-  );
 }
 
 export function formatHours(hours: number): string {

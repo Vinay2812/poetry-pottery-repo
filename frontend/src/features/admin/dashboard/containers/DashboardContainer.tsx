@@ -15,12 +15,12 @@ import {
   formatTime,
 } from "@/lib/format";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
+import { toRegistrationStatusLabel } from "@/lib/registration-status";
 
 import {
   AdminPageHeader,
   orderStatusLabel,
   orderStatusTone,
-  registrationStatusLabel,
   registrationStatusTone,
 } from "@/features/admin/ui";
 
@@ -130,7 +130,7 @@ export function DashboardContainer() {
       (dashboard?.recent_bookings ?? []).map((booking) => ({
         id: booking.id,
         customerName: booking.customer.name ?? booking.customer.email,
-        statusLabel: registrationStatusLabel(booking.status),
+        statusLabel: toRegistrationStatusLabel(booking.status),
         statusTone: registrationStatusTone(booking.status),
         shapeLabel: describeBooking(booking.hours, booking.participants),
         totalLabel: formatInr(booking.total),

@@ -18,7 +18,6 @@ import {
   applyRegistrationCancellation,
   DEFAULT_EVENT_FILTERS,
   type RegistrationData,
-  isRegistrationClosed,
   parseEventFilters,
   toEventPath,
   toEventSearchParams,
@@ -26,7 +25,6 @@ import {
   toEventTypeLabel,
   toLevelLabel,
   toRegistrationPath,
-  toRegistrationStatusLabel,
   toRegistrationStatusTone,
   REGISTRATION_STAGES,
   toEventWhenLabel,
@@ -112,16 +110,7 @@ describe("dates", () => {
 });
 
 describe("registration status helpers", () => {
-  it("maps statuses to labels, tones and steps", () => {
-    expect(toRegistrationStatusLabel(RegistrationStatus.Pending)).toBe(
-      "Awaiting approval",
-    );
-    expect(toRegistrationStatusLabel(RegistrationStatus.Approved)).toBe(
-      "Approved, awaiting payment",
-    );
-    expect(toRegistrationStatusLabel(RegistrationStatus.Rejected)).toBe(
-      "Not approved",
-    );
+  it("maps statuses to tones", () => {
     expect(toRegistrationStatusTone(RegistrationStatus.Pending)).toBe(
       "pending",
     );
@@ -130,8 +119,6 @@ describe("registration status helpers", () => {
     );
     expect(toRegistrationStatusTone(RegistrationStatus.Confirmed)).toBe("done");
     expect(toRegistrationStatusTone(RegistrationStatus.Rejected)).toBe("off");
-    expect(isRegistrationClosed(RegistrationStatus.Cancelled)).toBe(true);
-    expect(isRegistrationClosed(RegistrationStatus.Approved)).toBe(false);
   });
 
   it("keys every stage by a registration status", () => {

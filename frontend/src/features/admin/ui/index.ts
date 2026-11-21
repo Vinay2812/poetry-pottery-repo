@@ -47,7 +47,6 @@ export {
   registrationActionNeedsReason,
   registrationClosingDialog,
   registrationHoldNote,
-  registrationStatusLabel,
   registrationStatusOptions,
   registrationStatusTone,
   toDateTimeLocal,

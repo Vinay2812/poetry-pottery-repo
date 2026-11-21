@@ -17,7 +17,6 @@ import {
   formatPickedProgress,
   formatWheels,
   groupSlotsByDay,
-  isBookingClosed,
   isRequestBannerShown,
   pickTier,
   quoteSession,
@@ -30,7 +29,6 @@ import {
   toUnavailableMessage,
   toBookingPath,
   toBookingGroup,
-  toBookingStatusLabel,
   toBookingStatusTone,
   toBookingWhenLines,
   toDateKey,
@@ -254,22 +252,7 @@ describe("session helpers", () => {
 });
 
 describe("booking status helpers", () => {
-  it("maps statuses to labels, tones and steps", () => {
-    expect(toBookingStatusLabel(RegistrationStatus.Pending)).toBe(
-      "Awaiting approval",
-    );
-    expect(toBookingStatusLabel(RegistrationStatus.Approved)).toBe(
-      "Approved, awaiting payment",
-    );
-    expect(toBookingStatusLabel(RegistrationStatus.Confirmed)).toBe(
-      "Confirmed",
-    );
-    expect(toBookingStatusLabel(RegistrationStatus.Rejected)).toBe(
-      "Not approved",
-    );
-    expect(toBookingStatusLabel(RegistrationStatus.Cancelled)).toBe(
-      "Cancelled",
-    );
+  it("maps statuses to tones", () => {
     expect(toBookingStatusTone(RegistrationStatus.Pending)).toBe("pending");
     expect(toBookingStatusTone(RegistrationStatus.Approved)).toBe("active");
     expect(toBookingStatusTone(RegistrationStatus.Confirmed)).toBe("done");
@@ -359,13 +342,6 @@ describe("booking status helpers", () => {
 
   it("never repeats the line above it in a promise", () => {
     expect(toRepeatedPhrases(BOOKING_STAGES)).toEqual([]);
-  });
-
-  it("knows which bookings are closed", () => {
-    expect(isBookingClosed(RegistrationStatus.Cancelled)).toBe(true);
-    expect(isBookingClosed(RegistrationStatus.Rejected)).toBe(true);
-    expect(isBookingClosed(RegistrationStatus.Approved)).toBe(false);
-    expect(isBookingClosed(RegistrationStatus.Confirmed)).toBe(false);
   });
 
   it("counts hours and free wheels", () => {

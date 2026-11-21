@@ -19,13 +19,11 @@ import {
 } from "@/features/events/hooks";
 import {
   applyRegistrationCancellation,
-  isRegistrationClosed,
   isRequestBannerShown,
   REGISTRATION_STAGES,
   toEventPath,
   toRegistrationClosedLabel,
   toRegistrationFacts,
-  toRegistrationStatusLabel,
   toRegistrationStatusTone,
   toRegistrationStepDates,
   toTimeRange,
@@ -33,6 +31,10 @@ import {
 } from "@/features/events/types";
 import { buildWhatsAppUrl } from "@/features/layout/types";
 import { toTimelineSteps } from "@/lib/timeline";
+import {
+  isRegistrationClosed,
+  toRegistrationStatusLabel,
+} from "@/lib/registration-status";
 import { ReviewActionContainer } from "@/features/reviews";
 
 export interface RegistrationDetailContainerProps {

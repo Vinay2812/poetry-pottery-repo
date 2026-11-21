@@ -6,18 +6,20 @@ import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
 import { cn } from "@/lib/utils";
+import {
+  isRegistrationClosed,
+  toRegistrationStatusLabel,
+} from "@/lib/registration-status";
 
 import { SignInWall } from "@/features/auth/components/SignInWall";
 import { EmptyRegistrations } from "@/features/events/components/EmptyRegistrations";
 import { RegistrationCard } from "@/features/events/components/RegistrationCard";
 import { useMyRegistrations } from "@/features/events/hooks";
 import {
-  isRegistrationClosed,
   toEventTypeLabel,
   toEventWhenLabel,
   toRegistrationGroups,
   toRegistrationPath,
-  toRegistrationStatusLabel,
 } from "@/features/events/types";
 
 export interface RegistrationsListContainerProps {
