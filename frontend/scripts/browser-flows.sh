@@ -408,7 +408,7 @@ flow_product_to_order() {
 flow_wishlist() {
   start_flow wishlist
   goto "/products"
-  click_matching '^Save .* to wishlist$' "save a piece to the wishlist" || {
+  click_matching '^Add .* to saved pieces$' "save a piece" || {
     end_flow
     return
   }
@@ -417,7 +417,7 @@ flow_wishlist() {
   expect_text "Saved pieces" "the wishlist page renders"
   expect_no_text "Nothing saved yet" "the saved piece is listed"
   shot "wishlist-full"
-  click_matching '^Remove .* from wishlist$' "unsave the piece" || {
+  click_matching '^Remove .* from saved pieces$' "unsave the piece" || {
     end_flow
     return
   }
