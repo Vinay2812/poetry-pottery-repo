@@ -24,12 +24,12 @@ export function DashboardStats({
       <AdminStatTile label="Orders" value={orders} hint="Last 30 days" />
       <AdminStatTile label="Revenue" value={revenue} hint="Last 30 days" />
       <AdminStatTile
-        label="Event seats"
+        label="Event requests"
         value={pendingRegistrations}
         hint="Waiting on you"
       />
       <AdminStatTile
-        label="Wheel sessions"
+        label="Session requests"
         value={pendingBookings}
         hint="Waiting on you"
       />
