@@ -11,7 +11,6 @@ import { SiteHeader } from "@/features/layout/components/SiteHeader";
 import { MobileMenuContainer } from "@/features/layout/containers/MobileMenuContainer";
 import {
   isActivePath,
-  isFocusedPath,
   NAV_LINKS,
   toCartAnnouncement,
   toFocusedHeader,
@@ -96,7 +95,7 @@ export function SiteHeaderContainer({
         isAdmin={user?.publicMetadata.role === UserRole.Admin}
         userImageUrl={user?.hasImage ? user.imageUrl : null}
         isHome={pathname === "/"}
-        variant={isFocusedPath(pathname) ? "focused" : "full"}
+        variant={focused ? "focused" : "full"}
         backHref={focused?.href ?? null}
         backLabel={focused?.label ?? null}
         isSearchOpen={isSearchOpen}
