@@ -110,7 +110,7 @@ export function ProductBuyBox({
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-2">
-          {/* One row from 340px up; narrower phones wrap the button and heart. */}
+          {/* One row from 340px; narrower, the button gets its own line under the stepper and heart. */}
           <div ref={actionsRef} className="flex flex-wrap items-center gap-2">
             {!isSoldOut && (
               <QuantityStepper
@@ -121,7 +121,7 @@ export function ProductBuyBox({
             )}
             <Button
               size="lg"
-              className="min-w-32 flex-1 px-4"
+              className="order-last min-w-full flex-1 px-4 min-[340px]:order-none min-[340px]:min-w-32"
               onClick={onAddToCart}
               disabled={!canAddToCart || isAddingToCart || isSoldOut}
             >
@@ -134,7 +134,10 @@ export function ProductBuyBox({
             <Button
               variant="outline"
               size="icon-lg"
-              className={cn("shrink-0", isWishlisted && "bg-ink text-white")}
+              className={cn(
+                "ml-auto shrink-0 min-[340px]:ml-0",
+                isWishlisted && "bg-ink text-white",
+              )}
               onClick={onToggleWishlist}
               aria-pressed={isWishlisted}
               aria-label={
