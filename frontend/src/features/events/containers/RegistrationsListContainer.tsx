@@ -20,7 +20,15 @@ import {
   toRegistrationStatusLabel,
 } from "@/features/events/types";
 
-export function RegistrationsListContainer() {
+export interface RegistrationsListContainerProps {
+  // ISO time the server rendered at. Fixed on purpose: a list does not need to regroup itself live.
+  now: string;
+}
+
+export function RegistrationsListContainer({
+  now: renderedAt,
+}: RegistrationsListContainerProps) {
+  const now = new Date(renderedAt);
   const [page, setPage] = useState(1);
   const {
     registrations,
@@ -79,7 +87,7 @@ export function RegistrationsListContainer() {
               isPaging && "opacity-60",
             )}
           >
-            {toRegistrationGroups(registrations).map((group) => (
+            {toRegistrationGroups(registrations, now).map((group) => (
               <section key={group.key} className="flex flex-col gap-3">
                 <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
                   {group.heading}

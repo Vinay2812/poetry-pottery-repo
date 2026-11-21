@@ -435,23 +435,53 @@ describe("registration detail helpers", () => {
   });
 
   it("files closed and finished bookings under past and leaves out empty groups", () => {
-    const groups = toRegistrationGroups([
-      registration({ id: "open" }),
-      registration({ id: "cancelled", status: RegistrationStatus.Cancelled }),
-      registration({
-        id: "done",
-        event: { ...registration().event, is_past: true },
-      }),
-    ]);
+    const groups = toRegistrationGroups(
+      [
+        registration({ id: "open" }),
+        registration({ id: "cancelled", status: RegistrationStatus.Cancelled }),
+        registration({
+          id: "done",
+          event: { ...registration().event, is_past: true },
+        }),
+      ],
+      NOW,
+    );
     expect(groups.map((group) => group.key)).toEqual(["upcoming", "past"]);
     expect(groups[0]?.registrations.map((item) => item.id)).toEqual(["open"]);
     expect(groups[1]?.registrations.map((item) => item.id).sort()).toEqual([
       "cancelled",
       "done",
     ]);
-    expect(toRegistrationGroups([registration()]).map((g) => g.key)).toEqual([
-      "upcoming",
-    ]);
+    expect(
+      toRegistrationGroups([registration()], NOW).map((g) => g.key),
+    ).toEqual(["upcoming"]);
+  });
+
+  it("files a booking for a date that has begun but not ended under way", () => {
+    const duringTheEvent = new Date("2026-09-19T10:00:00.000Z");
+    const groups = toRegistrationGroups(
+      [
+        registration({ id: "now" }),
+        registration({
+          id: "later",
+          event: {
+            ...registration().event,
+            starts_at: "2026-10-04T09:30:00.000Z",
+          },
+        }),
+      ],
+      duringTheEvent,
+    );
+    expect(groups.map((group) => group.key)).toEqual(["underWay", "upcoming"]);
+    expect(groups[0]?.heading).toBe("Under way");
+    expect(groups[0]?.registrations.map((item) => item.id)).toEqual(["now"]);
+    // Once the API calls it past, it leaves the under-way group.
+    expect(
+      toRegistrationGroups(
+        [registration({ event: { ...registration().event, is_past: true } })],
+        duringTheEvent,
+      ).map((group) => group.key),
+    ).toEqual(["past"]);
   });
 
   it("puts the soonest upcoming date first and the latest past date first", () => {
@@ -465,12 +495,15 @@ describe("registration detail helpers", () => {
         },
       });
     // The API lists newest bookings first, which is not the order of the dates.
-    const groups = toRegistrationGroups([
-      on("dec", "2026-12-20T09:30:00.000Z", false),
-      on("oct", "2026-10-04T09:30:00.000Z", false),
-      on("aug", "2026-08-01T09:30:00.000Z", true),
-      on("sep", "2026-09-01T09:30:00.000Z", true),
-    ]);
+    const groups = toRegistrationGroups(
+      [
+        on("dec", "2026-12-20T09:30:00.000Z", false),
+        on("oct", "2026-10-04T09:30:00.000Z", false),
+        on("aug", "2026-08-01T09:30:00.000Z", true),
+        on("sep", "2026-09-01T09:30:00.000Z", true),
+      ],
+      NOW,
+    );
     expect(groups[0]?.registrations.map((item) => item.id)).toEqual([
       "oct",
       "dec",

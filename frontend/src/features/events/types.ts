@@ -398,7 +398,7 @@ export function toRequestReceiptLine(seats: number): string {
   return `${kept} Send us a message and we will share payment details, or wait for ours within a day.`;
 }
 
-type RegistrationGroupKey = "upcoming" | "past";
+type RegistrationGroupKey = "underWay" | "upcoming" | "past";
 
 type GroupableRegistration = Pick<RegistrationData, "status"> & {
   event: Pick<RegistrationData["event"], "is_past" | "starts_at">;
@@ -411,11 +411,16 @@ export interface RegistrationGroup<T extends GroupableRegistration> {
 }
 
 // Like wheel sessions: a date that has run, or a seat that will never be taken, sits under Past.
+// A date that has begun but not ended is neither ahead nor done, so it gets its own group.
 function toRegistrationGroupKey(
   registration: GroupableRegistration,
+  now: Date,
 ): RegistrationGroupKey {
   if (isRegistrationClosed(registration.status)) return "past";
-  return registration.event.is_past ? "past" : "upcoming";
+  if (registration.event.is_past) return "past";
+  return hasEventStarted(registration.event.starts_at, now)
+    ? "underWay"
+    : "upcoming";
 }
 
 function byStart(a: GroupableRegistration, b: GroupableRegistration): number {
@@ -428,18 +433,28 @@ function byStart(a: GroupableRegistration, b: GroupableRegistration): number {
 // Soonest first for what is ahead, latest first for the record; empty groups are left out.
 export function toRegistrationGroups<T extends GroupableRegistration>(
   registrations: T[],
+  now: Date,
 ): RegistrationGroup<T>[] {
-  const upcoming = registrations
-    .filter(
-      (registration) => toRegistrationGroupKey(registration) === "upcoming",
-    )
-    .sort(byStart);
-  const past = registrations
-    .filter((registration) => toRegistrationGroupKey(registration) === "past")
-    .sort((a, b) => byStart(b, a));
+  const inGroup = (key: RegistrationGroupKey) =>
+    registrations.filter(
+      (registration) => toRegistrationGroupKey(registration, now) === key,
+    );
   const groups: RegistrationGroup<T>[] = [
-    { key: "upcoming", heading: "Upcoming", registrations: upcoming },
-    { key: "past", heading: "Past and cancelled", registrations: past },
+    {
+      key: "underWay",
+      heading: "Under way",
+      registrations: inGroup("underWay").sort(byStart),
+    },
+    {
+      key: "upcoming",
+      heading: "Upcoming",
+      registrations: inGroup("upcoming").sort(byStart),
+    },
+    {
+      key: "past",
+      heading: "Past and cancelled",
+      registrations: inGroup("past").sort((a, b) => byStart(b, a)),
+    },
   ];
   return groups.filter((group) => group.registrations.length > 0);
 }
