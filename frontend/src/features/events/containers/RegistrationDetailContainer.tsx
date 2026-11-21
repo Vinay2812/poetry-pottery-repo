@@ -12,6 +12,7 @@ import { PageShell } from "@/components/layout/PageShell";
 import { SignInWall } from "@/features/auth/components/SignInWall";
 import { CancelRegistrationDialog } from "@/features/events/components/CancelRegistrationDialog";
 import { RegistrationDetail } from "@/features/events/components/RegistrationDetail";
+import { TEXT_LINK } from "@/features/events/components/styles";
 import {
   useCancelRegistration,
   useRegistration,
@@ -19,6 +20,7 @@ import {
 import {
   applyRegistrationCancellation,
   isRegistrationClosed,
+  isRequestBannerShown,
   REGISTRATION_STEPS,
   toEventPath,
   toRegistrationClosedLabel,
@@ -27,6 +29,7 @@ import {
   toRegistrationStatusTone,
   toRegistrationStepDates,
   toRegistrationStepIndex,
+  toRequestReceiptLine,
   toTimeRange,
   toWhatsAppBookingMessage,
 } from "@/features/events/types";
@@ -97,7 +100,7 @@ export function RegistrationDetailContainer({
         <button
           type="button"
           onClick={() => void refetch()}
-          className="border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
+          className={TEXT_LINK}
         >
           Try again
         </button>
@@ -132,10 +135,14 @@ export function RegistrationDetailContainer({
         registrationId={optimisticRegistration.id}
         eventTitle={event.title}
         eventHref={toEventPath(event.slug)}
-        bookedOn={formatDateTime(optimisticRegistration.created_at)}
+        requestedOn={formatDateTime(optimisticRegistration.created_at)}
         statusLabel={toRegistrationStatusLabel(optimisticRegistration.status)}
         statusTone={toRegistrationStatusTone(optimisticRegistration.status)}
-        isJustPlaced={isJustPlaced && !isClosed}
+        isRequestShown={isRequestBannerShown(
+          isJustPlaced,
+          optimisticRegistration.status,
+        )}
+        requestLine={toRequestReceiptLine(optimisticRegistration.seats)}
         steps={REGISTRATION_STEPS.map((step) => ({
           key: step.key,
           label: step.label,

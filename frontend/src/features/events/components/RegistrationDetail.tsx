@@ -14,14 +14,17 @@ import {
 import type { StatusTone } from "@/features/orders/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
+import { TEXT_LINK } from "@/features/events/components/styles";
+
 export interface RegistrationDetailProps {
   registrationId: string;
   eventTitle: string;
   eventHref: string;
-  bookedOn: string;
+  requestedOn: string;
   statusLabel: string;
   statusTone: StatusTone;
-  isJustPlaced: boolean;
+  isRequestShown: boolean;
+  requestLine: string;
   steps: OrderTimelineStep[];
   currentStepIndex: number;
   isClosed: boolean;
@@ -39,17 +42,15 @@ export interface RegistrationDetailProps {
   onCancel: () => void;
 }
 
-const TEXT_LINK =
-  "w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary";
-
 export function RegistrationDetail({
   registrationId,
   eventTitle,
   eventHref,
-  bookedOn,
+  requestedOn,
   statusLabel,
   statusTone,
-  isJustPlaced,
+  isRequestShown,
+  requestLine,
   steps,
   currentStepIndex,
   isClosed,
@@ -76,20 +77,20 @@ export function RegistrationDetail({
           <h1 className="max-w-2xl font-heading text-3xl tracking-tight text-balance md:text-5xl">
             {eventTitle}
           </h1>
-          <p className="text-[13px] text-muted-foreground">Booked {bookedOn}</p>
+          <p className="text-[13px] text-muted-foreground">
+            Requested {requestedOn}
+          </p>
         </div>
         <OrderStatusBadge tone={statusTone} label={statusLabel} />
       </header>
 
-      {isJustPlaced && (
+      {isRequestShown && (
         <section className="flex flex-col gap-3 border border-ash bg-white p-6 md:p-8">
-          {/* The seat is only held once the studio says so, which is the next step. */}
           <h2 className="font-heading text-2xl tracking-tight md:text-3xl">
             We have your request
           </h2>
           <p className="max-w-xl text-[15px] text-muted-foreground">
-            Send us a message and we will confirm the seat and share payment
-            details, or wait for ours within a day.
+            {requestLine}
           </p>
           {whatsappUrl && (
             <Button className="w-fit" asChild>
@@ -99,7 +100,7 @@ export function RegistrationDetail({
                 reference={registrationId}
               >
                 <MessageCircle className="size-4" strokeWidth={1.5} />
-                Confirm on WhatsApp
+                Message us on WhatsApp
               </WhatsAppLink>
             </Button>
           )}
@@ -173,7 +174,7 @@ export function RegistrationDetail({
           </section>
 
           <div className="flex flex-col items-start gap-3">
-            {whatsappUrl && !isJustPlaced && (
+            {whatsappUrl && !isRequestShown && (
               <WhatsAppLink
                 href={whatsappUrl}
                 kind="event"
