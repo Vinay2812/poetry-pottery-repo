@@ -435,6 +435,21 @@ export function isStickyBarWanted({
   );
 }
 
+// Only a piece that can go in the bag gets the phone bar; archived, retired and sold-out pieces never render it.
+export function canOfferStickyBar({
+  isArchived,
+  isActive,
+  stock,
+  isCustomizable,
+}: {
+  isArchived: boolean;
+  isActive: boolean;
+  stock: number;
+  isCustomizable: boolean;
+}): boolean {
+  return !isArchived && isActive && (isCustomizable || stock > 0);
+}
+
 // The price already sits above the button, so the button only says what it does.
 export function toAddToCartLabel(quantity: number): string {
   return quantity > 1 ? `Add ${quantity} to cart` : "Add to cart";

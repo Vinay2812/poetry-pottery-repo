@@ -13,9 +13,7 @@ const meta = {
     name: "Slate Morning Mug",
     quantity: 1,
     total: 850,
-    isSoldOut: false,
     isAddingToCart: false,
-    canAddToCart: true,
     onAddToCart: fn(),
   },
 } satisfies Meta<typeof StickyBuyBar>;
@@ -30,10 +28,6 @@ export const Hidden: Story = { args: { isVisible: false } };
 
 export const TwoPieces: Story = {
   args: { quantity: 2, total: 1700 },
-};
-
-export const SoldOut: Story = {
-  args: { isSoldOut: true, canAddToCart: false },
 };
 
 export const Adding: Story = {

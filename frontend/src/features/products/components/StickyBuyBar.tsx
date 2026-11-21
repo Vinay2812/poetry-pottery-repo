@@ -9,23 +9,20 @@ export interface StickyBuyBarProps {
   name: string;
   quantity: number;
   total: number;
-  isSoldOut: boolean;
   isAddingToCart: boolean;
-  canAddToCart: boolean;
   onAddToCart: () => void;
   barRef?: React.Ref<HTMLDivElement>;
 }
 
 // Phone and tablet bar that appears once the main buttons have scrolled up out of view.
+// Rendered only for a piece that can go in the bag; inert while tucked away so its button never takes focus.
 // Sits on MobileNav; sized by the shared CSS variables.
 export function StickyBuyBar({
   isVisible,
   name,
   quantity,
   total,
-  isSoldOut,
   isAddingToCart,
-  canAddToCart,
   onAddToCart,
   barRef,
 }: StickyBuyBarProps) {
@@ -42,15 +39,8 @@ export function StickyBuyBar({
         <p className="truncate text-sm">{name}</p>
         <p className="text-sm text-muted-foreground tnum">{formatInr(total)}</p>
       </div>
-      <Button
-        onClick={onAddToCart}
-        disabled={isSoldOut || !canAddToCart || isAddingToCart}
-      >
-        {isSoldOut
-          ? "Sold out"
-          : isAddingToCart
-            ? "Adding…"
-            : toAddToCartLabel(quantity)}
+      <Button onClick={onAddToCart} disabled={isAddingToCart}>
+        {isAddingToCart ? "Adding…" : toAddToCartLabel(quantity)}
       </Button>
     </div>
   );

@@ -38,6 +38,7 @@ import { SecondNotice } from "@/features/products/components/SecondNotice";
 import { StickyBuyBar } from "@/features/products/components/StickyBuyBar";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
+  canOfferStickyBar,
   computeUnitPrice,
   isStickyBarWanted,
   isTuckedUnderHeader,
@@ -258,8 +259,14 @@ export function ProductDetailContainer({
     };
   }, []);
 
+  const isStickyBarOffered = canOfferStickyBar({
+    isArchived,
+    isActive: product.is_active,
+    stock: product.stock,
+    isCustomizable: product.is_customizable,
+  });
   // While the bar is up, focused and scrolled-to controls stop above it rather than under it.
-  const isStickyBarShown = !isArchived && isBarWanted;
+  const isStickyBarShown = isStickyBarOffered && isBarWanted;
   useEffect(() => {
     if (!isStickyBarShown) return;
     const root = document.documentElement;
@@ -593,17 +600,17 @@ export function ProductDetailContainer({
         </div>
       )}
 
-      <StickyBuyBar
-        barRef={stickyBarRef}
-        isVisible={isStickyBarShown}
-        name={product.name}
-        quantity={quantity}
-        total={unitPrice * quantity}
-        isSoldOut={stock.tone === "sold_out"}
-        isAddingToCart={isAdding}
-        canAddToCart={product.stock > 0 || product.is_customizable}
-        onAddToCart={handleStickyAddToCart}
-      />
+      {isStickyBarOffered && (
+        <StickyBuyBar
+          barRef={stickyBarRef}
+          isVisible={isStickyBarShown}
+          name={product.name}
+          quantity={quantity}
+          total={unitPrice * quantity}
+          isAddingToCart={isAdding}
+          onAddToCart={handleStickyAddToCart}
+        />
+      )}
     </PageShell>
   );
 }
