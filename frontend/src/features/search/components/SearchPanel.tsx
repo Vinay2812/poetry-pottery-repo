@@ -61,6 +61,7 @@ function Section({
     <>
       <li
         role="presentation"
+        // About 37px tall (16 + an 11px line + 6); SuggestionRow's scroll-mt-10 clears it, so change both together.
         className="px-4 pt-4 pb-1.5 text-[11px] tracking-[0.18em] text-muted-foreground uppercase"
       >
         {title}
@@ -147,7 +148,7 @@ export function SearchPanel({
             autoComplete="off"
             onChange={(event) => onChange(event.target.value)}
             onKeyDown={onKeyDown}
-            className="h-10 w-full min-w-0 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
+            className="h-10 w-full min-w-0 bg-transparent text-[15px] placeholder:text-muted-foreground"
           />
           <button
             type="button"

@@ -45,7 +45,7 @@ export function SuggestionRow({
       onPointerMove={isDisabled ? undefined : onHover}
       className={cn(
         "flex items-center gap-3 px-4 py-2.5 transition-opacity",
-        // The first row of a section keeps its heading in view when arrow keys scroll to it.
+        // 40px clears the ~37px section heading in SearchPanel, so arrow keys never hide it; change both together.
         isFirst && "scroll-mt-10",
         isDisabled ? "opacity-50" : "cursor-pointer",
         isActive && "bg-ash/60",
