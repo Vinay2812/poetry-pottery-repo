@@ -69,7 +69,7 @@ export function MobileMenuSheet({
           titleRef.current?.focus();
         }}
       >
-        <SheetHeader className="shrink-0 px-6 py-5">
+        <SheetHeader className="shrink-0 border-b border-ash px-6 py-5">
           <SheetTitle
             ref={titleRef}
             tabIndex={-1}
@@ -190,7 +190,8 @@ export function MobileMenuSheet({
             ref={closeRef}
             variant="ghost"
             size="icon-sm"
-            className="absolute top-3 right-3"
+            // Last in the tab order but drawn in the header: 18px centres it on the heading's 28px line under 20px padding.
+            className="absolute top-[18px] right-3"
           >
             <XIcon />
             <span className="sr-only">Close</span>
