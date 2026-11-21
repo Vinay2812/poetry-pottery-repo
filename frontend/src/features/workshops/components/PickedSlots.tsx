@@ -10,6 +10,8 @@ export interface PickedSlotsProps {
   progress: string;
   emptyMessage: string;
   onRemoveSlot: (startsAt: string) => void;
+  // Set when a picked time could not be checked; the retry sits with the picks it is about.
+  onRetryCheck: (() => void) | null;
 }
 
 export function PickedSlots({
@@ -17,6 +19,7 @@ export function PickedSlots({
   progress,
   emptyMessage,
   onRemoveSlot,
+  onRetryCheck,
 }: PickedSlotsProps) {
   return (
     <div className="flex flex-col gap-2">
@@ -43,6 +46,18 @@ export function PickedSlots({
             </li>
           ))}
         </ul>
+      )}
+      {onRetryCheck && (
+        <p role="alert" className="text-[13px] text-muted-foreground">
+          We could not check every picked time just now.{" "}
+          <button
+            type="button"
+            onClick={onRetryCheck}
+            className="border-b border-ink pb-0.5 text-ink hover:border-primary hover:text-primary"
+          >
+            Try again
+          </button>
+        </p>
       )}
     </div>
   );

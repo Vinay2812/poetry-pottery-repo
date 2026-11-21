@@ -11,6 +11,7 @@ import {
   isSlotPickable,
   keepFittingPicks,
   pickableSlots,
+  rememberPickReads,
   shiftMonth,
   spanDays,
   suggestSlots,
@@ -411,24 +412,84 @@ describe("toOffMonthRange", () => {
 describe("keepFittingPicks", () => {
   const roomy = slot(13, 4);
   const tight = slot(14, 1);
-  const byStart = new Map([
+  const reads = new Map([
     [roomy.starts_at, roomy],
     [tight.starts_at, tight],
   ]);
   const unread = { starts_at: "2026-12-01T08:30:00.000Z", ends_at: "x" };
 
   it("drops a time that no longer has room for the group", () => {
-    expect(keepFittingPicks([roomy, tight], byStart, 2)).toEqual([roomy]);
+    expect(keepFittingPicks([roomy, tight], reads, 2)).toEqual([roomy]);
   });
 
   it("keeps every time while the group still fits", () => {
-    expect(keepFittingPicks([roomy, tight], byStart, 1)).toEqual([
-      roomy,
-      tight,
-    ]);
+    expect(keepFittingPicks([roomy, tight], reads, 1)).toEqual([roomy, tight]);
   });
 
   it("keeps a time whose availability has not been read yet", () => {
-    expect(keepFittingPicks([unread], byStart, 3)).toEqual([unread]);
+    expect(keepFittingPicks([unread], reads, 3)).toEqual([unread]);
+  });
+
+  it("drops a time a read of its day no longer has", () => {
+    expect(
+      keepFittingPicks([roomy, unread], new Map([[unread.starts_at, null]]), 1),
+    ).toEqual([roomy]);
+  });
+});
+
+describe("rememberPickReads", () => {
+  const one = slot(13, 4);
+  const two = slot(14, 4);
+  const day = (slots: ReturnType<typeof slot>[]) => ({
+    date: "2026-09-13",
+    weekday: 0,
+    is_closed: slots.length === 0,
+    closed_kind: null,
+    reason: null,
+    slots,
+  });
+  const none = new Map<string, null>();
+
+  it("records what a read of each picked day says", () => {
+    const reads = rememberPickReads(none, [one, two], [day([one])], IST);
+    expect(reads.get(one.starts_at)).toEqual(one);
+    // The day was read and the time is not in it, so it is gone, not unknown.
+    expect(reads.get(two.starts_at)).toBeNull();
+  });
+
+  it("keeps an earlier read while the picked day is not being read", () => {
+    const earlier = rememberPickReads(none, [one], [day([one])], IST);
+    expect(rememberPickReads(earlier, [one], [], IST)).toBe(earlier);
+  });
+
+  it("knows nothing of a pick no read has covered", () => {
+    expect(rememberPickReads(none, [one], [], IST).has(one.starts_at)).toBe(
+      false,
+    );
+  });
+
+  it("lets the latest read of a day replace an earlier one", () => {
+    const earlier = rememberPickReads(none, [one], [day([one])], IST);
+    const closed = rememberPickReads(earlier, [one], [day([])], IST);
+    expect(closed.get(one.starts_at)).toBeNull();
+    const fuller = rememberPickReads(
+      earlier,
+      [one],
+      [day([{ ...one, remaining: 1 }])],
+      IST,
+    );
+    expect(fuller.get(one.starts_at)?.remaining).toBe(1);
+  });
+
+  it("forgets a time once it is no longer picked", () => {
+    const earlier = rememberPickReads(none, [one, two], [day([one, two])], IST);
+    expect(rememberPickReads(earlier, [two], [], IST).size).toBe(1);
+  });
+
+  it("hands back the same reads when nothing changed, so state settles", () => {
+    const earlier = rememberPickReads(none, [one], [day([one])], IST);
+    expect(rememberPickReads(earlier, [one], [day([{ ...one }])], IST)).toBe(
+      earlier,
+    );
   });
 });

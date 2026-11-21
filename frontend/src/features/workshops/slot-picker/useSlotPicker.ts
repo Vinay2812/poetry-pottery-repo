@@ -24,6 +24,8 @@ import {
   formatMonth,
   isSameSelection,
   keepFittingPicks,
+  type PickReads,
+  rememberPickReads,
   shiftMonth,
   suggestSlots,
   toCalendarWeeks,
@@ -82,6 +84,8 @@ export interface SlotPicker {
   isSwapHintShown: boolean;
   hasNoRoom: boolean;
   isUnchanged: boolean;
+  // Set while a picked time in another month could not be checked, so Book has a way forward.
+  onRetryPickCheck: (() => void) | null;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
   onSelectDate: (dateKey: string) => void;
@@ -94,6 +98,7 @@ export interface SlotPicker {
 
 const NO_DAYS: WorkshopDayData[] = [];
 const NO_SLOTS: SlotInterval[] = [];
+const NO_READS: PickReads = new Map();
 
 export function useSlotPicker({
   workshop,
@@ -118,6 +123,7 @@ export function useSlotPicker({
   const [chosenDate, setChosenDate] = useState<string | null>(null);
   const [manual, setManual] = useState<SlotInterval[] | null>(null);
   const [baseline, setBaseline] = useState<readonly SlotInterval[]>(NO_SLOTS);
+  const [rememberedReads, setRememberedReads] = useState<PickReads>(NO_READS);
 
   const isIdle = isSkipped || !workshop;
   const { data, loading, error, refetch } = useQuery(
@@ -189,42 +195,38 @@ export function useSlotPicker({
     chosen.map((slot) => toDateKey(slot.starts_at, timezone)),
     month,
   );
-  const { data: offMonthData, refetch: refetchOffMonth } = useQuery(
-    WorkshopAvailabilityDocument,
-    {
-      variables: {
-        input: {
-          config_slug: workshop?.slug ?? "",
-          from: offMonthRange?.from ?? "",
-          days: offMonthRange?.days ?? 0,
-          exclude_booking_id: excludeBookingId ?? null,
-        },
+  const {
+    data: offMonthData,
+    error: offMonthError,
+    refetch: refetchOffMonth,
+  } = useQuery(WorkshopAvailabilityDocument, {
+    variables: {
+      input: {
+        config_slug: workshop?.slug ?? "",
+        from: offMonthRange?.from ?? "",
+        days: offMonthRange?.days ?? 0,
+        exclude_booking_id: excludeBookingId ?? null,
       },
-      skip: isIdle || offMonthRange === null,
-      fetchPolicy: "cache-and-network",
     },
-  );
+    skip: isIdle || offMonthRange === null,
+    fetchPolicy: "cache-and-network",
+  });
   const offMonthDays = offMonthRange
     ? (offMonthData?.workshopAvailability ?? NO_DAYS)
     : NO_DAYS;
-  const knownSlotByStart = useMemo(
-    () =>
-      new Map([
-        ...slotByStart,
-        ...offMonthDays
-          .flatMap((day) => day.slots)
-          .map((slot) => [slot.starts_at, slot] as const),
-      ]),
-    [offMonthDays, slotByStart],
+  const freshDays = useMemo(
+    () => [...days, ...offMonthDays],
+    [days, offMonthDays],
   );
+  // A pick read once stays checked while its month is read again; the latest read of its day decides.
+  const reads = rememberPickReads(rememberedReads, chosen, freshDays, timezone);
+  if (reads !== rememberedReads) setRememberedReads(reads);
   // A bigger group or a fresh read drops the hours that no longer have room, in any month.
   const picked = useMemo(
-    () => keepFittingPicks(chosen, knownSlotByStart, participants),
-    [chosen, knownSlotByStart, participants],
+    () => keepFittingPicks(chosen, reads, participants),
+    [chosen, reads, participants],
   );
-  const isEveryPickChecked = picked.every((slot) =>
-    knownSlotByStart.has(slot.starts_at),
-  );
+  const isEveryPickChecked = picked.every((slot) => reads.has(slot.starts_at));
 
   const firstPicked = picked[0];
   const selectedDate =
@@ -342,6 +344,11 @@ export function useSlotPicker({
     [firstMonth, timezone],
   );
 
+  const handleRetryPickCheck = useCallback(() => {
+    // A failed retry keeps the error, which keeps the retry on screen.
+    refetchOffMonth().catch(() => undefined);
+  }, [refetchOffMonth]);
+
   const hasOffMonthPicks = offMonthRange !== null;
   const refresh = useCallback(() => {
     // A skipped query reads again when it comes back, because of cache-and-network.
@@ -373,6 +380,10 @@ export function useSlotPicker({
     isSwapHintShown: needed > 1 && picked.length === needed,
     hasNoRoom: suggestion === null,
     isUnchanged: baseline.length > 0 && isSameSelection(picked, baseline),
+    onRetryPickCheck:
+      hasOffMonthPicks && offMonthError && !isEveryPickChecked
+        ? handleRetryPickCheck
+        : null,
     onPreviousMonth: handlePreviousMonth,
     onNextMonth: handleNextMonth,
     onSelectDate: setChosenDate,

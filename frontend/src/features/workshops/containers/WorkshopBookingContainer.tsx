@@ -181,6 +181,7 @@ export function WorkshopBookingContainer({
             onNoteChange={setNote}
             onBook={handleBook}
             onRemoveSlot={picker.onRemoveSlot}
+            onRetryPickCheck={picker.onRetryPickCheck}
           />
         </aside>
       </div>

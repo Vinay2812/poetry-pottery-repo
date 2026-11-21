@@ -22,6 +22,7 @@ const meta = {
     progress: "2 of 3 hours picked",
     emptyMessage: "Pick your times from the calendar.",
     onRemoveSlot: fn(),
+    onRetryCheck: null,
   },
 } satisfies Meta<typeof PickedSlots>;
 
@@ -50,6 +51,11 @@ export const HalfHourTimes: Story = {
     ],
     progress: "30 minutes of 1 hour picked",
   },
+};
+
+// A pick in another month could not be read, so Book waits and the retry sits with the picks.
+export const CheckFailed: Story = {
+  args: { onRetryCheck: fn() },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

@@ -275,8 +275,8 @@ describe("useSlotPicker", () => {
       from: "2026-10-02",
       days: 1,
     });
-    // Until those days are read, nothing says the picks still fit.
-    expect(result.current.isComplete).toBe(false);
+    // October was read already, so Book stays on while those days are read again.
+    expect(result.current.isComplete).toBe(true);
 
     months["2026-10-02"] = october;
     rerender({ workshop: WORKSHOP, hours: 2, participants: 1 });
@@ -309,6 +309,88 @@ describe("useSlotPicker", () => {
     rerender({ workshop: WORKSHOP, hours: 2, participants: 1 });
     expect(result.current.pickedStarts).toEqual([studioHour("2026-10-02", 13)]);
     expect(result.current.isComplete).toBe(false);
+  });
+
+  it("drops a pick in another month once a read shows its day closed", () => {
+    const { result, rerender } = renderPicker({ hours: 1 });
+    act(() => result.current.onSelectDate("2026-10-02"));
+    act(() => result.current.onToggleSlot(studioHour("2026-10-02", 13)));
+    act(() => result.current.onNextMonth());
+    expect(result.current.pickedStarts).toEqual([studioHour("2026-10-02", 13)]);
+
+    months["2026-10-02"] = {
+      workshopAvailability: [{ ...dayOn("2026-10-02", []), is_closed: true }],
+    };
+    rerender({ workshop: WORKSHOP, hours: 1, participants: 1 });
+    expect(result.current.pickedStarts).toEqual([]);
+    expect(result.current.isComplete).toBe(false);
+    // Coming back to October does not bring the closed time back while it is read again.
+    delete months["2026-10-01"];
+    act(() => result.current.onPreviousMonth());
+    expect(result.current.pickedStarts).toEqual([]);
+  });
+
+  it("keeps Book on for a pick read before while its re-read fails", () => {
+    const held = [
+      {
+        starts_at: studioHour("2026-11-20", 13),
+        ends_at: studioHour("2026-11-20", 14),
+      },
+    ];
+    useQueryMock.mockImplementation((_document, { variables, skip }) => {
+      const data = skip ? undefined : months[variables.input.from];
+      const isFailing = !skip && variables.input.from === "2026-11-20";
+      return {
+        data,
+        loading: !skip && !data && !isFailing,
+        error: isFailing ? new Error("Network down") : undefined,
+        refetch: refetchMock,
+      };
+    });
+    months["2026-11-01"] = {
+      workshopAvailability: [dayOn("2026-11-20", [13])],
+    };
+    const { result } = renderPicker();
+
+    act(() => result.current.startFrom(held));
+    expect(result.current.isComplete).toBe(true);
+    act(() => result.current.onPreviousMonth());
+    // Read before, so a failed re-read leaves Book on and asks nothing.
+    expect(result.current.isComplete).toBe(true);
+    expect(result.current.onRetryPickCheck).toBeNull();
+  });
+
+  it("offers a retry beside the selection when a never-read pick cannot be checked", () => {
+    const held = [
+      {
+        starts_at: studioHour("2026-11-20", 13),
+        ends_at: studioHour("2026-11-20", 14),
+      },
+    ];
+    delete months["2026-11-01"];
+    useQueryMock.mockImplementation((_document, { variables, skip }) => {
+      const data = skip ? undefined : months[variables.input.from];
+      const isFailing = !skip && variables.input.from === "2026-11-20";
+      return {
+        data,
+        loading: !skip && !data && !isFailing,
+        error: isFailing ? new Error("Network down") : undefined,
+        refetch: refetchMock,
+      };
+    });
+    const { result } = renderPicker();
+
+    act(() => result.current.startFrom(held));
+    // November is still on the wire, so nothing says the time is free yet.
+    expect(result.current.isComplete).toBe(false);
+    expect(result.current.onRetryPickCheck).toBeNull();
+
+    act(() => result.current.onPreviousMonth());
+    expect(result.current.isComplete).toBe(false);
+    expect(result.current.onRetryPickCheck).not.toBeNull();
+    const callsBefore = refetchMock.mock.calls.length;
+    act(() => result.current.onRetryPickCheck?.());
+    expect(refetchMock.mock.calls.length).toBe(callsBefore + 1);
   });
 
   it("opens a move on the hours held and knows when nothing changed", () => {
