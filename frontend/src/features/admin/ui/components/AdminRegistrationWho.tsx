@@ -19,7 +19,10 @@ export function AdminRegistrationWho({
         {email}
       </span>
       <span className="text-[12px] text-muted-foreground tnum">
-        {reference} · Booked {bookedLabel}
+        {reference}
+      </span>
+      <span className="text-[12px] text-muted-foreground tnum">
+        Booked {bookedLabel}
       </span>
     </div>
   );

@@ -133,7 +133,8 @@ export function WorkshopBookingsContainer({
   );
 
   const move = useReasonAction({
-    patch: ({ target }) => patchItems(target),
+    patch: ({ target, reason }) =>
+      patchItems({ ...target, reason: reason ?? null }),
     // The payload is one row; the list needs a fresh take on what is next.
     run: ({ target, reason }) =>
       setStatus({

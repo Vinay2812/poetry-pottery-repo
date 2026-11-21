@@ -318,11 +318,13 @@ export function applyBlackoutPatch(
 export interface WorkshopBookingStatusPatch {
   id: string;
   status: RegistrationStatus;
+  // The reason typed when turning down or cancelling, shown at once.
+  reason: string | null;
 }
 
 /**
- * The optimistic baseline for the bookings list: the row shows its new status at
- * once and drops its actions until the server says which ones are left.
+ * The optimistic baseline for the bookings list: the row shows its new status and
+ * reason at once and drops its actions until the server says which ones are left.
  */
 export function applyBookingStatus(
   rows: WorkshopBookingData[],
@@ -333,7 +335,11 @@ export function applyBookingStatus(
     return {
       ...row,
       next_statuses: [],
-      booking: { ...row.booking, status: patch.status },
+      booking: {
+        ...row.booking,
+        status: patch.status,
+        cancel_reason: patch.reason ?? row.booking.cancel_reason,
+      },
     };
   });
 }

@@ -39,28 +39,13 @@ import {
   EventRegistrationsTable,
   type RegistrationTableRow,
 } from "@/features/admin/events/components/EventRegistrationsTable";
+import { applyRegistrationStatus } from "@/features/admin/events/types";
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS = registrationStatusOptions();
 
 interface StatusPatch {
   id: string;
   status: RegistrationStatus;
-}
-
-/** The row moves at once; its buttons wait for the refetch to say what comes next. */
-function applyStatusPatch(
-  rows: RegistrationTableRow[],
-  patch: StatusPatch,
-): RegistrationTableRow[] {
-  return rows.map((row) => {
-    if (row.id !== patch.id) return row;
-    return {
-      ...row,
-      statusLabel: registrationStatusLabel(patch.status),
-      statusTone: registrationStatusTone(patch.status),
-      actions: [],
-    };
-  });
 }
 
 export interface EventRegistrationsContainerProps {
@@ -108,9 +93,15 @@ export function EventRegistrationsContainer({
   const result =
     data?.adminEventRegistrations ?? previousData?.adminEventRegistrations;
 
+  const items = useMemo(() => result?.items ?? [], [result]);
+  const [optimisticItems, patchItems] = useOptimistic(
+    items,
+    applyRegistrationStatus,
+  );
+
   const rows = useMemo<RegistrationTableRow[]>(
     () =>
-      (result?.items ?? []).map((entry) => ({
+      optimisticItems.map((entry) => ({
         id: entry.registration.id,
         personName: toPersonName(entry.customer.name, entry.customer.email),
         personEmail: entry.customer.email,
@@ -127,13 +118,12 @@ export function EventRegistrationsContainer({
           "seat",
         ),
       })),
-    [result],
+    [optimisticItems],
   );
 
-  const [optimisticRows, patchRow] = useOptimistic(rows, applyStatusPatch);
-
   const move = useReasonAction({
-    patch: ({ target }) => patchRow(target),
+    patch: ({ target, reason }) =>
+      patchItems({ ...target, reason: reason ?? null }),
     // The event header counts seats, so it reads again once the row moves.
     run: ({ target, reason }) =>
       setRegistrationStatus({
@@ -194,7 +184,7 @@ export function EventRegistrationsContainer({
         />
       </AdminToolbar>
       <EventRegistrationsTable
-        rows={optimisticRows}
+        rows={rows}
         isBusy={isPending || loading}
         isLocked={isEventCancelled}
         busyId={move.pending?.id ?? null}

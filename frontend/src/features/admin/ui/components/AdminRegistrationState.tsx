@@ -21,9 +21,7 @@ export function AdminRegistrationState({
         <AdminStatusPill label={statusLabel} tone={statusTone} />
       </span>
       {closingNote && (
-        <span className="max-w-56 text-[12px] text-muted-foreground">
-          {closingNote}
-        </span>
+        <span className="text-[12px] text-muted-foreground">{closingNote}</span>
       )}
     </div>
   );

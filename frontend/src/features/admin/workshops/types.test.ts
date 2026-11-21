@@ -340,6 +340,7 @@ describe("applyBookingStatus", () => {
     const next = applyBookingStatus(rows, {
       id: "two",
       status: RegistrationStatus.Approved,
+      reason: null,
     });
 
     expect(next[0]?.booking.status).toBe(RegistrationStatus.Pending);
@@ -355,8 +356,21 @@ describe("applyBookingStatus", () => {
       applyBookingStatus(rows, {
         id: "gone",
         status: RegistrationStatus.Cancelled,
+        reason: "Work came up",
       }),
     ).toEqual(rows);
+  });
+
+  it("shows the reason for a cancel at once", () => {
+    const [moved] = applyBookingStatus(
+      [bookingRow("one", RegistrationStatus.Approved)],
+      {
+        id: "one",
+        status: RegistrationStatus.Cancelled,
+        reason: "Work came up",
+      },
+    );
+    expect(moved?.booking.cancel_reason).toBe("Work came up");
   });
 });
 

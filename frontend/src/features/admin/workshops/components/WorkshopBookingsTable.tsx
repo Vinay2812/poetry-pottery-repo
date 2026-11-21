@@ -15,6 +15,8 @@ import {
   type RegistrationAction,
 } from "@/features/admin/ui";
 
+import { WorkshopSessionSummary } from "@/features/admin/workshops/components/WorkshopSessionSummary";
+
 export interface WorkshopBookingRow {
   id: string;
   personName: string;
@@ -41,21 +43,6 @@ export interface WorkshopBookingsTableProps {
 const CAPTION = "Wheel bookings";
 const EMPTY_MESSAGE = "No bookings match those filters";
 
-function SessionLines({ row }: { row: WorkshopBookingRow }) {
-  return (
-    <div className="flex flex-col tnum">
-      {row.sessionLines.map((line) => (
-        <span key={line} className="whitespace-nowrap">
-          {line}
-        </span>
-      ))}
-      <span className="text-[12px] text-muted-foreground">
-        {row.sizeLabel} · {row.totalLabel}
-      </span>
-    </div>
-  );
-}
-
 // The table needs about a thousand pixels; anything narrower reads each booking as a card.
 export function WorkshopBookingsTable({
   rows,
@@ -80,7 +67,11 @@ export function WorkshopBookingsTable({
                 reference={row.id}
                 bookedLabel={row.bookedLabel}
               />
-              <SessionLines row={row} />
+              <WorkshopSessionSummary
+                sessionLines={row.sessionLines}
+                sizeLabel={row.sizeLabel}
+                totalLabel={row.totalLabel}
+              />
               <AdminRegistrationState
                 statusLabel={row.statusLabel}
                 statusTone={row.statusTone}
@@ -125,9 +116,13 @@ export function WorkshopBookingsTable({
                   />
                 </td>
                 <td className={ADMIN_TD}>
-                  <SessionLines row={row} />
+                  <WorkshopSessionSummary
+                    sessionLines={row.sessionLines}
+                    sizeLabel={row.sizeLabel}
+                    totalLabel={row.totalLabel}
+                  />
                 </td>
-                <td className={ADMIN_TD}>
+                <td className={`${ADMIN_TD} max-w-64`}>
                   <AdminRegistrationState
                     statusLabel={row.statusLabel}
                     statusTone={row.statusTone}

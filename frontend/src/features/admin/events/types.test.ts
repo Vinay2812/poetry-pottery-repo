@@ -5,10 +5,13 @@ import {
   EventLevel,
   EventStatus,
   EventType,
+  RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
 import {
   allowedEventActions,
+  applyRegistrationStatus,
+  type EventRegistrationData,
   describeSeats,
   describeWhen,
   EMPTY_EVENT_FORM,
@@ -272,5 +275,57 @@ describe("toEventInput", () => {
   it("drops blank lines from the lists", () => {
     const input = toEventInput({ ...values, includes: "Tea\n\n  \nClay" });
     expect(input.includes).toEqual(["Tea", "Clay"]);
+  });
+});
+
+function registrationRow(id: string, status: RegistrationStatus) {
+  return {
+    next_statuses: [RegistrationStatus.Confirmed, RegistrationStatus.Cancelled],
+    customer: { id: 1, name: "Asha", email: "asha@example.com", image: null },
+    registration: {
+      id,
+      seats: 1,
+      unit_price: 1500,
+      total: 1500,
+      status,
+      note: null,
+      cancel_reason: null,
+      created_at: "2026-09-01T06:00:00.000Z",
+      event: {
+        id: 21,
+        title: "Open mic",
+        starts_at: "2026-11-23T16:08:00.000Z",
+      },
+    },
+  } satisfies EventRegistrationData;
+}
+
+describe("applyRegistrationStatus", () => {
+  it("moves one row, parks its actions and shows the reason at once", () => {
+    const rows = [
+      registrationRow("EV-1", RegistrationStatus.Approved),
+      registrationRow("EV-2", RegistrationStatus.Approved),
+    ];
+
+    const next = applyRegistrationStatus(rows, {
+      id: "EV-2",
+      status: RegistrationStatus.Cancelled,
+      reason: "Travelling that weekend",
+    });
+
+    expect(next[0]).toBe(rows[0]);
+    expect(next[1]?.registration).toMatchObject({
+      status: RegistrationStatus.Cancelled,
+      cancel_reason: "Travelling that weekend",
+    });
+    expect(next[1]?.next_statuses).toEqual([]);
+  });
+
+  it("keeps the old reason when the move has none", () => {
+    const [moved] = applyRegistrationStatus(
+      [registrationRow("EV-1", RegistrationStatus.Pending)],
+      { id: "EV-1", status: RegistrationStatus.Approved, reason: null },
+    );
+    expect(moved?.registration.cancel_reason).toBeNull();
   });
 });

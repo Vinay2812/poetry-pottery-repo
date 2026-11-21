@@ -42,14 +42,6 @@ export interface EventRegistrationsTableProps {
 const CAPTION = "Everyone booked on this event";
 const EMPTY_MESSAGE = "No registrations match those filters";
 
-function SeatsLine({ row }: { row: RegistrationTableRow }) {
-  return (
-    <span className="whitespace-nowrap tnum">
-      {row.seatsLabel} · {row.totalLabel}
-    </span>
-  );
-}
-
 // The table needs about a thousand pixels; anything narrower reads each registration as a card.
 export function EventRegistrationsTable({
   rows,
@@ -76,7 +68,9 @@ export function EventRegistrationsTable({
                 reference={row.id}
                 bookedLabel={row.bookedLabel}
               />
-              <SeatsLine row={row} />
+              <span className="whitespace-nowrap tnum">
+                {row.seatsLabel} · {row.totalLabel}
+              </span>
               <AdminRegistrationState
                 statusLabel={row.statusLabel}
                 statusTone={row.statusTone}
@@ -121,9 +115,11 @@ export function EventRegistrationsTable({
                   />
                 </td>
                 <td className={ADMIN_TD}>
-                  <SeatsLine row={row} />
+                  <span className="whitespace-nowrap tnum">
+                    {row.seatsLabel} · {row.totalLabel}
+                  </span>
                 </td>
-                <td className={ADMIN_TD}>
+                <td className={`${ADMIN_TD} max-w-64`}>
                   <AdminRegistrationState
                     statusLabel={row.statusLabel}
                     statusTone={row.statusTone}
