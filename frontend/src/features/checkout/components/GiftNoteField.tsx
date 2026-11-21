@@ -23,7 +23,7 @@ export function GiftNoteField({
   onHiddenPricesChange,
 }: GiftNoteFieldProps) {
   return (
-    <div className="flex flex-col gap-4 border-t border-ash pt-5">
+    <div className="flex flex-col gap-4">
       <div className="flex items-center gap-3">
         <Checkbox
           id="gift-toggle"

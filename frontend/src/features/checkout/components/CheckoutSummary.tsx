@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { formatInr } from "@/lib/format";
 
+import { CheckoutSection } from "@/features/checkout/components/CheckoutSection";
 import { OrderTotals } from "@/features/orders/components/OrderTotals";
 
 export interface CheckoutSummaryProps {
@@ -37,12 +38,12 @@ export function CheckoutSummary({
   coupon,
 }: CheckoutSummaryProps) {
   return (
-    <div className="flex flex-col gap-5 border-t border-ash pt-5">
-      <h2 className="font-heading text-xl tracking-tight">
-        {itemCount} {itemCount === 1 ? "piece" : "pieces"}
-      </h2>
+    <CheckoutSection
+      title="Your order"
+      aside={`${itemCount} ${itemCount === 1 ? "piece" : "pieces"}`}
+    >
       {problems.length > 0 && (
-        <ul className="flex flex-col gap-1 text-[13px] text-muted-foreground">
+        <ul className="flex flex-col gap-1 text-[13px] text-terracotta-dark">
           {problems.map((problem) => (
             <li key={problem}>{problem}</li>
           ))}
@@ -62,6 +63,7 @@ export function CheckoutSummary({
       </div>
       <Button
         size="lg"
+        className="mt-1"
         onClick={onPlaceOrder}
         disabled={!canPlaceOrder || isPlacing}
       >
@@ -73,9 +75,9 @@ export function CheckoutSummary({
         <p className="text-[13px] text-muted-foreground">{blockedReason}</p>
       )}
       <p className="text-[13px] text-muted-foreground">
-        No payment now; we confirm on WhatsApp within a day and share UPI
-        details.
+        Nothing to pay now. We confirm your order on WhatsApp within a day, then
+        send UPI details to pay.
       </p>
-    </div>
+    </CheckoutSection>
   );
 }

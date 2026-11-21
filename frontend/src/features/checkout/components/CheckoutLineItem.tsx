@@ -9,6 +9,7 @@ export interface CheckoutLineItemProps {
   name: string;
   imageUrl: string | null;
   quantity: number;
+  unitPrice: number;
   lineTotal: number;
   selectionSummary: string | null;
   referenceImageUrls: string[];
@@ -18,6 +19,7 @@ export function CheckoutLineItem({
   name,
   imageUrl,
   quantity,
+  unitPrice,
   lineTotal,
   selectionSummary,
   referenceImageUrls,
@@ -45,7 +47,7 @@ export function CheckoutLineItem({
           </p>
         )}
         <p className="text-[13px] text-muted-foreground tnum">
-          Quantity {quantity}
+          {quantity} × {formatInr(unitPrice)}
         </p>
         <ReferencePhotoStrip
           urls={referenceImageUrls}
