@@ -1,3 +1,5 @@
+import { CANCELLING_RULE } from "@/features/workshops/types";
+
 const POLICY_POINTS = [
   {
     term: "Missed sessions",
@@ -6,8 +8,7 @@ const POLICY_POINTS = [
   },
   {
     term: "Cancelling",
-    detail:
-      "Cancel at least 4 days before your session for a full refund. After that, we refund only if we can fill your seat from the waitlist or with someone you refer.",
+    detail: CANCELLING_RULE,
   },
   {
     term: "Sending someone else",
@@ -31,9 +32,13 @@ export function CancellationPolicy() {
       <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
         Cancellation policy
       </h2>
-      <dl className="grid max-w-3xl gap-x-8 gap-y-4 text-[15px] md:grid-cols-[180px_1fr]">
+      {/* Each term sits tight on its detail so the pairs read as pairs on a phone. */}
+      <dl className="flex max-w-3xl flex-col border-t border-ash text-[15px]">
         {POLICY_POINTS.map(({ term, detail }) => (
-          <div key={term} className="contents">
+          <div
+            key={term}
+            className="grid gap-1 border-b border-ash py-4 md:grid-cols-[180px_1fr] md:gap-8"
+          >
             <dt className="font-medium">{term}</dt>
             <dd className="text-muted-foreground">{detail}</dd>
           </div>

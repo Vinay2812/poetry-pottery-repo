@@ -19,6 +19,10 @@ export type BookingData = WorkshopBookingFieldsFragment;
 export const SESSION_NOTE =
   "Everything you make is fired and glazed by us, ready in about two weeks.";
 
+// Owner-approved policy wording; the booking page and the cancel dialog both show it as is.
+export const CANCELLING_RULE =
+  "Cancel at least 4 days before your session for a full refund. After that, we refund only if we can fill your seat from the waitlist or with someone you refer.";
+
 export interface SessionFact {
   label: string;
   value: string;
