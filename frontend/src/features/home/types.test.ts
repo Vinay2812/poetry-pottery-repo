@@ -74,12 +74,24 @@ describe("toStudioDaysLabel", () => {
 });
 
 describe("toStudioPriceLabel", () => {
-  it("reads the shortest tier whatever the order", () => {
+  it("reads the cheapest tier whatever the order", () => {
     expect(toStudioPriceLabel([tier(3, 2700), tier(1, 1100)])).toBe(
       "From ₹1,100 a person for an hour",
     );
     expect(toStudioPriceLabel([tier(2, 2000)])).toBe(
-      "From ₹2,000 a person for 2 hours",
+      "From ₹2,000 a person for two hours",
+    );
+  });
+
+  it("prefers a longer tier that costs less", () => {
+    expect(toStudioPriceLabel([tier(1, 1800), tier(2, 1500)])).toBe(
+      "From ₹1,500 a person for two hours",
+    );
+  });
+
+  it("takes the shorter tier when two cost the same", () => {
+    expect(toStudioPriceLabel([tier(3, 1500), tier(2, 1500)])).toBe(
+      "From ₹1,500 a person for two hours",
     );
   });
 
@@ -201,6 +213,16 @@ describe("toStudioSchedule", () => {
       priceLabel: "From ₹1,100 a person for an hour",
       offer: "Book an hour.",
     });
+  });
+
+  it("prices from the cheapest tier that fits, not the cheapest listed", () => {
+    const cheapLongTier: StudioWheel = {
+      ...shortDay([]),
+      tiers: [tier(1, 1800), tier(2, 1500)],
+    };
+    expect(toStudioSchedule(cheapLongTier)?.priceLabel).toBe(
+      "From ₹1,800 a person for an hour",
+    );
   });
 
   it("is empty when no tier fits the day", () => {

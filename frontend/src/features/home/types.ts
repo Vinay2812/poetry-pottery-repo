@@ -117,12 +117,18 @@ export function toStudioDaysLabel(
   return `Every day except ${joinWords(shut)}`;
 }
 
-// The cheapest way onto a wheel, read off the shortest tier.
+// "an hour", "two hours".
+function toHoursPhrase(hours: number): string {
+  return hours === 1 ? "an hour" : `${toNumberWord(hours)} hours`;
+}
+
+// The cheapest way onto a wheel, the shorter tier on a tie, and how long it buys.
 export function toStudioPriceLabel(tiers: StudioWheel["tiers"]): string | null {
-  const shortest = [...tiers].sort((a, b) => a.hours - b.hours)[0];
-  if (!shortest) return null;
-  const hours = shortest.hours === 1 ? "an hour" : `${shortest.hours} hours`;
-  return `From ${formatInr(shortest.price_per_person)} a person for ${hours}`;
+  const cheapest = [...tiers].sort(
+    (a, b) => a.price_per_person - b.price_per_person || a.hours - b.hours,
+  )[0];
+  if (!cheapest) return null;
+  return `From ${formatInr(cheapest.price_per_person)} a person for ${toHoursPhrase(cheapest.hours)}`;
 }
 
 // How long someone can book, said only as far as the tiers allow.
@@ -133,7 +139,7 @@ export function toStudioOffer(tiers: StudioWheel["tiers"]): string | null {
   const shortest = hours[0];
   const longest = hours[hours.length - 1];
   if (shortest === undefined || longest === undefined) return null;
-  const first = shortest === 1 ? "an hour" : `${toNumberWord(shortest)} hours`;
+  const first = toHoursPhrase(shortest);
   if (hours.length === 1) return `Book ${first}.`;
   if (shortest === 1 && longest === 3) return "Book an hour or three.";
   return `Book ${first} or more.`;
