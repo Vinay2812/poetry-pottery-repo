@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { ContentIndex } from "@/features/content/components/ContentIndex";
 import { pickActiveSection } from "@/features/content/types";
@@ -32,6 +32,10 @@ export function ContentIndexContainer({
   const [activeId, setActiveId] = useState<string | null>(
     entries[0]?.id ?? null,
   );
+
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // On phones the list folds away once a section is picked, so the text is what is on screen.
+  const handleJump = useCallback(() => setIsMenuOpen(false), []);
 
   useEffect(() => {
     if (typeof IntersectionObserver === "undefined") return;
@@ -69,5 +73,14 @@ export function ContentIndexContainer({
     };
   }, [entries]);
 
-  return <ContentIndex label={label} entries={entries} activeId={activeId} />;
+  return (
+    <ContentIndex
+      label={label}
+      entries={entries}
+      activeId={activeId}
+      isMenuOpen={isMenuOpen}
+      onMenuOpenChange={setIsMenuOpen}
+      onJump={handleJump}
+    />
+  );
 }
