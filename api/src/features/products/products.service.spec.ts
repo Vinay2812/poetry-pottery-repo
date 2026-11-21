@@ -206,14 +206,14 @@ describe("ProductsService", () => {
   it("lists every filter option at zero when search matches nothing", async () => {
     searchMock.rankProducts.mockResolvedValue([]);
     prismaMock.category.findMany.mockResolvedValue([
-      { slug: "mugs", name: "Mugs" },
+      { slug: "mugs", name: "Mugs", _count: { products: 0 } },
     ]);
     prismaMock.collection.findMany.mockResolvedValue([
-      { slug: "spring-2025", name: "Spring 2025" },
+      { slug: "spring-2025", name: "Spring 2025", _count: { products: 0 } },
     ]);
     prismaMock.product.groupBy.mockResolvedValue([{ material: "Stoneware" }]);
     prismaMock.glaze.findMany.mockResolvedValue([
-      { slug: "sage", name: "Sage" },
+      { slug: "sage", name: "Sage", _count: { products: 0 } },
     ]);
 
     const result = await service.list({ search: "zzz" });
@@ -229,7 +229,7 @@ describe("ProductsService", () => {
       archive_count: 0,
       seconds_count: 0,
     });
-    // Nothing matched, so nothing is counted: only the names are read.
+    // Nothing matched: the lists are read once, against nothing, and no price or material is counted.
     expect(prismaMock.product.groupBy).toHaveBeenCalledTimes(1);
     expect(prismaMock.product.groupBy).toHaveBeenCalledWith({
       by: ["material"],
@@ -238,7 +238,11 @@ describe("ProductsService", () => {
     expect(prismaMock.product.aggregate).not.toHaveBeenCalled();
     expect(prismaMock.product.count).not.toHaveBeenCalled();
     expect(prismaMock.category.findMany).toHaveBeenCalledWith(
-      containing({ select: { slug: true, name: true } }),
+      containing({
+        select: containing({
+          _count: { select: { products: { where: { id: { in: [] } } } } },
+        }),
+      }),
     );
   });
 
