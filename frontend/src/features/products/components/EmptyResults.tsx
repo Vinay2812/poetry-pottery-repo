@@ -31,7 +31,7 @@ export function EmptyResults({
     return (
       <EmptyState
         kind="mug"
-        heading="Nothing made to order right now"
+        heading="No made-to-order pieces listed right now"
         line="Tell us what you have in mind and we will throw it for you."
         actionLabel="Ask for a piece"
         actionHref="/custom"

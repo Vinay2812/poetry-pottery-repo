@@ -23,7 +23,7 @@ const MAX_DESCRIPTION_SENTENCES = 3;
 // Studio words for the shop sorts; the footer links to two of them by the same names.
 export const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
   { value: ProductSort.Featured, label: "Studio picks" },
-  { value: ProductSort.Newest, label: "Newest from the kiln" },
+  { value: ProductSort.Newest, label: "Newest on the shelf" },
   { value: ProductSort.BestSelling, label: "Most taken home" },
   { value: ProductSort.PriceLowToHigh, label: "Price, low to high" },
   { value: ProductSort.PriceHighToLow, label: "Price, high to low" },
