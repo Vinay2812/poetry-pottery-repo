@@ -47,7 +47,12 @@ describe("dates", () => {
 
 describe("toPhoneHref", () => {
   it("dials the number the studio put on file", () => {
-    expect(toPhoneHref("+91 91234 56789")).toBe("tel:+91 91234 56789");
+    expect(toPhoneHref("+91 91234 56789")).toBe("tel:+919123456789");
+  });
+
+  it("drops dashes and keeps the leading plus", () => {
+    expect(toPhoneHref(" +91 91234-56789 ")).toBe("tel:+919123456789");
+    expect(toPhoneHref("080-2345-6789")).toBe("tel:08023456789");
   });
 
   it("has nothing to offer when no number is configured", () => {

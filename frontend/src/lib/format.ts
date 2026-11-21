@@ -42,8 +42,8 @@ export function formatDateTime(value: string | Date): string {
   return `${formatDate(value)}, ${formatTime(value)}`;
 }
 
-// A studio with no number on file would otherwise render a link with no text and nowhere to go.
+// A tel: URI takes no spaces or dashes; a studio with no number on file gets no link at all.
 export function toPhoneHref(phone: string): string | null {
-  const trimmed = phone.trim();
-  return trimmed.length > 0 ? `tel:${trimmed}` : null;
+  const dialable = phone.replace(/[\s-]/g, "");
+  return dialable.length > 0 ? `tel:${dialable}` : null;
 }
