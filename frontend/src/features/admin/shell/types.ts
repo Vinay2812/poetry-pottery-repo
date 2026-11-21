@@ -104,3 +104,16 @@ export function toPreviousPage(
 ): number {
   return Math.max(1, Math.min(page - 1, Math.ceil(total / limit)));
 }
+
+// A dirty editor holds in-app navigation and asks first; a clean one lets the link go.
+export function toGuardedNavigate(
+  isLeaveGuarded: boolean,
+  href: string,
+  onGuardedLeave: (href: string) => void,
+): (event: { preventDefault: () => void }) => void {
+  return (event) => {
+    if (!isLeaveGuarded) return;
+    event.preventDefault();
+    onGuardedLeave(href);
+  };
+}

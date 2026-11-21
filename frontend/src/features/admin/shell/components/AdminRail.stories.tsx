@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 
 import { atViewport } from "@/lib/storybook/viewports";
 import { ADMIN_NAV_LINKS } from "@/features/admin/shell/types";
@@ -10,6 +11,8 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     links: ADMIN_NAV_LINKS,
+    isLeaveGuarded: false,
+    onGuardedLeave: fn(),
     pathname: "/dashboard/orders",
   },
 } satisfies Meta<typeof AdminRail>;

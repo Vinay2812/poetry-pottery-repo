@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import { type UrlCodec, useUrlState } from "@/lib/use-url-state";
 
@@ -74,4 +81,25 @@ export function useSearchDraft(
   );
 
   return [draft ?? committed, change];
+}
+
+export interface AdminLeaveGuard {
+  onLeaveAttempt: (href: string) => void;
+}
+
+// The chrome holds at most one guard, set by whichever editor is dirty.
+export const AdminLeaveGuardContext = createContext<
+  (guard: AdminLeaveGuard | null) => void
+>(() => {});
+
+/** While an editor has unsaved work, the admin nav hands its clicks here instead of leaving. */
+export function useAdminLeaveGuard(
+  onLeaveAttempt: ((href: string) => void) | null,
+): void {
+  const setGuard = useContext(AdminLeaveGuardContext);
+  useEffect(() => {
+    if (onLeaveAttempt === null) return;
+    setGuard({ onLeaveAttempt });
+    return () => setGuard(null);
+  }, [onLeaveAttempt, setGuard]);
 }

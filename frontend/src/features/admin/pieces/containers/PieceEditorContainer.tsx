@@ -35,6 +35,7 @@ import {
   AdminPageHeader,
   AdminStatTile,
 } from "@/features/admin/ui";
+import { useAdminLeaveGuard } from "@/features/admin/shell";
 import { ImageListUploaderContainer } from "@/features/admin/uploads";
 
 import { PieceForm } from "@/features/admin/pieces/components/PieceForm";
@@ -62,6 +63,8 @@ import {
 
 // The picker lists every glaze the studio fires; there are never many.
 const GLAZE_PICKER_LIMIT = 60;
+
+const PIECES_HREF = "/dashboard/pieces";
 
 interface PieceState {
   stock: number;
@@ -134,7 +137,8 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   const [adjustStock] = useMutation(AdjustProductStockDocument);
 
   const [isRetireOpen, setIsRetireOpen] = useState(false);
-  const [isLeaveOpen, setIsLeaveOpen] = useState(false);
+  // Where a held leave was headed; null while the dialog is closed.
+  const [leaveHref, setLeaveHref] = useState<string | null>(null);
   const [isStockOpen, setIsStockOpen] = useState(false);
   const [imageDraft, setImageDraft] = useState<string[] | null>(null);
   // Bumped after each save so the form remounts clean from its new baseline.
@@ -174,7 +178,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   );
   const hasUnsavedChanges = isFormDirty || imageDraft !== null;
 
-  // Reloading or closing the tab asks too; in-app links are not guarded.
+  // Reloading or closing the tab asks too; the admin nav asks through the leave guard below.
   useEffect(() => {
     if (!hasUnsavedChanges) return;
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -323,16 +327,20 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     [productId, saveStock],
   );
 
-  const leave = useCallback(() => router.push("/dashboard/pieces"), [router]);
+  const handleLeaveConfirm = useCallback(() => {
+    if (leaveHref !== null) router.push(leaveHref);
+  }, [leaveHref, router]);
 
-  // Unsaved fields or photos ask first; a clean form just goes back.
+  // Unsaved fields or photos ask first, from Cancel or from the admin nav.
+  useAdminLeaveGuard(hasUnsavedChanges ? setLeaveHref : null);
+
   const handleCancel = useCallback(() => {
     if (hasUnsavedChanges) {
-      setIsLeaveOpen(true);
+      setLeaveHref(PIECES_HREF);
       return;
     }
-    leave();
-  }, [hasUnsavedChanges, leave]);
+    router.push(PIECES_HREF);
+  }, [hasUnsavedChanges, router]);
 
   const handleInvalid = useCallback(
     () => toast.error("Some fields need a look before this can be saved"),
@@ -514,15 +522,17 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       />
 
       <AdminConfirmDialog
-        isOpen={isLeaveOpen}
+        isOpen={leaveHref !== null}
         title="Leave without saving?"
         description={describeUnsavedChanges(imageDraft !== null)}
         confirmLabel="Leave without saving"
         cancelLabel="Keep editing"
         isDestructive
         isBusy={false}
-        onConfirm={leave}
-        onOpenChange={setIsLeaveOpen}
+        onConfirm={handleLeaveConfirm}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setLeaveHref(null);
+        }}
       />
 
       <StockAdjustDialog

@@ -3,15 +3,25 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 import type { AdminNavLink } from "@/features/admin/shell/types";
-import { isNavLinkActive } from "@/features/admin/shell/types";
+import {
+  isNavLinkActive,
+  toGuardedNavigate,
+} from "@/features/admin/shell/types";
 
 export interface AdminSectionStripProps {
   links: AdminNavLink[];
   pathname: string;
+  isLeaveGuarded: boolean;
+  onGuardedLeave: (href: string) => void;
 }
 
 /** The rail below the laptop breakpoint: one scrolling row, same hairline language. */
-export function AdminSectionStrip({ links, pathname }: AdminSectionStripProps) {
+export function AdminSectionStrip({
+  links,
+  pathname,
+  isLeaveGuarded,
+  onGuardedLeave,
+}: AdminSectionStripProps) {
   return (
     <nav
       aria-label="Studio sections"
@@ -24,6 +34,11 @@ export function AdminSectionStrip({ links, pathname }: AdminSectionStripProps) {
             <li key={link.href}>
               <Link
                 href={link.href}
+                onNavigate={toGuardedNavigate(
+                  isLeaveGuarded,
+                  link.href,
+                  onGuardedLeave,
+                )}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex h-10 items-center border-b-2 px-3 text-[13px] whitespace-nowrap transition-colors",

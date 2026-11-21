@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   applyQueryPatch,
@@ -9,6 +9,7 @@ import {
   readPage,
   readQueryValues,
   toPageNumber,
+  toGuardedNavigate,
   toQueryString,
 } from "./types";
 
@@ -118,5 +119,35 @@ describe("toPreviousPage", () => {
 
   it("goes back to the start when the list is empty", () => {
     expect(toPreviousPage(3, 20, 0)).toBe(1);
+  });
+});
+
+describe("toGuardedNavigate", () => {
+  it("lets the link go while nothing is unsaved", () => {
+    const preventDefault = vi.fn();
+    const onGuardedLeave = vi.fn();
+    toGuardedNavigate(
+      false,
+      "/dashboard/orders",
+      onGuardedLeave,
+    )({
+      preventDefault,
+    });
+    expect(preventDefault).not.toHaveBeenCalled();
+    expect(onGuardedLeave).not.toHaveBeenCalled();
+  });
+
+  it("holds the link and hands its destination to the editor", () => {
+    const preventDefault = vi.fn();
+    const onGuardedLeave = vi.fn();
+    toGuardedNavigate(
+      true,
+      "/dashboard/orders",
+      onGuardedLeave,
+    )({
+      preventDefault,
+    });
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(onGuardedLeave).toHaveBeenCalledWith("/dashboard/orders");
   });
 });
