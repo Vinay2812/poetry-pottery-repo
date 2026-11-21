@@ -88,7 +88,7 @@ export function SiteSettingsForm({
         <ContentTextField
           id="settings-whatsapp"
           label="WhatsApp"
-          hint="Used by the ask-us links on product pages."
+          hint="With 91 in front. Used by the ask-us links on product pages."
           error={errors.whatsapp_number?.message}
           isMultiline={false}
           registration={register("whatsapp_number")}

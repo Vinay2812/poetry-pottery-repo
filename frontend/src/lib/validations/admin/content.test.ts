@@ -31,7 +31,7 @@ function settingsValues(overrides: Record<string, unknown> = {}) {
   return {
     contact_email: "studio@poetryandpottery.in",
     contact_phone: "9876543210",
-    whatsapp_number: "9876543210",
+    whatsapp_number: "919876543210",
     address: "12 Kiln Lane, Sangli",
     opening_hours: "Tue to Sun, 10am to 6pm",
     instagram_url: "https://instagram.com/poetryandpottery",
@@ -172,15 +172,33 @@ describe("contentPageSchema", () => {
 });
 
 describe("siteSettingsSchema", () => {
-  it("keeps the ten digits of both numbers", () => {
+  it("saves both numbers as typed, only trimmed", () => {
     const result = siteSettingsSchema.parse(
       settingsValues({
         contact_phone: " +91 98765-43210 ",
-        whatsapp_number: "09876543210",
+        whatsapp_number: "+91 98765 43210",
       }),
     );
-    expect(result.contact_phone).toBe("9876543210");
-    expect(result.whatsapp_number).toBe("9876543210");
+    expect(result.contact_phone).toBe("+91 98765-43210");
+    expect(result.whatsapp_number).toBe("+91 98765 43210");
+  });
+
+  it("accepts a phone without the country code", () => {
+    expect(
+      siteSettingsSchema.safeParse(
+        settingsValues({ contact_phone: "09876543210" }),
+      ).success,
+    ).toBe(true);
+  });
+
+  it("asks for the country code on the WhatsApp number", () => {
+    expect(
+      firstError(
+        siteSettingsSchema.safeParse(
+          settingsValues({ whatsapp_number: "9876543210" }),
+        ),
+      ),
+    ).toBe("WhatsApp number needs 91 in front, like 91 98765 43210");
   });
 
   it("rejects an invalid email", () => {
@@ -285,7 +303,7 @@ describe("siteSettingsSchema dispatch window", () => {
     return {
       contact_email: "studio@example.com",
       contact_phone: "9123456789",
-      whatsapp_number: "9123456789",
+      whatsapp_number: "919123456789",
       address: "12 Nandi Lane, Bengaluru",
       opening_hours: "Tue to Sun, 11am to 7pm",
       instagram_url: "",
