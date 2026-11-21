@@ -18,7 +18,7 @@ import {
   useWorkshopBooking,
 } from "@/features/workshops/hooks";
 import { useSlotPicker } from "@/features/workshops/slot-picker";
-import { toClosedLabel, toTimelineSteps } from "@/features/orders/types";
+import { toClosedLabel, toTimelineSteps } from "@/lib/timeline";
 import {
   applyBookingAction,
   BOOKING_STAGES,

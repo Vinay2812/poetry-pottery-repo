@@ -10,6 +10,8 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
+import { toRepeatedPhrases, toTimelineSteps } from "@/lib/timeline";
+
 import {
   toEventsFilterKey,
   applyRegistrationCancellation,
@@ -49,7 +51,6 @@ import {
   toTimeRange,
   toWhatsAppBookingMessage,
 } from "./types";
-import { toTimelineSteps } from "@/features/orders/types";
 
 const STARTS_AT = "2026-09-19T09:30:00.000Z";
 const ENDS_AT = "2026-09-19T12:30:00.000Z";
@@ -116,7 +117,7 @@ describe("registration status helpers", () => {
       "Awaiting confirmation",
     );
     expect(toRegistrationStatusLabel(RegistrationStatus.Approved)).toBe(
-      "Seat held, awaiting payment",
+      "Approved, awaiting payment",
     );
     expect(toRegistrationStatusLabel(RegistrationStatus.Rejected)).toBe(
       "Not confirmed",
@@ -141,33 +142,96 @@ describe("registration status helpers", () => {
     ]);
   });
 
-  it("promises the held seat while the request is still pending", () => {
-    const steps = toTimelineSteps({
+  const readTimeline = (
+    status: RegistrationStatus,
+    dates: Record<string, string | null>,
+    isClosed = false,
+  ) =>
+    toTimelineSteps({
       stages: REGISTRATION_STAGES,
-      status: RegistrationStatus.Pending,
-      dates: { PENDING: "12 Sept", APPROVED: null, CONFIRMED: null },
-      isClosed: false,
-    });
-    expect(steps.map((step) => step.state)).toEqual([
-      "current",
-      "upcoming",
-      "upcoming",
+      status,
+      dates,
+      isClosed,
+    }).map((step) => [step.label, step.state, step.date, step.note]);
+
+  it("promises approval and payment while a request waits", () => {
+    expect(
+      readTimeline(RegistrationStatus.Pending, { PENDING: "12 Sept" }),
+    ).toEqual([
+      [
+        "Requested",
+        "current",
+        "12 Sept",
+        "We have your request and are keeping it for you.",
+      ],
+      [
+        "Approved",
+        "upcoming",
+        null,
+        "If we can take you, we approve it and share payment details on WhatsApp.",
+      ],
+      [
+        "Confirmed",
+        "upcoming",
+        null,
+        "Confirmed as soon as your payment lands.",
+      ],
     ]);
-    expect(steps[1]?.note).not.toMatch(/is held/);
-    expect(steps[2]?.note).not.toMatch(/Paid and confirmed/);
   });
 
-  it("stops a rejected request at the stage it reached", () => {
-    const steps = toTimelineSteps({
-      stages: REGISTRATION_STAGES,
-      status: RegistrationStatus.Rejected,
-      dates: { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null },
-      isClosed: true,
-    });
-    expect(steps.map((step) => step.key)).toEqual([
-      RegistrationStatus.Pending,
-      RegistrationStatus.Approved,
+  it("asks for payment once approved", () => {
+    expect(
+      readTimeline(RegistrationStatus.Approved, {
+        PENDING: "12 Sept",
+        APPROVED: "13 Sept",
+      }),
+    ).toEqual([
+      ["Requested", "done", "12 Sept", null],
+      [
+        "Approved",
+        "current",
+        "13 Sept",
+        "We share payment details on WhatsApp.",
+      ],
+      [
+        "Confirmed",
+        "upcoming",
+        null,
+        "Confirmed as soon as your payment lands.",
+      ],
     ]);
+  });
+
+  it("gives the arrival instructions once confirmed", () => {
+    expect(
+      readTimeline(RegistrationStatus.Confirmed, {
+        PENDING: "12 Sept",
+        APPROVED: "13 Sept",
+        CONFIRMED: "14 Sept",
+      }).at(-1),
+    ).toEqual([
+      "Confirmed",
+      "current",
+      "14 Sept",
+      "Paid and confirmed. Come in ten minutes early.",
+    ]);
+  });
+
+  it("stops a closed registration at the stage it reached", () => {
+    const dates = { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null };
+    for (const status of [
+      RegistrationStatus.Cancelled,
+      RegistrationStatus.Rejected,
+    ]) {
+      expect(readTimeline(status, dates, true)).toEqual([
+        ["Requested", "done", "12 Sept", null],
+        ["Approved", "done", "13 Sept", null],
+      ]);
+    }
+  });
+
+  it("never repeats the line above it in a promise", () => {
+    expect(toRepeatedPhrases(REGISTRATION_STAGES)).toEqual([]);
   });
 });
 

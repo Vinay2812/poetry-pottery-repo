@@ -7,8 +7,10 @@ import { formatInr, pluralize } from "@/lib/format";
 
 import type { EventFact } from "@/features/events/types";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
-import { OrderTimeline } from "@/features/orders/components/OrderTimeline";
-import type { StatusTone, TimelineStep } from "@/features/orders/types";
+import { Timeline } from "@/components/timeline/Timeline";
+import type { TimelineStep } from "@/lib/timeline";
+
+import type { StatusTone } from "@/features/orders/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 import { TEXT_LINK } from "@/features/events/components/styles";
@@ -106,7 +108,7 @@ export function RegistrationDetail({
             <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
               Progress
             </h2>
-            <OrderTimeline steps={steps} closedLabel={closedLabel} />
+            <Timeline steps={steps} closedLabel={closedLabel} />
           </section>
 
           <section className="flex flex-col gap-4">

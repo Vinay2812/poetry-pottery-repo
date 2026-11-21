@@ -6,6 +6,7 @@ import { useCallback, useOptimistic, useState } from "react";
 import { OrderStatus } from "@/graphql/generated/graphql";
 
 import { formatDateTime, formatInr } from "@/lib/format";
+import { toClosedLabel, toTimelineSteps } from "@/lib/timeline";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -20,13 +21,11 @@ import {
   isClosed,
   ORDER_STAGES,
   showsPlacedBanner,
-  toClosedLabel,
   toArrivalWindow,
   toDeliveredCareLines,
   toFirstName,
   toStatusLabel,
   toStatusTone,
-  toTimelineSteps,
   toWhatsAppOrderMessage,
 } from "@/features/orders/types";
 import { toProductPath } from "@/features/products/types";

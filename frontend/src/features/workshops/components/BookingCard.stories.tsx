@@ -20,7 +20,7 @@ const meta = {
     hours: 2,
     participants: 2,
     total: 3400,
-    statusLabel: "Wheel held, awaiting payment",
+    statusLabel: "Approved, awaiting payment",
     isCancelled: false,
   },
 } satisfies Meta<typeof BookingCard>;

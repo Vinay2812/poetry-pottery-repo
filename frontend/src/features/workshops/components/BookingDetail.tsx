@@ -5,8 +5,10 @@ import { PageShell } from "@/components/layout/PageShell";
 import { formatInr, pluralize } from "@/lib/format";
 
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
-import { OrderTimeline } from "@/features/orders/components/OrderTimeline";
-import type { StatusTone, TimelineStep } from "@/features/orders/types";
+import { Timeline } from "@/components/timeline/Timeline";
+import type { TimelineStep } from "@/lib/timeline";
+
+import type { StatusTone } from "@/features/orders/types";
 import type { SessionFact } from "@/features/workshops/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 import { SectionLabel } from "@/features/workshops/components/SectionLabel";
@@ -103,7 +105,7 @@ export function BookingDetail({
         <div className="flex flex-col gap-10">
           <section className="flex flex-col gap-4">
             <SectionLabel>Progress</SectionLabel>
-            <OrderTimeline steps={steps} closedLabel={closedLabel} />
+            <Timeline steps={steps} closedLabel={closedLabel} />
           </section>
 
           <section className="flex flex-col gap-4">

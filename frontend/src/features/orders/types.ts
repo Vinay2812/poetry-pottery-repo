@@ -3,6 +3,7 @@ import {
   OrderStatus,
 } from "@/graphql/generated/graphql";
 
+import type { TimelineStage } from "@/lib/timeline";
 import type { UrlCodec } from "@/lib/use-url-state";
 
 export type OrderData = OrderFieldsFragment;
@@ -13,98 +14,12 @@ export function toPageNumber(raw: string | null): number {
   return Number.isInteger(page) && page > 1 ? page : 1;
 }
 
-// The orders list keeps its page in the address bar, so back and refresh land where you were.
+// The orders list keeps its page in the address bar, so a refresh or a shared link opens the same page.
 export const ORDERS_PAGE_CODEC: UrlCodec<number, number> = {
   parse: (search) => toPageNumber(search.get("page")),
   serialize: (page) => (page > 1 ? `page=${page}` : ""),
   apply: (_current, next) => next,
 };
-
-// One stage of a progress timeline, worded twice: as it reads once it has happened and as
-// a promise while it is still ahead.
-export interface TimelineStage<Key extends string = string> {
-  key: Key;
-  label: string;
-  description: string;
-  // The first stage is always reached, so it never needs one.
-  upcoming?: string;
-}
-
-export interface TimelineStep {
-  key: string;
-  label: string;
-  date: string | null;
-  note: string | null;
-  state: "done" | "current" | "upcoming";
-}
-
-// The status may be one no stage carries (cancelled, refunded, rejected).
-export interface TimelineInput<Key extends string> {
-  stages: readonly TimelineStage<Key>[];
-  status: Key;
-  dates: Readonly<Record<string, string | null>>;
-  isClosed: boolean;
-}
-
-// Cancelled, refunded and rejected are not stages of their own, so a closed item stops at the
-// last stage that carries a date.
-function toReachedIndex<Key extends string>({
-  stages,
-  status,
-  dates,
-}: TimelineInput<Key>): number {
-  const index = stages.findIndex((stage) => stage.key === status);
-  if (index !== -1) return index;
-  return stages.reduce(
-    (reached, stage, at) => (dates[stage.key] ? at : reached),
-    0,
-  );
-}
-
-// Reached stages show only their date, the current one also says what it means, and later
-// ones say what will happen. A closed item shows only the stages it actually reached.
-export function toTimelineSteps<Key extends string>(
-  input: TimelineInput<Key>,
-): TimelineStep[] {
-  const reached = toReachedIndex(input);
-  const visible = input.isClosed
-    ? input.stages.slice(0, reached + 1)
-    : input.stages;
-  return visible.map((stage, index) => {
-    const date = input.dates[stage.key] ?? null;
-    if (index > reached) {
-      return {
-        key: stage.key,
-        label: stage.label,
-        date: null,
-        note: stage.upcoming ?? null,
-        state: "upcoming",
-      };
-    }
-    const isCurrent = index === reached && !input.isClosed;
-    return {
-      key: stage.key,
-      label: stage.label,
-      date,
-      note: isCurrent ? stage.description : null,
-      state: isCurrent ? "current" : "done",
-    };
-  });
-}
-
-// "Cancelled on 16 Sept · Travelling that week": what closed it, when, and why if we know.
-export function toClosedLabel(
-  statusLabel: string,
-  closedOn: string | null,
-  reason: string | null,
-): string {
-  return [
-    closedOn ? `${statusLabel} on ${closedOn}` : statusLabel,
-    reason?.trim() || null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-}
 
 export const ORDER_STAGES: TimelineStage<OrderStatus>[] = [
   {
@@ -116,19 +31,20 @@ export const ORDER_STAGES: TimelineStage<OrderStatus>[] = [
     key: OrderStatus.Confirmed,
     label: "Confirmed",
     description: "Payment details shared; we start packing once it lands.",
-    upcoming: "We confirm on WhatsApp and share payment details.",
+    upcoming: "Payment details follow with the confirmation.",
   },
   {
     key: OrderStatus.Paid,
     label: "Paid",
     description: "Payment received. Wrapping every piece by hand.",
-    upcoming: "Once payment lands, we wrap every piece by hand.",
+    upcoming: "After payment, each piece is wrapped by hand.",
   },
   {
     key: OrderStatus.Shipped,
     label: "Shipped",
     description: "On its way, usually five to seven days.",
-    upcoming: "Goes out by courier once it is packed.",
+    upcoming:
+      "Goes by courier once packed, usually five to seven days on the road.",
   },
   {
     key: OrderStatus.Delivered,

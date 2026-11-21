@@ -22,7 +22,7 @@ const meta = {
     dateLabel: "Thu 17 Sep · 4 pm",
     seats: 2,
     total: 3600,
-    statusLabel: "Seat held, awaiting payment",
+    statusLabel: "Approved, awaiting payment",
     isClosed: false,
   },
 } satisfies Meta<typeof RegistrationCard>;

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { DayClosedKind, RegistrationStatus } from "@/graphql/generated/graphql";
 
+import { toRepeatedPhrases, toTimelineSteps } from "@/lib/timeline";
+
 import {
   BOOKING_STAGES,
   applyBookingAction,
@@ -36,7 +38,6 @@ import {
   toWorkshopPath,
   type WorkshopDayData,
 } from "./types";
-import { toTimelineSteps } from "@/features/orders/types";
 
 const IST = "Asia/Kolkata";
 
@@ -257,7 +258,7 @@ describe("booking status helpers", () => {
       "Awaiting confirmation",
     );
     expect(toBookingStatusLabel(RegistrationStatus.Approved)).toBe(
-      "Wheel held, awaiting payment",
+      "Approved, awaiting payment",
     );
     expect(toBookingStatusLabel(RegistrationStatus.Confirmed)).toBe(
       "Confirmed",
@@ -275,33 +276,93 @@ describe("booking status helpers", () => {
     expect(toBookingStatusTone(RegistrationStatus.Cancelled)).toBe("off");
   });
 
-  it("words the wheel and payment as promises while a booking waits", () => {
-    const steps = toTimelineSteps({
-      stages: BOOKING_STAGES,
-      status: RegistrationStatus.Pending,
-      dates: { PENDING: "12 Sept", APPROVED: null, CONFIRMED: null },
-      isClosed: false,
-    });
-    expect(steps.map((step) => step.state)).toEqual([
-      "current",
-      "upcoming",
-      "upcoming",
+  const readTimeline = (
+    status: RegistrationStatus,
+    dates: Record<string, string | null>,
+    isClosed = false,
+  ) =>
+    toTimelineSteps({ stages: BOOKING_STAGES, status, dates, isClosed }).map(
+      (step) => [step.label, step.state, step.date, step.note],
+    );
+
+  it("promises approval and payment while a request waits", () => {
+    expect(
+      readTimeline(RegistrationStatus.Pending, { PENDING: "12 Sept" }),
+    ).toEqual([
+      [
+        "Requested",
+        "current",
+        "12 Sept",
+        "We have your request and are keeping it for you.",
+      ],
+      [
+        "Approved",
+        "upcoming",
+        null,
+        "If the wheel is free, we approve it and share payment details on WhatsApp.",
+      ],
+      [
+        "Confirmed",
+        "upcoming",
+        null,
+        "Confirmed as soon as your payment lands.",
+      ],
     ]);
-    expect(steps[1]?.note).not.toMatch(/Your wheel is held/);
-    expect(steps[2]?.note).not.toMatch(/Paid and confirmed/);
   });
 
-  it("shows a cancelled booking only up to the stage it reached", () => {
-    const steps = toTimelineSteps({
-      stages: BOOKING_STAGES,
-      status: RegistrationStatus.Cancelled,
-      dates: { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null },
-      isClosed: true,
-    });
-    expect(steps.map((step) => [step.key, step.state, step.note])).toEqual([
-      [RegistrationStatus.Pending, "done", null],
-      [RegistrationStatus.Approved, "done", null],
+  it("asks for payment once approved", () => {
+    expect(
+      readTimeline(RegistrationStatus.Approved, {
+        PENDING: "12 Sept",
+        APPROVED: "13 Sept",
+      }),
+    ).toEqual([
+      ["Requested", "done", "12 Sept", null],
+      [
+        "Approved",
+        "current",
+        "13 Sept",
+        "We share payment details on WhatsApp.",
+      ],
+      [
+        "Confirmed",
+        "upcoming",
+        null,
+        "Confirmed as soon as your payment lands.",
+      ],
     ]);
+  });
+
+  it("gives the arrival instructions once confirmed", () => {
+    expect(
+      readTimeline(RegistrationStatus.Confirmed, {
+        PENDING: "12 Sept",
+        APPROVED: "13 Sept",
+        CONFIRMED: "14 Sept",
+      }).at(-1),
+    ).toEqual([
+      "Confirmed",
+      "current",
+      "14 Sept",
+      "Paid and confirmed. Come in ten minutes early.",
+    ]);
+  });
+
+  it("stops a closed booking at the stage it reached", () => {
+    const dates = { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null };
+    for (const status of [
+      RegistrationStatus.Cancelled,
+      RegistrationStatus.Rejected,
+    ]) {
+      expect(readTimeline(status, dates, true)).toEqual([
+        ["Requested", "done", "12 Sept", null],
+        ["Approved", "done", "13 Sept", null],
+      ]);
+    }
+  });
+
+  it("never repeats the line above it in a promise", () => {
+    expect(toRepeatedPhrases(BOOKING_STAGES)).toEqual([]);
   });
 
   it("knows which bookings are closed", () => {

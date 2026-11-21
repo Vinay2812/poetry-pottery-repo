@@ -12,7 +12,9 @@ import {
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
-import type { StatusTone, TimelineStage } from "@/features/orders/types";
+import type { TimelineStage } from "@/lib/timeline";
+
+import type { StatusTone } from "@/features/orders/types";
 
 export type EventCardData = EventCardFragment;
 export type EventDetailData = EventQuery["event"];
@@ -251,31 +253,32 @@ export function toGalleryHeading(eventType: EventType): string {
   return GALLERY_HEADING[eventType];
 }
 
+// A pending request already keeps its seats, so the step after it is about payment.
 export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
   {
     key: RegistrationStatus.Pending,
     label: "Requested",
-    description: "We have your request and are keeping your seat.",
+    description: "We have your request and are keeping it for you.",
   },
   {
     key: RegistrationStatus.Approved,
-    label: "Seat held",
-    description: "Your seat is held. We share payment details on WhatsApp.",
+    label: "Approved",
+    description: "We share payment details on WhatsApp.",
     upcoming:
-      "If a seat is free we hold it and share payment details on WhatsApp.",
+      "If we can take you, we approve it and share payment details on WhatsApp.",
   },
   {
     key: RegistrationStatus.Confirmed,
     label: "Confirmed",
     description: "Paid and confirmed. Come in ten minutes early.",
-    upcoming: "Confirmed once you have paid.",
+    upcoming: "Confirmed as soon as your payment lands.",
   },
 ];
 
 // Same words as wheel sessions: a seat is a request until the studio confirms it.
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting confirmation",
-  [RegistrationStatus.Approved]: "Seat held, awaiting payment",
+  [RegistrationStatus.Pending]: "Awaiting approval",
+  [RegistrationStatus.Approved]: "Approved, awaiting payment",
   [RegistrationStatus.Confirmed]: "Confirmed",
   [RegistrationStatus.Rejected]: "Not confirmed",
   [RegistrationStatus.Cancelled]: "Cancelled",

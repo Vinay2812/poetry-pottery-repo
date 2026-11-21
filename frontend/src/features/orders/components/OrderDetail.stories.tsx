@@ -4,7 +4,8 @@ import { fn } from "storybook/test";
 import { OrderStatus } from "@/graphql/generated/graphql";
 
 import { atViewport } from "@/lib/storybook/viewports";
-import { ORDER_STAGES, toTimelineSteps } from "@/features/orders/types";
+import { toTimelineSteps } from "@/lib/timeline";
+import { ORDER_STAGES } from "@/features/orders/types";
 import { OrderDetail } from "./OrderDetail";
 
 const items = [

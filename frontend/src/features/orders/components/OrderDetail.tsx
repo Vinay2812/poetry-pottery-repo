@@ -11,13 +11,15 @@ import {
   type OrderItemRowProps,
 } from "@/features/orders/components/OrderItemRow";
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
-import { OrderTimeline } from "@/features/orders/components/OrderTimeline";
+import { Timeline } from "@/components/timeline/Timeline";
 import { OrderTotals } from "@/features/orders/components/OrderTotals";
 import {
   StudioNote,
   type StudioNoteProps,
 } from "@/features/orders/components/StudioNote";
-import type { StatusTone, TimelineStep } from "@/features/orders/types";
+import type { TimelineStep } from "@/lib/timeline";
+
+import type { StatusTone } from "@/features/orders/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface OrderDetailProps {
@@ -134,7 +136,7 @@ export function OrderDetail({
         <div className="flex flex-col gap-10">
           <section className="flex flex-col gap-5">
             <h2 className={SECTION_HEADING}>Progress</h2>
-            <OrderTimeline steps={steps} closedLabel={closedLabel} />
+            <Timeline steps={steps} closedLabel={closedLabel} />
             {trackingNote && (
               <p className="text-[13px] text-muted-foreground">
                 {trackingNote}

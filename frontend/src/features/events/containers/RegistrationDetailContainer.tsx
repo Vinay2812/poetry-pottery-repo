@@ -33,7 +33,7 @@ import {
   toWhatsAppBookingMessage,
 } from "@/features/events/types";
 import { buildWhatsAppUrl } from "@/features/layout/types";
-import { toTimelineSteps } from "@/features/orders/types";
+import { toTimelineSteps } from "@/lib/timeline";
 import { ReviewActionContainer } from "@/features/reviews";
 
 export interface RegistrationDetailContainerProps {

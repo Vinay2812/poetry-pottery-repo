@@ -7,7 +7,9 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { buildWhatsAppUrl } from "@/features/layout/types";
-import type { StatusTone, TimelineStage } from "@/features/orders/types";
+import type { TimelineStage } from "@/lib/timeline";
+
+import type { StatusTone } from "@/features/orders/types";
 
 export type WorkshopData = WorkshopConfigFieldsFragment;
 export type WorkshopTierData = WorkshopData["tiers"][number];
@@ -314,29 +316,31 @@ export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
   ].join("\n");
 }
 
+// A pending request already keeps its hours, so the step after it is about payment.
 export const BOOKING_STAGES: TimelineStage<RegistrationStatus>[] = [
   {
     key: RegistrationStatus.Pending,
     label: "Requested",
-    description: "We have your request and are checking the wheel.",
+    description: "We have your request and are keeping it for you.",
   },
   {
     key: RegistrationStatus.Approved,
-    label: "Wheel held",
-    description: "Your wheel is held. We share payment details on WhatsApp.",
-    upcoming: "We hold your wheel and share payment details on WhatsApp.",
+    label: "Approved",
+    description: "We share payment details on WhatsApp.",
+    upcoming:
+      "If the wheel is free, we approve it and share payment details on WhatsApp.",
   },
   {
     key: RegistrationStatus.Confirmed,
     label: "Confirmed",
     description: "Paid and confirmed. Come in ten minutes early.",
-    upcoming: "Confirmed once you have paid.",
+    upcoming: "Confirmed as soon as your payment lands.",
   },
 ];
 
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
   [RegistrationStatus.Pending]: "Awaiting confirmation",
-  [RegistrationStatus.Approved]: "Wheel held, awaiting payment",
+  [RegistrationStatus.Approved]: "Approved, awaiting payment",
   [RegistrationStatus.Confirmed]: "Confirmed",
   [RegistrationStatus.Rejected]: "Not confirmed",
   [RegistrationStatus.Cancelled]: "Cancelled",

@@ -1,8 +1,8 @@
 import { cn } from "@/lib/utils";
 
-import type { TimelineStep } from "@/features/orders/types";
+import type { TimelineStep } from "@/lib/timeline";
 
-export interface OrderTimelineProps {
+export interface TimelineProps {
   steps: TimelineStep[];
   closedLabel: string | null;
 }
@@ -13,8 +13,8 @@ const STATE_FOR_READERS: Record<TimelineStep["state"], string> = {
   upcoming: " (not yet)",
 };
 
-// Shared by orders, wheel sessions and event bookings; each maps its own status to stages.
-export function OrderTimeline({ steps, closedLabel }: OrderTimelineProps) {
+// Shared by orders, wheel sessions and event bookings; steps come from toTimelineSteps.
+export function Timeline({ steps, closedLabel }: TimelineProps) {
   const isClosed = closedLabel !== null;
   return (
     <ol className="flex flex-col">

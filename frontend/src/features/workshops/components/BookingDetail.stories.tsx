@@ -5,7 +5,7 @@ import { RegistrationStatus } from "@/graphql/generated/graphql";
 
 import { atViewport } from "@/lib/storybook/viewports";
 import { BOOKING_STAGES } from "@/features/workshops/types";
-import { toTimelineSteps } from "@/features/orders/types";
+import { toTimelineSteps } from "@/lib/timeline";
 import { BookingDetail } from "./BookingDetail";
 
 // Every stage up to `reachedThrough` carries a date; a closed one stops there.
@@ -68,7 +68,7 @@ export const JustBooked: Story = {};
 
 export const WheelHeld: Story = {
   args: {
-    statusLabel: "Wheel held, awaiting payment",
+    statusLabel: "Approved, awaiting payment",
     statusTone: "active",
     isJustPlaced: false,
     steps: toSteps(1),

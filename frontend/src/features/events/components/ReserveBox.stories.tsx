@@ -80,7 +80,7 @@ export const AlreadyBooked: Story = {
   args: {
     state: "booked",
     bookingHref: "/registrations/REG7Q2X9M1KD",
-    bookingStatusLabel: "Seat held, awaiting payment",
+    bookingStatusLabel: "Approved, awaiting payment",
     bookingSeats: 2,
   },
 };

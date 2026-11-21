@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { OrderStatus } from "@/graphql/generated/graphql";
 
+import { toRepeatedPhrases, toTimelineSteps } from "@/lib/timeline";
+
 import {
   applyOrderCancellation,
   ORDER_STAGES,
@@ -16,8 +18,6 @@ import {
   toStatusTone,
   toOrderPath,
   toPageNumber,
-  toClosedLabel,
-  toTimelineSteps,
   toWhatsAppOrderMessage,
 } from "./types";
 
@@ -35,98 +35,84 @@ describe("order status helpers", () => {
   });
 });
 
-describe("toTimelineSteps", () => {
-  const dates = (reachedThrough: number) =>
+describe("order timeline", () => {
+  const DATES = {
+    PENDING: "12 Sept",
+    CONFIRMED: "13 Sept",
+    PAID: "14 Sept",
+    SHIPPED: "15 Sept",
+    DELIVERED: null,
+  };
+  const reachedThrough = (index: number) =>
     Object.fromEntries(
-      ORDER_STAGES.map((stage, index) => [
-        stage.key,
-        index <= reachedThrough ? `day ${index}` : null,
+      Object.entries(DATES).map(([key, date], at) => [
+        key,
+        at <= index ? date : null,
       ]),
     );
-
-  it("dates what happened, explains the current stage and promises the rest", () => {
-    const steps = toTimelineSteps({
+  const read = (status: OrderStatus, index: number, isClosed = false) =>
+    toTimelineSteps({
       stages: ORDER_STAGES,
-      status: OrderStatus.Confirmed,
-      dates: dates(1),
-      isClosed: false,
-    });
-    expect(steps.map((step) => step.state)).toEqual([
-      "done",
-      "current",
-      "upcoming",
-      "upcoming",
-      "upcoming",
+      status,
+      dates: reachedThrough(index),
+      isClosed,
+    }).map((step) => [step.label, step.state, step.date, step.note]);
+
+  it("promises every later stage of a new order", () => {
+    expect(read(OrderStatus.Pending, 0)).toEqual([
+      [
+        "Order placed",
+        "current",
+        "12 Sept",
+        "We have your order and will confirm it on WhatsApp.",
+      ],
+      [
+        "Confirmed",
+        "upcoming",
+        null,
+        "Payment details follow with the confirmation.",
+      ],
+      [
+        "Paid",
+        "upcoming",
+        null,
+        "After payment, each piece is wrapped by hand.",
+      ],
+      [
+        "Shipped",
+        "upcoming",
+        null,
+        "Goes by courier once packed, usually five to seven days on the road.",
+      ],
+      ["Delivered", "upcoming", null, "We mark it here once it reaches you."],
     ]);
-    expect(steps[0]).toMatchObject({ date: "day 0", note: null });
-    expect(steps[1]).toMatchObject({
-      date: "day 1",
-      note: ORDER_STAGES[1]?.description,
-    });
-    expect(steps[2]).toMatchObject({
-      date: null,
-      note: ORDER_STAGES[2]?.upcoming,
-    });
   });
 
-  it("never says a later stage has already happened", () => {
-    for (const stage of ORDER_STAGES.slice(1)) {
-      expect(stage.upcoming).toBeTruthy();
-      expect(stage.upcoming).not.toBe(stage.description);
-    }
+  it("dates what happened once the order has shipped", () => {
+    expect(read(OrderStatus.Shipped, 3)).toEqual([
+      ["Order placed", "done", "12 Sept", null],
+      ["Confirmed", "done", "13 Sept", null],
+      ["Paid", "done", "14 Sept", null],
+      [
+        "Shipped",
+        "current",
+        "15 Sept",
+        "On its way, usually five to seven days.",
+      ],
+      ["Delivered", "upcoming", null, "We mark it here once it reaches you."],
+    ]);
   });
 
-  it("leaves a reached stage the studio skipped dating as its label", () => {
-    const steps = toTimelineSteps({
-      stages: ORDER_STAGES,
-      status: OrderStatus.Paid,
-      dates: { ...dates(0), PAID: "day 2" },
-      isClosed: false,
-    });
-    expect(steps[1]).toMatchObject({ state: "done", date: null, note: null });
+  it("stops a refunded order at the last dated stage", () => {
+    expect(read(OrderStatus.Refunded, 2, true)).toEqual([
+      ["Order placed", "done", "12 Sept", null],
+      ["Confirmed", "done", "13 Sept", null],
+      ["Paid", "done", "14 Sept", null],
+    ]);
   });
 
-  it("shows a cancelled order only up to the last dated stage", () => {
-    for (const status of [OrderStatus.Cancelled, OrderStatus.Refunded]) {
-      const steps = toTimelineSteps({
-        stages: ORDER_STAGES,
-        status,
-        dates: dates(2),
-        isClosed: true,
-      });
-      expect(steps.map((step) => step.key)).toEqual([
-        OrderStatus.Pending,
-        OrderStatus.Confirmed,
-        OrderStatus.Paid,
-      ]);
-      expect(steps.every((step) => step.state === "done")).toBe(true);
-      expect(steps.every((step) => step.note === null)).toBe(true);
-    }
-  });
-
-  it("keeps the placed stage for an order cancelled straight away", () => {
-    const steps = toTimelineSteps({
-      stages: ORDER_STAGES,
-      status: OrderStatus.Cancelled,
-      dates: dates(0),
-      isClosed: true,
-    });
-    expect(steps).toHaveLength(1);
-  });
-});
-
-describe("toClosedLabel", () => {
-  it("says what closed it, when and why", () => {
-    expect(toClosedLabel("Cancelled", "16 Sept", "Changed my mind")).toBe(
-      "Cancelled on 16 Sept · Changed my mind",
-    );
-  });
-
-  it("leaves out what it does not know", () => {
-    expect(toClosedLabel("Refunded", null, null)).toBe("Refunded");
-    expect(toClosedLabel("Cancelled", "16 Sept", "  ")).toBe(
-      "Cancelled on 16 Sept",
-    );
+  it("never repeats the line above it in a promise", () => {
+    expect(toRepeatedPhrases(ORDER_STAGES)).toEqual([]);
   });
 });
 
