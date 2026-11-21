@@ -114,7 +114,8 @@ export function EventDetailContainer({
         <ReserveBox
           state={reserveState}
           eventId={event.id}
-          price={event.price}
+          // A booking keeps the price it was made at; the date's current price is for new seats.
+          price={registration?.unit_price ?? event.price}
           seats={seats}
           maxSeats={Math.max(1, Math.min(MAX_SEATS, event.available_seats))}
           note={note}
@@ -136,6 +137,7 @@ export function EventDetailContainer({
             registration ? toRegistrationStatusLabel(registration.status) : ""
           }
           bookingSeats={registration?.seats ?? 0}
+          bookingTotal={registration?.total ?? 0}
           whatsappUrl={whatsappUrl}
           onSeatsChange={setSeats}
           onNoteChange={setNote}
