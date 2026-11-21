@@ -8,15 +8,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   ADMIN_TD,
   ADMIN_TH,
-  ADMIN_TR,
   ADMIN_FROM_LAPTOP,
+  ADMIN_FROM_TABLET,
+  ADMIN_TR,
   AdminEmptyRow,
   AdminTableFrame,
 } from "@/features/admin/ui";
 
-import { LIVE_BLOCKED_NOTE } from "@/features/admin/pieces/types";
+import { canFeature, LIVE_BLOCKED_NOTE } from "@/features/admin/pieces/types";
 
-const COLUMN_COUNT = 9;
+const COLUMN_COUNT = 8;
 
 export interface PieceRow {
   id: number;
@@ -52,20 +53,17 @@ export function PiecesTable({
   onAdjustStock,
 }: PiecesTableProps) {
   return (
-    <AdminTableFrame caption="Every piece on the shelf" isBusy={isBusy}>
+    <AdminTableFrame caption="Every piece" isBusy={isBusy}>
       <thead>
         <tr>
           <th className={ADMIN_TH}>Photo</th>
           <th className={ADMIN_TH}>Piece</th>
-          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Price</th>
-          <th className={ADMIN_TH}>Stock</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_TABLET}`}>Price</th>
           <th className={ADMIN_TH}>On the shelf</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Home page</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Categories</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Collection</th>
-          <th className={ADMIN_TH}>
-            <span className="sr-only">Change the stock</span>
-          </th>
+          <th className={ADMIN_TH}>Stock</th>
         </tr>
       </thead>
       <tbody>
@@ -101,10 +99,9 @@ export function PiecesTable({
                 {row.name}
               </Link>
             </td>
-            <td className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} tnum`}>
+            <td className={`${ADMIN_TD} ${ADMIN_FROM_TABLET} tnum`}>
               {row.priceLabel}
             </td>
-            <td className={`${ADMIN_TD} tnum`}>{row.stockLabel}</td>
             <td className={ADMIN_TD}>
               <Checkbox
                 checked={row.isActive}
@@ -125,7 +122,9 @@ export function PiecesTable({
             <td className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP}`}>
               <Checkbox
                 checked={row.isFeatured}
-                disabled={busyId === row.id}
+                disabled={
+                  busyId === row.id || !canFeature(row.isActive, row.isFeatured)
+                }
                 aria-label={`Show ${row.name} on the home page`}
                 onCheckedChange={(checked) =>
                   onFeaturedChange(row.id, checked === true)
@@ -143,16 +142,19 @@ export function PiecesTable({
               {row.collectionLabel}
             </td>
             <td className={ADMIN_TD}>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={busyId === row.id}
-                aria-label={`Change the stock of ${row.name}`}
-                onClick={() => onAdjustStock(row.id)}
-              >
-                Change
-              </Button>
+              <div className="flex items-center gap-3">
+                <span className="min-w-6 tnum">{row.stockLabel}</span>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={busyId === row.id}
+                  aria-label={`Change the stock of ${row.name}`}
+                  onClick={() => onAdjustStock(row.id)}
+                >
+                  Change
+                </Button>
+              </div>
             </td>
           </tr>
         ))}
