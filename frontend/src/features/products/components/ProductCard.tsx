@@ -148,7 +148,8 @@ export function ProductCard({
         )}
 
         {hasMany && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center">
+          // Stops at the corner button (size-9 at right-2, so 44px), so no dot's hit area runs under it.
+          <div className="pointer-events-none absolute right-11 bottom-0 left-0 z-20 flex justify-center">
             {photos.map((url, index) => (
               <button
                 key={`${url}-${index}`}
