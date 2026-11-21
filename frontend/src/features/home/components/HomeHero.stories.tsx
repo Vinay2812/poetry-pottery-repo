@@ -23,6 +23,10 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const WheelsResting: Story = {
+  args: { sessionHref: undefined },
+};
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };

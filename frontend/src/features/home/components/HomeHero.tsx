@@ -7,7 +7,8 @@ export interface HomeHeroProps {
   subheading: string;
   shopHref: string;
   shopLabel: string;
-  sessionHref: string;
+  // Left out hides the booking link.
+  sessionHref?: string;
 }
 
 export function HomeHero({
@@ -37,12 +38,14 @@ export function HomeHero({
           >
             {shopLabel}
           </Link>
-          <Link
-            href={sessionHref}
-            className="link-underline pb-0.5 hover:text-primary"
-          >
-            Book a wheel session
-          </Link>
+          {sessionHref && (
+            <Link
+              href={sessionHref}
+              className="link-underline pb-0.5 hover:text-primary"
+            >
+              Book a wheel session
+            </Link>
+          )}
         </div>
       </div>
     </section>
