@@ -61,7 +61,10 @@ export const EMPTY_FILTERS: ProductFilters = {
   sort: ProductSort.Featured,
 };
 
-const SORT_VALUES = new Set<string>(Object.values(ProductSort));
+// One of the sorts the shelf offers, or null for anything else a URL or a control hands over.
+export function toProductSort(raw: string | null): ProductSort | null {
+  return SORT_OPTIONS.find((option) => option.value === raw)?.value ?? null;
+}
 
 function readList(params: URLSearchParams, key: string): string[] {
   return params
@@ -92,10 +95,7 @@ export function parseFilters(params: URLSearchParams): ProductFilters {
     customizableOnly: params.get("customizable") === "true",
     secondsOnly: params.get("seconds") === "1",
     isArchive: params.get("view") === ARCHIVE_VIEW,
-    sort:
-      sort && SORT_VALUES.has(sort)
-        ? (sort as ProductSort)
-        : ProductSort.Featured,
+    sort: toProductSort(sort) ?? ProductSort.Featured,
   };
 }
 

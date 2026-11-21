@@ -10,7 +10,7 @@ import {
 import type { ProductSort } from "@/graphql/generated/graphql";
 import { cn } from "@/lib/utils";
 
-import { SORT_OPTIONS } from "@/features/products/types";
+import { SORT_OPTIONS, toProductSort } from "@/features/products/types";
 
 export interface ProductToolbarProps {
   // Null when there is nothing honest to say, such as after a failure.
@@ -77,7 +77,10 @@ export function ProductToolbar({
         ) : (
           <Select
             value={sort}
-            onValueChange={(value) => onSortChange(value as ProductSort)}
+            onValueChange={(value) => {
+              const next = toProductSort(value);
+              if (next) onSortChange(next);
+            }}
           >
             <SelectTrigger
               aria-label="Sort by"

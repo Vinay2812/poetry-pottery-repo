@@ -17,6 +17,7 @@ import {
   type ReferencePhoto,
   remainingReferenceSlots,
   SORT_OPTIONS,
+  toProductSort,
   toConfirmedPhotoUrls,
   toDefaultSelections,
   validateReferencePhoto,
@@ -375,6 +376,15 @@ describe("toResultCountLabel", () => {
     expect(toResultCountLabel(1, "bowl", true)).toBe(
       "1 made-to-order piece for \u201cbowl\u201d",
     );
+  });
+});
+
+describe("toProductSort", () => {
+  it("accepts only the sorts the shelf offers", () => {
+    expect(toProductSort("NEWEST")).toBe(ProductSort.Newest);
+    expect(toProductSort("newest")).toBeNull();
+    expect(toProductSort("RELEVANCE")).toBeNull();
+    expect(toProductSort(null)).toBeNull();
   });
 });
 
