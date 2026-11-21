@@ -27,6 +27,7 @@ PASSED=0
 FAILED=0
 FAILURES=()
 CURRENT_FLOW="setup"
+LAST_CLICKED=""
 
 log() { printf '%s\n' "$*"; }
 note() { printf '   %s\n' "$*"; }
@@ -149,6 +150,7 @@ click_matching() {
     return 1
   fi
   note "clicked: $result"
+  LAST_CLICKED="$result"
   pass "$what"
   settle
 }
@@ -171,6 +173,21 @@ pick_first_option() {
   settle
 }
 
+# Picked hours are checked with the studio before the button wakes up, which can take a moment.
+wait_for_enabled() {
+  local name="$1" tries=0
+  while [ "$tries" -lt 20 ]; do
+    if [ "$(count_matching "^$name\$")" != "0" ]; then
+      pass "\"$name\" is ready"
+      return 0
+    fi
+    settle 500
+    tries=$((tries + 1))
+  done
+  fail "\"$name\" is ready"
+  return 1
+}
+
 count_matching() {
   local counted
   counted="$(ab eval "(() => {
@@ -186,8 +203,9 @@ count_matching() {
 # are subtracted rather than the date guessed.
 booking_day() {
   ab eval "(() => {
-    const fixed = new Set(['Session', 'Duration', 'You take home']);
-    return [...document.querySelectorAll('dt')]
+    const fixed = new Set(['Session', 'Hours', 'People', 'You take home']);
+    // The first list is the session's facts; the price summary comes after it.
+    return [...(document.querySelector('main dl')?.querySelectorAll('dt') ?? [])]
       .map((n) => (n.textContent || '').trim())
       .filter((t) => t && !fixed.has(t))
       .join(' | ');
@@ -264,14 +282,27 @@ sign_in() {
   shot "signed-in"
 }
 
+# Each cart line's remove button is named "Remove <piece>", so the names after the
+# prefix are the pieces in the cart, one line each, joined by " | ".
+cart_lines() {
+  ab eval "[...document.querySelectorAll('main button[aria-label^=\"Remove \"]')]
+    .map((n) => n.getAttribute('aria-label').slice('Remove '.length))
+    .join(' | ')" 2>/dev/null | tail -1 | tr -d '"'
+}
+
 empty_the_cart() {
   goto "/cart"
   local guard=0
-  while [ "$(count_matching '^Remove$')" != "0" ] && [ "$guard" -lt 12 ]; do
-    click_matching '^Remove$' "remove a leftover cart line" >/dev/null 2>&1 || break
+  while [ -n "$(cart_lines)" ] && [ "$guard" -lt 12 ]; do
+    click_matching '^Remove ' "remove a leftover cart line" 'main' >/dev/null 2>&1 || break
     settle 1200
     guard=$((guard + 1))
   done
+  if [ -z "$(cart_lines)" ]; then
+    pass "the cart starts empty"
+  else
+    fail "the cart starts empty (still holds $(cart_lines))"
+  fi
 }
 
 # ---------------------------------------------------------------------- flows
@@ -326,6 +357,7 @@ flow_product_to_order() {
     end_flow
     return
   }
+  local piece="$LAST_CLICKED"
   settle 3000
   expect_url "/products/"
   shot "product-detail"
@@ -346,7 +378,16 @@ flow_product_to_order() {
   settle 2500
   goto "/cart"
   expect_text "Your cart" "the cart page renders"
-  expect_no_text "Nothing here yet" "the cart holds the piece"
+  # The order must be for the fixture alone, so a leftover line stops the flow before it is placed.
+  local lines
+  lines="$(cart_lines)"
+  if [ "$lines" = "$piece" ]; then
+    pass "the cart holds only $piece"
+  else
+    fail "the cart holds only $piece (holds: ${lines:-nothing})"
+    end_flow
+    return
+  fi
   shot "cart"
 
   act "continue to checkout" find role link click --name "Continue to checkout"
@@ -451,19 +492,28 @@ flow_workshops() {
     end_flow
     return
   }
-  # Day cells are named "Sun, 22 Nov, 6 wheels free"; a time chip's text also ends in
-  # "wheels free" and sits under the selected week, so the weekday prefix tells them apart.
-  click_matching '^[A-Z][a-z]{2}, .*wheels free$' "pick an open day" || {
+  # Day cells carry their date in data-date and are disabled when nothing can be booked,
+  # so the first enabled one is an open day whatever the calendar's wording.
+  act "pick an open day" find first 'button[data-date]:not([disabled])' click || {
     end_flow
     return
   }
   settle 3000
-  # Slot labels are clock times, so the hours group is the stable handle.
-  click_matching '.' "pick an hour at the wheel" '[role="group"][aria-label="Times"]' || {
+  # The picker suggests the earliest free hours itself, and clicking a picked hour drops it,
+  # so an hour is picked only when nothing is; each picked hour has a "Remove <day> · <time>" control.
+  if [ "$(count_matching '^Remove .+ · ')" = "0" ]; then
+    # Slot labels are clock times, so the hours group is the stable handle.
+    click_matching '.' "pick an hour at the wheel" '[role="group"][aria-label="Times"]' || {
+      end_flow
+      return
+    }
+  else
+    pass "the picker suggested an hour"
+  fi
+  wait_for_enabled "Book this wheel session" || {
     end_flow
     return
   }
-  settle 2000
   shot "workshop-picked"
   click_matching '^Book this wheel session$' "book the session" || {
     end_flow
@@ -479,7 +529,8 @@ flow_workshops() {
     note "booked for: $before_day"
     click_matching '^Move this session$' "open the reschedule dialog"
     settle 2500
-    click_matching '^[A-Z][a-z]{2}, .*wheels free$' "pick a new day" '[role="dialog"]' || true
+    # The booked day is the pressed one, so any other open day is a real move.
+    act "pick a new day" find first '[role="dialog"] button[data-date]:not([disabled]):not([aria-pressed="true"])' click || true
     settle 2500
     # The dialog opens on the hours already booked and the picker caps at that
     # many, so the old hour has to be dropped before a new one can be taken.

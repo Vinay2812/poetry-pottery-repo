@@ -57,6 +57,8 @@ function DayCell({ day, isSelected, onSelect }: DayCellProps) {
       disabled={isDisabled && day.pickedCount === 0}
       aria-pressed={isSelected}
       aria-label={`${day.dayLabel}, ${note.description}`}
+      // A handle for the browser flows that does not change with the wording of the label.
+      data-date={day.dateKey}
       onClick={() => onSelect(day.dateKey)}
       className={cn(
         "flex aspect-square flex-col items-center justify-center gap-1 bg-background transition-colors",
