@@ -203,7 +203,7 @@ describe("toGridColumns", () => {
 describe("toGridClass", () => {
   it("maps a count to its responsive column classes", () => {
     expect(toGridClass(4)).toBe("sm:grid-cols-2 lg:grid-cols-4");
-    expect(toGridClass(6)).toBe("sm:grid-cols-2 md:grid-cols-3");
+    expect(toGridClass(6)).toBe("sm:grid-cols-3");
   });
 });
 

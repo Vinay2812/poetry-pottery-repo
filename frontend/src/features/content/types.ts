@@ -80,6 +80,9 @@ export function sectionAt(
   return sections[index] ?? null;
 }
 
+// One label-column width for the page index and the definition rows, so the two never drift apart.
+export const ASIDE_COLUMNS = "md:grid-cols-[minmax(0,13.75rem)_1fr]";
+
 // The on-this-page list earns its space only when there is somewhere to jump to.
 export const MIN_INDEX_SECTIONS = 2;
 
@@ -119,7 +122,7 @@ export function toGridColumns(count: number): GridColumns {
 // Literal class strings, so Tailwind can see every one of them.
 const GRID_CLASSES: Record<GridColumns, string> = {
   2: "sm:grid-cols-2",
-  3: "sm:grid-cols-2 md:grid-cols-3",
+  3: "sm:grid-cols-3",
   4: "sm:grid-cols-2 lg:grid-cols-4",
 };
 

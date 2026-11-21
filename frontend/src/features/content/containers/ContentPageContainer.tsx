@@ -11,7 +11,11 @@ import { cn } from "@/lib/utils";
 import { ContentHeader } from "@/features/content/components/ContentHeader";
 import { ContentSectionBlock } from "@/features/content/components/ContentSectionBlock";
 import { ContentIndexContainer } from "@/features/content/containers/ContentIndexContainer";
-import { MIN_INDEX_SECTIONS, toSectionViews } from "@/features/content/types";
+import {
+  ASIDE_COLUMNS,
+  MIN_INDEX_SECTIONS,
+  toSectionViews,
+} from "@/features/content/types";
 
 export async function contentMetadata(slug: string): Promise<Metadata> {
   const page = await getContentPage(slug);
@@ -48,7 +52,7 @@ export async function ContentPageContainer({
         className={cn(
           "grid gap-10 border-t border-ash pb-10 md:gap-16 md:py-12",
           // On phones the folded index sits right on the rule, as its own band.
-          hasIndex ? "md:grid-cols-[minmax(0,13.75rem)_1fr]" : "pt-10",
+          hasIndex ? ASIDE_COLUMNS : "pt-10",
         )}
       >
         {hasIndex && (
