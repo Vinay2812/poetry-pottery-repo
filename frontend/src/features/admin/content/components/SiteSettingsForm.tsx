@@ -157,17 +157,17 @@ export function SiteSettingsForm({
         />
       </SettingsGroup>
 
-      <SettingsGroup title="Dispatch" note={null}>
+      <SettingsGroup title="Arrival" note={null}>
         <ContentTextField
-          id="settings-dispatch-min"
+          id="settings-arrival-min"
           label="Earliest, in days"
-          hint="Days after ordering, at the soonest."
+          hint="Days from order to arrival, at the soonest."
           error={errors.dispatch_days_min?.message}
           isMultiline={false}
           registration={register("dispatch_days_min")}
         />
         <ContentTextField
-          id="settings-dispatch-max"
+          id="settings-arrival-max"
           label="Latest, in days"
           hint="Never earlier than the first number."
           error={errors.dispatch_days_max?.message}

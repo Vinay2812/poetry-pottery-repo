@@ -183,7 +183,7 @@ describe("isMissingPage", () => {
 describe("describeArrivalPreview", () => {
   it("reads as a range when the ends differ", () => {
     expect(describeArrivalPreview("7", "12")).toBe(
-      "A piece from the shelf should reach the customer 7 to 12 days after they order.",
+      "A piece from the shelf should reach your buyer 7 to 12 days after they order.",
     );
   });
 

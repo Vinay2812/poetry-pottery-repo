@@ -214,5 +214,5 @@ export function describeArrivalPreview(
   if (earliest === null || latest === null || earliest > latest) return null;
   const days =
     earliest === latest ? `${earliest} days` : `${earliest} to ${latest} days`;
-  return `A piece from the shelf should reach the customer ${days} after they order.`;
+  return `A piece from the shelf should reach your buyer ${days} after they order.`;
 }

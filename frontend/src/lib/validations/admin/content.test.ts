@@ -299,7 +299,7 @@ describe("announcementSchema", () => {
   });
 });
 
-describe("siteSettingsSchema dispatch window", () => {
+describe("siteSettingsSchema arrival window", () => {
   function settings(overrides: Record<string, string> = {}) {
     return {
       contact_email: "studio@example.com",
@@ -348,7 +348,7 @@ describe("siteSettingsSchema dispatch window", () => {
     }
   });
 
-  it("refuses a dispatch day that is not a whole number", () => {
+  it("refuses an arrival day that is not a whole number", () => {
     expect(
       siteSettingsSchema.safeParse(settings({ dispatch_days_min: "soon" }))
         .success,
