@@ -26,7 +26,7 @@ const LINKS = [
   {
     href: "/workshops/bookings",
     label: "Wheel sessions",
-    hint: "Your wheel sessions",
+    hint: "Hours booked at the wheel",
   },
   { href: "/wishlist", label: "Saved pieces", hint: "Pieces you saved" },
   {
