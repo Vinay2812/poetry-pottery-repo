@@ -155,7 +155,6 @@ export function OrderDetailContainer({
           optimisticOrder.items.some((item) => item.product?.is_customizable),
         )}
         transitLine={TRANSIT_LINE}
-        emailedTo={user?.primaryEmailAddress?.emailAddress ?? null}
         steps={toTimelineSteps({
           stages: ORDER_STAGES,
           status: optimisticOrder.status,

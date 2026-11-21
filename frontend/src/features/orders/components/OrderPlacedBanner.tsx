@@ -15,7 +15,6 @@ export interface OrderPlacedBannerProps {
   pieces: { id: number; name: string; imageUrl: string | null }[];
   arrivalLine: string;
   transitLine: string;
-  emailedTo: string | null;
   whatsappUrl: string | null;
 }
 
@@ -25,7 +24,6 @@ export function OrderPlacedBanner({
   pieces,
   arrivalLine,
   transitLine,
-  emailedTo,
   whatsappUrl,
 }: OrderPlacedBannerProps) {
   return (
@@ -38,11 +36,9 @@ export function OrderPlacedBanner({
           We confirm every order by hand, and there is nothing to pay until we
           do.
         </p>
-        {emailedTo && (
-          <p className="text-[13px] text-muted-foreground">
-            We have emailed a copy to {emailedTo}.
-          </p>
-        )}
+        <p className="text-[13px] text-muted-foreground">
+          We will email you a copy of this order.
+        </p>
       </div>
 
       <ul className="flex flex-wrap gap-3">

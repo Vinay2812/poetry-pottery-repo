@@ -32,7 +32,6 @@ export interface OrderDetailProps {
   firstName: string;
   arrivalLine: string;
   transitLine: string;
-  emailedTo: string | null;
   steps: TimelineStep[];
   closedLabel: string | null;
   items: (OrderItemRowProps & { id: number })[];
@@ -67,7 +66,6 @@ export function OrderDetail({
   firstName,
   arrivalLine,
   transitLine,
-  emailedTo,
   steps,
   closedLabel,
   items,
@@ -115,7 +113,6 @@ export function OrderDetail({
           }))}
           arrivalLine={arrivalLine}
           transitLine={transitLine}
-          emailedTo={emailedTo}
           whatsappUrl={whatsappUrl}
         />
       )}

@@ -30,7 +30,6 @@ const meta = {
     arrivalLine: "Should reach you between 24 September and 29 September",
     transitLine:
       "Everything is packed by hand and goes by courier, so a day either way is normal.",
-    emailedTo: "maya@example.com",
     whatsappUrl: "https://wa.me/919876543210?text=Hi",
   },
 } satisfies Meta<typeof OrderPlacedBanner>;
@@ -44,7 +43,7 @@ export const Default: Story = {};
 export const OnePiece: Story = { args: { pieces: [pieces[0]!] } };
 
 export const NoWhatsApp: Story = {
-  args: { whatsappUrl: null, emailedTo: null },
+  args: { whatsappUrl: null },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };
