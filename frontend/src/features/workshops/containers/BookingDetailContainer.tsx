@@ -21,6 +21,7 @@ import { useSlotPicker } from "@/features/workshops/slot-picker";
 import {
   applyBookingAction,
   BOOKING_STEPS,
+  formatDayRange,
   formatHours,
   groupSlotsByDay,
   isBookingClosed,
@@ -169,7 +170,11 @@ export function BookingDetailContainer({
       label: group.dayLabel,
       value: group.timesLabel,
     })),
-    { label: "Duration", value: formatHours(optimisticBooking.hours) },
+    { label: "Hours", value: formatHours(optimisticBooking.hours) },
+    {
+      label: "People",
+      value: pluralize(optimisticBooking.participants, "person", "people"),
+    },
     {
       label: "You take home",
       value: `${pluralize(optimisticBooking.pieces_per_person * optimisticBooking.participants, "piece")}, fired and glazed`,
@@ -193,6 +198,7 @@ export function BookingDetailContainer({
     <>
       <BookingDetail
         bookingId={optimisticBooking.id}
+        dateLabel={formatDayRange(optimisticBooking.slots, timezone)}
         bookedOn={formatDateTime(optimisticBooking.created_at)}
         statusLabel={toBookingStatusLabel(optimisticBooking.status)}
         statusTone={toBookingStatusTone(optimisticBooking.status)}
