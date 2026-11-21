@@ -7,7 +7,6 @@ import { SendContactMessageDocument } from "@/graphql/generated/graphql";
 import { describeError } from "@/lib/apollo/errors";
 import type { ContactFormValues } from "@/lib/validations/contact";
 
-import { ConfirmationLine } from "@/features/content/components/ConfirmationLine";
 import { ContactForm } from "@/features/content/components/ContactForm";
 
 export function ContactFormContainer() {
@@ -43,14 +42,9 @@ export function ContactFormContainer() {
     [send],
   );
 
-  if (isSent) {
-    return (
-      <ConfirmationLine text="Thank you, your message is with us. We reply within a day." />
-    );
-  }
-
   return (
     <ContactForm
+      isSent={isSent}
       isSubmitting={loading}
       errorMessage={errorMessage}
       onSubmit={(values) => void handleSubmit(values)}

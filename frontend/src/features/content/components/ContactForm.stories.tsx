@@ -17,6 +17,7 @@ const meta = {
     ),
   ],
   args: {
+    isSent: false,
     isSubmitting: false,
     errorMessage: null,
     onSubmit: fn(),
@@ -30,6 +31,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Submitting: Story = { args: { isSubmitting: true } };
+
+export const Sent: Story = { args: { isSent: true } };
 
 export const WithServerError: Story = {
   args: {

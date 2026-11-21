@@ -1,7 +1,6 @@
-export { ContactDetails } from "@/features/content/components/ContactDetails";
 export { ContentHeader } from "@/features/content/components/ContentHeader";
 export { AboutPageContainer } from "@/features/content/containers/AboutPageContainer";
-export { ContactFormContainer } from "@/features/content/containers/ContactFormContainer";
+export { ContactPageContainer } from "@/features/content/containers/ContactPageContainer";
 export {
   contentMetadata,
   ContentPageContainer,
