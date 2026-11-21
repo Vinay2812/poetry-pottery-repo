@@ -47,8 +47,12 @@ export function ImageDropField({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={previewUrl} alt="" className="size-full object-cover" />
             ) : (
-              <span className="text-[11px] text-muted-foreground">
-                No photo
+              <span
+                role="img"
+                aria-label="No image yet"
+                className="text-muted-foreground"
+              >
+                —
               </span>
             )}
           </div>

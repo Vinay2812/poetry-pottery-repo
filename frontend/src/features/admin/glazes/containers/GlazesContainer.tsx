@@ -203,6 +203,7 @@ export function GlazesContainer() {
         <ImageUploaderContainer
           id={`glaze-${editorId ?? "new"}-swatch`}
           label="Swatch"
+          hasPreview
           purpose={UploadPurpose.Glaze}
           value={swatchUrl}
           onChange={setSwatchUrl}

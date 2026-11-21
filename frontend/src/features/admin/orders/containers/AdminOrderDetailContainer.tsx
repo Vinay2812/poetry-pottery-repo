@@ -324,6 +324,7 @@ export function AdminOrderDetailContainer({
                 <ImageUploaderContainer
                   id="studio-note-photo"
                   label="Photo"
+                  hasPreview
                   purpose={UploadPurpose.OrderNote}
                   value={studioPhotoUrl}
                   onChange={setStudioPhotoUrl}

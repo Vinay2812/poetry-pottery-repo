@@ -135,6 +135,7 @@ export function SiteSettingsContainer() {
             <ImageUploaderContainer
               id="settings-hero-image"
               label="Hero image"
+              hasPreview
               purpose={UploadPurpose.Hero}
               value={heroUrl}
               onChange={setHeroDraft}

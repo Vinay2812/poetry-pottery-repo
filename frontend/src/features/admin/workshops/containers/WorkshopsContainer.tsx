@@ -178,6 +178,7 @@ export function WorkshopsContainer() {
           <ImageUploaderContainer
             id="workshop-image"
             label="Intro image"
+            hasPreview
             purpose={UploadPurpose.Hero}
             value={currentImage}
             onChange={(url) => setPickedImage({ configId: selected.id, url })}
