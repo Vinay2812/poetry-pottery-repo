@@ -28,7 +28,7 @@ import { ProductToolbar } from "@/features/products/components/ProductToolbar";
 import { SearchField } from "@/features/products/components/SearchField";
 import { ShelfTabs } from "@/features/products/components/ShelfTabs";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
-import { useShelfResults } from "@/features/products/hooks";
+import { useSearchDraft, useShelfResults } from "@/features/products/hooks";
 import {
   clampPriceRange,
   countActiveFilters,
@@ -50,8 +50,6 @@ export interface ProductListContainerProps {
   initialFilterKey?: string | null;
 }
 
-const SEARCH_DEBOUNCE_MS = 300;
-
 export function ProductListContainer({
   heading,
   description,
@@ -67,30 +65,17 @@ export function ProductListContainer({
   } = useUrlState(PRODUCT_FILTERS_CODEC);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [priceDraft, setPriceDraft] = useState<[number, number] | null>(null);
-  const [searchDraft, setSearchDraft] = useState<string | null>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   // Typing updates the field at once and the URL after a short pause.
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setSearchDraft(value);
-      if (searchTimer.current) clearTimeout(searchTimer.current);
-      searchTimer.current = setTimeout(() => {
-        dispatch({ type: "search", value });
-      }, SEARCH_DEBOUNCE_MS);
-    },
+  const commitSearch = useCallback(
+    (value: string) => dispatch({ type: "search", value }),
     [dispatch],
   );
-  const handleSearchClear = useCallback(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    setSearchDraft("");
-    dispatch({ type: "search", value: "" });
-  }, [dispatch]);
-  // The draft stays on screen until the URL has caught up, so the field never snaps back mid-navigation.
-  const searchValue =
-    searchDraft !== null && searchDraft.trim() !== filters.search
-      ? searchDraft
-      : filters.search;
+  const {
+    value: searchValue,
+    change: handleSearchChange,
+    clear: handleSearchClear,
+    reset: resetSearchDraft,
+  } = useSearchDraft(filters.search, commitSearch);
   // The field paints on every keystroke; the results follow this copy at a lower priority.
   const deferredSearchValue = useDeferredValue(searchValue);
   const isSearchSettling = deferredSearchValue.trim() !== filters.search;
@@ -111,13 +96,6 @@ export function ProductListContainer({
   const items = result?.items ?? [];
   const pageInfo = result?.page_info;
   const facets = result?.facets;
-  useEffect(
-    () => () => {
-      if (searchTimer.current) clearTimeout(searchTimer.current);
-    },
-    [],
-  );
-
   const handleOpenFilters = useCallback(() => setIsSheetOpen(true), []);
   const handleSortChange = useCallback(
     (sort: ProductSort) => dispatch({ type: "sort", sort }),
@@ -175,11 +153,10 @@ export function ProductListContainer({
     [dispatch],
   );
   const handleClear = useCallback(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    setSearchDraft(null);
+    resetSearchDraft();
     setPriceDraft(null);
     dispatch({ type: "clear" });
-  }, [dispatch]);
+  }, [dispatch, resetSearchDraft]);
 
   // Load the next page when the sentinel scrolls into view.
   const loadMoreRef = useRef(handleLoadMore);

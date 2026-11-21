@@ -1,11 +1,11 @@
 import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { NetworkStatus } from "@apollo/client";
 
 import type { ProductsQuery } from "@/graphql/generated/graphql";
 
-import { useShelfResults } from "./hooks";
+import { useSearchDraft, useShelfResults } from "./hooks";
 import {
   EMPTY_FILTERS,
   type ProductFilters,
@@ -292,5 +292,69 @@ describe("useShelfResults", () => {
     act(() => result.current.loadMore());
 
     expect(fetchMoreMock).not.toHaveBeenCalled();
+  });
+});
+
+describe("useSearchDraft", () => {
+  beforeEach(() => vi.useFakeTimers());
+  afterEach(() => vi.useRealTimers());
+
+  function renderDraft(search: string) {
+    const commit = vi.fn<(value: string) => void>();
+    const view = renderHook(
+      ({ query }: { query: string }) => useSearchDraft(query, commit),
+      { initialProps: { query: search } },
+    );
+    return { ...view, commit };
+  }
+
+  it("keeps what was typed, trailing space included, and trims only what it sends", () => {
+    const { result, rerender, commit } = renderDraft("");
+
+    act(() => result.current.change("mug "));
+    act(() => vi.advanceTimersByTime(300));
+    expect(commit).toHaveBeenLastCalledWith("mug");
+    rerender({ query: "mug" });
+    expect(result.current.value).toBe("mug ");
+
+    act(() => result.current.change("mug c"));
+    expect(result.current.value).toBe("mug c");
+    act(() => vi.advanceTimersByTime(300));
+    expect(commit).toHaveBeenLastCalledWith("mug c");
+  });
+
+  it("follows the URL when history moves the query after a send", () => {
+    const { result, rerender, commit } = renderDraft("bowl");
+
+    act(() => result.current.change("cup"));
+    act(() => vi.advanceTimersByTime(300));
+    expect(commit).toHaveBeenLastCalledWith("cup");
+    rerender({ query: "cup" });
+    // Back: the URL returns to an earlier search the field never sent.
+    rerender({ query: "mug" });
+
+    expect(result.current.value).toBe("mug");
+  });
+
+  it("drops a pending send when history moves the query first", () => {
+    const { result, rerender, commit } = renderDraft("bowl");
+
+    act(() => result.current.change("cu"));
+    rerender({ query: "mug" });
+    act(() => vi.advanceTimersByTime(300));
+
+    expect(result.current.value).toBe("mug");
+    expect(commit).not.toHaveBeenCalled();
+  });
+
+  it("follows the URL back to the query it was typed over", () => {
+    const { result, rerender } = renderDraft("bowl");
+
+    act(() => result.current.change("cup"));
+    act(() => vi.advanceTimersByTime(300));
+    rerender({ query: "cup" });
+    rerender({ query: "bowl" });
+
+    expect(result.current.value).toBe("bowl");
   });
 });

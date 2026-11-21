@@ -167,6 +167,76 @@ export function useShelfResults({
   };
 }
 
+const SEARCH_DEBOUNCE_MS = 300;
+
+interface SearchDraft {
+  // Exactly what was typed, spaces and all; it is trimmed only when sent.
+  value: string;
+  // The query this draft last put in the URL, or null before its first send.
+  sent: string | null;
+}
+
+export interface SearchDraftState {
+  value: string;
+  change: (value: string) => void;
+  clear: () => void;
+  reset: () => void;
+}
+
+// The search field's own copy of the query: it paints every keystroke and sends after a pause.
+// When the URL's query moves somewhere the draft never sent it (Back, or the header search),
+// the draft and its pending send are dropped and the field follows the URL again.
+export function useSearchDraft(
+  search: string,
+  commit: (value: string) => void,
+): SearchDraftState {
+  const [draft, setDraft] = useState<SearchDraft | null>(null);
+  const [seenSearch, setSeenSearch] = useState(search);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  if (search !== seenSearch) {
+    setSeenSearch(search);
+    if (draft && draft.sent !== search) setDraft(null);
+  }
+
+  const cancel = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+  }, []);
+  // A dropped draft takes its pending send with it.
+  useEffect(() => {
+    if (draft === null) cancel();
+  }, [draft, cancel]);
+  useEffect(() => cancel, [cancel]);
+
+  const change = useCallback(
+    (value: string) => {
+      setDraft((current) => ({ value, sent: current?.sent ?? null }));
+      cancel();
+      timer.current = setTimeout(() => {
+        timer.current = null;
+        const query = value.trim();
+        setDraft((current) => (current ? { ...current, sent: query } : null));
+        commit(query);
+      }, SEARCH_DEBOUNCE_MS);
+    },
+    [cancel, commit],
+  );
+
+  const clear = useCallback(() => {
+    cancel();
+    setDraft({ value: "", sent: "" });
+    commit("");
+  }, [cancel, commit]);
+
+  const reset = useCallback(() => {
+    cancel();
+    setDraft(null);
+  }, [cancel]);
+
+  return { value: draft?.value ?? search, change, clear, reset };
+}
+
 const TOO_MANY = `You can attach up to ${MAX_REFERENCE_PHOTOS} photos`;
 const UPLOAD_FAILED = "Upload failed";
 
