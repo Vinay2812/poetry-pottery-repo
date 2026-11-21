@@ -6,13 +6,7 @@ import { CommissionSent } from "./CommissionSent";
 const meta = {
   title: "Features/Commissions/CommissionSent",
   component: CommissionSent,
-  decorators: [
-    (Story) => (
-      <div className="max-w-2xl">
-        <Story />
-      </div>
-    ),
-  ],
+  parameters: { layout: "padded" },
   args: {
     reference: "k3md81xq0z7p",
     summary: "Mug · Short (150 ml) · Ocean Blue",

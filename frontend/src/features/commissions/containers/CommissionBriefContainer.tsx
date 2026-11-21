@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
-import { useCallback, useState } from "react";
+import { useAuth, useClerk } from "@clerk/nextjs";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMutation } from "@apollo/client/react";
 import { CreateCommissionRequestDocument } from "@/graphql/generated/graphql";
@@ -10,6 +10,7 @@ import type { CommissionFormValues } from "@/lib/validations/commission";
 
 import { CommissionBriefForm } from "@/features/commissions/components/CommissionBriefForm";
 import { CommissionSent } from "@/features/commissions/components/CommissionSent";
+import { ReferencePhotosSignIn } from "@/features/commissions/components/ReferencePhotosSignIn";
 import type {
   GlazeChoice,
   PieceChoice,
@@ -51,7 +52,9 @@ export function CommissionBriefContainer({
   referencePiece,
 }: CommissionBriefContainerProps) {
   const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
   const [sent, setSent] = useState<SentBrief | null>(null);
+  const sentRef = useRef<HTMLDivElement>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [sentAskUrl, setSentAskUrl] = useState<string | null>(null);
   const [create, { loading }] = useMutation(CreateCommissionRequestDocument);
@@ -108,14 +111,23 @@ export function CommissionBriefContainer({
     [clearPhotos, create, photos, setPhotoError, whatsappNumber],
   );
 
+  // The confirmation is far shorter than the form, so bring it into view instead of leaving the footer there.
+  useEffect(() => {
+    if (!sent) return;
+    sentRef.current?.scrollIntoView({ block: "start" });
+    sentRef.current?.focus({ preventScroll: true });
+  }, [sent]);
+
   if (sent) {
     return (
-      <CommissionSent
-        reference={sent.reference}
-        summary={sent.summary}
-        email={sent.email}
-        askUrl={sentAskUrl}
-      />
+      <div ref={sentRef} tabIndex={-1} className="scroll-mt-28 outline-none">
+        <CommissionSent
+          reference={sent.reference}
+          summary={sent.summary}
+          email={sent.email}
+          askUrl={sentAskUrl}
+        />
+      </div>
     );
   }
 
@@ -148,11 +160,8 @@ export function CommissionBriefContainer({
             onRemove={removePhoto}
           />
         ) : (
-          // Uploads are signed; send the photos on WhatsApp instead of asking for an account.
-          <p className="text-[13px] text-muted-foreground">
-            Sign in to attach reference photos, or send them on WhatsApp with
-            your brief.
-          </p>
+          // The modal keeps the page, so whatever is typed survives signing in.
+          <ReferencePhotosSignIn onSignIn={() => openSignIn()} />
         )
       }
       onSubmit={(values) => void handleSubmit(values)}

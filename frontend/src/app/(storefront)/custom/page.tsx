@@ -77,9 +77,14 @@ export default async function CustomPage({
       {pieces.length > 0 && (
         <Reveal isGroup>
           <section className="flex flex-col gap-5 border-t border-ash pt-10">
-            <h2 className="font-heading text-2xl tracking-tight">
-              Pieces we have made this way
-            </h2>
+            <div className="flex flex-col gap-2">
+              <h2 className="font-heading text-2xl tracking-tight">
+                Pieces we have made this way
+              </h2>
+              <p className="max-w-2xl text-[15px] text-muted-foreground">
+                Open one to see it up close, or name it in your brief below.
+              </p>
+            </div>
             <ProductGrid>
               {pieces.map((piece, index) => (
                 <ProductCardContainer
@@ -95,23 +100,13 @@ export default async function CustomPage({
       )}
 
       <Reveal>
-        <section className="flex flex-col gap-5 border-t border-ash pt-10">
-          <div className="flex flex-col gap-2">
-            <h2 className="font-heading text-2xl tracking-tight">
-              Send us the brief
-            </h2>
-            <p className="max-w-2xl text-[15px] text-muted-foreground">
-              The sizes and glazes here are the ones the studio is firing now.
-            </p>
-          </div>
-          <div className="max-w-2xl">
-            <CommissionBriefContainer
-              pieces={toPieceChoices(options.piece_types)}
-              glazes={toGlazeChoices(options.glazes)}
-              whatsappNumber={settings.whatsapp_number}
-              referencePiece={referencePiece}
-            />
-          </div>
+        <section className="border-t border-ash pt-10">
+          <CommissionBriefContainer
+            pieces={toPieceChoices(options.piece_types)}
+            glazes={toGlazeChoices(options.glazes)}
+            whatsappNumber={settings.whatsapp_number}
+            referencePiece={referencePiece}
+          />
         </section>
       </Reveal>
     </PageShell>
