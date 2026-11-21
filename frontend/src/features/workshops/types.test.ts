@@ -500,7 +500,7 @@ describe("toDayNote", () => {
 });
 
 describe("toBookingGroup against the API's ahead rule", () => {
-  // The same rows as aheadBookingWhere's table in api/src/features/workshops/workshops.service.spec.ts:
+  // Mirrors aheadBookingWhere's table in api/src/features/workshops/workshops.service.spec.ts:
   // the API puts a booking ahead when it still holds the wheel and its last hour ends after now.
   const now = new Date("2026-09-12T12:00:00Z");
   const endings = {
@@ -528,6 +528,22 @@ describe("toBookingGroup against the API's ahead rule", () => {
     const isAhead = holdsWheel.has(row.status) && new Date(row.endsAt) > now;
     expect(toBookingGroup(slots, row.status, now)).toBe(
       isAhead ? "upcoming" : "past",
+    );
+  });
+
+  it("reads the last hour, not the first, across days", () => {
+    const slots = [
+      {
+        starts_at: "2026-09-11T10:00:00.000Z",
+        ends_at: "2026-09-11T11:00:00.000Z",
+      },
+      {
+        starts_at: "2026-09-13T10:00:00.000Z",
+        ends_at: "2026-09-13T11:00:00.000Z",
+      },
+    ];
+    expect(toBookingGroup(slots, RegistrationStatus.Confirmed, now)).toBe(
+      "upcoming",
     );
   });
 });
