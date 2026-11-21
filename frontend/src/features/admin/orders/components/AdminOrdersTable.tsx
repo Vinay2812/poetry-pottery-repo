@@ -1,6 +1,8 @@
 import Link from "next/link";
 
 import {
+  ADMIN_FROM_LAPTOP,
+  ADMIN_FROM_TABLET,
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
@@ -37,11 +39,15 @@ export function AdminOrdersTable({
       <thead>
         <tr>
           <th className={ADMIN_TH}>Order</th>
-          <th className={ADMIN_TH}>Customer</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_TABLET}`}>Customer</th>
           <th className={ADMIN_TH}>Status</th>
-          <th className={`${ADMIN_TH} text-right`}>Items</th>
-          <th className={`${ADMIN_TH} text-right`}>Total</th>
-          <th className={ADMIN_TH}>Placed</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP} text-right`}>
+            Items
+          </th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_TABLET} text-right`}>
+            Total
+          </th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Placed</th>
         </tr>
       </thead>
       <tbody>
@@ -53,15 +59,19 @@ export function AdminOrdersTable({
             <td className={`${ADMIN_TD} tnum`}>
               <Link
                 href={`/dashboard/orders/${row.id}`}
-                className="underline-offset-4 hover:underline"
+                className="whitespace-nowrap underline-offset-4 hover:underline"
               >
                 {row.id}
               </Link>
+              {/* Phones drop the customer and total columns, so they ride under the id. */}
+              <span className="block text-[12px] text-muted-foreground md:hidden">
+                {row.customerLabel} · {row.totalLabel}
+              </span>
             </td>
-            <td className={ADMIN_TD}>
+            <td className={`${ADMIN_TD} ${ADMIN_FROM_TABLET}`}>
               <span className="block">{row.customerLabel}</span>
               {row.customerLabel !== row.customerEmail && (
-                <span className="block text-[11px] text-muted-foreground">
+                <span className="block text-[12px] wrap-anywhere text-muted-foreground">
                   {row.customerEmail}
                 </span>
               )}
@@ -69,11 +79,17 @@ export function AdminOrdersTable({
             <td className={ADMIN_TD}>
               <AdminStatusPill label={row.statusLabel} tone={row.statusTone} />
             </td>
-            <td className={`${ADMIN_TD} text-right text-muted-foreground tnum`}>
+            <td
+              className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} text-right text-muted-foreground tnum`}
+            >
               {row.itemsLabel}
             </td>
-            <td className={`${ADMIN_TD} text-right tnum`}>{row.totalLabel}</td>
-            <td className={`${ADMIN_TD} text-muted-foreground`}>
+            <td className={`${ADMIN_TD} ${ADMIN_FROM_TABLET} text-right tnum`}>
+              {row.totalLabel}
+            </td>
+            <td
+              className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} whitespace-nowrap text-muted-foreground`}
+            >
               {row.placedLabel}
             </td>
           </tr>
