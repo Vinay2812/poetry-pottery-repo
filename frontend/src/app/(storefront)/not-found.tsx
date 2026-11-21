@@ -53,14 +53,17 @@ export default async function NotFound() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-4 lg:gap-x-6">
-            {pieces.map((piece, index) => (
-              <ProductCardContainer
-                key={piece.id}
-                product={piece}
-                isPriority={toCardPhotoLoading(index).isPriority}
-                isEager={toCardPhotoLoading(index).isEager}
-              />
-            ))}
+            {pieces.map((piece, index) => {
+              const photoLoading = toCardPhotoLoading(index);
+              return (
+                <ProductCardContainer
+                  key={piece.id}
+                  product={piece}
+                  isPriority={photoLoading.isPriority}
+                  isEager={photoLoading.isEager}
+                />
+              );
+            })}
           </div>
         </section>
       )}
