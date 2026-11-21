@@ -1660,7 +1660,7 @@ export type PlaceOrderInput = {
   address_id: Scalars['Int']['input'];
   coupon_code?: InputMaybe<Scalars['String']['input']>;
   customer_note?: InputMaybe<Scalars['String']['input']>;
-  expected_total?: InputMaybe<Scalars['Int']['input']>;
+  expected_total: Scalars['Int']['input'];
   gift_note?: InputMaybe<Scalars['String']['input']>;
   hide_prices?: InputMaybe<Scalars['Boolean']['input']>;
 };

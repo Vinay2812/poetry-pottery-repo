@@ -9,6 +9,7 @@ import {
   QueueRecorder,
   race,
   resetData,
+  placeAtQuote,
 } from "./harness";
 
 const RACERS = 15;
@@ -82,7 +83,7 @@ describe("next-batch notifications", () => {
     if (!buyer) throw new Error("no user");
     const piece = await makeProduct(harness.prisma, { stock: 1 });
     await harness.cart.add(buyer.id, { product_id: piece.id, quantity: 1 });
-    const order = await harness.orders.place(buyer.id, {
+    const order = await placeAtQuote(harness, buyer.id, {
       address_id: buyer.address_id,
     });
     const sold = await harness.prisma.product.findUniqueOrThrow({
@@ -102,7 +103,7 @@ describe("next-batch notifications", () => {
     if (!buyer) throw new Error("no user");
     const piece = await makeProduct(harness.prisma, { stock: 5 });
     await harness.cart.add(buyer.id, { product_id: piece.id, quantity: 1 });
-    const order = await harness.orders.place(buyer.id, {
+    const order = await placeAtQuote(harness, buyer.id, {
       address_id: buyer.address_id,
     });
     queue.reset();

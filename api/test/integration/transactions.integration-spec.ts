@@ -10,6 +10,7 @@ import {
   makeUsers,
   QueueRecorder,
   resetData,
+  placeAtQuote,
 } from "./harness";
 
 const ADDRESS = "maya@example.test";
@@ -40,7 +41,7 @@ describe("the transaction seam", () => {
     const piece = await makeProduct(harness.prisma, { stock: 1 });
     await harness.notifications.watch(piece.id, ADDRESS, null);
     await harness.cart.add(buyer.id, { product_id: piece.id, quantity: 1 });
-    const order = await harness.orders.place(buyer.id, {
+    const order = await placeAtQuote(harness, buyer.id, {
       address_id: buyer.address_id,
     });
     queue.reset();

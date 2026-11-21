@@ -223,8 +223,8 @@ export class PlaceOrderInput {
   hide_prices?: boolean | null;
 
   // The total the shopper was shown; a cart changed in another tab must not be billed unseen.
-  @Field(() => Int, { nullable: true })
-  expected_total?: number | null;
+  @Field(() => Int)
+  expected_total!: number;
 }
 
 // Everything from a past order that could go back in the cart, and what could not.
