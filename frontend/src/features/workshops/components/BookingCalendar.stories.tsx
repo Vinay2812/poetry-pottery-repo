@@ -28,7 +28,7 @@ function toDay(dateKey: string): CalendarDay {
     isPast: dateKey < TODAY,
     mutedReason:
       isOutsideSpan && dateKey >= TODAY
-        ? "Pick within 7 days of your first slot"
+        ? "Keep your hours within 7 days of the first one"
         : null,
   };
 }
@@ -44,7 +44,7 @@ const meta = {
   args: {
     monthLabel: "September 2026",
     notice:
-      "Pick within 7 days of your first slot. Days further out are closed off.",
+      "Keep your hours within 7 days of the first one. Days further out are closed off.",
     weeks: WEEKS,
     selectedDate: "2026-09-19",
     canGoBack: false,

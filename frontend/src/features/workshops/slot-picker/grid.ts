@@ -104,7 +104,7 @@ export function isDayWithinSpan(
 export function spanNotice(allowedSpanDays: number): string {
   return allowedSpanDays === 1
     ? "Pick every hour on the same day"
-    : `Pick within ${allowedSpanDays} days of your first slot`;
+    : `Keep your hours within ${allowedSpanDays} days of the first one`;
 }
 
 // Picked hours are always shown and sent in the order they happen, as "Sat, 20 Sept · 3–4 pm".

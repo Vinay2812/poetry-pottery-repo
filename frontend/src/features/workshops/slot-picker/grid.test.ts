@@ -104,7 +104,7 @@ describe("slot helpers", () => {
     expect(isDayWithinSpan("2026-09-19", [], 7)).toBe(true);
     expect(isDayWithinSpan("2026-09-19", ["2026-09-13"], 7)).toBe(true);
     expect(isDayWithinSpan("2026-09-20", ["2026-09-13"], 7)).toBe(false);
-    expect(spanNotice(7)).toBe("Pick within 7 days of your first slot");
+    expect(spanNotice(7)).toBe("Keep your hours within 7 days of the first one");
     expect(spanNotice(1)).toBe("Pick every hour on the same day");
   });
 
