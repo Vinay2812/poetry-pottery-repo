@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   buildWhatsAppUrl,
   formatBadgeCount,
-  isActiveLink,
   isActivePath,
   toCartAnnouncement,
   toFocusedHeader,
@@ -26,29 +25,6 @@ describe("isActivePath", () => {
   it("only matches home exactly", () => {
     expect(isActivePath("/", "/")).toBe(true);
     expect(isActivePath("/cart", "/")).toBe(false);
-  });
-});
-
-describe("isActiveLink", () => {
-  it("tells the shelf and the archive apart", () => {
-    expect(isActiveLink("/products", "archive", "/products")).toBe(false);
-    expect(isActiveLink("/products", "archive", "/products?view=archive")).toBe(
-      true,
-    );
-    expect(isActiveLink("/products", null, "/products")).toBe(true);
-    expect(isActiveLink("/products", null, "/products?view=archive")).toBe(
-      false,
-    );
-  });
-
-  it("ignores query keys other than the view", () => {
-    expect(isActiveLink("/products", null, "/products?sort=NEWEST")).toBe(true);
-  });
-
-  it("still requires the path to match", () => {
-    expect(isActiveLink("/custom", "archive", "/products?view=archive")).toBe(
-      false,
-    );
   });
 });
 

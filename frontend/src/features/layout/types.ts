@@ -3,10 +3,11 @@ export interface NavLink {
   label: string;
 }
 
+// Labels follow the pages they open: /workshops books a wheel session, /events lists workshops and open mics.
 export const NAV_LINKS: NavLink[] = [
   { href: "/products", label: "Shop" },
-  { href: "/custom", label: "Custom" },
-  { href: "/workshops", label: "Workshops" },
+  { href: "/custom", label: "Made to order" },
+  { href: "/workshops", label: "Wheel sessions" },
   { href: "/events", label: "Events" },
   { href: "/about", label: "Our story" },
 ];
@@ -15,8 +16,8 @@ export const NAV_LINKS: NavLink[] = [
 export const MOBILE_MENU_LINKS: NavLink[] = [
   { href: "/products", label: "Shop" },
   { href: "/archive", label: "Archive" },
-  { href: "/custom", label: "Custom" },
-  { href: "/workshops", label: "Workshops" },
+  { href: "/custom", label: "Made to order" },
+  { href: "/workshops", label: "Wheel sessions" },
   { href: "/events", label: "Events" },
   { href: "/about", label: "Our story" },
 ];
@@ -40,6 +41,10 @@ export const FOOTER_HELP_LINKS: NavLink[] = [
   { href: "/shipping", label: "Shipping and returns" },
   { href: "/care", label: "Caring for pottery" },
   { href: "/faq", label: "FAQ" },
+];
+
+// Small print, so it sits on the copyright line rather than in a column.
+export const FOOTER_LEGAL_LINKS: NavLink[] = [
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
 ];
@@ -51,20 +56,7 @@ export function isActivePath(pathname: string, href: string): boolean {
   return pathname === base || pathname.startsWith(`${base}/`);
 }
 
-// The shelf and the archive share a path, so the view decides which of the two rows is lit.
-export function isActiveLink(
-  pathname: string,
-  view: string | null,
-  href: string,
-): boolean {
-  if (!isActivePath(pathname, href)) return false;
-  const query = href.split("?")[1];
-  const linkView = new URLSearchParams(query ?? "").get("view");
-  return (linkView ?? null) === (view || null);
-}
-
-// Cart and checkout drop the nav so the only moves are finish or go back.
-// Only checkout narrows the header; the cart keeps the full nav so shopping can continue.
+// Checkout keeps the wordmark and one way back; the cart keeps the full nav so shopping can continue.
 export function toFocusedHeader(pathname: string): NavLink | null {
   if (pathname === "/checkout") return { href: "/cart", label: "Back to cart" };
   return null;

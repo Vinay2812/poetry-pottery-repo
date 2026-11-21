@@ -147,7 +147,11 @@ export function SiteHeader({
               >
                 <Search className="size-5" strokeWidth={1.5} />
               </button>
-              <IconLink href="/wishlist" label="Wishlist" count={wishlistCount}>
+              <IconLink
+                href="/wishlist"
+                label="Saved pieces"
+                count={wishlistCount}
+              >
                 <Heart className="size-5" strokeWidth={1.5} />
               </IconLink>
               <span className="hidden lg:contents">

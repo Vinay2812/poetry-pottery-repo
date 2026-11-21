@@ -21,7 +21,9 @@ export const ActiveHome: Story = {};
 
 export const ActiveShop: Story = { args: { activeHref: "/products" } };
 
-export const ActiveWorkshops: Story = { args: { activeHref: "/workshops" } };
+export const ActiveWheelSessions: Story = {
+  args: { activeHref: "/workshops" },
+};
 
 export const ActiveCart: Story = { args: { activeHref: "/cart" } };
 

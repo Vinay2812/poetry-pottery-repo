@@ -2,14 +2,7 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { UserRole } from "@/graphql/generated/graphql";
 
@@ -119,19 +112,17 @@ export function SiteHeaderContainer({
         onMenuClick={() => setIsMenuOpen(true)}
       />
       <SearchMenuContainer isOpen={isSearchOpen} onClose={handleCloseSearch} />
-      <Suspense>
-        <MobileMenuContainer
-          isOpen={isMenuOpen}
-          isSignedIn={Boolean(isSignedIn)}
-          wishlistCount={wishlistCount}
-          contactPhone={contactPhone}
-          whatsappUrl={whatsappUrl}
-          onOpenChange={setIsMenuOpen}
-          onNavigate={handleCloseMenu}
-          onAccountClick={handleAccountClick}
-          onSignOut={handleSignOut}
-        />
-      </Suspense>
+      <MobileMenuContainer
+        isOpen={isMenuOpen}
+        isSignedIn={Boolean(isSignedIn)}
+        wishlistCount={wishlistCount}
+        contactPhone={contactPhone}
+        whatsappUrl={whatsappUrl}
+        onOpenChange={setIsMenuOpen}
+        onNavigate={handleCloseMenu}
+        onAccountClick={handleAccountClick}
+        onSignOut={handleSignOut}
+      />
     </>
   );
 }

@@ -38,7 +38,7 @@ export const SignedIn: Story = {
 };
 
 export const OnArchive: Story = {
-  args: { activeHref: "/products?view=archive" },
+  args: { activeHref: "/archive" },
 };
 
 // A fresh install has no number on file, and an empty tel: link is a link with no name.

@@ -1,10 +1,10 @@
 "use client";
 
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useMemo } from "react";
 
 import { MobileMenuSheet } from "@/features/layout/components/MobileMenuSheet";
-import { isActiveLink, MOBILE_MENU_LINKS } from "@/features/layout/types";
+import { isActivePath, MOBILE_MENU_LINKS } from "@/features/layout/types";
 
 export interface MobileMenuContainerProps {
   isOpen: boolean;
@@ -18,7 +18,6 @@ export interface MobileMenuContainerProps {
   onSignOut: () => void;
 }
 
-// Split out of the header so the search params it reads sit behind their own Suspense boundary.
 export function MobileMenuContainer({
   isOpen,
   isSignedIn,
@@ -31,12 +30,11 @@ export function MobileMenuContainer({
   onSignOut,
 }: MobileMenuContainerProps) {
   const pathname = usePathname();
-  const view = useSearchParams().get("view");
   const activeHref = useMemo(
     () =>
-      MOBILE_MENU_LINKS.find((link) => isActiveLink(pathname, view, link.href))
+      MOBILE_MENU_LINKS.find((link) => isActivePath(pathname, link.href))
         ?.href ?? null,
-    [pathname, view],
+    [pathname],
   );
 
   return (

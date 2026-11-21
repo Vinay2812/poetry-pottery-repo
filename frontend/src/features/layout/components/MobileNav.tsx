@@ -13,7 +13,7 @@ export interface MobileNavProps {
 const ITEMS = [
   { href: "/", label: "Home", Icon: House },
   { href: "/products", label: "Shop", Icon: Store },
-  { href: "/workshops", label: "Workshops", Icon: CalendarDays },
+  { href: "/workshops", label: "Wheel sessions", Icon: CalendarDays },
   { href: "/cart", label: "Cart", Icon: ShoppingBag },
 ] as const;
 
