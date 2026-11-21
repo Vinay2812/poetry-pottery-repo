@@ -185,23 +185,10 @@ export class ProductsService {
 
     // A search that finds nothing still lists every filter option, each counted at zero.
     if (rankedIds && rankedIds.length === 0) {
-      const none: Prisma.ProductWhereInput = { id: { in: [] } };
-      const facets = await this.facets({
-        categories: none,
-        collections: none,
-        materials: none,
-        glazes: none,
-        prices: none,
-      });
       return {
         items: [],
         page_info: toPageInfo(bounds, 0),
-        facets: {
-          ...facets,
-          active_count: 0,
-          archive_count: 0,
-          seconds_count: 0,
-        },
+        facets: await this.zeroFacets(),
       };
     }
 
@@ -469,6 +456,40 @@ export class ProductsService {
   }
 
   // The whole catalogue is always listed, zero counts included, so the sidebar never reflows.
+  // Every option by name, nothing counted: there is no match to count against.
+  private async zeroFacets(): Promise<ProductFacets> {
+    const [categories, collections, materials, glazes] = await Promise.all([
+      this.prisma.category.findMany({
+        orderBy: [{ sort_order: "asc" }, { name: "asc" }],
+        select: { slug: true, name: true },
+      }),
+      this.prisma.collection.findMany({
+        orderBy: [{ created_at: "desc" }],
+        select: { slug: true, name: true },
+      }),
+      this.prisma.product.groupBy({
+        by: ["material"],
+        orderBy: { material: "asc" },
+      }),
+      this.prisma.glaze.findMany({
+        orderBy: { name: "asc" },
+        select: { slug: true, name: true },
+      }),
+    ]);
+    const zero = (value: string, label: string) => ({ value, label, count: 0 });
+    return {
+      categories: categories.map((c) => zero(c.slug, c.name)),
+      collections: collections.map((c) => zero(c.slug, c.name)),
+      materials: materials.map((m) => zero(m.material, m.material)),
+      glazes: glazes.map((g) => zero(g.slug, g.name)),
+      price_min: 0,
+      price_max: 0,
+      active_count: 0,
+      archive_count: 0,
+      seconds_count: 0,
+    };
+  }
+
   private async facets(count: {
     categories: Prisma.ProductWhereInput;
     collections: Prisma.ProductWhereInput;
