@@ -47,12 +47,6 @@ import type {
 } from "./workshops.type";
 
 const MAX_AVAILABILITY_DAYS = 31;
-
-// Ahead means the wheel is still held and the last hour has not ended; the shop's
-// Upcoming group (toBookingGroup) reads the same rule, and the spec ties the two together.
-export function aheadBookingWhere(now: Date): Prisma.WorkshopBookingWhereInput {
-  return { status: { in: [...SEAT_HOLDING] }, ends_at: { gt: now } };
-}
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
 
 export const configInclude = {
@@ -69,6 +63,13 @@ export const bookingInclude = {
 type BookingRow = Prisma.WorkshopBookingGetPayload<{
   include: typeof bookingInclude;
 }>;
+
+// Ahead means the wheel is still held and the last hour has not ended. The shop's Upcoming
+// group (toBookingGroup) mirrors this rule, and each side's tests check its own copy row by row.
+// It reads the booking's ends_at as its last slot's end, which slotBounds guarantees.
+export function aheadBookingWhere(now: Date): Prisma.WorkshopBookingWhereInput {
+  return { status: { in: [...SEAT_HOLDING] }, ends_at: { gt: now } };
+}
 
 export function toConfig(row: ConfigRow): WorkshopConfig {
   return row;
