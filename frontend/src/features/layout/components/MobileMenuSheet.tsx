@@ -37,6 +37,16 @@ const ROW_CLASS =
   "relative flex min-h-11 w-full items-center gap-2 text-left text-[15px] transition-colors hover:text-primary";
 const MARKER_CLASS = "absolute top-1/2 -left-4 -translate-y-1/2";
 
+// Opening on the heading keeps the drawer's top in view; the first control can be "Sign in" below the fold.
+function focusTitle(event: Event) {
+  const content = event.currentTarget;
+  if (!(content instanceof HTMLElement)) return;
+  const title = content.querySelector<HTMLElement>('[data-slot="sheet-title"]');
+  if (!title) return;
+  event.preventDefault();
+  title.focus();
+}
+
 export function MobileMenuSheet({
   isOpen,
   links,
@@ -58,9 +68,13 @@ export function MobileMenuSheet({
         side="right"
         // The whole sheet scrolls, so a landscape phone reaches every link instead of a sliver of them.
         className="flex h-dvh w-full flex-col overflow-y-auto"
+        onOpenAutoFocus={focusTitle}
       >
         <SheetHeader className="px-6 py-5">
-          <SheetTitle className="font-heading text-xl tracking-tight">
+          <SheetTitle
+            tabIndex={-1}
+            className="font-heading text-xl tracking-tight focus:outline-none"
+          >
             Menu
           </SheetTitle>
         </SheetHeader>
