@@ -159,7 +159,7 @@ export function WorkshopBookingContainer({
             emptyMessage={
               picker.hasNoRoom
                 ? toUnavailableMessage(hours, participants)
-                : "Pick a day on the calendar, then an hour from the chips under it."
+                : "Pick a day on the calendar, then an hour under it."
             }
             arrangementAskUrl={
               picker.hasNoRoom

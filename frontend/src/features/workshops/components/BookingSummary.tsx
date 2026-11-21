@@ -49,16 +49,28 @@ export function BookingSummary({
   onBook,
   onRemoveSlot,
 }: BookingSummaryProps) {
+  // What the time at the wheel is first; the money closes the list.
   const rows = [
-    { label: "Duration", value: formatHours(hours) },
+    { label: "Hours", value: formatHours(hours) },
     { label: "People", value: pluralize(participants, "person", "people") },
-    { label: "Per person", value: formatInr(pricePerPerson) },
-    { label: "Total", value: formatInr(total) },
     { label: "You take home", value: pluralize(pieces, "piece") },
+    {
+      label: `${pluralize(participants, "person", "people")} × ${formatInr(pricePerPerson)}`,
+      value: formatInr(total),
+    },
   ];
 
   return (
-    <div className="flex flex-col gap-5 border border-ash bg-white p-5 md:p-6">
+    <section
+      aria-labelledby="booking-summary-heading"
+      className="flex flex-col gap-5 border border-ash bg-white p-5 md:p-6"
+    >
+      <h2
+        id="booking-summary-heading"
+        className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase"
+      >
+        Your wheel session
+      </h2>
       <PickedSlots
         slots={pickedSlots}
         needed={slotsNeeded}
@@ -86,6 +98,10 @@ export function BookingSummary({
             <dd className="text-right tnum">{row.value}</dd>
           </div>
         ))}
+        <div className="flex items-baseline justify-between gap-4 border-b border-ash py-3 text-[15px]">
+          <dt>Total</dt>
+          <dd className="text-right tnum">{formatInr(total)}</dd>
+        </div>
       </dl>
 
       <div className="flex flex-col gap-2">
@@ -104,7 +120,7 @@ export function BookingSummary({
 
       <div className="flex flex-col gap-3">
         <Button size="lg" onClick={onBook} disabled={!canBook || isBooking}>
-          {isBooking ? "Booking…" : "Book this session"}
+          {isBooking ? "Booking…" : "Book this wheel session"}
         </Button>
         <p className="text-[13px] text-muted-foreground">
           We confirm the wheel by hand on WhatsApp, usually within a day.
@@ -113,6 +129,6 @@ export function BookingSummary({
           {SESSION_NOTE}
         </p>
       </div>
-    </div>
+    </section>
   );
 }
