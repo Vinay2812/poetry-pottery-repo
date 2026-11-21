@@ -98,6 +98,8 @@ export function OrderDetail({
   onReorder,
   onPrint,
 }: OrderDetailProps) {
+  // The placed banner carries the page's h1; without it the order heading does.
+  const OrderHeading = isJustPlaced ? "h2" : "h1";
   return (
     <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
       {isJustPlaced && (
@@ -119,9 +121,9 @@ export function OrderDetail({
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-1">
           <p className="text-[13px] text-muted-foreground">Placed {placedOn}</p>
-          <h2 className="font-heading text-2xl tracking-tight md:text-4xl">
+          <OrderHeading className="font-heading text-2xl tracking-tight md:text-4xl">
             Order <span className="tnum">{orderId}</span>
-          </h2>
+          </OrderHeading>
         </div>
         <OrderStatusBadge tone={statusTone} label={statusLabel} />
       </header>
@@ -129,7 +131,7 @@ export function OrderDetail({
       <div className="grid gap-10 lg:grid-cols-[1fr_360px] lg:items-start">
         <div className="flex flex-col gap-10">
           <section className="flex flex-col gap-5">
-            <h3 className={SECTION_HEADING}>Progress</h3>
+            <h2 className={SECTION_HEADING}>Progress</h2>
             <OrderTimeline
               steps={steps}
               currentIndex={currentStepIndex}
@@ -144,7 +146,7 @@ export function OrderDetail({
           </section>
 
           <section className="flex flex-col gap-4">
-            <h3 className={SECTION_HEADING}>Pieces</h3>
+            <h2 className={SECTION_HEADING}>Pieces</h2>
             <ul className="flex flex-col">
               {items.map((item) => (
                 <OrderItemRow
@@ -165,7 +167,7 @@ export function OrderDetail({
 
           {studioNotes.length > 0 && (
             <section className="flex flex-col gap-4">
-              <h3 className={SECTION_HEADING}>From the studio</h3>
+              <h2 className={SECTION_HEADING}>From the studio</h2>
               <ul className="flex flex-col">
                 {studioNotes.map((note) => (
                   <StudioNote
@@ -184,7 +186,7 @@ export function OrderDetail({
 
         <aside className="flex flex-col gap-8 lg:sticky lg:top-24">
           <section className="flex flex-col gap-4">
-            <h3 className={SECTION_HEADING}>Summary</h3>
+            <h2 className={SECTION_HEADING}>Summary</h2>
             <OrderTotals
               subtotal={subtotal}
               discount={discount}
@@ -194,7 +196,7 @@ export function OrderDetail({
             />
           </section>
           <section className="flex flex-col gap-4">
-            <h3 className={SECTION_HEADING}>Delivering to</h3>
+            <h2 className={SECTION_HEADING}>Delivering to</h2>
             <address className="text-sm leading-relaxed not-italic">
               {addressLines.map((line, index) => (
                 <span key={index} className="block">
@@ -210,7 +212,7 @@ export function OrderDetail({
           </section>
           {(giftNote || hasHiddenPrices) && (
             <section className="flex flex-col gap-4">
-              <h3 className={SECTION_HEADING}>Sent as a gift</h3>
+              <h2 className={SECTION_HEADING}>Sent as a gift</h2>
               {giftNote && (
                 <p className="font-script text-lg leading-relaxed italic">
                   “{giftNote}”
