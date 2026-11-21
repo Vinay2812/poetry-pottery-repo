@@ -42,6 +42,7 @@ export interface ProductBuyBoxProps {
   options?: React.ReactNode;
   // Lets the page tell when the buttons themselves have scrolled away.
   actionsRef?: React.Ref<HTMLDivElement>;
+  addToCartRef?: React.Ref<HTMLButtonElement>;
 }
 
 export function ProductBuyBox({
@@ -68,6 +69,7 @@ export function ProductBuyBox({
   onToggleWishlist,
   options,
   actionsRef,
+  addToCartRef,
 }: ProductBuyBoxProps) {
   const isSoldOut = stockTone === "sold_out";
   const totalLine = isSoldOut
@@ -141,6 +143,7 @@ export function ProductBuyBox({
               />
             </Button>
             <Button
+              ref={addToCartRef}
               size="lg"
               className="col-span-3 px-4 min-[340px]:min-w-32 min-[340px]:flex-1"
               onClick={onAddToCart}

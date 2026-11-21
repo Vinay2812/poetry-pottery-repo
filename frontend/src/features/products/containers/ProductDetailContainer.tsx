@@ -110,6 +110,8 @@ export function ProductDetailContainer({
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [activeFact, setActiveFact] = useState<string | null>(null);
   const actionsRef = useRef<HTMLDivElement>(null);
+  const addToCartRef = useRef<HTMLButtonElement>(null);
+  const stickyBarRef = useRef<HTMLDivElement>(null);
 
   const { data: relatedData } = useQuery(RelatedProductsDocument, {
     variables: { slug: product.slug, limit: 8 },
@@ -193,6 +195,10 @@ export function ProductDetailContainer({
     const show = (isVisible: boolean) => {
       if (isActionsVisibleRef.current === isVisible) return;
       isActionsVisibleRef.current = isVisible;
+      // The bar is about to go inert; a reader on its button lands on the main one instead.
+      if (isVisible && stickyBarRef.current?.contains(document.activeElement)) {
+        addToCartRef.current?.focus({ preventScroll: true });
+      }
       setIsActionsVisible(isVisible);
     };
     const measure = () => {
@@ -388,6 +394,7 @@ export function ProductDetailContainer({
               onAddToCart={handleAddToCart}
               onToggleWishlist={handleToggleWishlist}
               actionsRef={actionsRef}
+              addToCartRef={addToCartRef}
               options={
                 groups.length > 0 || product.is_customizable ? (
                   <div className="flex flex-col gap-5 border-y border-ash py-6">
@@ -556,6 +563,7 @@ export function ProductDetailContainer({
       )}
 
       <StickyBuyBar
+        barRef={stickyBarRef}
         isVisible={isStickyBarShown}
         name={product.name}
         quantity={quantity}
