@@ -20,7 +20,7 @@ export function toStockNotice(
   isCustomizable: boolean,
 ): string | null {
   if (isCustomizable || stock <= 0 || stock > LOW_STOCK_THRESHOLD) return null;
-  return stock === 1 ? "Only 1 left" : `Only ${stock} left`;
+  return `${stock} left in this batch`;
 }
 
 export function toMaxQuantity(

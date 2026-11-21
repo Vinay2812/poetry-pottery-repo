@@ -19,7 +19,7 @@ type Story = StoryObj<typeof meta>;
 export const InStock: Story = {};
 
 export const LowStock: Story = {
-  args: { tone: "low", label: "Only 3 left" },
+  args: { tone: "low", label: "3 left in this batch" },
 };
 
 export const SoldOut: Story = {

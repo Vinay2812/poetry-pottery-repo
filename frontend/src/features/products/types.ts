@@ -250,12 +250,11 @@ export function toStockStatus(
   return { tone: "in_stock", label: "Ready to ship" };
 }
 
-// The product page counts the batch rather than an inventory number.
+// The product page counts what is left of the batch, in the same words as the card and the cart.
 export function toBatchLabel(stock: number, isCustomizable: boolean): string {
   if (isCustomizable) return "Made to order, thrown in about ten days";
   if (stock <= 0) return "Sold out \u00b7 next batch soon";
-  if (stock === 1) return "One made in this batch";
-  return `${stock} made in this batch`;
+  return `${stock} left in this batch`;
 }
 
 // A second still says what is left in the batch; both facts share the card's one reserved line.

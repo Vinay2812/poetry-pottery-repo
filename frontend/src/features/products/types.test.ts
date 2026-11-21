@@ -243,8 +243,8 @@ describe("toStockStatus", () => {
 
 describe("toBatchLabel", () => {
   it("counts the batch", () => {
-    expect(toBatchLabel(3, false)).toBe("3 made in this batch");
-    expect(toBatchLabel(1, false)).toBe("One made in this batch");
+    expect(toBatchLabel(3, false)).toBe("3 left in this batch");
+    expect(toBatchLabel(1, false)).toBe("1 left in this batch");
     expect(toBatchLabel(0, false)).toBe("Sold out \u00b7 next batch soon");
     expect(toBatchLabel(0, true)).toBe(
       "Made to order, thrown in about ten days",
