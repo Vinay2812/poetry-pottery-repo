@@ -26,6 +26,7 @@ import {
 import { ReferencePhotoPicker } from "@/features/products/components/ReferencePhotoPicker";
 import { useReferencePhotos } from "@/features/products/hooks";
 import {
+  hasFailedPhoto,
   isPhotoUploadPending,
   MAX_REFERENCE_PHOTOS,
   REFERENCE_PHOTO_ACCEPT,
@@ -78,6 +79,11 @@ export function CommissionBriefContainer({
       setErrorMessage(null);
       if (isPhotoUploadPending(photos)) {
         setPhotoError("Wait for the photos to finish uploading");
+        return;
+      }
+      // Otherwise the brief would go without them and the customer would never know.
+      if (hasFailedPhoto(photos)) {
+        setPhotoError("Remove the photo that did not upload, or try it again");
         return;
       }
       try {
