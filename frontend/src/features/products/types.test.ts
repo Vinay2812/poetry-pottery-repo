@@ -49,6 +49,7 @@ import {
   toFactRows,
   toGlazePath,
   toPieceScale,
+  toPriceRangeLabel,
   toProductPath,
   toShortDescription,
   toSizeLine,
@@ -190,6 +191,15 @@ describe("toFilterInput", () => {
     expect(input.in_stock_only).toBe(true);
     expect(input.customizable_only).toBe(true);
     expect(input.page).toBe(3);
+  });
+});
+
+describe("toPriceRangeLabel", () => {
+  it("names the chosen price in words", () => {
+    expect(toPriceRangeLabel(500, 2000)).toBe("\u20b9500 to \u20b92,000");
+    expect(toPriceRangeLabel(500, null)).toBe("From \u20b9500");
+    expect(toPriceRangeLabel(null, 2000)).toBe("Up to \u20b92,000");
+    expect(toPriceRangeLabel(null, null)).toBeNull();
   });
 });
 

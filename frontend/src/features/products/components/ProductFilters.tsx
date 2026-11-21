@@ -35,6 +35,8 @@ export interface ProductFiltersProps {
   priceFloor: number;
   priceCeiling: number;
   priceRange: [number, number];
+  // Set when the URL holds a price filter, so it stays removable even with no slider to drag.
+  chosenPriceLabel: string | null;
   inStockOnly: boolean;
   customizableOnly: boolean;
   secondsOnly: boolean;
@@ -45,6 +47,7 @@ export interface ProductFiltersProps {
   onToggleGlaze: (slug: string) => void;
   onPriceRangeChange: (range: [number, number]) => void;
   onPriceRangeCommit: (range: [number, number]) => void;
+  onClearPrice: () => void;
   onInStockOnlyChange: (value: boolean) => void;
   onCustomizableOnlyChange: (value: boolean) => void;
   onSecondsOnlyChange: (value: boolean) => void;
@@ -116,6 +119,7 @@ export function ProductFilters({
   priceFloor,
   priceCeiling,
   priceRange,
+  chosenPriceLabel,
   inStockOnly,
   customizableOnly,
   secondsOnly,
@@ -126,6 +130,7 @@ export function ProductFilters({
   onToggleGlaze,
   onPriceRangeChange,
   onPriceRangeCommit,
+  onClearPrice,
   onInStockOnlyChange,
   onCustomizableOnlyChange,
   onSecondsOnlyChange,
@@ -152,6 +157,25 @@ export function ProductFilters({
         selected={selectedCollection ? [selectedCollection] : []}
         onToggle={onToggleCollection}
       />
+
+      {!hasPriceRange && chosenPriceLabel && (
+        <div className="flex flex-col gap-1 lg:gap-3">
+          <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+            Price
+          </h3>
+          <p className="flex min-h-11 items-center justify-between gap-3 text-sm lg:min-h-0">
+            <span className="tnum">{chosenPriceLabel}</span>
+            <button
+              type="button"
+              onClick={onClearPrice}
+              aria-label={`Remove the price filter, ${chosenPriceLabel}`}
+              className="text-[13px] underline-offset-4 hover:text-primary hover:underline"
+            >
+              Remove
+            </button>
+          </p>
+        </div>
+      )}
 
       {hasPriceRange && (
         <div className="flex flex-col gap-4">

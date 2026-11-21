@@ -40,6 +40,7 @@ const meta = {
         selectedGlazes={[]}
         priceFloor={400}
         priceCeiling={4500}
+        chosenPriceLabel={null}
         priceRange={[400, 4500]}
         inStockOnly={false}
         customizableOnly={false}
@@ -54,6 +55,7 @@ const meta = {
         onInStockOnlyChange={fn()}
         onCustomizableOnlyChange={fn()}
         onSecondsOnlyChange={fn()}
+        onClearPrice={fn()}
       />
     ),
   },

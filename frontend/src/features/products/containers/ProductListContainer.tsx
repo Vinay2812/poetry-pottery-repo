@@ -34,6 +34,7 @@ import {
   countActiveFilters,
   PRODUCT_FILTERS_CODEC,
   toCardPhotoLoading,
+  toPriceRangeLabel,
   toResultCountLabel,
 } from "@/features/products/types";
 
@@ -150,6 +151,10 @@ export function ProductListContainer({
     },
     [dispatch, facets],
   );
+  const handleClearPrice = useCallback(() => {
+    setPriceDraft(null);
+    dispatch({ type: "price", min: null, max: null });
+  }, [dispatch]);
   const handleInStockChange = useCallback(
     (value: boolean) => dispatch({ type: "inStock", value }),
     [dispatch],
@@ -215,6 +220,7 @@ export function ProductListContainer({
       priceFloor={priceFloor}
       priceCeiling={priceCeiling}
       priceRange={priceRange}
+      chosenPriceLabel={toPriceRangeLabel(filters.minPrice, filters.maxPrice)}
       inStockOnly={filters.inStockOnly}
       customizableOnly={filters.customizableOnly}
       secondsOnly={filters.secondsOnly}
@@ -225,6 +231,7 @@ export function ProductListContainer({
       onToggleGlaze={handleToggleGlaze}
       onPriceRangeChange={setPriceDraft}
       onPriceRangeCommit={handlePriceCommit}
+      onClearPrice={handleClearPrice}
       onInStockOnlyChange={handleInStockChange}
       onCustomizableOnlyChange={handleCustomizableChange}
       onSecondsOnlyChange={handleSecondsChange}

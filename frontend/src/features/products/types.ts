@@ -6,6 +6,7 @@ import {
   type ProductsFilterInput,
 } from "@/graphql/generated/graphql";
 
+import { formatInr } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
 import { buildWhatsAppUrl } from "@/features/layout/types";
@@ -472,6 +473,18 @@ export function clampPriceRange(
   const low = Math.min(Math.max(range[0], floor), ceiling);
   const high = Math.max(Math.min(range[1], ceiling), low);
   return [low, high];
+}
+
+// The price filter in words, for when the slider has no range to show it on.
+export function toPriceRangeLabel(
+  min: number | null,
+  max: number | null,
+): string | null {
+  if (min !== null && max !== null)
+    return `${formatInr(min)} to ${formatInr(max)}`;
+  if (min !== null) return `From ${formatInr(min)}`;
+  if (max !== null) return `Up to ${formatInr(max)}`;
+  return null;
 }
 
 export function toProductPath(slug: string): string {
