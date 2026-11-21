@@ -79,11 +79,30 @@ export function toSectionViews(
   }));
 }
 
-export function sectionAt(
+type AboutItemLayout = "values" | "steps";
+
+export interface AboutSectionView {
+  key: string;
+  heading: string;
+  paragraphs: string[];
+  items: ContentSectionData["items"];
+  itemLayout: AboutItemLayout;
+}
+
+// The third section tells how a piece is made, so its items read as numbered steps.
+const ABOUT_STEPS_INDEX = 2;
+
+// Every section shows whatever the editor saved, body and items alike, in the editor's order.
+export function toAboutSections(
   sections: readonly ContentSectionData[],
-  index: number,
-): ContentSectionData | null {
-  return sections[index] ?? null;
+): AboutSectionView[] {
+  return sections.map((section, index) => ({
+    key: `${index}-${section.heading}`,
+    heading: section.heading,
+    paragraphs: splitParagraphs(section.body),
+    items: section.items,
+    itemLayout: index === ABOUT_STEPS_INDEX ? "steps" : "values",
+  }));
 }
 
 // One label-column width for the page index and the definition rows, so the two never drift apart.

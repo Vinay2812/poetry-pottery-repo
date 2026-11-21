@@ -6,8 +6,8 @@ import {
   IDLE_NEWSLETTER,
   type NewsletterResult,
   pickActiveSection,
-  sectionAt,
   splitParagraphs,
+  toAboutSections,
   toAnchorId,
   toGridClass,
   toGridColumns,
@@ -134,15 +134,36 @@ describe("toSectionViews", () => {
   });
 });
 
-describe("sectionAt", () => {
-  const sections = [section("One"), section("Two")];
+describe("toAboutSections", () => {
+  const value = { title: "Made with love", body: "By hand." };
+  const step = { title: "Throwing", body: "On the wheel." };
 
-  it("returns the section at the index", () => {
-    expect(sectionAt(sections, 1)?.heading).toBe("Two");
+  it("keeps every section's body and items, whatever their order", () => {
+    const views = toAboutSections([
+      section("What we believe", "", [value]),
+      section("Our story", "Founded in 2025.\n\nIn Sangli.", [value]),
+      section("How it is made", "Slowly.", [step]),
+      section("Visit", "Saturdays."),
+    ]);
+
+    expect(
+      views.map((view) => [
+        view.heading,
+        view.paragraphs,
+        view.items.length,
+        view.itemLayout,
+      ]),
+    ).toEqual([
+      ["What we believe", [], 1, "values"],
+      ["Our story", ["Founded in 2025.", "In Sangli."], 1, "values"],
+      ["How it is made", ["Slowly."], 1, "steps"],
+      ["Visit", ["Saturdays."], 0, "values"],
+    ]);
   });
 
-  it("returns null when the CMS has fewer sections", () => {
-    expect(sectionAt(sections, 5)).toBeNull();
+  it("gives repeated headings distinct keys", () => {
+    const views = toAboutSections([section("Notes"), section("Notes")]);
+    expect(new Set(views.map((view) => view.key)).size).toBe(2);
   });
 });
 

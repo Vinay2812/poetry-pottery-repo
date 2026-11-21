@@ -12,21 +12,18 @@ import { ProcessStep } from "@/features/content/components/ProcessStep";
 import { StoryColumns } from "@/features/content/components/StoryColumns";
 import { ValueColumn } from "@/features/content/components/ValueColumn";
 import {
-  sectionAt,
-  splitParagraphs,
+  toAboutSections,
   toGridClass,
   toStepNumber,
 } from "@/features/content/types";
 import { HowItsMade } from "@/features/home";
 
-// The about page has a shape of its own: story, then beliefs, then the making.
+// The about page has a shape of its own: story, then beliefs, then the making, then anything else.
 export async function AboutPageContainer() {
   const page = await getContentPage("about");
   if (!page) notFound();
 
-  const story = sectionAt(page.sections, 0);
-  const values = sectionAt(page.sections, 1);
-  const process = sectionAt(page.sections, 2);
+  const sections = toAboutSections(page.sections);
 
   return (
     <PageShell>
@@ -37,51 +34,51 @@ export async function AboutPageContainer() {
           imageUrl={page.hero_image_url}
         />
       </Reveal>
-      {story && (
-        <Reveal>
-          <AboutSection heading={story.heading}>
-            <StoryColumns paragraphs={splitParagraphs(story.body)} />
+      {sections.map((section) => (
+        <Reveal key={section.key}>
+          <AboutSection heading={section.heading}>
+            {section.paragraphs.length > 0 && (
+              <StoryColumns paragraphs={section.paragraphs} />
+            )}
+            {section.items.length > 0 && section.itemLayout === "values" && (
+              <div
+                className={cn(
+                  "grid gap-x-10 gap-y-8",
+                  toGridClass(section.items.length),
+                )}
+              >
+                {section.items.map((item, index) => (
+                  <ValueColumn
+                    key={index}
+                    title={item.title}
+                    body={item.body}
+                  />
+                ))}
+              </div>
+            )}
+            {section.items.length > 0 && section.itemLayout === "steps" && (
+              <>
+                <HowItsMade />
+                <ol
+                  className={cn(
+                    "grid gap-x-10 gap-y-8",
+                    toGridClass(section.items.length),
+                  )}
+                >
+                  {section.items.map((item, index) => (
+                    <ProcessStep
+                      key={index}
+                      stepNumber={toStepNumber(index)}
+                      title={item.title}
+                      body={item.body}
+                    />
+                  ))}
+                </ol>
+              </>
+            )}
           </AboutSection>
         </Reveal>
-      )}
-      {values && values.items.length > 0 && (
-        <Reveal>
-          <AboutSection heading={values.heading}>
-            <div
-              className={cn(
-                "grid gap-x-10 gap-y-8",
-                toGridClass(values.items.length),
-              )}
-            >
-              {values.items.map((item, index) => (
-                <ValueColumn key={index} title={item.title} body={item.body} />
-              ))}
-            </div>
-          </AboutSection>
-        </Reveal>
-      )}
-      {process && process.items.length > 0 && (
-        <Reveal>
-          <AboutSection heading={process.heading}>
-            <HowItsMade />
-            <ol
-              className={cn(
-                "grid gap-x-10 gap-y-8",
-                toGridClass(process.items.length),
-              )}
-            >
-              {process.items.map((item, index) => (
-                <ProcessStep
-                  key={index}
-                  stepNumber={toStepNumber(index)}
-                  title={item.title}
-                  body={item.body}
-                />
-              ))}
-            </ol>
-          </AboutSection>
-        </Reveal>
-      )}
+      ))}
       <Reveal>
         <AboutClosing />
       </Reveal>
