@@ -5,6 +5,7 @@ export interface SearchFieldProps {
   placeholder: string;
   onChange: (value: string) => void;
   onClear: () => void;
+  onBlur?: () => void;
   autoFocus?: boolean;
 }
 
@@ -13,6 +14,7 @@ export function SearchField({
   placeholder,
   onChange,
   onClear,
+  onBlur,
   autoFocus = false,
 }: SearchFieldProps) {
   return (
@@ -25,6 +27,7 @@ export function SearchField({
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
         placeholder={placeholder}
         aria-label="Search pieces"
         autoFocus={autoFocus}

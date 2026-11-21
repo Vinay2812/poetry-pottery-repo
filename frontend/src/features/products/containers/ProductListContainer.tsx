@@ -73,6 +73,7 @@ export function ProductListContainer({
   const {
     value: searchValue,
     change: handleSearchChange,
+    flush: handleSearchBlur,
     clear: handleSearchClear,
     reset: resetSearchDraft,
   } = useSearchDraft(filters.search, commitSearch);
@@ -242,6 +243,7 @@ export function ProductListContainer({
             placeholder="Try “tea cup”, “sage green” or “planter”"
             onChange={handleSearchChange}
             onClear={handleSearchClear}
+            onBlur={handleSearchBlur}
             autoFocus={isSearchPage}
           />
         </div>

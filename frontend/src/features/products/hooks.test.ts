@@ -347,6 +347,39 @@ describe("useSearchDraft", () => {
     expect(commit).not.toHaveBeenCalled();
   });
 
+  it("sends a waiting draft when the field is left, so a navigation started elsewhere lands last", () => {
+    const navigations: string[] = [];
+    const commit = vi.fn((value: string) => {
+      navigations.push(`replace ${value}`);
+    });
+    const { result, rerender } = renderHook(
+      ({ query }: { query: string }) => useSearchDraft(query, commit),
+      { initialProps: { query: "blue" } },
+    );
+
+    act(() => result.current.change("stale slow draft"));
+    // The shopper moves to the header search inside the pause; the field loses focus first.
+    act(() => result.current.flush());
+    navigations.push("push empty");
+    // The header's route answer is delayed, so the URL still reads "blue" while time passes.
+    act(() => vi.advanceTimersByTime(1000));
+
+    expect(navigations).toEqual(["replace stale slow draft", "push empty"]);
+    rerender({ query: "empty" });
+    expect(result.current.value).toBe("empty");
+  });
+
+  it("sends nothing on leaving the field when no draft is waiting", () => {
+    const { result, commit } = renderDraft("blue");
+
+    act(() => result.current.flush());
+    act(() => result.current.change("cup"));
+    act(() => vi.advanceTimersByTime(300));
+    act(() => result.current.flush());
+
+    expect(commit).toHaveBeenCalledTimes(1);
+  });
+
   it("follows the URL back to the query it was typed over", () => {
     const { result, rerender } = renderDraft("bowl");
 

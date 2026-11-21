@@ -175,6 +175,8 @@ interface SearchDraft {
 export interface SearchDraftState {
   value: string;
   change: (value: string) => void;
+  // Sends a waiting draft now; called when the field loses focus.
+  flush: () => void;
   clear: () => void;
   reset: () => void;
 }
@@ -189,6 +191,7 @@ export function useSearchDraft(
   const [draft, setDraft] = useState<SearchDraft | null>(null);
   const [seenSearch, setSeenSearch] = useState(search);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const waiting = useRef<string | null>(null);
 
   if (search !== seenSearch) {
     setSeenSearch(search);
@@ -198,6 +201,7 @@ export function useSearchDraft(
   const cancel = useCallback(() => {
     if (timer.current) clearTimeout(timer.current);
     timer.current = null;
+    waiting.current = null;
   }, []);
   // A dropped draft takes its pending send with it.
   useEffect(() => {
@@ -205,19 +209,37 @@ export function useSearchDraft(
   }, [draft, cancel]);
   useEffect(() => cancel, [cancel]);
 
+  const send = useCallback(
+    (value: string) => {
+      const query = value.trim();
+      setDraft((current) => (current ? { ...current, sent: query } : null));
+      commit(query);
+    },
+    [commit],
+  );
+
   const change = useCallback(
     (value: string) => {
       setDraft((current) => ({ value, sent: current?.sent ?? null }));
       cancel();
+      waiting.current = value;
       timer.current = setTimeout(() => {
-        timer.current = null;
-        const query = value.trim();
-        setDraft((current) => (current ? { ...current, sent: query } : null));
-        commit(query);
+        cancel();
+        send(value);
       }, SEARCH_DEBOUNCE_MS);
     },
-    [cancel, commit],
+    [cancel, send],
   );
+
+  // Leaving the field is how any other navigation starts: the header search, a link, a
+  // suggestion. Sending the draft then puts its replace ahead of that navigation, which
+  // therefore lands last and wins; the draft can no longer fire after it.
+  const flush = useCallback(() => {
+    const value = waiting.current;
+    if (value === null) return;
+    cancel();
+    send(value);
+  }, [cancel, send]);
 
   const clear = useCallback(() => {
     cancel();
@@ -230,7 +252,7 @@ export function useSearchDraft(
     setDraft(null);
   }, [cancel]);
 
-  return { value: draft?.value ?? search, change, clear, reset };
+  return { value: draft?.value ?? search, change, flush, clear, reset };
 }
 
 const TOO_MANY = `You can attach up to ${MAX_REFERENCE_PHOTOS} photos`;
