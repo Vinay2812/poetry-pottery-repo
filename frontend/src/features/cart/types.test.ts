@@ -7,6 +7,7 @@ import {
   toMaxQuantity,
   toStockNotice,
   toSelectionSummary,
+  toFreeShippingThreshold,
   toShippingNote,
 } from "./types";
 
@@ -216,6 +217,14 @@ describe("applyCartAction", () => {
 
   it("has nothing to do before the cart loads", () => {
     expect(applyCartAction(null, { kind: "clear" })).toBeNull();
+  });
+});
+
+describe("toFreeShippingThreshold", () => {
+  it("counts the threshold amount itself as qualifying", () => {
+    expect(toFreeShippingThreshold(2500, (amount) => `Rs${amount}`)).toBe(
+      "on orders of Rs2500 or more",
+    );
   });
 });
 

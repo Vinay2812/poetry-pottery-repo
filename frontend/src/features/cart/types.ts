@@ -45,8 +45,16 @@ export function canPredictShipping(
   return !shipsFreeNow || shipsFreeNext;
 }
 
-// A quiet fact under the shipping row, never a meter: said only while a fee applies. The server
-// ships free once the subtotal reaches the threshold, so the amount itself qualifies.
+// The server ships free once the subtotal reaches the threshold, so the amount itself qualifies.
+// Shared by the cart, checkout and the piece page so the threshold reads the same everywhere.
+export function toFreeShippingThreshold(
+  freeShippingAbove: number,
+  format: (amount: number) => string,
+): string {
+  return `on orders of ${format(freeShippingAbove)} or more`;
+}
+
+// A quiet fact under the shipping row, never a meter: said only while a fee applies.
 export function toShippingNote(
   shippingFee: number,
   freeShippingAbove: number | null,
@@ -59,7 +67,7 @@ export function toShippingNote(
   ) {
     return null;
   }
-  return `Free on orders of ${format(freeShippingAbove)} or more.`;
+  return `Free ${toFreeShippingThreshold(freeShippingAbove, format)}.`;
 }
 
 export type CartData = CartFieldsFragment;
