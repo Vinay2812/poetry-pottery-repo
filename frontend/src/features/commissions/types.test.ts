@@ -5,8 +5,6 @@ import {
   EMPTY_COMMISSION_FORM,
 } from "@/lib/validations/commission";
 
-import { FAILED_PHOTO_MESSAGE } from "@/features/products/types";
-
 import {
   COMMISSION_STEPS,
   toBriefSummary,
@@ -15,7 +13,6 @@ import {
   toCommissionMessage,
   toCommissionPiecesNote,
   toGlazeChoices,
-  toPhotoHoldMessage,
   OTHER_PIECE,
   toPieceChoices,
   toPieceSelection,
@@ -203,36 +200,6 @@ describe("toReferenceLine", () => {
     expect(
       toReferenceLine({ name: "Drip sip mug", url: "", categoryName: null }),
     ).toBe("Asking for one like the Drip sip mug.");
-  });
-});
-
-describe("toPhotoHoldMessage", () => {
-  const photo = (url: string | null, error: string | null) => ({
-    id: "1",
-    name: "jar.jpg",
-    previewUrl: "blob:jar",
-    progress: 100,
-    url,
-    error,
-  });
-
-  it("lets a brief go with no photos or only uploaded ones", () => {
-    expect(toPhotoHoldMessage([])).toBeNull();
-    expect(
-      toPhotoHoldMessage([photo("https://cdn.test/a.jpg", null)]),
-    ).toBeNull();
-  });
-
-  it("waits for a photo still uploading", () => {
-    expect(toPhotoHoldMessage([photo(null, null)])).toBe(
-      "Wait for the photos to finish uploading",
-    );
-  });
-
-  it("asks for a failed photo to be added again", () => {
-    expect(toPhotoHoldMessage([photo(null, "Upload failed")])).toBe(
-      FAILED_PHOTO_MESSAGE,
-    );
   });
 });
 

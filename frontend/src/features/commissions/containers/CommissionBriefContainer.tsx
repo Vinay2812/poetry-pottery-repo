@@ -20,7 +20,6 @@ import {
   toBriefSummary,
   toCommissionAskUrl,
   toCommissionInput,
-  toPhotoHoldMessage,
   toReferenceBrief,
   toReferenceLine,
 } from "@/features/commissions/types";
@@ -30,6 +29,7 @@ import {
   MAX_REFERENCE_PHOTOS,
   REFERENCE_PHOTO_ACCEPT,
   toConfirmedPhotoUrls,
+  toPhotoHoldMessage,
 } from "@/features/products/types";
 
 export interface CommissionBriefContainerProps {

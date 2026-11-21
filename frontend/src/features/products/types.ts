@@ -671,6 +671,14 @@ export function hasFailedPhoto(photos: ReferencePhoto[]): boolean {
   return photos.some((photo) => photo.error !== null);
 }
 
+// Why a cart line or a brief cannot go yet because of its photos, or null once they are all uploaded.
+export function toPhotoHoldMessage(photos: ReferencePhoto[]): string | null {
+  if (isPhotoUploadPending(photos)) {
+    return "Wait for the photos to finish uploading";
+  }
+  return hasFailedPhoto(photos) ? FAILED_PHOTO_MESSAGE : null;
+}
+
 export const PRODUCT_FILTERS_CODEC: UrlCodec<ProductFilters, FilterAction> = {
   parse: parseFilters,
   serialize: (filters) => toSearchParams(filters).toString(),

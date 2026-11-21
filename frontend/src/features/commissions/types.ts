@@ -3,12 +3,6 @@ import type { CommissionRequestInput } from "@/graphql/generated/graphql";
 import type { CommissionFormValues } from "@/lib/validations/commission";
 
 import { buildWhatsAppUrl } from "@/features/layout/types";
-import {
-  FAILED_PHOTO_MESSAGE,
-  hasFailedPhoto,
-  isPhotoUploadPending,
-  type ReferencePhoto,
-} from "@/features/products/types";
 
 export interface CommissionStep {
   title: string;
@@ -151,14 +145,6 @@ export function toBriefSummary(
     .map((part) => part.trim())
     .filter((part) => part.length > 0)
     .join(" · ");
-}
-
-// Why a brief cannot go yet because of its photos, or null when they are all uploaded.
-export function toPhotoHoldMessage(photos: ReferencePhoto[]): string | null {
-  if (isPhotoUploadPending(photos)) {
-    return "Wait for the photos to finish uploading";
-  }
-  return hasFailedPhoto(photos) ? FAILED_PHOTO_MESSAGE : null;
 }
 
 // Past commissions can be archived and unbuyable, so the line promises ordering only when every card allows it.
