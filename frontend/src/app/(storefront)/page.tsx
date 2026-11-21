@@ -62,9 +62,8 @@ export default async function HomePage() {
   // A shape with nothing on the shelf would only lead to an empty page.
   const shapes = categories.filter((category) => category.product_count > 0);
   const customPiece = customPieces[0] ?? null;
-  const wheel = workshops[0] ?? null;
   const hasEvents = upcomingEvents.length > 0;
-  const studio = toStudioSection(wheel, hasEvents);
+  const studio = toStudioSection(workshops, hasEvents);
 
   return (
     <PageShell className="flex flex-col">
@@ -74,7 +73,7 @@ export default async function HomePage() {
         subheading={settings.hero_subheading}
         shopHref={settings.hero_cta_href || "/products"}
         shopLabel={settings.hero_cta_text || "Shop the shelf"}
-        sessionHref={studio.isBookable ? "/workshops" : undefined}
+        sessionHref={studio.bookingHref}
       />
 
       {shapes.length > 0 && (
@@ -129,7 +128,7 @@ export default async function HomePage() {
       >
         {studio.teaser ? (
           <StudioTeaser
-            imageUrl={wheel?.image_url ?? null}
+            imageUrl={studio.teaser.imageUrl}
             line={studio.teaser.line}
             hoursLabel={studio.teaser.hoursLabel}
             daysLabel={studio.teaser.daysLabel}

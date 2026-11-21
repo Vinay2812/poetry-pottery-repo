@@ -1,10 +1,12 @@
 import type { WorkshopsQuery } from "@/graphql/generated/graphql";
 import { formatInr } from "@/lib/format";
 
-import { slotsNeeded } from "@/features/workshops/types";
+import { slotsNeeded, toWorkshopPath } from "@/features/workshops/types";
 
 export type StudioWheel = Pick<
   WorkshopsQuery["workshops"][number],
+  | "slug"
+  | "image_url"
   | "opening_minutes"
   | "closing_minutes"
   | "slot_minutes"
@@ -22,6 +24,7 @@ export interface StudioSchedule {
 }
 
 interface StudioTeaserCopy {
+  imageUrl: string | null;
   line: string;
   hoursLabel: string | null;
   daysLabel: string | null;
@@ -32,7 +35,8 @@ interface StudioTeaserCopy {
 
 // The note sits under the heading beside event rows; the teaser replaces empty rows.
 export interface StudioSection {
-  isBookable: boolean;
+  // Present only while a wheel can be booked.
+  bookingHref?: string;
   note?: string;
   teaser: StudioTeaserCopy | null;
 }
@@ -214,38 +218,52 @@ export function toStudioNote(schedule: StudioSchedule): string {
   return `Wheel sessions run ${schedule.hoursLabel}, ${toMidSentence(schedule.daysLabel)}. ${schedule.offer}`;
 }
 
+// The first active wheel that can be booked, with what it offers.
+function toBookableWheel(
+  wheels: readonly StudioWheel[],
+): { wheel: StudioWheel; schedule: StudioSchedule } | null {
+  for (const wheel of wheels) {
+    const schedule = toStudioSchedule(wheel);
+    if (schedule) return { wheel, schedule };
+  }
+  return null;
+}
+
 // Everything the "At the studio" section says, for both calendar states.
 export function toStudioSection(
-  wheel: StudioWheel | null,
+  wheels: readonly StudioWheel[],
   hasEvents: boolean,
 ): StudioSection {
-  const schedule = toStudioSchedule(wheel);
-  if (hasEvents) {
-    return schedule
-      ? { isBookable: true, note: toStudioNote(schedule), teaser: null }
-      : { isBookable: false, teaser: null };
-  }
-  if (!schedule) {
+  const bookable = toBookableWheel(wheels);
+  if (!bookable) {
     return {
-      isBookable: false,
-      teaser: {
-        line: "Nothing is coming up on the calendar, and the wheels are resting for now. Write to us and we will tell you when they turn again.",
-        hoursLabel: null,
-        daysLabel: null,
-        priceLabel: null,
-        href: "/contact",
-        linkLabel: "Write to us",
-      },
+      teaser: hasEvents
+        ? null
+        : {
+            imageUrl: null,
+            line: "Nothing is coming up on the calendar, and the wheels are resting for now. Write to us and we will tell you when they turn again.",
+            hoursLabel: null,
+            daysLabel: null,
+            priceLabel: null,
+            href: "/contact",
+            linkLabel: "Write to us",
+          },
     };
   }
+  const { wheel, schedule } = bookable;
+  const bookingHref = toWorkshopPath(wheel.slug);
+  if (hasEvents) {
+    return { bookingHref, note: toStudioNote(schedule), teaser: null };
+  }
   return {
-    isBookable: true,
+    bookingHref,
     teaser: {
+      imageUrl: wheel.image_url,
       line: "Nothing is coming up on the calendar, but the wheels keep their usual hours. Pick a time and we will set one up for you.",
       hoursLabel: schedule.hoursLabel,
       daysLabel: schedule.daysLabel,
       priceLabel: schedule.priceLabel,
-      href: "/workshops",
+      href: bookingHref,
       linkLabel: "Book a wheel session",
     },
   };

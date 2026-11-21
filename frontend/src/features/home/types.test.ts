@@ -22,6 +22,8 @@ function wheel(
   tierHours: number[] = [1, 2, 3],
 ): StudioWheel {
   return {
+    slug: "wheel",
+    image_url: null,
     opening_minutes: 780,
     closing_minutes: 1140,
     slot_minutes: 60,
@@ -129,6 +131,8 @@ function shortDay(
   closedWeekdays: number[] = [],
 ): StudioWheel {
   return {
+    slug: "wheel",
+    image_url: null,
     opening_minutes: 780,
     closing_minutes: 840,
     slot_minutes: 60,
@@ -264,52 +268,63 @@ describe("toStudioSection", () => {
     "Nothing is coming up on the calendar, but the wheels keep their usual hours. Pick a time and we will set one up for you.";
   const RESTING_LINE =
     "Nothing is coming up on the calendar, and the wheels are resting for now. Write to us and we will tell you when they turn again.";
+  const resting = {
+    teaser: {
+      imageUrl: null,
+      line: RESTING_LINE,
+      hoursLabel: null,
+      daysLabel: null,
+      priceLabel: null,
+      href: "/contact",
+      linkLabel: "Write to us",
+    },
+  };
 
-  it("puts the wheel's note beside listed events and no teaser", () => {
-    expect(toStudioSection(wheel([1]), true)).toEqual({
-      isBookable: true,
+  it("puts the wheel's note and booking link beside listed events", () => {
+    expect(toStudioSection([wheel([1])], true)).toEqual({
+      bookingHref: "/workshops/wheel",
       note: "Wheel sessions run 1 to 7 pm, every day except Monday. Book an hour or three.",
       teaser: null,
     });
   });
 
-  it("drops the note beside events when the wheel cannot be booked", () => {
-    const unbookable = { isBookable: false, teaser: null };
-    expect(toStudioSection(null, true)).toEqual(unbookable);
-    expect(toStudioSection(wheel([], []), true)).toEqual(unbookable);
-    expect(toStudioSection(shortDay([2]), true)).toEqual(unbookable);
+  it("drops the note and link beside events when nothing can be booked", () => {
+    expect(toStudioSection([], true)).toEqual({ teaser: null });
+    expect(toStudioSection([wheel([], []), shortDay([2])], true)).toEqual({
+      teaser: null,
+    });
   });
 
-  it("hands an empty calendar to the wheel's facts and booking link", () => {
-    expect(toStudioSection(wheel([1]), false)).toEqual({
-      isBookable: true,
+  it("hands an empty calendar to the wheel's facts, photo and booking link", () => {
+    const photographed = { ...wheel([1]), image_url: "/wheel.jpg" };
+    expect(toStudioSection([photographed], false)).toEqual({
+      bookingHref: "/workshops/wheel",
       teaser: {
+        imageUrl: "/wheel.jpg",
         line: OPEN_LINE,
         hoursLabel: "1 to 7 pm",
         daysLabel: "Every day except Monday",
         priceLabel: "From ₹1,100 a person for an hour",
-        href: "/workshops",
+        href: "/workshops/wheel",
         linkLabel: "Book a wheel session",
       },
     });
   });
 
+  it("skips a wheel with nothing bookable for a later one that has it", () => {
+    const unbookable = { ...shortDay([2]), slug: "hand-building" };
+    const open = { ...wheel([1]), slug: "evening-wheel", image_url: "/e.jpg" };
+    const section = toStudioSection([unbookable, open], false);
+    expect(section.bookingHref).toBe("/workshops/evening-wheel");
+    expect(section.teaser?.href).toBe("/workshops/evening-wheel");
+    expect(section.teaser?.imageUrl).toBe("/e.jpg");
+  });
+
   it("goes quiet and points to contact when nothing can be booked", () => {
-    const resting = {
-      isBookable: false,
-      teaser: {
-        line: RESTING_LINE,
-        hoursLabel: null,
-        daysLabel: null,
-        priceLabel: null,
-        href: "/contact",
-        linkLabel: "Write to us",
-      },
-    };
-    expect(toStudioSection(null, false)).toEqual(resting);
-    expect(toStudioSection(wheel([], []), false)).toEqual(resting);
-    expect(toStudioSection(shortDay([2]), false)).toEqual(resting);
-    expect(toStudioSection(wheel([0, 1, 2, 3, 4, 5, 6]), false)).toEqual(
+    expect(toStudioSection([], false)).toEqual(resting);
+    expect(toStudioSection([wheel([], [])], false)).toEqual(resting);
+    expect(toStudioSection([shortDay([2])], false)).toEqual(resting);
+    expect(toStudioSection([wheel([0, 1, 2, 3, 4, 5, 6])], false)).toEqual(
       resting,
     );
   });
