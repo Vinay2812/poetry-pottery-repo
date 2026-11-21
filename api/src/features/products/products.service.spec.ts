@@ -237,13 +237,15 @@ describe("ProductsService", () => {
     });
     expect(prismaMock.product.aggregate).not.toHaveBeenCalled();
     expect(prismaMock.product.count).not.toHaveBeenCalled();
-    expect(prismaMock.category.findMany).toHaveBeenCalledWith(
-      containing({
-        select: containing({
-          _count: { select: { products: { where: { id: { in: [] } } } } },
-        }),
+    // Every list counts against the same "nothing", so each option reads zero.
+    const countsNothing = containing({
+      select: containing({
+        _count: { select: { products: { where: { id: { in: [] } } } } },
       }),
-    );
+    });
+    expect(prismaMock.category.findMany).toHaveBeenCalledWith(countsNothing);
+    expect(prismaMock.collection.findMany).toHaveBeenCalledWith(countsNothing);
+    expect(prismaMock.glaze.findMany).toHaveBeenCalledWith(countsNothing);
   });
 
   it("counts a facet against the other filters but not itself", async () => {

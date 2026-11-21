@@ -482,7 +482,7 @@ export class ProductsService {
   private async facetOptions(
     count: FacetCountWheres | null,
   ): Promise<FacetOptionLists> {
-    const counted = (where: Prisma.ProductWhereInput | undefined) =>
+    const countWhere = (where: Prisma.ProductWhereInput | undefined) =>
       where ?? NOTHING;
     const [categories, collections, materials, materialCounts, glazes] =
       await Promise.all([
@@ -492,7 +492,7 @@ export class ProductsService {
             slug: true,
             name: true,
             _count: {
-              select: { products: { where: counted(count?.categories) } },
+              select: { products: { where: countWhere(count?.categories) } },
             },
           },
         }),
@@ -502,7 +502,7 @@ export class ProductsService {
             slug: true,
             name: true,
             _count: {
-              select: { products: { where: counted(count?.collections) } },
+              select: { products: { where: countWhere(count?.collections) } },
             },
           },
         }),
@@ -510,14 +510,14 @@ export class ProductsService {
           by: ["material"],
           orderBy: { material: "asc" },
         }),
-        this.countMaterials(count?.materials ?? null),
+        this.countMaterials(countWhere(count?.materials)),
         this.prisma.glaze.findMany({
           orderBy: { name: "asc" },
           select: {
             slug: true,
             name: true,
             _count: {
-              select: { products: { where: counted(count?.glazes) } },
+              select: { products: { where: countWhere(count?.glazes) } },
             },
           },
         }),
@@ -547,9 +547,10 @@ export class ProductsService {
   }
 
   private async countMaterials(
-    where: Prisma.ProductWhereInput | null,
+    where: Prisma.ProductWhereInput,
   ): Promise<Map<string, number>> {
-    if (!where) return new Map();
+    // Counting against nothing needs no query: every material reads zero.
+    if (where === NOTHING) return new Map();
     const rows = await this.prisma.product.groupBy({
       by: ["material"],
       where,
