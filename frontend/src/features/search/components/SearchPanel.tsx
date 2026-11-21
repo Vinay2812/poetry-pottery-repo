@@ -126,30 +126,33 @@ export function SearchPanel({
           }}
           className="flex h-16 shrink-0 items-center gap-3"
         >
-          <Search
-            className="size-5 shrink-0 text-muted-foreground"
-            strokeWidth={1.5}
-            aria-hidden
-          />
-          <input
-            autoFocus
-            id={toInputId(panelId)}
-            type="search"
-            role="combobox"
-            value={value}
-            aria-label="Search the studio"
-            aria-expanded={total > 0}
-            aria-controls={listboxId}
-            aria-autocomplete="list"
-            aria-activedescendant={
-              activeIndex >= 0 ? toOptionId(panelId, activeIndex) : undefined
-            }
-            placeholder="Try “tea cup”, “sage green” or “wheel session”"
-            autoComplete="off"
-            onChange={(event) => onChange(event.target.value)}
-            onKeyDown={onKeyDown}
-            className="h-10 w-full min-w-0 bg-transparent text-[15px] placeholder:text-muted-foreground"
-          />
+          {/* The outline wraps the icon and the field together, the way the shelf's search box does. */}
+          <div className="flex h-10 min-w-0 flex-1 items-center gap-3 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-ink">
+            <Search
+              className="size-5 shrink-0 text-muted-foreground"
+              strokeWidth={1.5}
+              aria-hidden
+            />
+            <input
+              autoFocus
+              id={toInputId(panelId)}
+              type="search"
+              role="combobox"
+              value={value}
+              aria-label="Search the studio"
+              aria-expanded={total > 0}
+              aria-controls={listboxId}
+              aria-autocomplete="list"
+              aria-activedescendant={
+                activeIndex >= 0 ? toOptionId(panelId, activeIndex) : undefined
+              }
+              placeholder="Try “tea cup”, “sage green” or “wheel session”"
+              autoComplete="off"
+              onChange={(event) => onChange(event.target.value)}
+              onKeyDown={onKeyDown}
+              className="h-10 w-full min-w-0 bg-transparent text-[15px] placeholder:text-muted-foreground focus-visible:outline-none"
+            />
+          </div>
           <button
             type="button"
             onClick={onClose}
