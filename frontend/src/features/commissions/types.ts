@@ -1,4 +1,7 @@
-import type { CommissionRequestInput } from "@/graphql/generated/graphql";
+import type {
+  CommissionRequestInput,
+  ProductCardFragment,
+} from "@/graphql/generated/graphql";
 
 import type { CommissionFormValues } from "@/lib/validations/commission";
 
@@ -147,9 +150,9 @@ export function toBriefSummary(
     .join(" · ");
 }
 
-// Past commissions can be archived and unbuyable, so the line promises ordering only when every card allows it.
+// Promises ordering only if no card is archived: the API's one availability rule, which the cards follow too.
 export function toCommissionPiecesNote(
-  pieces: readonly { is_archived: boolean }[],
+  pieces: readonly Pick<ProductCardFragment, "is_archived">[],
 ): string {
   return pieces.every((piece) => !piece.is_archived)
     ? "Order one as it is, at the price shown, or describe something else in the brief below."
