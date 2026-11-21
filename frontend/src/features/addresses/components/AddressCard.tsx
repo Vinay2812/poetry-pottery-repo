@@ -71,11 +71,21 @@ export function AddressCard({
               Deliver here
             </Button>
           ))}
-        <button type="button" onClick={onEdit} className={TEXT_LINK}>
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label={`Edit the address for ${name}`}
+          className={TEXT_LINK}
+        >
           Edit
         </button>
         {!isDefault && (
-          <button type="button" onClick={onMakeDefault} className={TEXT_LINK}>
+          <button
+            type="button"
+            onClick={onMakeDefault}
+            aria-label={`Make the address for ${name} the default`}
+            className={TEXT_LINK}
+          >
             Make default
           </button>
         )}
