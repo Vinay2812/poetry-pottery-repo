@@ -82,8 +82,8 @@ export function BookingDetail({
             We have your request
           </h2>
           <p className="max-w-xl text-[15px] text-muted-foreground">
-            Your hours are kept for you while we confirm. Send us a message and
-            we will confirm the session and share payment details, or wait for
+            Your hours are kept for you while we approve it. Send us a message and
+            we will approve the session and share payment details, or wait for
             ours within a day.
           </p>
           {whatsappUrl && (

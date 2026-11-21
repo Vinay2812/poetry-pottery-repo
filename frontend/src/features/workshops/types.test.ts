@@ -255,7 +255,7 @@ describe("session helpers", () => {
 describe("booking status helpers", () => {
   it("maps statuses to labels, tones and steps", () => {
     expect(toBookingStatusLabel(RegistrationStatus.Pending)).toBe(
-      "Awaiting confirmation",
+      "Awaiting approval",
     );
     expect(toBookingStatusLabel(RegistrationStatus.Approved)).toBe(
       "Approved, awaiting payment",
@@ -264,7 +264,7 @@ describe("booking status helpers", () => {
       "Confirmed",
     );
     expect(toBookingStatusLabel(RegistrationStatus.Rejected)).toBe(
-      "Not confirmed",
+      "Not approved",
     );
     expect(toBookingStatusLabel(RegistrationStatus.Cancelled)).toBe(
       "Cancelled",
@@ -293,13 +293,13 @@ describe("booking status helpers", () => {
         "Requested",
         "current",
         "12 Sept",
-        "We have your request and are keeping it for you.",
+        "We have your request and are holding the wheel for you.",
       ],
       [
         "Approved",
         "upcoming",
         null,
-        "If the wheel is free, we approve it and share payment details on WhatsApp.",
+        "We look over each request, then approve it and share payment details on WhatsApp.",
       ],
       [
         "Confirmed",

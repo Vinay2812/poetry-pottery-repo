@@ -253,19 +253,19 @@ export function toGalleryHeading(eventType: EventType): string {
   return GALLERY_HEADING[eventType];
 }
 
-// A pending request already keeps its seats, so the step after it is about payment.
+// A pending request already holds the seat, so the step after it is about payment.
 export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
   {
     key: RegistrationStatus.Pending,
     label: "Requested",
-    description: "We have your request and are keeping it for you.",
+    description: "We have your request and are holding your seat.",
   },
   {
     key: RegistrationStatus.Approved,
     label: "Approved",
     description: "We share payment details on WhatsApp.",
     upcoming:
-      "If we can take you, we approve it and share payment details on WhatsApp.",
+      "We look over each request, then approve it and share payment details on WhatsApp.",
   },
   {
     key: RegistrationStatus.Confirmed,

@@ -162,13 +162,13 @@ describe("registration status helpers", () => {
         "Requested",
         "current",
         "12 Sept",
-        "We have your request and are keeping it for you.",
+        "We have your request and are holding your seat.",
       ],
       [
         "Approved",
         "upcoming",
         null,
-        "If we can take you, we approve it and share payment details on WhatsApp.",
+        "We look over each request, then approve it and share payment details on WhatsApp.",
       ],
       [
         "Confirmed",

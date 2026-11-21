@@ -316,19 +316,19 @@ export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
   ].join("\n");
 }
 
-// A pending request already keeps its hours, so the step after it is about payment.
+// A pending request already holds the wheel, so the step after it is about payment.
 export const BOOKING_STAGES: TimelineStage<RegistrationStatus>[] = [
   {
     key: RegistrationStatus.Pending,
     label: "Requested",
-    description: "We have your request and are keeping it for you.",
+    description: "We have your request and are holding the wheel for you.",
   },
   {
     key: RegistrationStatus.Approved,
     label: "Approved",
     description: "We share payment details on WhatsApp.",
     upcoming:
-      "If the wheel is free, we approve it and share payment details on WhatsApp.",
+      "We look over each request, then approve it and share payment details on WhatsApp.",
   },
   {
     key: RegistrationStatus.Confirmed,
@@ -339,10 +339,10 @@ export const BOOKING_STAGES: TimelineStage<RegistrationStatus>[] = [
 ];
 
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting confirmation",
+  [RegistrationStatus.Pending]: "Awaiting approval",
   [RegistrationStatus.Approved]: "Approved, awaiting payment",
   [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not confirmed",
+  [RegistrationStatus.Rejected]: "Not approved",
   [RegistrationStatus.Cancelled]: "Cancelled",
 };
 
