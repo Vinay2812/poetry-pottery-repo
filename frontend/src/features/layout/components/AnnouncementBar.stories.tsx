@@ -21,6 +21,14 @@ export const WithLink: Story = {};
 
 export const WithoutLink: Story = { args: { href: null } };
 
+// Near the editor's 160-character limit, so the bar wraps on a phone.
+export const LongNote: Story = {
+  args: {
+    text: "The studio is closed from 24 to 28 December for the kiln firing. Orders placed this week ship on 2 January, and wheel sessions resume on 3 January.",
+  },
+  ...atViewport("mobile"),
+};
+
 export const Mobile: Story = { ...atViewport("mobile") };
 
 export const Tablet: Story = { ...atViewport("tablet") };
