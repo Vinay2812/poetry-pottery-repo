@@ -71,32 +71,24 @@ export function ProductListContainer({
   const [priceDraft, setPriceDraft] = useState<[number, number] | null>(null);
   const [searchDraft, setSearchDraft] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [hasLeftServerPage, setHasLeftServerPage] = useState(false);
-  // A load-more asked for before the live query had its first page waits here for it.
-  const pendingPage = useRef<number | null>(null);
 
   const filterInput = toFilterInput(filters, 1);
-  // The server's first page covers the first load, but only while the filters still match it.
-  const serverPage =
-    initialProducts && initialFilterKey === toFilterKey(filterInput)
-      ? initialProducts
-      : null;
-  // Once the visitor moves off that page the browser takes over for good.
-  if (serverPage === null && !hasLeftServerPage) setHasLeftServerPage(true);
-  // Until then there is nothing to ask the API that the server has not already answered.
-  const isOnServerPage = serverPage !== null && !hasLeftServerPage;
   const { data, previousData, loading, error, fetchMore, refetch } = useQuery(
     ProductsDocument,
     {
       variables: { filter: filterInput },
-      skip: isOnServerPage,
       notifyOnNetworkStatusChange: true,
     },
   );
+  // The server's first page covers the first load, but only while the filters still match it.
+  const serverPage =
+    initialProducts && initialFilterKey === toFilterKey(filterInput)
+      ? initialProducts
+      : undefined;
   // Old results bridge a load, not a failure: they would sit under filters they do not match.
   const result =
     data?.products ??
-    (error ? undefined : (previousData?.products ?? serverPage ?? undefined));
+    (error ? undefined : (previousData?.products ?? serverPage));
   const items = result?.items ?? [];
   const pageInfo = result?.page_info;
   const facets = result?.facets;
@@ -196,41 +188,22 @@ export function ProductListContainer({
     dispatch({ type: "clear" });
   }, [dispatch]);
 
-  const appendPage = useCallback(
-    (page: number) =>
-      fetchMore({
-        variables: { filter: toFilterInput(filters, page) },
-        updateQuery: (previous, { fetchMoreResult }) => ({
-          products: {
-            ...fetchMoreResult.products,
-            items: [
-              ...previous.products.items,
-              ...fetchMoreResult.products.items,
-            ],
-          },
-        }),
-      }).finally(() => setIsAppending(false)),
-    [fetchMore, filters],
-  );
-
   const handleLoadMore = useCallback(() => {
-    if (!pageInfo?.has_more || loading || isAppending) return;
+    if (!pageInfo?.has_more || loading) return;
     setIsAppending(true);
-    // A page can only be appended to a live query, so the server's page goes live first.
-    if (isOnServerPage) {
-      pendingPage.current = pageInfo.page + 1;
-      setHasLeftServerPage(true);
-      return;
-    }
-    void appendPage(pageInfo.page + 1);
-  }, [appendPage, isAppending, isOnServerPage, loading, pageInfo]);
-
-  useEffect(() => {
-    const page = pendingPage.current;
-    if (page === null || !data?.products) return;
-    pendingPage.current = null;
-    void appendPage(page);
-  }, [appendPage, data]);
+    void fetchMore({
+      variables: { filter: toFilterInput(filters, pageInfo.page + 1) },
+      updateQuery: (previous, { fetchMoreResult }) => ({
+        products: {
+          ...fetchMoreResult.products,
+          items: [
+            ...previous.products.items,
+            ...fetchMoreResult.products.items,
+          ],
+        },
+      }),
+    }).finally(() => setIsAppending(false));
+  }, [fetchMore, filters, loading, pageInfo]);
 
   // Load the next page when the sentinel scrolls into view.
   const loadMoreRef = useRef(handleLoadMore);
