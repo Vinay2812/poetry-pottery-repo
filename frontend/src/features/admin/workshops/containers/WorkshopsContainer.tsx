@@ -9,12 +9,17 @@ import {
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { DEFAULT_TIME_ZONE, safeTimeZone } from "@/lib/timezones";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { WorkshopConfigFormValues } from "@/lib/validations/admin/workshop";
 
 import { useAdminQueryState } from "@/features/admin/shell";
-import { AdminPageHeader } from "@/features/admin/ui";
+import {
+  AdminLoadError,
+  AdminPageHeader,
+  retryQuery,
+} from "@/features/admin/ui";
 import { ImageUploaderContainer } from "@/features/admin/uploads";
 
 import { WorkshopConfigForm } from "@/features/admin/workshops/components/WorkshopConfigForm";
@@ -61,7 +66,7 @@ interface ConfigSave {
 
 export function WorkshopsContainer() {
   const { values, patch } = useAdminQueryState();
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminWorkshopConfigsDocument,
     { fetchPolicy: "cache-and-network" },
   );
@@ -129,6 +134,25 @@ export function WorkshopsContainer() {
   );
 
   if (!selected) {
+    if (error) {
+      return (
+        <div className="flex flex-col gap-8">
+          <AdminPageHeader
+            eyebrow="Studio"
+            title="Wheel sessions"
+            description={null}
+          />
+          <AdminLoadError
+            message={describeError(
+              error,
+              "The wheel sessions could not be loaded.",
+            )}
+            isRetrying={loading}
+            onRetry={retryQuery(refetch)}
+          />
+        </div>
+      );
+    }
     return loading ? (
       <div aria-busy="true" className="flex flex-col gap-3">
         <div className="h-20 animate-pulse bg-ash" />

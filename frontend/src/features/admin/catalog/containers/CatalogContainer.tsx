@@ -361,19 +361,6 @@ export function CatalogContainer() {
         )
       : null;
 
-  if (
-    categories === undefined &&
-    collections === undefined &&
-    (categoriesQuery.loading || collectionsQuery.loading)
-  ) {
-    return (
-      <div aria-busy="true" className="flex flex-col gap-3">
-        <div className="h-20 animate-pulse bg-ash" />
-        <div className="h-64 animate-pulse bg-ash" />
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-10">
       <AdminPageHeader
@@ -395,6 +382,9 @@ export function CatalogContainer() {
             isRetrying={categoriesQuery.loading}
             onRetry={retryQuery(categoriesQuery.refetch)}
           />
+        ) : categories === undefined ? (
+          // Each list waits on its own answer, so an empty table always means an empty list.
+          <div aria-busy="true" className="h-40 animate-pulse bg-ash" />
         ) : (
           <CategoriesTable
             rows={optimisticCategories}
@@ -449,6 +439,8 @@ export function CatalogContainer() {
             isRetrying={collectionsQuery.loading}
             onRetry={retryQuery(collectionsQuery.refetch)}
           />
+        ) : collections === undefined ? (
+          <div aria-busy="true" className="h-40 animate-pulse bg-ash" />
         ) : (
           <CollectionsTable
             rows={optimisticCollections}

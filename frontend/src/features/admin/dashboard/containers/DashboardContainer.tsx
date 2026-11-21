@@ -14,14 +14,17 @@ import {
   formatInr,
   formatTime,
 } from "@/lib/format";
+import { describeError } from "@/lib/apollo/errors";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import { toRegistrationStatusLabel } from "@/lib/registration-status";
 
 import {
+  AdminLoadError,
   AdminPageHeader,
   orderStatusLabel,
   orderStatusTone,
   registrationStatusTone,
+  retryQuery,
 } from "@/features/admin/ui";
 
 import { DashboardSection } from "@/features/admin/dashboard/components/DashboardSection";
@@ -70,8 +73,10 @@ function applyStockPatch(
   });
 }
 
+const DASHBOARD_DESCRIPTION = "What the shelf and the wheel have been doing.";
+
 export function DashboardContainer() {
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminDashboardDocument,
     {
       fetchPolicy: "cache-and-network",
@@ -181,7 +186,20 @@ export function DashboardContainer() {
   }
 
   if (!dashboard) {
-    return <p className="text-[13px]">The dashboard could not be loaded.</p>;
+    return (
+      <div className="flex flex-col gap-8">
+        <AdminPageHeader
+          eyebrow="Studio"
+          title="Dashboard"
+          description={DASHBOARD_DESCRIPTION}
+        />
+        <AdminLoadError
+          message={describeError(error, "The dashboard could not be loaded.")}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      </div>
+    );
   }
 
   return (
@@ -189,7 +207,7 @@ export function DashboardContainer() {
       <AdminPageHeader
         eyebrow="Studio"
         title="Dashboard"
-        description="What the shelf and the wheel have been doing."
+        description={DASHBOARD_DESCRIPTION}
       />
       <DashboardStats
         orders={formatCount(dashboard.orders_last_30_days)}

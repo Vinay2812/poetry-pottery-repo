@@ -12,12 +12,14 @@ import {
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type {
   AnnouncementFormValues,
   SiteSettingsFormValues,
 } from "@/lib/validations/admin/content";
 
+import { AdminLoadError, retryQuery } from "@/features/admin/ui";
 import { ImageUploaderContainer } from "@/features/admin/uploads";
 
 import { AnnouncementForm } from "../components/AnnouncementForm";
@@ -47,9 +49,10 @@ function mergeSettings(
 }
 
 export function SiteSettingsContainer() {
-  const { data, previousData, loading } = useQuery(AdminSiteSettingsDocument, {
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AdminSiteSettingsDocument,
+    { fetchPolicy: "cache-and-network" },
+  );
   const [updateSettings] = useMutation(UpdateSiteSettingsDocument);
   const [updateAnnouncement] = useMutation(UpdateAnnouncementDocument);
   // The mutations return the whole settings row, so the payload becomes the baseline.
@@ -114,12 +117,14 @@ export function SiteSettingsContainer() {
   );
 
   if (!settings) {
-    return loading ? (
+    return loading && !error ? (
       <div aria-busy="true" className="h-64 animate-pulse bg-ash" />
     ) : (
-      <p role="alert" className="text-[13px]">
-        The site settings could not be loaded. Refresh to try again.
-      </p>
+      <AdminLoadError
+        message={describeError(error, "The site settings could not be loaded.")}
+        isRetrying={loading}
+        onRetry={retryQuery(refetch)}
+      />
     );
   }
 

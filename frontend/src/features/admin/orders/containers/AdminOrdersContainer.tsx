@@ -45,6 +45,8 @@ import {
 
 const STATUS_OPTIONS = orderStatusOptions();
 
+const ORDERS_DESCRIPTION = "Everything the shelf has sent out.";
+
 export function AdminOrdersContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const search = values.q ?? "";
@@ -132,7 +134,11 @@ export function AdminOrdersContainer() {
   if (!result && error) {
     return (
       <div className="flex flex-col gap-8">
-        <AdminPageHeader eyebrow="Studio" title="Orders" description={null} />
+        <AdminPageHeader
+          eyebrow="Studio"
+          title="Orders"
+          description={ORDERS_DESCRIPTION}
+        />
         <AdminLoadError
           message={describeError(error, "The orders could not be loaded.")}
           isRetrying={loading}
@@ -149,7 +155,7 @@ export function AdminOrdersContainer() {
       <AdminPageHeader
         eyebrow="Studio"
         title="Orders"
-        description="Everything the shelf has sent out."
+        description={ORDERS_DESCRIPTION}
       />
       <AdminOrdersToolbar
         search={searchDraft}
