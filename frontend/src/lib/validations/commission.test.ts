@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { TERMS_REQUIRED } from "@/lib/terms";
 import { commissionSchema, EMPTY_COMMISSION_FORM } from "./commission";
 
 const brief = {
@@ -31,5 +32,22 @@ describe("commissionSchema size", () => {
 
   it("asks for a size when none is given", () => {
     expect(sizeIssue("   ")).toBe("Tell us the size");
+  });
+});
+
+describe("commissionSchema terms", () => {
+  it("asks for the terms when the box is left empty", () => {
+    const result = commissionSchema.safeParse(brief);
+    expect(result.success).toBe(false);
+    expect(
+      result.error?.issues.find((issue) => issue.path[0] === "acceptedTerms")
+        ?.message,
+    ).toBe(TERMS_REQUIRED);
+  });
+
+  it("sends once the box is ticked", () => {
+    expect(
+      commissionSchema.safeParse({ ...brief, acceptedTerms: true }).success,
+    ).toBe(true);
   });
 });

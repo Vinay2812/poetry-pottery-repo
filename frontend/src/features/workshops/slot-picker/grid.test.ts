@@ -7,7 +7,6 @@ import {
   daysInMonth,
   formatMonth,
   isDayWithinSpan,
-  isSameSelection,
   isSlotPickable,
   keepFittingPicks,
   pickableSlots,
@@ -275,17 +274,6 @@ describe("slot helpers", () => {
     expect(togglePicked([first], first, 2)).toEqual([]);
     // A full pick swaps out its earliest hour so a fresh click always lands.
     expect(togglePicked([first, second], third, 2)).toEqual([second, third]);
-  });
-
-  it("knows when a move would land on the hours already held", () => {
-    const first = { starts_at: "a", ends_at: "b" };
-    const second = { starts_at: "c", ends_at: "d" };
-    const other = { starts_at: "e", ends_at: "f" };
-    expect(isSameSelection([first], [first])).toBe(true);
-    expect(isSameSelection([first, second], [second, first])).toBe(true);
-    expect(isSameSelection([first], [other])).toBe(false);
-    expect(isSameSelection([first], [first, second])).toBe(false);
-    expect(isSameSelection([], [])).toBe(true);
   });
 
   it("lists picked hours in the order they happen", () => {

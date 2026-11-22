@@ -9,6 +9,7 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
+import type { PolicyPoint } from "@/components/legal/CancellationPolicy";
 import { formatDate, formatShortDay, formatTime } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
@@ -517,4 +518,53 @@ export function applyRegistrationCancellation(
     cancelled_at: cancellation.at,
     cancel_reason: cancellation.reason.trim() || registration.cancel_reason,
   };
+}
+
+const PAID_SEAT_POLICY: readonly PolicyPoint[] = [
+  {
+    term: "Before you pay",
+    detail: "You can withdraw your request at no cost.",
+  },
+  {
+    term: "Once paid, it's final",
+    detail:
+      "Paid seats can't be cancelled, refunded or moved to another event.",
+  },
+  {
+    term: "Sending someone else",
+    detail:
+      "If you can't come, a friend or family member can take your seat. Tell us their name before the event.",
+  },
+  {
+    term: "Missed events",
+    detail: "If you miss the event, your seat isn't refunded or moved.",
+  },
+  {
+    term: "If we cancel",
+    detail:
+      "If we have to cancel or move the event, you choose a full refund or a seat at another event.",
+  },
+];
+
+// A free seat has nothing to pay or refund, so its policy keeps only what still applies.
+const FREE_SEAT_POLICY: readonly PolicyPoint[] = [
+  {
+    term: "If you can't come",
+    detail:
+      "If you can't come, please withdraw so someone else can have the seat.",
+  },
+  {
+    term: "Sending someone else",
+    detail:
+      "A friend or family member can take your seat instead. Tell us their name before the event.",
+  },
+  {
+    term: "If we cancel",
+    detail:
+      "If we have to cancel or move the event, we'll let you know as soon as we can.",
+  },
+];
+
+export function toSeatPolicy(isFree: boolean): readonly PolicyPoint[] {
+  return isFree ? FREE_SEAT_POLICY : PAID_SEAT_POLICY;
 }

@@ -52,10 +52,8 @@ const meta = {
     note: "Both of us are first-timers.",
     whatsappUrl: "https://wa.me/919876543210?text=Hi",
     canCancel: true,
-    canReschedule: true,
     isCancelling: false,
     onCancel: fn(),
-    onReschedule: fn(),
   },
 } satisfies Meta<typeof BookingDetail>;
 
@@ -83,7 +81,6 @@ export const Confirmed: Story = {
     isJustPlaced: false,
     steps: toSteps(2),
     canCancel: false,
-    canReschedule: false,
     note: null,
   },
 };
@@ -96,7 +93,6 @@ export const Cancelled: Story = {
     steps: toSteps(0, true),
     closedLabel: "Cancelled on Wed, 16 Sep, 2026 · Travelling that week",
     canCancel: false,
-    canReschedule: false,
   },
 };
 

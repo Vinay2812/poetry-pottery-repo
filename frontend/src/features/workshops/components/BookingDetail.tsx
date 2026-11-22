@@ -30,10 +30,8 @@ export interface BookingDetailProps {
   note: string | null;
   whatsappUrl: string | null;
   canCancel: boolean;
-  canReschedule: boolean;
   isCancelling: boolean;
   onCancel: () => void;
-  onReschedule: () => void;
 }
 
 const TEXT_BUTTON =
@@ -55,10 +53,8 @@ export function BookingDetail({
   note,
   whatsappUrl,
   canCancel,
-  canReschedule,
   isCancelling,
   onCancel,
-  onReschedule,
 }: BookingDetailProps) {
   return (
     <PageShell column="wide" className="flex flex-col gap-10 py-8 md:py-12">
@@ -164,15 +160,6 @@ export function BookingDetail({
                   Message us about this session
                 </WhatsAppLink>
               </Button>
-            )}
-            {canReschedule && (
-              <button
-                type="button"
-                onClick={onReschedule}
-                className={TEXT_BUTTON}
-              >
-                Move this session
-              </button>
             )}
             {canCancel && (
               <button

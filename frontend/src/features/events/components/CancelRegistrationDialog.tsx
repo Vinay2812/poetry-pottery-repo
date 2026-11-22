@@ -16,6 +16,8 @@ export interface CancelRegistrationDialogProps {
   isOpen: boolean;
   reason: string;
   isSubmitting: boolean;
+  // What withdrawing costs, which depends on whether anything is due.
+  withdrawNote: string;
   onReasonChange: (reason: string) => void;
   onOpenChange: (isOpen: boolean) => void;
   onConfirm: () => void;
@@ -25,6 +27,7 @@ export function CancelRegistrationDialog({
   isOpen,
   reason,
   isSubmitting,
+  withdrawNote,
   onReasonChange,
   onOpenChange,
   onConfirm,
@@ -41,6 +44,9 @@ export function CancelRegistrationDialog({
             date any time.
           </DialogDescription>
         </DialogHeader>
+        <p className="border-y border-ash py-3 text-[13px] text-muted-foreground">
+          {withdrawNote}
+        </p>
         <div className="flex flex-col gap-2">
           <Label htmlFor="cancel-registration-reason">
             Tell us why (optional)

@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
+import { TermsAgreement } from "@/components/legal/TermsAgreement";
 import { atViewport } from "@/lib/storybook/viewports";
-import { CancellationPolicy } from "@/features/workshops";
+import { CancellationPolicy } from "@/components/legal/CancellationPolicy";
+import { toSeatPolicy } from "@/features/events/types";
 import { EventDetail } from "./EventDetail";
 import type { ReserveState } from "@/features/events/types";
 import { ReserveBox } from "./ReserveBox";
@@ -34,6 +36,15 @@ function reserveBoxIn(state: ReserveState, price = 1800) {
       bookingSeats={0}
       bookingTotal={0}
       whatsappUrl="https://wa.me/919876543210?text=Hi"
+      terms={
+        <TermsAgreement
+          id="reserve-terms"
+          isChecked={false}
+          error={null}
+          hasPaymentNote={price > 0}
+          onCheckedChange={fn()}
+        />
+      }
       onSeatsChange={fn()}
       onNoteChange={fn()}
       onReserve={fn()}
@@ -72,7 +83,7 @@ const meta = {
     galleryHeading: "From the workshop",
     reserveBox: reserveBoxIn("open"),
     reviews: null,
-    policy: <CancellationPolicy />,
+    policy: <CancellationPolicy points={toSeatPolicy(false)} />,
   },
 } satisfies Meta<typeof EventDetail>;
 

@@ -8,6 +8,7 @@ import { toTimelineSteps } from "@/lib/timeline";
 import {
   BOOKING_STAGES,
   applyBookingAction,
+  SESSION_POLICY,
   type BookingData,
   formatDayRange,
   formatDateKey,
@@ -436,7 +437,6 @@ function booking(overrides: Partial<BookingData> = {}): BookingData {
     note: null,
     cancel_reason: null,
     can_cancel: true,
-    can_reschedule: true,
     created_at: "2026-09-10T09:00:00.000Z",
     approved_at: "2026-09-11T09:00:00.000Z",
     confirmed_at: null,
@@ -471,7 +471,6 @@ describe("applyBookingAction", () => {
     });
     expect(cancelled?.status).toBe(RegistrationStatus.Cancelled);
     expect(cancelled?.can_cancel).toBe(false);
-    expect(cancelled?.can_reschedule).toBe(false);
     expect(cancelled?.cancelled_at).toBe("2026-09-12T09:00:00.000Z");
     expect(cancelled?.cancel_reason).toBe("Cannot make it");
   });
@@ -482,35 +481,6 @@ describe("applyBookingAction", () => {
       { kind: "cancel", reason: "   ", at: "2026-09-12T09:00:00.000Z" },
     );
     expect(cancelled?.cancel_reason).toBe("Studio closed");
-  });
-
-  it("moves the hours and restates when the session runs", () => {
-    const moved = applyBookingAction(booking(), {
-      kind: "reschedule",
-      slots: [
-        {
-          starts_at: "2026-09-25T12:00:00.000Z",
-          ends_at: "2026-09-25T13:00:00.000Z",
-        },
-        {
-          starts_at: "2026-09-25T11:00:00.000Z",
-          ends_at: "2026-09-25T12:00:00.000Z",
-        },
-      ],
-    });
-    expect(moved?.starts_at).toBe("2026-09-25T11:00:00.000Z");
-    expect(moved?.ends_at).toBe("2026-09-25T13:00:00.000Z");
-    expect(moved?.slots.map((slot) => slot.starts_at)).toEqual([
-      "2026-09-25T11:00:00.000Z",
-      "2026-09-25T12:00:00.000Z",
-    ]);
-  });
-
-  it("leaves the booking alone when a move picks no hours", () => {
-    const current = booking();
-    expect(applyBookingAction(current, { kind: "reschedule", slots: [] })).toBe(
-      current,
-    );
   });
 
   it("has nothing to do before the booking loads", () => {
@@ -743,5 +713,18 @@ describe("studio asks", () => {
       "3 hours at the wheel for 2 people (Open Studio Sessions)",
     );
     expect(toArrangementAskUrl("", "Open Studio Sessions", 3, 2)).toBeNull();
+  });
+});
+
+describe("SESSION_POLICY", () => {
+  it("reads in the owner's order, from withdrawing before payment to breakage", () => {
+    expect(SESSION_POLICY.map((point) => point.term)).toEqual([
+      "Before you pay",
+      "Once paid, it's final",
+      "Sending someone else",
+      "Missed sessions",
+      "If we cancel",
+      "Breakage",
+    ]);
   });
 });

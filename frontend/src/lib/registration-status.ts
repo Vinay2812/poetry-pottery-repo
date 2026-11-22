@@ -105,3 +105,10 @@ export function withRequestedLine(
     .filter((stage) => stage.key === RegistrationStatus.Pending)
     .map((stage) => ({ ...stage, description: line }));
 }
+
+// The cancel dialog only opens while nothing is paid, so it says what withdrawing costs.
+export function toWithdrawNote(isFree: boolean): string {
+  return isFree
+    ? "Nothing is paid for a free place, so withdrawing costs nothing."
+    : "Withdrawing is free until you pay. If you've already sent a payment and it still shows as unpaid, message us on WhatsApp instead.";
+}

@@ -114,6 +114,7 @@ export function toCommissionInput(
     email: values.email,
     phone: values.phone.length > 0 ? values.phone : null,
     reference_image_urls: referenceImageUrls,
+    accepted_terms: values.acceptedTerms,
   };
 }
 

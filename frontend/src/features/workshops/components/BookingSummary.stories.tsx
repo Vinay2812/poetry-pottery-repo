@@ -1,8 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
+import { TermsAgreement } from "@/components/legal/TermsAgreement";
 import { atViewport } from "@/lib/storybook/viewports";
+import { TERMS_REQUIRED } from "@/lib/terms";
 import { BookingSummary } from "./BookingSummary";
+
+const terms = (
+  <TermsAgreement
+    id="session-terms"
+    isChecked={false}
+    error={null}
+    hasPaymentNote
+    onCheckedChange={fn()}
+  />
+);
 
 const meta = {
   title: "Features/Workshops/BookingSummary",
@@ -33,6 +45,7 @@ const meta = {
     note: "",
     canBook: true,
     isBooking: false,
+    terms,
     onNoteChange: fn(),
     onBook: fn(),
     onRemoveSlot: fn(),
@@ -45,6 +58,20 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const TermsNotTicked: Story = {
+  args: {
+    terms: (
+      <TermsAgreement
+        id="session-terms"
+        isChecked={false}
+        error={TERMS_REQUIRED}
+        hasPaymentNote
+        onCheckedChange={fn()}
+      />
+    ),
+  },
+};
 
 export const NothingPicked: Story = {
   args: {

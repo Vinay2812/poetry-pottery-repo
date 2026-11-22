@@ -35,6 +35,7 @@ import {
   isRequestLapsed,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
+  toWithdrawNote,
 } from "@/lib/registration-status";
 import { ReviewActionContainer } from "@/features/reviews";
 
@@ -185,6 +186,7 @@ export function RegistrationDetailContainer({
         isOpen={isCancelOpen}
         reason={reason}
         isSubmitting={isCancelling}
+        withdrawNote={toWithdrawNote(optimisticRegistration.total === 0)}
         onReasonChange={setReason}
         onOpenChange={setIsCancelOpen}
         onConfirm={handleConfirmCancel}

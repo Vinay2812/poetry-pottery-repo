@@ -6,6 +6,7 @@ import {
   type WorkshopConfigFieldsFragment,
 } from "@/graphql/generated/graphql";
 
+import type { PolicyPoint } from "@/components/legal/CancellationPolicy";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { formatShortDay } from "@/lib/format";
 import type { TimelineStage } from "@/lib/timeline";
@@ -25,9 +26,37 @@ export type BookingData = WorkshopBookingFieldsFragment;
 export const SESSION_NOTE =
   "Everything you make is fired and glazed by us, ready in about two weeks.";
 
-// Owner-approved policy wording; the booking page and the cancel dialog both show it as is.
-export const CANCELLING_RULE =
-  "Cancel at least 4 days before your session for a full refund. After that, we refund only if we can fill your seat from the waitlist or with someone you refer.";
+// Owner-approved policy wording, shown as is on the booking page.
+export const SESSION_POLICY: readonly PolicyPoint[] = [
+  {
+    term: "Before you pay",
+    detail: "You can withdraw your request at no cost.",
+  },
+  {
+    term: "Once paid, it's final",
+    detail:
+      "Paid sessions can't be cancelled, refunded or moved to another date.",
+  },
+  {
+    term: "Sending someone else",
+    detail:
+      "If you can't make it, a friend or family member can take your place. Tell us their name before the session.",
+  },
+  {
+    term: "Missed sessions",
+    detail: "If you miss your session, it isn't refunded or moved.",
+  },
+  {
+    term: "If we cancel",
+    detail:
+      "If we have to cancel or move your session, you choose a full refund or another date.",
+  },
+  {
+    term: "Breakage",
+    detail:
+      "We look after every student's piece, but clay is fragile and a piece can sometimes break in the kiln.",
+  },
+];
 
 export interface SessionFact {
   label: string;
@@ -472,9 +501,7 @@ export function toDayNote(day: CalendarDayState): DayNote {
   };
 }
 
-type BookingAction =
-  | { kind: "cancel"; reason: string; at: string }
-  | { kind: "reschedule"; slots: readonly SlotInterval[] };
+type BookingAction = { kind: "cancel"; reason: string; at: string };
 
 // The reducer behind the optimistic booking: what the studio will say once it agrees.
 export function applyBookingAction(
@@ -482,29 +509,11 @@ export function applyBookingAction(
   action: BookingAction,
 ): BookingData | null {
   if (!booking) return booking;
-  if (action.kind === "cancel") {
-    return {
-      ...booking,
-      status: RegistrationStatus.Cancelled,
-      can_cancel: false,
-      can_reschedule: false,
-      cancelled_at: action.at,
-      cancel_reason: action.reason.trim() || booking.cancel_reason,
-    };
-  }
-  const slots = [...action.slots].sort((a, b) =>
-    a.starts_at.localeCompare(b.starts_at),
-  );
-  const first = slots[0];
-  const last = slots[slots.length - 1];
-  if (!first || !last) return booking;
   return {
     ...booking,
-    slots: slots.map((slot) => ({
-      starts_at: slot.starts_at,
-      ends_at: slot.ends_at,
-    })),
-    starts_at: first.starts_at,
-    ends_at: last.ends_at,
+    status: RegistrationStatus.Cancelled,
+    can_cancel: false,
+    cancelled_at: action.at,
+    cancel_reason: action.reason.trim() || booking.cancel_reason,
   };
 }

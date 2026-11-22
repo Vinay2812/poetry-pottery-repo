@@ -10,7 +10,6 @@ import {
   BookWorkshopDocument,
   CancelWorkshopBookingDocument,
   MyWorkshopBookingsDocument,
-  RescheduleWorkshopBookingDocument,
   WorkshopBookingDocument,
   WorkshopDocument,
 } from "@/graphql/generated/graphql";
@@ -39,6 +38,7 @@ export interface BookSessionInput {
   hours: number;
   participants: number;
   note: string;
+  acceptedTerms: boolean;
 }
 
 export function useBookWorkshop(onBooked?: () => void) {
@@ -56,6 +56,7 @@ export function useBookWorkshop(onBooked?: () => void) {
             hours: input.hours,
             participants: input.participants,
             note: input.note.trim() || null,
+            accepted_terms: input.acceptedTerms,
           },
         },
       }),
@@ -144,26 +145,4 @@ export function useCancelWorkshopBooking() {
   );
 
   return { cancel, isCancelling: loading };
-}
-
-export function useRescheduleWorkshopBooking() {
-  const [mutate, { loading }] = useMutation(RescheduleWorkshopBookingDocument);
-
-  const reschedule = useCallback(
-    async (id: string, slotStarts: string[]): Promise<boolean> => {
-      try {
-        await mutate({
-          variables: { input: { booking_id: id, slot_starts: slotStarts } },
-        });
-        toast.success("Session moved");
-        return true;
-      } catch (error) {
-        toast.error(describeError(error, "The session could not be moved"));
-        return false;
-      }
-    },
-    [mutate],
-  );
-
-  return { reschedule, isRescheduling: loading };
 }

@@ -31,6 +31,7 @@ function values(
     glaze: "Ocean Blue",
     name: "Maya",
     email: "maya@example.com",
+    acceptedTerms: true,
     ...overrides,
   };
 }
@@ -56,6 +57,7 @@ describe("toCommissionInput", () => {
       email: "maya@example.com",
       phone: null,
       reference_image_urls: [],
+      accepted_terms: true,
     });
   });
 

@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { EventStatus } from "@/graphql/generated/graphql";
+import { CancellationPolicy } from "@/components/legal/CancellationPolicy";
+import { TermsAgreement } from "@/components/legal/TermsAgreement";
 import { formatDate } from "@/lib/format";
+import { toTermsError } from "@/lib/terms";
 import {
   isRegistrationClosed,
   toRegistrationStatusLabel,
@@ -26,11 +29,11 @@ import {
   toReserveNotePlaceholder,
   toReserveState,
   toSeatPriceNote,
+  toSeatPolicy,
   toSeatsLabel,
 } from "@/features/events/types";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { ReviewsPanelContainer } from "@/features/reviews";
-import { CancellationPolicy } from "@/features/workshops";
 
 export interface EventDetailContainerProps {
   event: EventDetailData;
@@ -46,6 +49,9 @@ export function EventDetailContainer({
 }: EventDetailContainerProps) {
   const [seats, setSeats] = useState(1);
   const [note, setNote] = useState("");
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false);
+  const [hasTriedReserving, setHasTriedReserving] = useState(false);
+  const termsRef = useRef<HTMLButtonElement>(null);
   const { reserve, isReserving } = useRegisterForEvent();
   const { now, sync: syncClock } = useEventClock(renderedAt, event.starts_at);
 
@@ -55,8 +61,26 @@ export function EventDetailContainer({
       syncClock();
       return;
     }
-    reserve(event.id, seats, note);
-  }, [event.id, event.starts_at, note, reserve, seats, syncClock]);
+    if (!isTermsAccepted) {
+      setHasTriedReserving(true);
+      termsRef.current?.focus();
+      return;
+    }
+    reserve({
+      eventId: event.id,
+      seats,
+      note,
+      acceptedTerms: isTermsAccepted,
+    });
+  }, [
+    event.id,
+    event.starts_at,
+    isTermsAccepted,
+    note,
+    reserve,
+    seats,
+    syncClock,
+  ]);
 
   // A cancelled or rejected row still comes back, but the studio lets you book again.
   const registration =
@@ -107,7 +131,7 @@ export function EventDetailContainer({
       // The policy is about seats on a date still to come; a date marked done early counts as done.
       policy={
         !hasStarted && !event.is_past && !isCancelled ? (
-          <CancellationPolicy />
+          <CancellationPolicy points={toSeatPolicy(event.price === 0)} />
         ) : null
       }
       reserveBox={
@@ -144,6 +168,17 @@ export function EventDetailContainer({
           bookingSeats={registration?.seats ?? 0}
           bookingTotal={registration?.total ?? 0}
           whatsappUrl={whatsappUrl}
+          terms={
+            <TermsAgreement
+              ref={termsRef}
+              id="reserve-terms"
+              isChecked={isTermsAccepted}
+              error={toTermsError(isTermsAccepted, hasTriedReserving)}
+              // A free seat has nothing to pay, so nothing to keep final.
+              hasPaymentNote={event.price > 0}
+              onCheckedChange={setIsTermsAccepted}
+            />
+          }
           onSeatsChange={setSeats}
           onNoteChange={setNote}
           onReserve={handleReserve}

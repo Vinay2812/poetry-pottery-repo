@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
+import { toWithdrawNote } from "@/lib/registration-status";
 import { atViewport } from "@/lib/storybook/viewports";
 import { CancelBookingDialog } from "./CancelBookingDialog";
 
@@ -12,6 +13,7 @@ const meta = {
     isOpen: true,
     reason: "",
     isSubmitting: false,
+    withdrawNote: toWithdrawNote(false),
     onReasonChange: fn(),
     onOpenChange: fn(),
     onConfirm: fn(),
@@ -29,6 +31,10 @@ export const WithReason: Story = {
 };
 
 export const Cancelling: Story = { args: { isSubmitting: true } };
+
+export const FreePlace: Story = {
+  args: { withdrawNote: toWithdrawNote(true) },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

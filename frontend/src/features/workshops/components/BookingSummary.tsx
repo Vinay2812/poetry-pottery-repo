@@ -32,6 +32,8 @@ export interface BookingSummaryProps {
   isSwapHintShown: boolean;
   canBook: boolean;
   isBooking: boolean;
+  // The agreement sits right above Book, so it is read before asking.
+  terms: React.ReactNode;
   onNoteChange: (note: string) => void;
   onBook: () => void;
   onRemoveSlot: (startsAt: string) => void;
@@ -53,6 +55,7 @@ export function BookingSummary({
   isSwapHintShown,
   canBook,
   isBooking,
+  terms,
   onNoteChange,
   onBook,
   onRemoveSlot,
@@ -126,6 +129,7 @@ export function BookingSummary({
       </div>
 
       <div className="flex flex-col gap-3">
+        {terms}
         <Button size="lg" onClick={onBook} disabled={!canBook || isBooking}>
           {isBooking ? "Booking…" : "Book this wheel session"}
         </Button>

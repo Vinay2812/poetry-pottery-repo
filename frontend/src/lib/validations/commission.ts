@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { TERMS_REQUIRED } from "@/lib/terms";
+
 const TEN_DIGITS = /^(?:\+?91|0)?(\d{10})$/;
 
 // The words are carved into wet clay by hand, so the rim sets the limit.
@@ -44,6 +46,7 @@ export const commissionSchema = z.object({
         value.length === 0 || TEN_DIGITS.test(value.replace(/[\s-]/g, "")),
       "Enter a valid 10-digit phone number",
     ),
+  acceptedTerms: z.boolean().refine((value) => value, TERMS_REQUIRED),
 });
 
 export type CommissionFormValues = z.infer<typeof commissionSchema>;
@@ -57,4 +60,5 @@ export const EMPTY_COMMISSION_FORM: CommissionFormValues = {
   name: "",
   email: "",
   phone: "",
+  acceptedTerms: false,
 };

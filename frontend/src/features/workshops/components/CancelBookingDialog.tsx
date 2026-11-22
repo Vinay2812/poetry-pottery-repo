@@ -12,12 +12,12 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { CANCELLING_RULE } from "@/features/workshops/types";
-
 export interface CancelBookingDialogProps {
   isOpen: boolean;
   reason: string;
   isSubmitting: boolean;
+  // What withdrawing costs, which depends on whether anything is due.
+  withdrawNote: string;
   onReasonChange: (reason: string) => void;
   onOpenChange: (isOpen: boolean) => void;
   onConfirm: () => void;
@@ -27,6 +27,7 @@ export function CancelBookingDialog({
   isOpen,
   reason,
   isSubmitting,
+  withdrawNote,
   onReasonChange,
   onOpenChange,
   onConfirm,
@@ -45,7 +46,7 @@ export function CancelBookingDialog({
           </DialogDescription>
         </DialogHeader>
         <p className="border-y border-ash py-3 text-[13px] text-muted-foreground">
-          {CANCELLING_RULE}
+          {withdrawNote}
         </p>
         <div className="flex flex-col gap-2">
           <Label htmlFor="cancel-booking-reason">Tell us why (optional)</Label>
