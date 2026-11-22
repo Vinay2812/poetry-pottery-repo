@@ -25,6 +25,7 @@ export interface MobileMenuSheetProps {
   links: NavLink[];
   activeHref: string | null;
   isSignedIn: boolean;
+  isAdmin: boolean;
   wishlistCount: number;
   contactPhone: string;
   whatsappUrl: string | null;
@@ -45,6 +46,7 @@ export function MobileMenuSheet({
   links,
   activeHref,
   isSignedIn,
+  isAdmin,
   wishlistCount,
   contactPhone,
   whatsappUrl,
@@ -146,6 +148,17 @@ export function MobileMenuSheet({
                       Your account
                     </button>
                   </li>
+                  {isAdmin && (
+                    <li>
+                      <Link
+                        href="/dashboard"
+                        onClick={onNavigate}
+                        className={cn(ROW_CLASS, "text-muted-foreground")}
+                      >
+                        Admin
+                      </Link>
+                    </li>
+                  )}
                   <li>
                     <button
                       type="button"

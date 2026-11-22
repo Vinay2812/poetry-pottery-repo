@@ -9,6 +9,7 @@ import { isActivePath, MOBILE_MENU_LINKS } from "@/features/layout/types";
 export interface MobileMenuContainerProps {
   isOpen: boolean;
   isSignedIn: boolean;
+  isAdmin: boolean;
   wishlistCount: number;
   contactPhone: string;
   whatsappUrl: string | null;
@@ -21,6 +22,7 @@ export interface MobileMenuContainerProps {
 export function MobileMenuContainer({
   isOpen,
   isSignedIn,
+  isAdmin,
   wishlistCount,
   contactPhone,
   whatsappUrl,
@@ -43,6 +45,7 @@ export function MobileMenuContainer({
       links={MOBILE_MENU_LINKS}
       activeHref={activeHref}
       isSignedIn={isSignedIn}
+      isAdmin={isAdmin}
       wishlistCount={wishlistCount}
       contactPhone={contactPhone}
       whatsappUrl={whatsappUrl}
