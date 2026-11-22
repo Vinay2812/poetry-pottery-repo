@@ -46,6 +46,23 @@ export function toInitials(name: string | null, email: string): string {
   return letters.join("").toUpperCase() || "?";
 }
 
+// The access copy says "customer", so the pill and filter do too.
+const ROLE_LABEL: Record<UserRole, string> = {
+  [UserRole.Admin]: "Admin",
+  [UserRole.User]: "Customer",
+};
+
+export function roleLabel(role: UserRole): string {
+  return ROLE_LABEL[role];
+}
+
+export function roleOptions(): { value: string; label: string }[] {
+  return [UserRole.User, UserRole.Admin].map((value) => ({
+    value,
+    label: roleLabel(value),
+  }));
+}
+
 export function roleTone(role: UserRole): AdminStatusTone {
   return role === UserRole.Admin ? "live" : "quiet";
 }
@@ -53,8 +70,15 @@ export function roleTone(role: UserRole): AdminStatusTone {
 /** "Admin" needs "an", so the whole sentence is built here rather than glued in the view. */
 export function describeCurrentRole(role: UserRole): string {
   return role === UserRole.Admin
-    ? "They are an admin today."
-    : "They are a customer today.";
+    ? "They are an admin and can open the studio admin."
+    : "They are a customer and cannot open the studio admin.";
+}
+
+/** The page reads the current role first, so the offer only says what would change. */
+export function describeRoleOffer(nextRole: UserRole): string {
+  return nextRole === UserRole.Admin
+    ? "Making them an admin lets them in."
+    : "Making them a customer takes that away.";
 }
 
 /** The one sentence the confirm dialog needs: what this change actually does. */

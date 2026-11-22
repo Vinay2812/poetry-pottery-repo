@@ -130,14 +130,22 @@ export function buildOrderTimeline(
       at: order.cancelled_at,
       note: order.cancel_reason,
     },
-    { key: "refunded", label: "Refunded", at: order.refunded_at, note: null },
+    {
+      key: "refunded",
+      label: "Refunded",
+      at: order.refunded_at,
+      // A cancelled order cannot be refunded, so a refund owns the reason outright.
+      note: order.cancel_reason,
+    },
   ];
   return steps.filter((step): step is OrderTimelineEntry => step.at !== null);
 }
 
-const STATUS_ACTION_LABEL: Record<OrderStatus, string> = {
-  [OrderStatus.Pending]: "Move back to pending",
-  [OrderStatus.Confirmed]: "Mark confirmed",
+// No move ever leads back to pending, so it has no button.
+type OrderMoveTarget = Exclude<OrderStatus, OrderStatus.Pending>;
+
+const STATUS_ACTION_LABEL: Record<OrderMoveTarget, string> = {
+  [OrderStatus.Confirmed]: "Confirm order",
   [OrderStatus.Paid]: "Mark paid",
   [OrderStatus.Shipped]: "Mark shipped",
   [OrderStatus.Delivered]: "Mark delivered",
@@ -149,11 +157,18 @@ export interface OrderStatusAction {
   status: OrderStatus;
   label: string;
   isDestructive: boolean;
+  // The one move that takes the order forward gets the dark button.
+  isPrimary: boolean;
   needsNote: boolean;
 }
 
-function toStatusActionLabel(status: OrderStatus): string {
-  return STATUS_ACTION_LABEL[status];
+function isMoveTarget(status: OrderStatus): status is OrderMoveTarget {
+  return status !== OrderStatus.Pending;
+}
+
+/** Cancelling and refunding both undo the sale, so both are quiet and asked twice. */
+function isUndoingMove(status: OrderStatus): boolean {
+  return status === OrderStatus.Cancelled || status === OrderStatus.Refunded;
 }
 
 /** The server says which moves are legal; the console offers those and nothing else. */
@@ -161,16 +176,83 @@ export function toStatusActions(
   nextStatuses: OrderStatus[],
 ): OrderStatusAction[] {
   return nextStatuses
+    .filter(isMoveTarget)
     .map((status) => ({
       status,
-      label: toStatusActionLabel(status),
-      isDestructive: status === OrderStatus.Cancelled,
-      needsNote:
-        status === OrderStatus.Shipped || status === OrderStatus.Cancelled,
+      label: STATUS_ACTION_LABEL[status],
+      isDestructive: isUndoingMove(status),
+      needsNote: status === OrderStatus.Shipped || isUndoingMove(status),
     }))
     .sort(
       (left, right) => Number(left.isDestructive) - Number(right.isDestructive),
-    );
+    )
+    .map((action, index) => ({
+      ...action,
+      isPrimary: index === 0 && !action.isDestructive,
+    }));
+}
+
+/** Cancel and refund both undo a paid sale, so the console says which is which. */
+export function describeUndoChoice(
+  actions: OrderStatusAction[],
+): string | null {
+  const offers = (status: OrderStatus) =>
+    actions.some((action) => action.status === status);
+  return offers(OrderStatus.Cancelled) && offers(OrderStatus.Refunded)
+    ? "Cancel before it ships; mark refunded once their money is back."
+    : null;
+}
+
+export interface OrderMoveDialog {
+  title: string;
+  description: string;
+  fieldLabel: string;
+  hint: string;
+  placeholder: string;
+  confirmLabel: string;
+  isDestructive: boolean;
+  isRequired: boolean;
+}
+
+const SHIP_DIALOG: OrderMoveDialog = {
+  title: "Mark this order shipped",
+  description: "The customer sees this note on their order page.",
+  fieldLabel: "Tracking note",
+  hint: "Courier and tracking number",
+  placeholder: "Delhivery 7712445901",
+  confirmLabel: "Mark shipped",
+  isDestructive: false,
+  isRequired: false,
+};
+
+const CANCEL_DIALOG: OrderMoveDialog = {
+  title: "Cancel this order",
+  description: "The pieces go back on the shelf straight away.",
+  fieldLabel: "Reason",
+  hint: "The customer reads this, so keep it kind",
+  placeholder: "The batch cracked in the kiln",
+  confirmLabel: "Cancel order",
+  isDestructive: true,
+  isRequired: true,
+};
+
+const REFUND_DIALOG: OrderMoveDialog = {
+  title: "Mark this order refunded",
+  description:
+    "The pieces go back on the shelf and the customer is told the refund is on its way.",
+  fieldLabel: "Reason",
+  hint: "Optional. The customer reads this, so keep it kind",
+  placeholder: "The mug arrived chipped",
+  confirmLabel: "Mark refunded",
+  isDestructive: true,
+  isRequired: false,
+};
+
+/** The words for the one dialog every noted move goes through. */
+export function toOrderMoveDialog(status: OrderStatus): OrderMoveDialog {
+  if (status === OrderStatus.Cancelled) return CANCEL_DIALOG;
+  if (status === OrderStatus.Refunded) return REFUND_DIALOG;
+  return SHIP_DIALOG;
 }
 
 export interface AdminOrderPatch {

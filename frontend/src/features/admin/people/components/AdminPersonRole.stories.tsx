@@ -9,8 +9,9 @@ const meta = {
   title: "Features/Admin/People/AdminPersonRole",
   component: AdminPersonRole,
   args: {
-    currentRoleSentence: "They are a customer today.",
-    explanation: "They will be able to open the studio admin.",
+    currentRoleSentence:
+      "They are a customer and cannot open the studio admin.",
+    explanation: "Making them an admin lets them in.",
     actionLabel: "Make an admin",
     isBusy: false,
     onChange: fn(),
@@ -25,8 +26,8 @@ export const Customer: Story = {};
 
 export const Admin: Story = {
   args: {
-    currentRoleSentence: "They are an admin today.",
-    explanation: "They will lose access to the studio admin.",
+    currentRoleSentence: "They are an admin and can open the studio admin.",
+    explanation: "Making them a customer takes that away.",
     actionLabel: "Make a customer",
   },
 };
@@ -35,8 +36,8 @@ export const Working: Story = { args: { isBusy: true } };
 
 export const OnlyAdmin: Story = {
   args: {
-    currentRoleSentence: "They are an admin today.",
-    explanation: "They will lose access to the studio admin.",
+    currentRoleSentence: "They are an admin and can open the studio admin.",
+    explanation: "Making them a customer takes that away.",
     actionLabel: "Make a customer",
     isDisabled: true,
     disabledReason:

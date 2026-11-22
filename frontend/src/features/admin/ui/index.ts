@@ -1,3 +1,7 @@
+export {
+  ADMIN_CARD,
+  AdminCardList,
+} from "@/features/admin/ui/components/AdminCardList";
 export { AdminCheckboxField } from "@/features/admin/ui/components/AdminCheckboxField";
 export { AdminConfirmDialog } from "@/features/admin/ui/components/AdminConfirmDialog";
 export { AdminDateFilter } from "@/features/admin/ui/components/AdminDateFilter";
@@ -7,6 +11,9 @@ export { AdminFormSection } from "@/features/admin/ui/components/AdminFormSectio
 export { AdminPageHeader } from "@/features/admin/ui/components/AdminPageHeader";
 export { AdminPagination } from "@/features/admin/ui/components/AdminPagination";
 export { AdminReasonDialog } from "@/features/admin/ui/components/AdminReasonDialog";
+export { AdminRegistrationActions } from "@/features/admin/ui/components/AdminRegistrationActions";
+export { AdminRegistrationState } from "@/features/admin/ui/components/AdminRegistrationState";
+export { AdminRegistrationWho } from "@/features/admin/ui/components/AdminRegistrationWho";
 export { AdminSearchField } from "@/features/admin/ui/components/AdminSearchField";
 export {
   type AdminFilterOption,
@@ -28,16 +35,25 @@ export {
 export { AdminToolbar } from "@/features/admin/ui/components/AdminToolbar";
 export {
   adminFieldMessageId,
+  describeClosing,
   enumOptions,
   eventStatusTone,
   fromDateTimeLocal,
+  orderStatusLabel,
+  orderStatusOptions,
   orderStatusTone,
-  registrationActionLabel,
+  type RegistrationAction,
+  type RegistrationHold,
   registrationActionNeedsReason,
+  registrationClosingDialog,
+  registrationHoldNote,
+  registrationStatusLabel,
+  registrationStatusOptions,
   registrationStatusTone,
   toDateTimeLocal,
   toNullableNumber,
   toPersonName,
   toPreviewColour,
+  toRegistrationActions,
   toRegistrationStatus,
 } from "@/features/admin/ui/types";

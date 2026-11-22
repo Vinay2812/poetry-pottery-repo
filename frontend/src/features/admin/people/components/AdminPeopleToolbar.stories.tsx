@@ -13,7 +13,7 @@ const meta = {
     role: "",
     roleOptions: [
       { value: "ADMIN", label: "Admin" },
-      { value: "USER", label: "User" },
+      { value: "USER", label: "Customer" },
     ],
     onSearchChange: fn(),
     onRoleChange: fn(),

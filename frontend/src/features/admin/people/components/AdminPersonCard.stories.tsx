@@ -13,7 +13,7 @@ const meta = {
     phone: "9876543210",
     imageUrl: null,
     initials: "MK",
-    roleLabel: "User",
+    roleLabel: "Customer",
     roleTone: "quiet" as const,
     joinedLabel: "Sun, 1 Feb 2026",
   },

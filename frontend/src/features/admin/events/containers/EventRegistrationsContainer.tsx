@@ -9,11 +9,10 @@ import {
   SetRegistrationStatusDocument,
 } from "@/graphql/generated/graphql";
 
-import { formatDate, formatInr } from "@/lib/format";
+import { formatDate, formatInr, pluralize } from "@/lib/format";
 import { useReasonAction } from "@/lib/use-reason-action";
 
 import {
-  formatEnumLabel,
   toPageNumber,
   useAdminQueryState,
   useSearchDraft,
@@ -24,11 +23,15 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
-  enumOptions,
-  registrationActionLabel,
+  describeClosing,
   registrationActionNeedsReason,
+  registrationClosingDialog,
+  registrationHoldNote,
+  registrationStatusLabel,
+  registrationStatusOptions,
   registrationStatusTone,
   toPersonName,
+  toRegistrationActions,
   toRegistrationStatus,
 } from "@/features/admin/ui";
 
@@ -36,28 +39,13 @@ import {
   EventRegistrationsTable,
   type RegistrationTableRow,
 } from "@/features/admin/events/components/EventRegistrationsTable";
+import { applyRegistrationStatus } from "@/features/admin/events/types";
 const PAGE_SIZE = 20;
-const STATUS_OPTIONS = enumOptions(RegistrationStatus);
+const STATUS_OPTIONS = registrationStatusOptions();
 
 interface StatusPatch {
   id: string;
   status: RegistrationStatus;
-}
-
-/** The row moves at once; its buttons wait for the refetch to say what comes next. */
-function applyStatusPatch(
-  rows: RegistrationTableRow[],
-  patch: StatusPatch,
-): RegistrationTableRow[] {
-  return rows.map((row) => {
-    if (row.id !== patch.id) return row;
-    return {
-      ...row,
-      statusLabel: formatEnumLabel(patch.status),
-      statusTone: registrationStatusTone(patch.status),
-      nextStatuses: [],
-    };
-  });
 }
 
 export interface EventRegistrationsContainerProps {
@@ -105,28 +93,37 @@ export function EventRegistrationsContainer({
   const result =
     data?.adminEventRegistrations ?? previousData?.adminEventRegistrations;
 
+  const items = useMemo(() => result?.items ?? [], [result]);
+  const [optimisticItems, patchItems] = useOptimistic(
+    items,
+    applyRegistrationStatus,
+  );
+
   const rows = useMemo<RegistrationTableRow[]>(
     () =>
-      (result?.items ?? []).map((entry) => ({
+      optimisticItems.map((entry) => ({
         id: entry.registration.id,
         personName: toPersonName(entry.customer.name, entry.customer.email),
         personEmail: entry.customer.email,
-        seatsLabel: String(entry.registration.seats),
-        unitPriceLabel: formatInr(entry.registration.unit_price),
-        totalLabel: formatInr(entry.registration.total),
-        statusLabel: formatEnumLabel(entry.registration.status),
-        statusTone: registrationStatusTone(entry.registration.status),
-        note: entry.registration.note ?? "—",
         bookedLabel: formatDate(entry.registration.created_at),
-        nextStatuses: entry.next_statuses,
+        seatsLabel: pluralize(entry.registration.seats, "seat"),
+        totalLabel: formatInr(entry.registration.total),
+        statusLabel: registrationStatusLabel(entry.registration.status),
+        statusTone: registrationStatusTone(entry.registration.status),
+        closingNote: describeClosing(entry.registration.cancel_reason),
+        note: entry.registration.note,
+        actions: toRegistrationActions(
+          entry.registration.status,
+          entry.next_statuses,
+          "seat",
+        ),
       })),
-    [result],
+    [optimisticItems],
   );
 
-  const [optimisticRows, patchRow] = useOptimistic(rows, applyStatusPatch);
-
   const move = useReasonAction({
-    patch: ({ target }) => patchRow(target),
+    patch: ({ target, reason }) =>
+      patchItems({ ...target, reason: reason ?? null }),
     // The event header counts seats, so it reads again once the row moves.
     run: ({ target, reason }) =>
       setRegistrationStatus({
@@ -139,7 +136,7 @@ export function EventRegistrationsContainer({
     requiredMessage: "Say why, in a sentence the person can read",
     messages: {
       success: ({ target }) =>
-        `Registration ${formatEnumLabel(target.status).toLowerCase()}`,
+        `Registration updated: ${registrationStatusLabel(target.status)}`,
       failure: "The registration could not be moved",
     },
   });
@@ -151,17 +148,27 @@ export function EventRegistrationsContainer({
   );
 
   const pageInfo = result?.page_info;
+  const closingStatus = move.target?.status;
+  const closing =
+    closingStatus && registrationActionNeedsReason(closingStatus)
+      ? registrationClosingDialog(closingStatus, "seat")
+      : null;
 
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="border-b border-ash pb-3 font-display text-xl leading-none tracking-tight">
-        Registrations
-      </h2>
+      <div className="flex flex-col gap-1 border-b border-ash pb-3">
+        <h2 className="font-display text-xl leading-none tracking-tight">
+          Registrations
+        </h2>
+        <p className="text-[13px] text-muted-foreground">
+          {registrationHoldNote("seat")}
+        </p>
+      </div>
       <AdminToolbar>
         <AdminSearchField
           id="registrations-search"
           label="Search"
-          placeholder="Name or email"
+          placeholder="Email or registration ID"
           value={searchDraft}
           onChange={handleSearchChange}
         />
@@ -177,7 +184,7 @@ export function EventRegistrationsContainer({
         />
       </AdminToolbar>
       <EventRegistrationsTable
-        rows={optimisticRows}
+        rows={rows}
         isBusy={isPending || loading}
         isLocked={isEventCancelled}
         busyId={move.pending?.id ?? null}
@@ -191,21 +198,15 @@ export function EventRegistrationsContainer({
         onPageChange={(next) => patch({ reg_page: String(next) })}
       />
       <AdminReasonDialog
-        isOpen={move.target !== null}
-        title={
-          move.target?.status === RegistrationStatus.Rejected
-            ? "Reject this registration?"
-            : "Cancel this registration?"
-        }
+        isOpen={closing !== null}
+        title={closing?.title ?? ""}
         description="The seats go back and the person is told."
         fieldLabel="Reason"
         hint="The person reads this, so keep it kind"
         placeholder="The session is full"
         value={move.reason}
         error={move.error}
-        confirmLabel={
-          move.target ? registrationActionLabel(move.target.status) : "Confirm"
-        }
+        confirmLabel={closing?.confirmLabel ?? ""}
         isDestructive
         isRequired
         isBusy={move.isPending}

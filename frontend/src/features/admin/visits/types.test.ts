@@ -7,6 +7,8 @@ import {
   toDayEndIso,
   toDayStartIso,
   toVisitRow,
+  toVisitState,
+  toVisitTableRow,
   toVisitsFilter,
   type VisitRow,
   VISITS_PAGE_SIZE,
@@ -110,14 +112,28 @@ describe("toVisitsFilter", () => {
   });
 });
 
-describe("visitStatus", () => {
-  it("separates a live booking from a cancelled one", () => {
-    expect(visitStatusLabel(null)).toBe("Booked");
-    expect(visitStatusLabel("2026-09-18T04:00:00.000Z")).toBe("Cancelled");
-    expect(visitStatusTone(null)).toBe("live");
-    expect(visitStatusTone("2026-09-18T04:00:00.000Z")).toBe("quiet");
-    expect(canCancelVisit(null)).toBe(true);
-    expect(canCancelVisit("2026-09-18T04:00:00.000Z")).toBe(false);
+describe("visit state", () => {
+  const endsAt = "2026-09-20T07:00:00.000Z";
+  const before = new Date("2026-09-20T06:00:00.000Z");
+  const after = new Date("2026-09-20T08:00:00.000Z");
+
+  it("separates a visit to come, a past one and a cancelled one", () => {
+    expect(toVisitState(null, endsAt, before)).toBe("booked");
+    expect(toVisitState(null, endsAt, after)).toBe("past");
+    expect(toVisitState("2026-09-18T04:00:00.000Z", endsAt, before)).toBe(
+      "cancelled",
+    );
+  });
+
+  it("labels each state and lets only a visit to come be cancelled", () => {
+    expect(visitStatusLabel("booked")).toBe("Booked");
+    expect(visitStatusLabel("past")).toBe("Past");
+    expect(visitStatusLabel("cancelled")).toBe("Cancelled");
+    expect(visitStatusTone("booked")).toBe("live");
+    expect(visitStatusTone("past")).toBe("neutral");
+    expect(canCancelVisit("booked")).toBe(true);
+    expect(canCancelVisit("past")).toBe(false);
+    expect(canCancelVisit("cancelled")).toBe(false);
   });
 });
 
@@ -139,5 +155,19 @@ describe("applyVisitPatch", () => {
     });
     expect(next[0]?.cancelledAt).toBe("2026-09-18T04:00:00.000Z");
     expect(next[1]?.cancelledAt).toBeNull();
+  });
+});
+
+describe("toVisitTableRow", () => {
+  it("reads the state once and hands the table words, a tone and a yes or no", () => {
+    const now = new Date("2026-09-20T12:00:00.000Z");
+    expect(toVisitTableRow(row(), now)).toMatchObject({
+      statusLabel: "Past",
+      statusTone: "neutral",
+      canCancel: false,
+    });
+    expect(
+      toVisitTableRow(row(), new Date("2026-09-19T00:00:00.000Z")),
+    ).toMatchObject({ statusLabel: "Booked", canCancel: true });
   });
 });

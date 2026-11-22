@@ -11,35 +11,78 @@ const meta = {
   args: {
     rows: [
       {
-        id: "bk_01",
+        id: "WS-HJN2NGS3UP",
         personName: "Maya Iyer",
         personEmail: "maya@example.com",
-        sessionLabel: "Mon, 14 Sept, 2026, 9:00 am → 11:00 am",
-        hoursLabel: "2 hours",
-        participantsLabel: "1 person",
-        totalLabel: "₹1,400",
-        statusLabel: "Pending",
-        statusTone: "warn",
-        noteLabel: "First time on a wheel",
         bookedLabel: "Tue, 1 Sept, 2026",
+        sessionLines: ["Mon, 14 Sept · 9–11 am"],
+        sizeLabel: "2 hours · 1 person",
+        totalLabel: "₹1,400",
+        statusLabel: "Awaiting approval",
+        statusTone: "warn",
+        closingNote: null,
+        note: "First time on a wheel",
         actions: [
-          { status: RegistrationStatus.Approved, label: "Approve" },
-          { status: RegistrationStatus.Rejected, label: "Reject" },
+          {
+            status: RegistrationStatus.Approved,
+            label: "Approve, ask for payment",
+            isPrimary: true,
+            isDestructive: false,
+          },
+          {
+            status: RegistrationStatus.Confirmed,
+            label: "Confirm as paid",
+            isPrimary: false,
+            isDestructive: false,
+          },
+          {
+            status: RegistrationStatus.Rejected,
+            label: "Turn down",
+            isPrimary: false,
+            isDestructive: true,
+          },
         ],
       },
       {
-        id: "bk_02",
+        id: "WS-8KD2LQ0PZA",
         personName: "Arjun Rao",
-        personEmail: "arjun@example.com",
-        sessionLabel: "Sat, 19 Sept, 2026, 3:00 pm → 7:00 pm",
-        hoursLabel: "4 hours",
-        participantsLabel: "2 people",
-        totalLabel: "₹5,200",
-        statusLabel: "Confirmed",
-        statusTone: "live",
-        noteLabel: "—",
+        personEmail: "arjun.rao.weekend.pottery.club.member@example.com",
         bookedLabel: "Wed, 2 Sept, 2026",
-        actions: [{ status: RegistrationStatus.Cancelled, label: "Cancel" }],
+        sessionLines: ["Wed, 25 Nov · 3–4 pm", "Sat, 28 Nov · 4–5 pm"],
+        sizeLabel: "2 hours · 2 people",
+        totalLabel: "₹4,000",
+        statusLabel: "Approved, awaiting payment",
+        statusTone: "neutral",
+        closingNote: null,
+        note: null,
+        actions: [
+          {
+            status: RegistrationStatus.Confirmed,
+            label: "Confirm as paid",
+            isPrimary: true,
+            isDestructive: false,
+          },
+          {
+            status: RegistrationStatus.Cancelled,
+            label: "Cancel booking",
+            isPrimary: false,
+            isDestructive: true,
+          },
+        ],
+      },
+      {
+        id: "WS-M3XC91TT0B",
+        personName: "Leela Menon",
+        personEmail: "leela@example.com",
+        bookedLabel: "Thu, 3 Sept, 2026",
+        sessionLines: ["Fri, 27 Nov · 4–5 pm"],
+        sizeLabel: "1 hour · 1 person",
+        totalLabel: "₹1,100",
+        statusLabel: "Cancelled",
+        statusTone: "quiet",
+        closingNote: "Cancelled by the guest",
+        note: null,
+        actions: [],
       },
     ],
     isBusy: false,
@@ -52,14 +95,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const TwoBookings: Story = {};
+export const Bookings: Story = {};
 
 export const Empty: Story = {
   args: { rows: [] },
 };
 
 export const Working: Story = {
-  args: { isBusy: true, busyId: "bk_01" },
+  args: { isBusy: true, busyId: "WS-HJN2NGS3UP" },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

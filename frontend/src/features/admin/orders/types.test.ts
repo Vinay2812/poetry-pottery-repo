@@ -16,6 +16,8 @@ import {
   toDayStartIso,
   toOrderStatus,
   toSelectionLabel,
+  describeUndoChoice,
+  toOrderMoveDialog,
   toStatusActions,
 } from "./types";
 
@@ -148,6 +150,19 @@ describe("toSelectionLabel", () => {
 });
 
 describe("buildOrderTimeline", () => {
+  it("puts the refund reason on the refund line", () => {
+    const entries = buildOrderTimeline({
+      ...TIMELINE,
+      paid_at: "2026-09-02T06:00:00.000Z",
+      refunded_at: "2026-09-05T06:00:00.000Z",
+      cancel_reason: "The mug arrived chipped",
+    });
+    expect(entries.at(-1)).toMatchObject({
+      key: "refunded",
+      note: "The mug arrived chipped",
+    });
+  });
+
   it("keeps only the steps that happened, in order", () => {
     const entries = buildOrderTimeline({
       ...TIMELINE,
@@ -188,6 +203,38 @@ describe("toStatusActions", () => {
     ]);
     expect(actions[2].isDestructive).toBe(true);
     expect(actions[2].needsNote).toBe(true);
+  });
+
+  it("treats a refund as undoing the sale and asks for a note", () => {
+    const [refund] = toStatusActions([OrderStatus.Refunded]);
+    expect(refund).toMatchObject({
+      label: "Mark refunded",
+      isDestructive: true,
+      needsNote: true,
+      isPrimary: false,
+    });
+  });
+
+  it("never offers a way back to pending", () => {
+    expect(
+      toStatusActions([OrderStatus.Pending, OrderStatus.Paid]).map(
+        (action) => action.status,
+      ),
+    ).toEqual([OrderStatus.Paid]);
+  });
+
+  it("darkens only the move that takes the order forward", () => {
+    const actions = toStatusActions([
+      OrderStatus.Shipped,
+      OrderStatus.Cancelled,
+      OrderStatus.Refunded,
+    ]);
+    expect(actions.map((action) => action.isPrimary)).toEqual([
+      true,
+      false,
+      false,
+    ]);
+    expect(toStatusActions([OrderStatus.Cancelled])[0].isPrimary).toBe(false);
   });
 
   it("asks for a note when shipping", () => {
@@ -288,5 +335,38 @@ describe("toPackingSlipHref", () => {
     expect(toPackingSlipHref("ORD123")).toBe(
       "/dashboard/orders/ORD123/packing-slip",
     );
+  });
+});
+
+describe("toOrderMoveDialog", () => {
+  it("requires a reason to cancel but not to refund", () => {
+    expect(toOrderMoveDialog(OrderStatus.Cancelled).isRequired).toBe(true);
+    expect(toOrderMoveDialog(OrderStatus.Refunded)).toMatchObject({
+      confirmLabel: "Mark refunded",
+      isDestructive: true,
+      isRequired: false,
+    });
+    expect(toOrderMoveDialog(OrderStatus.Shipped).fieldLabel).toBe(
+      "Tracking note",
+    );
+  });
+});
+
+describe("describeUndoChoice", () => {
+  it("tells cancel from refund only when both are offered", () => {
+    expect(
+      describeUndoChoice(
+        toStatusActions([
+          OrderStatus.Shipped,
+          OrderStatus.Cancelled,
+          OrderStatus.Refunded,
+        ]),
+      ),
+    ).toBe("Cancel before it ships; mark refunded once their money is back.");
+    expect(
+      describeUndoChoice(
+        toStatusActions([OrderStatus.Delivered, OrderStatus.Refunded]),
+      ),
+    ).toBeNull();
   });
 });

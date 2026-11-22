@@ -38,6 +38,7 @@ fragment AdminRegistrationRow on AdminRegistration {
     total
     status
     note
+    cancel_reason
     created_at
     event {
       id

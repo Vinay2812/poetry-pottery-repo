@@ -45,6 +45,9 @@ type AdminRegistrationRow = Prisma.EventRegistrationGetPayload<{
   include: typeof adminRegistrationInclude;
 }>;
 
+// What duplicate() leaves on a fresh copy: "<title>-copy", or "-copy-2" when that is taken.
+const COPY_SLUG = /-copy(-\d+)?$/;
+
 export function nextRegistrationStatuses(
   from: RegistrationStatus,
 ): RegistrationStatus[] {
@@ -220,6 +223,7 @@ export class AdminEventsService {
       UploadPurpose.EVENT,
     );
     const seatDelta = input.total_seats - current.total_seats;
+    const slug = await this.followTitle(current, input.title.trim());
     const row = await this.prisma.withTransaction(async () => {
       // Predicated on the room size that was read, and on enough free seats to absorb a shrink.
       const moved = await this.prisma.event.updateMany({
@@ -230,6 +234,7 @@ export class AdminEventsService {
         },
         data: {
           title: input.title.trim(),
+          ...(slug === null ? {} : { slug }),
           description: input.description.trim(),
           ...(input.event_type ? { event_type: input.event_type } : {}),
           level: input.level ?? null,
@@ -284,6 +289,7 @@ export class AdminEventsService {
   // guest reaching for a seat is refused rather than left holding one on a cancelled evening, and
   // a second admin waits on the lock and is then told there is nothing left to call off.
   async cancel(id: number, reason: string | null): Promise<Event> {
+    // The admin console reads this exact text as who cancelled (frontend admin/ui/types.ts).
     const note = trimmed(reason, 300) ?? "The studio called this one off";
     const row = await this.prisma.withTransaction(async () => {
       await this.prisma
@@ -413,10 +419,34 @@ export class AdminEventsService {
     );
   }
 
-  private async freeSlug(title: string): Promise<string> {
+  // Only an untouched duplicate renames its link: its slug still ends in the copy suffix, it is
+  // a draft, and nobody has booked it. A draft that was once published under its own slug keeps
+  // it when renamed. One exception: a copy published under its "-copy" slug, then unpublished
+  // and renamed, still follows the title, since nothing here records that it was ever live.
+  private async followTitle(
+    current: { id: number; title: string; slug: string; status: EventStatus },
+    title: string,
+  ): Promise<string | null> {
+    if (
+      current.status !== EventStatus.DRAFT ||
+      title === current.title ||
+      !COPY_SLUG.test(current.slug)
+    ) {
+      return null;
+    }
+    const bookings = await this.prisma.eventRegistration.count({
+      where: { event_id: current.id },
+    });
+    return bookings === 0 ? this.freeSlug(title, current.id) : null;
+  }
+
+  private async freeSlug(title: string, exceptId?: number): Promise<string> {
     const base = slugify(title);
     const siblings = await this.prisma.event.findMany({
-      where: { slug: { startsWith: base } },
+      where: {
+        slug: { startsWith: base },
+        ...(exceptId === undefined ? {} : { id: { not: exceptId } }),
+      },
       select: { slug: true },
     });
     return uniqueSlug(base, new Set(siblings.map((row) => row.slug)));

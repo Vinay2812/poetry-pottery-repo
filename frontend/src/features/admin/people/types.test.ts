@@ -7,6 +7,9 @@ import {
   applyPersonRolePatch,
   describeCurrentRole,
   describeRoleChange,
+  describeRoleOffer,
+  roleLabel,
+  roleOptions,
   roleTone,
   toInitials,
   toOppositeRole,
@@ -80,13 +83,35 @@ describe("roleTone", () => {
   });
 });
 
+describe("roleLabel", () => {
+  it("calls a shopper a customer, as the access copy does", () => {
+    expect(roleLabel(UserRole.User)).toBe("Customer");
+    expect(roleLabel(UserRole.Admin)).toBe("Admin");
+    expect(roleOptions().map((option) => option.label)).toEqual([
+      "Customer",
+      "Admin",
+    ]);
+  });
+});
+
 describe("describeCurrentRole", () => {
   it("keeps the article right for both roles", () => {
     expect(describeCurrentRole(UserRole.Admin)).toBe(
-      "They are an admin today.",
+      "They are an admin and can open the studio admin.",
     );
     expect(describeCurrentRole(UserRole.User)).toBe(
-      "They are a customer today.",
+      "They are a customer and cannot open the studio admin.",
+    );
+  });
+});
+
+describe("describeRoleOffer", () => {
+  it("says only what the change would do", () => {
+    expect(describeRoleOffer(UserRole.Admin)).toBe(
+      "Making them an admin lets them in.",
+    );
+    expect(describeRoleOffer(UserRole.User)).toBe(
+      "Making them a customer takes that away.",
     );
   });
 });

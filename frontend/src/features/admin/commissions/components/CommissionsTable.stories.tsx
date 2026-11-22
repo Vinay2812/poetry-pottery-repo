@@ -33,7 +33,7 @@ const ROWS: CommissionRow[] = [
     carvedWords: null,
     notes: null,
     name: "Dev Menon",
-    email: "dev@example.com",
+    email: "dev.menon.ceramics.collector.since.2019@example.com",
     phone: null,
     referenceImageUrls: ["https://placehold.co/600x600.png"],
     isRead: true,

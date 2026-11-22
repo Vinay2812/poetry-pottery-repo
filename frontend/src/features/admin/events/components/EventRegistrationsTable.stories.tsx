@@ -7,43 +7,69 @@ import { EventRegistrationsTable } from "./EventRegistrationsTable";
 
 const ROWS = [
   {
-    id: "reg_a1",
+    id: "EV-FJ3CER77MU",
     personName: "Asha Kulkarni",
     personEmail: "asha@example.com",
-    seatsLabel: "2",
-    unitPriceLabel: "₹1,200",
-    totalLabel: "₹2,400",
-    statusLabel: "Pending",
-    statusTone: "warn" as const,
-    note: "Coming with my sister",
     bookedLabel: "Mon, 14 Sep, 2026",
-    nextStatuses: [RegistrationStatus.Approved, RegistrationStatus.Rejected],
+    seatsLabel: "2 seats",
+    totalLabel: "₹2,400",
+    statusLabel: "Awaiting approval",
+    statusTone: "warn" as const,
+    closingNote: null,
+    note: "Coming with my sister",
+    actions: [
+      {
+        status: RegistrationStatus.Approved,
+        label: "Approve, ask for payment",
+        isPrimary: true,
+        isDestructive: false,
+      },
+      {
+        status: RegistrationStatus.Rejected,
+        label: "Turn down",
+        isPrimary: false,
+        isDestructive: true,
+      },
+    ],
   },
   {
-    id: "reg_b2",
+    id: "EV-2HQ8ZP6NWX",
     personName: "Rohan Patil",
     personEmail: "rohan@example.com",
-    seatsLabel: "1",
-    unitPriceLabel: "₹1,200",
-    totalLabel: "₹1,200",
-    statusLabel: "Approved",
-    statusTone: "neutral" as const,
-    note: "—",
     bookedLabel: "Sun, 13 Sep, 2026",
-    nextStatuses: [RegistrationStatus.Confirmed, RegistrationStatus.Cancelled],
+    seatsLabel: "1 seat",
+    totalLabel: "₹1,200",
+    statusLabel: "Approved, awaiting payment",
+    statusTone: "neutral" as const,
+    closingNote: null,
+    note: null,
+    actions: [
+      {
+        status: RegistrationStatus.Confirmed,
+        label: "Confirm as paid",
+        isPrimary: true,
+        isDestructive: false,
+      },
+      {
+        status: RegistrationStatus.Cancelled,
+        label: "Cancel registration",
+        isPrimary: false,
+        isDestructive: true,
+      },
+    ],
   },
   {
-    id: "reg_c3",
-    personName: "meera@example.com",
-    personEmail: "meera@example.com",
-    seatsLabel: "1",
-    unitPriceLabel: "₹1,200",
-    totalLabel: "₹1,200",
-    statusLabel: "Confirmed",
-    statusTone: "live" as const,
-    note: "—",
-    bookedLabel: "Fri, 11 Sep, 2026",
-    nextStatuses: [RegistrationStatus.Cancelled],
+    id: "EV-K7TT3M1QRC",
+    personName: "Kabir Shah",
+    personEmail: "kabir.shah.longform.address.for.testing@example.com",
+    bookedLabel: "Thu, 10 Sep, 2026",
+    seatsLabel: "2 seats",
+    totalLabel: "₹2,400",
+    statusLabel: "Cancelled",
+    statusTone: "quiet" as const,
+    closingNote: "Reason: Travelling that weekend after all",
+    note: null,
+    actions: [],
   },
 ];
 
@@ -66,7 +92,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Working: Story = { args: { busyId: "reg_a1", isBusy: true } };
+export const Working: Story = {
+  args: { busyId: "EV-FJ3CER77MU", isBusy: true },
+};
 
 export const Empty: Story = { args: { rows: [] } };
 

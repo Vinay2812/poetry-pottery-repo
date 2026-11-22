@@ -7,13 +7,14 @@ import { type AdminStatusTone, AdminStatusPill } from "@/features/admin/ui";
 import {
   type EventAction,
   eventActionLabel,
-  isDestructiveEventAction,
 } from "@/features/admin/events/types";
 
 export interface EventStatusActionsProps {
   statusLabel: string;
   statusTone: AdminStatusTone;
   actions: EventAction[];
+  // At most one move gets the dark button; completing waits until the evening is over.
+  primaryAction: EventAction | null;
   busyAction: EventAction | null;
   isDuplicating: boolean;
   onAction: (action: EventAction) => void;
@@ -24,6 +25,7 @@ export function EventStatusActions({
   statusLabel,
   statusTone,
   actions,
+  primaryAction,
   busyAction,
   isDuplicating,
   onAction,
@@ -42,7 +44,7 @@ export function EventStatusActions({
           key={action}
           type="button"
           size="sm"
-          variant={isDestructiveEventAction(action) ? "secondary" : "default"}
+          variant={action === primaryAction ? "default" : "secondary"}
           disabled={busyAction !== null}
           onClick={() => onAction(action)}
         >
@@ -53,7 +55,7 @@ export function EventStatusActions({
       <Button
         type="button"
         size="sm"
-        variant="outline"
+        variant="secondary"
         disabled={busyAction !== null || isDuplicating}
         onClick={onDuplicate}
       >

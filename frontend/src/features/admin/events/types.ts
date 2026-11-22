@@ -1,9 +1,11 @@
 import {
   type AdminEventDetailFragment,
   type AdminEventInput,
+  type AdminRegistrationRowFragment,
   EventLevel,
   EventStatus,
   EventType,
+  type RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
@@ -118,6 +120,16 @@ export function isDestructiveEventAction(action: EventAction): boolean {
   return action === "cancel";
 }
 
+/** One dark button at most: publishing a draft, or completing an evening once it has ended. */
+export function isPrimaryEventAction(
+  action: EventAction,
+  endsAt: string,
+  now: Date,
+): boolean {
+  if (action === "publish") return true;
+  return action === "complete" && Date.parse(endsAt) <= now.getTime();
+}
+
 export function isWorkshop(eventType: EventType): boolean {
   return eventType === EventType.PotteryWorkshop;
 }
@@ -190,4 +202,35 @@ export function toEventInput(values: EventFormValues): AdminEventInput {
   }
 
   return input;
+}
+
+export type EventRegistrationData = AdminRegistrationRowFragment;
+
+export interface RegistrationStatusPatch {
+  id: string;
+  status: RegistrationStatus;
+  // The reason typed when turning down or cancelling, shown at once.
+  reason: string | null;
+}
+
+/**
+ * The optimistic baseline for the registrations list, mirroring the wheel bookings:
+ * the row moves and shows its reason at once; its buttons wait for the refetch.
+ */
+export function applyRegistrationStatus(
+  rows: EventRegistrationData[],
+  patch: RegistrationStatusPatch,
+): EventRegistrationData[] {
+  return rows.map((row) => {
+    if (row.registration.id !== patch.id) return row;
+    return {
+      ...row,
+      next_statuses: [],
+      registration: {
+        ...row.registration,
+        status: patch.status,
+        cancel_reason: patch.reason ?? row.registration.cancel_reason,
+      },
+    };
+  });
 }

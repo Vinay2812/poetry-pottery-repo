@@ -55,18 +55,20 @@ export function CommissionsTable({
         )}
         {rows.map((row) => (
           <tr key={row.id} className={ADMIN_TR}>
-            <td className={`${ADMIN_TD} text-muted-foreground tnum`}>
+            <td
+              className={`${ADMIN_TD} whitespace-nowrap text-muted-foreground tnum`}
+            >
               {formatDate(row.createdAt)}
             </td>
-            <td className={ADMIN_TD}>
+            <td className={`${ADMIN_TD} max-w-64 min-w-48`}>
               <span className={row.isRead ? "" : "font-medium"}>
                 {row.name}
               </span>
-              <span className="block text-[11px] text-muted-foreground">
+              <span className="block text-[12px] wrap-anywhere text-muted-foreground">
                 {row.email}
               </span>
             </td>
-            <td className={`${ADMIN_TD} max-w-80 text-muted-foreground`}>
+            <td className={`${ADMIN_TD} min-w-56 text-muted-foreground`}>
               {describeBrief(row.pieceType, row.size, row.glaze)}
             </td>
             <td className={ADMIN_TD}>

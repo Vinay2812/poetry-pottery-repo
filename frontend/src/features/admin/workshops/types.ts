@@ -5,7 +5,6 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
-import { formatDate, formatDateTime, formatTime } from "@/lib/format";
 import { safeTimeZone } from "@/lib/timezones";
 
 export type WorkshopConfigData = AdminWorkshopConfigFieldsFragment;
@@ -171,13 +170,87 @@ export function formatParticipantsLabel(participants: number): string {
   return `${participants} ${participants === 1 ? "person" : "people"}`;
 }
 
-/** One line for a session: the day once, then both clock times. */
-export function describeSession(startsAt: string, endsAt: string): string {
-  const from = formatDateTime(startsAt);
-  if (formatDate(startsAt) === formatDate(endsAt)) {
-    return `${from} → ${formatTime(endsAt)}`;
+export interface SessionSlot {
+  starts_at: string;
+  ends_at: string;
+}
+
+interface ClockReading {
+  time: string;
+  period: string;
+}
+
+// Read from parts, never by splitting text: ICU may put a narrow no-break space before "pm".
+function readClock(instant: string, timezone: string): ClockReading {
+  const parts = new Intl.DateTimeFormat("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: timezone,
+  }).formatToParts(new Date(instant));
+  const read = (type: Intl.DateTimeFormatPartTypes): string =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  const minute = read("minute");
+  return {
+    time: minute === "00" ? read("hour") : `${read("hour")}:${minute}`,
+    period: read("dayPeriod").toLowerCase(),
+  };
+}
+
+// "3–5 pm" when both ends share a meridiem, "11 am–1 pm" when they do not.
+function formatClockRange(slot: SessionSlot, timezone: string): string {
+  const from = readClock(slot.starts_at, timezone);
+  const to = readClock(slot.ends_at, timezone);
+  if (from.period === to.period) return `${from.time}–${to.time} ${to.period}`;
+  return `${from.time} ${from.period}–${to.time} ${to.period}`;
+}
+
+function formatSessionDay(instant: string, timezone: string): string {
+  return new Intl.DateTimeFormat("en-IN", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: timezone,
+  }).format(new Date(instant));
+}
+
+/** Back-to-back hours read as one stretch, so 3–4 and 4–5 become 3–5. */
+function joinBackToBack(slots: SessionSlot[]): SessionSlot[] {
+  const sorted = [...slots].sort((a, b) =>
+    a.starts_at.localeCompare(b.starts_at),
+  );
+  return sorted.reduce<SessionSlot[]>((runs, slot) => {
+    const last = runs[runs.length - 1];
+    if (last && Date.parse(last.ends_at) === Date.parse(slot.starts_at)) {
+      return [...runs.slice(0, -1), { ...last, ends_at: slot.ends_at }];
+    }
+    return [...runs, slot];
+  }, []);
+}
+
+/**
+ * A booking can be split across days, so each day gets its own line:
+ * "Wed, 25 Nov · 3–4 pm" then "Sat, 28 Nov · 4–5 pm".
+ */
+export function describeSessionDays(
+  slots: SessionSlot[],
+  timezone: string,
+): string[] {
+  const zone = safeTimeZone(timezone);
+  const days = new Map<string, string[]>();
+  for (const run of joinBackToBack(slots)) {
+    const day = formatSessionDay(run.starts_at, zone);
+    days.set(day, [...(days.get(day) ?? []), formatClockRange(run, zone)]);
   }
-  return `${from} → ${formatDateTime(endsAt)}`;
+  return [...days.entries()].map(
+    ([day, times]) => `${day} · ${times.join(", ")}`,
+  );
+}
+
+export function describeSessionSize(
+  hours: number,
+  participants: number,
+): string {
+  return `${formatHoursLabel(hours)} · ${formatParticipantsLabel(participants)}`;
 }
 
 export interface WorkshopConfigPatch {
@@ -245,11 +318,13 @@ export function applyBlackoutPatch(
 export interface WorkshopBookingStatusPatch {
   id: string;
   status: RegistrationStatus;
+  // The reason typed when turning down or cancelling, shown at once.
+  reason: string | null;
 }
 
 /**
- * The optimistic baseline for the bookings list: the row shows its new status at
- * once and drops its actions until the server says which ones are left.
+ * The optimistic baseline for the bookings list: the row shows its new status and
+ * reason at once and drops its actions until the server says which ones are left.
  */
 export function applyBookingStatus(
   rows: WorkshopBookingData[],
@@ -260,7 +335,11 @@ export function applyBookingStatus(
     return {
       ...row,
       next_statuses: [],
-      booking: { ...row.booking, status: patch.status },
+      booking: {
+        ...row.booking,
+        status: patch.status,
+        cancel_reason: patch.reason ?? row.booking.cancel_reason,
+      },
     };
   });
 }

@@ -8,22 +8,18 @@ import { useLazyQuery, useQuery } from "@apollo/client/react";
 import {
   AdminOrdersDocument,
   ExportOrdersDocument,
-  OrderStatus,
 } from "@/graphql/generated/graphql";
 import { describeError } from "@/lib/apollo/errors";
 import { downloadCsv } from "@/lib/download";
 
 import { formatDate, formatInr } from "@/lib/format";
 
-import {
-  formatEnumLabel,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminPageHeader,
   AdminPagination,
-  enumOptions,
+  orderStatusLabel,
+  orderStatusOptions,
   orderStatusTone,
   toPersonName,
 } from "@/features/admin/ui";
@@ -45,7 +41,7 @@ import {
   toOrderStatus,
 } from "@/features/admin/orders/types";
 
-const STATUS_OPTIONS = enumOptions(OrderStatus);
+const STATUS_OPTIONS = orderStatusOptions();
 
 export function AdminOrdersContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
@@ -113,7 +109,7 @@ export function AdminOrdersContainer() {
         id: item.order.id,
         customerLabel: toPersonName(item.customer.name, item.customer.email),
         customerEmail: item.customer.email,
-        statusLabel: formatEnumLabel(item.order.status),
+        statusLabel: orderStatusLabel(item.order.status),
         statusTone: orderStatusTone(item.order.status),
         itemsLabel: describeItems(item.order.item_count),
         totalLabel: formatInr(item.order.total),

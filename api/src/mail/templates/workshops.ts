@@ -93,9 +93,9 @@ export function bookingStatusMail(
     Record<WorkshopBooking["status"], { title: string; intro: string }>
   > = {
     APPROVED: {
-      title: "Your wheel is held",
+      title: "Your session is approved",
       intro:
-        "We have held your session. Once payment reaches us it is confirmed.",
+        "We have approved your session and will send payment details next. Once payment reaches us it is confirmed.",
     },
     CONFIRMED: {
       title: "You are confirmed",

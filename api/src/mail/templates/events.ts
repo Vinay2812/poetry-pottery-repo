@@ -71,8 +71,8 @@ export function registrationStatusMail(
     Record<Registration["status"], { title: string; intro: string }>
   > = {
     APPROVED: {
-      title: "Your seat is held",
-      intro: `We have held your seat for ${registration.event.title}. Once payment reaches us it is confirmed.`,
+      title: "Your booking is approved",
+      intro: `We have approved your booking for ${registration.event.title} and will send payment details next. Once payment reaches us it is confirmed.`,
     },
     CONFIRMED: {
       title: "You are confirmed",

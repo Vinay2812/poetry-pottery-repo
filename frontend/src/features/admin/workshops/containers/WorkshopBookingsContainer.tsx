@@ -12,11 +12,7 @@ import {
 import { formatDate, formatInr } from "@/lib/format";
 import { useReasonAction } from "@/lib/use-reason-action";
 
-import {
-  formatEnumLabel,
-  useAdminQueryState,
-  useSearchDraft,
-} from "@/features/admin/shell";
+import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminDateFilter,
   AdminPagination,
@@ -24,11 +20,15 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
-  enumOptions,
-  registrationActionLabel,
+  describeClosing,
   registrationActionNeedsReason,
+  registrationClosingDialog,
+  registrationHoldNote,
+  registrationStatusLabel,
+  registrationStatusOptions,
   registrationStatusTone,
   toPersonName,
+  toRegistrationActions,
   toRegistrationStatus,
 } from "@/features/admin/ui";
 import {
@@ -43,9 +43,8 @@ import {
 import {
   applyBookingStatus,
   BOOKINGS_PAGE_SIZE,
-  describeSession,
-  formatHoursLabel,
-  formatParticipantsLabel,
+  describeSessionDays,
+  describeSessionSize,
   toRangeEnd,
   toRangeStart,
 } from "@/features/admin/workshops/types";
@@ -60,7 +59,7 @@ interface BookingMove {
   status: RegistrationStatus;
 }
 
-const STATUS_OPTIONS = enumOptions(RegistrationStatus);
+const STATUS_OPTIONS = registrationStatusOptions();
 
 export function WorkshopBookingsContainer({
   configId,
@@ -113,27 +112,29 @@ export function WorkshopBookingsContainer({
         id: item.booking.id,
         personName: toPersonName(item.customer.name, item.customer.email),
         personEmail: item.customer.email,
-        sessionLabel: describeSession(
-          item.booking.starts_at,
-          item.booking.ends_at,
+        sessionLines: describeSessionDays(item.booking.slots, timezone),
+        sizeLabel: describeSessionSize(
+          item.booking.hours,
+          item.booking.participants,
         ),
-        hoursLabel: formatHoursLabel(item.booking.hours),
-        participantsLabel: formatParticipantsLabel(item.booking.participants),
         totalLabel: formatInr(item.booking.total),
-        statusLabel: formatEnumLabel(item.booking.status),
+        statusLabel: registrationStatusLabel(item.booking.status),
         statusTone: registrationStatusTone(item.booking.status),
-        noteLabel: item.booking.note ?? "—",
+        closingNote: describeClosing(item.booking.cancel_reason),
+        note: item.booking.note,
         bookedLabel: formatDate(item.booking.created_at),
-        actions: item.next_statuses.map((next) => ({
-          status: next,
-          label: registrationActionLabel(next),
-        })),
+        actions: toRegistrationActions(
+          item.booking.status,
+          item.next_statuses,
+          "wheel",
+        ),
       })),
-    [optimisticItems],
+    [optimisticItems, timezone],
   );
 
   const move = useReasonAction({
-    patch: ({ target }) => patchItems(target),
+    patch: ({ target, reason }) =>
+      patchItems({ ...target, reason: reason ?? null }),
     // The payload is one row; the list needs a fresh take on what is next.
     run: ({ target, reason }) =>
       setStatus({
@@ -145,7 +146,7 @@ export function WorkshopBookingsContainer({
     requiredMessage: "Tell them why, in a line",
     messages: {
       success: ({ target }) =>
-        `Booking ${formatEnumLabel(target.status).toLowerCase()}`,
+        `Booking updated: ${registrationStatusLabel(target.status)}`,
       failure: "The booking could not be moved",
     },
   });
@@ -157,6 +158,11 @@ export function WorkshopBookingsContainer({
   );
 
   const pageInfo = result?.page_info;
+  const closingStatus = move.target?.status;
+  const closing =
+    closingStatus && registrationActionNeedsReason(closingStatus)
+      ? registrationClosingDialog(closingStatus, "wheel")
+      : null;
 
   return (
     <section className="flex flex-col gap-3">
@@ -165,14 +171,15 @@ export function WorkshopBookingsContainer({
           Bookings
         </h2>
         <p className="text-[13px] text-muted-foreground">
-          Who has asked for the wheel, and where each request stands.
+          Who has asked for the wheel, and where each request stands.{" "}
+          {registrationHoldNote("wheel")}
         </p>
       </div>
       <AdminToolbar>
         <AdminSearchField
           id="bookings-search"
           label="Search"
-          placeholder="Name or email"
+          placeholder="Email or booking ID"
           value={searchDraft}
           onChange={onSearchChange}
         />
@@ -219,21 +226,15 @@ export function WorkshopBookingsContainer({
         onPageChange={(next) => patch({ page: String(next) })}
       />
       <AdminReasonDialog
-        isOpen={move.target !== null}
-        title={
-          move.target?.status === RegistrationStatus.Rejected
-            ? "Turn this booking down?"
-            : "Cancel this booking?"
-        }
+        isOpen={closing !== null}
+        title={closing?.title ?? ""}
         description="Tell them why, in a line."
         fieldLabel="Reason"
         hint="The guest reads this, so keep it kind"
         placeholder="The wheel is booked that afternoon"
         value={move.reason}
         error={move.error}
-        confirmLabel={
-          move.target ? registrationActionLabel(move.target.status) : ""
-        }
+        confirmLabel={closing?.confirmLabel ?? ""}
         isDestructive
         isRequired
         isBusy={move.isPending}

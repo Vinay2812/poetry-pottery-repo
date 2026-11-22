@@ -1,5 +1,6 @@
 import { CommissionStatus } from "@/graphql/generated/graphql";
 
+import { formatEnumLabel } from "@/features/admin/shell";
 import type { AdminStatusTone } from "@/features/admin/ui";
 
 export const COMMISSIONS_PAGE_SIZE = 20;
@@ -50,6 +51,21 @@ export function toCommissionRow(request: {
     status: request.status,
     createdAt: request.created_at,
   };
+}
+
+/** A brief moves from new to sketched, then is accepted or declined. */
+export const COMMISSION_FLOW: CommissionStatus[] = [
+  CommissionStatus.New,
+  CommissionStatus.Sketched,
+  CommissionStatus.Accepted,
+  CommissionStatus.Declined,
+];
+
+export function commissionStatusOptions(): { value: string; label: string }[] {
+  return COMMISSION_FLOW.map((value) => ({
+    value,
+    label: formatEnumLabel(value),
+  }));
 }
 
 export function commissionStatusTone(

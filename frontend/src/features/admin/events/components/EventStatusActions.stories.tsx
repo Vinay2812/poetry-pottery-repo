@@ -11,6 +11,7 @@ const meta = {
     statusLabel: "Published",
     statusTone: "live",
     actions: ["unpublish", "complete", "cancel"],
+    primaryAction: null,
     busyAction: null,
     isDuplicating: false,
     onAction: () => {},
@@ -24,11 +25,15 @@ type Story = StoryObj<typeof meta>;
 
 export const Published: Story = {};
 
+// Once the evening is over, completing it is the move forward.
+export const Ended: Story = { args: { primaryAction: "complete" } };
+
 export const Draft: Story = {
   args: {
     statusLabel: "Draft",
     statusTone: "warn",
     actions: ["publish", "cancel"],
+    primaryAction: "publish",
   },
 };
 

@@ -8,17 +8,24 @@ import {
 
 import {
   adminFieldMessageId,
+  describeClosing,
   enumOptions,
   eventStatusTone,
   fromDateTimeLocal,
+  orderStatusLabel,
+  orderStatusOptions,
   orderStatusTone,
-  registrationActionLabel,
   registrationActionNeedsReason,
+  registrationClosingDialog,
+  registrationHoldNote,
+  registrationStatusLabel,
+  registrationStatusOptions,
   registrationStatusTone,
   toDateTimeLocal,
   toNullableNumber,
   toPersonName,
   toPreviewColour,
+  toRegistrationActions,
   toRegistrationStatus,
 } from "./types";
 
@@ -38,6 +45,54 @@ describe("status tones", () => {
   it("gives the good outcome the accent", () => {
     expect(orderStatusTone(OrderStatus.Delivered)).toBe("live");
     expect(eventStatusTone(EventStatus.Published)).toBe("live");
+  });
+});
+
+describe("status labels", () => {
+  it("reads an order the way the shopper does", () => {
+    expect(orderStatusLabel(OrderStatus.Pending)).toBe("Awaiting confirmation");
+    expect(orderStatusLabel(OrderStatus.Confirmed)).toBe(
+      "Confirmed, awaiting payment",
+    );
+    expect(orderStatusLabel(OrderStatus.Refunded)).toBe("Refunded");
+  });
+
+  it("reads a booking the way the guest does", () => {
+    expect(registrationStatusLabel(RegistrationStatus.Pending)).toBe(
+      "Awaiting approval",
+    );
+    expect(registrationStatusLabel(RegistrationStatus.Approved)).toBe(
+      "Approved, awaiting payment",
+    );
+    expect(registrationStatusLabel(RegistrationStatus.Confirmed)).toBe(
+      "Confirmed",
+    );
+    expect(registrationStatusLabel(RegistrationStatus.Rejected)).toBe(
+      "Not approved",
+    );
+  });
+
+  it("explains that a request already holds its place", () => {
+    expect(registrationHoldNote("wheel")).toBe(
+      "A request holds its wheel from the moment it's made; turning it down frees it.",
+    );
+    expect(registrationHoldNote("seat")).toContain("holds its seats");
+  });
+
+  it("lists filter options in the order things happen", () => {
+    expect(orderStatusOptions().map((option) => option.value)).toEqual([
+      "PENDING",
+      "CONFIRMED",
+      "PAID",
+      "SHIPPED",
+      "DELIVERED",
+      "CANCELLED",
+      "REFUNDED",
+    ]);
+    expect(registrationStatusOptions()[1]).toEqual({
+      value: "APPROVED",
+      label: "Approved, awaiting payment",
+    });
   });
 });
 
@@ -79,20 +134,110 @@ describe("toRegistrationStatus", () => {
 });
 
 describe("registration actions", () => {
-  it("names each move in the words an admin would use", () => {
-    expect(registrationActionLabel(RegistrationStatus.Pending)).toBe(
-      "Move back to pending",
-    );
-    expect(registrationActionLabel(RegistrationStatus.Approved)).toBe(
-      "Approve",
-    );
-    expect(registrationActionLabel(RegistrationStatus.Confirmed)).toBe(
-      "Confirm",
-    );
-    expect(registrationActionLabel(RegistrationStatus.Rejected)).toBe("Reject");
-    expect(registrationActionLabel(RegistrationStatus.Cancelled)).toBe(
-      "Cancel",
-    );
+  it("says what each move does", () => {
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Approved,
+        [
+          RegistrationStatus.Confirmed,
+          RegistrationStatus.Rejected,
+          RegistrationStatus.Cancelled,
+        ],
+        "wheel",
+      ).map((action) => action.label),
+    ).toEqual(["Confirm as paid", "Cancel booking"]);
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Confirmed,
+        [RegistrationStatus.Cancelled],
+        "seat",
+      ).map((action) => action.label),
+    ).toEqual(["Cancel registration"]);
+  });
+
+  it("marks only the first move that lets someone in", () => {
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Pending,
+        [RegistrationStatus.Approved, RegistrationStatus.Confirmed],
+        "wheel",
+      ).map((action) => [action.label, action.isPrimary]),
+    ).toEqual([
+      ["Approve, ask for payment", true],
+      ["Confirm as paid", false],
+    ]);
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Confirmed,
+        [RegistrationStatus.Cancelled],
+        "seat",
+      )[0]?.isPrimary,
+    ).toBe(false);
+  });
+
+  it("gives a request awaiting approval one way to say no", () => {
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Pending,
+        [
+          RegistrationStatus.Approved,
+          RegistrationStatus.Confirmed,
+          RegistrationStatus.Rejected,
+          RegistrationStatus.Cancelled,
+        ],
+        "wheel",
+      ).map((action) => action.status),
+    ).toEqual([
+      RegistrationStatus.Approved,
+      RegistrationStatus.Confirmed,
+      RegistrationStatus.Rejected,
+    ]);
+  });
+
+  it("gives an approved booking one way to say no, since the guest was told", () => {
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Approved,
+        [
+          RegistrationStatus.Confirmed,
+          RegistrationStatus.Rejected,
+          RegistrationStatus.Cancelled,
+        ],
+        "seat",
+      ).map((action) => action.status),
+    ).toEqual([RegistrationStatus.Confirmed, RegistrationStatus.Cancelled]);
+  });
+
+  it("marks turning down and cancelling as destructive", () => {
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Pending,
+        [RegistrationStatus.Approved, RegistrationStatus.Rejected],
+        "wheel",
+      ).map((action) => action.isDestructive),
+    ).toEqual([false, true]);
+  });
+
+  it("never offers a way back to awaiting approval", () => {
+    expect(
+      toRegistrationActions(
+        RegistrationStatus.Approved,
+        [RegistrationStatus.Pending, RegistrationStatus.Confirmed],
+        "seat",
+      ).map((action) => action.status),
+    ).toEqual([RegistrationStatus.Confirmed]);
+  });
+
+  it("names the closing dialog after the thing being closed", () => {
+    expect(
+      registrationClosingDialog(RegistrationStatus.Rejected, "wheel"),
+    ).toEqual({ title: "Turn this booking down?", confirmLabel: "Turn down" });
+    expect(
+      registrationClosingDialog(RegistrationStatus.Cancelled, "seat"),
+    ).toEqual({
+      title: "Cancel this registration?",
+      confirmLabel: "Cancel registration",
+    });
   });
 
   it("asks for a reason only when someone is turned away", () => {
@@ -108,6 +253,26 @@ describe("registration actions", () => {
     expect(registrationActionNeedsReason(RegistrationStatus.Confirmed)).toBe(
       false,
     );
+  });
+});
+
+describe("describeClosing", () => {
+  it("names who closed it when the reason was filled in for them", () => {
+    expect(describeClosing("Cancelled by the guest")).toBe(
+      "Cancelled by the guest",
+    );
+    expect(describeClosing("The studio called this one off")).toBe(
+      "Cancelled by the studio with the event",
+    );
+  });
+
+  it("quotes a reason someone wrote", () => {
+    expect(describeClosing("Work came up")).toBe("Reason: Work came up");
+  });
+
+  it("says nothing when there is no reason", () => {
+    expect(describeClosing(null)).toBeNull();
+    expect(describeClosing("  ")).toBeNull();
   });
 });
 
