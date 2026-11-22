@@ -94,7 +94,7 @@ export function OrderDetail({
   const OrderHeading = isJustPlaced ? "h2" : "h1";
   return (
     <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
-      <BackLink href="/orders" label="All orders" />
+      <BackLink href="/orders" label="Your orders" />
       {isJustPlaced && (
         <OrderPlacedBanner
           orderId={orderId}

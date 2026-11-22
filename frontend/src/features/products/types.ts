@@ -61,7 +61,10 @@ export const EMPTY_FILTERS: ProductFilters = {
   sort: ProductSort.Featured,
 };
 
-const SORT_VALUES = new Set<string>(Object.values(ProductSort));
+// One of the sorts the shelf offers, or null for anything else a URL or a control hands over.
+export function toProductSort(raw: string | null): ProductSort | null {
+  return SORT_OPTIONS.find((option) => option.value === raw)?.value ?? null;
+}
 
 function readList(params: URLSearchParams, key: string): string[] {
   return params
@@ -92,10 +95,7 @@ export function parseFilters(params: URLSearchParams): ProductFilters {
     customizableOnly: params.get("customizable") === "true",
     secondsOnly: params.get("seconds") === "1",
     isArchive: params.get("view") === ARCHIVE_VIEW,
-    sort:
-      sort && SORT_VALUES.has(sort)
-        ? (sort as ProductSort)
-        : ProductSort.Featured,
+    sort: toProductSort(sort) ?? ProductSort.Featured,
   };
 }
 
@@ -230,48 +230,6 @@ export function toResultCountLabel(
   const noun = total === 1 ? "piece" : "pieces";
   const counted = `${total} ${isMadeToOrderOnly ? `made-to-order ${noun}` : noun}`;
   return search ? `${counted} for \u201c${search}\u201d` : counted;
-}
-
-// A next-page request the shelf is waiting on, or one that failed and can be retried.
-export interface ShelfAppend {
-  page: number;
-  status: "loading" | "failed";
-}
-
-// Records how a next-page request ended, per filter key. An answer for a page the key is no
-// longer waiting on changes nothing; success forgets the entry, failure keeps it for a retry.
-export function settleAppend(
-  all: Record<string, ShelfAppend>,
-  key: string,
-  page: number,
-  status: "done" | "failed",
-): Record<string, ShelfAppend> {
-  if (all[key]?.page !== page) return all;
-  const rest = Object.fromEntries(
-    Object.entries(all).filter(([other]) => other !== key),
-  );
-  return status === "failed" ? { ...rest, [key]: { page, status } } : rest;
-}
-
-interface PagedShelf {
-  products: { items: unknown[]; page_info: { page: number } };
-}
-
-// Joins a next page only onto the one before it, so a repeated or late answer writes nothing.
-export function appendShelfPage<Shelf extends PagedShelf>(
-  previous: Shelf | undefined,
-  next: Shelf,
-): Shelf | undefined {
-  const list = previous?.products;
-  if (!list || list.page_info.page + 1 !== next.products.page_info.page)
-    return previous;
-  return {
-    ...next,
-    products: {
-      ...next.products,
-      items: [...list.items, ...next.products.items],
-    },
-  };
 }
 
 // Where the shelf's list stands for the current filters: still finding it, showing it, or failed.

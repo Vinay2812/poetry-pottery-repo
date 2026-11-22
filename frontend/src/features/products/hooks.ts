@@ -9,7 +9,7 @@ import {
 } from "react";
 
 import { NetworkStatus } from "@apollo/client";
-import { useMutation, useQuery } from "@apollo/client/react";
+import { useApolloClient, useMutation, useQuery } from "@apollo/client/react";
 import {
   CreateCustomizationUploadDocument,
   ProductsDocument,
@@ -17,13 +17,21 @@ import {
 } from "@/graphql/generated/graphql";
 
 import {
-  appendShelfPage,
+  abandonPage,
+  dropTrail,
+  joinPages,
+  type PageTrails,
+  settlePage,
+  startPage,
+  toNextPageNumber,
+  toPageTrail,
+} from "@/lib/page-trail";
+
+import {
   MAX_REFERENCE_PHOTOS,
   type ProductFilters,
   type ReferencePhoto,
   remainingReferenceSlots,
-  settleAppend,
-  type ShelfAppend,
   type ShelfPhase,
   toFilterInput,
   toFilterKey,
@@ -34,7 +42,7 @@ import {
 
 type ProductsPage = ProductsQuery["products"];
 
-// Only these statuses mean the first page itself is on its way; a fetchMore or a poll does not.
+// Only these statuses mean the first page itself is on its way; a poll does not.
 const FIRST_PAGE_LOADING = new Set<NetworkStatus>([
   NetworkStatus.loading,
   NetworkStatus.setVariables,
@@ -65,16 +73,18 @@ export interface ShelfResults {
 }
 
 // The shelf's list. The server's first page bridges the first load and old results bridge a
-// filter change. Next pages are tracked per filter key and only ever join the list that asked.
+// filter change. Apollo fetches page one through the query and each next page on its own; the
+// next pages live in this hook's state per filter key and only ever join the list that asked.
 export function useShelfResults({
   filters,
   initialProducts,
   initialFilterKey,
   isFiltersMoving = false,
 }: ShelfResultsOptions): ShelfResults {
+  const client = useApolloClient();
   const filterInput = toFilterInput(filters, 1);
   const filterKey = toFilterKey(filterInput);
-  const [appends, setAppends] = useState<Record<string, ShelfAppend>>({});
+  const [trails, setTrails] = useState<PageTrails<ProductsPage>>({});
   // Recorded at once, so a second call in the same frame sees the first before any re-render.
   const inFlight = useRef(new Set<string>());
   // Apollo has already moved to the new variables during render; this key follows at commit,
@@ -84,19 +94,17 @@ export function useShelfResults({
     latestKey.current = filterKey;
   }, [filterKey]);
 
-  const {
-    data,
-    previousData,
-    loading,
-    error,
-    networkStatus,
-    fetchMore,
-    refetch,
-  } = useQuery(ProductsDocument, {
-    variables: { filter: filterInput },
-    notifyOnNetworkStatusChange: true,
-  });
+  const { data, previousData, loading, error, networkStatus, refetch } =
+    useQuery(ProductsDocument, {
+      variables: { filter: filterInput },
+      notifyOnNetworkStatusChange: true,
+    });
   const current = data?.products;
+  // Apollo's previous answer belongs to the last filters that had one, so it keeps their pages too.
+  const [answeredKey, setAnsweredKey] = useState(filterKey);
+  if (current !== undefined && answeredKey !== filterKey) {
+    setAnsweredKey(filterKey);
+  }
   const serverPage =
     initialProducts && initialFilterKey === filterKey
       ? initialProducts
@@ -109,47 +117,59 @@ export function useShelfResults({
     isOwnPageLoading,
     hasServerPage: serverPage !== undefined,
   });
+  const trail = toPageTrail(trails, filterKey);
   // A failure keeps the last answer on hand, so the filter options stay to recover with.
   const result = toShelfResult({
-    current,
+    current: joinPages(current, trail),
     serverPage,
-    previous: previousData?.products,
+    previous: joinPages(
+      previousData?.products,
+      toPageTrail(trails, answeredKey),
+    ),
     initial: initialProducts ?? undefined,
     isLoading: loading,
   });
 
-  const ownAppend = appends[filterKey];
-  const isNextPageLoading = ownAppend?.status === "loading";
-  // Not the same as a ready phase: the server's page counts as ready, but Apollo cannot page from it.
+  const isNextPageLoading = trail.next?.status === "loading";
+  // Not the same as a ready phase: the server's page counts as ready, but only a page the
+  // browser fetched for these filters starts a trail.
   const hasSettledOwnPage =
     current !== undefined && !isOwnPageLoading && !error;
 
   const loadMore = useCallback(() => {
-    if (!current || !hasSettledOwnPage || !current.page_info.has_more) return;
+    const page = toNextPageNumber(current, toPageTrail(trails, filterKey));
+    if (!hasSettledOwnPage || page === null) return;
     const key = filterKey;
-    const page = current.page_info.page + 1;
     const requestId = `${key}#${page}`;
     if (inFlight.current.has(requestId)) return;
     inFlight.current.add(requestId);
-    const settle = (status: "done" | "failed") =>
-      setAppends((all) => settleAppend(all, key, page, status));
-    setAppends((all) => ({ ...all, [key]: { page, status: "loading" } }));
-    fetchMore({
-      variables: { filter: toFilterInput(filters, page) },
-      // Only the list that asked takes the page, and only once; anything else writes nothing.
-      updateQuery: (previous, { fetchMoreResult }) =>
-        latestKey.current === key
-          ? (appendShelfPage(previous, fetchMoreResult) ?? previous)
-          : previous,
-    })
+    setTrails((all) => startPage(all, key, page));
+    client
+      .query({
+        query: ProductsDocument,
+        variables: { filter: toFilterInput(filters, page) },
+        fetchPolicy: "network-only",
+      })
       .then(
-        () => settle("done"),
-        () => settle("failed"),
+        ({ data: answer }) => answer?.products ?? null,
+        () => null,
+      )
+      // Only the list still on screen takes the page; one that lands under other filters is let go.
+      .then((answer) =>
+        setTrails((all) =>
+          latestKey.current === key
+            ? settlePage(all, key, page, answer)
+            : abandonPage(all, key, page),
+        ),
       )
       .finally(() => inFlight.current.delete(requestId));
-  }, [current, fetchMore, filterKey, filters, hasSettledOwnPage]);
+  }, [client, current, filterKey, filters, hasSettledOwnPage, trails]);
 
-  const retry = useCallback(() => void refetch(), [refetch]);
+  // Page one reads again, so the pages after it start again from the fresh answer.
+  const retry = useCallback(() => {
+    setTrails((all) => dropTrail(all, filterKey));
+    void refetch();
+  }, [filterKey, refetch]);
 
   return {
     result,
@@ -157,7 +177,7 @@ export function useShelfResults({
     isRefreshing: phase === "pending" && result !== undefined,
     isNextPageLoading,
     canAskNextPage: hasSettledOwnPage && !isNextPageLoading,
-    hasAppendFailed: ownAppend?.status === "failed",
+    hasAppendFailed: trail.next?.status === "failed",
     loadMore,
     retry,
   };

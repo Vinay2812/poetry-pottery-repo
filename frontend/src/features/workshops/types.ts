@@ -303,12 +303,15 @@ export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
     `Booking: ${input.bookingId}`,
     `When: ${input.when}`,
     `${input.hours} ${input.hours === 1 ? "hour" : "hours"} for ${input.participants} ${input.participants === 1 ? "person" : "people"}`,
-    `Total: ${input.total}`,
+    // A free booking has nothing to pay, so a ₹0 total line would only read like a bill.
+    input.isFree ? null : `Total: ${input.total}`,
     `Name: ${input.guestName}`,
     input.isFree
       ? "Could you confirm my session?"
       : "Could you approve my request and share payment details?",
-  ].join("\n");
+  ]
+    .filter((line) => line !== null)
+    .join("\n");
 }
 
 const SESSION_STAGES = toRequestStages(

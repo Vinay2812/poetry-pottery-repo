@@ -6,7 +6,6 @@ import { toUrlSearchParams } from "@/lib/search-params";
 import { FOOTER_SHOP_LINKS } from "@/features/layout/types";
 
 import {
-  appendShelfPage,
   applyFilterAction,
   clampPriceRange,
   computeUnitPrice,
@@ -17,6 +16,7 @@ import {
   type ReferencePhoto,
   remainingReferenceSlots,
   SORT_OPTIONS,
+  toProductSort,
   toConfirmedPhotoUrls,
   toDefaultSelections,
   validateReferencePhoto,
@@ -33,7 +33,6 @@ import {
   toFilterKey,
   toResultCountLabel,
   isShelfCountable,
-  settleAppend,
   toShelfCountLine,
   toShelfPhase,
   toShelfResult,
@@ -203,58 +202,6 @@ describe("toFilterInput", () => {
   });
 });
 
-describe("settleAppend", () => {
-  const waiting = {
-    mug: { page: 2, status: "loading" as const },
-    bowl: { page: 3, status: "loading" as const },
-  };
-
-  it("ignores an answer for a page the filter key is no longer waiting on", () => {
-    expect(settleAppend(waiting, "mug", 3, "done")).toBe(waiting);
-    expect(settleAppend(waiting, "cup", 2, "failed")).toBe(waiting);
-  });
-
-  it("forgets a page once it has landed", () => {
-    expect(settleAppend(waiting, "mug", 2, "done")).toEqual({
-      bowl: { page: 3, status: "loading" },
-    });
-  });
-
-  it("keeps a failed page so it can be retried", () => {
-    expect(settleAppend(waiting, "mug", 2, "failed")).toEqual({
-      mug: { page: 2, status: "failed" },
-      bowl: { page: 3, status: "loading" },
-    });
-  });
-});
-
-describe("appendShelfPage", () => {
-  const shelfPage = (ids: number[], page: number) => ({
-    products: { items: ids.map((id) => ({ id })), page_info: { page } },
-  });
-  const ids = (value: ReturnType<typeof shelfPage> | undefined) =>
-    value?.products.items.map((item) => item.id);
-
-  it("joins the page that follows the list", () => {
-    const merged = appendShelfPage(shelfPage([1, 2], 1), shelfPage([3, 4], 2));
-
-    expect(ids(merged)).toEqual([1, 2, 3, 4]);
-    expect(merged?.products.page_info.page).toBe(2);
-  });
-
-  it("writes nothing for the same page twice or a page out of order", () => {
-    const once = appendShelfPage(shelfPage([1, 2], 1), shelfPage([3, 4], 2));
-
-    expect(appendShelfPage(once, shelfPage([3, 4], 2))).toBe(once);
-    const first = shelfPage([1, 2], 1);
-    expect(appendShelfPage(first, shelfPage([5, 6], 3))).toBe(first);
-  });
-
-  it("writes nothing when there is no list to join", () => {
-    expect(appendShelfPage(undefined, shelfPage([3, 4], 2))).toBeUndefined();
-  });
-});
-
 describe("toShelfResult", () => {
   const none = {
     current: undefined,
@@ -375,6 +322,15 @@ describe("toResultCountLabel", () => {
     expect(toResultCountLabel(1, "bowl", true)).toBe(
       "1 made-to-order piece for \u201cbowl\u201d",
     );
+  });
+});
+
+describe("toProductSort", () => {
+  it("accepts only the sorts the shelf offers", () => {
+    expect(toProductSort("NEWEST")).toBe(ProductSort.Newest);
+    expect(toProductSort("newest")).toBeNull();
+    expect(toProductSort("RELEVANCE")).toBeNull();
+    expect(toProductSort(null)).toBeNull();
   });
 });
 

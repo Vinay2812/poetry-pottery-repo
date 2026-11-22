@@ -5,8 +5,9 @@ import { useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
+import { PastLastPage } from "@/components/layout/PastLastPage";
 import { PageTurnFailed } from "@/components/layout/PageTurnFailed";
-import { PAGE_CODEC } from "@/lib/page-turn";
+import { isPastLastPage, PAGE_CODEC } from "@/lib/page-turn";
 import { useFocusAfterTurn } from "@/lib/use-focus-after-turn";
 import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
@@ -62,11 +63,17 @@ export function RegistrationsListContainer({
   const handlePageChange = useCallback(
     (next: number) => {
       if (next === page) void refetch();
-      else goToPage(next);
+      else goToPage(next, { history: "push" });
       startTurn();
     },
     [goToPage, page, refetch, startTurn],
   );
+
+  // A page past the end is a dead link, so leaving it replaces it rather than adding a Back step.
+  const handleSeeLatest = useCallback(() => {
+    goToPage(1);
+    startTurn();
+  }, [goToPage, startTurn]);
   const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
 
@@ -108,6 +115,12 @@ export function RegistrationsListContainer({
             Try again
           </Button>
         </div>
+      ) : isPastLastPage(page, registrations.length, pageInfo?.total) ? (
+        <PastLastPage
+          message="There are no events this far back."
+          actionLabel="See your latest events"
+          onLatest={handleSeeLatest}
+        />
       ) : registrations.length === 0 ? (
         <EmptyRegistrations />
       ) : (

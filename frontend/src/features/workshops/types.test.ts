@@ -236,6 +236,7 @@ describe("session helpers", () => {
     });
     expect(message).toContain("Booking: WS-ABC");
     expect(message).toContain("2 hours for 1 person");
+    expect(message).toContain("Total: ₹1,700");
   });
 
   it("says one hour and several people the way a person would", () => {
@@ -264,6 +265,7 @@ describe("session helpers", () => {
     });
     expect(message).toContain("Could you confirm my session?");
     expect(message).not.toMatch(/payment/i);
+    expect(message).not.toContain("Total");
   });
 });
 

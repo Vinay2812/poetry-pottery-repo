@@ -18,10 +18,6 @@ import {
 } from "./types";
 
 type Page = ProductsQuery["products"];
-type UpdateQuery = (
-  previous: ProductsQuery,
-  options: { fetchMoreResult: ProductsQuery },
-) => ProductsQuery;
 
 interface QueryState {
   data: ProductsQuery | undefined;
@@ -47,21 +43,25 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => navigation.search,
 }));
 
-const { useQueryMock, fetchMoreMock, refetchMock } = vi.hoisted(() => ({
+const { useQueryMock, clientQueryMock, refetchMock } = vi.hoisted(() => ({
   useQueryMock: vi.fn(),
-  fetchMoreMock:
+  clientQueryMock:
     vi.fn<
       (options: {
         variables: { filter: { page: number; category_slugs: unknown } };
-        updateQuery: UpdateQuery;
-      }) => Promise<void>
+        fetchPolicy: string;
+      }) => Promise<{ data: ProductsQuery | undefined }>
     >(),
   refetchMock: vi.fn<() => Promise<void>>(),
 }));
 
+// A stable client, as the provider gives one, so the hook's callbacks do not churn.
+const client = { query: clientQueryMock };
+
 vi.mock("@apollo/client/react", () => ({
   useQuery: useQueryMock,
   useMutation: () => [vi.fn()],
+  useApolloClient: () => client,
 }));
 
 function piece(id: number): Page["items"][number] {
@@ -148,10 +148,9 @@ beforeEach(() => {
     networkStatus:
       state.networkStatus ??
       (state.loading ? NetworkStatus.setVariables : NetworkStatus.ready),
-    fetchMore: fetchMoreMock,
     refetch: refetchMock,
   }));
-  fetchMoreMock.mockResolvedValue(undefined);
+  clientQueryMock.mockResolvedValue({ data: answer(page([3, 4], 2, 5)) });
 });
 
 describe("useShelfResults", () => {
@@ -217,11 +216,11 @@ describe("useShelfResults", () => {
     expect(result.current.canAskNextPage).toBe(false);
   });
 
-  it("stays ready while Apollo reports a next page still out", () => {
+  it("stays ready while Apollo polls the first page", () => {
     setQuery({
       data: answer(SERVER_PAGE),
       loading: true,
-      networkStatus: NetworkStatus.fetchMore,
+      networkStatus: NetworkStatus.poll,
     });
     const { result } = renderShelf();
 
@@ -247,7 +246,7 @@ describe("useShelfResults", () => {
 
   it("marks a failed next page and keeps the cards", async () => {
     setQuery({ data: answer(SERVER_PAGE), loading: false });
-    fetchMoreMock.mockRejectedValue(new Error("page two down"));
+    clientQueryMock.mockRejectedValueOnce(new Error("page two down"));
     const { result } = renderShelf();
 
     await act(async () => result.current.loadMore());
@@ -255,47 +254,99 @@ describe("useShelfResults", () => {
     expect(result.current.hasAppendFailed).toBe(true);
     expect(result.current.isNextPageLoading).toBe(false);
     expect(result.current.result?.items).toHaveLength(2);
+
+    // Asking again fetches the same page and joins it once it lands.
+    await act(async () => result.current.loadMore());
+    expect(clientQueryMock).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        variables: { filter: expect.objectContaining({ page: 2 }) },
+      }),
+    );
+    expect(result.current.hasAppendFailed).toBe(false);
+    expect(result.current.result?.items.map((item) => item.id)).toEqual([
+      1, 2, 3, 4,
+    ]);
   });
 
-  it("appends the next page to the list that asked for it", async () => {
+  it("fetches the next page without touching the cache and joins it to the list", async () => {
     setQuery({ data: answer(SERVER_PAGE), loading: false });
     const { result } = renderShelf();
 
     await act(async () => result.current.loadMore());
 
-    const call = fetchMoreMock.mock.calls[0]?.[0];
+    const call = clientQueryMock.mock.calls[0]?.[0];
     expect(call?.variables.filter.page).toBe(2);
-    const merged = call?.updateQuery(answer(SERVER_PAGE), {
-      fetchMoreResult: answer(page([3, 4], 2, 5)),
+    expect(call?.fetchPolicy).toBe("network-only");
+    expect(result.current.result?.items.map((item) => item.id)).toEqual([
+      1, 2, 3, 4,
+    ]);
+    // The newest page says what is left, and the facets stay the first page's.
+    expect(result.current.result?.page_info.page).toBe(2);
+    expect(result.current.result?.facets.categories).toHaveLength(1);
+    expect(result.current.isNextPageLoading).toBe(false);
+  });
+
+  it("asks for each page once, however fast the button is pressed", async () => {
+    setQuery({ data: answer(SERVER_PAGE), loading: false });
+    const { result } = renderShelf();
+
+    await act(async () => {
+      result.current.loadMore();
+      result.current.loadMore();
     });
-    expect(merged?.products.items.map((item) => item.id)).toEqual([1, 2, 3, 4]);
+
+    expect(clientQueryMock).toHaveBeenCalledTimes(1);
   });
 
   it("drops a page that lands after the filters moved on", async () => {
     setQuery({ data: answer(SERVER_PAGE), loading: false });
     const { result, rerender } = renderShelf();
     let release: () => void = () => undefined;
-    fetchMoreMock.mockReturnValue(
-      new Promise<void>((resolve) => {
-        release = resolve;
+    clientQueryMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        release = () => resolve({ data: answer(page([3, 4], 2, 5)) });
       }),
     );
 
     act(() => result.current.loadMore());
     expect(result.current.isNextPageLoading).toBe(true);
 
-    const mugs = answer(page([7], 1, 1));
-    setQuery({ data: mugs, loading: false });
+    setQuery({ data: answer(page([7], 1, 1)), loading: false });
     rerender({ filters: MUGS });
     // The filters changed, so the old page's spinner no longer belongs to this list.
     expect(result.current.isNextPageLoading).toBe(false);
 
-    const call = fetchMoreMock.mock.calls[0]?.[0];
-    const merged = call?.updateQuery(mugs, {
-      fetchMoreResult: answer(page([3, 4], 2, 5)),
-    });
-    expect(merged).toBe(mugs);
     await act(async () => release());
+    expect(result.current.result?.items.map((item) => item.id)).toEqual([7]);
+  });
+
+  it("keeps the pages it joined on screen while new filters load", async () => {
+    setQuery({ data: answer(SERVER_PAGE), loading: false });
+    const { result, rerender } = renderShelf();
+    await act(async () => result.current.loadMore());
+
+    setQuery({
+      data: undefined,
+      previousData: answer(SERVER_PAGE),
+      loading: true,
+    });
+    rerender({ filters: MUGS });
+
+    expect(result.current.isRefreshing).toBe(true);
+    expect(result.current.result?.items.map((item) => item.id)).toEqual([
+      1, 2, 3, 4,
+    ]);
+  });
+
+  it("starts the trail again when the first page is read again", async () => {
+    setQuery({ data: answer(SERVER_PAGE), loading: false });
+    const { result } = renderShelf();
+    await act(async () => result.current.loadMore());
+
+    act(() => result.current.retry());
+
+    expect(refetchMock).toHaveBeenCalled();
+    expect(result.current.result?.items.map((item) => item.id)).toEqual([1, 2]);
   });
 
   it("asks for no page while the list on screen belongs to other filters", () => {
@@ -310,7 +361,7 @@ describe("useShelfResults", () => {
     rerender({ filters: MUGS });
     act(() => result.current.loadMore());
 
-    expect(fetchMoreMock).not.toHaveBeenCalled();
+    expect(clientQueryMock).not.toHaveBeenCalled();
   });
 });
 
