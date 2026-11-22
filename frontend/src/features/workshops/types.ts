@@ -35,7 +35,7 @@ export const SESSION_POLICY: readonly PolicyPoint[] = [
   {
     term: "Once paid, it's final",
     detail:
-      "Paid sessions can't be cancelled, refunded or moved to another date.",
+      "Your session stays on the date you chose. It can't be cancelled, moved or refunded if your plans change.",
   },
   {
     term: "Sending someone else",
@@ -54,7 +54,7 @@ export const SESSION_POLICY: readonly PolicyPoint[] = [
   {
     term: "Breakage",
     detail:
-      "We look after every student's piece, but clay is fragile and a piece can sometimes break in the kiln.",
+      "Clay can crack while drying or in the kiln; that's part of making pottery. If something goes wrong because of how we handled your piece, tell us and we'll put it right.",
   },
 ];
 

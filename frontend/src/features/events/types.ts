@@ -528,7 +528,7 @@ const PAID_SEAT_POLICY: readonly PolicyPoint[] = [
   {
     term: "Once paid, it's final",
     detail:
-      "Paid seats can't be cancelled, refunded or moved to another event.",
+      "Your seat stays yours. It can't be cancelled or refunded if your plans change.",
   },
   {
     term: "Sending someone else",
