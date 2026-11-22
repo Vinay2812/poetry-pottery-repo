@@ -38,7 +38,7 @@ export function ContentPagesContainer() {
   const [pendingSlug, setPendingSlug] = useState<string | null>(null);
   const [isNewOpen, setIsNewOpen] = useState(false);
   const [newSlug, setNewSlug] = useState("");
-  const [slugError, setSlugError] = useState<string | null>(null);
+  const [slugError, setSlugError] = useState<string | undefined>(undefined);
 
   const pages = data?.adminContentPages ?? previousData?.adminContentPages;
 
@@ -79,7 +79,7 @@ export function ContentPagesContainer() {
     }
     setIsNewOpen(false);
     setNewSlug("");
-    setSlugError(null);
+    setSlugError(undefined);
     router.push(`/dashboard/content/${parsed.data}`);
   }, [newSlug, router]);
 
@@ -94,7 +94,7 @@ export function ContentPagesContainer() {
             type="button"
             size="sm"
             onClick={() => {
-              setSlugError(null);
+              setSlugError(undefined);
               setIsNewOpen(true);
             }}
           >
@@ -114,7 +114,7 @@ export function ContentPagesContainer() {
         error={slugError}
         onSlugChange={(value) => {
           setNewSlug(value);
-          setSlugError(null);
+          setSlugError(undefined);
         }}
         onSubmit={handleCreate}
         onOpenChange={setIsNewOpen}

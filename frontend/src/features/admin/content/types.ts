@@ -6,10 +6,11 @@ import type {
 } from "@/graphql/generated/graphql";
 
 import { formatDateTime } from "@/lib/format";
-import type {
-  AnnouncementFormValues,
-  ContentPageFormValues,
-  SiteSettingsFormValues,
+import {
+  type AnnouncementFormValues,
+  type ContentPageFormValues,
+  parseDayCount,
+  type SiteSettingsFormValues,
 } from "@/lib/validations/admin/content";
 
 import type { AdminStatusTone } from "@/features/admin/ui";
@@ -203,9 +204,15 @@ export function isMissingPage(message: string): boolean {
   return /not found/i.test(message);
 }
 
-/** The sentence a product page shows: "ships in 7 to 12 days". */
-export function describeDispatchWindow(min: number, max: number): string {
-  return min === max
-    ? `Ships in about ${min} days`
-    : `Ships in ${min} to ${max} days`;
+/** What the arrival line on an order page will promise; null until both boxes make a window. */
+export function describeArrivalPreview(
+  min: string,
+  max: string,
+): string | null {
+  const earliest = parseDayCount(min);
+  const latest = parseDayCount(max);
+  if (earliest === null || latest === null || earliest > latest) return null;
+  const days =
+    earliest === latest ? `${earliest} days` : `${earliest} to ${latest} days`;
+  return `A piece from the shelf should reach your buyer ${days} after they order.`;
 }

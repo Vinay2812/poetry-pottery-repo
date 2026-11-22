@@ -117,7 +117,9 @@ export function SiteSettingsContainer() {
     return loading ? (
       <div aria-busy="true" className="h-64 animate-pulse bg-ash" />
     ) : (
-      <p className="text-[13px]">The site settings could not be loaded.</p>
+      <p role="alert" className="text-[13px]">
+        The site settings could not be loaded. Refresh to try again.
+      </p>
     );
   }
 

@@ -12,21 +12,24 @@ import {
   type SiteSettingsFormValues,
 } from "@/lib/validations/admin/content";
 
-import { describeDispatchWindow } from "@/features/admin/content/types";
+import { describeArrivalPreview } from "@/features/admin/content/types";
 
 import { ContentTextField } from "./ContentTextField";
 
 interface SettingsGroupProps {
   title: string;
+  note: string | null;
   children: ReactNode;
 }
 
-function SettingsGroup({ title, children }: SettingsGroupProps) {
+// The panel heading already draws a rule, so the first group does not draw its own.
+function SettingsGroup({ title, note, children }: SettingsGroupProps) {
   return (
-    <fieldset className="flex flex-col gap-4 border-t border-ash pt-4">
+    <fieldset className="flex flex-col gap-4 border-t border-ash pt-4 first-of-type:border-t-0">
       <legend className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
         {title}
       </legend>
+      {note && <p className="text-[12px] text-muted-foreground">{note}</p>}
       <div className="grid gap-4 md:grid-cols-2">{children}</div>
     </fieldset>
   );
@@ -57,10 +60,7 @@ export function SiteSettingsForm({
 
   const dispatchMin = useWatch({ control, name: "dispatch_days_min" });
   const dispatchMax = useWatch({ control, name: "dispatch_days_max" });
-  const dispatchLine = describeDispatchWindow(
-    Number(dispatchMin),
-    Number(dispatchMax),
-  );
+  const arrivalLine = describeArrivalPreview(dispatchMin, dispatchMax);
 
   return (
     <form
@@ -68,7 +68,7 @@ export function SiteSettingsForm({
       onSubmit={handleSubmit(onSubmit)}
       className="flex flex-col gap-5"
     >
-      <SettingsGroup title="Contact">
+      <SettingsGroup title="Contact" note={null}>
         <ContentTextField
           id="settings-contact-email"
           label="Email"
@@ -80,7 +80,7 @@ export function SiteSettingsForm({
         <ContentTextField
           id="settings-contact-phone"
           label="Phone"
-          hint="Ten digits."
+          hint="Ten digits. A +91 in front is fine."
           error={errors.contact_phone?.message}
           isMultiline={false}
           registration={register("contact_phone")}
@@ -88,7 +88,7 @@ export function SiteSettingsForm({
         <ContentTextField
           id="settings-whatsapp"
           label="WhatsApp"
-          hint="Used by the ask-us links on product pages."
+          hint="With 91 in front. Used by the ask-us links on product pages."
           error={errors.whatsapp_number?.message}
           isMultiline={false}
           registration={register("whatsapp_number")}
@@ -111,11 +111,11 @@ export function SiteSettingsForm({
         />
       </SettingsGroup>
 
-      <SettingsGroup title="Social">
+      <SettingsGroup title="Social" note="Leave a link empty to hide it.">
         <ContentTextField
           id="settings-instagram"
           label="Instagram"
-          hint="Leave empty to hide the link."
+          hint={null}
           error={errors.instagram_url?.message}
           isMultiline={false}
           registration={register("instagram_url")}
@@ -138,7 +138,7 @@ export function SiteSettingsForm({
         />
       </SettingsGroup>
 
-      <SettingsGroup title="Shipping">
+      <SettingsGroup title="Shipping" note={null}>
         <ContentTextField
           id="settings-shipping-fee"
           label="Flat fee in rupees"
@@ -157,29 +157,32 @@ export function SiteSettingsForm({
         />
       </SettingsGroup>
 
-      <SettingsGroup title="Dispatch">
+      <SettingsGroup title="Arrival" note={null}>
         <ContentTextField
-          id="settings-dispatch-min"
+          id="settings-arrival-min"
           label="Earliest, in days"
-          hint="The first number in “ships in 7 to 12 days”."
+          hint="Days from order to arrival, at the soonest."
           error={errors.dispatch_days_min?.message}
           isMultiline={false}
           registration={register("dispatch_days_min")}
         />
         <ContentTextField
-          id="settings-dispatch-max"
+          id="settings-arrival-max"
           label="Latest, in days"
           hint="Never earlier than the first number."
           error={errors.dispatch_days_max?.message}
           isMultiline={false}
           registration={register("dispatch_days_max")}
         />
-        <p className="text-[12px] text-muted-foreground md:col-span-2">
-          The shelf will read: {dispatchLine}
+        <p
+          aria-live="polite"
+          className="text-[12px] text-muted-foreground md:col-span-2"
+        >
+          {arrivalLine}
         </p>
       </SettingsGroup>
 
-      <SettingsGroup title="Hero">
+      <SettingsGroup title="Hero" note={null}>
         <ContentTextField
           id="settings-hero-heading"
           label="Heading"

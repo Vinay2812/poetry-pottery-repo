@@ -10,7 +10,7 @@ const meta = {
   args: {
     isOpen: true,
     slug: "care-guide",
-    error: null,
+    error: undefined,
     onSlugChange: () => {},
     onSubmit: () => {},
     onOpenChange: () => {},

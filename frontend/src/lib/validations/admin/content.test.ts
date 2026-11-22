@@ -8,6 +8,7 @@ import {
   isHref,
   isHttpUrl,
   isSectionBodyOptional,
+  parseDayCount,
   siteSettingsSchema,
 } from "./content";
 
@@ -31,7 +32,7 @@ function settingsValues(overrides: Record<string, unknown> = {}) {
   return {
     contact_email: "studio@poetryandpottery.in",
     contact_phone: "9876543210",
-    whatsapp_number: "9876543210",
+    whatsapp_number: "919876543210",
     address: "12 Kiln Lane, Sangli",
     opening_hours: "Tue to Sun, 10am to 6pm",
     instagram_url: "https://instagram.com/poetryandpottery",
@@ -172,15 +173,33 @@ describe("contentPageSchema", () => {
 });
 
 describe("siteSettingsSchema", () => {
-  it("keeps the ten digits of both numbers", () => {
+  it("saves both numbers as typed, only trimmed", () => {
     const result = siteSettingsSchema.parse(
       settingsValues({
         contact_phone: " +91 98765-43210 ",
-        whatsapp_number: "09876543210",
+        whatsapp_number: "+91 98765 43210",
       }),
     );
-    expect(result.contact_phone).toBe("9876543210");
-    expect(result.whatsapp_number).toBe("9876543210");
+    expect(result.contact_phone).toBe("+91 98765-43210");
+    expect(result.whatsapp_number).toBe("+91 98765 43210");
+  });
+
+  it("accepts a phone without the country code", () => {
+    expect(
+      siteSettingsSchema.safeParse(
+        settingsValues({ contact_phone: "09876543210" }),
+      ).success,
+    ).toBe(true);
+  });
+
+  it("asks for the country code on the WhatsApp number", () => {
+    expect(
+      firstError(
+        siteSettingsSchema.safeParse(
+          settingsValues({ whatsapp_number: "9876543210" }),
+        ),
+      ),
+    ).toBe("WhatsApp number needs 91 in front, like 91 98765 43210");
   });
 
   it("rejects an invalid email", () => {
@@ -280,12 +299,12 @@ describe("announcementSchema", () => {
   });
 });
 
-describe("siteSettingsSchema dispatch window", () => {
+describe("siteSettingsSchema arrival window", () => {
   function settings(overrides: Record<string, string> = {}) {
     return {
       contact_email: "studio@example.com",
       contact_phone: "9123456789",
-      whatsapp_number: "9123456789",
+      whatsapp_number: "919123456789",
       address: "12 Nandi Lane, Bengaluru",
       opening_hours: "Tue to Sun, 11am to 7pm",
       instagram_url: "",
@@ -329,7 +348,7 @@ describe("siteSettingsSchema dispatch window", () => {
     }
   });
 
-  it("refuses a dispatch day that is not a whole number", () => {
+  it("refuses an arrival day that is not a whole number", () => {
     expect(
       siteSettingsSchema.safeParse(settings({ dispatch_days_min: "soon" }))
         .success,
@@ -338,5 +357,28 @@ describe("siteSettingsSchema dispatch window", () => {
       siteSettingsSchema.safeParse(settings({ dispatch_days_min: "0" }))
         .success,
     ).toBe(false);
+  });
+
+  it("refuses a window longer than 120 days", () => {
+    expect(
+      siteSettingsSchema.safeParse(settings({ dispatch_days_max: "200" }))
+        .success,
+    ).toBe(false);
+  });
+});
+
+describe("parseDayCount", () => {
+  it("reads a whole number of days from 1 to 120", () => {
+    expect(parseDayCount(" 7 ")).toBe(7);
+    expect(parseDayCount("1")).toBe(1);
+    expect(parseDayCount("120")).toBe(120);
+  });
+
+  it("refuses anything outside that", () => {
+    expect(parseDayCount("")).toBeNull();
+    expect(parseDayCount("0")).toBeNull();
+    expect(parseDayCount("121")).toBeNull();
+    expect(parseDayCount("1.5")).toBeNull();
+    expect(parseDayCount("soon")).toBeNull();
   });
 });

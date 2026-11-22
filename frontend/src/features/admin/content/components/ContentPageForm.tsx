@@ -52,13 +52,21 @@ function SectionFields({
   const position = index + 1;
   const up = nextIndex(count, index, -1);
   const down = nextIndex(count, index, 1);
+  const labelId = `section-${index}-label`;
 
   return (
-    <fieldset className="flex flex-col gap-4 border border-ash p-4">
+    <div
+      role="group"
+      aria-labelledby={labelId}
+      className="flex flex-col gap-4 border border-ash p-4"
+    >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <legend className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+        <span
+          id={labelId}
+          className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase"
+        >
           Section {position}
-        </legend>
+        </span>
         <span className="flex gap-1">
           <Button
             type="button"
@@ -115,99 +123,108 @@ function SectionFields({
       />
 
       <div className="flex flex-col gap-3 border-t border-ash pt-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
-            Items
-          </span>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => items.append({ ...EMPTY_ITEM })}
-          >
-            Add item
-          </Button>
-        </div>
+        <span className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
+          Items
+        </span>
         {items.fields.length === 0 && (
           <p className="text-[12px] text-muted-foreground">
             Items become a list under the section. A section can have none.
           </p>
         )}
-        {items.fields.map((item, itemIndex) => {
-          const itemErrors = sectionErrors?.items?.[itemIndex];
-          const itemPosition = itemIndex + 1;
-          const itemUp = nextIndex(items.fields.length, itemIndex, -1);
-          const itemDown = nextIndex(items.fields.length, itemIndex, 1);
-          return (
-            <div
-              key={item.id}
-              className="flex flex-col gap-3 border-t border-ash pt-3 first:border-t-0 first:pt-0"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-[12px] text-muted-foreground">
-                  Item {itemPosition}
-                </span>
-                <span className="flex gap-1">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon-sm"
-                    aria-label={`Move item ${itemPosition} of section ${position} up`}
-                    disabled={itemUp === null}
-                    onClick={() =>
-                      itemUp !== null && items.move(itemIndex, itemUp)
-                    }
-                  >
-                    ↑
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon-sm"
-                    aria-label={`Move item ${itemPosition} of section ${position} down`}
-                    disabled={itemDown === null}
-                    onClick={() =>
-                      itemDown !== null && items.move(itemIndex, itemDown)
-                    }
-                  >
-                    ↓
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    aria-label={`Remove item ${itemPosition} of section ${position}`}
-                    onClick={() => items.remove(itemIndex)}
-                  >
-                    Remove
-                  </Button>
-                </span>
-              </div>
-              <ContentTextField
-                id={`section-${index}-item-${itemIndex}-title`}
-                label="Item title"
-                hint={null}
-                error={itemErrors?.title?.message}
-                isMultiline={false}
-                registration={register(
-                  `sections.${index}.items.${itemIndex}.title`,
-                )}
-              />
-              <ContentTextField
-                id={`section-${index}-item-${itemIndex}-body`}
-                label="Item body"
-                hint={null}
-                error={itemErrors?.body?.message}
-                isMultiline
-                registration={register(
-                  `sections.${index}.items.${itemIndex}.body`,
-                )}
-              />
-            </div>
-          );
-        })}
+        {items.fields.length > 0 && (
+          <div className="flex flex-col divide-y divide-ash">
+            {items.fields.map((item, itemIndex) => {
+              const itemErrors = sectionErrors?.items?.[itemIndex];
+              const itemPosition = itemIndex + 1;
+              const itemUp = nextIndex(items.fields.length, itemIndex, -1);
+              const itemDown = nextIndex(items.fields.length, itemIndex, 1);
+              const itemLabelId = `section-${index}-item-${itemIndex}-label`;
+              return (
+                <div
+                  key={item.id}
+                  role="group"
+                  aria-labelledby={itemLabelId}
+                  className="flex flex-col gap-3 py-3 first:pt-0 last:pb-0"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span
+                      id={itemLabelId}
+                      className="text-[12px] text-muted-foreground"
+                    >
+                      Item {itemPosition}
+                    </span>
+                    <span className="flex gap-1">
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon-sm"
+                        aria-label={`Move item ${itemPosition} of section ${position} up`}
+                        disabled={itemUp === null}
+                        onClick={() =>
+                          itemUp !== null && items.move(itemIndex, itemUp)
+                        }
+                      >
+                        ↑
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon-sm"
+                        aria-label={`Move item ${itemPosition} of section ${position} down`}
+                        disabled={itemDown === null}
+                        onClick={() =>
+                          itemDown !== null && items.move(itemIndex, itemDown)
+                        }
+                      >
+                        ↓
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        aria-label={`Remove item ${itemPosition} of section ${position}`}
+                        onClick={() => items.remove(itemIndex)}
+                      >
+                        Remove
+                      </Button>
+                    </span>
+                  </div>
+                  <ContentTextField
+                    id={`section-${index}-item-${itemIndex}-title`}
+                    label="Item title"
+                    hint={null}
+                    error={itemErrors?.title?.message}
+                    isMultiline={false}
+                    registration={register(
+                      `sections.${index}.items.${itemIndex}.title`,
+                    )}
+                  />
+                  <ContentTextField
+                    id={`section-${index}-item-${itemIndex}-body`}
+                    label="Item body"
+                    hint={null}
+                    error={itemErrors?.body?.message}
+                    isMultiline
+                    registration={register(
+                      `sections.${index}.items.${itemIndex}.body`,
+                    )}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="self-start"
+          onClick={() => items.append({ ...EMPTY_ITEM })}
+        >
+          Add item
+        </Button>
       </div>
-    </fieldset>
+    </div>
   );
 }
 
@@ -268,7 +285,7 @@ export function ContentPageForm({
 
       {heroField}
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-y border-ash py-3">
+      <div className="border-y border-ash py-3">
         <Label
           htmlFor="page-published"
           className="w-fit gap-2.5 text-[13px] font-normal"
@@ -282,23 +299,12 @@ export function ContentPageForm({
           />
           Published on the site
         </Label>
-        <p className="text-[12px] text-muted-foreground">{savedLabel}</p>
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-xl leading-none tracking-tight">
-            Sections
-          </h2>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => sections.append({ ...EMPTY_SECTION, items: [] })}
-          >
-            Add section
-          </Button>
-        </div>
+        <h2 className="font-display text-xl leading-none tracking-tight">
+          Sections
+        </h2>
         {sectionsError && (
           <p role="alert" className="text-[12px] text-destructive">
             {sectionsError}
@@ -316,9 +322,22 @@ export function ContentPageForm({
             onRemove={(target) => sections.remove(target)}
           />
         ))}
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          className="self-start"
+          onClick={() => sections.append({ ...EMPTY_SECTION, items: [] })}
+        >
+          Add section
+        </Button>
       </div>
 
-      <div className="flex gap-3">
+      <div
+        data-sticky-save-bar=""
+        className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-ash bg-background py-3"
+      >
+        <p className="text-[12px] text-muted-foreground">{savedLabel}</p>
         <Button type="submit" size="sm" disabled={isSaving}>
           {isSaving ? "Saving…" : "Save page"}
         </Button>

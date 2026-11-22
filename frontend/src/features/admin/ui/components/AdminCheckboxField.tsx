@@ -3,6 +3,8 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 
+import { adminFieldMessageId } from "../types";
+
 export interface AdminCheckboxFieldProps {
   id: string;
   label: string;
@@ -21,7 +23,7 @@ export function AdminCheckboxField({
   isDisabled,
   onCheckedChange,
 }: AdminCheckboxFieldProps) {
-  const hintId = hint ? `${id}-hint` : undefined;
+  const hintId = adminFieldMessageId(id);
   return (
     <div className="grid grid-cols-[auto_1fr] items-center gap-x-2.5">
       <Checkbox

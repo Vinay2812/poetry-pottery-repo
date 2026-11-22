@@ -102,15 +102,21 @@ export function ContentPageEditorContainer({
   }
 
   if (page === null && error !== undefined && !isMissing) {
-    return <p className="text-[13px]">{error.message}</p>;
+    return (
+      <p role="alert" className="text-[13px]">
+        This page could not be loaded. Refresh to try again.
+      </p>
+    );
   }
+
+  const hasTitle = page !== null && page.title.length > 0;
 
   return (
     <div className="flex flex-col gap-6">
       <AdminPageHeader
         eyebrow="Content"
-        title={page?.title.length ? page.title : `/${slug}`}
-        description={`/${slug}`}
+        title={hasTitle ? page.title : `/${slug}`}
+        description={hasTitle ? `/${slug}` : null}
         actions={
           <div className="flex items-center gap-3">
             <AdminStatusPill

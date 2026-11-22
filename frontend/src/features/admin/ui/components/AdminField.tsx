@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 
 import { Label } from "@/components/ui/label";
 
+import { adminFieldMessageId } from "../types";
+
 export interface AdminFieldProps {
   id: string;
   label: string;
@@ -17,6 +19,7 @@ export function AdminField({
   error,
   children,
 }: AdminFieldProps) {
+  const messageId = adminFieldMessageId(id);
   return (
     <div className="flex flex-col gap-1.5">
       <Label
@@ -27,10 +30,12 @@ export function AdminField({
       </Label>
       {children}
       {hint && !error && (
-        <p className="text-[12px] text-muted-foreground">{hint}</p>
+        <p id={messageId} className="text-[12px] text-muted-foreground">
+          {hint}
+        </p>
       )}
       {error && (
-        <p role="alert" className="text-[12px] text-destructive">
+        <p id={messageId} role="alert" className="text-[12px] text-destructive">
           {error}
         </p>
       )}

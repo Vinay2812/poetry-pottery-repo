@@ -39,7 +39,7 @@ export function ContentPagesTable({
       <thead>
         <tr>
           <th className={ADMIN_TH}>Title</th>
-          <th className={ADMIN_TH}>Slug</th>
+          <th className={`${ADMIN_TH} hidden sm:table-cell`}>Slug</th>
           <th className={ADMIN_TH}>State</th>
           <th className={ADMIN_TH}>Actions</th>
         </tr>
@@ -57,8 +57,15 @@ export function ContentPagesTable({
               >
                 {row.title}
               </Link>
+              <span className="block text-muted-foreground sm:hidden">
+                /{row.slug}
+              </span>
             </td>
-            <td className={`${ADMIN_TD} text-muted-foreground`}>/{row.slug}</td>
+            <td
+              className={`${ADMIN_TD} hidden text-muted-foreground sm:table-cell`}
+            >
+              /{row.slug}
+            </td>
             <td className={ADMIN_TD}>
               <AdminStatusPill label={row.statusLabel} tone={row.statusTone} />
             </td>

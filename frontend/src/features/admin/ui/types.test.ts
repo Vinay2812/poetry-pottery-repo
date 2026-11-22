@@ -7,6 +7,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import {
+  adminFieldMessageId,
   enumOptions,
   eventStatusTone,
   fromDateTimeLocal,
@@ -151,5 +152,11 @@ describe("toPreviewColour", () => {
     expect(toPreviewColour("#4F6")).toBeNull();
     expect(toPreviewColour("")).toBeNull();
     expect(toPreviewColour("sage")).toBeNull();
+  });
+});
+
+describe("adminFieldMessageId", () => {
+  it("names the line under a field after the field", () => {
+    expect(adminFieldMessageId("email")).toBe("email-message");
   });
 });

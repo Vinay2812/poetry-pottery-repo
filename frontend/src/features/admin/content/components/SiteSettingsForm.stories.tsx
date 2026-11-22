@@ -17,7 +17,7 @@ const meta = {
     defaultValues: {
       contact_email: "studio@poetryandpottery.in",
       contact_phone: "9876543210",
-      whatsapp_number: "9876543210",
+      whatsapp_number: "919876543210",
       address: "12 Kiln Lane, Sangli, Maharashtra",
       opening_hours: "Tue to Sun, 10am to 6pm",
       instagram_url: "https://instagram.com/poetryandpottery",
