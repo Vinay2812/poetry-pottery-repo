@@ -341,17 +341,21 @@ describe("applyRegistrationStatus", () => {
 });
 
 describe("toEventStatusFilterPatch", () => {
-  it("turns the waiting filter off for a status it could never match", () => {
-    expect(toEventStatusFilterPatch(EventStatus.Completed)).toEqual({
-      status: EventStatus.Completed,
+  it("turns the waiting filter off for Cancelled, whose requests are all closed", () => {
+    expect(toEventStatusFilterPatch(EventStatus.Cancelled)).toEqual({
+      status: EventStatus.Cancelled,
       awaiting: null,
     });
   });
 
-  it("keeps it for published events or any status", () => {
-    expect(toEventStatusFilterPatch(EventStatus.Published)).toEqual({
-      status: EventStatus.Published,
-    });
+  it("keeps it for every status that can still hold a waiting request", () => {
+    for (const status of [
+      EventStatus.Published,
+      EventStatus.Draft,
+      EventStatus.Completed,
+    ]) {
+      expect(toEventStatusFilterPatch(status)).toEqual({ status });
+    }
     expect(toEventStatusFilterPatch("")).toEqual({ status: null });
   });
 });
@@ -364,11 +368,17 @@ describe("toEventAwaitingFilterPatch", () => {
     });
   });
 
-  it("leaves published alone and clears itself when turned off", () => {
-    expect(toEventAwaitingFilterPatch("1", EventStatus.Published)).toEqual({
-      awaiting: "1",
-    });
-    expect(toEventAwaitingFilterPatch("", EventStatus.Draft)).toEqual({
+  it("keeps a status that can still hold a waiting request, and clears itself when turned off", () => {
+    for (const status of [
+      EventStatus.Published,
+      EventStatus.Draft,
+      EventStatus.Completed,
+    ]) {
+      expect(toEventAwaitingFilterPatch("1", status)).toEqual({
+        awaiting: "1",
+      });
+    }
+    expect(toEventAwaitingFilterPatch("", EventStatus.Cancelled)).toEqual({
       awaiting: null,
     });
   });

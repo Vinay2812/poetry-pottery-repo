@@ -244,10 +244,10 @@ export function applyRegistrationStatus(
   });
 }
 
-// "Waiting on you" only holds published events with a request still ahead, so any other status
-// turns it off, and turning it on drops a status it could never match.
+// "Waiting on you" holds any event with a request still ahead, including one unpublished or marked
+// done early; only cancelling an event closes its requests, so Cancelled is the one status it can't share.
 function clashesWithWaiting(status: string): boolean {
-  return status !== "" && status !== EventStatus.Published;
+  return status === EventStatus.Cancelled;
 }
 
 export function toEventStatusFilterPatch(status: string): QueryPatch {
