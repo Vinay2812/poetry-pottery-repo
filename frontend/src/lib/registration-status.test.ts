@@ -109,4 +109,15 @@ describe("withRequestedLine", () => {
       stages.map((stage) => stage.label),
     );
   });
+
+  it("drops the later steps' promises once the date has passed", () => {
+    const lapsed = withRequestedLine(
+      toRequestStages("Held.", "seat").paid,
+      "Passed.",
+    );
+    expect(lapsed.slice(1).map((stage) => stage.upcoming)).toEqual([
+      undefined,
+      undefined,
+    ]);
+  });
 });

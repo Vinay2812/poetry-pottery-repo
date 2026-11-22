@@ -95,7 +95,8 @@ export function isRequestLapsed(
   return status === RegistrationStatus.Pending && new Date(startsAt) < now;
 }
 
-// Only the requested step's note changes; the steps and status words stay as they were.
+// The requested step says the date passed, and the later steps stop promising what can no longer
+// happen; the steps and status words stay as they were.
 export function withRequestedLine(
   stages: RequestStage[],
   line: string,
@@ -103,6 +104,6 @@ export function withRequestedLine(
   return stages.map((stage) =>
     stage.key === RegistrationStatus.Pending
       ? { ...stage, description: line }
-      : stage,
+      : { ...stage, upcoming: undefined },
   );
 }

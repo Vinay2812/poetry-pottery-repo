@@ -262,7 +262,7 @@ const SEAT_STAGES = toRequestStages(
 export const REGISTRATION_STAGES = SEAT_STAGES.paid;
 
 const SEAT_LAPSED_LINE =
-  "The event began before we answered. Message us to pick another one.";
+  "The event began before we answered. Message us and we'll find you another.";
 
 // The saved total decides the steps, so a seat made free later keeps the steps it was booked with.
 export function toRegistrationStages(
