@@ -17,8 +17,7 @@ const meta = {
     ),
   ],
   args: {
-    total: 48,
-    isLoading: false,
+    countLine: "48 pieces",
     sort: ProductSort.Featured,
     activeFilterCount: 0,
     onSortChange: fn(),
@@ -34,11 +33,23 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Loading: Story = {
-  args: { isLoading: true },
+  args: { countLine: "Finding pieces\u2026" },
 };
 
 export const WithActiveFilters: Story = {
-  args: { total: 12, activeFilterCount: 3 },
+  args: { countLine: "12 pieces", activeFilterCount: 3 },
+};
+
+export const SearchResults: Story = {
+  args: { countLine: "4 pieces for \u201cmug\u201d", isRelevanceOnly: true },
+};
+
+export const MadeToOrderOnly: Story = {
+  args: { countLine: "3 made-to-order pieces", activeFilterCount: 1 },
+};
+
+export const Failed: Story = {
+  args: { countLine: null },
 };
 
 export const SortedByPrice: Story = {

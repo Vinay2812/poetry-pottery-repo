@@ -76,7 +76,7 @@ export const OnSale: Story = {
 };
 
 export const LowStock: Story = {
-  args: { stockTone: "low", stockLabel: "Only 3" },
+  args: { stockTone: "low", stockLabel: "3 left in this batch" },
 };
 
 export const SoldOut: Story = {

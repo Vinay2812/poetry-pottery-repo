@@ -8,12 +8,7 @@ import {
   useState,
 } from "react";
 
-import { useQuery } from "@apollo/client/react";
-import {
-  ProductsDocument,
-  type ProductSort,
-  type ProductsQuery,
-} from "@/graphql/generated/graphql";
+import type { ProductSort, ProductsQuery } from "@/graphql/generated/graphql";
 
 import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
@@ -33,13 +28,18 @@ import { ProductToolbar } from "@/features/products/components/ProductToolbar";
 import { SearchField } from "@/features/products/components/SearchField";
 import { ShelfTabs } from "@/features/products/components/ShelfTabs";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
+import { useSearchDraft, useShelfResults } from "@/features/products/hooks";
 import {
   clampPriceRange,
   countActiveFilters,
+  isShelfCountable,
   PRODUCT_FILTERS_CODEC,
   toCardPhotoLoading,
-  toFilterInput,
-  toFilterKey,
+  toPriceRangeLabel,
+  toResultCountLabel,
+  toShelfCountLine,
+  toShelfTabCount,
+  toShowPiecesLabel,
 } from "@/features/products/types";
 
 export interface ProductListContainerProps {
@@ -49,8 +49,6 @@ export interface ProductListContainerProps {
   initialProducts?: ProductsQuery["products"] | null;
   initialFilterKey?: string | null;
 }
-
-const SEARCH_DEBOUNCE_MS = 300;
 
 export function ProductListContainer({
   heading,
@@ -66,69 +64,41 @@ export function ProductListContainer({
     toHref,
   } = useUrlState(PRODUCT_FILTERS_CODEC);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [isAppending, setIsAppending] = useState(false);
   const [priceDraft, setPriceDraft] = useState<[number, number] | null>(null);
-  const [searchDraft, setSearchDraft] = useState<string | null>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const filterInput = toFilterInput(filters, 1);
-  const { data, previousData, loading, error, fetchMore, refetch } = useQuery(
-    ProductsDocument,
-    {
-      variables: { filter: filterInput },
-      notifyOnNetworkStatusChange: true,
-    },
-  );
-  // The server's first page covers the first load, but only while the filters still match it.
-  const serverPage =
-    initialProducts && initialFilterKey === toFilterKey(filterInput)
-      ? initialProducts
-      : undefined;
-  // Old results bridge a load, not a failure: they would sit under filters they do not match.
-  const result =
-    data?.products ??
-    (error ? undefined : (previousData?.products ?? serverPage));
-  const items = result?.items ?? [];
-  const pageInfo = result?.page_info;
-  const facets = result?.facets;
-  const isInitialLoading = loading && !result;
-
   // Typing updates the field at once and the URL after a short pause.
-  const handleSearchChange = useCallback(
-    (value: string) => {
-      setSearchDraft(value);
-      if (searchTimer.current) clearTimeout(searchTimer.current);
-      searchTimer.current = setTimeout(() => {
-        dispatch({ type: "search", value });
-      }, SEARCH_DEBOUNCE_MS);
-    },
+  const commitSearch = useCallback(
+    (value: string) => dispatch({ type: "search", value }),
     [dispatch],
   );
-  const handleSearchClear = useCallback(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    setSearchDraft("");
-    dispatch({ type: "search", value: "" });
-  }, [dispatch]);
-  // The draft stays on screen until the URL has caught up, so the field never snaps back mid-navigation.
-  const searchValue =
-    searchDraft !== null && searchDraft.trim() !== filters.search
-      ? searchDraft
-      : filters.search;
+  const {
+    value: searchValue,
+    change: handleSearchChange,
+    flush: handleSearchBlur,
+    clear: handleSearchClear,
+    reset: resetSearchDraft,
+  } = useSearchDraft(filters.search, commitSearch);
   // The field paints on every keystroke; the results follow this copy at a lower priority.
   const deferredSearchValue = useDeferredValue(searchValue);
   const isSearchSettling = deferredSearchValue.trim() !== filters.search;
-  // Results stay on screen while a new page loads; only their opacity says so.
-  const isBusy =
-    isPending ||
-    isSearchSettling ||
-    (loading && Boolean(result) && !isAppending);
-  useEffect(
-    () => () => {
-      if (searchTimer.current) clearTimeout(searchTimer.current);
-    },
-    [],
-  );
-
+  const {
+    result,
+    phase,
+    isRefreshing,
+    isNextPageLoading,
+    canAskNextPage,
+    hasAppendFailed,
+    loadMore: handleLoadMore,
+    retry: handleRetry,
+  } = useShelfResults({
+    filters,
+    initialProducts,
+    initialFilterKey,
+    isFiltersMoving: isPending || isSearchSettling,
+  });
+  const items = result?.items ?? [];
+  const pageInfo = result?.page_info;
+  const facets = result?.facets;
+  const handleOpenFilters = useCallback(() => setIsSheetOpen(true), []);
   const handleSortChange = useCallback(
     (sort: ProductSort) => dispatch({ type: "sort", sort }),
     [dispatch],
@@ -168,6 +138,10 @@ export function ProductListContainer({
     },
     [dispatch, facets],
   );
+  const handleClearPrice = useCallback(() => {
+    setPriceDraft(null);
+    dispatch({ type: "price", min: null, max: null });
+  }, [dispatch]);
   const handleInStockChange = useCallback(
     (value: boolean) => dispatch({ type: "inStock", value }),
     [dispatch],
@@ -180,47 +154,42 @@ export function ProductListContainer({
     (value: boolean) => dispatch({ type: "seconds", value }),
     [dispatch],
   );
+  // The empty state's button goes away once the search clears, so focus moves to the field.
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const handleClearSearchFromEmpty = useCallback(() => {
+    handleSearchClear();
+    searchInputRef.current?.focus();
+  }, [handleSearchClear]);
   const handleClear = useCallback(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    setSearchDraft(null);
+    resetSearchDraft();
     setPriceDraft(null);
     dispatch({ type: "clear" });
-  }, [dispatch]);
-
-  const handleLoadMore = useCallback(() => {
-    if (!pageInfo?.has_more || loading) return;
-    setIsAppending(true);
-    void fetchMore({
-      variables: { filter: toFilterInput(filters, pageInfo.page + 1) },
-      updateQuery: (previous, { fetchMoreResult }) => ({
-        products: {
-          ...fetchMoreResult.products,
-          items: [
-            ...previous.products.items,
-            ...fetchMoreResult.products.items,
-          ],
-        },
-      }),
-    }).finally(() => setIsAppending(false));
-  }, [fetchMore, filters, loading, pageInfo]);
+  }, [dispatch, resetSearchDraft]);
 
   // Load the next page when the sentinel scrolls into view.
   const loadMoreRef = useRef(handleLoadMore);
   useEffect(() => {
     loadMoreRef.current = handleLoadMore;
   }, [handleLoadMore]);
-  const sentinelRef = useCallback((node: HTMLDivElement | null) => {
-    if (!node) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting))
-          loadMoreRef.current();
-      },
-      { rootMargin: "600px 0px" },
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
+  // Observed afresh each time a next page becomes askable, so a shopper already at the
+  // bottom still sets it off: the observer reports the current position when it starts.
+  // After a failure only "Try again" asks; re-arming then would retry in a tight loop.
+  const isSentinelArmed = canAskNextPage && !hasAppendFailed;
+  const sentinelRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (!node || !isSentinelArmed) return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((entry) => entry.isIntersecting))
+            loadMoreRef.current();
+        },
+        { rootMargin: "600px 0px" },
+      );
+      observer.observe(node);
+      return () => observer.disconnect();
+    },
+    [isSentinelArmed],
+  );
 
   const priceFloor = facets?.price_min ?? 0;
   const priceCeiling = facets?.price_max ?? 0;
@@ -233,6 +202,7 @@ export function ProductListContainer({
     priceCeiling,
   );
   const activeFilterCount = countActiveFilters(filters);
+  const isMadeToOrderOnly = filters.customizableOnly && activeFilterCount === 1;
 
   const filterPanel = facets && (
     <ProductFilters
@@ -247,6 +217,7 @@ export function ProductListContainer({
       priceFloor={priceFloor}
       priceCeiling={priceCeiling}
       priceRange={priceRange}
+      chosenPriceLabel={toPriceRangeLabel(filters.minPrice, filters.maxPrice)}
       inStockOnly={filters.inStockOnly}
       customizableOnly={filters.customizableOnly}
       secondsOnly={filters.secondsOnly}
@@ -257,6 +228,7 @@ export function ProductListContainer({
       onToggleGlaze={handleToggleGlaze}
       onPriceRangeChange={setPriceDraft}
       onPriceRangeCommit={handlePriceCommit}
+      onClearPrice={handleClearPrice}
       onInStockOnlyChange={handleInStockChange}
       onCustomizableOnlyChange={handleCustomizableChange}
       onSecondsOnlyChange={handleSecondsChange}
@@ -279,6 +251,8 @@ export function ProductListContainer({
             placeholder="Try “tea cup”, “sage green” or “planter”"
             onChange={handleSearchChange}
             onClear={handleSearchClear}
+            onBlur={handleSearchBlur}
+            inputRef={searchInputRef}
             autoFocus={isSearchPage}
           />
         </div>
@@ -288,8 +262,7 @@ export function ProductListContainer({
         <ShelfTabs
           shelfHref={toHref({ ...filters, isArchive: false })}
           archiveHref={ARCHIVE_PATH}
-          shelfCount={facets?.active_count ?? 0}
-          archiveCount={facets?.archive_count ?? 0}
+          shelfCount={toShelfTabCount(phase, facets?.active_count)}
           isArchive={filters.isArchive}
           onSelectShelf={handleSelectShelf}
         />
@@ -303,51 +276,67 @@ export function ProductListContainer({
         {/* A narrow result set must not pull the footer up over the reader's scroll position. */}
         <div className="flex min-h-[60vh] flex-col gap-5">
           <ProductToolbar
-            total={pageInfo?.total ?? 0}
-            isLoading={isInitialLoading}
+            countLine={toShelfCountLine(
+              phase,
+              toResultCountLabel(
+                pageInfo?.total ?? 0,
+                filters.search,
+                filters.customizableOnly,
+              ),
+            )}
             sort={filters.sort}
+            isRelevanceOnly={filters.search !== ""}
             activeFilterCount={activeFilterCount}
             onSortChange={handleSortChange}
-            onOpenFilters={() => setIsSheetOpen(true)}
+            onOpenFilters={handleOpenFilters}
             onClear={handleClear}
           />
 
-          {isInitialLoading ? (
+          {/* The empty copy speaks only for an answer to the current filters; until then, skeletons. */}
+          {phase === "failed" ? (
+            <LoadFailed onRetry={handleRetry} />
+          ) : items.length === 0 && phase === "pending" ? (
             <ProductGrid>
               {Array.from({ length: 8 }, (_, index) => (
                 <ProductCardSkeleton key={index} />
               ))}
             </ProductGrid>
-          ) : error && !result ? (
-            <LoadFailed onRetry={() => void refetch()} />
           ) : items.length === 0 ? (
             <EmptyResults
               search={filters.search}
               hasActiveFilters={activeFilterCount > 0}
+              isMadeToOrderOnly={isMadeToOrderOnly}
+              onClearSearch={handleClearSearchFromEmpty}
               onClear={handleClear}
             />
           ) : (
             <div
-              aria-busy={isBusy}
+              aria-busy={isRefreshing}
               className={cn(
                 "flex flex-col gap-5 transition-opacity duration-200",
-                isBusy && "opacity-60",
+                isRefreshing && "opacity-60",
               )}
             >
               <ProductGrid>
-                {items.map((product, index) => (
-                  <ProductCardContainer
-                    key={product.id}
-                    product={product}
-                    isPriority={toCardPhotoLoading(index).isPriority}
-                    isEager={toCardPhotoLoading(index).isEager}
-                  />
-                ))}
+                {items.map((product, index) => {
+                  const photoLoading = toCardPhotoLoading(index);
+                  return (
+                    <ProductCardContainer
+                      key={product.id}
+                      product={product}
+                      isPriority={photoLoading.isPriority}
+                      isEager={photoLoading.isEager}
+                    />
+                  );
+                })}
               </ProductGrid>
-              {pageInfo && (
+              {/* The footer counts only a settled list; a pending one has no honest number yet. */}
+              {pageInfo && isShelfCountable(phase) && (
                 <LoadMore
                   hasMore={pageInfo.has_more}
-                  isLoading={isAppending}
+                  isLoading={isNextPageLoading}
+                  canAsk={canAskNextPage}
+                  hasFailed={hasAppendFailed}
                   loadedCount={items.length}
                   total={pageInfo.total}
                   onLoadMore={handleLoadMore}
@@ -361,7 +350,7 @@ export function ProductListContainer({
 
       <FilterSheet
         isOpen={isSheetOpen}
-        resultCount={pageInfo?.total ?? 0}
+        showLabel={toShowPiecesLabel(phase, pageInfo?.total ?? 0)}
         activeFilterCount={activeFilterCount}
         onOpenChange={setIsSheetOpen}
         onClear={handleClear}

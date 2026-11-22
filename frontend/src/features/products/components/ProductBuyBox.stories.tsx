@@ -64,7 +64,7 @@ const meta = {
     colorName: "Slate Grey",
     colorCode: "#6B7280",
     stockTone: "in_stock",
-    stockLabel: "6 made in this batch",
+    stockLabel: "6 left in this batch",
     quantity: 1,
     maxQuantity: 10,
     isWishlisted: false,
@@ -100,7 +100,7 @@ export const SoldOut: Story = {
 };
 
 export const LowStock: Story = {
-  args: { stockTone: "low", stockLabel: "3 made in this batch" },
+  args: { stockTone: "low", stockLabel: "3 left in this batch" },
 };
 
 export const MadeToOrder: Story = {

@@ -30,8 +30,11 @@ export function EmptyState({
       <span aria-hidden className="size-32 shrink-0 sm:size-40">
         <PlaceholderImage kind={kind} />
       </span>
-      <div className="flex flex-col items-start gap-4">
-        <h2 className="font-heading text-2xl tracking-tight">{heading}</h2>
+      {/* A heading can quote what someone typed, so one long word must wrap, not widen the page. */}
+      <div className="flex min-w-0 flex-col items-start gap-4">
+        <h2 className="max-w-full font-heading text-2xl tracking-tight wrap-anywhere">
+          {heading}
+        </h2>
         <p className="max-w-sm text-[15px] text-muted-foreground">{line}</p>
         {actionHref ? (
           <Button variant="outline" asChild>

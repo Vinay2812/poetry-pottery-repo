@@ -28,8 +28,8 @@ export const MOBILE_MENU_LINKS: NavLink[] = [
 
 export const FOOTER_SHOP_LINKS: NavLink[] = [
   { href: "/products", label: "All pieces" },
-  { href: "/products?sort=NEWEST", label: "New arrivals" },
-  { href: "/products?sort=BEST_SELLING", label: "Best sellers" },
+  { href: "/products?sort=NEWEST", label: "Newest on the shelf" },
+  { href: "/products?sort=BEST_SELLING", label: "Most taken home" },
   { href: "/custom", label: "Made to order" },
   { href: "/archive", label: "Archive" },
 ];

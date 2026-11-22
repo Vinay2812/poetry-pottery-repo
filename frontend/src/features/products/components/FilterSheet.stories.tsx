@@ -11,7 +11,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     isOpen: true,
-    resultCount: 48,
+    showLabel: "Show 48 pieces",
     activeFilterCount: 1,
     onOpenChange: fn(),
     onClear: fn(),
@@ -40,6 +40,7 @@ const meta = {
         selectedGlazes={[]}
         priceFloor={400}
         priceCeiling={4500}
+        chosenPriceLabel={null}
         priceRange={[400, 4500]}
         inStockOnly={false}
         customizableOnly={false}
@@ -54,6 +55,7 @@ const meta = {
         onInStockOnlyChange={fn()}
         onCustomizableOnlyChange={fn()}
         onSecondsOnlyChange={fn()}
+        onClearPrice={fn()}
       />
     ),
   },
@@ -67,7 +69,13 @@ export const Open: Story = {};
 
 export const Closed: Story = { args: { isOpen: false } };
 
-export const SinglePieceResult: Story = { args: { resultCount: 1 } };
+export const SinglePieceResult: Story = { args: { showLabel: "Show 1 piece" } };
+
+export const FindingPieces: Story = {
+  args: { showLabel: "Finding pieces\u2026" },
+};
+
+export const Failed: Story = { args: { showLabel: "Show pieces" } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

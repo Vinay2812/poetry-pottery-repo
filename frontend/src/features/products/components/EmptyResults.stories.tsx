@@ -10,6 +10,7 @@ const meta = {
   args: {
     search: "",
     hasActiveFilters: false,
+    onClearSearch: fn(),
     onClear: fn(),
   },
 } satisfies Meta<typeof EmptyResults>;
@@ -26,6 +27,10 @@ export const WithSearch: Story = {
 
 export const WithActiveFilters: Story = {
   args: { hasActiveFilters: true },
+};
+
+export const MadeToOrderOnly: Story = {
+  args: { hasActiveFilters: true, isMadeToOrderOnly: true },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

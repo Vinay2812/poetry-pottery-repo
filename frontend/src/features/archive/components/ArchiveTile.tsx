@@ -17,9 +17,9 @@ export interface ArchiveTileProps {
   isEager?: boolean;
 }
 
-const SIZES = "(min-width: 1024px) 32vw, (min-width: 640px) 48vw, 100vw";
+const SIZES = "(min-width: 1024px) 32vw, 50vw";
 
-// Bigger than a shelf card and carrying no price: the photograph is the point here.
+// A shelf-sized tile with no price: the photograph and where it went are the point here.
 export function ArchiveTile({
   href,
   name,

@@ -156,6 +156,21 @@ const NARROW_KEYS = [
 
 type NarrowKey = (typeof NARROW_KEYS)[number];
 
+interface FacetCountWheres {
+  categories: Prisma.ProductWhereInput;
+  collections: Prisma.ProductWhereInput;
+  materials: Prisma.ProductWhereInput;
+  glazes: Prisma.ProductWhereInput;
+}
+
+type FacetOptionLists = Pick<
+  ProductFacets,
+  "categories" | "collections" | "materials" | "glazes"
+>;
+
+// Matches no row, for counting an option against a search that found nothing.
+const NOTHING: Prisma.ProductWhereInput = { id: { in: [] } };
+
 // Decimal columns arrive as Prisma objects; GraphQL Float wants a number.
 const toCm = (value: Prisma.Decimal | null): number | null =>
   value === null ? null : value.toNumber();
@@ -183,11 +198,19 @@ export class ProductsService {
       ? await this.search.rankProducts(term, SEARCH_CANDIDATES)
       : null;
 
+    // A search that finds nothing still lists every filter option, each counted at zero.
     if (rankedIds && rankedIds.length === 0) {
       return {
         items: [],
         page_info: toPageInfo(bounds, 0),
-        facets: emptyFacets(),
+        facets: {
+          ...(await this.facetOptions(null)),
+          price_min: 0,
+          price_max: 0,
+          active_count: 0,
+          archive_count: 0,
+          seconds_count: 0,
+        },
       };
     }
 
@@ -455,67 +478,50 @@ export class ProductsService {
   }
 
   // The whole catalogue is always listed, zero counts included, so the sidebar never reflows.
-  private async facets(count: {
-    categories: Prisma.ProductWhereInput;
-    collections: Prisma.ProductWhereInput;
-    materials: Prisma.ProductWhereInput;
-    glazes: Prisma.ProductWhereInput;
-    prices: Prisma.ProductWhereInput;
-  }): Promise<
-    Omit<ProductFacets, "active_count" | "archive_count" | "seconds_count">
-  > {
-    const [
-      categories,
-      collections,
-      materialNames,
-      materialCounts,
-      glazes,
-      prices,
-    ] = await Promise.all([
-      this.prisma.category.findMany({
-        orderBy: [{ sort_order: "asc" }, { name: "asc" }],
-        select: {
-          slug: true,
-          name: true,
-          _count: { select: { products: { where: count.categories } } },
-        },
-      }),
-      this.prisma.collection.findMany({
-        orderBy: [{ created_at: "desc" }],
-        select: {
-          slug: true,
-          name: true,
-          _count: { select: { products: { where: count.collections } } },
-        },
-      }),
-      this.prisma.product.groupBy({
-        by: ["material"],
-        orderBy: { material: "asc" },
-      }),
-      this.prisma.product.groupBy({
-        by: ["material"],
-        where: count.materials,
-        _count: { _all: true },
-        orderBy: { material: "asc" },
-      }),
-      this.prisma.glaze.findMany({
-        orderBy: { name: "asc" },
-        select: {
-          slug: true,
-          name: true,
-          _count: { select: { products: { where: count.glazes } } },
-        },
-      }),
-      // Bounds for the slider, so they span the pieces on show rather than every row.
-      this.prisma.product.aggregate({
-        where: count.prices,
-        _min: { price: true },
-        _max: { price: true },
-      }),
-    ]);
-    const counted = new Map(
-      materialCounts.map((row) => [row.material, row._count._all]),
-    );
+  // With nothing to count against, every option simply reads zero.
+  private async facetOptions(
+    count: FacetCountWheres | null,
+  ): Promise<FacetOptionLists> {
+    const countWhere = (where: Prisma.ProductWhereInput | undefined) =>
+      where ?? NOTHING;
+    const [categories, collections, materials, materialCounts, glazes] =
+      await Promise.all([
+        this.prisma.category.findMany({
+          orderBy: [{ sort_order: "asc" }, { name: "asc" }],
+          select: {
+            slug: true,
+            name: true,
+            _count: {
+              select: { products: { where: countWhere(count?.categories) } },
+            },
+          },
+        }),
+        this.prisma.collection.findMany({
+          orderBy: [{ created_at: "desc" }],
+          select: {
+            slug: true,
+            name: true,
+            _count: {
+              select: { products: { where: countWhere(count?.collections) } },
+            },
+          },
+        }),
+        this.prisma.product.groupBy({
+          by: ["material"],
+          orderBy: { material: "asc" },
+        }),
+        this.countMaterials(countWhere(count?.materials)),
+        this.prisma.glaze.findMany({
+          orderBy: { name: "asc" },
+          select: {
+            slug: true,
+            name: true,
+            _count: {
+              select: { products: { where: countWhere(count?.glazes) } },
+            },
+          },
+        }),
+      ]);
     return {
       categories: categories.map((c) => ({
         value: c.slug,
@@ -527,34 +533,54 @@ export class ProductsService {
         label: c.name,
         count: c._count.products,
       })),
-      materials: materialNames.map((m) => ({
+      materials: materials.map((m) => ({
         value: m.material,
         label: m.material,
-        count: counted.get(m.material) ?? 0,
+        count: materialCounts.get(m.material) ?? 0,
       })),
       glazes: glazes.map((g) => ({
         value: g.slug,
         label: g.name,
         count: g._count.products,
       })),
+    };
+  }
+
+  private async countMaterials(
+    where: Prisma.ProductWhereInput,
+  ): Promise<Map<string, number>> {
+    // Counting against nothing needs no query: every material reads zero. This is an identity
+    // check, so it relies on countWhere handing over the NOTHING object itself, not a copy.
+    if (where === NOTHING) return new Map();
+    const rows = await this.prisma.product.groupBy({
+      by: ["material"],
+      where,
+      _count: { _all: true },
+      orderBy: { material: "asc" },
+    });
+    return new Map(rows.map((row) => [row.material, row._count._all]));
+  }
+
+  private async facets(
+    count: FacetCountWheres & { prices: Prisma.ProductWhereInput },
+  ): Promise<
+    Omit<ProductFacets, "active_count" | "archive_count" | "seconds_count">
+  > {
+    const [options, prices] = await Promise.all([
+      this.facetOptions(count),
+      // Bounds for the slider, so they span the pieces on show rather than every row.
+      this.prisma.product.aggregate({
+        where: count.prices,
+        _min: { price: true },
+        _max: { price: true },
+      }),
+    ]);
+    return {
+      ...options,
       price_min: prices._min.price ?? 0,
       price_max: prices._max.price ?? 0,
     };
   }
-}
-
-function emptyFacets(): ProductFacets {
-  return {
-    categories: [],
-    collections: [],
-    materials: [],
-    glazes: [],
-    price_min: 0,
-    price_max: 0,
-    active_count: 0,
-    archive_count: 0,
-    seconds_count: 0,
-  };
 }
 
 function sortByRank<T extends { id: number }>(

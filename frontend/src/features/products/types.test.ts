@@ -3,7 +3,10 @@ import { describe, expect, it } from "vitest";
 import { OptionGroupKind, ProductSort } from "@/graphql/generated/graphql";
 import { toUrlSearchParams } from "@/lib/search-params";
 
+import { FOOTER_SHOP_LINKS } from "@/features/layout/types";
+
 import {
+  appendShelfPage,
   applyFilterAction,
   clampPriceRange,
   computeUnitPrice,
@@ -13,6 +16,7 @@ import {
   MAX_REFERENCE_PHOTO_BYTES,
   type ReferencePhoto,
   remainingReferenceSlots,
+  SORT_OPTIONS,
   toConfirmedPhotoUrls,
   toDefaultSelections,
   validateReferencePhoto,
@@ -26,6 +30,14 @@ import {
   toArchiveNote,
   toFilterInput,
   toFilterKey,
+  toResultCountLabel,
+  isShelfCountable,
+  settleAppend,
+  toShelfCountLine,
+  toShelfPhase,
+  toShelfResult,
+  toShelfTabCount,
+  toShowPiecesLabel,
   toSearchParams,
   isStickyBarWanted,
   isTuckedUnderHeader,
@@ -45,6 +57,7 @@ import {
   toFactRows,
   toGlazePath,
   toPieceScale,
+  toPriceRangeLabel,
   toProductPath,
   toShortDescription,
   toSizeLine,
@@ -189,6 +202,194 @@ describe("toFilterInput", () => {
   });
 });
 
+describe("settleAppend", () => {
+  const waiting = {
+    mug: { page: 2, status: "loading" as const },
+    bowl: { page: 3, status: "loading" as const },
+  };
+
+  it("ignores an answer for a page the filter key is no longer waiting on", () => {
+    expect(settleAppend(waiting, "mug", 3, "done")).toBe(waiting);
+    expect(settleAppend(waiting, "cup", 2, "failed")).toBe(waiting);
+  });
+
+  it("forgets a page once it has landed", () => {
+    expect(settleAppend(waiting, "mug", 2, "done")).toEqual({
+      bowl: { page: 3, status: "loading" },
+    });
+  });
+
+  it("keeps a failed page so it can be retried", () => {
+    expect(settleAppend(waiting, "mug", 2, "failed")).toEqual({
+      mug: { page: 2, status: "failed" },
+      bowl: { page: 3, status: "loading" },
+    });
+  });
+});
+
+describe("appendShelfPage", () => {
+  const shelfPage = (ids: number[], page: number) => ({
+    products: { items: ids.map((id) => ({ id })), page_info: { page } },
+  });
+  const ids = (value: ReturnType<typeof shelfPage> | undefined) =>
+    value?.products.items.map((item) => item.id);
+
+  it("joins the page that follows the list", () => {
+    const merged = appendShelfPage(shelfPage([1, 2], 1), shelfPage([3, 4], 2));
+
+    expect(ids(merged)).toEqual([1, 2, 3, 4]);
+    expect(merged?.products.page_info.page).toBe(2);
+  });
+
+  it("writes nothing for the same page twice or a page out of order", () => {
+    const once = appendShelfPage(shelfPage([1, 2], 1), shelfPage([3, 4], 2));
+
+    expect(appendShelfPage(once, shelfPage([3, 4], 2))).toBe(once);
+    const first = shelfPage([1, 2], 1);
+    expect(appendShelfPage(first, shelfPage([5, 6], 3))).toBe(first);
+  });
+
+  it("writes nothing when there is no list to join", () => {
+    expect(appendShelfPage(undefined, shelfPage([3, 4], 2))).toBeUndefined();
+  });
+});
+
+describe("toShelfResult", () => {
+  const none = {
+    current: undefined,
+    serverPage: undefined,
+    previous: undefined,
+    initial: undefined,
+    isLoading: false,
+  };
+
+  it("prefers the browser's answer, then the server's page, then the last answer", () => {
+    expect(
+      toShelfResult({ ...none, current: "own", serverPage: "server" }),
+    ).toBe("own");
+    expect(
+      toShelfResult({ ...none, serverPage: "server", previous: "last" }),
+    ).toBe("server");
+    expect(toShelfResult({ ...none, previous: "last", initial: "first" })).toBe(
+      "last",
+    );
+  });
+
+  it("falls back to the rendered page only while the browser's first answer is out", () => {
+    expect(toShelfResult({ ...none, initial: "first", isLoading: true })).toBe(
+      "first",
+    );
+    expect(toShelfResult({ ...none, initial: "first" })).toBeUndefined();
+  });
+});
+
+describe("shelf phase copy", () => {
+  it("counts only a settled list", () => {
+    expect(isShelfCountable("ready")).toBe(true);
+    expect(isShelfCountable("pending")).toBe(false);
+    expect(toShelfTabCount("ready", 7)).toBe(7);
+    expect(toShelfTabCount("pending", 7)).toBeNull();
+    expect(toShelfTabCount("failed", 7)).toBeNull();
+  });
+
+  it("says finding, the count or nothing in the toolbar", () => {
+    expect(toShelfCountLine("pending", "7 pieces")).toBe(
+      "Finding pieces\u2026",
+    );
+    expect(toShelfCountLine("ready", "7 pieces")).toBe("7 pieces");
+    expect(toShelfCountLine("failed", "7 pieces")).toBeNull();
+  });
+
+  it("always gives the sheet a way to close", () => {
+    expect(toShowPiecesLabel("ready", 1)).toBe("Show 1 piece");
+    expect(toShowPiecesLabel("ready", 7)).toBe("Show 7 pieces");
+    expect(toShowPiecesLabel("pending", 7)).toBe("Finding pieces\u2026");
+    expect(toShowPiecesLabel("failed", 7)).toBe("Show pieces");
+  });
+});
+
+describe("toShelfPhase", () => {
+  const settled = {
+    hasFailed: false,
+    isFiltersMoving: false,
+    hasOwnPage: true,
+    isOwnPageLoading: false,
+    hasServerPage: false,
+  };
+
+  it("is ready with the browser's own page or a matching server page", () => {
+    expect(toShelfPhase(settled)).toBe("ready");
+    expect(
+      toShelfPhase({ ...settled, hasOwnPage: false, hasServerPage: true }),
+    ).toBe("ready");
+  });
+
+  it("is pending while the first page loads or the filters are ahead of it", () => {
+    expect(toShelfPhase({ ...settled, isOwnPageLoading: true })).toBe(
+      "pending",
+    );
+    expect(toShelfPhase({ ...settled, isFiltersMoving: true })).toBe("pending");
+    expect(toShelfPhase({ ...settled, hasOwnPage: false })).toBe("pending");
+  });
+
+  it("lets a failure win over everything else", () => {
+    expect(
+      toShelfPhase({ ...settled, hasFailed: true, isFiltersMoving: true }),
+    ).toBe("failed");
+  });
+});
+
+describe("toPriceRangeLabel", () => {
+  it("names the chosen price in words", () => {
+    expect(toPriceRangeLabel(500, 2000)).toBe("\u20b9500 to \u20b92,000");
+    expect(toPriceRangeLabel(500, null)).toBe("From \u20b9500");
+    expect(toPriceRangeLabel(null, 2000)).toBe("Up to \u20b92,000");
+    expect(toPriceRangeLabel(null, null)).toBeNull();
+  });
+});
+
+describe("toFilterInput while searching", () => {
+  it("leaves the sort out, since a search keeps its relevance order", () => {
+    const filters = { ...EMPTY_FILTERS, sort: ProductSort.PriceLowToHigh };
+
+    expect(toFilterInput(filters, 1).sort).toBe(ProductSort.PriceLowToHigh);
+    expect(toFilterInput({ ...filters, search: "mug" }, 1).sort).toBeNull();
+    expect(toFilterKey(toFilterInput({ ...filters, search: "mug" }, 1))).toBe(
+      toFilterKey(toFilterInput({ ...EMPTY_FILTERS, search: "mug" }, 1)),
+    );
+  });
+});
+
+describe("toResultCountLabel", () => {
+  it("counts pieces", () => {
+    expect(toResultCountLabel(1, "", false)).toBe("1 piece");
+    expect(toResultCountLabel(7, "", false)).toBe("7 pieces");
+  });
+
+  it("names the made-to-order shelf and the search term", () => {
+    expect(toResultCountLabel(3, "", true)).toBe("3 made-to-order pieces");
+    expect(toResultCountLabel(4, "mug", false)).toBe(
+      "4 pieces for \u201cmug\u201d",
+    );
+    expect(toResultCountLabel(1, "bowl", true)).toBe(
+      "1 made-to-order piece for \u201cbowl\u201d",
+    );
+  });
+});
+
+describe("SORT_OPTIONS", () => {
+  it("shares its names with the footer links that open a sort", () => {
+    for (const link of FOOTER_SHOP_LINKS) {
+      const sort = new URLSearchParams(link.href.split("?")[1] ?? "").get(
+        "sort",
+      );
+      if (!sort) continue;
+      const option = SORT_OPTIONS.find((candidate) => candidate.value === sort);
+      expect(option?.label).toBe(link.label);
+    }
+  });
+});
+
 describe("toStockStatus", () => {
   it("labels stock levels as batch state", () => {
     expect(toStockStatus(0, false)).toEqual({
@@ -197,7 +398,7 @@ describe("toStockStatus", () => {
     });
     expect(toStockStatus(3, false)).toEqual({
       tone: "low",
-      label: "Only 3",
+      label: "3 left in this batch",
     });
     expect(toStockStatus(20, false)).toEqual({
       tone: "in_stock",
@@ -209,8 +410,8 @@ describe("toStockStatus", () => {
 
 describe("toBatchLabel", () => {
   it("counts the batch", () => {
-    expect(toBatchLabel(3, false)).toBe("3 made in this batch");
-    expect(toBatchLabel(1, false)).toBe("One made in this batch");
+    expect(toBatchLabel(3, false)).toBe("3 left in this batch");
+    expect(toBatchLabel(1, false)).toBe("1 left in this batch");
     expect(toBatchLabel(0, false)).toBe("Sold out \u00b7 next batch soon");
     expect(toBatchLabel(0, true)).toBe(
       "Made to order, thrown in about ten days",
@@ -713,10 +914,12 @@ describe("toCardStatusLine", () => {
 
   it("names the second on its own and alongside the batch line", () => {
     expect(toCardStatusLine(true, "in_stock", "Ready to ship")).toBe("Second");
-    expect(toCardStatusLine(true, "low", "Only 2")).toBe(
-      "Second \u00b7 Only 2",
+    expect(toCardStatusLine(true, "low", "2 left in this batch")).toBe(
+      "Second \u00b7 2 left in this batch",
     );
-    expect(toCardStatusLine(false, "low", "Only 2")).toBe("Only 2");
+    expect(toCardStatusLine(false, "low", "2 left in this batch")).toBe(
+      "2 left in this batch",
+    );
   });
 });
 

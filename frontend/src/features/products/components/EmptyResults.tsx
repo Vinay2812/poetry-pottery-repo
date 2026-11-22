@@ -3,12 +3,18 @@ import { EmptyState } from "@/components/empty/EmptyState";
 export interface EmptyResultsProps {
   search: string;
   hasActiveFilters: boolean;
+  // True when the made-to-order switch is the only filter on.
+  isMadeToOrderOnly?: boolean;
+  // Clears the search alone; the other filters stay as they were.
+  onClearSearch: () => void;
   onClear: () => void;
 }
 
 export function EmptyResults({
   search,
   hasActiveFilters,
+  isMadeToOrderOnly = false,
+  onClearSearch,
   onClear,
 }: EmptyResultsProps) {
   // Nothing is coming to a filtered result, so "yet" would be a lie here.
@@ -19,7 +25,19 @@ export function EmptyResults({
         heading={`Nothing matches “${search}”`}
         line="Try a glaze, a clay body or a simpler word."
         actionLabel="Clear the search"
-        onAction={onClear}
+        onAction={onClearSearch}
+      />
+    );
+  }
+  // Nothing to loosen here: the way forward is asking for a piece.
+  if (isMadeToOrderOnly) {
+    return (
+      <EmptyState
+        kind="mug"
+        heading="No made-to-order pieces listed right now"
+        line="Tell us what you have in mind and we will throw it for you."
+        actionLabel="Ask for a piece"
+        actionHref="/custom"
       />
     );
   }

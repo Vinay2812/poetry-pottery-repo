@@ -13,7 +13,8 @@ import { cn } from "@/lib/utils";
 
 export interface FilterSheetProps {
   isOpen: boolean;
-  resultCount: number;
+  // The close button's words: a count once the list settles, never a stale one.
+  showLabel: string;
   activeFilterCount: number;
   onOpenChange: (isOpen: boolean) => void;
   onClear: () => void;
@@ -22,7 +23,7 @@ export interface FilterSheetProps {
 
 export function FilterSheet({
   isOpen,
-  resultCount,
+  showLabel,
   activeFilterCount,
   onOpenChange,
   onClear,
@@ -32,7 +33,8 @@ export function FilterSheet({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="flex h-dvh w-full flex-col sm:max-w-sm"
+        // Full width on phones so long glaze and collection names never squeeze.
+        className="flex h-dvh flex-col data-[side=right]:w-full data-[side=right]:sm:max-w-sm"
       >
         <SheetHeader>
           <div className="flex items-baseline justify-between gap-3 pr-10">
@@ -56,7 +58,7 @@ export function FilterSheet({
         <div className="flex-1 overflow-y-auto px-4 pb-2">{children}</div>
         <SheetFooter>
           <Button size="lg" onClick={() => onOpenChange(false)}>
-            Show {resultCount} {resultCount === 1 ? "piece" : "pieces"}
+            {showLabel}
           </Button>
         </SheetFooter>
       </SheetContent>

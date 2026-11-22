@@ -54,8 +54,8 @@ describe("toSelectionSummary", () => {
 
 describe("toStockNotice", () => {
   it("speaks up only when a batch is nearly gone", () => {
-    expect(toStockNotice(1, false)).toBe("Only 1 left");
-    expect(toStockNotice(3, false)).toBe("Only 3 left");
+    expect(toStockNotice(1, false)).toBe("1 left in this batch");
+    expect(toStockNotice(3, false)).toBe("3 left in this batch");
     expect(toStockNotice(4, false)).toBeNull();
   });
 

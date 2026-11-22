@@ -43,7 +43,7 @@ export interface ProductCardProps {
 
 const SIZES = "(min-width: 1280px) 22vw, (min-width: 768px) 30vw, 50vw";
 const OVERLAY_BUTTON =
-  "z-20 flex size-9 items-center justify-center border border-ink bg-white text-ink transition-[color,background-color,opacity] duration-200 ease-out hover:bg-ink hover:text-white lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100";
+  "z-20 flex size-9 items-center justify-center border border-ash bg-white text-ink transition-[color,background-color,border-color,opacity] duration-200 ease-out hover:border-ink hover:bg-ink hover:text-white lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100";
 
 // Image first, then one line of name and price. Made-to-order pieces link to their options instead of adding blind.
 export function ProductCard({
@@ -218,10 +218,9 @@ export function ProductCard({
         ) : null}
       </div>
 
-      {/* Two lines kept for the name and one for the stock line, so a short name and a
-          missing stock line leave a card the same height as every other one. */}
+      {/* The stock line stays with its name, so a name that wraps carries its line down with it. */}
       <div className="flex min-w-0 flex-col gap-1">
-        <div className="flex min-h-10 items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-3">
           <span className="flex min-w-0 items-start gap-2">
             {glazeColor && (
               <GlazeSwatch
@@ -242,7 +241,7 @@ export function ProductCard({
         </div>
         <p
           className={cn(
-            "min-h-5 text-[13px]",
+            "text-[13px] empty:hidden",
             stockTone === "made_to_order"
               ? "text-primary"
               : "text-muted-foreground",

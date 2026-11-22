@@ -3,7 +3,7 @@ export interface ArchiveShelfRowProps {
   children: React.ReactNode;
 }
 
-// One named run inside a year: its name on a hairline, then the pieces it held.
+// One named run inside a year: its name on a hairline, then the pieces it held, two abreast even on a phone.
 export function ArchiveShelfRow({
   collection,
   children,
@@ -13,7 +13,7 @@ export function ArchiveShelfRow({
       <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
         {collection}
       </h3>
-      <div className="grid grid-cols-1 gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-x-3 gap-y-10 md:gap-x-4 lg:grid-cols-3">
         {children}
       </div>
     </section>

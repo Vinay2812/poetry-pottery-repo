@@ -19,7 +19,6 @@ const meta = {
     shelfHref: "/products",
     archiveHref: "/archive",
     shelfCount: 9,
-    archiveCount: 15,
     isArchive: false,
     onSelectShelf: fn(),
   },
@@ -31,9 +30,9 @@ type Story = StoryObj<typeof meta>;
 
 export const Shelf: Story = {};
 
-export const Archive: Story = { args: { isArchive: true } };
+export const CountPending: Story = { args: { shelfCount: null } };
 
-export const EmptyArchive: Story = { args: { archiveCount: 0 } };
+export const Archive: Story = { args: { isArchive: true } };
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

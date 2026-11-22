@@ -6,6 +6,7 @@ import {
   type ProductsFilterInput,
 } from "@/graphql/generated/graphql";
 
+import { formatInr } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
 import { buildWhatsAppUrl } from "@/features/layout/types";
@@ -20,13 +21,14 @@ const PAGE_SIZE = 24;
 const LOW_STOCK_THRESHOLD = 3;
 const MAX_DESCRIPTION_SENTENCES = 3;
 
+// Studio words for the shop sorts; the footer links to two of them by the same names.
 export const SORT_OPTIONS: { value: ProductSort; label: string }[] = [
-  { value: ProductSort.Featured, label: "Featured" },
-  { value: ProductSort.Newest, label: "New arrivals" },
-  { value: ProductSort.BestSelling, label: "Best sellers" },
-  { value: ProductSort.PriceLowToHigh, label: "Price: low to high" },
-  { value: ProductSort.PriceHighToLow, label: "Price: high to low" },
-  { value: ProductSort.TopRated, label: "Top rated" },
+  { value: ProductSort.Featured, label: "Studio picks" },
+  { value: ProductSort.Newest, label: "Newest on the shelf" },
+  { value: ProductSort.BestSelling, label: "Most taken home" },
+  { value: ProductSort.PriceLowToHigh, label: "Price, low to high" },
+  { value: ProductSort.PriceHighToLow, label: "Price, high to low" },
+  { value: ProductSort.TopRated, label: "Best reviewed" },
 ];
 
 export interface ProductFilters {
@@ -194,7 +196,8 @@ export function toFilterInput(
     customizable_only: filters.customizableOnly || null,
     seconds_only: filters.secondsOnly || null,
     archive: filters.isArchive,
-    sort: filters.sort,
+    // A search is ranked by relevance, so a sort would only split the cache.
+    sort: filters.search ? null : filters.sort,
     page,
     limit: PAGE_SIZE,
   };
@@ -218,6 +221,133 @@ export function countActiveFilters(filters: ProductFilters): number {
   );
 }
 
+// The count names what the list is: a search term or the made-to-order shelf changes what was counted.
+export function toResultCountLabel(
+  total: number,
+  search: string,
+  isMadeToOrderOnly: boolean,
+): string {
+  const noun = total === 1 ? "piece" : "pieces";
+  const counted = `${total} ${isMadeToOrderOnly ? `made-to-order ${noun}` : noun}`;
+  return search ? `${counted} for \u201c${search}\u201d` : counted;
+}
+
+// A next-page request the shelf is waiting on, or one that failed and can be retried.
+export interface ShelfAppend {
+  page: number;
+  status: "loading" | "failed";
+}
+
+// Records how a next-page request ended, per filter key. An answer for a page the key is no
+// longer waiting on changes nothing; success forgets the entry, failure keeps it for a retry.
+export function settleAppend(
+  all: Record<string, ShelfAppend>,
+  key: string,
+  page: number,
+  status: "done" | "failed",
+): Record<string, ShelfAppend> {
+  if (all[key]?.page !== page) return all;
+  const rest = Object.fromEntries(
+    Object.entries(all).filter(([other]) => other !== key),
+  );
+  return status === "failed" ? { ...rest, [key]: { page, status } } : rest;
+}
+
+interface PagedShelf {
+  products: { items: unknown[]; page_info: { page: number } };
+}
+
+// Joins a next page only onto the one before it, so a repeated or late answer writes nothing.
+export function appendShelfPage<Shelf extends PagedShelf>(
+  previous: Shelf | undefined,
+  next: Shelf,
+): Shelf | undefined {
+  const list = previous?.products;
+  if (!list || list.page_info.page + 1 !== next.products.page_info.page)
+    return previous;
+  return {
+    ...next,
+    products: {
+      ...next.products,
+      items: [...list.items, ...next.products.items],
+    },
+  };
+}
+
+// Where the shelf's list stands for the current filters: still finding it, showing it, or failed.
+export type ShelfPhase = "pending" | "ready" | "failed";
+
+export interface ShelfPhaseInput {
+  hasFailed: boolean;
+  // The filters on screen are ahead of the list: a URL change or a search still being typed.
+  isFiltersMoving: boolean;
+  hasOwnPage: boolean;
+  isOwnPageLoading: boolean;
+  hasServerPage: boolean;
+}
+
+export interface ShelfResultSources<Page> {
+  current: Page | undefined;
+  serverPage: Page | undefined;
+  previous: Page | undefined;
+  initial: Page | undefined;
+  isLoading: boolean;
+}
+
+// What the list shows: the browser's answer for these filters, else the server's page for them,
+// else the last answer while the next one loads. The last arm fires only when the filters change
+// before the browser has any answer at all, so the page the server rendered stands in, not a blank.
+export function toShelfResult<Page>({
+  current,
+  serverPage,
+  previous,
+  initial,
+  isLoading,
+}: ShelfResultSources<Page>): Page | undefined {
+  return current ?? serverPage ?? previous ?? (isLoading ? initial : undefined);
+}
+
+// The one answer the toolbar, shelf tab, pagination footer and filter sheet all read.
+export function toShelfPhase({
+  hasFailed,
+  isFiltersMoving,
+  hasOwnPage,
+  isOwnPageLoading,
+  hasServerPage,
+}: ShelfPhaseInput): ShelfPhase {
+  if (hasFailed) return "failed";
+  if (isFiltersMoving) return "pending";
+  if (hasOwnPage) return isOwnPageLoading ? "pending" : "ready";
+  return hasServerPage ? "ready" : "pending";
+}
+
+// Counts speak only for a settled list: the tab, the footer and the toolbar all wait for one.
+export function isShelfCountable(phase: ShelfPhase): boolean {
+  return phase === "ready";
+}
+
+export function toShelfCountLine(
+  phase: ShelfPhase,
+  countLabel: string,
+): string | null {
+  if (phase === "pending") return "Finding pieces\u2026";
+  return isShelfCountable(phase) ? countLabel : null;
+}
+
+export function toShelfTabCount(
+  phase: ShelfPhase,
+  count: number | undefined,
+): number | null {
+  return isShelfCountable(phase) ? (count ?? null) : null;
+}
+
+// A failure has no count to promise, but the sheet must still close.
+export function toShowPiecesLabel(phase: ShelfPhase, total: number): string {
+  if (phase === "pending") return "Finding pieces\u2026";
+  if (phase === "failed") return "Show pieces";
+  return `Show ${total} ${total === 1 ? "piece" : "pieces"}`;
+}
+
 export type StockTone = "in_stock" | "low" | "sold_out" | "made_to_order";
 
 export interface StockStatus {
@@ -234,16 +364,15 @@ export function toStockStatus(
   if (stock <= 0)
     return { tone: "sold_out", label: "Sold out \u00b7 next batch soon" };
   if (stock <= LOW_STOCK_THRESHOLD)
-    return { tone: "low", label: `Only ${stock}` };
+    return { tone: "low", label: `${stock} left in this batch` };
   return { tone: "in_stock", label: "Ready to ship" };
 }
 
-// The product page counts the batch rather than an inventory number.
+// The product page counts what is left of the batch, in the same words as the card and the cart.
 export function toBatchLabel(stock: number, isCustomizable: boolean): string {
   if (isCustomizable) return "Made to order, thrown in about ten days";
   if (stock <= 0) return "Sold out \u00b7 next batch soon";
-  if (stock === 1) return "One made in this batch";
-  return `${stock} made in this batch`;
+  return `${stock} left in this batch`;
 }
 
 // A second still says what is left in the batch; both facts share the card's one reserved line.
@@ -460,6 +589,18 @@ export function clampPriceRange(
   const low = Math.min(Math.max(range[0], floor), ceiling);
   const high = Math.max(Math.min(range[1], ceiling), low);
   return [low, high];
+}
+
+// The price filter in words, for when the slider has no range to show it on.
+export function toPriceRangeLabel(
+  min: number | null,
+  max: number | null,
+): string | null {
+  if (min !== null && max !== null)
+    return `${formatInr(min)} to ${formatInr(max)}`;
+  if (min !== null) return `From ${formatInr(min)}`;
+  if (max !== null) return `Up to ${formatInr(max)}`;
+  return null;
 }
 
 export function toProductPath(slug: string): string {

@@ -72,7 +72,7 @@ export const LowStock: Story = {
     quantity: 2,
     maxQuantity: 2,
     lineTotal: 1700,
-    stockNotice: "Only 2 left",
+    stockNotice: "2 left in this batch",
   },
 };
 

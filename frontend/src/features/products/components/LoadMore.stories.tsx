@@ -26,6 +26,14 @@ export const Loading: Story = {
   args: { isLoading: true },
 };
 
+export const WaitingForFirstPage: Story = {
+  args: { canAsk: false },
+};
+
+export const NextPageFailed: Story = {
+  args: { hasFailed: true },
+};
+
 export const AllLoaded: Story = {
   args: { hasMore: false, loadedCount: 48 },
 };

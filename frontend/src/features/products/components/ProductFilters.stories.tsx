@@ -41,6 +41,7 @@ const meta = {
     selectedGlazes: [],
     priceFloor: 400,
     priceCeiling: 4500,
+    chosenPriceLabel: null,
     priceRange: [400, 4500],
     inStockOnly: false,
     customizableOnly: false,
@@ -55,6 +56,7 @@ const meta = {
     onInStockOnlyChange: fn(),
     onCustomizableOnlyChange: fn(),
     onSecondsOnlyChange: fn(),
+    onClearPrice: fn(),
   },
 } satisfies Meta<typeof ProductFilters>;
 
@@ -77,6 +79,16 @@ export const WithActiveFilters: Story = {
 
 export const CustomizableOnly: Story = {
   args: { customizableOnly: true },
+};
+
+// A search that found nothing has no price range, but a chosen price must stay removable.
+export const ChosenPriceWithoutRange: Story = {
+  args: {
+    priceFloor: 0,
+    priceCeiling: 0,
+    priceRange: [0, 0],
+    chosenPriceLabel: "\u20b9500 to \u20b92,000",
+  },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };
