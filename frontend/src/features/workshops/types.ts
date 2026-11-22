@@ -12,6 +12,7 @@ import type { TimelineStage } from "@/lib/timeline";
 import {
   isRegistrationClosed,
   toRequestStages,
+  withRequestedLine,
 } from "@/lib/registration-status";
 
 export type WorkshopData = WorkshopConfigFieldsFragment;
@@ -321,11 +322,16 @@ const SESSION_STAGES = toRequestStages(
 
 export const BOOKING_STAGES = SESSION_STAGES.paid;
 
+const SESSION_LAPSED_LINE =
+  "Your date passed before we answered. Message us to pick a new one.";
+
 // The saved total decides the steps, so a free session never promises payment details.
 export function toBookingStages(
   total: number,
+  isLapsed: boolean,
 ): TimelineStage<RegistrationStatus>[] {
-  return total === 0 ? SESSION_STAGES.free : SESSION_STAGES.paid;
+  const stages = total === 0 ? SESSION_STAGES.free : SESSION_STAGES.paid;
+  return isLapsed ? withRequestedLine(stages, SESSION_LAPSED_LINE) : stages;
 }
 
 type BookingGroup = "upcoming" | "past";

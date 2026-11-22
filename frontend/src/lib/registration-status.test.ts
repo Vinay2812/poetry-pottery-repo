@@ -4,8 +4,11 @@ import { RegistrationStatus } from "@/graphql/generated/graphql";
 
 import {
   isRegistrationClosed,
+  isRequestLapsed,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
+  toRequestStages,
+  withRequestedLine,
 } from "./registration-status";
 
 describe("toRegistrationStatusLabel", () => {
@@ -63,5 +66,47 @@ describe("toRegistrationStatusTone", () => {
     expect(toRegistrationStatusTone(RegistrationStatus.Confirmed)).toBe("done");
     expect(toRegistrationStatusTone(RegistrationStatus.Rejected)).toBe("off");
     expect(toRegistrationStatusTone(RegistrationStatus.Cancelled)).toBe("off");
+  });
+});
+
+describe("isRequestLapsed", () => {
+  const now = new Date("2026-06-10T10:00:00Z");
+
+  it("holds a request whose date is still ahead", () => {
+    expect(
+      isRequestLapsed(RegistrationStatus.Pending, "2026-06-10T10:30:00Z", now),
+    ).toBe(false);
+  });
+
+  it("lapses an unanswered request once its date has come", () => {
+    expect(
+      isRequestLapsed(RegistrationStatus.Pending, "2026-06-09T10:00:00Z", now),
+    ).toBe(true);
+  });
+
+  it("never lapses a request the studio has answered", () => {
+    for (const status of [
+      RegistrationStatus.Approved,
+      RegistrationStatus.Confirmed,
+      RegistrationStatus.Rejected,
+      RegistrationStatus.Cancelled,
+    ]) {
+      expect(isRequestLapsed(status, "2026-06-09T10:00:00Z", now)).toBe(false);
+    }
+  });
+});
+
+describe("withRequestedLine", () => {
+  it("swaps only the requested step's note", () => {
+    const stages = toRequestStages("Held.", "seat").paid;
+    const lapsed = withRequestedLine(stages, "Passed.");
+    expect(lapsed.map((stage) => stage.description)).toEqual([
+      "Passed.",
+      stages[1]?.description,
+      stages[2]?.description,
+    ]);
+    expect(lapsed.map((stage) => stage.label)).toEqual(
+      stages.map((stage) => stage.label),
+    );
   });
 });

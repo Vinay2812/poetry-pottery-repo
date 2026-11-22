@@ -355,17 +355,28 @@ describe("booking status helpers", () => {
   });
 
   it("keeps the payment step for a paid session", () => {
-    expect(toBookingStages(1700)).toBe(BOOKING_STAGES);
+    expect(toBookingStages(1700, false)).toBe(BOOKING_STAGES);
   });
 
   it("goes straight from requested to confirmed for a free session", () => {
-    const stages = toBookingStages(0);
+    const stages = toBookingStages(0, false);
     expect(stages.map((stage) => stage.key)).toEqual([
       RegistrationStatus.Pending,
       RegistrationStatus.Confirmed,
     ]);
     expect(JSON.stringify(stages)).not.toMatch(/pay/i);
     expect(toRepeatedPhrases(stages)).toEqual([]);
+  });
+
+  it("tells a guest whose date passed unanswered to message the studio", () => {
+    for (const total of [0, 1700]) {
+      const stages = toBookingStages(total, true);
+      expect(stages[0]?.description).toMatch(/passed before we answered/);
+      expect(stages[0]?.description).not.toMatch(/holding/);
+      expect(stages.map((stage) => stage.label)).toEqual(
+        toBookingStages(total, false).map((stage) => stage.label),
+      );
+    }
   });
 
   it("counts hours and free wheels", () => {

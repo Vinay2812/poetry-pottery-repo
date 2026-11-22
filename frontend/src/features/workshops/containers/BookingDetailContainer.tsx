@@ -23,6 +23,7 @@ import { useSlotPicker } from "@/features/workshops/slot-picker";
 import { toClosedLabel, toTimelineDate, toTimelineSteps } from "@/lib/timeline";
 import {
   isRegistrationClosed,
+  isRequestLapsed,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
 } from "@/lib/registration-status";
@@ -220,7 +221,13 @@ export function BookingDetailContainer({
           optimisticBooking.status,
         )}
         steps={toTimelineSteps({
-          stages: toBookingStages(optimisticBooking.total),
+          stages: toBookingStages(
+            optimisticBooking.total,
+            isRequestLapsed(
+              optimisticBooking.status,
+              optimisticBooking.starts_at,
+            ),
+          ),
           status: optimisticBooking.status,
           dates,
           isClosed: closed,

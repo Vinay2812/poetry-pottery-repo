@@ -32,6 +32,7 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { toTimelineSteps } from "@/lib/timeline";
 import {
   isRegistrationClosed,
+  isRequestLapsed,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
 } from "@/lib/registration-status";
@@ -147,7 +148,10 @@ export function RegistrationDetailContainer({
           optimisticRegistration.status,
         )}
         steps={toTimelineSteps({
-          stages: toRegistrationStages(optimisticRegistration.total),
+          stages: toRegistrationStages(
+            optimisticRegistration.total,
+            isRequestLapsed(optimisticRegistration.status, event.starts_at),
+          ),
           status: optimisticRegistration.status,
           dates: stepDates,
           isClosed,

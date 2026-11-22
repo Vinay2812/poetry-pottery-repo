@@ -21,6 +21,7 @@ import {
   isRegistrationClosed,
   toRegistrationStatusLabel,
   toRequestStages,
+  withRequestedLine,
 } from "@/lib/registration-status";
 
 export type EventCardData = EventCardFragment;
@@ -260,11 +261,16 @@ const SEAT_STAGES = toRequestStages(
 
 export const REGISTRATION_STAGES = SEAT_STAGES.paid;
 
+const SEAT_LAPSED_LINE =
+  "The event began before we answered. Message us to pick another one.";
+
 // The saved total decides the steps, so a seat made free later keeps the steps it was booked with.
 export function toRegistrationStages(
   total: number,
+  isLapsed: boolean,
 ): TimelineStage<RegistrationStatus>[] {
-  return total === 0 ? SEAT_STAGES.free : SEAT_STAGES.paid;
+  const stages = total === 0 ? SEAT_STAGES.free : SEAT_STAGES.paid;
+  return isLapsed ? withRequestedLine(stages, SEAT_LAPSED_LINE) : stages;
 }
 
 export type RegistrationStepDates = Partial<

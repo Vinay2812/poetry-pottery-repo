@@ -242,17 +242,28 @@ describe("toWhatsAppBookingMessage", () => {
 
 describe("toRegistrationStages", () => {
   it("keeps the payment step for a paid seat", () => {
-    expect(toRegistrationStages(600)).toBe(REGISTRATION_STAGES);
+    expect(toRegistrationStages(600, false)).toBe(REGISTRATION_STAGES);
   });
 
   it("goes straight from requested to confirmed for a free seat", () => {
-    const stages = toRegistrationStages(0);
+    const stages = toRegistrationStages(0, false);
     expect(stages.map((stage) => stage.key)).toEqual([
       RegistrationStatus.Pending,
       RegistrationStatus.Confirmed,
     ]);
     expect(JSON.stringify(stages)).not.toMatch(/pay/i);
     expect(toRepeatedPhrases(stages)).toEqual([]);
+  });
+
+  it("tells a guest whose event began unanswered to message the studio", () => {
+    for (const total of [0, 600]) {
+      const stages = toRegistrationStages(total, true);
+      expect(stages[0]?.description).toMatch(/began before we answered/);
+      expect(stages[0]?.description).not.toMatch(/holding/);
+      expect(stages.map((stage) => stage.label)).toEqual(
+        toRegistrationStages(total, false).map((stage) => stage.label),
+      );
+    }
   });
 });
 
