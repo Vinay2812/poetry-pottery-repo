@@ -61,30 +61,46 @@ describe("registration status rules", () => {
     ).toEqual([RegistrationStatus.CANCELLED]);
   });
 
-  it("offers only the ways to close a request once its date has begun", () => {
+  it("offers only the ways to close an unanswered request once its date has begun", () => {
     expect(
       nextAdminStatuses(RegistrationStatus.PENDING, 1200, BEGUN, NOW),
     ).toEqual([RegistrationStatus.REJECTED, RegistrationStatus.CANCELLED]);
+  });
+
+  it("still lets an approved booking be confirmed as paid after its date", () => {
     expect(
       nextAdminStatuses(RegistrationStatus.APPROVED, 1200, BEGUN, NOW),
-    ).toEqual([RegistrationStatus.REJECTED, RegistrationStatus.CANCELLED]);
+    ).toEqual([
+      RegistrationStatus.CONFIRMED,
+      RegistrationStatus.REJECTED,
+      RegistrationStatus.CANCELLED,
+    ]);
     expect(
       nextAdminStatuses(RegistrationStatus.CONFIRMED, 1200, BEGUN, NOW),
     ).toEqual([RegistrationStatus.CANCELLED]);
   });
 
-  it("refuses approving or confirming a date that has begun", () => {
+  it("refuses letting an unanswered request in once its date has begun", () => {
+    const pending = RegistrationStatus.PENDING;
     expect(() =>
-      assertNotLateAdmission(RegistrationStatus.APPROVED, BEGUN, NOW),
+      assertNotLateAdmission(pending, RegistrationStatus.APPROVED, BEGUN, NOW),
     ).toThrow(BadRequestException);
     expect(() =>
-      assertNotLateAdmission(RegistrationStatus.CONFIRMED, BEGUN, NOW),
+      assertNotLateAdmission(pending, RegistrationStatus.CONFIRMED, BEGUN, NOW),
     ).toThrow(BadRequestException);
     expect(() =>
-      assertNotLateAdmission(RegistrationStatus.REJECTED, BEGUN, NOW),
+      assertNotLateAdmission(pending, RegistrationStatus.REJECTED, BEGUN, NOW),
     ).not.toThrow();
     expect(() =>
-      assertNotLateAdmission(RegistrationStatus.CONFIRMED, AHEAD, NOW),
+      assertNotLateAdmission(pending, RegistrationStatus.CONFIRMED, AHEAD, NOW),
+    ).not.toThrow();
+    expect(() =>
+      assertNotLateAdmission(
+        RegistrationStatus.APPROVED,
+        RegistrationStatus.CONFIRMED,
+        BEGUN,
+        NOW,
+      ),
     ).not.toThrow();
   });
 

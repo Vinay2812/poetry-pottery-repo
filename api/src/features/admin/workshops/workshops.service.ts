@@ -408,7 +408,7 @@ export class AdminWorkshopsService {
       throw new NotFoundException("Booking not found");
     }
     assertNotPaymentStepForFreeSeat(status, current.total);
-    assertNotLateAdmission(status, current.starts_at);
+    assertNotLateAdmission(current.status, status, current.starts_at);
     const updated = await this.workshops.applyStatus(
       current,
       status,

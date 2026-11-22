@@ -392,7 +392,7 @@ export class AdminEventsService {
       throw new NotFoundException("Registration not found");
     }
     assertNotPaymentStepForFreeSeat(status, current.total);
-    assertNotLateAdmission(status, current.event.starts_at);
+    assertNotLateAdmission(current.status, status, current.event.starts_at);
     const updated = await this.events.applyStatus(
       current,
       status,
