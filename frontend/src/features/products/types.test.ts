@@ -7,6 +7,7 @@ import {
   applyFilterAction,
   clampPriceRange,
   computeUnitPrice,
+  FAILED_PHOTO_MESSAGE,
   hasFailedPhoto,
   isPhotoUploadPending,
   MAX_REFERENCE_PHOTO_BYTES,
@@ -35,6 +36,7 @@ import {
   toFlawNote,
   toGlazeAskUrl,
   toPhotoAlt,
+  toPhotoHoldMessage,
   toPhotoLabel,
   formatCapacity,
   formatCentimetres,
@@ -519,6 +521,41 @@ describe("hasFailedPhoto", () => {
     expect(hasFailedPhoto([photo({ url: null, error: "Upload failed" })])).toBe(
       true,
     );
+  });
+});
+
+describe("toPhotoHoldMessage", () => {
+  it("lets the photos go when there are none or all are uploaded", () => {
+    expect(toPhotoHoldMessage([])).toBeNull();
+    expect(
+      toPhotoHoldMessage([photo({ url: "https://cdn.test/a.jpg" })]),
+    ).toBeNull();
+  });
+
+  it("waits for a photo still uploading", () => {
+    expect(toPhotoHoldMessage([photo({ url: null })])).toBe(
+      "Wait for the photos to finish uploading",
+    );
+  });
+
+  it("asks for a failed photo to be added again", () => {
+    expect(
+      toPhotoHoldMessage([photo({ url: null, error: "Upload failed" })]),
+    ).toBe(FAILED_PHOTO_MESSAGE);
+  });
+
+  // A held send shows this live, so it must move on as the same photo settles.
+  it("follows one photo from uploading to failed, and clears once it is uploaded", () => {
+    const uploading = photo({ url: null });
+    const failed = photo({ url: null, error: "Upload failed" });
+    const uploaded = photo({ url: "https://cdn.test/a.jpg" });
+    expect(
+      [uploading, failed, uploaded].map((p) => toPhotoHoldMessage([p])),
+    ).toEqual([
+      "Wait for the photos to finish uploading",
+      FAILED_PHOTO_MESSAGE,
+      null,
+    ]);
   });
 });
 

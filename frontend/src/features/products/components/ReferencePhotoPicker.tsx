@@ -96,7 +96,7 @@ export function ReferencePhotoPicker({
         aria-hidden
       />
       {error ? (
-        <p id={errorId} className="text-[13px] text-destructive">
+        <p id={errorId} role="alert" className="text-[13px] text-destructive">
           {error}
         </p>
       ) : (

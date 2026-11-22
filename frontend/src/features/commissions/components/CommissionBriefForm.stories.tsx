@@ -3,17 +3,12 @@ import { fn } from "storybook/test";
 
 import { atViewport } from "@/lib/storybook/viewports";
 import { CommissionBriefForm } from "./CommissionBriefForm";
+import { ReferencePhotosSignIn } from "./ReferencePhotosSignIn";
 
 const meta = {
   title: "Features/Commissions/CommissionBriefForm",
   component: CommissionBriefForm,
-  decorators: [
-    (Story) => (
-      <div className="max-w-2xl">
-        <Story />
-      </div>
-    ),
-  ],
+  parameters: { layout: "padded" },
   args: {
     pieces: [
       {
@@ -60,16 +55,14 @@ export const ServerRefused: Story = {
   args: { errorMessage: "We could not send that just now. Try again." },
 };
 
+export const PhotoHold: Story = {
+  args: { photoHoldMessage: "Wait for the photos to finish uploading" },
+};
+
 export const WithoutWhatsApp: Story = { args: { toAskUrl: () => null } };
 
-export const WithPhotoPicker: Story = {
-  args: {
-    photoPicker: (
-      <p className="text-[13px] text-muted-foreground">
-        Sign in to attach reference photos.
-      </p>
-    ),
-  },
+export const SignedOutPhotos: Story = {
+  args: { photoPicker: <ReferencePhotosSignIn onSignIn={fn()} /> },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

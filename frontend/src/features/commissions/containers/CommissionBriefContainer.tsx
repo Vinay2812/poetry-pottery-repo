@@ -1,7 +1,7 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
-import { useCallback, useState } from "react";
+import { useAuth, useClerk } from "@clerk/nextjs";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useMutation } from "@apollo/client/react";
 import { CreateCommissionRequestDocument } from "@/graphql/generated/graphql";
@@ -10,6 +10,7 @@ import type { CommissionFormValues } from "@/lib/validations/commission";
 
 import { CommissionBriefForm } from "@/features/commissions/components/CommissionBriefForm";
 import { CommissionSent } from "@/features/commissions/components/CommissionSent";
+import { ReferencePhotosSignIn } from "@/features/commissions/components/ReferencePhotosSignIn";
 import type {
   GlazeChoice,
   PieceChoice,
@@ -25,10 +26,10 @@ import {
 import { ReferencePhotoPicker } from "@/features/products/components/ReferencePhotoPicker";
 import { useReferencePhotos } from "@/features/products/hooks";
 import {
-  isPhotoUploadPending,
   MAX_REFERENCE_PHOTOS,
   REFERENCE_PHOTO_ACCEPT,
   toConfirmedPhotoUrls,
+  toPhotoHoldMessage,
 } from "@/features/products/types";
 
 export interface CommissionBriefContainerProps {
@@ -51,8 +52,13 @@ export function CommissionBriefContainer({
   referencePiece,
 }: CommissionBriefContainerProps) {
   const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
   const [sent, setSent] = useState<SentBrief | null>(null);
+  const sentHeadingRef = useRef<HTMLHeadingElement>(null);
+  const photoPickerRef = useRef<HTMLDivElement>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  // Set once a send is held back; the words then follow the photos as they finish or fail.
+  const [isPhotoHoldShown, setIsPhotoHoldShown] = useState(false);
   const [sentAskUrl, setSentAskUrl] = useState<string | null>(null);
   const [create, { loading }] = useMutation(CreateCommissionRequestDocument);
   const {
@@ -63,6 +69,7 @@ export function CommissionBriefContainer({
     removePhoto,
     clearPhotos,
   } = useReferencePhotos();
+  const photoHoldMessage = isPhotoHoldShown ? toPhotoHoldMessage(photos) : null;
 
   const toAskUrl = useCallback(
     (values: CommissionFormValues) =>
@@ -73,8 +80,14 @@ export function CommissionBriefContainer({
   const handleSubmit = useCallback(
     async (values: CommissionFormValues) => {
       setErrorMessage(null);
-      if (isPhotoUploadPending(photos)) {
-        setPhotoError("Wait for the photos to finish uploading");
+      // Shown beside Send and at the picker, which scrolls into view the way a field error would.
+      if (toPhotoHoldMessage(photos)) {
+        // An older picker error would otherwise sit over the hold at the picker.
+        setPhotoError(null);
+        setIsPhotoHoldShown(true);
+        // Focus follows the scroll, so the next Tab lands on the photos rather than past Send.
+        photoPickerRef.current?.scrollIntoView({ block: "start" });
+        photoPickerRef.current?.focus({ preventScroll: true });
         return;
       }
       try {
@@ -108,6 +121,26 @@ export function CommissionBriefContainer({
     [clearPhotos, create, photos, setPhotoError, whatsappNumber],
   );
 
+  // A new photo starts fresh only once nothing is holding the brief; a failed photo still attached keeps the hold.
+  const handleAddFiles = useCallback(
+    (files: File[]) => {
+      if (!toPhotoHoldMessage(photos)) setIsPhotoHoldShown(false);
+      addFiles(files);
+    },
+    [addFiles, photos],
+  );
+
+  const handleSignIn = useCallback(() => {
+    void openSignIn();
+  }, [openSignIn]);
+
+  // The confirmation is far shorter than the form, so bring it into view instead of leaving the footer there.
+  useEffect(() => {
+    if (!sent) return;
+    sentHeadingRef.current?.scrollIntoView({ block: "start" });
+    sentHeadingRef.current?.focus({ preventScroll: true });
+  }, [sent]);
+
   if (sent) {
     return (
       <CommissionSent
@@ -115,6 +148,7 @@ export function CommissionBriefContainer({
         summary={sent.summary}
         email={sent.email}
         askUrl={sentAskUrl}
+        headingRef={sentHeadingRef}
       />
     );
   }
@@ -129,30 +163,36 @@ export function CommissionBriefContainer({
       referenceLine={referencePiece ? toReferenceLine(referencePiece) : null}
       isSubmitting={loading}
       errorMessage={errorMessage}
+      photoHoldMessage={photoHoldMessage}
       toAskUrl={toAskUrl}
       photoPicker={
         isSignedIn ? (
-          <ReferencePhotoPicker
-            photos={photos.map((photo) => ({
-              id: photo.id,
-              name: photo.name,
-              previewUrl: photo.previewUrl,
-              progress: photo.progress,
-              error: photo.error,
-              isUploaded: photo.url !== null,
-            }))}
-            maxPhotos={MAX_REFERENCE_PHOTOS}
-            accept={REFERENCE_PHOTO_ACCEPT}
-            error={photoError}
-            onAddFiles={addFiles}
-            onRemove={removePhoto}
-          />
+          <div
+            ref={photoPickerRef}
+            tabIndex={-1}
+            role="group"
+            aria-label="Reference photos"
+          >
+            <ReferencePhotoPicker
+              photos={photos.map((photo) => ({
+                id: photo.id,
+                name: photo.name,
+                previewUrl: photo.previewUrl,
+                progress: photo.progress,
+                error: photo.error,
+                isUploaded: photo.url !== null,
+              }))}
+              maxPhotos={MAX_REFERENCE_PHOTOS}
+              accept={REFERENCE_PHOTO_ACCEPT}
+              // A refused file is the newer news at the picker; the hold stays beside Send meanwhile.
+              error={photoError ?? photoHoldMessage}
+              onAddFiles={handleAddFiles}
+              onRemove={removePhoto}
+            />
+          </div>
         ) : (
-          // Uploads are signed; send the photos on WhatsApp instead of asking for an account.
-          <p className="text-[13px] text-muted-foreground">
-            Sign in to attach reference photos, or send them on WhatsApp with
-            your brief.
-          </p>
+          // The modal keeps the page, so whatever is typed survives signing in.
+          <ReferencePhotosSignIn onSignIn={handleSignIn} />
         )
       }
       onSubmit={(values) => void handleSubmit(values)}

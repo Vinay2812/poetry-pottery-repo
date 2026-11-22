@@ -1,4 +1,7 @@
-import type { CommissionRequestInput } from "@/graphql/generated/graphql";
+import type {
+  CommissionRequestInput,
+  ProductCardFragment,
+} from "@/graphql/generated/graphql";
 
 import type { CommissionFormValues } from "@/lib/validations/commission";
 
@@ -145,4 +148,29 @@ export function toBriefSummary(
     .map((part) => part.trim())
     .filter((part) => part.length > 0)
     .join(" · ");
+}
+
+// Promises ordering only if no card is archived: the API's one availability rule, which the cards follow too.
+export function toCommissionPiecesNote(
+  pieces: readonly Pick<ProductCardFragment, "is_archived">[],
+): string {
+  return pieces.every((piece) => !piece.is_archived)
+    ? "Order one as it is, at the price shown, or describe something else in the brief below."
+    : "Name one in your brief below if you'd like something like it.";
+}
+
+// The last entry in the piece list; picking it opens a box to describe the piece instead.
+export const OTHER_PIECE = "__other__";
+
+// What the piece selector shows and which sizes it offers; a typed piece stays typed even if it matches a listed name.
+export function toPieceSelection(
+  pieces: readonly PieceChoice[],
+  pieceType: string,
+  isOtherPiece: boolean,
+): { selectValue: string; sizes: string[] } {
+  if (isOtherPiece) return { selectValue: OTHER_PIECE, sizes: [] };
+  const isListed = pieces.some((piece) => piece.name === pieceType);
+  return isListed
+    ? { selectValue: pieceType, sizes: toSizesForPiece(pieces, pieceType) }
+    : { selectValue: "", sizes: [] };
 }

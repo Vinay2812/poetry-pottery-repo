@@ -11,8 +11,11 @@ import {
   toCommissionAskUrl,
   toCommissionInput,
   toCommissionMessage,
+  toCommissionPiecesNote,
   toGlazeChoices,
+  OTHER_PIECE,
   toPieceChoices,
+  toPieceSelection,
   toReferenceBrief,
   toReferenceLine,
   toSizesForPiece,
@@ -197,5 +200,50 @@ describe("toReferenceLine", () => {
     expect(
       toReferenceLine({ name: "Drip sip mug", url: "", categoryName: null }),
     ).toBe("Asking for one like the Drip sip mug.");
+  });
+});
+
+describe("toCommissionPiecesNote", () => {
+  it("offers the price shown when every piece can still be ordered", () => {
+    expect(
+      toCommissionPiecesNote([{ is_archived: false }, { is_archived: false }]),
+    ).toBe(
+      "Order one as it is, at the price shown, or describe something else in the brief below.",
+    );
+  });
+
+  // The API's isProductArchived sets is_archived for sold-out, inactive or out-of-window pieces alike.
+  it("speaks of past work once any piece is archived", () => {
+    expect(
+      toCommissionPiecesNote([{ is_archived: false }, { is_archived: true }]),
+    ).toBe("Name one in your brief below if you'd like something like it.");
+  });
+});
+
+describe("toPieceSelection", () => {
+  const pieces = [
+    { name: "Mugs", sizes: ["Short (150 ml)", "Tall (300 ml)"] },
+    { name: "Bowls", sizes: [] },
+  ];
+
+  it("shows a listed piece with its sizes", () => {
+    expect(toPieceSelection(pieces, "Mugs", false)).toEqual({
+      selectValue: "Mugs",
+      sizes: ["Short (150 ml)", "Tall (300 ml)"],
+    });
+  });
+
+  it("keeps something else chosen when the typed piece matches a listed name", () => {
+    expect(toPieceSelection(pieces, "Mugs", true)).toEqual({
+      selectValue: OTHER_PIECE,
+      sizes: [],
+    });
+  });
+
+  it("shows nothing picked before a piece is chosen", () => {
+    expect(toPieceSelection(pieces, "", false)).toEqual({
+      selectValue: "",
+      sizes: [],
+    });
   });
 });

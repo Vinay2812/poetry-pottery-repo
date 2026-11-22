@@ -39,16 +39,15 @@ import { StickyBuyBar } from "@/features/products/components/StickyBuyBar";
 import { ProductCardContainer } from "@/features/products/containers/ProductCardContainer";
 import {
   computeUnitPrice,
-  hasFailedPhoto,
   isStickyBarWanted,
   isTuckedUnderHeader,
   LG_MEDIA_QUERY,
   STICKY_BAR_SCROLL_PADDING,
-  isPhotoUploadPending,
   MAX_REFERENCE_PHOTOS,
   type ProductDetailData,
   REFERENCE_PHOTO_ACCEPT,
   toConfirmedPhotoUrls,
+  toPhotoHoldMessage,
   toArchiveAskUrl,
   toArchiveCommissionPath,
   toArchiveNote,
@@ -298,13 +297,10 @@ export function ProductDetailContainer({
       setShowErrors(true);
       return false;
     }
-    if (isPhotoUploadPending(photos)) {
-      setPhotoError("Wait for the photos to finish uploading");
-      return false;
-    }
     // A failed photo would otherwise be dropped from the line without a word.
-    if (hasFailedPhoto(photos)) {
-      setPhotoError("Remove the photo that did not upload, or try it again");
+    const photoHoldMessage = toPhotoHoldMessage(photos);
+    if (photoHoldMessage) {
+      setPhotoError(photoHoldMessage);
       return false;
     }
     addToCart(
