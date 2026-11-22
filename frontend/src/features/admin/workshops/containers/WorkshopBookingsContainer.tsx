@@ -9,6 +9,7 @@ import {
   SetWorkshopBookingStatusDocument,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { formatDate, formatInr } from "@/lib/format";
 import { useReasonAction } from "@/lib/use-reason-action";
 import { toRegistrationStatusLabel } from "@/lib/registration-status";
@@ -16,6 +17,7 @@ import { toRegistrationStatusLabel } from "@/lib/registration-status";
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminDateFilter,
+  AdminLoadError,
   AdminPagination,
   AdminReasonDialog,
   AdminSearchField,
@@ -27,6 +29,7 @@ import {
   registrationHoldNote,
   registrationStatusOptions,
   registrationStatusTone,
+  retryQuery,
   toPersonName,
   toRegistrationActions,
   toRegistrationStatus,
@@ -72,7 +75,7 @@ export function WorkshopBookingsContainer({
   const to = values.to ?? "";
   const { personId, personName } = usePersonFilter(values.user);
 
-  const { data, previousData, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminWorkshopBookingsDocument,
     {
       variables: {
@@ -118,7 +121,10 @@ export function WorkshopBookingsContainer({
           item.booking.participants,
         ),
         totalLabel: formatInr(item.booking.total),
-        statusLabel: toRegistrationStatusLabel(item.booking.status),
+        statusLabel: toRegistrationStatusLabel(
+          item.booking.status,
+          item.booking.total === 0,
+        ),
         statusTone: registrationStatusTone(item.booking.status),
         closingNote: describeClosing(item.booking.cancel_reason),
         note: item.booking.note,
@@ -127,6 +133,7 @@ export function WorkshopBookingsContainer({
           item.booking.status,
           item.next_statuses,
           "wheel",
+          item.booking.total === 0,
         ),
       })),
     [optimisticItems, timezone],
@@ -146,7 +153,8 @@ export function WorkshopBookingsContainer({
     requiredMessage: "Tell them why, in a line",
     messages: {
       success: ({ target }) =>
-        `Booking updated: ${toRegistrationStatusLabel(target.status)}`,
+        // A free seat is never moved to Approved, so the paid wording always fits here.
+        `Booking updated: ${toRegistrationStatusLabel(target.status, false)}`,
       failure: "The booking could not be moved",
     },
   });
@@ -164,11 +172,20 @@ export function WorkshopBookingsContainer({
       ? registrationClosingDialog(closingStatus, "wheel")
       : null;
 
+  // Only a successful answer earns the empty row.
+  const loadError =
+    error && !data
+      ? describeError(error, "The wheel sessions could not be loaded.")
+      : null;
+
   return (
-    <section className="flex flex-col gap-3">
+    <section aria-labelledby="wheel-sessions" className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <h2 className="font-display text-xl leading-none tracking-tight">
-          Bookings
+        <h2
+          id="wheel-sessions"
+          className="font-display text-xl leading-none tracking-tight"
+        >
+          Sessions
         </h2>
         <p className="text-[13px] text-muted-foreground">
           Who has asked for the wheel, and where each request stands.{" "}
@@ -212,19 +229,29 @@ export function WorkshopBookingsContainer({
           onClear={() => patch({ user: null })}
         />
       )}
-      <WorkshopBookingsTable
-        rows={rows}
-        isBusy={isNavigating || move.isPending}
-        busyId={move.pending?.id ?? null}
-        onAction={handleAction}
-      />
-      <AdminPagination
-        page={pageInfo?.page ?? page}
-        limit={pageInfo?.limit ?? BOOKINGS_PAGE_SIZE}
-        total={pageInfo?.total ?? 0}
-        hasMore={pageInfo?.has_more ?? false}
-        onPageChange={(next) => patch({ page: String(next) })}
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : (
+        <>
+          <WorkshopBookingsTable
+            rows={rows}
+            isBusy={isNavigating || move.isPending}
+            busyId={move.pending?.id ?? null}
+            onAction={handleAction}
+          />
+          <AdminPagination
+            page={pageInfo?.page ?? page}
+            limit={pageInfo?.limit ?? BOOKINGS_PAGE_SIZE}
+            total={pageInfo?.total ?? 0}
+            hasMore={pageInfo?.has_more ?? false}
+            onPageChange={(next) => patch({ page: String(next) })}
+          />
+        </>
+      )}
       <AdminReasonDialog
         isOpen={closing !== null}
         title={closing?.title ?? ""}

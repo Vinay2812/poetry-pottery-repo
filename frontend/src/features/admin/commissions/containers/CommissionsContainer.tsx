@@ -12,14 +12,17 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
+import { describeError } from "@/lib/apollo/errors";
 
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
+  AdminLoadError,
   AdminPageHeader,
   AdminPagination,
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
+  retryQuery,
 } from "@/features/admin/ui";
 
 import { CommissionDrawer } from "@/features/admin/commissions/components/CommissionDrawer";
@@ -55,7 +58,7 @@ export function CommissionsContainer() {
   );
   const [searchDraft, setSearchDraft] = useSearchDraft(search, commitSearch);
 
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     CommissionRequestsDocument,
     {
       variables: {
@@ -160,6 +163,12 @@ export function CommissionsContainer() {
     );
   }
 
+  // Only a successful answer earns the empty message.
+  const loadError =
+    error && !data
+      ? describeError(error, "The commission briefs could not be loaded.")
+      : null;
+
   return (
     <div className="flex flex-col gap-6">
       <AdminPageHeader
@@ -187,17 +196,25 @@ export function CommissionsContainer() {
         />
       </AdminToolbar>
 
-      <CommissionsTable
-        rows={optimisticRows}
-        isBusy={isPending || (loading && result !== undefined)}
-        busyId={busyId}
-        emptyMessage={
-          hasFilters ? "No briefs match that search" : "No briefs yet"
-        }
-        onOpen={handleOpen}
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : (
+        <CommissionsTable
+          rows={optimisticRows}
+          isBusy={isPending || (loading && result !== undefined)}
+          busyId={busyId}
+          emptyMessage={
+            hasFilters ? "No briefs match that search" : "No briefs yet"
+          }
+          onOpen={handleOpen}
+        />
+      )}
 
-      {pageInfo && (
+      {pageInfo && !loadError && (
         <AdminPagination
           page={pageInfo.page}
           limit={pageInfo.limit}

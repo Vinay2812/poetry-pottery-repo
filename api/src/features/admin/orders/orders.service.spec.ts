@@ -53,6 +53,18 @@ describe("nextStatuses", () => {
     ]);
     expect(nextStatuses(OrderStatus.CANCELLED)).toEqual([]);
   });
+
+  it("undoes a paid, shipped or delivered order only by refunding it", () => {
+    expect(nextStatuses(OrderStatus.PAID)).toEqual([
+      OrderStatus.SHIPPED,
+      OrderStatus.REFUNDED,
+    ]);
+    expect(nextStatuses(OrderStatus.SHIPPED)).toEqual([
+      OrderStatus.DELIVERED,
+      OrderStatus.REFUNDED,
+    ]);
+    expect(nextStatuses(OrderStatus.DELIVERED)).toEqual([OrderStatus.REFUNDED]);
+  });
 });
 
 describe("AdminOrdersService", () => {

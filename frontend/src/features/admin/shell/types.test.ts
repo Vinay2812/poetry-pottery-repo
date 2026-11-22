@@ -1,14 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   applyQueryPatch,
   formatEnumLabel,
   formatRange,
   toPreviousPage,
+  isBackFromGuard,
+  isBackGuardState,
   isNavLinkActive,
   readPage,
   readQueryValues,
   toPageNumber,
+  toBackGuardState,
+  toGuardedNavigate,
   toQueryString,
 } from "./types";
 
@@ -118,5 +122,56 @@ describe("toPreviousPage", () => {
 
   it("goes back to the start when the list is empty", () => {
     expect(toPreviousPage(3, 20, 0)).toBe(1);
+  });
+});
+
+describe("toGuardedNavigate", () => {
+  it("lets the link go while nothing is unsaved", () => {
+    const preventDefault = vi.fn();
+    const onGuardedLeave = vi.fn();
+    toGuardedNavigate(
+      false,
+      "/dashboard/orders",
+      onGuardedLeave,
+    )({
+      preventDefault,
+    });
+    expect(preventDefault).not.toHaveBeenCalled();
+    expect(onGuardedLeave).not.toHaveBeenCalled();
+  });
+
+  it("holds the link and hands its destination to the editor", () => {
+    const preventDefault = vi.fn();
+    const onGuardedLeave = vi.fn();
+    toGuardedNavigate(
+      true,
+      "/dashboard/orders",
+      onGuardedLeave,
+    )({
+      preventDefault,
+    });
+    expect(preventDefault).toHaveBeenCalledOnce();
+    expect(onGuardedLeave).toHaveBeenCalledWith("/dashboard/orders");
+  });
+});
+
+describe("back guard", () => {
+  it("tells the spare entry from Next's own history state", () => {
+    expect(isBackGuardState(toBackGuardState())).toBe(true);
+    expect(isBackGuardState({ ...toBackGuardState(), __NA: true })).toBe(true);
+    expect(isBackGuardState({ __NA: true })).toBe(false);
+    expect(isBackGuardState(null)).toBe(false);
+    expect(isBackGuardState("admin_back_guard")).toBe(false);
+  });
+
+  it("counts only a step off the spare entry onto the same page as Back", () => {
+    const href = "http://localhost/dashboard/pieces/4";
+    expect(isBackFromGuard(true, false, href, href)).toBe(true);
+    // Forward onto the spare entry, or a move to another page, is not it.
+    expect(isBackFromGuard(false, true, href, href)).toBe(false);
+    expect(
+      isBackFromGuard(true, false, "http://localhost/dashboard", href),
+    ).toBe(false);
+    expect(isBackFromGuard(false, false, href, href)).toBe(false);
   });
 });

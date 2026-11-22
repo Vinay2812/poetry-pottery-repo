@@ -171,7 +171,7 @@ function isUndoingMove(status: OrderStatus): boolean {
   return status === OrderStatus.Cancelled || status === OrderStatus.Refunded;
 }
 
-/** The server says which moves are legal; the console offers those and nothing else. */
+/** The server says which moves are legal, Cancel only before payment; the console offers those and nothing else. */
 export function toStatusActions(
   nextStatuses: OrderStatus[],
 ): OrderStatusAction[] {
@@ -192,14 +192,12 @@ export function toStatusActions(
     }));
 }
 
-/** Cancel and refund both undo a paid sale, so the console says which is which. */
+/** The site moves no money, so a paid order is refunded by hand before it is marked. */
 export function describeUndoChoice(
   actions: OrderStatusAction[],
 ): string | null {
-  const offers = (status: OrderStatus) =>
-    actions.some((action) => action.status === status);
-  return offers(OrderStatus.Cancelled) && offers(OrderStatus.Refunded)
-    ? "Cancel before it ships; mark refunded once their money is back."
+  return actions.some((action) => action.status === OrderStatus.Refunded)
+    ? "To undo a paid order, send their money back outside the site, then mark it refunded."
     : null;
 }
 
@@ -239,7 +237,7 @@ const CANCEL_DIALOG: OrderMoveDialog = {
 const REFUND_DIALOG: OrderMoveDialog = {
   title: "Mark this order refunded",
   description:
-    "The pieces go back on the shelf and the customer is told the refund is on its way.",
+    "Do this once you have sent their money back. The pieces go back on the shelf and the customer is told the refund is on its way.",
   fieldLabel: "Reason",
   hint: "Optional. The customer reads this, so keep it kind",
   placeholder: "The mug arrived chipped",

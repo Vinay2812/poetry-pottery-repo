@@ -16,14 +16,17 @@ import {
   SetProductFeaturedDocument,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { formatInr } from "@/lib/format";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
+  AdminLoadError,
   AdminPageHeader,
   AdminPagination,
+  retryQuery,
 } from "@/features/admin/ui";
 
 import {
@@ -70,7 +73,7 @@ export function PiecesListContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
   const filter = useMemo(() => toProductsFilter(values, page), [values, page]);
 
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminProductsDocument,
     {
       variables: { filter },
@@ -110,6 +113,7 @@ export function PiecesListContainer() {
         isActive: piece.is_active,
         canGoLive: canGoLive(piece.stock, piece.is_customizable),
         isFeatured: piece.is_featured,
+        isMadeToOrder: piece.is_customizable,
         categoriesLabel: describeCategories(
           piece.categories.map((category) => category.name),
         ),
@@ -238,6 +242,11 @@ export function PiecesListContainer() {
   const stockRow = optimisticRows.find((row) => row.id === stockId);
   const pageInfo = result?.page_info;
   const isFirstLoad = !result && loading;
+  // Only a successful empty answer earns the empty message.
+  const loadError =
+    error && !data
+      ? describeError(error, "The pieces could not be loaded.")
+      : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -278,7 +287,13 @@ export function PiecesListContainer() {
         onGlazeChange={(value) => patch({ glaze_id: value || null })}
         onLowStockChange={(isOn) => patch({ low_stock: isOn ? "1" : null })}
       />
-      {isFirstLoad ? (
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : isFirstLoad ? (
         <div aria-busy="true" className="h-64 animate-pulse bg-ash" />
       ) : (
         <PiecesTable
@@ -291,7 +306,7 @@ export function PiecesListContainer() {
           onAdjustStock={setStockId}
         />
       )}
-      {pageInfo && (
+      {pageInfo && !loadError && (
         <AdminPagination
           page={pageInfo.page}
           limit={pageInfo.limit}

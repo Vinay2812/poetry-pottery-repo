@@ -18,6 +18,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { isCategoryPieceKind } from "@/components/media/categoryKinds";
+import { describeError } from "@/lib/apollo/errors";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type {
   AdminCategoryFormValues,
@@ -26,8 +27,10 @@ import type {
 
 import {
   AdminConfirmDialog,
+  AdminLoadError,
   AdminPageHeader,
   fromDateTimeLocal,
+  retryQuery,
   toDateTimeLocal,
 } from "@/features/admin/ui";
 import { ImageUploaderContainer } from "@/features/admin/uploads";
@@ -342,14 +345,21 @@ export function CatalogContainer() {
         )
     : "";
 
-  if (categories === undefined && collections === undefined) {
-    return (
-      <div aria-busy="true" className="flex flex-col gap-3">
-        <div className="h-20 animate-pulse bg-ash" />
-        <div className="h-64 animate-pulse bg-ash" />
-      </div>
-    );
-  }
+  // Only a successful answer earns a table and its empty row.
+  const categoriesError =
+    categoriesQuery.error && !categoriesQuery.data
+      ? describeError(
+          categoriesQuery.error,
+          "The categories could not be loaded.",
+        )
+      : null;
+  const collectionsError =
+    collectionsQuery.error && !collectionsQuery.data
+      ? describeError(
+          collectionsQuery.error,
+          "The collections could not be loaded.",
+        )
+      : null;
 
   return (
     <div className="flex flex-col gap-10">
@@ -366,43 +376,54 @@ export function CatalogContainer() {
         isActionDisabled={editor !== null}
         onAction={() => openEditor("category", null, null)}
       >
-        <CategoriesTable
-          rows={optimisticCategories}
-          isBusy={categoriesQuery.loading && categories !== undefined}
-          isEditorOpen={isCategoryEditorOpen}
-          editorRowId={isCategoryEditorOpen ? editor.id : null}
-          editor={
-            isCategoryEditorOpen ? (
-              <CategoryEditorForm
-                key={categoryEditorKey}
-                idPrefix={categoryEditorKey}
-                defaultValues={categoryDefaults}
-                isSaving={isSaving}
-                submitLabel={
-                  editor.id === null ? "Add category" : "Save category"
-                }
-                imageField={
-                  <ImageUploaderContainer
-                    key={categoryEditorKey}
-                    id={`${categoryEditorKey}-image`}
-                    label="Category image"
-                    hasPreview
-                    purpose={UploadPurpose.Category}
-                    value={imageUrl}
-                    onChange={setImageUrl}
-                  />
-                }
-                onSubmit={handleCategorySubmit}
-                onCancel={handleCancel}
-              />
-            ) : null
-          }
-          onEdit={(id) => {
-            const row = optimisticCategories.find((item) => item.id === id);
-            openEditor("category", id, row?.imageUrl ?? null);
-          }}
-          onDelete={handleCategoryDelete}
-        />
+        {categoriesError ? (
+          <AdminLoadError
+            message={categoriesError}
+            isRetrying={categoriesQuery.loading}
+            onRetry={retryQuery(categoriesQuery.refetch)}
+          />
+        ) : categories === undefined ? (
+          // Each list waits on its own answer, so an empty table always means an empty list.
+          <div aria-busy="true" className="h-40 animate-pulse bg-ash" />
+        ) : (
+          <CategoriesTable
+            rows={optimisticCategories}
+            isBusy={categoriesQuery.loading && categories !== undefined}
+            isEditorOpen={isCategoryEditorOpen}
+            editorRowId={isCategoryEditorOpen ? editor.id : null}
+            editor={
+              isCategoryEditorOpen ? (
+                <CategoryEditorForm
+                  key={categoryEditorKey}
+                  idPrefix={categoryEditorKey}
+                  defaultValues={categoryDefaults}
+                  isSaving={isSaving}
+                  submitLabel={
+                    editor.id === null ? "Add category" : "Save category"
+                  }
+                  imageField={
+                    <ImageUploaderContainer
+                      key={categoryEditorKey}
+                      id={`${categoryEditorKey}-image`}
+                      label="Category image"
+                      hasPreview
+                      purpose={UploadPurpose.Category}
+                      value={imageUrl}
+                      onChange={setImageUrl}
+                    />
+                  }
+                  onSubmit={handleCategorySubmit}
+                  onCancel={handleCancel}
+                />
+              ) : null
+            }
+            onEdit={(id) => {
+              const row = optimisticCategories.find((item) => item.id === id);
+              openEditor("category", id, row?.imageUrl ?? null);
+            }}
+            onDelete={handleCategoryDelete}
+          />
+        )}
       </CatalogSection>
 
       <CatalogSection
@@ -412,43 +433,53 @@ export function CatalogContainer() {
         isActionDisabled={editor !== null}
         onAction={() => openEditor("collection", null, null)}
       >
-        <CollectionsTable
-          rows={optimisticCollections}
-          isBusy={collectionsQuery.loading && collections !== undefined}
-          isEditorOpen={isCollectionEditorOpen}
-          editorRowId={isCollectionEditorOpen ? editor.id : null}
-          editor={
-            isCollectionEditorOpen ? (
-              <CollectionEditorForm
-                key={collectionEditorKey}
-                idPrefix={collectionEditorKey}
-                defaultValues={collectionDefaults}
-                isSaving={isSaving}
-                submitLabel={
-                  editor.id === null ? "Add collection" : "Save collection"
-                }
-                imageField={
-                  <ImageUploaderContainer
-                    key={collectionEditorKey}
-                    id={`${collectionEditorKey}-image`}
-                    label="Collection image"
-                    hasPreview
-                    purpose={UploadPurpose.Collection}
-                    value={imageUrl}
-                    onChange={setImageUrl}
-                  />
-                }
-                onSubmit={handleCollectionSubmit}
-                onCancel={handleCancel}
-              />
-            ) : null
-          }
-          onEdit={(id) => {
-            const row = optimisticCollections.find((item) => item.id === id);
-            openEditor("collection", id, row?.imageUrl ?? null);
-          }}
-          onDelete={handleCollectionDelete}
-        />
+        {collectionsError ? (
+          <AdminLoadError
+            message={collectionsError}
+            isRetrying={collectionsQuery.loading}
+            onRetry={retryQuery(collectionsQuery.refetch)}
+          />
+        ) : collections === undefined ? (
+          <div aria-busy="true" className="h-40 animate-pulse bg-ash" />
+        ) : (
+          <CollectionsTable
+            rows={optimisticCollections}
+            isBusy={collectionsQuery.loading && collections !== undefined}
+            isEditorOpen={isCollectionEditorOpen}
+            editorRowId={isCollectionEditorOpen ? editor.id : null}
+            editor={
+              isCollectionEditorOpen ? (
+                <CollectionEditorForm
+                  key={collectionEditorKey}
+                  idPrefix={collectionEditorKey}
+                  defaultValues={collectionDefaults}
+                  isSaving={isSaving}
+                  submitLabel={
+                    editor.id === null ? "Add collection" : "Save collection"
+                  }
+                  imageField={
+                    <ImageUploaderContainer
+                      key={collectionEditorKey}
+                      id={`${collectionEditorKey}-image`}
+                      label="Collection image"
+                      hasPreview
+                      purpose={UploadPurpose.Collection}
+                      value={imageUrl}
+                      onChange={setImageUrl}
+                    />
+                  }
+                  onSubmit={handleCollectionSubmit}
+                  onCancel={handleCancel}
+                />
+              ) : null
+            }
+            onEdit={(id) => {
+              const row = optimisticCollections.find((item) => item.id === id);
+              openEditor("collection", id, row?.imageUrl ?? null);
+            }}
+            onDelete={handleCollectionDelete}
+          />
+        )}
       </CatalogSection>
 
       <AdminConfirmDialog

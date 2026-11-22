@@ -13,7 +13,12 @@ import { describeError } from "@/lib/apollo/errors";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
-import { AdminConfirmDialog, AdminPagination } from "@/features/admin/ui";
+import {
+  AdminConfirmDialog,
+  AdminLoadError,
+  AdminPagination,
+  retryQuery,
+} from "@/features/admin/ui";
 
 import { ContactMessagesTable } from "@/features/admin/inbox/components/ContactMessagesTable";
 import { MessagesFilters } from "@/features/admin/inbox/components/MessagesFilters";
@@ -109,13 +114,14 @@ export function ContactMessagesContainer() {
     return <div aria-busy="true" className="h-96 animate-pulse bg-ash" />;
   }
 
+  // The whole page waits on its first answer, so a failure there asks again.
   if (!result) {
     return (
-      <p className="text-[13px]">
-        {error
-          ? describeError(error, "Messages could not be loaded.")
-          : "Messages could not be loaded."}
-      </p>
+      <AdminLoadError
+        message={describeError(error, "Messages could not be loaded.")}
+        isRetrying={loading}
+        onRetry={retryQuery(refetch)}
+      />
     );
   }
 

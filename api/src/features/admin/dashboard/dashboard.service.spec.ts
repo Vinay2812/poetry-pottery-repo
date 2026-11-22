@@ -215,6 +215,7 @@ describe("AdminDashboardService", () => {
             id: "WS-1",
             participants: 2,
             status: RegistrationStatus.CONFIRMED,
+            total: 2400,
             user: {
               id: 1,
               name: "Maya",
@@ -252,11 +253,12 @@ describe("AdminDashboardService", () => {
           item.title,
           item.detail,
           item.booking_status,
+          item.booking_total,
         ]),
       ).toEqual([
-        ["VISIT", "Rohan", "Studio visit", null],
-        ["BOOKING", "Maya", "Open studio · 2 at the wheel", "CONFIRMED"],
-        ["EVENT", "Open mic", "15 of 20 seats taken", null],
+        ["VISIT", "Rohan", "Studio visit", null, null],
+        ["BOOKING", "Maya", "Open studio · 2 at the wheel", "CONFIRMED", 2400],
+        ["EVENT", "Open mic", "15 of 20 seats taken", null, null],
       ]);
       expect(prismaMock.event.findMany).toHaveBeenCalledWith(
         expect.objectContaining({

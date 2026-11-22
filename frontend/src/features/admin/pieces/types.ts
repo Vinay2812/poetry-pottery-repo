@@ -37,17 +37,59 @@ export function canGoLive(stock: number, isCustomizable: boolean): boolean {
   return isCustomizable || stock > 0;
 }
 
-// A retired piece is never offered for the home page, but one still there can be taken off.
-export function canFeature(isActive: boolean, isFeatured: boolean): boolean {
-  return isActive || isFeatured;
+// The flag only orders the home shelf: a marked piece comes first among those the shelf can show.
+export type FeatureBlock = "retired" | "made-to-order" | "sold-out";
+
+export interface HomeShelfFacts {
+  isActive: boolean;
+  isCustomizable: boolean;
+  stock: number;
 }
 
+// The storefront's home shelf shows only pieces on the shelf, in stock and ready to ship.
+export function findHomeShelfBlock({
+  isActive,
+  isCustomizable,
+  stock,
+}: HomeShelfFacts): FeatureBlock | null {
+  if (!isActive) return "retired";
+  if (isCustomizable) return "made-to-order";
+  return stock > 0 ? null : "sold-out";
+}
+
+// A piece still marked can always be unmarked; otherwise only one the home shelf can show.
+export function findFeatureBlock(
+  facts: HomeShelfFacts,
+  isFeatured: boolean,
+): FeatureBlock | null {
+  return isFeatured ? null : findHomeShelfBlock(facts);
+}
+
+export const FEATURE_BLOCK_NOTES: Record<FeatureBlock, string> = {
+  retired: "Put it back on the shelf first",
+  "made-to-order":
+    "The home page shows pieces ready to ship, not made to order",
+  "sold-out": "The home page shows pieces in stock. Add stock first",
+};
+
+// A new piece is not retired yet, just not ticked onto the shelf.
+export function describeNewFeatureHint(block: FeatureBlock | null): string {
+  if (block === "retired") {
+    return "Only a piece on the shelf can be on the home page";
+  }
+  if (block !== null) return FEATURE_BLOCK_NOTES[block];
+  return "Among the pieces the home page can show, it comes first.";
+}
+
+const LEFT_OFF_HOME: Record<Exclude<FeatureBlock, "retired">, string> = {
+  "made-to-order": "made to order",
+  "sold-out": "sold out",
+};
+
+// A held leave goes on to a link or carries on with browser Back.
+export type LeaveTarget = { kind: "link"; href: string } | { kind: "back" };
+
 export const LIVE_BLOCKED_NOTE = "Add stock first, or mark it made to order";
-
-export const FEATURE_BLOCKED_NOTE = "Put it back on the shelf first";
-
-export const NEW_FEATURE_BLOCKED_NOTE =
-  "Only a piece on the shelf can be on the home page";
 
 // The storefront calls an inactive piece "Retired from the shelf" and lists it in the archive.
 export function describeShelfState(isActive: boolean): string {
@@ -58,10 +100,18 @@ export function describeShelfStateHint(
   isActive: boolean,
   isLiveAllowed: boolean,
   isFeatured: boolean,
+  homeShelfBlock: FeatureBlock | null,
 ): string | null {
-  if (isActive) return isFeatured ? "Also on the home page" : null;
-  // Retired but still marked, so "Take off the home page" has something to take off.
-  if (isFeatured) return "Still marked for the home page";
+  if (isActive) {
+    if (!isFeatured) return null;
+    // Marked, but the home shelf leaves it out until it is in stock and ready to ship.
+    if (homeShelfBlock !== null && homeShelfBlock !== "retired") {
+      return `Marked to go first, but left off the home page while ${LEFT_OFF_HOME[homeShelfBlock]}`;
+    }
+    return "Goes first among the pieces on the home page";
+  }
+  // Retired but still marked, so "Stop putting it first" has something to undo.
+  if (isFeatured) return "Still marked to go first on the home page";
   return isLiveAllowed ? "Shown in the archive" : LIVE_BLOCKED_NOTE;
 }
 
@@ -292,7 +342,7 @@ export function toProductInput(
   values: ProductFormValues,
   imageUrls: readonly string[],
 ): AdminProductInput {
-  // What the boxes show is what is sent: never live without stock, never featured while hidden.
+  // What the boxes show is what is sent: never live without stock, never featured where it cannot show.
   const isActive =
     values.is_active && canGoLive(values.stock, values.is_customizable);
   return {
@@ -319,7 +369,13 @@ export function toProductInput(
     is_second: values.is_second,
     flaw_note: optionalText(values.flaw_note),
     is_commission: values.is_commission,
-    is_featured: values.is_featured && isActive,
+    is_featured:
+      values.is_featured &&
+      findHomeShelfBlock({
+        isActive,
+        isCustomizable: values.is_customizable,
+        stock: values.stock,
+      }) === null,
     is_active: isActive,
   };
 }

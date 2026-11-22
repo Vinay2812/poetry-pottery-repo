@@ -11,7 +11,12 @@ const STATUS_LABEL: Record<RegistrationStatus, string> = {
   [RegistrationStatus.Cancelled]: "Cancelled",
 };
 
-export function toRegistrationStatusLabel(status: RegistrationStatus): string {
+// A free seat has nothing to pay, so one approved before free seats skipped the step reads plain "Approved".
+export function toRegistrationStatusLabel(
+  status: RegistrationStatus,
+  isFree: boolean,
+): string {
+  if (isFree && status === RegistrationStatus.Approved) return "Approved";
   return STATUS_LABEL[status];
 }
 

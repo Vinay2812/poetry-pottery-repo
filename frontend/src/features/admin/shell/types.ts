@@ -104,3 +104,42 @@ export function toPreviousPage(
 ): number {
   return Math.max(1, Math.min(page - 1, Math.ceil(total / limit)));
 }
+
+// A dirty editor holds in-app navigation and asks first; a clean one lets the link go.
+export function toGuardedNavigate(
+  isLeaveGuarded: boolean,
+  href: string,
+  onGuardedLeave: (href: string) => void,
+): (event: { preventDefault: () => void }) => void {
+  return (event) => {
+    if (!isLeaveGuarded) return;
+    event.preventDefault();
+    onGuardedLeave(href);
+  };
+}
+
+const BACK_GUARD_KEY = "admin_back_guard";
+
+// The spare history entry an unsaved editor sits on, so browser Back lands on this page first.
+export function toBackGuardState(): Record<string, boolean> {
+  return { [BACK_GUARD_KEY]: true };
+}
+
+export function isBackGuardState(state: unknown): boolean {
+  return (
+    typeof state === "object" &&
+    state !== null &&
+    BACK_GUARD_KEY in state &&
+    state[BACK_GUARD_KEY] === true
+  );
+}
+
+// Back from the spare entry lands on the same page; anything else is a real move elsewhere.
+export function isBackFromGuard(
+  wasOnGuard: boolean,
+  isOnGuard: boolean,
+  href: string,
+  guardedHref: string | null,
+): boolean {
+  return wasOnGuard && !isOnGuard && href === guardedHref;
+}

@@ -16,7 +16,8 @@ import {
 } from "@/features/events/events.service";
 import { canTransition as canEventTransition } from "@/features/events/event-status";
 import {
-  canTransition,
+  assertNotPaymentStepForFreeSeat,
+  nextAdminStatuses,
   SEAT_HOLDING,
 } from "@/features/events/registration-status";
 import type { Event } from "@/features/events/events.type";
@@ -48,14 +49,6 @@ type AdminRegistrationRow = Prisma.EventRegistrationGetPayload<{
 // What duplicate() leaves on a fresh copy: "<title>-copy", or "-copy-2" when that is taken.
 const COPY_SLUG = /-copy(-\d+)?$/;
 
-export function nextRegistrationStatuses(
-  from: RegistrationStatus,
-): RegistrationStatus[] {
-  return Object.values(RegistrationStatus).filter((to) =>
-    canTransition(from, to),
-  );
-}
-
 export function toAdminRegistration(
   row: AdminRegistrationRow,
   now = new Date(),
@@ -63,7 +56,7 @@ export function toAdminRegistration(
   return {
     registration: toRegistration(row, now),
     customer: toUserRef(row.user),
-    next_statuses: nextRegistrationStatuses(row.status),
+    next_statuses: nextAdminStatuses(row.status, row.total),
   };
 }
 
@@ -369,6 +362,7 @@ export class AdminEventsService {
     if (!current) {
       throw new NotFoundException("Registration not found");
     }
+    assertNotPaymentStepForFreeSeat(status, current.total);
     const updated = await this.events.applyStatus(
       current,
       status,

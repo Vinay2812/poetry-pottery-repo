@@ -2,11 +2,15 @@ import Link from "next/link";
 
 import { Wordmark } from "@/components/brand/Wordmark";
 
+import { toGuardedNavigate } from "@/features/admin/shell/types";
+
 export interface AdminTopBarProps {
   adminName: string;
   adminEmail: string;
   adminImageUrl: string | null;
   shopHref: string;
+  isLeaveGuarded: boolean;
+  onGuardedLeave: (href: string) => void;
 }
 
 export function AdminTopBar({
@@ -14,13 +18,23 @@ export function AdminTopBar({
   adminEmail,
   adminImageUrl,
   shopHref,
+  isLeaveGuarded,
+  onGuardedLeave,
 }: AdminTopBarProps) {
   return (
     <header
       data-admin-chrome
       className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-ash bg-background px-4 md:px-6"
     >
-      <Link href="/dashboard" className="inline-flex shrink-0 items-center">
+      <Link
+        href="/dashboard"
+        onNavigate={toGuardedNavigate(
+          isLeaveGuarded,
+          "/dashboard",
+          onGuardedLeave,
+        )}
+        className="inline-flex shrink-0 items-center"
+      >
         <Wordmark className="h-[18px]" />
       </Link>
       <span className="hidden h-5 w-px bg-ash md:block" />
@@ -30,6 +44,11 @@ export function AdminTopBar({
       <div className="ml-auto flex items-center gap-4">
         <Link
           href={shopHref}
+          onNavigate={toGuardedNavigate(
+            isLeaveGuarded,
+            shopHref,
+            onGuardedLeave,
+          )}
           className="text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
           View shop

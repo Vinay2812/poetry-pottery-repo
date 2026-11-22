@@ -15,8 +15,10 @@ import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
+  AdminLoadError,
   AdminPageHeader,
   AdminPagination,
+  retryQuery,
 } from "@/features/admin/ui";
 import {
   AdminPersonFilterNotice,
@@ -128,13 +130,14 @@ export function ReviewsContainer() {
     );
   }
 
+  // The whole page waits on its first answer, so a failure there asks again.
   if (!result) {
     return (
-      <p className="text-[13px]">
-        {error
-          ? describeError(error, "Reviews could not be loaded.")
-          : "Reviews could not be loaded."}
-      </p>
+      <AdminLoadError
+        message={describeError(error, "Reviews could not be loaded.")}
+        isRetrying={loading}
+        onRetry={retryQuery(refetch)}
+      />
     );
   }
 

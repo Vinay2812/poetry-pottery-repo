@@ -3,6 +3,9 @@ export { AdminSectionStrip } from "@/features/admin/shell/components/AdminSectio
 export { AdminTopBar } from "@/features/admin/shell/components/AdminTopBar";
 export { AdminChromeContainer } from "@/features/admin/shell/containers/AdminChromeContainer";
 export {
+  type BackGuard,
+  useAdminLeaveGuard,
+  useBackGuard,
   useAdminQueryState,
   useSearchDraft,
 } from "@/features/admin/shell/hooks";

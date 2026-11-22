@@ -9,6 +9,7 @@ import {
   SetRegistrationStatusDocument,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { formatDate, formatInr, pluralize } from "@/lib/format";
 import { useReasonAction } from "@/lib/use-reason-action";
 import { toRegistrationStatusLabel } from "@/lib/registration-status";
@@ -19,6 +20,7 @@ import {
   useSearchDraft,
 } from "@/features/admin/shell";
 import {
+  AdminLoadError,
   AdminPagination,
   AdminReasonDialog,
   AdminSearchField,
@@ -30,6 +32,7 @@ import {
   registrationHoldNote,
   registrationStatusOptions,
   registrationStatusTone,
+  retryQuery,
   toPersonName,
   toRegistrationActions,
   toRegistrationStatus,
@@ -72,7 +75,7 @@ export function EventRegistrationsContainer({
     commitSearch,
   );
 
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminEventRegistrationsDocument,
     {
       variables: {
@@ -108,7 +111,10 @@ export function EventRegistrationsContainer({
         requestedLabel: formatDate(entry.registration.created_at),
         seatsLabel: pluralize(entry.registration.seats, "seat"),
         totalLabel: formatInr(entry.registration.total),
-        statusLabel: toRegistrationStatusLabel(entry.registration.status),
+        statusLabel: toRegistrationStatusLabel(
+          entry.registration.status,
+          entry.registration.total === 0,
+        ),
         statusTone: registrationStatusTone(entry.registration.status),
         closingNote: describeClosing(entry.registration.cancel_reason),
         note: entry.registration.note,
@@ -116,6 +122,7 @@ export function EventRegistrationsContainer({
           entry.registration.status,
           entry.next_statuses,
           "seat",
+          entry.registration.total === 0,
         ),
       })),
     [optimisticItems],
@@ -136,7 +143,8 @@ export function EventRegistrationsContainer({
     requiredMessage: "Say why, in a sentence the person can read",
     messages: {
       success: ({ target }) =>
-        `Registration updated: ${toRegistrationStatusLabel(target.status)}`,
+        // A free seat is never moved to Approved, so the paid wording always fits here.
+        `Registration updated: ${toRegistrationStatusLabel(target.status, false)}`,
       failure: "The registration could not be moved",
     },
   });
@@ -154,11 +162,20 @@ export function EventRegistrationsContainer({
       ? registrationClosingDialog(closingStatus, "seat")
       : null;
 
+  // Only a successful answer earns the empty row.
+  const loadError =
+    error && !data
+      ? describeError(error, "The seats could not be loaded.")
+      : null;
+
   return (
-    <section className="flex flex-col gap-2">
+    <section aria-labelledby="event-seats" className="flex flex-col gap-2">
       <div className="flex flex-col gap-1 border-b border-ash pb-3">
-        <h2 className="font-display text-xl leading-none tracking-tight">
-          Registrations
+        <h2
+          id="event-seats"
+          className="font-display text-xl leading-none tracking-tight"
+        >
+          Event seats
         </h2>
         <p className="text-[13px] text-muted-foreground">
           {registrationHoldNote("seat")}
@@ -183,20 +200,30 @@ export function EventRegistrationsContainer({
           }
         />
       </AdminToolbar>
-      <EventRegistrationsTable
-        rows={rows}
-        isBusy={isPending || loading}
-        isLocked={isEventCancelled}
-        busyId={move.pending?.id ?? null}
-        onAction={handleAction}
-      />
-      <AdminPagination
-        page={pageInfo?.page ?? page}
-        limit={pageInfo?.limit ?? PAGE_SIZE}
-        total={pageInfo?.total ?? 0}
-        hasMore={pageInfo?.has_more ?? false}
-        onPageChange={(next) => patch({ reg_page: String(next) })}
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : (
+        <>
+          <EventRegistrationsTable
+            rows={rows}
+            isBusy={isPending || loading}
+            isLocked={isEventCancelled}
+            busyId={move.pending?.id ?? null}
+            onAction={handleAction}
+          />
+          <AdminPagination
+            page={pageInfo?.page ?? page}
+            limit={pageInfo?.limit ?? PAGE_SIZE}
+            total={pageInfo?.total ?? 0}
+            hasMore={pageInfo?.has_more ?? false}
+            onPageChange={(next) => patch({ reg_page: String(next) })}
+          />
+        </>
+      )}
       <AdminReasonDialog
         isOpen={closing !== null}
         title={closing?.title ?? ""}

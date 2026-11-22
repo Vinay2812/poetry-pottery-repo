@@ -39,8 +39,8 @@ export interface EventRegistrationsTableProps {
   onAction: (id: string, status: RegistrationStatus) => void;
 }
 
-const CAPTION = "Everyone booked on this event";
-const EMPTY_MESSAGE = "No registrations match those filters";
+const CAPTION = "Event seats";
+const EMPTY_MESSAGE = "No seats match those filters";
 
 // The table needs about a thousand pixels; anything narrower reads each registration as a card.
 export function EventRegistrationsTable({

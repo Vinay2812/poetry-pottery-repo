@@ -61,7 +61,8 @@ export function toAgendaKindLabel(kind: AdminAgendaKind): string {
 export function toAgendaDetail(
   detail: string,
   bookingStatus: RegistrationStatus | null,
+  isFree: boolean,
 ): string {
   if (!bookingStatus) return detail;
-  return `${detail} · ${toRegistrationStatusLabel(bookingStatus)}`;
+  return `${detail} · ${toRegistrationStatusLabel(bookingStatus, isFree)}`;
 }

@@ -74,6 +74,18 @@ export function assertFeaturedIsLive(
   }
 }
 
+// The home shelf shows pieces ready to ship, so made-to-order work never takes the mark.
+export function assertFeaturedIsReadyToShip(
+  isFeatured: boolean,
+  isCustomizable: boolean,
+): void {
+  if (isFeatured && isCustomizable) {
+    throw new BadRequestException(
+      "The home page shows pieces ready to ship, not made to order",
+    );
+  }
+}
+
 // A measurement is either a positive number or missing; zero is never a real piece.
 export function assertMeasure(
   value: number | null | undefined,
@@ -189,6 +201,10 @@ export class AdminProductsService {
       assertCanBeLive(input.stock ?? 0, input.is_customizable ?? false);
     }
     assertFeaturedIsLive(input.is_active ?? true, input.is_featured ?? false);
+    assertFeaturedIsReadyToShip(
+      input.is_featured ?? false,
+      input.is_customizable ?? false,
+    );
     await this.assertLinks(
       input.category_ids,
       input.collection_id,
@@ -357,6 +373,17 @@ export class AdminProductsService {
   }
 
   async setFeatured(id: number, isFeatured: boolean): Promise<Product> {
+    const current = await this.prisma.product.findUnique({
+      where: { id },
+      select: { is_featured: true, is_customizable: true },
+    });
+    if (!current) {
+      throw new NotFoundException("Product not found");
+    }
+    // Only newly marking is refused, so a made-to-order piece marked before this rule can still be unmarked.
+    if (!current.is_featured) {
+      assertFeaturedIsReadyToShip(isFeatured, current.is_customizable);
+    }
     const row = await this.prisma.product
       .update({
         where: { id },

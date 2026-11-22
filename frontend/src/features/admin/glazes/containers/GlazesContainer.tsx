@@ -14,14 +14,17 @@ import {
 
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { AdminGlazeFormValues } from "@/lib/validations/admin/glaze";
+import { describeError } from "@/lib/apollo/errors";
 
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
   AdminConfirmDialog,
+  AdminLoadError,
   AdminPageHeader,
   AdminPagination,
   AdminSearchField,
   AdminToolbar,
+  retryQuery,
 } from "@/features/admin/ui";
 import { ImageUploaderContainer } from "@/features/admin/uploads";
 
@@ -65,7 +68,7 @@ export function GlazesContainer() {
   );
   const [searchDraft, setSearchDraft] = useSearchDraft(search, commitSearch);
 
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminGlazesDocument,
     {
       variables: {
@@ -223,6 +226,12 @@ export function GlazesContainer() {
     );
   }
 
+  // Only a successful answer earns the empty message.
+  const loadError =
+    error && !data
+      ? describeError(error, "The glazes could not be loaded.")
+      : null;
+
   return (
     <div className="flex flex-col gap-6">
       <AdminPageHeader
@@ -251,20 +260,28 @@ export function GlazesContainer() {
         />
       </AdminToolbar>
 
-      <GlazesTable
-        rows={optimisticRows}
-        isBusy={isPending || (loading && result !== undefined)}
-        isEditorOpen={isEditorOpen}
-        editorRowId={editorId}
-        editor={editor}
-        emptyMessage={
-          search === "" ? "No glazes yet" : "No glazes match that search"
-        }
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : (
+        <GlazesTable
+          rows={optimisticRows}
+          isBusy={isPending || (loading && result !== undefined)}
+          isEditorOpen={isEditorOpen}
+          editorRowId={editorId}
+          editor={editor}
+          emptyMessage={
+            search === "" ? "No glazes yet" : "No glazes match that search"
+          }
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+      )}
 
-      {pageInfo && (
+      {pageInfo && !loadError && (
         <AdminPagination
           page={pageInfo.page}
           limit={pageInfo.limit}

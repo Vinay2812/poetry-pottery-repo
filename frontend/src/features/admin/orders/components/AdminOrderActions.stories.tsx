@@ -54,10 +54,26 @@ export const Working: Story = {
 
 export const Closed: Story = { args: { actions: [] } };
 
-// Paid but not shipped: cancel and refund both undo the sale, so a line says which is which.
-export const PaidWithBothUndos: Story = {
+// Paid but not shipped: the only way back is a refund made outside the site, then marked here.
+export const Paid: Story = {
   args: {
-    hint: "Cancel before it ships; mark refunded once their money is back.",
+    actions: [
+      {
+        status: OrderStatus.Shipped,
+        label: "Mark shipped",
+        isDestructive: false,
+        isPrimary: true,
+        needsNote: true,
+      },
+      {
+        status: OrderStatus.Refunded,
+        label: "Mark refunded",
+        isDestructive: true,
+        isPrimary: false,
+        needsNote: true,
+      },
+    ],
+    hint: "To undo a paid order, send their money back outside the site, then mark it refunded.",
   },
 };
 

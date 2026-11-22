@@ -71,8 +71,9 @@ export function toContactRow(
   };
 }
 
+// Said whole, so it reads on its own in a phone card and under the Account column alike.
 export function toAccountLabel(userId: number | null): string {
-  return userId === null ? "No" : "Yes";
+  return userId === null ? "No account" : "Has an account";
 }
 
 export function toUnsubscribedLabel(value: string | null): string {

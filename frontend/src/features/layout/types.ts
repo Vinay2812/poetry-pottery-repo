@@ -1,3 +1,5 @@
+import { toWhatsAppDigits } from "@/lib/whatsapp";
+
 // Pages that sit content under the sticky SiteHeader find its live edge through this.
 export const SITE_HEADER_SELECTOR = "[data-site-header]";
 export const SITE_FOOTER_SELECTOR = "[data-site-footer]";
@@ -72,7 +74,19 @@ export function isFocusedPath(pathname: string): boolean {
 }
 
 export function buildWhatsAppUrl(number: string, text: string): string {
-  const digits = number.replace(/\D/g, "");
+  return toWaMeUrl(toWhatsAppDigits(number), text);
+}
+
+// The same link, or null when the number has no digits to send to, read once either way.
+export function buildOptionalWhatsAppUrl(
+  number: string,
+  text: string,
+): string | null {
+  const digits = toWhatsAppDigits(number);
+  return digits ? toWaMeUrl(digits, text) : null;
+}
+
+function toWaMeUrl(digits: string, text: string): string {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 

@@ -224,16 +224,8 @@ describe("toStatusActions", () => {
   });
 
   it("darkens only the move that takes the order forward", () => {
-    const actions = toStatusActions([
-      OrderStatus.Shipped,
-      OrderStatus.Cancelled,
-      OrderStatus.Refunded,
-    ]);
-    expect(actions.map((action) => action.isPrimary)).toEqual([
-      true,
-      false,
-      false,
-    ]);
+    const actions = toStatusActions([OrderStatus.Paid, OrderStatus.Cancelled]);
+    expect(actions.map((action) => action.isPrimary)).toEqual([true, false]);
     expect(toStatusActions([OrderStatus.Cancelled])[0].isPrimary).toBe(false);
   });
 
@@ -353,7 +345,7 @@ describe("toOrderMoveDialog", () => {
 });
 
 describe("describeUndoChoice", () => {
-  it("tells cancel from refund only when both are offered", () => {
+  it("sends a paid order through a refund outside the site", () => {
     expect(
       describeUndoChoice(
         toStatusActions([
@@ -362,10 +354,15 @@ describe("describeUndoChoice", () => {
           OrderStatus.Refunded,
         ]),
       ),
-    ).toBe("Cancel before it ships; mark refunded once their money is back.");
+    ).toBe(
+      "To undo a paid order, send their money back outside the site, then mark it refunded.",
+    );
+  });
+
+  it("says nothing for an unpaid order, which simply cancels", () => {
     expect(
       describeUndoChoice(
-        toStatusActions([OrderStatus.Delivered, OrderStatus.Refunded]),
+        toStatusActions([OrderStatus.Paid, OrderStatus.Cancelled]),
       ),
     ).toBeNull();
   });

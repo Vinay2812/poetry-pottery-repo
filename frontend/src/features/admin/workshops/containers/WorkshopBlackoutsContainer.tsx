@@ -11,11 +11,16 @@ import {
   UpdateWorkshopBlackoutDocument,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { formatDateTime } from "@/lib/format";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { WorkshopBlackoutFormValues } from "@/lib/validations/admin/workshop";
 
-import { AdminConfirmDialog } from "@/features/admin/ui";
+import {
+  AdminConfirmDialog,
+  AdminLoadError,
+  retryQuery,
+} from "@/features/admin/ui";
 
 import { WorkshopBlackoutDialog } from "@/features/admin/workshops/components/WorkshopBlackoutDialog";
 import {
@@ -44,7 +49,7 @@ export function WorkshopBlackoutsContainer({
   configId,
   timezone,
 }: WorkshopBlackoutsContainerProps) {
-  const { data, previousData, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminWorkshopBlackoutsDocument,
     {
       variables: { config_id: configId },
@@ -156,16 +161,30 @@ export function WorkshopBlackoutsContainer({
   const busyId = pendingSave?.blackout.id ?? pendingRemove?.id ?? null;
   const isPending = isSaving || isDeleting;
 
+  // Only a successful answer earns the empty message.
+  const loadError =
+    error && !data
+      ? describeError(error, "The closed spells could not be loaded.")
+      : null;
+
   return (
     <>
-      <WorkshopBlackoutsTable
-        rows={rows}
-        isBusy={isPending}
-        busyId={busyId}
-        onAdd={() => setIsAdding(true)}
-        onEdit={setEditingId}
-        onDelete={setDeletingId}
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : (
+        <WorkshopBlackoutsTable
+          rows={rows}
+          isBusy={isPending}
+          busyId={busyId}
+          onAdd={() => setIsAdding(true)}
+          onEdit={setEditingId}
+          onDelete={setDeletingId}
+        />
+      )}
       <WorkshopBlackoutDialog
         // A fresh form each time the dialog opens on a different spell.
         key={`blackout-${editing?.id ?? "new"}`}

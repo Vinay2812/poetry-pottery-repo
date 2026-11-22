@@ -11,6 +11,7 @@ import {
   EventType,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { formatInr } from "@/lib/format";
 
 import {
@@ -19,6 +20,7 @@ import {
   useSearchDraft,
 } from "@/features/admin/shell";
 import {
+  AdminLoadError,
   AdminPageHeader,
   AdminPagination,
   AdminSearchField,
@@ -26,6 +28,7 @@ import {
   AdminToolbar,
   enumOptions,
   eventStatusTone,
+  retryQuery,
 } from "@/features/admin/ui";
 import {
   AdminPersonFilterNotice,
@@ -63,19 +66,22 @@ export function EventsListContainer() {
     commitSearch,
   );
 
-  const { data, previousData, loading } = useQuery(AdminEventsDocument, {
-    variables: {
-      filter: {
-        search: search || null,
-        status: toEventStatus(status),
-        event_type: toEventType(eventType),
-        user_id: personId,
-        page,
-        limit: PAGE_SIZE,
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AdminEventsDocument,
+    {
+      variables: {
+        filter: {
+          search: search || null,
+          status: toEventStatus(status),
+          event_type: toEventType(eventType),
+          user_id: personId,
+          page,
+          limit: PAGE_SIZE,
+        },
       },
+      fetchPolicy: "cache-and-network",
     },
-    fetchPolicy: "cache-and-network",
-  });
+  );
 
   const result = data?.adminEvents ?? previousData?.adminEvents;
 
@@ -97,6 +103,12 @@ export function EventsListContainer() {
   );
 
   const pageInfo = result?.page_info;
+
+  // Only a successful answer earns the empty row.
+  const loadError =
+    error && !data
+      ? describeError(error, "The events could not be loaded.")
+      : null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -145,14 +157,26 @@ export function EventsListContainer() {
           onClear={() => patch({ user: null })}
         />
       )}
-      <EventsTable rows={rows} isBusy={isPending || loading} />
-      <AdminPagination
-        page={pageInfo?.page ?? page}
-        limit={pageInfo?.limit ?? PAGE_SIZE}
-        total={pageInfo?.total ?? 0}
-        hasMore={pageInfo?.has_more ?? false}
-        onPageChange={(next) => patch({ page: String(next) })}
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : result === undefined ? (
+        <div aria-busy="true" className="h-64 animate-pulse bg-ash" />
+      ) : (
+        <>
+          <EventsTable rows={rows} isBusy={isPending || loading} />
+          <AdminPagination
+            page={pageInfo?.page ?? page}
+            limit={pageInfo?.limit ?? PAGE_SIZE}
+            total={pageInfo?.total ?? 0}
+            hasMore={pageInfo?.has_more ?? false}
+            onPageChange={(next) => patch({ page: String(next) })}
+          />
+        </>
+      )}
     </div>
   );
 }

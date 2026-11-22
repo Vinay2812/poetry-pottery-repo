@@ -137,7 +137,10 @@ export function RegistrationDetailContainer({
         registrationId={optimisticRegistration.id}
         eventTitle={event.title}
         eventHref={toEventPath(event.slug)}
-        statusLabel={toRegistrationStatusLabel(optimisticRegistration.status)}
+        statusLabel={toRegistrationStatusLabel(
+          optimisticRegistration.status,
+          optimisticRegistration.total === 0,
+        )}
         statusTone={toRegistrationStatusTone(optimisticRegistration.status)}
         isRequestShown={isRequestBannerShown(
           isJustPlaced,

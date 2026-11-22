@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildOptionalWhatsAppUrl,
   buildWhatsAppUrl,
   formatBadgeCount,
   isActivePath,
@@ -29,10 +30,26 @@ describe("isActivePath", () => {
   });
 });
 
+describe("buildOptionalWhatsAppUrl", () => {
+  it("builds the same link, or nothing when there is no number to send to", () => {
+    expect(buildOptionalWhatsAppUrl("91234 56789", "Hi")).toBe(
+      buildWhatsAppUrl("91234 56789", "Hi"),
+    );
+    expect(buildOptionalWhatsAppUrl("", "Hi")).toBeNull();
+    expect(buildOptionalWhatsAppUrl("n/a", "Hi")).toBeNull();
+  });
+});
+
 describe("buildWhatsAppUrl", () => {
   it("strips formatting and encodes the message", () => {
     expect(buildWhatsAppUrl("+91 91234 56789", "Hi there")).toBe(
       "https://wa.me/919123456789?text=Hi%20there",
+    );
+  });
+
+  it("puts 91 in front of a legacy 10-digit number", () => {
+    expect(buildWhatsAppUrl("91234 56789", "Hi")).toBe(
+      "https://wa.me/919123456789?text=Hi",
     );
   });
 });

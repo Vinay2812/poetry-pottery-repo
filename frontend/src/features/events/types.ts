@@ -321,7 +321,8 @@ export function toRegistrationClosedLabel(
 ): string | null {
   if (!isRegistrationClosed(registration.status)) return null;
   return toClosedLabel(
-    toRegistrationStatusLabel(registration.status),
+    // Only cancelled and not-approved reach here, which read the same free or paid.
+    toRegistrationStatusLabel(registration.status, false),
     toTimelineDate(registration.cancelled_at ?? registration.rejected_at),
     registration.cancel_reason,
   );

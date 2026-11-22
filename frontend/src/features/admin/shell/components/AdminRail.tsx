@@ -3,14 +3,24 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 import type { AdminNavLink } from "@/features/admin/shell/types";
-import { isNavLinkActive } from "@/features/admin/shell/types";
+import {
+  isNavLinkActive,
+  toGuardedNavigate,
+} from "@/features/admin/shell/types";
 
 export interface AdminRailProps {
   links: AdminNavLink[];
   pathname: string;
+  isLeaveGuarded: boolean;
+  onGuardedLeave: (href: string) => void;
 }
 
-export function AdminRail({ links, pathname }: AdminRailProps) {
+export function AdminRail({
+  links,
+  pathname,
+  isLeaveGuarded,
+  onGuardedLeave,
+}: AdminRailProps) {
   return (
     <nav
       aria-label="Studio sections"
@@ -23,6 +33,11 @@ export function AdminRail({ links, pathname }: AdminRailProps) {
             <li key={link.href}>
               <Link
                 href={link.href}
+                onNavigate={toGuardedNavigate(
+                  isLeaveGuarded,
+                  link.href,
+                  onGuardedLeave,
+                )}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex h-9 items-center border-l-2 pl-4 text-sm transition-colors",

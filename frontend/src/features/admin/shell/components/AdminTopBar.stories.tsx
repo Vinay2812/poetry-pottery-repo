@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { fn } from "storybook/test";
 
 import { atViewport } from "@/lib/storybook/viewports";
 import { AdminTopBar } from "./AdminTopBar";
@@ -11,6 +12,8 @@ const meta = {
     adminName: "Maya Iyer",
     adminEmail: "maya@poetryandpottery.in",
     adminImageUrl: null,
+    isLeaveGuarded: false,
+    onGuardedLeave: fn(),
     shopHref: "/",
   },
 } satisfies Meta<typeof AdminTopBar>;

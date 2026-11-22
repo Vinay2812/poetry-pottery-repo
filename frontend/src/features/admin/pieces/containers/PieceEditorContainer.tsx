@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
   useCallback,
   useEffect,
@@ -35,6 +34,7 @@ import {
   AdminPageHeader,
   AdminStatTile,
 } from "@/features/admin/ui";
+import { useAdminLeaveGuard, useBackGuard } from "@/features/admin/shell";
 import { ImageListUploaderContainer } from "@/features/admin/uploads";
 
 import { PieceForm } from "@/features/admin/pieces/components/PieceForm";
@@ -42,7 +42,6 @@ import { StockAdjustDialog } from "@/features/admin/pieces/components/StockAdjus
 import { OptionGroupsContainer } from "@/features/admin/pieces/containers/OptionGroupsContainer";
 import {
   applyStockDelta,
-  canFeature,
   canGoLive,
   describeKiln,
   describeKilnHint,
@@ -50,8 +49,12 @@ import {
   describeShelfStateHint,
   describeUnsavedChanges,
   EMPTY_PRODUCT_FORM,
+  FEATURE_BLOCK_NOTES,
+  findFeatureBlock,
+  findHomeShelfBlock,
   formatStock,
   LIVE_BLOCKED_NOTE,
+  type LeaveTarget,
   type PieceDraft,
   toFormBaseline,
   toProductFormValues,
@@ -61,6 +64,8 @@ import {
 
 // The picker lists every glaze the studio fires; there are never many.
 const GLAZE_PICKER_LIMIT = 60;
+
+const PIECES_HREF = "/dashboard/pieces";
 
 interface PieceState {
   stock: number;
@@ -107,7 +112,6 @@ export interface PieceEditorContainerProps {
 }
 
 export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
-  const router = useRouter();
   const isCreate = productId === null;
 
   const { data, loading, error, refetch } = useQuery(AdminProductDocument, {
@@ -133,7 +137,8 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   const [adjustStock] = useMutation(AdjustProductStockDocument);
 
   const [isRetireOpen, setIsRetireOpen] = useState(false);
-  const [isLeaveOpen, setIsLeaveOpen] = useState(false);
+  // Where a held leave was headed: a link, or browser Back; null while the dialog is closed.
+  const [leaveTarget, setLeaveTarget] = useState<LeaveTarget | null>(null);
   const [isStockOpen, setIsStockOpen] = useState(false);
   const [imageDraft, setImageDraft] = useState<string[] | null>(null);
   // Bumped after each save so the form remounts clean from its new baseline.
@@ -157,6 +162,18 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     state.stock,
     product?.is_customizable ?? false,
   );
+  const homeShelfFacts = {
+    isActive: state.isActive,
+    isCustomizable: product?.is_customizable ?? false,
+    stock: state.stock,
+  };
+  const homeShelfBlock = findHomeShelfBlock(homeShelfFacts);
+  const featureBlock = findFeatureBlock(homeShelfFacts, state.isFeatured);
+  // A retired piece gets no home page button at all, so only the other blocks need a reason.
+  const featureBlockNote =
+    featureBlock !== null && featureBlock !== "retired"
+      ? FEATURE_BLOCK_NOTES[featureBlock]
+      : null;
 
   // The draft wins until a save clears it; before that the saved gallery is the truth.
   const imageUrls = useMemo(
@@ -165,7 +182,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   );
   const hasUnsavedChanges = isFormDirty || imageDraft !== null;
 
-  // Reloading or closing the tab asks too; in-app links are not guarded.
+  // Reloading or closing the tab asks too; the admin nav and browser Back ask through the guards below.
   useEffect(() => {
     if (!hasUnsavedChanges) return;
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -174,6 +191,22 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  const handleLinkAttempt = useCallback(
+    (href: string) => setLeaveTarget({ kind: "link", href }),
+    [],
+  );
+  const handleBackAttempt = useCallback(
+    () => setLeaveTarget({ kind: "back" }),
+    [],
+  );
+
+  // Unsaved fields or photos ask first, from Cancel, the admin nav or browser Back.
+  // Typing a new address or closing the tab is left to the beforeunload prompt above.
+  useAdminLeaveGuard(hasUnsavedChanges ? handleLinkAttempt : null);
+  const { leaveBack, leaveTo, stay } = useBackGuard(
+    hasUnsavedChanges ? handleBackAttempt : null,
+  );
 
   const categoryOptions = useMemo(
     () =>
@@ -230,7 +263,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     },
     onSuccess: (result, save, isRefreshed) => {
       if (typeof result === "number") {
-        router.push(`/dashboard/pieces/${result}`);
+        leaveTo(`/dashboard/pieces/${result}`);
         return;
       }
       setBaseline(toFormBaseline(isRefreshed, save));
@@ -314,16 +347,28 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     [productId, saveStock],
   );
 
-  const leave = useCallback(() => router.push("/dashboard/pieces"), [router]);
+  const handleLeaveConfirm = useCallback(() => {
+    if (leaveTarget === null) return;
+    if (leaveTarget.kind === "back") leaveBack();
+    else leaveTo(leaveTarget.href);
+  }, [leaveBack, leaveTarget, leaveTo]);
 
-  // Unsaved fields or photos ask first; a clean form just goes back.
+  const handleLeaveOpenChange = useCallback(
+    (isOpen: boolean) => {
+      if (isOpen) return;
+      setLeaveTarget(null);
+      stay();
+    },
+    [stay],
+  );
+
   const handleCancel = useCallback(() => {
     if (hasUnsavedChanges) {
-      setIsLeaveOpen(true);
+      setLeaveTarget({ kind: "link", href: PIECES_HREF });
       return;
     }
-    leave();
-  }, [hasUnsavedChanges, leave]);
+    leaveTo(PIECES_HREF);
+  }, [hasUnsavedChanges, leaveTo]);
 
   const handleInvalid = useCallback(
     () => toast.error("Some fields need a look before this can be saved"),
@@ -384,17 +429,26 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
               >
                 Change the stock
               </Button>
-              {canFeature(state.isActive, state.isFeatured) && (
+              {featureBlock !== "retired" && (
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
                   disabled={isBusy}
-                  onClick={() => runFeatured(!state.isFeatured)}
+                  aria-disabled={featureBlockNote !== null}
+                  aria-describedby={
+                    featureBlockNote ? "piece-feature-block" : undefined
+                  }
+                  className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent"
+                  onClick={() => {
+                    if (featureBlockNote === null) {
+                      runFeatured(!state.isFeatured);
+                    }
+                  }}
                 >
                   {state.isFeatured
-                    ? "Take off the home page"
-                    : "Show on the home page"}
+                    ? "Stop putting it first"
+                    : "Put first among home page pieces"}
                 </Button>
               )}
               <Button
@@ -417,6 +471,14 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
               >
                 {state.isActive ? "Retire" : "Put back on the shelf"}
               </Button>
+              {featureBlockNote && (
+                <p
+                  id="piece-feature-block"
+                  className="basis-full text-[12px] text-muted-foreground"
+                >
+                  {featureBlockNote}
+                </p>
+              )}
             </>
           )
         }
@@ -436,6 +498,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
               state.isActive,
               isLiveAllowed,
               state.isFeatured,
+              homeShelfBlock,
             )}
           />
           <AdminStatTile
@@ -488,15 +551,15 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       />
 
       <AdminConfirmDialog
-        isOpen={isLeaveOpen}
+        isOpen={leaveTarget !== null}
         title="Leave without saving?"
         description={describeUnsavedChanges(imageDraft !== null)}
         confirmLabel="Leave without saving"
         cancelLabel="Keep editing"
         isDestructive
         isBusy={false}
-        onConfirm={leave}
-        onOpenChange={setIsLeaveOpen}
+        onConfirm={handleLeaveConfirm}
+        onOpenChange={handleLeaveOpenChange}
       />
 
       <StockAdjustDialog

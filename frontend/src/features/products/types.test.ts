@@ -443,6 +443,15 @@ describe("toGlazeAskUrl", () => {
     );
     expect(toGlazeAskUrl("", "Slate morning mug")).toBeNull();
   });
+
+  it("puts 91 in front of a legacy 10-digit number, as every studio link does", () => {
+    expect(toGlazeAskUrl("91234 56789", "Mug")).toMatch(
+      /^https:\/\/wa\.me\/919123456789\?text=/,
+    );
+    expect(
+      toArchiveAskUrl("91234 56789", "Mug", "https://example.com/p/mug"),
+    ).toMatch(/^https:\/\/wa\.me\/919123456789\?text=/);
+  });
 });
 
 describe("customisation pricing", () => {

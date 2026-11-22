@@ -19,13 +19,18 @@ import {
   UpdateProductOptionGroupDocument,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type {
   OptionGroupFormValues,
   ProductOptionFormValues,
 } from "@/lib/validations/admin/product";
 
-import { AdminConfirmDialog } from "@/features/admin/ui";
+import {
+  AdminConfirmDialog,
+  AdminLoadError,
+  retryQuery,
+} from "@/features/admin/ui";
 
 import { OptionForm } from "@/features/admin/pieces/components/OptionForm";
 import { OptionGroupForm } from "@/features/admin/pieces/components/OptionGroupForm";
@@ -92,7 +97,7 @@ export interface OptionGroupsContainerProps {
 export function OptionGroupsContainer({
   productId,
 }: OptionGroupsContainerProps) {
-  const { data, previousData, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminProductOptionGroupsDocument,
     {
       variables: { product_id: productId },
@@ -267,6 +272,12 @@ export function OptionGroupsContainer({
     editor.kind === "new-option" ||
     (editor.kind === "edit-option" && editingOption !== null);
 
+  // Only a successful answer earns the empty message.
+  const loadError =
+    error && !data
+      ? describeError(error, "The options could not be loaded.")
+      : null;
+
   return (
     <section className="flex flex-col gap-4 border-t border-ash pt-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -325,32 +336,40 @@ export function OptionGroupsContainer({
         />
       )}
 
-      <OptionGroupList
-        groups={rows}
-        busyId={busyId}
-        onEditGroup={(groupId) => setEditor({ kind: "edit-group", groupId })}
-        onDeleteGroup={(groupId) =>
-          setDoomed({
-            kind: "group",
-            groupId,
-            name: findGroup(groupId)?.name ?? "this group",
-          })
-        }
-        onAddOption={(groupId) => setEditor({ kind: "new-option", groupId })}
-        onEditOption={(groupId, optionId) =>
-          setEditor({ kind: "edit-option", groupId, optionId })
-        }
-        onDeleteOption={(groupId, optionId) =>
-          setDoomed({
-            kind: "option",
-            optionId,
-            name:
-              findGroup(groupId)?.options.find(
-                (option) => option.id === optionId,
-              )?.name ?? "this option",
-          })
-        }
-      />
+      {loadError ? (
+        <AdminLoadError
+          message={loadError}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      ) : (
+        <OptionGroupList
+          groups={rows}
+          busyId={busyId}
+          onEditGroup={(groupId) => setEditor({ kind: "edit-group", groupId })}
+          onDeleteGroup={(groupId) =>
+            setDoomed({
+              kind: "group",
+              groupId,
+              name: findGroup(groupId)?.name ?? "this group",
+            })
+          }
+          onAddOption={(groupId) => setEditor({ kind: "new-option", groupId })}
+          onEditOption={(groupId, optionId) =>
+            setEditor({ kind: "edit-option", groupId, optionId })
+          }
+          onDeleteOption={(groupId, optionId) =>
+            setDoomed({
+              kind: "option",
+              optionId,
+              name:
+                findGroup(groupId)?.options.find(
+                  (option) => option.id === optionId,
+                )?.name ?? "this option",
+            })
+          }
+        />
+      )}
 
       <AdminConfirmDialog
         isOpen={doomed !== null}

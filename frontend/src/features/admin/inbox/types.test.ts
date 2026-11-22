@@ -83,7 +83,7 @@ function buildSubscriberRow(
   return {
     id: 1,
     email: "ira@example.com",
-    accountLabel: "Yes",
+    accountLabel: "Has an account",
     subscribedLabel: "Tue, 1 Sep, 2026",
     unsubscribedLabel: "—",
     isActive: true,
@@ -224,8 +224,8 @@ describe("toContactRow", () => {
 
 describe("toAccountLabel", () => {
   it("says whether the email belongs to a signed-up person", () => {
-    expect(toAccountLabel(null)).toBe("No");
-    expect(toAccountLabel(4)).toBe("Yes");
+    expect(toAccountLabel(null)).toBe("No account");
+    expect(toAccountLabel(4)).toBe("Has an account");
   });
 });
 
@@ -257,7 +257,7 @@ describe("toSubscriberRow", () => {
     expect(toSubscriberRow(buildSubscriber())).toEqual({
       id: 3,
       email: "ira@example.com",
-      accountLabel: "Yes",
+      accountLabel: "Has an account",
       subscribedLabel: "Tue, 1 Sep, 2026",
       unsubscribedLabel: "—",
       isActive: true,

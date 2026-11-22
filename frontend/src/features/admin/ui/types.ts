@@ -106,7 +106,8 @@ export function registrationStatusOptions(): {
 }[] {
   return REGISTRATION_FLOW.map((value) => ({
     value,
-    label: toRegistrationStatusLabel(value),
+    // A filter names the status itself, so it keeps the paid wording.
+    label: toRegistrationStatusLabel(value, false),
   }));
 }
 
@@ -159,12 +160,21 @@ function isMoveTarget(
   return status !== RegistrationStatus.Pending;
 }
 
+const FREE_CONFIRM_LABEL: Record<RegistrationHold, string> = {
+  wheel: "Confirm booking",
+  seat: "Confirm seat",
+};
+
 /** Each button says what the move does, not just the status it lands on. */
 function registrationActionLabel(
   status: RegistrationMoveTarget,
   hold: RegistrationHold,
+  isFree: boolean,
 ): string {
   if (status === RegistrationStatus.Cancelled) return CANCEL_LABEL[hold];
+  if (status === RegistrationStatus.Confirmed && isFree) {
+    return FREE_CONFIRM_LABEL[hold];
+  }
   return REGISTRATION_ACTION_LABEL[status];
 }
 
@@ -189,13 +199,14 @@ export function toRegistrationActions(
   current: RegistrationStatus,
   nextStatuses: RegistrationStatus[],
   hold: RegistrationHold,
+  isFree: boolean,
 ): RegistrationAction[] {
   return nextStatuses
     .filter(isMoveTarget)
     .filter((status) => status !== SPARE_NO[current])
     .map((status, index) => ({
       status,
-      label: registrationActionLabel(status, hold),
+      label: registrationActionLabel(status, hold, isFree),
       isPrimary:
         index === 0 &&
         (status === RegistrationStatus.Approved ||
@@ -280,4 +291,11 @@ export function toPreviewColour(value: string): string | null {
 /** The id of the hint or error under a field; the control points its aria-describedby here. */
 export function adminFieldMessageId(id: string): string {
   return `${id}-message`;
+}
+
+// The hook's own error state shows a failed retry, so the rejected promise is not news.
+export function retryQuery(refetch: () => Promise<unknown>): () => void {
+  return () => {
+    refetch().catch(() => undefined);
+  };
 }

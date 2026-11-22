@@ -11,11 +11,7 @@ import { PrismaService } from "@/prisma/prisma.service";
 import { EventsService } from "@/features/events/events.service";
 import { SearchService } from "@/features/search/search.service";
 import { UploadsService } from "@/uploads/uploads.service";
-import {
-  AdminEventsService,
-  assertSchedule,
-  nextRegistrationStatuses,
-} from "./events.service";
+import { AdminEventsService, assertSchedule } from "./events.service";
 
 const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
@@ -126,14 +122,6 @@ describe("assertSchedule", () => {
     expect(() => assertSchedule({ ...base, price: 0, total_seats: 0 })).toThrow(
       BadRequestException,
     );
-  });
-});
-
-describe("nextRegistrationStatuses", () => {
-  it("mirrors the shared registration transitions", () => {
-    expect(nextRegistrationStatuses(RegistrationStatus.CONFIRMED)).toEqual([
-      RegistrationStatus.CANCELLED,
-    ]);
   });
 });
 
@@ -436,6 +424,22 @@ describe("AdminEventsService", () => {
       null,
     );
     expect(result.customer.email).toBe("maya@example.com");
+  });
+
+  it("refuses to approve a free seat, which has nothing to wait for", async () => {
+    prismaMock.eventRegistration.findUnique.mockResolvedValue({
+      ...registrationRow,
+      total: 0,
+    });
+
+    await expect(
+      service.setRegistrationStatus(
+        registrationRow.id,
+        RegistrationStatus.APPROVED,
+        null,
+      ),
+    ).rejects.toThrow("confirm it instead");
+    expect(eventsMock.applyStatus).not.toHaveBeenCalled();
   });
 
   it("reports a missing registration", async () => {

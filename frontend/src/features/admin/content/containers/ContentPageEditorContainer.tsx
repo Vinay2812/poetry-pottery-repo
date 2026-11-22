@@ -11,10 +11,16 @@ import {
   UploadPurpose,
 } from "@/graphql/generated/graphql";
 
+import { describeError } from "@/lib/apollo/errors";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import type { ContentPageFormValues } from "@/lib/validations/admin/content";
 
-import { AdminPageHeader, AdminStatusPill } from "@/features/admin/ui";
+import {
+  AdminLoadError,
+  AdminPageHeader,
+  AdminStatusPill,
+  retryQuery,
+} from "@/features/admin/ui";
 import { ImageUploaderContainer } from "@/features/admin/uploads";
 
 import { ContentPageForm } from "../components/ContentPageForm";
@@ -51,7 +57,7 @@ export interface ContentPageEditorContainerProps {
 export function ContentPageEditorContainer({
   slug,
 }: ContentPageEditorContainerProps) {
-  const { data, loading, error } = useQuery(AdminContentPageDocument, {
+  const { data, loading, error, refetch } = useQuery(AdminContentPageDocument, {
     variables: { slug },
     fetchPolicy: "cache-and-network",
   });
@@ -92,7 +98,7 @@ export function ContentPageEditorContainer({
   const isMissing =
     page === null && error !== undefined && isMissingPage(error.message);
 
-  if (page === null && loading) {
+  if (page === null && loading && error === undefined) {
     return (
       <div aria-busy="true" className="flex flex-col gap-3">
         <div className="h-20 animate-pulse bg-ash" />
@@ -103,9 +109,11 @@ export function ContentPageEditorContainer({
 
   if (page === null && error !== undefined && !isMissing) {
     return (
-      <p role="alert" className="text-[13px]">
-        This page could not be loaded. Refresh to try again.
-      </p>
+      <AdminLoadError
+        message={describeError(error, "This page could not be loaded.")}
+        isRetrying={loading}
+        onRetry={retryQuery(refetch)}
+      />
     );
   }
 

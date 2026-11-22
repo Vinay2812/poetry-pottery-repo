@@ -14,14 +14,17 @@ import {
   formatInr,
   formatTime,
 } from "@/lib/format";
+import { describeError } from "@/lib/apollo/errors";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 import { toRegistrationStatusLabel } from "@/lib/registration-status";
 
 import {
+  AdminLoadError,
   AdminPageHeader,
   orderStatusLabel,
   orderStatusTone,
   registrationStatusTone,
+  retryQuery,
 } from "@/features/admin/ui";
 
 import { DashboardSection } from "@/features/admin/dashboard/components/DashboardSection";
@@ -70,8 +73,10 @@ function applyStockPatch(
   });
 }
 
+const DASHBOARD_DESCRIPTION = "What the shelf and the wheel have been doing.";
+
 export function DashboardContainer() {
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     AdminDashboardDocument,
     {
       fetchPolicy: "cache-and-network",
@@ -121,7 +126,11 @@ export function DashboardContainer() {
         kindLabel: toAgendaKindLabel(item.kind),
         timeLabel: formatTime(item.starts_at),
         title: item.title,
-        detail: toAgendaDetail(item.detail, item.booking_status),
+        detail: toAgendaDetail(
+          item.detail,
+          item.booking_status,
+          item.booking_total === 0,
+        ),
       })),
     [dashboard],
   );
@@ -131,7 +140,10 @@ export function DashboardContainer() {
       (dashboard?.recent_bookings ?? []).map((booking) => ({
         id: booking.id,
         customerName: booking.customer.name ?? booking.customer.email,
-        statusLabel: toRegistrationStatusLabel(booking.status),
+        statusLabel: toRegistrationStatusLabel(
+          booking.status,
+          booking.total === 0,
+        ),
         statusTone: registrationStatusTone(booking.status),
         shapeLabel: describeBooking(booking.hours, booking.participants),
         totalLabel: formatInr(booking.total),
@@ -174,7 +186,20 @@ export function DashboardContainer() {
   }
 
   if (!dashboard) {
-    return <p className="text-[13px]">The dashboard could not be loaded.</p>;
+    return (
+      <div className="flex flex-col gap-8">
+        <AdminPageHeader
+          eyebrow="Studio"
+          title="Dashboard"
+          description={DASHBOARD_DESCRIPTION}
+        />
+        <AdminLoadError
+          message={describeError(error, "The dashboard could not be loaded.")}
+          isRetrying={loading}
+          onRetry={retryQuery(refetch)}
+        />
+      </div>
+    );
   }
 
   return (
@@ -182,7 +207,7 @@ export function DashboardContainer() {
       <AdminPageHeader
         eyebrow="Studio"
         title="Dashboard"
-        description="What the shelf and the wheel have been doing."
+        description={DASHBOARD_DESCRIPTION}
       />
       <DashboardStats
         orders={formatCount(dashboard.orders_last_30_days)}

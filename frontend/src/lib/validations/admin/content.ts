@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 const TEN_DIGITS = /^(?:\+?91|0)?\d{10}$/;
-const WITH_COUNTRY_CODE = /^\+?91\d{10}$/;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const WHOLE_RUPEES = /^\d+$/;
 
@@ -12,11 +11,6 @@ function compactPhone(value: string): string {
 // Accepts the ways people actually type an Indian number; it is saved as typed.
 function isPhone(value: string): boolean {
   return TEN_DIGITS.test(compactPhone(value));
-}
-
-// wa.me links use the digits as stored, so they need the country code.
-function isWhatsAppNumber(value: string): boolean {
-  return WITH_COUNTRY_CODE.test(compactPhone(value));
 }
 
 /** A page slug is what goes in the URL: lowercase letters, digits and single dashes between them. */
@@ -143,13 +137,11 @@ export const siteSettingsSchema = z
       .string()
       .trim()
       .refine(isPhone, "Phone must be a valid 10-digit phone number"),
+    // A bare 10-digit number is fine; it is saved and linked with 91 in front.
     whatsapp_number: z
       .string()
       .trim()
-      .refine(
-        isWhatsAppNumber,
-        "WhatsApp number needs 91 in front, like 91 98765 43210",
-      ),
+      .refine(isPhone, "WhatsApp number must be a valid 10-digit phone number"),
     address: requiredText("Address", 240),
     opening_hours: requiredText("Opening hours", 160),
     instagram_url: optionalUrl("Instagram"),
