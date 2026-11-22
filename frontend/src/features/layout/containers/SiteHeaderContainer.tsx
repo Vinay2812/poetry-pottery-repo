@@ -82,6 +82,7 @@ export function SiteHeaderContainer({
   }, [signOut]);
 
   const handleCloseMenu = useCallback(() => setIsMenuOpen(false), []);
+  const isAdmin = user?.publicMetadata.role === UserRole.Admin;
 
   return (
     <>
@@ -92,7 +93,7 @@ export function SiteHeaderContainer({
         wishlistCount={wishlistCount}
         countAnnouncement={countAnnouncement}
         isSignedIn={Boolean(isSignedIn)}
-        isAdmin={user?.publicMetadata.role === UserRole.Admin}
+        isAdmin={isAdmin}
         userImageUrl={user?.hasImage ? user.imageUrl : null}
         isHome={pathname === "/"}
         variant={focused ? "focused" : "full"}
@@ -107,6 +108,7 @@ export function SiteHeaderContainer({
       <MobileMenuContainer
         isOpen={isMenuOpen}
         isSignedIn={Boolean(isSignedIn)}
+        isAdmin={isAdmin}
         wishlistCount={wishlistCount}
         contactPhone={contactPhone}
         whatsappUrl={whatsappUrl}

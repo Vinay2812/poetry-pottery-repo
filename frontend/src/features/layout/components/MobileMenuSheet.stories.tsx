@@ -15,6 +15,7 @@ const meta = {
     links: MOBILE_MENU_LINKS,
     activeHref: "/products",
     isSignedIn: false,
+    isAdmin: false,
     wishlistCount: 0,
     contactPhone: "+91 91234 56789",
     whatsappUrl: buildWhatsAppUrl(
@@ -36,6 +37,11 @@ export const SignedOut: Story = {};
 
 export const SignedIn: Story = {
   args: { isSignedIn: true, wishlistCount: 3 },
+};
+
+// Admins reach the dashboard from the phone menu, as the desktop header has.
+export const SignedInAdmin: Story = {
+  args: { isSignedIn: true, isAdmin: true },
 };
 
 export const OnArchive: Story = {
