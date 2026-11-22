@@ -5,6 +5,7 @@ import { RegistrationStatus } from "@/graphql/generated/graphql";
 import {
   applyBlackoutPatch,
   applyBookingStatus,
+  describeBookingStatusNote,
   applyConfigPatch,
   applyTierPatch,
   describeClosedDays,
@@ -553,5 +554,50 @@ describe("toWheelSessionsHref", () => {
     expect(toWheelSessionsHref({ search: "WS-1" })).toBe(
       "/dashboard/workshops?config=all&search=WS-1",
     );
+  });
+});
+
+describe("describeBookingStatusNote", () => {
+  const now = new Date("2026-06-10T10:00:00Z");
+
+  it("says a request left unanswered past its date has lapsed", () => {
+    expect(
+      describeBookingStatusNote(
+        RegistrationStatus.Pending,
+        "2026-06-09T10:00:00Z",
+        null,
+        now,
+      ),
+    ).toBe("Date passed");
+  });
+
+  it("says nothing of a request still ahead or an answered one whose date passed", () => {
+    expect(
+      describeBookingStatusNote(
+        RegistrationStatus.Pending,
+        "2026-06-11T10:00:00Z",
+        null,
+        now,
+      ),
+    ).toBeNull();
+    expect(
+      describeBookingStatusNote(
+        RegistrationStatus.Confirmed,
+        "2026-06-09T10:00:00Z",
+        null,
+        now,
+      ),
+    ).toBeNull();
+  });
+
+  it("gives a closed booking its reason", () => {
+    expect(
+      describeBookingStatusNote(
+        RegistrationStatus.Rejected,
+        "2026-06-09T10:00:00Z",
+        "Away that week",
+        now,
+      ),
+    ).toBe("Reason: Away that week");
   });
 });

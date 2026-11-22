@@ -23,7 +23,6 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
-  describeClosing,
   registrationActionNeedsReason,
   registrationClosingDialog,
   registrationHoldNote,
@@ -46,6 +45,7 @@ import {
 import {
   applyBookingStatus,
   BOOKINGS_PAGE_SIZE,
+  describeBookingStatusNote,
   describeSessionDays,
   describeSessionSize,
   toRangeEnd,
@@ -65,6 +65,7 @@ interface BookingMove {
 }
 
 const STATUS_OPTIONS = registrationStatusOptions();
+const REQUEST_OPTIONS = [{ value: "1", label: "Awaiting approval" }];
 
 export function WorkshopBookingsContainer({
   configId,
@@ -76,6 +77,8 @@ export function WorkshopBookingsContainer({
   const status = values.status ?? "";
   const from = values.from ?? "";
   const to = values.to ?? "";
+  // The dashboard's request tile opens this, so the list holds exactly what it counts.
+  const isAwaitingFilter = values.awaiting === "1";
   const { personId, personName } = usePersonFilter(values.user);
 
   const { data, previousData, loading, error, refetch } = useQuery(
@@ -85,6 +88,7 @@ export function WorkshopBookingsContainer({
         filter: {
           config_id: configId,
           user_id: personId,
+          awaiting_approval: isAwaitingFilter || null,
           status: toRegistrationStatus(status),
           search: search || null,
           from: toRangeStart(from, timezone) || null,
@@ -133,7 +137,11 @@ export function WorkshopBookingsContainer({
           item.booking.total === 0,
         ),
         statusTone: registrationStatusTone(item.booking.status),
-        closingNote: describeClosing(item.booking.cancel_reason),
+        statusNote: describeBookingStatusNote(
+          item.booking.status,
+          item.booking.starts_at,
+          item.booking.cancel_reason,
+        ),
         note: item.booking.note,
         requestedLabel: formatDate(item.booking.created_at),
         actions: toRegistrationActions(
@@ -214,6 +222,14 @@ export function WorkshopBookingsContainer({
           options={STATUS_OPTIONS}
           value={status}
           onChange={(value) => patch({ status: value || null })}
+        />
+        <AdminSelectFilter
+          id="bookings-requests"
+          label="Requests"
+          anyLabel="All sessions"
+          options={REQUEST_OPTIONS}
+          value={isAwaitingFilter ? "1" : ""}
+          onChange={(value) => patch({ awaiting: value || null })}
         />
         <AdminDateFilter
           id="bookings-from"

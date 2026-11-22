@@ -412,6 +412,25 @@ describe("AdminWorkshopsService", () => {
     );
   });
 
+  it("narrows to the requests still waiting on the studio, the ones the dashboard counts", async () => {
+    prismaMock.workshopBooking.count
+      .mockResolvedValueOnce(1)
+      .mockResolvedValueOnce(0);
+    prismaMock.workshopBooking.findMany.mockResolvedValue([bookingRow]);
+
+    await service.bookings({ awaiting_approval: true, limit: 20 }, NOW);
+
+    const waiting = {
+      status: RegistrationStatus.PENDING,
+      starts_at: { gte: NOW },
+    };
+    expect(prismaMock.workshopBooking.count).toHaveBeenNthCalledWith(1, {
+      where: { AND: [{ AND: [{}, waiting] }, waiting] },
+    });
+    // A lapsed request is never waiting, so nothing is left for the rest.
+    expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledTimes(1);
+  });
+
   it("carries the page past the waiting requests into the rest", async () => {
     prismaMock.workshopBooking.count
       .mockResolvedValueOnce(3)

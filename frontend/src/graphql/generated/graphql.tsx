@@ -570,6 +570,7 @@ export type AdminWorkshopBooking = {
 };
 
 export type AdminWorkshopBookingsFilterInput = {
+  awaiting_approval?: InputMaybe<Scalars['Boolean']['input']>;
   config_id?: InputMaybe<Scalars['Int']['input']>;
   from?: InputMaybe<Scalars['DateTime']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;

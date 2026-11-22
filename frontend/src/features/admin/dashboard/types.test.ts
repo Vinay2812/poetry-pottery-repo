@@ -90,7 +90,7 @@ describe("today's agenda", () => {
 describe("request tiles", () => {
   it("open their lists narrowed to what is waiting on the studio", () => {
     expect(WAITING_SESSIONS_HREF).toBe(
-      "/dashboard/workshops?config=all&status=PENDING",
+      "/dashboard/workshops?awaiting=1&config=all",
     );
     expect(WAITING_EVENT_REQUESTS_HREF).toBe("/dashboard/events?awaiting=1");
   });

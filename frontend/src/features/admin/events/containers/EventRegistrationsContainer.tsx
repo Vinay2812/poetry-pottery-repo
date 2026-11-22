@@ -116,7 +116,7 @@ export function EventRegistrationsContainer({
           entry.registration.total === 0,
         ),
         statusTone: registrationStatusTone(entry.registration.status),
-        closingNote: describeClosing(entry.registration.cancel_reason),
+        statusNote: describeClosing(entry.registration.cancel_reason),
         note: entry.registration.note,
         actions: toRegistrationActions(
           entry.registration.status,

@@ -61,6 +61,10 @@ export class AdminWorkshopBookingsFilterInput {
   @Field(() => Int, { nullable: true })
   user_id?: number | null;
 
+  // Only requests still waiting on the studio, the ones the dashboard counts.
+  @Field(() => Boolean, { nullable: true })
+  awaiting_approval?: boolean | null;
+
   @Field(() => String, { nullable: true })
   search?: string | null;
 

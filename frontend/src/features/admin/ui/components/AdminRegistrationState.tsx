@@ -6,20 +6,20 @@ import {
 export interface AdminRegistrationStateProps {
   statusLabel: string;
   statusTone: AdminStatusTone;
-  // Who closed it, or why, once it is cancelled or turned down.
-  closingNote: string | null;
+  // Who closed it or why, or that a request went unanswered past its date.
+  statusNote: string | null;
 }
 
 export function AdminRegistrationState({
   statusLabel,
   statusTone,
-  closingNote,
+  statusNote,
 }: AdminRegistrationStateProps) {
   return (
     <div className="flex flex-col items-start gap-1">
       <AdminStatusPill label={statusLabel} tone={statusTone} />
-      {closingNote && (
-        <span className="text-[12px] text-muted-foreground">{closingNote}</span>
+      {statusNote && (
+        <span className="text-[12px] text-muted-foreground">{statusNote}</span>
       )}
     </div>
   );

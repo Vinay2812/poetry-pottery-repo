@@ -21,7 +21,7 @@ const meta = {
         totalLabel: "₹1,400",
         statusLabel: "Awaiting approval",
         statusTone: "warn",
-        closingNote: null,
+        statusNote: null,
         note: "First time on a wheel",
         actions: [
           {
@@ -55,7 +55,7 @@ const meta = {
         totalLabel: "₹4,000",
         statusLabel: "Approved, awaiting payment",
         statusTone: "neutral",
-        closingNote: null,
+        statusNote: null,
         note: null,
         actions: [
           {
@@ -83,9 +83,31 @@ const meta = {
         totalLabel: "₹1,100",
         statusLabel: "Cancelled",
         statusTone: "quiet",
-        closingNote: "Cancelled by the guest",
+        statusNote: "Cancelled by the guest",
         note: null,
         actions: [],
+      },
+      {
+        id: "WS-Q7RT4KD2MW",
+        personName: "Kabir Shah",
+        personEmail: "kabir@example.com",
+        requestedLabel: "Mon, 1 Jun, 2026",
+        setupName: null,
+        sessionLines: ["Sat 13 Jun · 10–11 am"],
+        sizeLabel: "1 hour · 1 person",
+        totalLabel: "₹1,100",
+        statusLabel: "Awaiting approval",
+        statusTone: "warn",
+        statusNote: "Date passed",
+        note: null,
+        actions: [
+          {
+            status: RegistrationStatus.Rejected,
+            label: "Turn down",
+            isPrimary: false,
+            isDestructive: true,
+          },
+        ],
       },
     ],
     isBusy: false,

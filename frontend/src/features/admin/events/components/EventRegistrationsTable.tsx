@@ -25,7 +25,7 @@ export interface RegistrationTableRow {
   statusLabel: string;
   statusTone: AdminStatusTone;
   // Who closed it, or why, once it is cancelled or turned down.
-  closingNote: string | null;
+  statusNote: string | null;
   note: string | null;
   actions: RegistrationAction[];
 }
@@ -74,7 +74,7 @@ export function EventRegistrationsTable({
               <AdminRegistrationState
                 statusLabel={row.statusLabel}
                 statusTone={row.statusTone}
-                closingNote={row.closingNote}
+                statusNote={row.statusNote}
               />
               {row.note && (
                 <p className="text-muted-foreground">Note: {row.note}</p>
@@ -123,7 +123,7 @@ export function EventRegistrationsTable({
                   <AdminRegistrationState
                     statusLabel={row.statusLabel}
                     statusTone={row.statusTone}
-                    closingNote={row.closingNote}
+                    statusNote={row.statusNote}
                   />
                 </td>
                 <td
