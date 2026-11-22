@@ -85,11 +85,16 @@ One-time setup:
 
 The run's log shows the deploy script's own output, ending in the container table and the tailnet reachability check.
 
+## Logs
+
+The API logs to the server's journal rather than to Docker's own files, so rebuilding the container keeps them. Every deploy sets journald to persistent storage with about 13 months of retention (capped at 4 GB) and makes nginx keep 400 days of daily, compressed access logs. The privacy policy relies on this: CERT-In asks for 180 days of logs now and the DPDP Rules for a year from May 2027. The storefront's request logs live at Vercel and follow Vercel's own retention.
+
 ## Day to day
 
 ```bash
 docker compose -f infra/docker/docker-compose.api.yml ps
 docker compose -f infra/docker/docker-compose.api.yml logs -f api
+journalctl -t poetry-pottery-api --since "2026-10-01"   # older API logs; they survive rebuilds
 docker compose -f infra/docker/docker-compose.api.yml run --rm migrate            # migrations
 docker compose -f infra/docker/docker-compose.api.yml run --rm migrate pnpm db:seed
 docker compose -f infra/docker/docker-compose.api.yml run --rm migrate pnpm search:reindex   # after an import or restore

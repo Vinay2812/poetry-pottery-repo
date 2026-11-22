@@ -189,6 +189,22 @@ if [ "$MODE" = setup ]; then
   systemctl restart docker
 fi
 
+# ---------------------------------------------------------------- log retention
+# The privacy policy promises security logs for as long as Indian law asks (CERT-In: 180 days; DPDP Rules: a year
+# from May 2027). The API logs to journald (see the compose file) so they outlive container rebuilds; journald and
+# nginx keep about 13 months. Written on every run so an existing server picks up a change.
+log "Keeping server logs for about 13 months"
+mkdir -p /etc/systemd/journald.conf.d /var/log/journal
+JOURNALD_CONF=/etc/systemd/journald.conf.d/poetry-pottery.conf
+JOURNALD_WANT="$(printf '[Journal]\nStorage=persistent\nMaxRetentionSec=400d\nSystemMaxUse=4G\n')"
+if [ "$(cat "$JOURNALD_CONF" 2>/dev/null)" != "$JOURNALD_WANT" ]; then
+  printf '%s\n' "$JOURNALD_WANT" > "$JOURNALD_CONF"
+  systemctl restart systemd-journald
+fi
+if [ -f /etc/logrotate.d/nginx ]; then
+  sed -i -E 's/^([[:space:]]*)(weekly|monthly)$/\1daily/; s/^([[:space:]]*)rotate [0-9]+$/\1rotate 400/' /etc/logrotate.d/nginx
+fi
+
 # ---------------------------------------------------------------- stack
 COMPOSE=(docker compose -f infra/docker/docker-compose.api.yml)
 
