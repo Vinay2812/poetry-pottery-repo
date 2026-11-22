@@ -11,6 +11,11 @@ services:
       dockerfile: ../infra/docker/Dockerfile.api
     container_name: poetry-pottery-api
     restart: unless-stopped
+    # journald keeps the logs across rebuilds; deploy.sh sets its retention. Read them with: journalctl -t poetry-pottery-api
+    logging:
+      driver: journald
+      options:
+        tag: poetry-pottery-api
     # Runtime app env (Clerk keys, schema key, log level, throttles) comes from api/.env.
     env_file: ../../api/.env
     # api/.env points at host ports; inside the network the siblings are reached by service name.
