@@ -18,8 +18,8 @@ const STATE_OPTIONS: AdminFilterOption[] = [
 ];
 
 const FEATURED_OPTIONS: AdminFilterOption[] = [
-  { value: "1", label: "Marked first for the home page" },
-  { value: "0", label: "Not marked first" },
+  { value: "1", label: "Studio picks" },
+  { value: "0", label: "Not studio picks" },
 ];
 
 const SECOND_OPTIONS: AdminFilterOption[] = [
@@ -130,7 +130,7 @@ export function PiecesToolbar({
         />
         <AdminSelectFilter
           id="pieces-featured"
-          label="Home page"
+          label="Studio picks"
           anyLabel="Any"
           options={FEATURED_OPTIONS}
           value={featuredState}

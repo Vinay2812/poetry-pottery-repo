@@ -37,54 +37,93 @@ export function canGoLive(stock: number, isCustomizable: boolean): boolean {
   return isCustomizable || stock > 0;
 }
 
-// The flag only orders the home shelf: a marked piece comes first among those the shelf can show.
-export type FeatureBlock = "retired" | "made-to-order" | "sold-out";
+// A studio pick leads the home page and the shop's default Studio picks order, among the pieces they show.
+export type StudioPickBlock =
+  | "retired"
+  | "made-to-order"
+  | "collection-not-open"
+  | "collection-closed"
+  | "sold-out";
 
-export interface HomeShelfFacts {
+// Where a piece's collection window stands; a piece with no collection is always "open".
+export type CollectionWindowState = "open" | "not-open" | "closed";
+
+export interface StudioPickFacts {
   isActive: boolean;
   isCustomizable: boolean;
   stock: number;
+  collectionWindow: CollectionWindowState;
 }
 
-// The storefront's home shelf shows only pieces on the shelf, in stock and ready to ship.
-export function findHomeShelfBlock({
+// Same window rule as the storefront: open from starts_at, still open on ends_at.
+export function readCollectionWindow(
+  collection: { starts_at?: string | null; ends_at?: string | null } | null,
+  now: Date,
+): CollectionWindowState {
+  if (collection === null) return "open";
+  const { starts_at: startsAt, ends_at: endsAt } = collection;
+  if (startsAt && new Date(startsAt) > now) return "not-open";
+  if (endsAt && new Date(endsAt) < now) return "closed";
+  return "open";
+}
+
+// Both places show only pieces on the shelf, in an open collection, in stock and ready to ship.
+export function findStudioPickBlock({
   isActive,
   isCustomizable,
   stock,
-}: HomeShelfFacts): FeatureBlock | null {
+  collectionWindow,
+}: StudioPickFacts): StudioPickBlock | null {
   if (!isActive) return "retired";
   if (isCustomizable) return "made-to-order";
+  if (collectionWindow === "not-open") return "collection-not-open";
+  if (collectionWindow === "closed") return "collection-closed";
   return stock > 0 ? null : "sold-out";
 }
 
-// A piece still marked can always be unmarked; otherwise only one the home shelf can show.
-export function findFeatureBlock(
-  facts: HomeShelfFacts,
+// A piece still marked can always be unmarked; otherwise only one the picks can show.
+export function findPickToggleBlock(
+  facts: StudioPickFacts,
   isFeatured: boolean,
-): FeatureBlock | null {
-  return isFeatured ? null : findHomeShelfBlock(facts);
+): StudioPickBlock | null {
+  return isFeatured ? null : findStudioPickBlock(facts);
 }
 
-export const FEATURE_BLOCK_NOTES: Record<FeatureBlock, string> = {
-  retired: "Put it back on the shelf first",
-  "made-to-order":
-    "The home page shows pieces ready to ship, not made to order",
-  "sold-out": "The home page shows pieces in stock. Add stock first",
+export const STUDIO_PICK_BLOCK_NOTES: Record<StudioPickBlock, string> = {
+  retired: "Only a piece on the shelf can be a studio pick",
+  "made-to-order": "Studio picks are pieces ready to ship, not made to order",
+  "collection-not-open":
+    "Its collection has not opened yet, so the shop leaves it out until then",
+  "collection-closed": "Its collection has closed, so the shop leaves it out",
+  "sold-out": "Studio picks are pieces in stock. Add stock to mark it",
 };
 
-// A new piece is not retired yet, just not ticked onto the shelf.
-export function describeNewFeatureHint(block: FeatureBlock | null): string {
-  if (block === "retired") {
-    return "Only a piece on the shelf can be on the home page";
-  }
-  if (block !== null) return FEATURE_BLOCK_NOTES[block];
-  return "Among the pieces the home page can show, it comes first.";
+export function describeNewPickHint(block: StudioPickBlock | null): string {
+  if (block !== null) return STUDIO_PICK_BLOCK_NOTES[block];
+  return "Leads the home page and the shop's Studio picks order.";
 }
 
-const LEFT_OFF_HOME: Record<Exclude<FeatureBlock, "retired">, string> = {
+const LEFT_OUT_WHILE: Record<Exclude<StudioPickBlock, "retired">, string> = {
   "made-to-order": "made to order",
+  "collection-not-open": "its collection has not opened",
+  "collection-closed": "its collection is closed",
   "sold-out": "sold out",
 };
+
+const MADE_TO_ORDER_HINT =
+  "Thrown after someone orders it, so it can sell with no stock.";
+
+// Saving a studio pick as made to order takes the mark off, so the box says so before the save.
+export function describeMadeToOrderHint(
+  isSavedPick: boolean,
+  isSavedMadeToOrder: boolean,
+  isMadeToOrder: boolean,
+): string {
+  if (isSavedPick && !isSavedMadeToOrder && isMadeToOrder) {
+    return `${MADE_TO_ORDER_HINT} Saving takes it off the studio picks.`;
+  }
+  return MADE_TO_ORDER_HINT;
+}
 
 // A held leave goes on to a link or carries on with browser Back.
 export type LeaveTarget = { kind: "link"; href: string } | { kind: "back" };
@@ -100,18 +139,18 @@ export function describeShelfStateHint(
   isActive: boolean,
   isLiveAllowed: boolean,
   isFeatured: boolean,
-  homeShelfBlock: FeatureBlock | null,
+  studioPickBlock: StudioPickBlock | null,
 ): string | null {
   if (isActive) {
     if (!isFeatured) return null;
-    // Marked, but the home shelf leaves it out until it is in stock and ready to ship.
-    if (homeShelfBlock !== null && homeShelfBlock !== "retired") {
-      return `Marked to go first, but left off the home page while ${LEFT_OFF_HOME[homeShelfBlock]}`;
+    // Marked, but the home page and the shop leave it out until it can show.
+    if (studioPickBlock !== null && studioPickBlock !== "retired") {
+      return `A studio pick, but left out while ${LEFT_OUT_WHILE[studioPickBlock]}`;
     }
-    return "Goes first among the pieces on the home page";
+    return "A studio pick: leads the home page and the shop";
   }
-  // Retired but still marked, so "Stop putting it first" has something to undo.
-  if (isFeatured) return "Still marked to go first on the home page";
+  // Retired but still marked, so "No longer a studio pick" has something to undo.
+  if (isFeatured) return "Still marked as a studio pick";
   return isLiveAllowed ? "Shown in the archive" : LIVE_BLOCKED_NOTE;
 }
 
@@ -341,8 +380,9 @@ function optionalText(value: string): string | null {
 export function toProductInput(
   values: ProductFormValues,
   imageUrls: readonly string[],
+  collectionWindow: CollectionWindowState,
 ): AdminProductInput {
-  // What the boxes show is what is sent: never live without stock, never featured where it cannot show.
+  // What the boxes show is what is sent: never live without stock, never a pick where it cannot show.
   const isActive =
     values.is_active && canGoLive(values.stock, values.is_customizable);
   return {
@@ -371,16 +411,17 @@ export function toProductInput(
     is_commission: values.is_commission,
     is_featured:
       values.is_featured &&
-      findHomeShelfBlock({
+      findStudioPickBlock({
         isActive,
         isCustomizable: values.is_customizable,
         stock: values.stock,
+        collectionWindow,
       }) === null,
     is_active: isActive,
   };
 }
 
-/** Active, featured and stock are not on the update input: each has its own mutation. */
+/** Active, the studio pick mark and stock are not on the update input: each has its own mutation. */
 export function toProductUpdateInput(
   values: ProductFormValues,
   imageUrls: readonly string[],

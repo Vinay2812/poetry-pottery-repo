@@ -48,6 +48,7 @@ query AdminDashboard {
       detail
       booking_status
       booking_total
+      event_type
     }
   }
 }

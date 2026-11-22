@@ -1,5 +1,10 @@
 import { AdminStatTile } from "@/features/admin/ui";
 
+import {
+  WAITING_EVENT_REQUESTS_HREF,
+  WAITING_SESSIONS_HREF,
+} from "@/features/admin/dashboard/types";
+
 export interface DashboardStatsProps {
   orders: string;
   revenue: string;
@@ -27,11 +32,13 @@ export function DashboardStats({
         label="Event requests"
         value={pendingRegistrations}
         hint="Waiting on you"
+        href={WAITING_EVENT_REQUESTS_HREF}
       />
       <AdminStatTile
         label="Session requests"
         value={pendingBookings}
         hint="Waiting on you"
+        href={WAITING_SESSIONS_HREF}
       />
       <AdminStatTile
         label="Messages"

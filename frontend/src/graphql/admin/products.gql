@@ -22,6 +22,8 @@ fragment AdminProductRow on Product {
     id
     name
     slug
+    starts_at
+    ends_at
   }
 }
 

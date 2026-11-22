@@ -49,9 +49,10 @@ import {
   describeShelfStateHint,
   describeUnsavedChanges,
   EMPTY_PRODUCT_FORM,
-  FEATURE_BLOCK_NOTES,
-  findFeatureBlock,
-  findHomeShelfBlock,
+  findPickToggleBlock,
+  findStudioPickBlock,
+  readCollectionWindow,
+  STUDIO_PICK_BLOCK_NOTES,
   formatStock,
   LIVE_BLOCKED_NOTE,
   type LeaveTarget,
@@ -162,17 +163,24 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     state.stock,
     product?.is_customizable ?? false,
   );
-  const homeShelfFacts = {
+  const studioPickFacts = {
     isActive: state.isActive,
     isCustomizable: product?.is_customizable ?? false,
     stock: state.stock,
+    collectionWindow: readCollectionWindow(
+      product?.collection ?? null,
+      new Date(),
+    ),
   };
-  const homeShelfBlock = findHomeShelfBlock(homeShelfFacts);
-  const featureBlock = findFeatureBlock(homeShelfFacts, state.isFeatured);
-  // A retired piece gets no home page button at all, so only the other blocks need a reason.
-  const featureBlockNote =
-    featureBlock !== null && featureBlock !== "retired"
-      ? FEATURE_BLOCK_NOTES[featureBlock]
+  const studioPickBlock = findStudioPickBlock(studioPickFacts);
+  const pickToggleBlock = findPickToggleBlock(
+    studioPickFacts,
+    state.isFeatured,
+  );
+  // A retired piece gets no studio pick button at all, so only the other blocks need a reason.
+  const pickBlockNote =
+    pickToggleBlock !== null && pickToggleBlock !== "retired"
+      ? STUDIO_PICK_BLOCK_NOTES[pickToggleBlock]
       : null;
 
   // The draft wins until a save clears it; before that the saved gallery is the truth.
@@ -216,14 +224,14 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       })),
     [categoryData],
   );
-  const collectionOptions = useMemo(
-    () =>
-      (collectionData?.adminCollections ?? []).map((collection) => ({
-        id: collection.id,
-        name: collection.name,
-      })),
-    [collectionData],
-  );
+  const collectionOptions = useMemo(() => {
+    const now = new Date();
+    return (collectionData?.adminCollections ?? []).map((collection) => ({
+      id: collection.id,
+      name: collection.name,
+      window: readCollectionWindow(collection, now),
+    }));
+  }, [collectionData]);
   const glazeOptions = useMemo(
     () =>
       (glazeData?.adminGlazes.items ?? []).map((row) => ({
@@ -236,13 +244,21 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   const createPiece = useCallback(
     async (save: PieceDraft) => {
       const created = await createProduct({
-        variables: { input: toProductInput(save.values, save.imageUrls) },
+        variables: {
+          input: toProductInput(
+            save.values,
+            save.imageUrls,
+            collectionOptions.find(
+              (option) => option.id === save.values.collection_id,
+            )?.window ?? "open",
+          ),
+        },
       });
       const id = created.data?.createProduct.id;
       if (id === undefined) throw new Error("The piece could not be saved");
       return id;
     },
-    [createProduct],
+    [collectionOptions, createProduct],
   );
 
   // A new piece has no query to read back; it navigates to its own page instead.
@@ -307,7 +323,10 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
           variables: { id: change.id, is_featured: change.isFeatured },
         }),
       refresh: refetch,
-      messages: { success: null, failure: "The piece could not be featured" },
+      messages: {
+        success: null,
+        failure: "The studio pick could not be changed",
+      },
     });
 
   const runFeatured = useCallback(
@@ -429,26 +448,26 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
               >
                 Change the stock
               </Button>
-              {featureBlock !== "retired" && (
+              {pickToggleBlock !== "retired" && (
                 <Button
                   type="button"
                   variant="secondary"
                   size="sm"
                   disabled={isBusy}
-                  aria-disabled={featureBlockNote !== null}
+                  aria-disabled={pickBlockNote !== null}
                   aria-describedby={
-                    featureBlockNote ? "piece-feature-block" : undefined
+                    pickBlockNote ? "piece-pick-block" : undefined
                   }
                   className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50 aria-disabled:hover:bg-transparent"
                   onClick={() => {
-                    if (featureBlockNote === null) {
+                    if (pickBlockNote === null) {
                       runFeatured(!state.isFeatured);
                     }
                   }}
                 >
                   {state.isFeatured
-                    ? "Stop putting it first"
-                    : "Put first among home page pieces"}
+                    ? "No longer a studio pick"
+                    : "Mark as a studio pick"}
                 </Button>
               )}
               <Button
@@ -471,12 +490,12 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
               >
                 {state.isActive ? "Retire" : "Put back on the shelf"}
               </Button>
-              {featureBlockNote && (
+              {pickBlockNote && (
                 <p
-                  id="piece-feature-block"
+                  id="piece-pick-block"
                   className="basis-full text-[12px] text-muted-foreground"
                 >
-                  {featureBlockNote}
+                  {pickBlockNote}
                 </p>
               )}
             </>
@@ -498,7 +517,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
               state.isActive,
               isLiveAllowed,
               state.isFeatured,
-              homeShelfBlock,
+              studioPickBlock,
             )}
           />
           <AdminStatTile

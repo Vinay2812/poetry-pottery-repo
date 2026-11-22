@@ -183,6 +183,8 @@ export function WorkshopsContainer() {
           are read in {timezone}. Pick a real zone and save to fix it.
         </p>
       )}
+      {/* Requests are the daily work, so they come before the settings that rarely change. */}
+      <WorkshopBookingsContainer configId={selected.id} timezone={timezone} />
       <WorkshopConfigForm
         // Switching studios swaps every default, so the form starts over.
         key={selected.id}
@@ -216,7 +218,6 @@ export function WorkshopsContainer() {
         onRefetch={refetch}
       />
       <WorkshopBlackoutsContainer configId={selected.id} timezone={timezone} />
-      <WorkshopBookingsContainer configId={selected.id} timezone={timezone} />
     </div>
   );
 }

@@ -51,6 +51,10 @@ export class AdminEventsFilterInput {
   @Field(() => Int, { nullable: true })
   user_id?: number | null;
 
+  // Only events holding at least one registration still awaiting approval.
+  @Field(() => Boolean, { nullable: true })
+  awaiting_approval?: boolean | null;
+
   @Field(() => String, { nullable: true })
   search?: string | null;
 

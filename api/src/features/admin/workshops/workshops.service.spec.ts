@@ -68,6 +68,7 @@ const bookingRow = {
 };
 
 const prismaMock = {
+  withTransaction: vi.fn((fn: () => Promise<unknown>) => fn()),
   workshopConfig: {
     findMany: vi.fn(),
     findUnique: vi.fn(),
@@ -322,6 +323,10 @@ describe("AdminWorkshopsService", () => {
 
   it("filters bookings by studio, status and date", async () => {
     const from = new Date("2026-10-01");
+    prismaMock.workshopBooking.count
+      .mockResolvedValueOnce(1)
+      .mockResolvedValueOnce(0);
+    prismaMock.workshopBooking.findMany.mockResolvedValue([bookingRow]);
 
     await service.bookings({
       config_id: 1,
@@ -329,14 +334,80 @@ describe("AdminWorkshopsService", () => {
       from,
     });
 
+    const filter = {
+      config_id: 1,
+      status: RegistrationStatus.PENDING,
+      starts_at: { gte: from },
+    };
+    expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledTimes(1);
     expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledWith(
       containing({
-        where: {
-          config_id: 1,
-          status: RegistrationStatus.PENDING,
-          starts_at: { gte: from },
-        },
+        where: { AND: [filter, { status: RegistrationStatus.PENDING }] },
       }),
+    );
+  });
+
+  it("lists requests waiting on the studio first, soonest first, then the rest newest first", async () => {
+    const waitingRow = { ...bookingRow, id: "WAIT1" };
+    const doneRow = {
+      ...bookingRow,
+      id: "DONE1",
+      status: RegistrationStatus.CANCELLED,
+    };
+    prismaMock.workshopBooking.count
+      .mockResolvedValueOnce(1)
+      .mockResolvedValueOnce(30);
+    prismaMock.workshopBooking.findMany
+      .mockResolvedValueOnce([waitingRow])
+      .mockResolvedValueOnce([doneRow]);
+
+    const result = await service.bookings({ config_id: 1, limit: 20 });
+
+    expect(result.items.map((item) => item.booking.id)).toEqual([
+      "WAIT1",
+      "DONE1",
+    ]);
+    expect(result.page_info.total).toBe(31);
+    const [waitingCall, restCall] =
+      prismaMock.workshopBooking.findMany.mock.calls.map(
+        ([args]) => args as Record<string, unknown>,
+      );
+    expect(waitingCall).toEqual(
+      containing({
+        where: {
+          AND: [{ config_id: 1 }, { status: RegistrationStatus.PENDING }],
+        },
+        orderBy: [{ starts_at: "asc" }, { id: "asc" }],
+        skip: 0,
+        take: 1,
+      }),
+    );
+    expect(restCall).toEqual(
+      containing({
+        where: {
+          AND: [
+            { config_id: 1 },
+            { status: { not: RegistrationStatus.PENDING } },
+          ],
+        },
+        orderBy: [{ starts_at: "desc" }, { id: "asc" }],
+        skip: 0,
+        take: 19,
+      }),
+    );
+  });
+
+  it("carries the page past the waiting requests into the rest", async () => {
+    prismaMock.workshopBooking.count
+      .mockResolvedValueOnce(3)
+      .mockResolvedValueOnce(51);
+    prismaMock.workshopBooking.findMany.mockResolvedValue([bookingRow]);
+
+    await service.bookings({ page: 2, limit: 20 });
+
+    expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledWith(
+      containing({ skip: 17, take: 20 }),
     );
   });
 

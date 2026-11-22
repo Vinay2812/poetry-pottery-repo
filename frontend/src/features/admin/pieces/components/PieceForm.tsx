@@ -22,8 +22,10 @@ import {
 } from "@/features/admin/ui";
 import {
   canGoLive,
-  describeNewFeatureHint,
-  findHomeShelfBlock,
+  type CollectionWindowState,
+  describeMadeToOrderHint,
+  describeNewPickHint,
+  findStudioPickBlock,
   LIVE_BLOCKED_NOTE,
 } from "@/features/admin/pieces/types";
 
@@ -32,13 +34,17 @@ interface PieceTaxonomyOption {
   name: string;
 }
 
+interface PieceCollectionOption extends PieceTaxonomyOption {
+  window: CollectionWindowState;
+}
+
 export interface PieceFormProps {
   defaultValues: ProductFormValues;
   isCreate: boolean;
   isSubmitting: boolean;
   submitLabel: string;
   categoryOptions: PieceTaxonomyOption[];
-  collectionOptions: PieceTaxonomyOption[];
+  collectionOptions: PieceCollectionOption[];
   glazeOptions: PieceTaxonomyOption[];
   gallery: ReactNode;
   onSubmit: (values: ProductFormValues) => void;
@@ -96,10 +102,13 @@ export function PieceForm({
 
   const isLiveAllowed = canGoLive(Number(stockValue) || 0, isCustomizable);
   const isOnShelf = isActive && isLiveAllowed;
-  const featureBlock = findHomeShelfBlock({
+  const pickBlock = findStudioPickBlock({
     isActive: isOnShelf,
     isCustomizable,
     stock: Number(stockValue) || 0,
+    collectionWindow:
+      collectionOptions.find((option) => option.id === collectionId)?.window ??
+      "open",
   });
   const swatchColour = toPreviewColour(colorCode);
 
@@ -494,7 +503,11 @@ export function PieceForm({
         <AdminCheckboxField
           id="piece-customizable"
           label="Made to order"
-          hint="Thrown after someone orders it, so it can sell with no stock."
+          hint={describeMadeToOrderHint(
+            !isCreate && defaultValues.is_featured,
+            defaultValues.is_customizable,
+            isCustomizable,
+          )}
           isChecked={isCustomizable}
           isDisabled={false}
           onCheckedChange={(isOn) => setFlag("is_customizable", isOn)}
@@ -517,16 +530,16 @@ export function PieceForm({
               isDisabled={!isLiveAllowed}
               onCheckedChange={(isOn) => {
                 setFlag("is_active", isOn);
-                // Off the shelf means off the home page too.
+                // Off the shelf means no longer a studio pick either.
                 if (!isOn) setFlag("is_featured", false);
               }}
             />
             <AdminCheckboxField
               id="piece-featured"
-              label="Put first among home page pieces"
-              hint={describeNewFeatureHint(featureBlock)}
-              isChecked={isFeatured && featureBlock === null}
-              isDisabled={featureBlock !== null}
+              label="Mark as a studio pick"
+              hint={describeNewPickHint(pickBlock)}
+              isChecked={isFeatured && pickBlock === null}
+              isDisabled={pickBlock !== null}
               onCheckedChange={(isOn) => setFlag("is_featured", isOn)}
             />
           </>

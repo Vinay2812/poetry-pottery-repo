@@ -31,7 +31,7 @@ export function TodayAgendaList({ rows }: TodayAgendaListProps) {
           <span className="w-20 shrink-0 text-muted-foreground tnum">
             {row.timeLabel}
           </span>
-          <span className="w-16 shrink-0 text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+          <span className="w-20 shrink-0 text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
             {row.kindLabel}
           </span>
           <Link href={row.href} className="underline-offset-4 hover:underline">

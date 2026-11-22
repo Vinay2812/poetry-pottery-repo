@@ -1,5 +1,5 @@
 import { Test } from "@nestjs/testing";
-import { OrderStatus, RegistrationStatus } from "@prisma/client";
+import { EventType, OrderStatus, RegistrationStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { PrismaService } from "@/prisma/prisma.service";
@@ -238,6 +238,7 @@ describe("AdminDashboardService", () => {
         {
           id: 3,
           title: "Open mic",
+          event_type: EventType.OPEN_MIC,
           starts_at: new Date("2026-09-24T13:30:00.000Z"),
           ends_at: new Date("2026-09-24T15:30:00.000Z"),
           total_seats: 20,
@@ -254,11 +255,19 @@ describe("AdminDashboardService", () => {
           item.detail,
           item.booking_status,
           item.booking_total,
+          item.event_type,
         ]),
       ).toEqual([
-        ["VISIT", "Rohan", "Studio visit", null, null],
-        ["BOOKING", "Maya", "Open studio · 2 at the wheel", "CONFIRMED", 2400],
-        ["EVENT", "Open mic", "15 of 20 seats taken", null, null],
+        ["VISIT", "Rohan", "Studio visit", null, null, null],
+        [
+          "BOOKING",
+          "Maya",
+          "Open studio · 2 at the wheel",
+          "CONFIRMED",
+          2400,
+          null,
+        ],
+        ["EVENT", "Open mic", "15 of 20 seats taken", null, null, "OPEN_MIC"],
       ]);
       expect(prismaMock.event.findMany).toHaveBeenCalledWith(
         expect.objectContaining({

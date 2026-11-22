@@ -89,11 +89,21 @@ export class AdminEventsService {
   async list(filter: AdminEventsFilterInput): Promise<AdminEventsResult> {
     const bounds = clampPage(filter.page, filter.limit, MAX_LIMIT);
     const term = searchTerm(filter.search);
-    const where: Prisma.EventWhereInput = {
+    const registrationFilters: Prisma.EventWhereInput[] = [
       // A person's events are the ones they hold a registration for, whatever its state.
       ...(filter.user_id
-        ? { registrations: { some: { user_id: filter.user_id } } }
-        : {}),
+        ? [{ registrations: { some: { user_id: filter.user_id } } }]
+        : []),
+      ...(filter.awaiting_approval
+        ? [
+            {
+              registrations: { some: { status: RegistrationStatus.PENDING } },
+            },
+          ]
+        : []),
+    ];
+    const where: Prisma.EventWhereInput = {
+      ...(registrationFilters.length > 0 ? { AND: registrationFilters } : {}),
       ...(filter.status ? { status: filter.status } : {}),
       ...(filter.event_type ? { event_type: filter.event_type } : {}),
       ...(term

@@ -172,6 +172,26 @@ describe("AdminEventsService", () => {
     );
   });
 
+  it("narrows to events with requests awaiting approval, alongside one person's events", async () => {
+    prismaMock.event.findMany.mockResolvedValue([eventRow]);
+    prismaMock.event.count.mockResolvedValue(1);
+
+    await service.list({ awaiting_approval: true, user_id: 7 });
+
+    expect(prismaMock.event.findMany).toHaveBeenCalledWith(
+      containing({
+        where: {
+          AND: [
+            { registrations: { some: { user_id: 7 } } },
+            {
+              registrations: { some: { status: RegistrationStatus.PENDING } },
+            },
+          ],
+        },
+      }),
+    );
+  });
+
   it("opens a new event with every seat free", async () => {
     await service.create(input());
 

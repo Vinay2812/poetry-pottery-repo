@@ -7,6 +7,7 @@ import { EventsTable } from "./EventsTable";
 const ROWS = [
   {
     id: 1,
+    href: "/dashboard/events/1",
     title: "Wheel evening",
     imageUrl: "https://images.unsplash.com/photo-1565193298357-c5b46b0d0b0a",
     typeLabel: "Pottery workshop",
@@ -19,6 +20,7 @@ const ROWS = [
   },
   {
     id: 2,
+    href: "/dashboard/events/2",
     title: "Open mic under the neem",
     imageUrl: "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f",
     typeLabel: "Open mic",
@@ -31,6 +33,7 @@ const ROWS = [
   },
   {
     id: 3,
+    href: "/dashboard/events/3",
     title: "Glaze morning",
     imageUrl: "https://images.unsplash.com/photo-1578749556568-bc2c40e68b61",
     typeLabel: "Pottery workshop",

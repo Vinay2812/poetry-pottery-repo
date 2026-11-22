@@ -16,9 +16,10 @@ import {
 } from "@/features/admin/ui";
 
 import {
-  FEATURE_BLOCK_NOTES,
-  findFeatureBlock,
+  type CollectionWindowState,
+  findPickToggleBlock,
   LIVE_BLOCKED_NOTE,
+  STUDIO_PICK_BLOCK_NOTES,
 } from "@/features/admin/pieces/types";
 
 const COLUMN_COUNT = 8;
@@ -34,6 +35,7 @@ export interface PieceRow {
   canGoLive: boolean;
   isFeatured: boolean;
   isMadeToOrder: boolean;
+  collectionWindow: CollectionWindowState;
   categoriesLabel: string;
   collectionLabel: string;
 }
@@ -65,7 +67,7 @@ export function PiecesTable({
           <th className={ADMIN_TH}>Piece</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_TABLET}`}>Price</th>
           <th className={ADMIN_TH}>On the shelf</th>
-          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>First on home</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Studio pick</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Categories</th>
           <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Collection</th>
           <th className={ADMIN_TH}>Stock</th>
@@ -79,16 +81,17 @@ export function PiecesTable({
           // Why a box cannot be ticked, said on hover and to a screen reader.
           const shelfBlock =
             !row.isActive && !row.canGoLive ? LIVE_BLOCKED_NOTE : null;
-          const featureKind = findFeatureBlock(
+          const pickBlockKind = findPickToggleBlock(
             {
               isActive: row.isActive,
               isCustomizable: row.isMadeToOrder,
               stock: row.stock,
+              collectionWindow: row.collectionWindow,
             },
             row.isFeatured,
           );
-          const featureBlock = featureKind
-            ? FEATURE_BLOCK_NOTES[featureKind]
+          const pickBlock = pickBlockKind
+            ? STUDIO_PICK_BLOCK_NOTES[pickBlockKind]
             : null;
           return (
             <tr key={row.id} className={ADMIN_TR}>
@@ -144,22 +147,19 @@ export function PiecesTable({
               <td className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP}`}>
                 <Checkbox
                   checked={row.isFeatured}
-                  disabled={busyId === row.id || featureBlock !== null}
-                  title={featureBlock ?? undefined}
-                  aria-label={`Put ${row.name} first among the pieces on the home page`}
+                  disabled={busyId === row.id || pickBlock !== null}
+                  title={pickBlock ?? undefined}
+                  aria-label={`Mark ${row.name} as a studio pick`}
                   aria-describedby={
-                    featureBlock ? `piece-${row.id}-feature-block` : undefined
+                    pickBlock ? `piece-${row.id}-pick-block` : undefined
                   }
                   onCheckedChange={(checked) =>
                     onFeaturedChange(row.id, checked === true)
                   }
                 />
-                {featureBlock && (
-                  <span
-                    id={`piece-${row.id}-feature-block`}
-                    className="sr-only"
-                  >
-                    {featureBlock}
+                {pickBlock && (
+                  <span id={`piece-${row.id}-pick-block`} className="sr-only">
+                    {pickBlock}
                   </span>
                 )}
               </td>

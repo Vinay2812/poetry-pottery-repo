@@ -270,43 +270,64 @@ describe("AdminProductsService", () => {
     expect(shelfMock.setListed).not.toHaveBeenCalled();
   });
 
-  it("refuses to mark made-to-order work for the home page", async () => {
+  it("refuses to make made-to-order work a studio pick", async () => {
     await expect(
       service.create(input({ is_customizable: true, is_featured: true })),
     ).rejects.toThrow("ready to ship, not made to order");
     expect(prismaMock.product.create).not.toHaveBeenCalled();
 
-    prismaMock.product.findUnique.mockResolvedValueOnce({
-      is_featured: false,
-      is_customizable: true,
-    });
-    await expect(service.setFeatured(1, true)).rejects.toBeInstanceOf(
-      BadRequestException,
+    prismaMock.product.updateMany.mockResolvedValueOnce({ count: 0 });
+    await expect(service.setFeatured(1, true)).rejects.toThrow(
+      "ready to ship, not made to order",
     );
     expect(prismaMock.product.update).not.toHaveBeenCalled();
   });
 
-  it("keeps a made-to-order piece marked before the rule, and lets it be unmarked", async () => {
-    prismaMock.product.findUnique.mockResolvedValueOnce({
-      is_featured: true,
-      is_customizable: true,
-    });
-    await service.setFeatured(1, false);
-    expect(prismaMock.product.update).toHaveBeenCalledWith(
-      containing({ data: { is_featured: false } }),
-    );
+  it("marks only while the row is still ready to ship, in one conditional write", async () => {
+    prismaMock.product.updateMany.mockResolvedValueOnce({ count: 1 });
 
-    // An unrelated save never touches the mark.
-    await service.update(1, { name: "Name-carved planter" });
-    const call = prismaMock.product.update.mock.calls.at(-1)?.[0] as {
+    await service.setFeatured(1, true);
+
+    expect(prismaMock.product.updateMany).toHaveBeenCalledWith({
+      where: { id: 1, is_customizable: false },
+      data: { is_featured: true },
+    });
+    expect(prismaMock.product.findUnique).toHaveBeenCalledTimes(1);
+    expect(productsMock.invalidateCatalogCache).toHaveBeenCalled();
+  });
+
+  it("lets a marked made-to-order piece be unmarked", async () => {
+    await service.setFeatured(1, false);
+    expect(prismaMock.product.update).toHaveBeenCalledWith({
+      where: { id: 1 },
+      data: { is_featured: false },
+    });
+    expect(prismaMock.product.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("takes the studio pick mark off when a save turns made to order on", async () => {
+    await service.update(1, { is_customizable: true });
+    const call = prismaMock.product.update.mock.calls[0]?.[0] as {
       data: Record<string, unknown>;
     };
-    expect(call.data).not.toHaveProperty("is_featured");
+    expect(call.data).toEqual(containing({ is_featured: false }));
+
+    // Turning it off, or an unrelated save, never touches the mark.
+    await service.update(1, { is_customizable: false });
+    await service.update(1, { name: "Name-carved planter" });
+    for (const [args] of prismaMock.product.update.mock.calls.slice(1)) {
+      expect((args as { data: object }).data).not.toHaveProperty("is_featured");
+    }
   });
 
   it("refuses setFeatured for a piece that does not exist", async () => {
+    prismaMock.product.updateMany.mockResolvedValueOnce({ count: 0 });
     prismaMock.product.findUnique.mockResolvedValueOnce(null);
     await expect(service.setFeatured(99, true)).rejects.toBeInstanceOf(
+      NotFoundException,
+    );
+    prismaMock.product.update.mockRejectedValueOnce(missingRow());
+    await expect(service.setFeatured(99, false)).rejects.toBeInstanceOf(
       NotFoundException,
     );
   });
