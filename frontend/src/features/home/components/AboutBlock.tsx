@@ -10,8 +10,7 @@ export interface AboutBlockProps {
   href: string;
 }
 
-// Two lines and a link do not need a full-bleed photograph above them: the
-// landscape frame sits beside the copy, and the copy sits level with it.
+// The first line takes the heading voice so it reads as the owner speaking.
 export function AboutBlock({
   imageUrl,
   firstLine,
@@ -34,8 +33,10 @@ export function AboutBlock({
         )}
       </div>
       <div className="flex flex-col gap-4">
-        <p className="text-[15px] leading-relaxed">{firstLine}</p>
-        <p className="text-[15px] leading-relaxed text-muted-foreground">
+        <p className="font-heading text-lg leading-snug tracking-tight text-balance md:text-2xl">
+          {firstLine}
+        </p>
+        <p className="text-[15px] leading-relaxed text-muted-foreground md:text-base">
           {secondLine}
         </p>
         <Link

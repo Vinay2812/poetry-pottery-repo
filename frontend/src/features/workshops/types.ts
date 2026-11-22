@@ -34,6 +34,12 @@ export function toBookingPath(id: string): string {
   return `/workshops/bookings/${id}`;
 }
 
+// Hours are picked one slot at a time, so a booking needs this many of them.
+export function slotsNeeded(hours: number, slotMinutes: number): number {
+  // Matches the API's slotsPerBooking, which rounds up so a session never runs short.
+  return Math.max(1, Math.ceil((hours * 60) / slotMinutes));
+}
+
 // Date keys are calendar days in the studio's timezone, never the visitor's.
 export function toDateKey(instant: string | Date, timezone: string): string {
   const parts = new Intl.DateTimeFormat("en-CA", {

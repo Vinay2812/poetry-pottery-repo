@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { WorkshopDayData } from "@/features/workshops/types";
+import { slotsNeeded, type WorkshopDayData } from "@/features/workshops/types";
 
 import {
   addDays,
@@ -11,7 +11,6 @@ import {
   isSlotPickable,
   pickableSlots,
   shiftMonth,
-  slotsNeeded,
   spanDays,
   spanNotice,
   suggestSlots,

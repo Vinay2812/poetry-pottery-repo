@@ -15,16 +15,15 @@ export function MadeToOrderBanner({
   priceLabel,
 }: MadeToOrderBannerProps) {
   return (
-    // The square is held to a column the copy can stand beside, centred on it so
-    // the heading sits level with the piece instead of above it.
-    <div className="grid gap-8 md:grid-cols-[minmax(0,26rem)_1fr] md:items-center md:gap-16">
+    // Halves on tablets, a fixed square column beside the copy from lg.
+    <div className="grid gap-8 md:grid-cols-2 md:items-center md:gap-10 lg:grid-cols-[minmax(0,26rem)_1fr] lg:gap-16">
       <div className="relative aspect-square bg-white">
         {imageUrl ? (
           <Image
             src={imageUrl}
             alt=""
             fill
-            sizes="(min-width: 768px) 26rem, 100vw"
+            sizes="(min-width: 1024px) 26rem, (min-width: 768px) 50vw, 100vw"
             className="object-cover"
           />
         ) : (
@@ -35,7 +34,7 @@ export function MadeToOrderBanner({
         <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
           Made to order
         </p>
-        <h2 className="font-heading text-3xl leading-tight tracking-tight text-balance md:text-5xl">
+        <h2 className="font-heading text-2xl leading-tight tracking-tight text-balance md:text-4xl">
           Your name, carved into a mug.
         </h2>
         <p className="max-w-md text-[15px] text-muted-foreground">
