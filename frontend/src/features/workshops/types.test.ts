@@ -240,6 +240,24 @@ describe("session helpers", () => {
     expect(message).toContain("Total: ₹1,700");
   });
 
+  it("asks for a new date once the date has passed, free or paid", () => {
+    for (const isFree of [false, true]) {
+      const message = toWhatsAppSessionMessage({
+        bookingId: "ID-1",
+        when: "Sun 22 Nov, 3–4 pm",
+        hours: 1,
+        participants: 2,
+        total: "₹1,200",
+        guestName: "Maya",
+        isFree,
+        isLapsed: true,
+      });
+      expect(message).toContain("Could we pick a new one?");
+      expect(message).toContain("Hi! I asked for");
+      expect(message).not.toMatch(/payment|Total:|confirm my/);
+    }
+  });
+
   it("says one hour and several people the way a person would", () => {
     expect(
       toWhatsAppSessionMessage({
@@ -376,9 +394,10 @@ describe("booking status helpers", () => {
       const stages = toBookingStages(total, true);
       expect(stages[0]?.description).toMatch(/passed before we answered/);
       expect(stages[0]?.description).not.toMatch(/holding/);
-      expect(stages.map((stage) => stage.label)).toEqual(
-        toBookingStages(total, false).map((stage) => stage.label),
-      );
+      // Approval and payment can no longer happen, so only the requested step is left.
+      expect(stages.map((stage) => stage.label)).toEqual([
+        toBookingStages(total, false)[0]?.label,
+      ]);
     }
   });
 
@@ -507,16 +526,28 @@ describe("applyBookingAction", () => {
 
 describe("isRequestBannerShown", () => {
   it("shows the request note only while the studio has not answered", () => {
-    expect(isRequestBannerShown(true, RegistrationStatus.Pending)).toBe(true);
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending, false)).toBe(
+      true,
+    );
     // A reopened ?placed=1 link after the studio confirms must not say "while we confirm".
-    expect(isRequestBannerShown(true, RegistrationStatus.Confirmed)).toBe(
+    expect(
+      isRequestBannerShown(true, RegistrationStatus.Confirmed, false),
+    ).toBe(false);
+    expect(isRequestBannerShown(true, RegistrationStatus.Approved, false)).toBe(
       false,
     );
-    expect(isRequestBannerShown(true, RegistrationStatus.Approved)).toBe(false);
-    expect(isRequestBannerShown(true, RegistrationStatus.Cancelled)).toBe(
+    expect(
+      isRequestBannerShown(true, RegistrationStatus.Cancelled, false),
+    ).toBe(false);
+    expect(isRequestBannerShown(false, RegistrationStatus.Pending, false)).toBe(
       false,
     );
-    expect(isRequestBannerShown(false, RegistrationStatus.Pending)).toBe(false);
+  });
+
+  it("hides the just-placed receipt once the date has passed", () => {
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending, true)).toBe(
+      false,
+    );
   });
 });
 
@@ -712,30 +743,5 @@ describe("studio asks", () => {
       "3 hours at the wheel for 2 people (Open Studio Sessions)",
     );
     expect(toArrangementAskUrl("", "Open Studio Sessions", 3, 2)).toBeNull();
-  });
-});
-
-describe("toWhatsAppSessionMessage for a lapsed request", () => {
-  it("asks for a new date instead of approval or payment", () => {
-    const base = toWhatsAppSessionMessage({
-      bookingId: "ID-1",
-      when: "Sun 22 Nov, 3–4 pm",
-      hours: 1,
-      participants: 2,
-      total: "₹1,200",
-      guestName: "Maya",
-      isFree: false,
-      isLapsed: true,
-    });
-    expect(base).toContain("Could we pick a new one?");
-    expect(base).not.toMatch(/payment|Total:/);
-  });
-});
-
-describe("isRequestBannerShown once the date has passed", () => {
-  it("hides the just-placed receipt for a lapsed request", () => {
-    expect(isRequestBannerShown(true, RegistrationStatus.Pending, true)).toBe(
-      false,
-    );
   });
 });

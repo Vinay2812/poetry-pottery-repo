@@ -302,7 +302,10 @@ interface WhatsAppSessionInput {
 
 export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
   return [
-    "Hi! I booked a wheel session on Poetry & Pottery.",
+    // Nothing was booked if the studio never answered, so the opening says what was asked for.
+    input.isLapsed
+      ? "Hi! I asked for a wheel session on Poetry & Pottery."
+      : "Hi! I booked a wheel session on Poetry & Pottery.",
     `Booking: ${input.bookingId}`,
     `When: ${input.when}`,
     `${input.hours} ${input.hours === 1 ? "hour" : "hours"} for ${input.participants} ${input.participants === 1 ? "person" : "people"}`,
@@ -360,7 +363,7 @@ export function toBookingGroup(
 export function isRequestBannerShown(
   isJustPlaced: boolean,
   status: RegistrationStatus,
-  isLapsed = false,
+  isLapsed: boolean,
 ): boolean {
   return isJustPlaced && status === RegistrationStatus.Pending && !isLapsed;
 }

@@ -97,27 +97,12 @@ describe("isRequestLapsed", () => {
 });
 
 describe("withRequestedLine", () => {
-  it("swaps only the requested step's note", () => {
+  it("keeps only the requested step, with the new note", () => {
     const stages = toRequestStages("Held.", "seat").paid;
     const lapsed = withRequestedLine(stages, "Passed.");
-    expect(lapsed.map((stage) => stage.description)).toEqual([
-      "Passed.",
-      stages[1]?.description,
-      stages[2]?.description,
+    expect(lapsed.map((stage) => [stage.key, stage.description])).toEqual([
+      [RegistrationStatus.Pending, "Passed."],
     ]);
-    expect(lapsed.map((stage) => stage.label)).toEqual(
-      stages.map((stage) => stage.label),
-    );
-  });
-
-  it("drops the later steps' promises once the date has passed", () => {
-    const lapsed = withRequestedLine(
-      toRequestStages("Held.", "seat").paid,
-      "Passed.",
-    );
-    expect(lapsed.slice(1).map((stage) => stage.upcoming)).toEqual([
-      undefined,
-      undefined,
-    ]);
+    expect(lapsed[0]?.label).toBe(stages[0]?.label);
   });
 });

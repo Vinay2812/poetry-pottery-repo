@@ -331,7 +331,7 @@ export function toRegistrationFacts(
 export function isRequestBannerShown(
   isJustPlaced: boolean,
   status: RegistrationStatus,
-  isLapsed = false,
+  isLapsed: boolean,
 ): boolean {
   return isJustPlaced && status === RegistrationStatus.Pending && !isLapsed;
 }
@@ -412,7 +412,10 @@ export interface WhatsAppBookingInput {
 
 export function toWhatsAppBookingMessage(input: WhatsAppBookingInput): string {
   return [
-    `Hi! I booked ${input.eventTitle} on Poetry & Pottery.`,
+    // Nothing was booked if the studio never answered, so the opening says what was asked for.
+    input.isLapsed
+      ? `Hi! I asked for a seat at ${input.eventTitle} on Poetry & Pottery.`
+      : `Hi! I booked ${input.eventTitle} on Poetry & Pottery.`,
     `Booking: ${input.registrationId}`,
     `When: ${input.when}`,
     `Seats: ${input.seats}`,
@@ -420,7 +423,7 @@ export function toWhatsAppBookingMessage(input: WhatsAppBookingInput): string {
     input.isFree || input.isLapsed ? null : `Total: ${input.total}`,
     `Name: ${input.guestName}`,
     input.isLapsed
-      ? "The event began before you could answer. Could you find me another?"
+      ? "The event began before I heard back. Is there another one I could join?"
       : input.isFree
         ? "Could you confirm my seat?"
         : "Could you approve my request and share payment details?",

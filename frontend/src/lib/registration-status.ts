@@ -95,15 +95,13 @@ export function isRequestLapsed(
   return status === RegistrationStatus.Pending && new Date(startsAt) < now;
 }
 
-// The requested step says the date passed, and the later steps stop promising what can no longer
-// happen; the steps and status words stay as they were.
+// Once the date has passed unanswered, only the requested step remains, saying so: approval and
+// payment can no longer happen, so they are not shown as steps to come. Status words stay as they were.
 export function withRequestedLine(
   stages: RequestStage[],
   line: string,
 ): RequestStage[] {
-  return stages.map((stage) =>
-    stage.key === RegistrationStatus.Pending
-      ? { ...stage, description: line }
-      : { ...stage, upcoming: undefined },
-  );
+  return stages
+    .filter((stage) => stage.key === RegistrationStatus.Pending)
+    .map((stage) => ({ ...stage, description: line }));
 }
