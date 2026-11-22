@@ -8,6 +8,8 @@ import {
 import { formatShortDay } from "@/lib/format";
 import { safeTimeZone } from "@/lib/timezones";
 
+import type { QueryPatch } from "@/features/admin/shell/types";
+
 export type WorkshopConfigData = AdminWorkshopConfigFieldsFragment;
 export type WorkshopTierData = WorkshopConfigData["tiers"][number];
 export type WorkshopBlackoutData = AdminWorkshopBlackoutFieldsFragment;
@@ -377,9 +379,7 @@ export function toWheelSessionsHref(
 }
 
 // "Waiting on you" only ever holds requests still awaiting approval, so another status turns it off.
-export function toStatusFilterPatch(
-  status: string,
-): Record<string, string | null> {
+export function toStatusFilterPatch(status: string): QueryPatch {
   const isOtherStatus = status !== "" && status !== RegistrationStatus.Pending;
   return isOtherStatus
     ? { status, awaiting: null }
@@ -390,7 +390,7 @@ export function toStatusFilterPatch(
 export function toAwaitingFilterPatch(
   awaiting: string,
   status: string,
-): Record<string, string | null> {
+): QueryPatch {
   const clashes =
     awaiting !== "" && status !== "" && status !== RegistrationStatus.Pending;
   return clashes ? { awaiting, status: null } : { awaiting: awaiting || null };

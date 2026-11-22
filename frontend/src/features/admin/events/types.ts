@@ -11,6 +11,8 @@ import {
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
 import type { EventFormValues } from "@/lib/validations/admin/event";
 
+import type { QueryPatch } from "@/features/admin/shell/types";
+
 // The studio runs on IST all year, so the console shows studio time wherever the admin sits.
 const IST_OFFSET_MINUTES = 330;
 const MINUTE_MS = 60_000;
@@ -240,4 +242,25 @@ export function applyRegistrationStatus(
       },
     };
   });
+}
+
+// "Waiting on you" only holds published events with a request still ahead, so any other status
+// turns it off, and turning it on drops a status it could never match.
+function clashesWithWaiting(status: string): boolean {
+  return status !== "" && status !== EventStatus.Published;
+}
+
+export function toEventStatusFilterPatch(status: string): QueryPatch {
+  return clashesWithWaiting(status)
+    ? { status, awaiting: null }
+    : { status: status || null };
+}
+
+export function toEventAwaitingFilterPatch(
+  awaiting: string,
+  status: string,
+): QueryPatch {
+  return awaiting !== "" && clashesWithWaiting(status)
+    ? { awaiting, status: null }
+    : { awaiting: awaiting || null };
 }

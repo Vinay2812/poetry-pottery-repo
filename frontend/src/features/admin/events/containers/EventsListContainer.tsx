@@ -42,8 +42,10 @@ import {
 import {
   describeSeats,
   describeWhen,
+  toEventAwaitingFilterPatch,
   toEventHref,
   toEventStatus,
+  toEventStatusFilterPatch,
   toEventType,
 } from "@/features/admin/events/types";
 
@@ -141,7 +143,7 @@ export function EventsListContainer() {
           anyLabel="Any status"
           options={STATUS_OPTIONS}
           value={status}
-          onChange={(value) => patch({ status: value || null })}
+          onChange={(value) => patch(toEventStatusFilterPatch(value))}
         />
         <AdminSelectFilter
           id="events-type"
@@ -157,7 +159,7 @@ export function EventsListContainer() {
           anyLabel="All events"
           options={REQUEST_OPTIONS}
           value={isAwaitingFilter ? "1" : ""}
-          onChange={(value) => patch({ awaiting: value || null })}
+          onChange={(value) => patch(toEventAwaitingFilterPatch(value, status))}
         />
       </AdminToolbar>
       {personId !== null && (

@@ -27,7 +27,9 @@ import {
   toDateTimeLocal,
   toEventFormValues,
   toEventInput,
+  toEventAwaitingFilterPatch,
   toEventStatus,
+  toEventStatusFilterPatch,
   toEventHref,
   toEventType,
   toLines,
@@ -335,5 +337,39 @@ describe("applyRegistrationStatus", () => {
       { id: "EV-1", status: RegistrationStatus.Approved, reason: null },
     );
     expect(moved?.registration.cancel_reason).toBeNull();
+  });
+});
+
+describe("toEventStatusFilterPatch", () => {
+  it("turns the waiting filter off for a status it could never match", () => {
+    expect(toEventStatusFilterPatch(EventStatus.Completed)).toEqual({
+      status: EventStatus.Completed,
+      awaiting: null,
+    });
+  });
+
+  it("keeps it for published events or any status", () => {
+    expect(toEventStatusFilterPatch(EventStatus.Published)).toEqual({
+      status: EventStatus.Published,
+    });
+    expect(toEventStatusFilterPatch("")).toEqual({ status: null });
+  });
+});
+
+describe("toEventAwaitingFilterPatch", () => {
+  it("drops a status the waiting filter could never match", () => {
+    expect(toEventAwaitingFilterPatch("1", EventStatus.Cancelled)).toEqual({
+      awaiting: "1",
+      status: null,
+    });
+  });
+
+  it("leaves published alone and clears itself when turned off", () => {
+    expect(toEventAwaitingFilterPatch("1", EventStatus.Published)).toEqual({
+      awaiting: "1",
+    });
+    expect(toEventAwaitingFilterPatch("", EventStatus.Draft)).toEqual({
+      awaiting: null,
+    });
   });
 });
