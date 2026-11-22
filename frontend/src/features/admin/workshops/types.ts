@@ -375,3 +375,23 @@ export function toWheelSessionsHref(
   query.sort();
   return `/dashboard/workshops?${query.toString()}`;
 }
+
+// "Waiting on you" only ever holds requests still awaiting approval, so another status turns it off.
+export function toStatusFilterPatch(
+  status: string,
+): Record<string, string | null> {
+  const isOtherStatus = status !== "" && status !== RegistrationStatus.Pending;
+  return isOtherStatus
+    ? { status, awaiting: null }
+    : { status: status || null };
+}
+
+// Turning the queue on drops a status it could never match.
+export function toAwaitingFilterPatch(
+  awaiting: string,
+  status: string,
+): Record<string, string | null> {
+  const clashes =
+    awaiting !== "" && status !== "" && status !== RegistrationStatus.Pending;
+  return clashes ? { awaiting, status: null } : { awaiting: awaiting || null };
+}

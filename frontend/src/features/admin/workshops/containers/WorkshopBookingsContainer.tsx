@@ -48,8 +48,10 @@ import {
   BOOKINGS_PAGE_SIZE,
   describeSessionDays,
   describeSessionSize,
+  toAwaitingFilterPatch,
   toRangeEnd,
   toRangeStart,
+  toStatusFilterPatch,
 } from "@/features/admin/workshops/types";
 
 export interface WorkshopBookingsContainerProps {
@@ -221,7 +223,7 @@ export function WorkshopBookingsContainer({
           anyLabel="Any status"
           options={STATUS_OPTIONS}
           value={status}
-          onChange={(value) => patch({ status: value || null })}
+          onChange={(value) => patch(toStatusFilterPatch(value))}
         />
         <AdminSelectFilter
           id="bookings-requests"
@@ -229,7 +231,7 @@ export function WorkshopBookingsContainer({
           anyLabel="All sessions"
           options={REQUEST_OPTIONS}
           value={isAwaitingFilter ? "1" : ""}
-          onChange={(value) => patch({ awaiting: value || null })}
+          onChange={(value) => patch(toAwaitingFilterPatch(value, status))}
         />
         <AdminDateFilter
           id="bookings-from"
