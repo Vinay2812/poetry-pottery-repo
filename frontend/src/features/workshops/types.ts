@@ -17,7 +17,11 @@ export type WorkshopSlotData = WorkshopDayData["slots"][number];
 export type BookingData = WorkshopBookingFieldsFragment;
 
 export const SESSION_NOTE =
-  "Everything you make is fired and glazed by us, ready in about two weeks";
+  "Everything you make is fired and glazed by us, ready in about two weeks.";
+
+// Owner-approved policy wording; the booking page and the cancel dialog both show it as is.
+export const CANCELLING_RULE =
+  "Cancel at least 4 days before your session for a full refund. After that, we refund only if we can fill your seat from the waitlist or with someone you refer.";
 
 export interface SessionFact {
   label: string;
@@ -107,24 +111,36 @@ interface SlotDayGroup {
   timesLabel: string;
 }
 
-// Booked hours read as one line per day: "Sat 20 Sep · 3–4 pm, 4–5 pm".
+// Booked hours read as one line per day, back-to-back hours as one stretch: "Sat 20 Sep · 1–3 pm, 5–6 pm".
 export function groupSlotsByDay(
   slots: SlotInterval[],
   timezone: string,
 ): SlotDayGroup[] {
-  const groups = new Map<string, string[]>();
+  const groups = new Map<string, SlotInterval[]>();
   for (const slot of [...slots].sort((a, b) =>
     a.starts_at.localeCompare(b.starts_at),
   )) {
     const dateKey = toDateKey(slot.starts_at, timezone);
-    const times = groups.get(dateKey) ?? [];
-    times.push(formatHourRange(slot.starts_at, slot.ends_at, timezone));
-    groups.set(dateKey, times);
+    const stretches = groups.get(dateKey) ?? [];
+    const last = stretches[stretches.length - 1];
+    if (
+      last &&
+      new Date(last.ends_at).getTime() === new Date(slot.starts_at).getTime()
+    ) {
+      stretches[stretches.length - 1] = { ...last, ends_at: slot.ends_at };
+    } else {
+      stretches.push({ starts_at: slot.starts_at, ends_at: slot.ends_at });
+    }
+    groups.set(dateKey, stretches);
   }
-  return [...groups.entries()].map(([dateKey, times]) => ({
+  return [...groups.entries()].map(([dateKey, stretches]) => ({
     dateKey,
     dayLabel: formatDayLabel(`${dateKey}T12:00:00.000Z`, "UTC"),
-    timesLabel: times.join(", "),
+    timesLabel: stretches
+      .map((stretch) =>
+        formatHourRange(stretch.starts_at, stretch.ends_at, timezone),
+      )
+      .join(", "),
   }));
 }
 
@@ -169,18 +185,40 @@ export function quoteSession(
   };
 }
 
-// One sentence above the pickers that says how the hours are chosen, before anyone scrolls.
-export function toPickingGuide(
-  needed: number,
-  allowedSpanDays: number,
-): string {
-  const hours = needed === 1 ? "1 hour" : `${needed} hours`;
-  if (needed === 1) {
-    return `Pick a day on the calendar, then ${hours} from the times under it.`;
-  }
+// The rule behind the days a picked set closes off, counted from the slot_span_days setting.
+export function toSpanRule(allowedSpanDays: number): string {
   return allowedSpanDays === 1
-    ? `Pick a day on the calendar, then ${hours} from the times under it; they all sit on that one day.`
-    : `Pick a day on the calendar, then ${hours} from the times under it. They can sit on different days, within ${allowedSpanDays} days of your first one.`;
+    ? "Pick all your hours on the same day"
+    : `Pick all your hours within a ${allowedSpanDays}-day window`;
+}
+
+// What the calendar does about the rule; on a one-day studio every other day is out.
+function toClosedOffNote(allowedSpanDays: number): string {
+  return allowedSpanDays === 1
+    ? "Other days are closed off"
+    : "Days further out are closed off";
+}
+
+// The calendar's notice once a pick can close days off: the rule, then what it does.
+export function toSpanNotice(allowedSpanDays: number): string {
+  return `${toSpanRule(allowedSpanDays)}. ${toClosedOffNote(allowedSpanDays)}.`;
+}
+
+interface PickingGuideInput {
+  hours: number;
+  // How many times of day the hours take; with one there is no window to keep to.
+  timesNeeded: number;
+  allowedSpanDays: number;
+}
+
+// Says how the hours are chosen; the intro and the empty summary both read it.
+export function toPickingGuide({
+  hours,
+  timesNeeded,
+  allowedSpanDays,
+}: PickingGuideInput): string {
+  const guide = `Pick a day on the calendar, then ${formatHours(hours)} from the times under it.`;
+  return timesNeeded > 1 ? `${guide} ${toSpanRule(allowedSpanDays)}.` : guide;
 }
 
 // A party bigger than the wheels is a special request, so the ask names the session and the size.
@@ -223,11 +261,36 @@ export function toUnavailableMessage(
   return `Nothing free for ${formatHours(hours)} for ${people} this month. Try another month, fewer hours or fewer people.`;
 }
 
-export const SUGGESTED_NOTE =
-  "Picked for you: the earliest free hours. Change any of them.";
+// A full pick swaps out its earliest time, so say how to swap a different one.
+export const REPLACE_TIME_HINT =
+  "To change one, remove it first; otherwise a new pick replaces the earliest.";
 
-export function formatPickedProgress(picked: number, needed: number): string {
-  return `${picked} of ${needed} ${needed === 1 ? "hour" : "hours"} picked`;
+export const SUGGESTED_NOTE =
+  "Picked for you: the earliest free times. Change any of them.";
+
+// "90 minutes" reads as "1 hour 30 minutes"; whole hours stay "2 hours".
+export function formatDuration(minutes: number): string {
+  const wholeHours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  if (rest === 0) return formatHours(wholeHours);
+  if (wholeHours === 0) return `${rest} minutes`;
+  return `${formatHours(wholeHours)} ${rest} minutes`;
+}
+
+// Progress is time at the wheel, not the number of times picked, which depends on slot length.
+export function formatPickedProgress(
+  pickedMinutes: number,
+  hours: number,
+): string {
+  const neededMinutes = hours * 60;
+  if (pickedMinutes === 0) return `Pick ${formatHours(hours)}`;
+  if (pickedMinutes >= neededMinutes) {
+    return hours === 1 ? "1 hour picked" : `All ${formatHours(hours)} picked`;
+  }
+  if (pickedMinutes % 60 === 0) {
+    return `${pickedMinutes / 60} of ${formatHours(hours)} picked`;
+  }
+  return `${formatDuration(pickedMinutes)} of ${formatHours(hours)} picked`;
 }
 
 interface WhatsAppSessionInput {
@@ -321,6 +384,14 @@ export function toBookingGroup(
   return last && new Date(last) > now ? "upcoming" : "past";
 }
 
+// The "we have your request" note is only true until the studio answers, however the page was reached.
+export function isRequestBannerShown(
+  isJustPlaced: boolean,
+  status: RegistrationStatus,
+): boolean {
+  return isJustPlaced && status === RegistrationStatus.Pending;
+}
+
 export function isBookingClosed(status: RegistrationStatus): boolean {
   return (
     status === RegistrationStatus.Cancelled ||
@@ -339,6 +410,8 @@ export function formatWheels(remaining: number): string {
 interface CalendarDayState {
   wheelsFree: number;
   pickedCount: number;
+  // False when the API sent nothing for the day, which is not the same as closed.
+  isLoaded: boolean;
   isClosed: boolean;
   closedKind: DayClosedKind | null;
   isPast: boolean;
@@ -353,14 +426,22 @@ interface DayNote {
   isPickable: boolean;
 }
 
-// A day that cannot be booked says why on the face of it: past, closed, full, or out of
-// reach of the hours already picked. "Studio closed" was answering all four.
+// A day that cannot be booked says why: closed, full, or out of reach of the hours already
+// picked. A past day's dimmed number says enough, so only screen readers hear "past".
 export function toDayNote(day: CalendarDayState): DayNote {
   if (day.isPast) {
     return {
-      caption: "past",
-      shortCaption: "past",
+      caption: "",
+      shortCaption: "",
       description: "past",
+      isPickable: false,
+    };
+  }
+  if (!day.isLoaded) {
+    return {
+      caption: "",
+      shortCaption: "",
+      description: "availability not loaded",
       isPickable: false,
     };
   }

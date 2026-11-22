@@ -21,6 +21,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     bookingId: "WSB7Q2X9M1KD",
+    dateLabel: "Sat, 19 Sept – Tue, 22 Sept",
     bookedOn: "Sat, 12 Sept, 2026, 3:00 pm",
     statusLabel: "Awaiting confirmation",
     statusTone: "pending",
@@ -33,7 +34,8 @@ const meta = {
       { label: "Session", value: "Open studio, a wheel of your own" },
       { label: "Sat, 19 Sept", value: "2–3 pm" },
       { label: "Tue, 22 Sept", value: "3–4 pm" },
-      { label: "Duration", value: "2 hours" },
+      { label: "Hours", value: "2 hours" },
+      { label: "People", value: "2 people" },
       { label: "You take home", value: "4 pieces, fired and glazed" },
     ],
     participants: 2,

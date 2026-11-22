@@ -22,10 +22,13 @@ import {
   SlotList,
   type SlotOption,
 } from "@/features/workshops/components/SlotList";
+import { formatDateKey, REPLACE_TIME_HINT } from "@/features/workshops/types";
+import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 export interface RescheduleDialogProps {
   isOpen: boolean;
   isLoading: boolean;
+  hasError: boolean;
   monthLabel: string;
   notice: string | null;
   weeks: (CalendarDay | null)[][];
@@ -34,7 +37,9 @@ export interface RescheduleDialogProps {
   canGoForward: boolean;
   slots: SlotOption[];
   pickedSlots: PickedSlot[];
-  slotsNeeded: number;
+  progress: string;
+  isComplete: boolean;
+  isSwapHintShown: boolean;
   isUnchanged: boolean;
   isSubmitting: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -44,11 +49,13 @@ export interface RescheduleDialogProps {
   onToggleSlot: (startsAt: string) => void;
   onRemoveSlot: (startsAt: string) => void;
   onConfirm: () => void;
+  onRetry: () => void;
 }
 
 export function RescheduleDialog({
   isOpen,
   isLoading,
+  hasError,
   monthLabel,
   weeks,
   selectedDate,
@@ -56,7 +63,9 @@ export function RescheduleDialog({
   canGoForward,
   slots,
   pickedSlots,
-  slotsNeeded,
+  progress,
+  isComplete,
+  isSwapHintShown,
   isUnchanged,
   isSubmitting,
   onOpenChange,
@@ -67,16 +76,18 @@ export function RescheduleDialog({
   onToggleSlot,
   onRemoveSlot,
   onConfirm,
+  onRetry,
 }: RescheduleDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+        {/* Left-aligned on phones too, so the header lines up with the text under it. */}
+        <DialogHeader className="text-left">
           <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Move this session
           </DialogTitle>
           <DialogDescription>
-            Pick the hours again. The session keeps its length and the same
+            Pick the times again. The session keeps its length and the same
             number of people.
           </DialogDescription>
         </DialogHeader>
@@ -89,30 +100,40 @@ export function RescheduleDialog({
           canGoBack={canGoBack}
           canGoForward={canGoForward}
           isLoading={isLoading}
+          hasError={hasError}
+          // Same as the booking page: the hours open under the week of the picked day.
+          slotPanel={
+            selectedDate && (
+              <div className="flex flex-col gap-3">
+                <SectionLabel level={3}>
+                  Times on {formatDateKey(selectedDate)}
+                </SectionLabel>
+                <SlotList
+                  slots={slots}
+                  selectedStarts={pickedSlots.map((slot) => slot.startsAt)}
+                  emptyMessage="Nothing is free that day."
+                  onToggleSlot={onToggleSlot}
+                />
+              </div>
+            )
+          }
           onPreviousMonth={onPreviousMonth}
           onNextMonth={onNextMonth}
           onSelectDate={onSelectDate}
+          onRetry={onRetry}
         />
-
-        {!isLoading && (
-          <SlotList
-            slots={slots}
-            selectedStarts={pickedSlots.map((slot) => slot.startsAt)}
-            emptyMessage={
-              selectedDate
-                ? "Nothing is free that day."
-                : "Pick a day to see its hours."
-            }
-            onToggleSlot={onToggleSlot}
-          />
-        )}
 
         <PickedSlots
           slots={pickedSlots}
-          needed={slotsNeeded}
-          emptyMessage="Pick your hours from the calendar."
+          progress={progress}
+          emptyMessage="Pick your times from the calendar."
           onRemoveSlot={onRemoveSlot}
         />
+        {isSwapHintShown && (
+          <p className="text-[13px] text-muted-foreground">
+            {REPLACE_TIME_HINT}
+          </p>
+        )}
 
         <DialogFooter className="gap-2 sm:gap-2">
           <Button
@@ -120,13 +141,11 @@ export function RescheduleDialog({
             onClick={() => onOpenChange(false)}
             disabled={isSubmitting}
           >
-            Keep the old day
+            Keep current times
           </Button>
           <Button
             onClick={onConfirm}
-            disabled={
-              isSubmitting || pickedSlots.length !== slotsNeeded || isUnchanged
-            }
+            disabled={isSubmitting || !isComplete || isUnchanged}
           >
             {isSubmitting ? "Moving…" : "Move session"}
           </Button>

@@ -21,9 +21,11 @@ import { useSlotPicker } from "@/features/workshops/slot-picker";
 import {
   applyBookingAction,
   BOOKING_STEPS,
+  formatDayRange,
   formatHours,
   groupSlotsByDay,
   isBookingClosed,
+  isRequestBannerShown,
   type SessionFact,
   toBookingStatusLabel,
   toBookingStatusTone,
@@ -169,7 +171,11 @@ export function BookingDetailContainer({
       label: group.dayLabel,
       value: group.timesLabel,
     })),
-    { label: "Duration", value: formatHours(optimisticBooking.hours) },
+    { label: "Hours", value: formatHours(optimisticBooking.hours) },
+    {
+      label: "People",
+      value: pluralize(optimisticBooking.participants, "person", "people"),
+    },
     {
       label: "You take home",
       value: `${pluralize(optimisticBooking.pieces_per_person * optimisticBooking.participants, "piece")}, fired and glazed`,
@@ -193,10 +199,14 @@ export function BookingDetailContainer({
     <>
       <BookingDetail
         bookingId={optimisticBooking.id}
+        dateLabel={formatDayRange(optimisticBooking.slots, timezone)}
         bookedOn={formatDateTime(optimisticBooking.created_at)}
         statusLabel={toBookingStatusLabel(optimisticBooking.status)}
         statusTone={toBookingStatusTone(optimisticBooking.status)}
-        isJustPlaced={isJustPlaced && !closed}
+        isJustPlaced={isRequestBannerShown(
+          isJustPlaced,
+          optimisticBooking.status,
+        )}
         steps={BOOKING_STEPS.map((step) => ({
           key: step.key,
           label: step.label,
@@ -230,6 +240,7 @@ export function BookingDetailContainer({
       <RescheduleDialog
         isOpen={isMoveOpen}
         isLoading={picker.isLoading}
+        hasError={picker.hasError}
         monthLabel={picker.monthLabel}
         notice={picker.notice}
         weeks={picker.weeks}
@@ -238,7 +249,9 @@ export function BookingDetailContainer({
         canGoForward={picker.canGoForward}
         slots={picker.slots}
         pickedSlots={picker.pickedSlots}
-        slotsNeeded={picker.needed}
+        progress={picker.progress}
+        isComplete={isComplete}
+        isSwapHintShown={picker.isSwapHintShown}
         isUnchanged={isUnchanged}
         isSubmitting={isRescheduling}
         onOpenChange={setIsMoveOpen}
@@ -248,6 +261,7 @@ export function BookingDetailContainer({
         onToggleSlot={picker.onToggleSlot}
         onRemoveSlot={picker.onRemoveSlot}
         onConfirm={() => void handleConfirmMove()}
+        onRetry={picker.refresh}
       />
     </>
   );

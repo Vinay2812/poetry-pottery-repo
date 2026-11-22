@@ -12,6 +12,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { CANCELLING_RULE } from "@/features/workshops/types";
+
 export interface CancelBookingDialogProps {
   isOpen: boolean;
   reason: string;
@@ -31,8 +33,9 @@ export function CancelBookingDialog({
 }: CancelBookingDialogProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md">
+        {/* Left-aligned on phones too, so the header lines up with the text under it. */}
+        <DialogHeader className="text-left">
           <DialogTitle className="font-heading text-2xl font-normal tracking-tight">
             Cancel this session?
           </DialogTitle>
@@ -41,6 +44,9 @@ export function CancelBookingDialog({
             another day any time.
           </DialogDescription>
         </DialogHeader>
+        <p className="border-y border-ash py-3 text-[13px] text-muted-foreground">
+          {CANCELLING_RULE}
+        </p>
         <div className="flex flex-col gap-2">
           <Label htmlFor="cancel-booking-reason">Tell us why (optional)</Label>
           <Textarea

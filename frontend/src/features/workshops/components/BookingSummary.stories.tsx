@@ -19,12 +19,13 @@ const meta = {
       { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat, 19 Sept · 2–3 pm" },
       { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue, 22 Sept · 3–4 pm" },
     ],
-    slotsNeeded: 2,
+    progress: "All 2 hours picked",
     hours: 2,
     emptyMessage:
-      "Pick a day on the calendar, then an hour from the chips under it.",
+      "Pick a day on the calendar, then 1 hour from the times under it.",
     arrangementAskUrl: null,
-    hint: "Picked for you: the earliest free hours. Change any of them.",
+    hint: "Picked for you: the earliest free times. Change any of them.",
+    isSwapHintShown: false,
     participants: 2,
     pricePerPerson: 1700,
     total: 3400,
@@ -47,10 +48,10 @@ export const Default: Story = {};
 export const NothingPicked: Story = {
   args: {
     pickedSlots: [],
-    slotsNeeded: 1,
+    progress: "Pick 1 hour",
     hours: 1,
     emptyMessage:
-      "Pick a day on the calendar, then an hour from the chips under it.",
+      "Pick a day on the calendar, then 1 hour from the times under it.",
     arrangementAskUrl: null,
     hint: null,
     participants: 1,
@@ -66,10 +67,15 @@ export const HalfPicked: Story = {
     pickedSlots: [
       { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat, 19 Sept · 2–3 pm" },
     ],
-    slotsNeeded: 3,
+    progress: "1 of 3 hours picked",
     hours: 3,
     canBook: false,
   },
+};
+
+// Every time picked by hand: the note says how a new pick swaps one out.
+export const AllTimesPickedByHand: Story = {
+  args: { hint: null, isSwapHintShown: true },
 };
 
 export const Booking: Story = { args: { isBooking: true } };
@@ -85,7 +91,7 @@ export const Desktop: Story = { ...atViewport("desktop") };
 export const NothingFree: Story = {
   args: {
     pickedSlots: [],
-    slotsNeeded: 3,
+    progress: "Pick 3 hours",
     hours: 3,
     emptyMessage:
       "Nothing free for 3 hours for one person this month. Try another month, fewer hours or fewer people.",

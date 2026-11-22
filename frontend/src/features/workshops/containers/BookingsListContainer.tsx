@@ -11,6 +11,7 @@ import { SignInWall } from "@/features/auth";
 import { BookingCard } from "@/features/workshops/components/BookingCard";
 import { BookingCardSkeleton } from "@/features/workshops/components/BookingCardSkeleton";
 import { EmptyBookings } from "@/features/workshops/components/EmptyBookings";
+import { NoUpcomingBookings } from "@/features/workshops/components/NoUpcomingBookings";
 import { useMyWorkshopBookings } from "@/features/workshops/hooks";
 import {
   formatDayRange,
@@ -20,6 +21,7 @@ import {
   toBookingPath,
   toBookingStatusLabel,
 } from "@/features/workshops/types";
+import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 const GROUPS: { key: ReturnType<typeof toBookingGroup>; heading: string }[] = [
   { key: "upcoming", heading: "Upcoming" },
@@ -89,12 +91,15 @@ export function BookingsListContainer() {
               // The list arrives newest first, which suits the past; what is ahead reads soonest first.
               const group =
                 key === "upcoming" ? [...matching].reverse() : matching;
-              if (group.length === 0) return null;
+              if (group.length === 0) {
+                // Later pages hold only older sessions, so the nudge belongs on the first.
+                return key === "upcoming" && page === 1 ? (
+                  <NoUpcomingBookings key={key} />
+                ) : null;
+              }
               return (
                 <section key={key} className="flex flex-col gap-3">
-                  <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                    {heading}
-                  </h2>
+                  <SectionLabel>{heading}</SectionLabel>
                   <div className="flex flex-col border-t border-ash">
                     {group.map((booking) => (
                       <BookingCard

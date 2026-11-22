@@ -25,6 +25,7 @@ import {
   toUnavailableMessage,
   type WorkshopData,
 } from "@/features/workshops/types";
+import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 export interface WorkshopBookingContainerProps {
   workshop: WorkshopData;
@@ -49,6 +50,11 @@ export function WorkshopBookingContainer({
   const { book, isBooking } = useBookWorkshop(refresh);
 
   const tier = pickTier(workshop.tiers, hours);
+  const pickingGuide = toPickingGuide({
+    hours,
+    timesNeeded: picker.needed,
+    allowedSpanDays: workshop.slot_span_days,
+  });
   const quote = quoteSession(tier, participants);
 
   const handleBook = useCallback(() => {
@@ -74,18 +80,14 @@ export function WorkshopBookingContainer({
             {workshop.description}
           </p>
         )}
-        <p className="max-w-xl text-[15px]">
-          {toPickingGuide(picker.needed, workshop.slot_span_days)}
-        </p>
+        <p className="max-w-xl text-[15px]">{pickingGuide}</p>
       </header>
 
       <div className="grid gap-10 border-t border-ash pt-8 lg:grid-cols-[1fr_340px] lg:items-start">
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-3">
-              <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                How long
-              </h2>
+              <SectionLabel>How long</SectionLabel>
               <DurationPicker
                 tiers={workshop.tiers}
                 hours={hours}
@@ -94,9 +96,7 @@ export function WorkshopBookingContainer({
             </div>
 
             <div className="flex flex-col items-start gap-3">
-              <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                How many people
-              </h2>
+              <SectionLabel>How many people</SectionLabel>
               <ParticipantsStepper
                 value={participants}
                 max={workshop.capacity_per_slot}
@@ -124,14 +124,15 @@ export function WorkshopBookingContainer({
             canGoBack={picker.canGoBack}
             canGoForward={picker.canGoForward}
             isLoading={picker.isLoading}
+            hasError={picker.hasError}
             slotPanel={
               <div className="flex flex-col gap-3">
-                <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                  Hours on{" "}
+                <SectionLabel level={3}>
+                  Times on{" "}
                   {picker.selectedDate
                     ? formatDateKey(picker.selectedDate)
                     : ""}
-                </h3>
+                </SectionLabel>
                 <SlotList
                   slots={picker.slots}
                   selectedStarts={picker.pickedStarts}
@@ -143,13 +144,14 @@ export function WorkshopBookingContainer({
             onPreviousMonth={picker.onPreviousMonth}
             onNextMonth={picker.onNextMonth}
             onSelectDate={picker.onSelectDate}
+            onRetry={picker.refresh}
           />
         </div>
 
         <aside className="lg:sticky lg:top-24">
           <BookingSummary
             pickedSlots={picker.pickedSlots}
-            slotsNeeded={picker.needed}
+            progress={picker.progress}
             hours={hours}
             participants={participants}
             pricePerPerson={tier?.price_per_person ?? 0}
@@ -159,7 +161,7 @@ export function WorkshopBookingContainer({
             emptyMessage={
               picker.hasNoRoom
                 ? toUnavailableMessage(hours, participants)
-                : "Pick a day on the calendar, then an hour from the chips under it."
+                : pickingGuide
             }
             arrangementAskUrl={
               picker.hasNoRoom
@@ -172,6 +174,8 @@ export function WorkshopBookingContainer({
                 : null
             }
             hint={picker.isSuggested ? SUGGESTED_NOTE : null}
+            // The suggestion note already invites changes, so the swap hint waits for a real pick.
+            isSwapHintShown={picker.isSwapHintShown && !picker.isSuggested}
             canBook={isComplete}
             isBooking={isBooking}
             onNoteChange={setNote}

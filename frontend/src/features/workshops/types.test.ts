@@ -9,16 +9,20 @@ import {
   formatDateKey,
   formatHourRange,
   formatHours,
+  formatDuration,
   formatPickedProgress,
   formatWheels,
   groupSlotsByDay,
   isBookingClosed,
+  isRequestBannerShown,
   pickTier,
   quoteSession,
   toArrangementAskUrl,
   toGroupAskLine,
   toGroupAskUrl,
   toPickingGuide,
+  toSpanNotice,
+  toSpanRule,
   toUnavailableMessage,
   toBookingPath,
   toBookingGroup,
@@ -115,20 +119,45 @@ describe("session helpers", () => {
   });
 
   it("explains the choice before the pickers, matching the span rule", () => {
-    expect(toPickingGuide(1, 1)).toBe(
-      "Pick a day on the calendar, then 1 hour from the times under it.",
+    expect(
+      toPickingGuide({ hours: 1, timesNeeded: 1, allowedSpanDays: 7 }),
+    ).toBe("Pick a day on the calendar, then 1 hour from the times under it.");
+    // One hour made of two half-hour times still has a window to keep to.
+    expect(
+      toPickingGuide({ hours: 1, timesNeeded: 2, allowedSpanDays: 7 }),
+    ).toBe(
+      "Pick a day on the calendar, then 1 hour from the times under it. Pick all your hours within a 7-day window.",
     );
-    expect(toPickingGuide(3, 1)).toBe(
-      "Pick a day on the calendar, then 3 hours from the times under it; they all sit on that one day.",
+    expect(
+      toPickingGuide({ hours: 3, timesNeeded: 3, allowedSpanDays: 1 }),
+    ).toBe(
+      "Pick a day on the calendar, then 3 hours from the times under it. Pick all your hours on the same day.",
     );
-    expect(toPickingGuide(3, 30)).toBe(
-      "Pick a day on the calendar, then 3 hours from the times under it. They can sit on different days, within 30 days of your first one.",
+    expect(toSpanRule(30)).toBe("Pick all your hours within a 30-day window");
+    expect(toSpanNotice(7)).toBe(
+      "Pick all your hours within a 7-day window. Days further out are closed off.",
+    );
+    // On a one-day studio every other day is out, not only the far ones.
+    expect(toSpanNotice(1)).toBe(
+      "Pick all your hours on the same day. Other days are closed off.",
     );
   });
 
   it("counts picked hours against the tier", () => {
-    expect(formatPickedProgress(2, 3)).toBe("2 of 3 hours picked");
-    expect(formatPickedProgress(0, 1)).toBe("0 of 1 hour picked");
+    expect(formatPickedProgress(0, 1)).toBe("Pick 1 hour");
+    expect(formatPickedProgress(60, 1)).toBe("1 hour picked");
+    expect(formatPickedProgress(120, 3)).toBe("2 of 3 hours picked");
+    expect(formatPickedProgress(180, 3)).toBe("All 3 hours picked");
+  });
+
+  it("counts half-hour times as the time they add up to", () => {
+    expect(formatPickedProgress(0, 1)).toBe("Pick 1 hour");
+    expect(formatPickedProgress(30, 1)).toBe("30 minutes of 1 hour picked");
+    expect(formatPickedProgress(60, 1)).toBe("1 hour picked");
+    expect(formatPickedProgress(90, 2)).toBe(
+      "1 hour 30 minutes of 2 hours picked",
+    );
+    expect(formatDuration(150)).toBe("2 hours 30 minutes");
   });
 
   it("labels hours and groups them by day", () => {
@@ -147,19 +176,35 @@ describe("session helpers", () => {
       {
         dateKey: "2026-09-13",
         dayLabel: "Sun, 13 Sept",
-        timesLabel: "2–3 pm, 3–4 pm",
+        timesLabel: "2–4 pm",
       },
       { dateKey: "2026-09-15", dayLabel: "Tue, 15 Sept", timesLabel: "3–4 pm" },
     ]);
     expect(formatDayRange(slots, IST)).toBe("Sun, 13 Sept – Tue, 15 Sept");
     expect(toBookingWhenLines(slots, IST)).toEqual([
-      "Sun, 13 Sept · 2–3 pm, 3–4 pm",
+      "Sun, 13 Sept · 2–4 pm",
       "Tue, 15 Sept · 3–4 pm",
     ]);
-    expect(toBookingWhenLines(slots.slice(0, 2), IST)).toEqual([
-      "2–3 pm, 3–4 pm",
-    ]);
+    expect(toBookingWhenLines(slots.slice(0, 2), IST)).toEqual(["2–4 pm"]);
     expect(formatDayRange(slots.slice(0, 2), IST)).toBe("Sun, 13 Sept");
+  });
+
+  it("keeps hours with a gap between them apart", () => {
+    const slots = [
+      {
+        starts_at: "2026-09-13T07:30:00.000Z",
+        ends_at: "2026-09-13T08:30:00.000Z",
+      },
+      {
+        starts_at: "2026-09-13T08:30:00.000Z",
+        ends_at: "2026-09-13T09:30:00.000Z",
+      },
+      {
+        starts_at: "2026-09-13T11:30:00.000Z",
+        ends_at: "2026-09-13T12:30:00.000Z",
+      },
+    ];
+    expect(toBookingWhenLines(slots, IST)).toEqual(["1–3 pm, 5–6 pm"]);
   });
 
   it("spells out both meridiems when an hour crosses noon", () => {
@@ -364,10 +409,26 @@ describe("applyBookingAction", () => {
   });
 });
 
+describe("isRequestBannerShown", () => {
+  it("shows the request note only while the studio has not answered", () => {
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending)).toBe(true);
+    // A reopened ?placed=1 link after the studio confirms must not say "while we confirm".
+    expect(isRequestBannerShown(true, RegistrationStatus.Confirmed)).toBe(
+      false,
+    );
+    expect(isRequestBannerShown(true, RegistrationStatus.Approved)).toBe(false);
+    expect(isRequestBannerShown(true, RegistrationStatus.Cancelled)).toBe(
+      false,
+    );
+    expect(isRequestBannerShown(false, RegistrationStatus.Pending)).toBe(false);
+  });
+});
+
 describe("toDayNote", () => {
   const day = {
     wheelsFree: 6,
     pickedCount: 0,
+    isLoaded: true,
     isClosed: false,
     closedKind: null,
     isPast: false,
@@ -386,10 +447,20 @@ describe("toDayNote", () => {
     );
   });
 
+  it("never calls a day closed when its availability did not load", () => {
+    expect(toDayNote({ ...day, isLoaded: false })).toEqual({
+      caption: "",
+      shortCaption: "",
+      description: "availability not loaded",
+      isPickable: false,
+    });
+  });
+
   it("tells a past day apart from a closed one", () => {
+    // The dimmed number shows it; only screen readers hear "past".
     expect(toDayNote({ ...day, isPast: true, isClosed: true })).toEqual({
-      caption: "past",
-      shortCaption: "past",
+      caption: "",
+      shortCaption: "",
       description: "past",
       isPickable: false,
     });
@@ -417,12 +488,12 @@ describe("toDayNote", () => {
     expect(
       toDayNote({
         ...day,
-        mutedReason: "Pick within 7 days of your first slot",
+        mutedReason: "Pick all your hours within a 7-day window",
       }),
     ).toEqual({
       caption: "too far",
       shortCaption: "too far",
-      description: "pick within 7 days of your first slot",
+      description: "pick all your hours within a 7-day window",
       isPickable: false,
     });
   });

@@ -9,11 +9,16 @@ import {
   PickedSlots,
   type PickedSlot,
 } from "@/features/workshops/components/PickedSlots";
-import { formatHours, SESSION_NOTE } from "@/features/workshops/types";
+import {
+  formatHours,
+  REPLACE_TIME_HINT,
+  SESSION_NOTE,
+} from "@/features/workshops/types";
+import { SectionLabel } from "@/features/workshops/components/SectionLabel";
 
 export interface BookingSummaryProps {
   pickedSlots: PickedSlot[];
-  slotsNeeded: number;
+  progress: string;
   hours: number;
   participants: number;
   pricePerPerson: number;
@@ -24,6 +29,7 @@ export interface BookingSummaryProps {
   // A way to the studio when the month cannot hold the request.
   arrangementAskUrl: string | null;
   hint: string | null;
+  isSwapHintShown: boolean;
   canBook: boolean;
   isBooking: boolean;
   onNoteChange: (note: string) => void;
@@ -33,7 +39,7 @@ export interface BookingSummaryProps {
 
 export function BookingSummary({
   pickedSlots,
-  slotsNeeded,
+  progress,
   hours,
   participants,
   pricePerPerson,
@@ -43,29 +49,39 @@ export function BookingSummary({
   emptyMessage,
   arrangementAskUrl,
   hint,
+  isSwapHintShown,
   canBook,
   isBooking,
   onNoteChange,
   onBook,
   onRemoveSlot,
 }: BookingSummaryProps) {
+  // What the time at the wheel is first; the money closes the list.
   const rows = [
-    { label: "Duration", value: formatHours(hours) },
+    { label: "Hours", value: formatHours(hours) },
     { label: "People", value: pluralize(participants, "person", "people") },
-    { label: "Per person", value: formatInr(pricePerPerson) },
-    { label: "Total", value: formatInr(total) },
     { label: "You take home", value: pluralize(pieces, "piece") },
+    { label: "Per person", value: formatInr(pricePerPerson) },
   ];
 
   return (
-    <div className="flex flex-col gap-5 border border-ash bg-white p-5 md:p-6">
+    <section
+      aria-labelledby="booking-summary-heading"
+      className="flex flex-col gap-5 border border-ash bg-white p-5 md:p-6"
+    >
+      <SectionLabel id="booking-summary-heading">
+        Your wheel session
+      </SectionLabel>
       <PickedSlots
         slots={pickedSlots}
-        needed={slotsNeeded}
+        progress={progress}
         emptyMessage={emptyMessage}
         onRemoveSlot={onRemoveSlot}
       />
       {hint && <p className="text-[13px] text-muted-foreground">{hint}</p>}
+      {isSwapHintShown && (
+        <p className="text-[13px] text-muted-foreground">{REPLACE_TIME_HINT}</p>
+      )}
       {pickedSlots.length === 0 && arrangementAskUrl && (
         <WhatsAppLink
           href={arrangementAskUrl}
@@ -86,6 +102,10 @@ export function BookingSummary({
             <dd className="text-right tnum">{row.value}</dd>
           </div>
         ))}
+        <div className="flex items-baseline justify-between gap-4 border-b border-ash py-3 text-[15px]">
+          <dt>Total</dt>
+          <dd className="text-right tnum">{formatInr(total)}</dd>
+        </div>
       </dl>
 
       <div className="flex flex-col gap-2">
@@ -104,7 +124,7 @@ export function BookingSummary({
 
       <div className="flex flex-col gap-3">
         <Button size="lg" onClick={onBook} disabled={!canBook || isBooking}>
-          {isBooking ? "Booking…" : "Book this session"}
+          {isBooking ? "Booking…" : "Book this wheel session"}
         </Button>
         <p className="text-[13px] text-muted-foreground">
           We confirm the wheel by hand on WhatsApp, usually within a day.
@@ -113,6 +133,6 @@ export function BookingSummary({
           {SESSION_NOTE}
         </p>
       </div>
-    </div>
+    </section>
   );
 }

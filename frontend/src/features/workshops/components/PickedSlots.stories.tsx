@@ -19,8 +19,8 @@ const meta = {
       { startsAt: "2026-09-19T08:30:00.000Z", label: "Sat, 19 Sept · 2–3 pm" },
       { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue, 22 Sept · 3–4 pm" },
     ],
-    needed: 3,
-    emptyMessage: "Pick your hours from the calendar.",
+    progress: "2 of 3 hours picked",
+    emptyMessage: "Pick your times from the calendar.",
     onRemoveSlot: fn(),
   },
 } satisfies Meta<typeof PickedSlots>;
@@ -31,11 +31,24 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const NothingPicked: Story = { args: { slots: [], needed: 3 } };
+export const NothingPicked: Story = {
+  args: { slots: [], progress: "Pick 3 hours" },
+};
 
 export const Complete: Story = {
+  args: { progress: "All 2 hours picked" },
+};
+
+// Half-hour times: one of two picked is half the hour, not "1 of 2 hours".
+export const HalfHourTimes: Story = {
   args: {
-    needed: 2,
+    slots: [
+      {
+        startsAt: "2026-09-19T08:30:00.000Z",
+        label: "Sat, 19 Sept · 2–2:30 pm",
+      },
+    ],
+    progress: "30 minutes of 1 hour picked",
   },
 };
 

@@ -12,12 +12,16 @@ import {
   pickableSlots,
   shiftMonth,
   spanDays,
-  spanNotice,
   suggestSlots,
   togglePicked,
+  toCalendarWeeks,
+  toDaysKeptByNextPick,
+  toReachReason,
+  toSlotOptions,
   toMonthGrid,
   toMonthKey,
   toPickedSlots,
+  toVisibleWeeks,
 } from "./grid";
 
 const IST = "Asia/Kolkata";
@@ -104,8 +108,160 @@ describe("slot helpers", () => {
     expect(isDayWithinSpan("2026-09-19", [], 7)).toBe(true);
     expect(isDayWithinSpan("2026-09-19", ["2026-09-13"], 7)).toBe(true);
     expect(isDayWithinSpan("2026-09-20", ["2026-09-13"], 7)).toBe(false);
-    expect(spanNotice(7)).toBe("Pick within 7 days of your first slot");
-    expect(spanNotice(1)).toBe("Pick every hour on the same day");
+  });
+
+  it("starts the month at the current week", () => {
+    const week = (isPast: boolean) =>
+      Array.from({ length: 7 }, (_, index) => ({
+        dateKey: `2026-09-0${index + 1}`,
+        dayNumber: index + 1,
+        dayLabel: "",
+        wheelsFree: 4,
+        pickedCount: 0,
+        isLoaded: true,
+        isClosed: false,
+        closedKind: null,
+        isPast,
+        mutedReason: null,
+      }));
+    const gone = week(true);
+    const ahead = week(false);
+    // A week with its last days still ahead stays, padding and all.
+    const straddling = [...gone.slice(0, 3), ...ahead.slice(3), null];
+    expect(toVisibleWeeks([gone, straddling, ahead])).toEqual([
+      straddling,
+      ahead,
+    ]);
+    // A month entirely behind is shown as it is rather than as nothing.
+    expect(toVisibleWeeks([gone, gone])).toEqual([gone, gone]);
+  });
+
+  it("measures a new pick against the times a swap would keep", () => {
+    expect(toDaysKeptByNextPick(["2026-11-28", "2026-11-25"], 2)).toEqual([
+      "2026-11-28",
+    ]);
+    // Until the pick is full nothing is dropped.
+    expect(toDaysKeptByNextPick(["2026-11-25"], 2)).toEqual(["2026-11-25"]);
+    // One time needed: the only pick is the one replaced.
+    expect(toDaysKeptByNextPick(["2026-11-25"], 1)).toEqual([]);
+  });
+
+  it("drops only one of two times on the same day", () => {
+    expect(toDaysKeptByNextPick(["2026-11-25", "2026-11-25"], 2)).toEqual([
+      "2026-11-25",
+    ]);
+    expect(
+      toDaysKeptByNextPick(["2026-11-28", "2026-11-25", "2026-11-25"], 3),
+    ).toEqual(["2026-11-25", "2026-11-28"]);
+    expect(
+      toDaysKeptByNextPick(["2026-11-25", "2026-11-28", "2026-11-28"], 3),
+    ).toEqual(["2026-11-28", "2026-11-28"]);
+  });
+
+  // Matches the API's checkSlots: every final start within slot_span_days, both ends counted.
+  it("says why a day is out of reach of the picks a new one would keep", () => {
+    const full = ["2026-11-22", "2026-11-24"];
+    // A full pick swaps out 22 Nov, so 24–30 Nov is the reach.
+    expect(toReachReason("2026-11-30", full, 2, 7)).toBeNull();
+    expect(toReachReason("2026-12-01", full, 2, 7)).toBe(
+      "Pick all your hours within a 7-day window",
+    );
+    // With 24 Nov removed nothing is swapped, so 22 Nov holds: 29 Nov is eight days out.
+    expect(toReachReason("2026-11-28", ["2026-11-22"], 2, 7)).toBeNull();
+    expect(toReachReason("2026-11-29", ["2026-11-22"], 2, 7)).toBe(
+      "Pick all your hours within a 7-day window",
+    );
+    // Two times on 25 Nov: a swap drops one, the other still holds the window.
+    expect(
+      toReachReason("2026-12-02", ["2026-11-25", "2026-11-25"], 2, 7),
+    ).toBe("Pick all your hours within a 7-day window");
+    expect(
+      toReachReason("2026-12-01", ["2026-11-25", "2026-11-25"], 2, 7),
+    ).toBeNull();
+  });
+
+  it("offers no new times on a day out of reach but keeps picked ones removable", () => {
+    const options = toSlotOptions(
+      day,
+      1,
+      IST,
+      "Pick all your hours within a 7-day window",
+    );
+    expect(options.map((option) => option.isDisabled)).toEqual([
+      true,
+      true,
+      true,
+      true,
+    ]);
+    expect(options.map((option) => option.reason)).toEqual([
+      "Too far",
+      "Too far",
+      "Fully booked",
+      "Too far",
+    ]);
+    const inReach = toSlotOptions(day, 1, IST, null);
+    expect(inReach.map((option) => option.isDisabled)).toEqual([
+      false,
+      false,
+      true,
+      false,
+    ]);
+    expect(inReach[0]?.reason).toBeNull();
+  });
+
+  it("opens the days a full pick could swap into", () => {
+    const open = (date: string): WorkshopDayData => ({ ...day, date });
+    const mutedIn = (
+      monthKey: string,
+      dateKey: string,
+      pickedDateKeys: string[],
+      timesNeeded: number,
+    ) =>
+      toCalendarWeeks({
+        monthKey,
+        dayByKey: new Map([[dateKey, open(dateKey)]]),
+        participants: 1,
+        pickedDateKeys,
+        timesNeeded,
+        allowedSpanDays: 7,
+        todayKey: "2026-11-01",
+      })
+        .flat()
+        .find((cell) => cell?.dateKey === dateKey)?.mutedReason ?? null;
+    const full = ["2026-11-25", "2026-11-28"];
+    // Swapping out 25 Nov leaves 28 Nov–2 Dec, five days.
+    expect(mutedIn("2026-12", "2026-12-02", full, 2)).toBeNull();
+    // 28 Nov–4 Dec is exactly the 7-day window; 5 Dec is one day over.
+    expect(mutedIn("2026-12", "2026-12-04", full, 2)).toBeNull();
+    expect(mutedIn("2026-12", "2026-12-05", full, 2)).toBe(
+      "Pick all your hours within a 7-day window",
+    );
+    // With a time still to pick, both picks hold the window: 25 Nov–2 Dec is eight days.
+    expect(mutedIn("2026-12", "2026-12-02", full, 3)).toBe(
+      "Pick all your hours within a 7-day window",
+    );
+    // A single time is always swapped, so any open day stays pickable.
+    expect(mutedIn("2026-12", "2026-12-29", ["2026-11-25"], 1)).toBeNull();
+  });
+
+  it("marks only days the API returned as closed", () => {
+    const weeks = toCalendarWeeks({
+      monthKey: "2026-09",
+      dayByKey: new Map([["2026-09-13", day]]),
+      participants: 1,
+      pickedDateKeys: [],
+      timesNeeded: 1,
+      allowedSpanDays: 7,
+      todayKey: "2026-09-01",
+    }).flat();
+    const returned = weeks.find((cell) => cell?.dateKey === "2026-09-13");
+    const missing = weeks.find((cell) => cell?.dateKey === "2026-09-14");
+    expect(returned).toEqual(
+      expect.objectContaining({ isLoaded: true, isClosed: false }),
+    );
+    expect(missing).toEqual(
+      expect.objectContaining({ isLoaded: false, isClosed: false }),
+    );
   });
 
   it("adds and drops hours up to the tier's count", () => {

@@ -9,9 +9,11 @@ import type { CalendarDay } from "@/features/workshops/components/BookingCalenda
 import type { PickedSlot } from "@/features/workshops/components/PickedSlots";
 import type { SlotOption } from "@/features/workshops/components/SlotList";
 import {
+  formatPickedProgress,
   type SlotInterval,
   slotsNeeded,
   toDateKey,
+  toSpanNotice,
   type WorkshopData,
   type WorkshopDayData,
 } from "@/features/workshops/types";
@@ -23,13 +25,14 @@ import {
   isSameSelection,
   isSlotPickable,
   shiftMonth,
-  spanNotice,
   suggestSlots,
   toCalendarWeeks,
   togglePicked,
   toMonthKey,
   toPickedSlots,
+  toReachReason,
   toSlotOptions,
+  toVisibleWeeks,
 } from "./grid";
 
 export type SlotPickerWorkshop = Pick<
@@ -60,15 +63,22 @@ export interface SlotPicker {
   canGoBack: boolean;
   canGoForward: boolean;
   isLoading: boolean;
+  // The month's availability failed to load; nothing about its days is known.
+  hasError: boolean;
   notice: string | null;
   slots: SlotOption[];
   // The hours to send, in the order they happen.
   picked: SlotInterval[];
   pickedSlots: PickedSlot[];
   pickedStarts: string[];
+  // How many times of day the hours take, which depends on the slot length.
   needed: number;
+  // Time picked against the hours booked, as "2 of 3 hours picked".
+  progress: string;
   isComplete: boolean;
   isSuggested: boolean;
+  // Every time is picked, so a new pick swaps out the earliest; worth saying when there are several.
+  isSwapHintShown: boolean;
   hasNoRoom: boolean;
   isUnchanged: boolean;
   onPreviousMonth: () => void;
@@ -94,7 +104,8 @@ export function useSlotPicker({
 }: UseSlotPickerOptions): SlotPicker {
   const timezone = workshop?.timezone ?? "Asia/Kolkata";
   const spanAllowance = workshop?.slot_span_days ?? 1;
-  const needed = slotsNeeded(hours, workshop?.slot_minutes ?? 60);
+  const slotMinutes = workshop?.slot_minutes ?? 60;
+  const needed = slotsNeeded(hours, slotMinutes);
   // The studio's calendar, never the visitor's or UTC's, decides which month opens.
   const todayKey = toDateKey(new Date(), timezone);
   const firstMonth = toMonthKey(todayKey);
@@ -108,23 +119,27 @@ export function useSlotPicker({
   const [baseline, setBaseline] = useState<readonly SlotInterval[]>(NO_SLOTS);
 
   const isIdle = isSkipped || !workshop;
-  const { data, loading, refetch } = useQuery(WorkshopAvailabilityDocument, {
-    variables: {
-      input: {
-        config_slug: workshop?.slug ?? "",
-        from: `${month}-01`,
-        days: daysInMonth(month),
-        exclude_booking_id: excludeBookingId ?? null,
+  const { data, loading, error, refetch } = useQuery(
+    WorkshopAvailabilityDocument,
+    {
+      variables: {
+        input: {
+          config_slug: workshop?.slug ?? "",
+          from: `${month}-01`,
+          days: daysInMonth(month),
+          exclude_booking_id: excludeBookingId ?? null,
+        },
       },
+      skip: isIdle,
+      // Wheels are taken by other guests all day, so a revisited month is read again.
+      fetchPolicy: "cache-and-network",
+      notifyOnNetworkStatusChange: true,
     },
-    skip: isIdle,
-    // Wheels are taken by other guests all day, so a revisited month is read again.
-    fetchPolicy: "cache-and-network",
-    notifyOnNetworkStatusChange: true,
-  });
+  );
   // Only this month's days count; another month's would mark every day here closed.
   const days = data?.workshopAvailability ?? NO_DAYS;
   const isLoading = !isIdle && loading && !data;
+  const hasError = !isIdle && Boolean(error) && !data;
 
   const dayByKey = useMemo(
     () => new Map(days.map((day) => [day.date, day])),
@@ -155,12 +170,13 @@ export function useSlotPicker({
   // Only the opening month is picked ahead, so browsing forward never moves a pick nobody made.
   const suggestion = useMemo(
     () =>
-      !isSuggesting || isIdle || isLoading || month !== firstMonth
+      !isSuggesting || isIdle || isLoading || hasError || month !== firstMonth
         ? undefined
         : suggestSlots(days, needed, participants, spanAllowance, todayKey),
     [
       days,
       firstMonth,
+      hasError,
       isIdle,
       isLoading,
       isSuggesting,
@@ -185,20 +201,47 @@ export function useSlotPicker({
   );
   const weeks = useMemo(
     () =>
-      toCalendarWeeks({
-        monthKey: month,
-        dayByKey,
-        participants,
-        pickedDateKeys,
-        allowedSpanDays: spanAllowance,
-        todayKey,
-      }),
-    [dayByKey, month, participants, pickedDateKeys, spanAllowance, todayKey],
+      toVisibleWeeks(
+        toCalendarWeeks({
+          monthKey: month,
+          dayByKey,
+          participants,
+          pickedDateKeys,
+          timesNeeded: needed,
+          allowedSpanDays: spanAllowance,
+          todayKey,
+        }),
+      ),
+    [
+      dayByKey,
+      month,
+      needed,
+      participants,
+      pickedDateKeys,
+      spanAllowance,
+      todayKey,
+    ],
   );
   const selectedDay = selectedDate ? dayByKey.get(selectedDate) : undefined;
   const slots = useMemo(
-    () => toSlotOptions(selectedDay, participants, timezone),
-    [participants, selectedDay, timezone],
+    () =>
+      toSlotOptions(
+        selectedDay,
+        participants,
+        timezone,
+        selectedDate
+          ? toReachReason(selectedDate, pickedDateKeys, needed, spanAllowance)
+          : null,
+      ),
+    [
+      needed,
+      participants,
+      pickedDateKeys,
+      selectedDate,
+      selectedDay,
+      spanAllowance,
+      timezone,
+    ],
   );
   const pickedSlots = useMemo(
     () => toPickedSlots(picked, timezone),
@@ -275,17 +318,19 @@ export function useSlotPicker({
     canGoBack: month > firstMonth,
     canGoForward: month < lastMonth,
     isLoading,
+    hasError,
+    // A single time has no window to keep to, so the rule only shows once it can bite.
     notice:
-      picked.length > 0
-        ? `${spanNotice(spanAllowance)}. Days further out are closed off.`
-        : null,
+      needed > 1 && picked.length > 0 ? toSpanNotice(spanAllowance) : null,
     slots,
     picked: pickedInOrder,
     pickedSlots,
     pickedStarts,
     needed,
+    progress: formatPickedProgress(picked.length * slotMinutes, hours),
     isComplete: picked.length === needed,
     isSuggested: !isTouched && picked.length > 0,
+    isSwapHintShown: needed > 1 && picked.length === needed,
     hasNoRoom: suggestion === null,
     isUnchanged: baseline.length > 0 && isSameSelection(picked, baseline),
     onPreviousMonth: handlePreviousMonth,

@@ -6,6 +6,7 @@ import {
   formatHourRange,
   type SlotInterval,
   toDateKey,
+  toSpanRule,
   type WorkshopDayData,
   type WorkshopSlotData,
 } from "@/features/workshops/types";
@@ -101,12 +102,6 @@ export function isDayWithinSpan(
   return spanDays([...pickedDateKeys, dateKey]) <= allowedSpanDays;
 }
 
-export function spanNotice(allowedSpanDays: number): string {
-  return allowedSpanDays === 1
-    ? "Pick every hour on the same day"
-    : `Pick within ${allowedSpanDays} days of your first slot`;
-}
-
 // Picked hours are always shown and sent in the order they happen, as "Sat, 20 Sept · 3–4 pm".
 export function toPickedSlots(
   picked: readonly SlotInterval[],
@@ -181,6 +176,31 @@ export function togglePicked(
   return [...kept, { starts_at: slot.starts_at, ends_at: slot.ends_at }];
 }
 
+// The days a new pick is measured against. A full pick drops its earliest time to make room
+// (see togglePicked), so that day no longer holds the window; with one time needed none does.
+export function toDaysKeptByNextPick(
+  pickedDateKeys: readonly string[],
+  timesNeeded: number,
+): string[] {
+  const sorted = [...pickedDateKeys].sort();
+  return sorted.length >= timesNeeded ? sorted.slice(1) : sorted;
+}
+
+// Why a day cannot take the next pick, or null when it can. The day cells and the times under
+// the selected day both ask this, so a day picked while in reach cannot keep offering its times
+// once the picks change and it falls outside the window the API enforces.
+export function toReachReason(
+  dateKey: string,
+  pickedDateKeys: readonly string[],
+  timesNeeded: number,
+  allowedSpanDays: number,
+): string | null {
+  const kept = toDaysKeptByNextPick(pickedDateKeys, timesNeeded);
+  return isDayWithinSpan(dateKey, kept, allowedSpanDays)
+    ? null
+    : toSpanRule(allowedSpanDays);
+}
+
 export function isSameSelection(
   picked: readonly SlotInterval[],
   current: readonly SlotInterval[],
@@ -196,16 +216,18 @@ export interface WeeksInput {
   dayByKey: ReadonlyMap<string, WorkshopDayData>;
   participants: number;
   pickedDateKeys: string[];
+  timesNeeded: number;
   allowedSpanDays: number;
   todayKey: string;
 }
 
-// A day nobody has loaded reads as closed, so callers show a skeleton until the month arrives.
+// A day the API sent nothing for is unknown, never closed; only a returned day can be closed.
 export function toCalendarWeeks({
   monthKey,
   dayByKey,
   participants,
   pickedDateKeys,
+  timesNeeded,
   allowedSpanDays,
   todayKey,
 }: WeeksInput): (CalendarDay | null)[][] {
@@ -223,29 +245,53 @@ export function toCalendarWeeks({
         dayLabel: formatDateKey(dateKey),
         wheelsFree,
         pickedCount: pickedDateKeys.filter((key) => key === dateKey).length,
-        isClosed: day?.is_closed ?? true,
+        isLoaded: day !== undefined,
+        isClosed: day?.is_closed ?? false,
         closedKind: day?.closed_kind ?? null,
         isPast: dateKey < todayKey,
-        mutedReason: isDayWithinSpan(dateKey, pickedDateKeys, allowedSpanDays)
-          ? null
-          : spanNotice(allowedSpanDays),
+        mutedReason: toReachReason(
+          dateKey,
+          pickedDateKeys,
+          timesNeeded,
+          allowedSpanDays,
+        ),
       };
     }),
   );
 }
 
+// Weeks already gone by push the open days down, so the month starts at the current week.
+export function toVisibleWeeks(
+  weeks: (CalendarDay | null)[][],
+): (CalendarDay | null)[][] {
+  const current = weeks.filter((week) =>
+    week.some((day) => day !== null && !day.isPast),
+  );
+  return current.length > 0 ? current : weeks;
+}
+
+// A day out of reach keeps its picked times removable (SlotList never disables a picked one)
+// but offers no new ones; the calendar notice says why, so the chip only says "Too far".
 export function toSlotOptions(
   day: WorkshopDayData | undefined,
   participants: number,
   timezone: string,
+  reachReason: string | null,
 ): SlotOption[] {
-  return (day?.slots ?? []).map((slot) => ({
-    startsAt: slot.starts_at,
-    label: formatHourRange(slot.starts_at, slot.ends_at, timezone),
-    wheelsFree: slot.remaining,
-    isDisabled: !isSlotPickable(slot, participants),
-    reason: slot.is_available
-      ? "Not enough wheels"
-      : (slot.reason ?? "Not free"),
-  }));
+  return (day?.slots ?? []).map((slot) => {
+    const isFree = isSlotPickable(slot, participants);
+    return {
+      startsAt: slot.starts_at,
+      label: formatHourRange(slot.starts_at, slot.ends_at, timezone),
+      wheelsFree: slot.remaining,
+      isDisabled: !isFree || reachReason !== null,
+      reason: !slot.is_available
+        ? (slot.reason ?? "Not free")
+        : !isFree
+          ? "Not enough wheels"
+          : reachReason
+            ? "Too far"
+            : null,
+    };
+  });
 }

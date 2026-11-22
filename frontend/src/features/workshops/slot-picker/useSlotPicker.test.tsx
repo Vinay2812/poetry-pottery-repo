@@ -19,6 +19,7 @@ interface QueryOptions {
 interface QueryResult {
   data: { workshopAvailability: WorkshopDayData[] } | undefined;
   loading: boolean;
+  error?: Error;
   refetch: () => Promise<void>;
 }
 
@@ -57,6 +58,29 @@ function dayOn(date: string, hours: number[], remaining = 4): WorkshopDayData {
       starts_at: studioHour(date, hour),
       ends_at: studioHour(date, hour + 1),
       remaining,
+      is_available: true,
+      reason: null,
+    })),
+  };
+}
+
+// A studio time given in fractional hours, so 13.5 is 1:30 pm.
+function studioTime(date: string, hours: number): string {
+  const top = new Date(studioHour(date, Math.floor(hours))).getTime();
+  return new Date(top + (hours % 1) * 3_600_000).toISOString();
+}
+
+function halfHourDay(date: string, starts: number[]): WorkshopDayData {
+  return {
+    date,
+    weekday: 0,
+    is_closed: false,
+    closed_kind: null,
+    reason: null,
+    slots: starts.map((start) => ({
+      starts_at: studioTime(date, start),
+      ends_at: studioTime(date, start + 0.5),
+      remaining: 4,
       is_available: true,
       reason: null,
     })),
@@ -254,19 +278,104 @@ describe("useSlotPicker", () => {
     const { result } = renderPicker({ isSuggesting: true });
     const days = result.current.weeks.flat();
     const picked = days.find((day) => day?.dateKey === "2026-10-02");
-    const closed = days.find((day) => day?.dateKey === "2026-10-05");
+    const unsent = days.find((day) => day?.dateKey === "2026-10-05");
 
     expect(result.current.weeks.every((week) => week.length === 7)).toBe(true);
     expect(picked).toEqual(
       expect.objectContaining({ pickedCount: 1, wheelsFree: 4 }),
     );
+    // A day the API did not send is unknown, not closed.
+    expect(unsent).toEqual(
+      expect.objectContaining({ isLoaded: false, isClosed: false }),
+    );
+    // A single hour is swapped, not added to, so other days stay open.
+    expect(
+      days.find((day) => day?.dateKey === "2026-10-03")?.mutedReason,
+    ).toBeNull();
+    // A single hour has no window to keep to, so no notice.
+    expect(result.current.notice).toBeNull();
+    // A single time is simply replaced, which needs no hint.
+    expect(result.current.isSwapHintShown).toBe(false);
+  });
+
+  it("states the window once more than one time is needed", () => {
+    const { result } = renderPicker({ isSuggesting: true, hours: 2 });
+    const days = result.current.weeks.flat();
+
     // Only the same day is open once an hour is picked on a one-day studio.
-    expect(closed?.isClosed).toBe(true);
     expect(days.find((day) => day?.dateKey === "2026-10-03")?.mutedReason).toBe(
-      "Pick every hour on the same day",
+      "Pick all your hours on the same day",
     );
+
     expect(result.current.notice).toBe(
-      "Pick every hour on the same day. Days further out are closed off.",
+      "Pick all your hours on the same day. Other days are closed off.",
     );
+    expect(result.current.progress).toBe("All 2 hours picked");
+    expect(result.current.isSwapHintShown).toBe(true);
+  });
+
+  it("closes the times of a selected day once the picks move out of its reach", () => {
+    months["2026-10-01"] = {
+      workshopAvailability: [
+        dayOn("2026-10-02", [13]),
+        dayOn("2026-10-04", [13]),
+        dayOn("2026-10-09", [13, 14]),
+      ],
+    };
+    const { result } = renderPicker({
+      workshop: { ...WORKSHOP, slot_span_days: 7 },
+      hours: 2,
+      isSuggesting: true,
+    });
+    const [second] = result.current.pickedStarts.slice(1);
+
+    // Full pick of 2 and 4 Oct: a swap drops 2 Oct, so 9 Oct (4–9 Oct) is in reach.
+    act(() => result.current.onSelectDate("2026-10-09"));
+    expect(result.current.slots.every((slot) => !slot.isDisabled)).toBe(true);
+
+    // Without 4 Oct nothing is swapped; 2–9 Oct is eight days, which the API refuses.
+    act(() => result.current.onRemoveSlot(second!));
+    expect(result.current.slots.map((slot) => slot.reason)).toEqual([
+      "Too far",
+      "Too far",
+    ]);
+    expect(result.current.slots.every((slot) => slot.isDisabled)).toBe(true);
+  });
+
+  it("counts half-hour times as the time they add up to", () => {
+    months["2026-10-01"] = {
+      workshopAvailability: [halfHourDay("2026-10-02", [13, 13.5])],
+    };
+    const { result } = renderPicker({
+      workshop: { ...WORKSHOP, slot_minutes: 30 },
+      isSuggesting: true,
+    });
+
+    expect(result.current.needed).toBe(2);
+    expect(result.current.progress).toBe("1 hour picked");
+    // Two half-hour times, all picked: a new one swaps out the earliest.
+    expect(result.current.isSwapHintShown).toBe(true);
+    act(() => result.current.onRemoveSlot(result.current.pickedStarts[0]!));
+    expect(result.current.progress).toBe("30 minutes of 1 hour picked");
+  });
+
+  it("says availability failed instead of calling every day closed", () => {
+    useQueryMock.mockImplementation(() => ({
+      data: undefined,
+      loading: false,
+      error: new Error("Network down"),
+      refetch: refetchMock,
+    }));
+    const { result } = renderPicker({ isSuggesting: true });
+
+    expect(result.current.hasError).toBe(true);
+    expect(result.current.isLoading).toBe(false);
+    // A failed month is not a full one, so the studio is not offered as booked out.
+    expect(result.current.hasNoRoom).toBe(false);
+    expect(
+      result.current.weeks.flat().some((day) => day?.isClosed === true),
+    ).toBe(false);
+    act(() => result.current.refresh());
+    expect(refetchMock).toHaveBeenCalled();
   });
 });

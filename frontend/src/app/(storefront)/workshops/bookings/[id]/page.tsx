@@ -5,7 +5,7 @@ import { getSiteSettings } from "@/lib/data/site-settings";
 import { BookingDetailContainer } from "@/features/workshops";
 
 export const metadata: Metadata = {
-  title: "Session details",
+  title: "Your wheel session",
   robots: { index: false },
 };
 

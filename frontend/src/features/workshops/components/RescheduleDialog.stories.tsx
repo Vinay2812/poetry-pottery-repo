@@ -4,7 +4,10 @@ import { fn } from "storybook/test";
 import { DayClosedKind } from "@/graphql/generated/graphql";
 
 import { atViewport } from "@/lib/storybook/viewports";
-import { toMonthGrid } from "@/features/workshops/slot-picker/grid";
+import {
+  toMonthGrid,
+  toVisibleWeeks,
+} from "@/features/workshops/slot-picker/grid";
 import { formatDateKey } from "@/features/workshops/types";
 import type { CalendarDay } from "./BookingCalendar";
 import { RescheduleDialog } from "./RescheduleDialog";
@@ -12,22 +15,25 @@ import { RescheduleDialog } from "./RescheduleDialog";
 const MONTH = "2026-09";
 const TODAY = "2026-09-14";
 
-const WEEKS: (CalendarDay | null)[][] = toMonthGrid(MONTH).map((week) =>
-  week.map((dateKey) => {
-    if (!dateKey) return null;
-    const weekday = new Date(`${dateKey}T00:00:00Z`).getUTCDay();
-    return {
-      dateKey,
-      dayNumber: Number(dateKey.slice(8)),
-      dayLabel: formatDateKey(dateKey),
-      wheelsFree: weekday === 1 ? 0 : 4,
-      pickedCount: dateKey === "2026-09-19" ? 1 : 0,
-      isClosed: weekday === 1,
-      closedKind: weekday === 1 ? DayClosedKind.StudioClosed : null,
-      isPast: dateKey < TODAY,
-      mutedReason: null,
-    };
-  }),
+const WEEKS: (CalendarDay | null)[][] = toVisibleWeeks(
+  toMonthGrid(MONTH).map((week) =>
+    week.map((dateKey) => {
+      if (!dateKey) return null;
+      const weekday = new Date(`${dateKey}T00:00:00Z`).getUTCDay();
+      return {
+        dateKey,
+        dayNumber: Number(dateKey.slice(8)),
+        dayLabel: formatDateKey(dateKey),
+        wheelsFree: weekday === 1 ? 0 : 4,
+        pickedCount: dateKey === "2026-09-19" ? 1 : 0,
+        isLoaded: true,
+        isClosed: weekday === 1,
+        closedKind: weekday === 1 ? DayClosedKind.StudioClosed : null,
+        isPast: dateKey < TODAY,
+        mutedReason: null,
+      };
+    }),
+  ),
 );
 
 const SLOTS = [
@@ -61,6 +67,7 @@ const meta = {
   args: {
     isOpen: true,
     isLoading: false,
+    hasError: false,
     monthLabel: "September 2026",
     notice: null,
     weeks: WEEKS,
@@ -71,7 +78,9 @@ const meta = {
     pickedSlots: [
       { startsAt: "2026-09-19T09:30:00.000Z", label: "Sat, 19 Sept · 3–4 pm" },
     ],
-    slotsNeeded: 2,
+    progress: "1 of 2 hours picked",
+    isComplete: false,
+    isSwapHintShown: false,
     isUnchanged: false,
     isSubmitting: false,
     onOpenChange: fn(),
@@ -81,6 +90,7 @@ const meta = {
     onToggleSlot: fn(),
     onRemoveSlot: fn(),
     onConfirm: fn(),
+    onRetry: fn(),
   },
 } satisfies Meta<typeof RescheduleDialog>;
 
@@ -96,9 +106,26 @@ export const NothingPicked: Story = {
 
 export const LoadingMonth: Story = { args: { isLoading: true } };
 
+export const AvailabilityFailed: Story = {
+  args: { hasError: true, selectedDate: null },
+};
+
 export const Moving: Story = { args: { isSubmitting: true } };
 
 export const SameHoursAsBooked: Story = { args: { isUnchanged: true } };
+
+// Every time is picked across two days, so the swap hint shows.
+export const AllTimesPickedAcrossDays: Story = {
+  args: {
+    pickedSlots: [
+      { startsAt: "2026-09-19T09:30:00.000Z", label: "Sat, 19 Sept · 3–4 pm" },
+      { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue, 22 Sept · 3–4 pm" },
+    ],
+    progress: "All 2 hours picked",
+    isComplete: true,
+    isSwapHintShown: true,
+  },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 
