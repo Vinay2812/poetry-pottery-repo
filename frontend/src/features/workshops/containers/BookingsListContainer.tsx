@@ -1,7 +1,7 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
@@ -30,6 +30,13 @@ const GROUPS: { key: ReturnType<typeof toBookingGroup>; heading: string }[] = [
 
 export function BookingsListContainer() {
   const [page, setPage] = useState(1);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  // The old page stays on screen while the next loads, so jumping to the top at once is safe.
+  const handlePageChange = useCallback((next: number) => {
+    setPage(next);
+    headingRef.current?.scrollIntoView({ block: "start" });
+  }, []);
   const {
     bookings,
     pageInfo,
@@ -53,7 +60,10 @@ export function BookingsListContainer() {
 
   return (
     <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
-      <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
+      <h1
+        ref={headingRef}
+        className="font-heading text-4xl leading-tight tracking-tight md:text-6xl"
+      >
         Your wheel sessions
       </h1>
 
@@ -84,15 +94,14 @@ export function BookingsListContainer() {
             )}
           >
             {GROUPS.map(({ key, heading }) => {
-              const matching = bookings.filter(
+              // The API sends sessions still ahead first, soonest first, then the record, latest first,
+              // so each group already arrives in reading order and holds across pages.
+              const group = bookings.filter(
                 (booking) =>
                   toBookingGroup(booking.slots, booking.status) === key,
               );
-              // The list arrives newest first, which suits the past; what is ahead reads soonest first.
-              const group =
-                key === "upcoming" ? [...matching].reverse() : matching;
               if (group.length === 0) {
-                // Later pages hold only older sessions, so the nudge belongs on the first.
+                // Sessions ahead lead page one, so a first page without one means there are none.
                 return key === "upcoming" && page === 1 ? (
                   <NoUpcomingBookings key={key} />
                 ) : null;
@@ -130,9 +139,9 @@ export function BookingsListContainer() {
               <Button
                 variant="outline"
                 disabled={page <= 1}
-                onClick={() => setPage((current) => current - 1)}
+                onClick={() => handlePageChange(page - 1)}
               >
-                Newer
+                Previous
               </Button>
               <span className="text-[13px] text-muted-foreground tnum">
                 Page {page} of {pageCount}
@@ -140,9 +149,9 @@ export function BookingsListContainer() {
               <Button
                 variant="outline"
                 disabled={page >= pageCount}
-                onClick={() => setPage((current) => current + 1)}
+                onClick={() => handlePageChange(page + 1)}
               >
-                Older
+                Next
               </Button>
             </div>
           )}

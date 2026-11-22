@@ -8,8 +8,9 @@ import { EventStatus, Prisma, RegistrationStatus } from "@prisma/client";
 
 import { newPublicId } from "@/common/ids/public-id";
 import {
+  canReturnRows,
   clampPage,
-  type PageBounds,
+  splitPage,
   toPageInfo,
 } from "@/common/pagination/pagination";
 import { env } from "@/config/env";
@@ -66,34 +67,6 @@ export function aheadRegistrationWhere(
   return {
     status: { in: [...SEAT_HOLDING] },
     event: { status: { not: EventStatus.COMPLETED }, ends_at: { gte: now } },
-  };
-}
-
-interface Slice {
-  skip: number;
-  take: number;
-}
-
-// A read is only worth sending when its slice starts inside the list.
-function canReturnRows(slice: Slice, total: number): boolean {
-  return slice.take > 0 && slice.skip < total;
-}
-
-// One page laid over two lists read back to back: how much of it each list fills.
-export function splitPage(
-  bounds: PageBounds,
-  firstTotal: number,
-): { first: Slice; second: Slice } {
-  const firstTake = Math.max(
-    0,
-    Math.min(bounds.limit, firstTotal - bounds.skip),
-  );
-  return {
-    first: { skip: Math.min(bounds.skip, firstTotal), take: firstTake },
-    second: {
-      skip: Math.max(0, bounds.skip - firstTotal),
-      take: bounds.limit - firstTake,
-    },
   };
 }
 

@@ -1,12 +1,12 @@
 import { Test } from "@nestjs/testing";
 import { RegistrationStatus } from "@prisma/client";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MailService } from "@/mail/mail.service";
 import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import { addDays, fromWallClock } from "./schedule";
-import { WorkshopsService } from "./workshops.service";
+import { aheadBookingWhere, WorkshopsService } from "./workshops.service";
 
 const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
@@ -108,6 +108,42 @@ function bookingRow(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+describe("aheadBookingWhere", () => {
+  const now = new Date("2026-09-12T12:00:00Z");
+  const where = aheadBookingWhere(now) as {
+    status: { in: RegistrationStatus[] };
+    ends_at: { gt: Date };
+  };
+
+  // The shop's toBookingGroup in features/workshops/types.ts: closed is past, else the last hour decides.
+  function shopGroup(status: RegistrationStatus, endsAt: Date) {
+    const isClosed =
+      status === RegistrationStatus.CANCELLED ||
+      status === RegistrationStatus.REJECTED;
+    if (isClosed) return "past";
+    return endsAt > now ? "upcoming" : "past";
+  }
+
+  const endings = {
+    ended: new Date("2026-09-12T11:00:00Z"),
+    endingNow: now,
+    ahead: new Date("2026-09-12T13:00:00Z"),
+  };
+  const rows = Object.values(RegistrationStatus).flatMap((status) =>
+    Object.entries(endings).map(([label, endsAt]) => ({
+      label: `${status} · ${label}`,
+      status,
+      endsAt,
+    })),
+  );
+
+  it.each(rows)("sorts $label the way the shop groups it", (row) => {
+    const isAhead =
+      where.status.in.includes(row.status) && row.endsAt > where.ends_at.gt;
+    expect(isAhead).toBe(shopGroup(row.status, row.endsAt) === "upcoming");
+  });
+});
 
 describe("WorkshopsService", () => {
   let service: WorkshopsService;
@@ -379,5 +415,105 @@ describe("WorkshopsService", () => {
     await expect(service.cancel(1, "WS-1", null)).rejects.toThrow(
       "no longer be cancelled",
     );
+  });
+  describe("myBookings", () => {
+    const ahead = Array.from({ length: 3 }, (_, index) =>
+      bookingRow({ id: `WS-A${index + 1}` }),
+    );
+    const behind = Array.from({ length: 14 }, (_, index) =>
+      bookingRow({
+        id: `WS-P${index + 1}`,
+        status: RegistrationStatus.CANCELLED,
+      }),
+    );
+    type Query = {
+      where: Record<string, unknown>;
+      skip: number;
+      take: number;
+    };
+    const isBehind = (query: { where: Record<string, unknown> }) =>
+      "NOT" in query.where;
+
+    beforeEach(() => {
+      prismaMock.workshopBooking.count.mockImplementation(
+        (query: { where: Record<string, unknown> }) =>
+          Promise.resolve(isBehind(query) ? behind.length : ahead.length),
+      );
+      prismaMock.workshopBooking.findMany.mockImplementation((query: Query) =>
+        Promise.resolve(
+          (isBehind(query) ? behind : ahead).slice(
+            query.skip,
+            query.skip + query.take,
+          ),
+        ),
+      );
+    });
+
+    // clearAllMocks keeps implementations, so restore the shared default afterwards.
+    afterEach(() => {
+      prismaMock.workshopBooking.count.mockReset();
+      prismaMock.workshopBooking.findMany.mockReset();
+      prismaMock.workshopBooking.findMany.mockResolvedValue([]);
+    });
+
+    it("puts every session still ahead on page one, then the record", async () => {
+      const first = await service.myBookings(7, 1, 12);
+
+      expect(first.items.map((item) => item.id)).toEqual([
+        "WS-A1",
+        "WS-A2",
+        "WS-A3",
+        ...behind.slice(0, 9).map((row) => row.id),
+      ]);
+      expect(first.page_info).toEqual({
+        total: 17,
+        page: 1,
+        limit: 12,
+        has_more: true,
+      });
+      expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledWith(
+        containing({ orderBy: [{ starts_at: "asc" }, { id: "asc" }] }),
+      );
+    });
+
+    it("carries on through the record across the page boundary", async () => {
+      const second = await service.myBookings(7, 2, 12);
+
+      expect(second.items.map((item) => item.id)).toEqual(
+        behind.slice(9).map((row) => row.id),
+      );
+      expect(second.page_info.has_more).toBe(false);
+      expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledTimes(1);
+      expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledWith(
+        containing({
+          orderBy: [{ starts_at: "desc" }, { id: "asc" }],
+          skip: 9,
+          take: 12,
+        }),
+      );
+    });
+
+    it("sends no reads for a shopper with no sessions", async () => {
+      prismaMock.workshopBooking.count.mockResolvedValue(0);
+
+      const result = await service.myBookings(7, 1, 12);
+
+      expect(result.items).toEqual([]);
+      expect(result.page_info).toEqual({
+        total: 0,
+        page: 1,
+        limit: 12,
+        has_more: false,
+      });
+      expect(prismaMock.workshopBooking.findMany).not.toHaveBeenCalled();
+    });
+
+    it("sends no reads for a page past both lists", async () => {
+      const beyond = await service.myBookings(7, 5, 12);
+
+      expect(beyond.items).toEqual([]);
+      expect(beyond.page_info.has_more).toBe(false);
+      expect(prismaMock.workshopBooking.findMany).not.toHaveBeenCalled();
+    });
   });
 });
