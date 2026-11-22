@@ -1,3 +1,4 @@
+import { PrivacyNote } from "@/components/legal/PrivacyNote";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -55,6 +56,7 @@ export function NextBatchForm({
       <p role="alert" className="min-h-4 text-[13px] text-destructive">
         {state === "error" ? message : null}
       </p>
+      <PrivacyNote lead="We'll email you when this piece is back." />
     </form>
   );
 }

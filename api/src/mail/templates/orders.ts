@@ -160,7 +160,7 @@ export function orderStatusMail(
     },
     PAID: {
       title: "Payment received",
-      intro: `Thank you, payment for order ${order.id} is in. Your pieces will ship within three working days.`,
+      intro: `Thank you, payment for order ${order.id} is in. Your pieces should reach you within about two weeks, depending on where you are.`,
     },
     SHIPPED: {
       title: "Your pieces are on the way",

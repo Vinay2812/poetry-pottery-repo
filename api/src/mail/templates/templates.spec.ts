@@ -231,7 +231,6 @@ function booking(overrides: Partial<WorkshopBooking> = {}): WorkshopBooking {
     note: null,
     cancel_reason: null,
     can_cancel: true,
-    can_reschedule: true,
     created_at: new Date("2026-09-01T06:00:00.000Z"),
     approved_at: null,
     confirmed_at: null,
@@ -703,6 +702,30 @@ describe("event registration templates", () => {
     expect(withoutReason?.html).not.toContain("booked out");
   });
 
+  it("offers a full refund or another event only when the studio cancels a paid seat", () => {
+    const cancelled = registration({
+      status: RegistrationStatus.CANCELLED,
+      cancel_reason: "The studio flooded",
+    });
+    const paid = registrationStatusMail(cancelled, {
+      byStudio: true,
+      wasPaid: true,
+    });
+    expect(paid?.text).toContain("was cancelled: The studio flooded");
+    expect(paid?.text).toContain(
+      "You can choose a full refund or a seat at another event.",
+    );
+
+    const free = registrationStatusMail(cancelled, {
+      byStudio: true,
+      wasPaid: false,
+    });
+    expect(free?.text).not.toMatch(/refund/i);
+
+    const byGuest = registrationStatusMail(cancelled);
+    expect(byGuest?.text).not.toMatch(/refund|another event/i);
+  });
+
   it("escapes an event title and a guest note that carry markup", () => {
     const mail = registrationPlacedStudioMail(
       registration({ event: event({ title: XSS }), note: XSS }),
@@ -727,13 +750,11 @@ describe("workshop booking templates", () => {
     expect(placed.text).not.toMatch(/pay/i);
     const approved = bookingStatusMail(
       booking({ status: RegistrationStatus.APPROVED, total: 0 }),
-      "status",
     );
     expect(approved?.text).toContain("will confirm it shortly");
     expect(approved?.text).not.toMatch(/pay/i);
     const confirmed = bookingStatusMail(
       booking({ status: RegistrationStatus.CONFIRMED, total: 0 }),
-      "status",
     );
     expect(confirmed?.text).not.toMatch(/payment/i);
   });
@@ -844,20 +865,6 @@ describe("workshop booking templates", () => {
     expect(mail.html).toContain(`href="${SITE}/dashboard/workshops"`);
   });
 
-  it("announces a move with the new hours, whatever the status says", () => {
-    const mail = bookingStatusMail(
-      booking({
-        status: RegistrationStatus.CONFIRMED,
-        slots: [slot("2026-10-06T05:30:00.000Z", "2026-10-06T06:30:00.000Z")],
-      }),
-      "rescheduled",
-    );
-
-    expect(mail?.subject).toBe("Session moved · wsbk3c9a1d7e2f40");
-    expect(mail?.html).toContain("Session moved");
-    expect(mail?.html).toContain("Tue, 6 Oct, 11:00 am to 12:00 pm");
-  });
-
   it("writes one status mail per decision the studio takes", () => {
     const titles: [RegistrationStatus, string][] = [
       [RegistrationStatus.APPROVED, "Your session is approved"],
@@ -867,7 +874,7 @@ describe("workshop booking templates", () => {
     ];
 
     for (const [status, title] of titles) {
-      const mail = bookingStatusMail(booking({ status }), "status");
+      const mail = bookingStatusMail(booking({ status }));
       expect(mail?.subject).toBe(`${title} · wsbk3c9a1d7e2f40`);
       expect(mail?.html).toContain(title);
       expect(mail?.html).toContain(
@@ -878,10 +885,7 @@ describe("workshop booking templates", () => {
 
   it("says nothing while a session request is still pending", () => {
     expect(
-      bookingStatusMail(
-        booking({ status: RegistrationStatus.PENDING }),
-        "status",
-      ),
+      bookingStatusMail(booking({ status: RegistrationStatus.PENDING })),
     ).toBeNull();
   });
 
@@ -892,14 +896,10 @@ describe("workshop booking templates", () => {
           status: RegistrationStatus.REJECTED,
           cancel_reason: "The wheel broke",
         }),
-        "status",
       )?.html,
     ).toContain("could not confirm this session: The wheel broke");
     expect(
-      bookingStatusMail(
-        booking({ status: RegistrationStatus.REJECTED }),
-        "status",
-      )?.html,
+      bookingStatusMail(booking({ status: RegistrationStatus.REJECTED }))?.html,
     ).toContain("Sorry, we could not confirm this session.");
 
     expect(
@@ -908,15 +908,42 @@ describe("workshop booking templates", () => {
           status: RegistrationStatus.CANCELLED,
           cancel_reason: "You asked us to",
         }),
-        "status",
       )?.html,
     ).toContain("Your session was cancelled: You asked us to");
     expect(
-      bookingStatusMail(
-        booking({ status: RegistrationStatus.CANCELLED }),
-        "status",
-      )?.html,
+      bookingStatusMail(booking({ status: RegistrationStatus.CANCELLED }))
+        ?.html,
     ).toContain("Your session has been cancelled.");
+  });
+
+  it("offers a full refund or another date only when the studio cancels a paid session", () => {
+    const cancelled = booking({
+      status: RegistrationStatus.CANCELLED,
+      cancel_reason: "The kiln is down",
+    });
+    const paid = bookingStatusMail(cancelled, {
+      byStudio: true,
+      wasPaid: true,
+    });
+    expect(paid?.text).toContain(
+      "Your session was cancelled: The kiln is down",
+    );
+    expect(paid?.text).toContain(
+      "You can choose a full refund or another date.",
+    );
+
+    const unpaid = bookingStatusMail(cancelled, {
+      byStudio: true,
+      wasPaid: false,
+    });
+    expect(unpaid?.text).not.toMatch(/refund/i);
+    expect(unpaid?.text).toContain("If you would like another date");
+
+    const byGuest = bookingStatusMail(cancelled, {
+      byStudio: false,
+      wasPaid: false,
+    });
+    expect(byGuest?.text).not.toMatch(/refund|another date/i);
   });
 
   it("reads the hours in the studio's own timezone, not the server's", () => {

@@ -29,7 +29,7 @@ export const metadata: Metadata = pageMetadata({
   title: "Commission a piece",
   path: "/custom",
   description:
-    "Tell us the piece, the size, the glaze and the words. A sketch comes back in two days and the piece ships in about ten.",
+    "Tell us the piece, the size, the glaze and the words. A sketch comes back in two days and the piece takes three to four weeks to make.",
 });
 
 export default async function CustomPage({
@@ -61,7 +61,7 @@ export default async function CustomPage({
           </h1>
           <p className="max-w-2xl text-muted-foreground">
             Tell us what to make, how big and in which glaze. We sketch it,
-            throw it and fire it, and it reaches you in about ten days.
+            throw it and fire it. It takes three to four weeks to make.
           </p>
         </header>
       </Reveal>

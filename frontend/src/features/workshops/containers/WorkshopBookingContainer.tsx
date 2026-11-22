@@ -1,12 +1,14 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { PageShell } from "@/components/layout/PageShell";
+import { CancellationPolicy } from "@/components/legal/CancellationPolicy";
+import { TermsAgreement } from "@/components/legal/TermsAgreement";
+import { toTermsError } from "@/lib/terms";
 
 import { BookingCalendar } from "@/features/workshops/components/BookingCalendar";
 import { BookingSummary } from "@/features/workshops/components/BookingSummary";
-import { CancellationPolicy } from "@/features/workshops/components/CancellationPolicy";
 import { DurationPicker } from "@/features/workshops/components/DurationPicker";
 import { GroupAskLine } from "@/features/workshops/components/GroupAskLine";
 import { ParticipantsStepper } from "@/features/workshops/components/ParticipantsStepper";
@@ -17,6 +19,7 @@ import {
   formatDateKey,
   pickTier,
   quoteSession,
+  SESSION_POLICY,
   SUGGESTED_NOTE,
   toArrangementAskUrl,
   toGroupAskLine,
@@ -39,6 +42,9 @@ export function WorkshopBookingContainer({
   const [hours, setHours] = useState(workshop.tiers[0]?.hours ?? 1);
   const [participants, setParticipants] = useState(1);
   const [note, setNote] = useState("");
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false);
+  const [hasTriedBooking, setHasTriedBooking] = useState(false);
+  const termsRef = useRef<HTMLButtonElement>(null);
 
   const picker = useSlotPicker({
     workshop,
@@ -59,14 +65,29 @@ export function WorkshopBookingContainer({
 
   const handleBook = useCallback(() => {
     if (!isComplete) return;
+    if (!isTermsAccepted) {
+      setHasTriedBooking(true);
+      termsRef.current?.focus();
+      return;
+    }
     book({
       configSlug: workshop.slug,
       slotStarts: picked.map((slot) => slot.starts_at),
       hours,
       participants,
       note,
+      acceptedTerms: isTermsAccepted,
     });
-  }, [book, hours, isComplete, note, participants, picked, workshop.slug]);
+  }, [
+    book,
+    hours,
+    isComplete,
+    isTermsAccepted,
+    note,
+    participants,
+    picked,
+    workshop.slug,
+  ]);
 
   return (
     <PageShell className="flex flex-col gap-10 py-8 md:py-12">
@@ -178,6 +199,17 @@ export function WorkshopBookingContainer({
             isSwapHintShown={picker.isSwapHintShown && !picker.isSuggested}
             canBook={isComplete}
             isBooking={isBooking}
+            terms={
+              <TermsAgreement
+                ref={termsRef}
+                id="session-terms"
+                isChecked={isTermsAccepted}
+                error={toTermsError(isTermsAccepted, hasTriedBooking)}
+                // A free session has nothing to pay, so nothing to keep final.
+                hasPaymentNote={quote.subtotal > 0}
+                onCheckedChange={setIsTermsAccepted}
+              />
+            }
             onNoteChange={setNote}
             onBook={handleBook}
             onRemoveSlot={picker.onRemoveSlot}
@@ -186,7 +218,7 @@ export function WorkshopBookingContainer({
         </aside>
       </div>
 
-      <CancellationPolicy />
+      <CancellationPolicy points={SESSION_POLICY} />
     </PageShell>
   );
 }

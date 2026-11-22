@@ -34,6 +34,8 @@ export interface ReserveBoxProps {
   // What the booking was quoted at, which stays put if the date's price later moves.
   bookingTotal: number;
   whatsappUrl: string | null;
+  // The agreement sits right above the request button, so it is read before asking.
+  terms: React.ReactNode;
   onSeatsChange: (seats: number) => void;
   onNoteChange: (note: string) => void;
   onReserve: () => void;
@@ -61,6 +63,7 @@ export function ReserveBox({
   bookingSeats,
   bookingTotal,
   whatsappUrl,
+  terms,
   onSeatsChange,
   onNoteChange,
   onReserve,
@@ -89,8 +92,9 @@ export function ReserveBox({
             This one was called off
           </p>
           <p className="text-sm text-muted-foreground">
-            The studio cancelled this session. Anyone with a seat has been told,
-            and nothing is owed.
+            The studio cancelled this one and everyone with a seat has been
+            told. If you paid for a seat, you choose a full refund or a seat at
+            another event.
           </p>
           <Link href="/events" className={TEXT_LINK}>
             See upcoming dates
@@ -227,6 +231,7 @@ export function ReserveBox({
           )}
 
           <div className="flex flex-col gap-3">
+            {terms}
             <Button size="lg" onClick={onReserve} disabled={isReserving}>
               {isReserving ? "Sending…" : toRequestSeatsLabel(seats)}
             </Button>

@@ -4,11 +4,9 @@ import { PageInfo } from "@/common/pagination/pagination";
 
 @ObjectType()
 export class ReviewAuthor {
+  // Only the name is public; the console reads the photo through its own customer field.
   @Field()
   name!: string;
-
-  @Field(() => String, { nullable: true })
-  image!: string | null;
 }
 
 @ObjectType()

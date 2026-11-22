@@ -146,7 +146,6 @@ describe("useSlotPicker", () => {
       config_slug: "open-studio",
       from: "2026-10-01",
       days: 31,
-      exclude_booking_id: null,
     });
     expect(result.current.canGoBack).toBe(false);
   });
@@ -175,15 +174,6 @@ describe("useSlotPicker", () => {
     act(() => result.current.onNextMonth());
     expect(result.current.isLoading).toBe(true);
     expect(lastQuery()?.variables.input.from).toBe("2026-11-01");
-  });
-
-  it("fetches nothing while skipped and never reports loading", () => {
-    const { result } = renderPicker({ isSkipped: true });
-
-    expect(lastQuery()?.skip).toBe(true);
-    expect(result.current.isLoading).toBe(false);
-    act(() => result.current.refresh());
-    expect(refetchMock).not.toHaveBeenCalled();
   });
 
   it("reads availability again after a save", () => {
@@ -331,12 +321,6 @@ describe("useSlotPicker", () => {
   });
 
   it("keeps Book on for a pick read before while its re-read fails", () => {
-    const held = [
-      {
-        starts_at: studioHour("2026-11-20", 13),
-        ends_at: studioHour("2026-11-20", 14),
-      },
-    ];
     useQueryMock.mockImplementation((_document, { variables, skip }) => {
       const data = skip ? undefined : months[variables.input.from];
       const isFailing = !skip && variables.input.from === "2026-11-20";
@@ -352,74 +336,14 @@ describe("useSlotPicker", () => {
     };
     const { result } = renderPicker();
 
-    act(() => result.current.startFrom(held));
+    act(() => result.current.onNextMonth());
+    act(() => result.current.onSelectDate("2026-11-20"));
+    act(() => result.current.onToggleSlot(studioHour("2026-11-20", 13)));
     expect(result.current.isComplete).toBe(true);
     act(() => result.current.onPreviousMonth());
     // Read before, so a failed re-read leaves Book on and asks nothing.
     expect(result.current.isComplete).toBe(true);
     expect(result.current.onRetryPickCheck).toBeNull();
-  });
-
-  it("offers a retry beside the selection when a never-read pick cannot be checked", () => {
-    const held = [
-      {
-        starts_at: studioHour("2026-11-20", 13),
-        ends_at: studioHour("2026-11-20", 14),
-      },
-    ];
-    delete months["2026-11-01"];
-    useQueryMock.mockImplementation((_document, { variables, skip }) => {
-      const data = skip ? undefined : months[variables.input.from];
-      const isFailing = !skip && variables.input.from === "2026-11-20";
-      return {
-        data,
-        loading: !skip && !data && !isFailing,
-        error: isFailing ? new Error("Network down") : undefined,
-        refetch: refetchMock,
-      };
-    });
-    const { result } = renderPicker();
-
-    act(() => result.current.startFrom(held));
-    // November is still on the wire, so nothing says the time is free yet.
-    expect(result.current.isComplete).toBe(false);
-    expect(result.current.onRetryPickCheck).toBeNull();
-
-    act(() => result.current.onPreviousMonth());
-    expect(result.current.isComplete).toBe(false);
-    expect(result.current.onRetryPickCheck).not.toBeNull();
-    const callsBefore = refetchMock.mock.calls.length;
-    act(() => result.current.onRetryPickCheck?.());
-    expect(refetchMock.mock.calls.length).toBe(callsBefore + 1);
-  });
-
-  it("opens a move on the hours held and knows when nothing changed", () => {
-    const held = [
-      {
-        starts_at: studioHour("2026-11-06", 13),
-        ends_at: studioHour("2026-11-06", 14),
-      },
-    ];
-    const { result } = renderPicker({ excludeBookingId: "WS-1" });
-
-    act(() => result.current.startFrom(held));
-    expect(lastQuery()?.variables.input).toEqual(
-      expect.objectContaining({
-        from: "2026-11-01",
-        exclude_booking_id: "WS-1",
-      }),
-    );
-    expect(result.current.monthLabel).toBe("November 2026");
-    expect(result.current.selectedDate).toBe("2026-11-06");
-    expect(result.current.isUnchanged).toBe(true);
-    expect(result.current.isComplete).toBe(true);
-
-    // An hour the guest unpicks can be picked again, because their own seats count as free.
-    act(() => result.current.onRemoveSlot(held[0]!.starts_at));
-    expect(result.current.isComplete).toBe(false);
-    expect(result.current.slots[0]?.isDisabled).toBe(false);
-    act(() => result.current.onToggleSlot(held[0]!.starts_at));
-    expect(result.current.isUnchanged).toBe(true);
   });
 
   it("lays out the month with the picked day marked", () => {

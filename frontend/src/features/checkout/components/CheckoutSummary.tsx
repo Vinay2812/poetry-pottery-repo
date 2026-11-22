@@ -22,6 +22,8 @@ export interface CheckoutSummaryProps {
   // Set when the total could not be checked, so the shopper can ask again.
   onRetryQuote: (() => void) | null;
   coupon: React.ReactNode;
+  // The agreement sits right above Place order, so it is read before paying.
+  terms: React.ReactNode;
 }
 
 export function CheckoutSummary({
@@ -41,6 +43,7 @@ export function CheckoutSummary({
   onPlaceOrder,
   onRetryQuote,
   coupon,
+  terms,
 }: CheckoutSummaryProps) {
   return (
     <CheckoutSection
@@ -67,6 +70,7 @@ export function CheckoutSummary({
           isDiscountPending={isDiscountPending}
         />
       </div>
+      {terms}
       <Button
         size="lg"
         className="mt-1"

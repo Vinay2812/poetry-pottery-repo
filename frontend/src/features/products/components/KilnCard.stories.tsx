@@ -20,7 +20,7 @@ const meta = {
       { label: "Glaze", value: "Slate Grey" },
       { label: "Size", value: "9cm x 9cm" },
       { label: "Made in", value: "Sangli, Maharashtra" },
-      { label: "Ships in", value: "3 working days" },
+      { label: "Ships in", value: "About two weeks" },
     ],
   },
 } satisfies Meta<typeof KilnCard>;
@@ -37,7 +37,7 @@ export const MadeToOrder: Story = {
       { label: "Clay body", value: "Terracotta" },
       { label: "Glaze", value: "Forest Green" },
       { label: "Made in", value: "Sangli, Maharashtra" },
-      { label: "Ships in", value: "About 10 days" },
+      { label: "Ships in", value: "Three to four weeks" },
     ],
   },
 };
@@ -49,7 +49,7 @@ export const Highlighted: Story = {
       { label: "Glaze", value: "Slate Grey", isLinked: true },
       { label: "Size", value: "9cm x 9cm", isLinked: true },
       { label: "Made in", value: "Sangli, Maharashtra" },
-      { label: "Ships in", value: "3 working days" },
+      { label: "Ships in", value: "About two weeks" },
     ],
     activeLabel: "Glaze",
     onActivate: fn(),

@@ -13,19 +13,17 @@ import { SignInWall } from "@/features/auth";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { BookingDetail } from "@/features/workshops/components/BookingDetail";
 import { CancelBookingDialog } from "@/features/workshops/components/CancelBookingDialog";
-import { RescheduleDialog } from "@/features/workshops/components/RescheduleDialog";
 import {
   useCancelWorkshopBooking,
-  useRescheduleWorkshopBooking,
   useWorkshopBooking,
 } from "@/features/workshops/hooks";
-import { useSlotPicker } from "@/features/workshops/slot-picker";
 import { toClosedLabel, toTimelineDate, toTimelineSteps } from "@/lib/timeline";
 import {
   isRegistrationClosed,
   isRequestLapsed,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
+  toWithdrawNote,
 } from "@/lib/registration-status";
 import {
   applyBookingAction,
@@ -59,22 +57,11 @@ export function BookingDetailContainer({
   const { openSignIn } = useClerk();
   const { user } = useUser();
   const { cancel, isCancelling } = useCancelWorkshopBooking();
-  const { reschedule, isRescheduling } = useRescheduleWorkshopBooking();
 
   const [isCancelOpen, setIsCancelOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const [isMoveOpen, setIsMoveOpen] = useState(false);
 
   const timezone = optimisticBooking?.config.timezone ?? "Asia/Kolkata";
-  // The guest's own hours count as free while they move, so they can keep or re-pick them.
-  const picker = useSlotPicker({
-    workshop: optimisticBooking?.config ?? null,
-    hours: optimisticBooking?.hours ?? 1,
-    participants: optimisticBooking?.participants ?? 1,
-    excludeBookingId: bookingId,
-    isSkipped: !isMoveOpen,
-  });
-  const { isComplete, isUnchanged, picked, startFrom } = picker;
 
   // The dialog closes and the badge turns at once; a refusal rolls both back with a toast.
   const handleConfirmCancel = useCallback(() => {
@@ -88,32 +75,6 @@ export function BookingDetailContainer({
       await cancel(bookingId, reason);
     });
   }, [applyBookingChange, bookingId, cancel, reason]);
-
-  const handleConfirmMove = useCallback(() => {
-    if (!isComplete || isUnchanged) return;
-    setIsMoveOpen(false);
-    startTransition(async () => {
-      applyBookingChange({ kind: "reschedule", slots: picked });
-      await reschedule(
-        bookingId,
-        picked.map((slot) => slot.starts_at),
-      );
-    });
-  }, [
-    applyBookingChange,
-    bookingId,
-    isComplete,
-    isUnchanged,
-    picked,
-    reschedule,
-  ]);
-
-  // The picker opens on the hours the guest already has, so a move can keep most of them.
-  const handleOpenMove = useCallback(() => {
-    if (!optimisticBooking) return;
-    startFrom(optimisticBooking.slots);
-    setIsMoveOpen(true);
-  }, [optimisticBooking, startFrom]);
 
   if (isLoading) {
     return (
@@ -241,45 +202,17 @@ export function BookingDetailContainer({
         note={optimisticBooking.note}
         whatsappUrl={whatsappUrl}
         canCancel={optimisticBooking.can_cancel}
-        canReschedule={optimisticBooking.can_reschedule}
         isCancelling={isCancelling}
         onCancel={() => setIsCancelOpen(true)}
-        onReschedule={handleOpenMove}
       />
       <CancelBookingDialog
         isOpen={isCancelOpen}
         reason={reason}
         isSubmitting={isCancelling}
+        withdrawNote={toWithdrawNote(optimisticBooking.total === 0)}
         onReasonChange={setReason}
         onOpenChange={setIsCancelOpen}
         onConfirm={() => void handleConfirmCancel()}
-      />
-      <RescheduleDialog
-        isOpen={isMoveOpen}
-        isLoading={picker.isLoading}
-        hasError={picker.hasError}
-        monthLabel={picker.monthLabel}
-        notice={picker.notice}
-        weeks={picker.weeks}
-        selectedDate={picker.selectedDate}
-        canGoBack={picker.canGoBack}
-        canGoForward={picker.canGoForward}
-        slots={picker.slots}
-        pickedSlots={picker.pickedSlots}
-        progress={picker.progress}
-        isComplete={isComplete}
-        isSwapHintShown={picker.isSwapHintShown}
-        isUnchanged={isUnchanged}
-        isSubmitting={isRescheduling}
-        onOpenChange={setIsMoveOpen}
-        onPreviousMonth={picker.onPreviousMonth}
-        onNextMonth={picker.onNextMonth}
-        onSelectDate={picker.onSelectDate}
-        onToggleSlot={picker.onToggleSlot}
-        onRemoveSlot={picker.onRemoveSlot}
-        onRetryPickCheck={picker.onRetryPickCheck}
-        onConfirm={() => void handleConfirmMove()}
-        onRetry={picker.refresh}
       />
     </>
   );

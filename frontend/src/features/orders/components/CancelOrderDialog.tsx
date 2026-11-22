@@ -40,6 +40,10 @@ export function CancelOrderDialog({
             The pieces go back on the shelf straight away.
           </DialogDescription>
         </DialogHeader>
+        <p className="border-y border-ash py-3 text-[13px] text-muted-foreground">
+          You can cancel until you pay. If you&apos;ve already sent a payment
+          and it still shows as unpaid, message us on WhatsApp instead.
+        </p>
         <div className="flex flex-col gap-2">
           <Label
             htmlFor="cancel-reason"

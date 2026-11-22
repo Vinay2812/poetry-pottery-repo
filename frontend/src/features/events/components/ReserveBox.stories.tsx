@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
+import { TermsAgreement } from "@/components/legal/TermsAgreement";
 import { atViewport } from "@/lib/storybook/viewports";
+import { TERMS_REQUIRED } from "@/lib/terms";
 import { ReserveBox } from "./ReserveBox";
 
 const meta = {
@@ -33,6 +35,15 @@ const meta = {
     bookingSeats: 0,
     bookingTotal: 0,
     whatsappUrl: "https://wa.me/919876543210?text=Hi",
+    terms: (
+      <TermsAgreement
+        id="reserve-terms"
+        isChecked={false}
+        error={null}
+        hasPaymentNote
+        onCheckedChange={fn()}
+      />
+    ),
     onSeatsChange: fn(),
     onNoteChange: fn(),
     onReserve: fn(),
@@ -50,6 +61,35 @@ export const TwoSeats: Story = {
 };
 
 export const Reserving: Story = { args: { isReserving: true } };
+
+export const TermsNotTicked: Story = {
+  args: {
+    terms: (
+      <TermsAgreement
+        id="reserve-terms"
+        isChecked={false}
+        error={TERMS_REQUIRED}
+        hasPaymentNote
+        onCheckedChange={fn()}
+      />
+    ),
+  },
+};
+
+export const FreeSeat: Story = {
+  args: {
+    price: 0,
+    terms: (
+      <TermsAgreement
+        id="reserve-terms"
+        isChecked={false}
+        error={null}
+        hasPaymentNote={false}
+        onCheckedChange={fn()}
+      />
+    ),
+  },
+};
 
 export const OpenMic: Story = {
   args: {

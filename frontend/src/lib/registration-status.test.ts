@@ -9,6 +9,7 @@ import {
   toRegistrationStatusTone,
   toRequestStages,
   withRequestedLine,
+  toWithdrawNote,
 } from "./registration-status";
 
 describe("toRegistrationStatusLabel", () => {
@@ -104,5 +105,19 @@ describe("withRequestedLine", () => {
       [RegistrationStatus.Pending, "Passed."],
     ]);
     expect(lapsed[0]?.label).toBe(stages[0]?.label);
+  });
+});
+
+describe("toWithdrawNote", () => {
+  it("says withdrawing is free until payment, and what to do about a payment in flight", () => {
+    const note = toWithdrawNote(false);
+    expect(note).toContain("Withdrawing is free until you pay.");
+    expect(note).toContain(
+      "If you've already sent a payment and it still shows as unpaid, message us on WhatsApp",
+    );
+  });
+
+  it("never talks about payment for a free place", () => {
+    expect(toWithdrawNote(true)).not.toMatch(/pay\b|payment/i);
   });
 });

@@ -569,6 +569,7 @@ type BatchNotificationResult {
 }
 
 input BookWorkshopInput {
+  accepted_terms: Boolean!
   config_slug: String!
   hours: Int!
   note: String
@@ -689,6 +690,7 @@ type CommissionRequest {
 }
 
 input CommissionRequestInput {
+  accepted_terms: Boolean!
   carved_words: String
   email: String!
   glaze: String!
@@ -963,7 +965,6 @@ type Mutation {
   removeCartItem(id: Int!): Cart!
   reorder(order_id: String!): ReorderResult!
   reorderProductImages(id: Int!, image_urls: [String!]!): Product!
-  rescheduleWorkshopBooking(input: RescheduleWorkshopInput!): WorkshopBooking!
   saveContentPage(input: ContentPageInput!, slug: String!): ContentPage!
   saveWorkshopTier(config_id: Int!, input: AdminWorkshopTierInput!): WorkshopConfig!
   sendContactMessage(input: ContactMessageInput!): Boolean!
@@ -1088,6 +1089,7 @@ type PageInfo {
 }
 
 input PlaceOrderInput {
+  accepted_terms: Boolean!
   address_id: Int!
   coupon_code: String
   customer_note: String
@@ -1283,6 +1285,7 @@ input RecordWhatsAppMessageInput {
 }
 
 input RegisterForEventInput {
+  accepted_terms: Boolean!
   event_id: Int!
   note: String
   seats: Int = 1
@@ -1324,11 +1327,6 @@ type ReorderResult {
   skipped: [String!]!
 }
 
-input RescheduleWorkshopInput {
-  booking_id: String!
-  slot_starts: [DateTime!]!
-}
-
 type Review {
   author: ReviewAuthor!
   body: String
@@ -1342,7 +1340,6 @@ type Review {
 }
 
 type ReviewAuthor {
-  image: String
   name: String!
 }
 
@@ -1553,14 +1550,12 @@ type WishlistToggleResult {
 input WorkshopAvailabilityInput {
   config_slug: String!
   days: Int = 14
-  exclude_booking_id: String
   from: String!
 }
 
 type WorkshopBooking {
   approved_at: DateTime
   can_cancel: Boolean!
-  can_reschedule: Boolean!
   cancel_reason: String
   cancelled_at: DateTime
   config: WorkshopConfig!

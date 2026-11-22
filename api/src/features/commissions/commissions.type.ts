@@ -123,6 +123,10 @@ export class CommissionRequestInput {
 
   @Field(() => [String], { nullable: true })
   reference_image_urls?: string[] | null;
+
+  // The shopper ticked the terms box; refused unless true.
+  @Field(() => Boolean)
+  accepted_terms!: boolean;
 }
 
 @InputType()

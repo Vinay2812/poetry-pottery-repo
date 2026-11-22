@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from "@nestjs/common";
 import { CommissionStatus, Prisma, UploadPurpose } from "@prisma/client";
 import { z } from "zod";
 
+import { assertAcceptedTerms } from "@/common/terms/terms";
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { env } from "@/config/env";
 import { MailService } from "@/mail/mail.service";
@@ -190,6 +191,7 @@ export class CommissionsService {
     input: CommissionRequestInput,
     userId: number | null,
   ): Promise<CommissionRequest> {
+    assertAcceptedTerms(input.accepted_terms);
     const fields = parseCommissionInput(input);
     // A guest cannot upload, so a guest brief carries no photos.
     if (userId === null && fields.reference_image_urls.length > 0) {

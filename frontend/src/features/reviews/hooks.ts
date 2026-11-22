@@ -330,10 +330,7 @@ export function useReviewComposer(
       setError(null);
       startTransition(async () => {
         const draft = toDraftReview(values, previous, {
-          author: {
-            name: user?.fullName ?? "You",
-            image: user?.imageUrl ?? null,
-          },
+          author: { name: user?.fullName ?? "You" },
           subjectName,
           subjectHref: toSubjectHref(subject),
           createdAt: new Date().toISOString(),

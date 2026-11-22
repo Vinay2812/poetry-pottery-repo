@@ -20,9 +20,11 @@ import {
 
 import { describeError } from "@/lib/apollo/errors";
 import { formatInr } from "@/lib/format";
+import { toTermsError } from "@/lib/terms";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
 import { PageShell } from "@/components/layout/PageShell";
+import { TermsAgreement } from "@/components/legal/TermsAgreement";
 
 import { AddressPickerContainer } from "@/features/addresses";
 import { CartLoadFailed, EmptyCart, useCart } from "@/features/cart";
@@ -77,6 +79,9 @@ export function CheckoutContainer() {
   const [isGift, setIsGift] = useState(false);
   const [giftNote, setGiftNote] = useState("");
   const [hasHiddenPrices, setHasHiddenPrices] = useState(false);
+  const [isTermsAccepted, setIsTermsAccepted] = useState(false);
+  const [hasTriedPlacing, setHasTriedPlacing] = useState(false);
+  const termsRef = useRef<HTMLButtonElement>(null);
 
   const {
     data: quoteData,
@@ -168,6 +173,11 @@ export function CheckoutContainer() {
 
   const handlePlaceOrder = useCallback(() => {
     if (addressId === null || quoteError || !currentQuote) return;
+    if (!isTermsAccepted) {
+      setHasTriedPlacing(true);
+      termsRef.current?.focus();
+      return;
+    }
     const gift = toGiftView(isGift, giftNote, hasHiddenPrices);
     submitOrder({
       address_id: addressId,
@@ -176,6 +186,7 @@ export function CheckoutContainer() {
       gift_note: gift.gift_note,
       hide_prices: gift.hide_prices,
       expected_total: currentQuote.total,
+      accepted_terms: isTermsAccepted,
     });
   }, [
     addressId,
@@ -183,6 +194,7 @@ export function CheckoutContainer() {
     giftNote,
     hasHiddenPrices,
     isGift,
+    isTermsAccepted,
     note,
     quoteError,
     submitOrder,
@@ -291,6 +303,16 @@ export function CheckoutContainer() {
             blockedReason={blockedReason}
             onPlaceOrder={handlePlaceOrder}
             onRetryQuote={quoteState === "failed" ? handleRetryQuote : null}
+            terms={
+              <TermsAgreement
+                ref={termsRef}
+                id="checkout-terms"
+                isChecked={isTermsAccepted}
+                error={toTermsError(isTermsAccepted, hasTriedPlacing)}
+                hasPaymentNote
+                onCheckedChange={setIsTermsAccepted}
+              />
+            }
             coupon={
               <CouponField
                 value={couponDraft}

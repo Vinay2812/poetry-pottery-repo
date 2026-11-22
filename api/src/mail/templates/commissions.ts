@@ -56,7 +56,7 @@ export function commissionAcknowledgementMail(
   const body = renderMail({
     title: "Your brief is with us",
     intro:
-      "Thanks for the brief. We will send a sketch within two days, and the piece ships in about ten days once you say yes.",
+      "Thanks for the brief. We will send a sketch within two days, and the piece takes three to four weeks to make once you say yes.",
     blocks: [{ heading: "Your reference", lines: [request.id] }],
   });
   return { subject: "Your brief is with us · Poetry & Pottery", ...body };

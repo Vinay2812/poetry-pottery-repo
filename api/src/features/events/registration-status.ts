@@ -8,11 +8,33 @@ export const SEAT_HOLDING: readonly RegistrationStatus[] = [
   RegistrationStatus.CONFIRMED,
 ];
 
-// Customers can back out until the studio has confirmed payment.
+// Nothing is paid yet: the request is waiting on the studio or on the guest's payment.
 export const CUSTOMER_CANCELLABLE: readonly RegistrationStatus[] = [
   RegistrationStatus.PENDING,
   RegistrationStatus.APPROVED,
 ];
+
+// Confirmed with money taken; such a place is final for the guest.
+export function isPaidPlace(
+  status: RegistrationStatus,
+  total: number,
+): boolean {
+  return status === RegistrationStatus.CONFIRMED && total > 0;
+}
+
+// Guests may withdraw before the date while nothing is paid, which includes a confirmed free place.
+export function customerCanCancel(
+  status: RegistrationStatus,
+  total: number,
+  startsAt: Date,
+  now = new Date(),
+): boolean {
+  if (startsAt <= now) return false;
+  return (
+    CUSTOMER_CANCELLABLE.includes(status) ||
+    (status === RegistrationStatus.CONFIRMED && total === 0)
+  );
+}
 
 const ADMIN_TRANSITIONS: Record<
   RegistrationStatus,

@@ -6,7 +6,11 @@ import { MailService } from "@/mail/mail.service";
 import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import { addDays, fromWallClock } from "./schedule";
-import { aheadBookingWhere, WorkshopsService } from "./workshops.service";
+import {
+  aheadBookingWhere,
+  PAID_SESSION_FINAL,
+  WorkshopsService,
+} from "./workshops.service";
 
 const containing = (value: Record<string, unknown>): unknown =>
   expect.objectContaining(value);
@@ -178,6 +182,7 @@ describe("WorkshopsService", () => {
     const second = fromWallClock(addDays(day, 2), 17 * 60, config.timezone);
 
     const booking = await service.book(1, {
+      accepted_terms: true,
       config_slug: "open-studio",
       slot_starts: [second, first],
       hours: 2,
@@ -219,11 +224,25 @@ describe("WorkshopsService", () => {
     expect(booking.can_cancel).toBe(true);
   });
 
+  it("refuses a booking without the terms ticked", async () => {
+    await expect(
+      service.book(1, {
+        accepted_terms: false,
+        config_slug: "open-studio",
+        slot_starts: [fromWallClock(nextSunday(), 14 * 60, config.timezone)],
+        hours: 1,
+        participants: 1,
+      }),
+    ).rejects.toThrow("Please agree to the terms to continue.");
+    expect(prismaMock.workshopBooking.create).not.toHaveBeenCalled();
+  });
+
   it("rejects durations without a tier, wrong hour counts, wide spans and full hours", async () => {
     const day = nextSunday();
     const first = fromWallClock(day, 14 * 60, config.timezone);
     await expect(
       service.book(1, {
+        accepted_terms: true,
         config_slug: "open-studio",
         slot_starts: [first],
         hours: 3,
@@ -233,6 +252,7 @@ describe("WorkshopsService", () => {
 
     await expect(
       service.book(1, {
+        accepted_terms: true,
         config_slug: "open-studio",
         slot_starts: [first],
         hours: 2,
@@ -242,6 +262,7 @@ describe("WorkshopsService", () => {
 
     await expect(
       service.book(1, {
+        accepted_terms: true,
         config_slug: "open-studio",
         slot_starts: [
           first,
@@ -261,6 +282,7 @@ describe("WorkshopsService", () => {
     ]);
     await expect(
       service.book(1, {
+        accepted_terms: true,
         config_slug: "open-studio",
         slot_starts: [first],
         hours: 1,
@@ -287,111 +309,6 @@ describe("WorkshopsService", () => {
     expect(days[0]?.slots.length).toBe(6);
   });
 
-  it("frees a booking's own hours only for the guest who owns it", async () => {
-    const hour = bookingRow().slots[0];
-    if (!hour) throw new Error("no slot");
-    const heldByOwn = [{ ...hour, booking: { participants: 6 } }];
-    // The owner check is the lookup's user_id; the slot query then drops that booking.
-    prismaMock.workshopBooking.findFirst.mockImplementation(
-      ({ where }: { where: { id: string; user_id: number } }) =>
-        Promise.resolve(
-          where.id === "WS-1" && where.user_id === 1 ? { id: "WS-1" } : null,
-        ),
-    );
-    prismaMock.workshopBookingSlot.findMany.mockImplementation(
-      ({ where }: { where: { booking: { id?: { not: string } } } }) =>
-        Promise.resolve(where.booking.id?.not === "WS-1" ? [] : heldByOwn),
-    );
-    const input = {
-      config_slug: "open-studio",
-      from: nextSunday(),
-      days: 1,
-      exclude_booking_id: "WS-1",
-    };
-    const remainingAt = async (viewerId: number | null) => {
-      const [day] = await service.availability(input, viewerId);
-      return day?.slots.find(
-        (slot) => slot.starts_at.getTime() === hour.starts_at.getTime(),
-      )?.remaining;
-    };
-
-    await expect(remainingAt(1)).resolves.toBe(6);
-    await expect(remainingAt(2)).resolves.toBe(0);
-    await expect(remainingAt(null)).resolves.toBe(0);
-    expect(prismaMock.workshopBooking.findFirst).toHaveBeenCalledWith({
-      where: { id: "WS-1", user_id: 2, config_id: config.id },
-      select: { id: true },
-    });
-    // A signed-out caller never reaches the lookup.
-    expect(prismaMock.workshopBooking.findFirst).toHaveBeenCalledTimes(2);
-  });
-
-  it("refuses a move that a cancellation beat to the row", async () => {
-    prismaMock.workshopBooking.findFirst.mockResolvedValue(bookingRow());
-    prismaMock.workshopBooking.updateMany.mockResolvedValueOnce({ count: 0 });
-    const day = nextSunday();
-
-    await expect(
-      service.reschedule(1, {
-        booking_id: "WS-1",
-        slot_starts: [
-          fromWallClock(day, 16 * 60, config.timezone),
-          fromWallClock(addDays(day, 2), 13 * 60, config.timezone),
-        ],
-      }),
-    ).rejects.toThrow("just updated");
-    expect(prismaMock.workshopBookingSlot.deleteMany).not.toHaveBeenCalled();
-  });
-
-  it("replaces the whole slot set on a move and keeps its own seats out of the count", async () => {
-    prismaMock.workshopBooking.findFirst.mockResolvedValue(bookingRow());
-    prismaMock.workshopBooking.updateMany.mockResolvedValueOnce({ count: 1 });
-    const day = nextSunday();
-    const first = fromWallClock(day, 16 * 60, config.timezone);
-    const second = fromWallClock(addDays(day, 2), 13 * 60, config.timezone);
-
-    await service.reschedule(1, {
-      booking_id: "WS-1",
-      slot_starts: [first, second],
-    });
-
-    expect(prismaMock.workshopBookingSlot.findMany).toHaveBeenCalledWith(
-      containing({
-        where: containing({
-          booking: containing({ id: { not: "WS-1" } }),
-        }),
-      }),
-    );
-    expect(prismaMock.workshopBookingSlot.deleteMany).toHaveBeenCalledWith({
-      where: { booking_id: "WS-1" },
-    });
-    expect(prismaMock.workshopBooking.updateMany).toHaveBeenCalledWith({
-      where: { id: "WS-1", status: bookingRow().status },
-      data: {
-        starts_at: first,
-        ends_at: new Date(second.getTime() + 3_600_000),
-      },
-    });
-    expect(prismaMock.workshopBooking.update).toHaveBeenCalledWith(
-      containing({
-        data: containing({
-          slots: {
-            create: [
-              {
-                starts_at: first,
-                ends_at: new Date(first.getTime() + 3_600_000),
-              },
-              {
-                starts_at: second,
-                ends_at: new Date(second.getTime() + 3_600_000),
-              },
-            ],
-          },
-        }),
-      }),
-    );
-  });
-
   it("cancels before the session and refuses afterwards", async () => {
     prismaMock.workshopBooking.findFirst.mockResolvedValue(bookingRow());
     prismaMock.workshopBooking.findUniqueOrThrow.mockResolvedValue(
@@ -415,6 +332,51 @@ describe("WorkshopsService", () => {
     await expect(service.cancel(1, "WS-1", null)).rejects.toThrow(
       "no longer be cancelled",
     );
+  });
+
+  it("keeps a paid session final, and lets an unpaid or free one go before it starts", async () => {
+    prismaMock.workshopBooking.findFirst.mockResolvedValue(
+      bookingRow({ status: RegistrationStatus.CONFIRMED }),
+    );
+    await expect(service.cancel(1, "WS-1", null)).rejects.toThrow(
+      PAID_SESSION_FINAL,
+    );
+    expect(prismaMock.workshopBooking.updateMany).not.toHaveBeenCalled();
+
+    prismaMock.workshopBooking.findUniqueOrThrow.mockResolvedValue(
+      bookingRow({ status: RegistrationStatus.CANCELLED }),
+    );
+    for (const row of [
+      bookingRow({ status: RegistrationStatus.APPROVED }),
+      bookingRow({ status: RegistrationStatus.CONFIRMED, total: 0 }),
+    ]) {
+      prismaMock.workshopBooking.findFirst.mockResolvedValue(row);
+      await service.cancel(1, "WS-1", null);
+    }
+    expect(prismaMock.workshopBooking.updateMany).toHaveBeenCalledTimes(2);
+  });
+
+  it("offers cancelling only while nothing is paid and the session is ahead", async () => {
+    const past = new Date(Date.now() - 3_600_000);
+    const cases: [Parameters<typeof bookingRow>[0], boolean][] = [
+      [{ status: RegistrationStatus.PENDING }, true],
+      [{ status: RegistrationStatus.APPROVED }, true],
+      [{ status: RegistrationStatus.CONFIRMED }, false],
+      [{ status: RegistrationStatus.CONFIRMED, total: 0 }, true],
+      [
+        { status: RegistrationStatus.CONFIRMED, total: 0, starts_at: past },
+        false,
+      ],
+      [{ status: RegistrationStatus.APPROVED, starts_at: past }, false],
+      [{ status: RegistrationStatus.CANCELLED }, false],
+    ];
+    for (const [overrides, expected] of cases) {
+      prismaMock.workshopBooking.findFirst.mockResolvedValueOnce(
+        bookingRow(overrides),
+      );
+      const booking = await service.bookingById(1, "WS-1");
+      expect(booking.can_cancel).toBe(expected);
+    }
   });
   describe("myBookings", () => {
     const ahead = Array.from({ length: 3 }, (_, index) =>

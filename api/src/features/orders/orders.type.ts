@@ -226,6 +226,10 @@ export class PlaceOrderInput {
   // Nullable for one release so open tabs on the old storefront still validate; tighten to Int! once they are gone.
   @Field(() => Int, { nullable: true })
   expected_total?: number | null;
+
+  // The shopper ticked the terms box; refused unless true.
+  @Field(() => Boolean)
+  accepted_terms!: boolean;
 }
 
 // Everything from a past order that could go back in the cart, and what could not.

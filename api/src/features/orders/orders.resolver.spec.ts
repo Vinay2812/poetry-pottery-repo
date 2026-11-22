@@ -101,7 +101,12 @@ function makeOrdersResult(overrides: Partial<OrdersResult> = {}): OrdersResult {
 function makePlaceOrderInput(
   overrides: Partial<PlaceOrderInput> = {},
 ): PlaceOrderInput {
-  return { address_id: 4, expected_total: 1850, ...overrides };
+  return {
+    address_id: 4,
+    expected_total: 1850,
+    accepted_terms: true,
+    ...overrides,
+  };
 }
 
 const ordersMock = {

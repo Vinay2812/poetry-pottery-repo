@@ -33,7 +33,7 @@ function review(overrides: Partial<ReviewData> = {}): ReviewData {
     is_mine: true,
     subject_name: "Slate morning mug",
     subject_href: "/products/slate-morning-mug",
-    author: { name: "Maya", image: null },
+    author: { name: "Maya" },
     ...overrides,
   };
 }
@@ -189,7 +189,7 @@ describe("applyReviewAction", () => {
 
 describe("review drafts", () => {
   const context = {
-    author: { name: "Maya", image: null },
+    author: { name: "Maya" },
     subjectName: "Slate morning mug",
     subjectHref: "/products/slate-morning-mug",
     createdAt: "2026-09-14T09:00:00.000Z",

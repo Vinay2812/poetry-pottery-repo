@@ -24,6 +24,7 @@ function brief(
     email: "  Maya@Example.test ",
     phone: "+91 91234-56789",
     reference_image_urls: [],
+    accepted_terms: true,
     ...overrides,
   };
 }

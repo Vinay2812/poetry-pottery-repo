@@ -17,6 +17,7 @@ import {
   toQuantityTotalLine,
 } from "@/features/products/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
+import { WhatsAppCopyNote } from "@/components/whatsapp/WhatsAppCopyNote";
 
 export interface ProductBuyBoxProps {
   name: string;
@@ -175,13 +176,16 @@ export function ProductBuyBox({
         </div>
 
         {askUrl && (
-          <WhatsAppLink
-            href={askUrl}
-            kind="glaze-ask"
-            className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
-          >
-            Want it in another glaze or size? Ask us
-          </WhatsAppLink>
+          <div className="flex flex-col gap-2">
+            <WhatsAppLink
+              href={askUrl}
+              kind="glaze-ask"
+              className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
+            >
+              Want it in another glaze or size? Ask us
+            </WhatsAppLink>
+            <WhatsAppCopyNote />
+          </div>
         )}
       </div>
     </div>

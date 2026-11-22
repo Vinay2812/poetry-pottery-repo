@@ -108,7 +108,7 @@ export const MadeToOrder: Story = {
     colorName: "Forest Green",
     colorCode: "#588157",
     stockTone: "made_to_order",
-    stockLabel: "Made to order, thrown in about ten days",
+    stockLabel: "Made to order, takes three to four weeks",
     unitPrice: 1200,
   },
 };

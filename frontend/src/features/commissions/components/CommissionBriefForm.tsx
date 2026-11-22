@@ -29,6 +29,7 @@ import {
   MAX_NOTES,
 } from "@/lib/validations/commission";
 
+import { TermsAgreement } from "@/components/legal/TermsAgreement";
 import { CommissionBriefLayout } from "@/features/commissions/components/CommissionBriefLayout";
 import type { GlazeChoice, PieceChoice } from "@/features/commissions/types";
 import { OTHER_PIECE, toPieceSelection } from "@/features/commissions/types";
@@ -55,6 +56,7 @@ const FIELD_ORDER: (keyof CommissionFormValues)[] = [
   "name",
   "email",
   "phone",
+  "acceptedTerms",
 ];
 
 function TextField({
@@ -439,6 +441,22 @@ export function CommissionBriefForm({
             registration={register("phone")}
           />
         </div>
+
+        <Controller
+          control={control}
+          name="acceptedTerms"
+          render={({ field }) => (
+            <TermsAgreement
+              // The ref lets the form focus the box when it is the first thing wrong.
+              ref={field.ref}
+              id="commission-terms"
+              isChecked={field.value}
+              error={errors.acceptedTerms?.message ?? null}
+              hasPaymentNote={false}
+              onCheckedChange={field.onChange}
+            />
+          )}
+        />
 
         <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
           <Button type="submit" className="w-fit" disabled={isSubmitting}>

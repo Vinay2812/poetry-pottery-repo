@@ -22,7 +22,6 @@ import {
   addDays,
   daysInMonth,
   formatMonth,
-  isSameSelection,
   keepFittingPicks,
   type PickReads,
   rememberPickReads,
@@ -52,11 +51,8 @@ export interface UseSlotPickerOptions {
   workshop: SlotPickerWorkshop | null;
   hours: number;
   participants: number;
-  // A booking being moved, whose own hours count as free for its owner.
-  excludeBookingId?: string;
   // Picks the earliest free hours of the opening month until someone changes one.
   isSuggesting?: boolean;
-  isSkipped?: boolean;
 }
 
 export interface SlotPicker {
@@ -83,7 +79,6 @@ export interface SlotPicker {
   // Every time is picked, so a new pick swaps out the earliest; worth saying when there are several.
   isSwapHintShown: boolean;
   hasNoRoom: boolean;
-  isUnchanged: boolean;
   // Set while a picked time in another month could not be checked, so Book has a way forward.
   onRetryPickCheck: (() => void) | null;
   onPreviousMonth: () => void;
@@ -91,8 +86,6 @@ export interface SlotPicker {
   onSelectDate: (dateKey: string) => void;
   onToggleSlot: (startsAt: string) => void;
   onRemoveSlot: (startsAt: string) => void;
-  // Opens the picker on hours already held, on the month and day of the first of them.
-  startFrom: (selection: readonly SlotInterval[]) => void;
   refresh: () => void;
 }
 
@@ -104,9 +97,7 @@ export function useSlotPicker({
   workshop,
   hours,
   participants,
-  excludeBookingId,
   isSuggesting = false,
-  isSkipped = false,
 }: UseSlotPickerOptions): SlotPicker {
   const timezone = workshop?.timezone ?? "Asia/Kolkata";
   const spanAllowance = workshop?.slot_span_days ?? 1;
@@ -122,10 +113,9 @@ export function useSlotPicker({
   const [month, setMonth] = useState(firstMonth);
   const [chosenDate, setChosenDate] = useState<string | null>(null);
   const [manual, setManual] = useState<SlotInterval[] | null>(null);
-  const [baseline, setBaseline] = useState<readonly SlotInterval[]>(NO_SLOTS);
   const [rememberedReads, setRememberedReads] = useState<PickReads>(NO_READS);
 
-  const isIdle = isSkipped || !workshop;
+  const isIdle = !workshop;
   const { data, loading, error, refetch } = useQuery(
     WorkshopAvailabilityDocument,
     {
@@ -134,7 +124,6 @@ export function useSlotPicker({
           config_slug: workshop?.slug ?? "",
           from: `${month}-01`,
           days: daysInMonth(month),
-          exclude_booking_id: excludeBookingId ?? null,
         },
       },
       skip: isIdle,
@@ -205,7 +194,6 @@ export function useSlotPicker({
         config_slug: workshop?.slug ?? "",
         from: offMonthRange?.from ?? "",
         days: offMonthRange?.days ?? 0,
-        exclude_booking_id: excludeBookingId ?? null,
       },
     },
     skip: isIdle || offMonthRange === null,
@@ -325,25 +313,6 @@ export function useSlotPicker({
     [picked],
   );
 
-  const startFrom = useCallback(
-    (selection: readonly SlotInterval[]) => {
-      const slots = selection.map((slot) => ({
-        starts_at: slot.starts_at,
-        ends_at: slot.ends_at,
-      }));
-      const first = [...slots].sort((a, b) =>
-        a.starts_at.localeCompare(b.starts_at),
-      )[0];
-      // The day stays open even if every hour on it is unpicked, so it can be picked again.
-      const dateKey = first ? toDateKey(first.starts_at, timezone) : null;
-      setManual(slots);
-      setBaseline(slots);
-      setChosenDate(dateKey);
-      setMonth(dateKey ? toMonthKey(dateKey) : firstMonth);
-    },
-    [firstMonth, timezone],
-  );
-
   const handleRetryPickCheck = useCallback(() => {
     // A failed retry keeps the error, which keeps the retry on screen.
     refetchOffMonth().catch(() => undefined);
@@ -379,7 +348,6 @@ export function useSlotPicker({
     isSuggested: !isTouched && picked.length > 0,
     isSwapHintShown: needed > 1 && picked.length === needed,
     hasNoRoom: suggestion === null,
-    isUnchanged: baseline.length > 0 && isSameSelection(picked, baseline),
     onRetryPickCheck:
       hasOffMonthPicks && offMonthError && !isEveryPickChecked
         ? handleRetryPickCheck
@@ -389,7 +357,6 @@ export function useSlotPicker({
     onSelectDate: setChosenDate,
     onToggleSlot: handleToggleSlot,
     onRemoveSlot: handleRemoveSlot,
-    startFrom,
     refresh,
   };
 }

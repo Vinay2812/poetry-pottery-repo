@@ -34,6 +34,7 @@ interface ReserveRequest {
   eventId: number;
   seats: number;
   note: string;
+  acceptedTerms: boolean;
 }
 
 interface CancelRequest {
@@ -129,6 +130,7 @@ export function useRegisterForEvent() {
             event_id: request.eventId,
             seats: request.seats,
             note: request.note.trim() || null,
+            accepted_terms: request.acceptedTerms,
           },
         },
       }),
@@ -142,8 +144,8 @@ export function useRegisterForEvent() {
   });
 
   const reserve = useCallback(
-    (eventId: number, seats: number, note: string) => {
-      requireAuth(() => execute({ eventId, seats, note }));
+    (request: ReserveRequest) => {
+      requireAuth(() => execute(request));
     },
     [execute, requireAuth],
   );

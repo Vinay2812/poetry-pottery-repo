@@ -1,5 +1,5 @@
 import type { WorkshopBooking } from "@/features/workshops/workshops.type";
-import { renderMail } from "./layout";
+import { type ClosingContext, renderMail } from "./layout";
 
 const inr = (value: number): string => `₹${value.toLocaleString("en-IN")}`;
 
@@ -76,22 +76,23 @@ export function bookingPlacedStudioMail(
   return { subject: `New wheel session · ${when(booking)}`, ...body };
 }
 
+function cancelledIntro(
+  booking: WorkshopBooking,
+  closing: ClosingContext,
+): string {
+  const reason = booking.cancel_reason
+    ? `Your session was cancelled: ${booking.cancel_reason}`
+    : "Your session has been cancelled.";
+  if (!closing.byStudio) return reason;
+  return closing.wasPaid
+    ? `${reason} Sorry for the change. You can choose a full refund or another date. Message us on WhatsApp and tell us which you would like.`
+    : `${reason} Sorry for the change. If you would like another date, message us on WhatsApp.`;
+}
+
 export function bookingStatusMail(
   booking: WorkshopBooking,
-  kind: "status" | "rescheduled",
+  closing: ClosingContext = { byStudio: false, wasPaid: false },
 ): { subject: string; html: string; text: string } | null {
-  if (kind === "rescheduled") {
-    const body = renderMail({
-      title: "Session moved",
-      intro: `Your wheel session has moved. The hours below are the new ones; everything else stays the same.`,
-      blocks: [{ heading: "Session", lines: detailLines(booking) }],
-      cta: {
-        label: "View your booking",
-        path: `/workshops/bookings/${booking.id}`,
-      },
-    });
-    return { subject: `Session moved · ${booking.id}`, ...body };
-  }
   const copy: Partial<
     Record<WorkshopBooking["status"], { title: string; intro: string }>
   > = {
@@ -115,9 +116,7 @@ export function bookingStatusMail(
     },
     CANCELLED: {
       title: "Session cancelled",
-      intro: booking.cancel_reason
-        ? `Your session was cancelled: ${booking.cancel_reason}`
-        : "Your session has been cancelled.",
+      intro: cancelledIntro(booking, closing),
     },
   };
   const entry = copy[booking.status];

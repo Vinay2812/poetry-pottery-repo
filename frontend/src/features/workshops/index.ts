@@ -2,13 +2,11 @@ export { BookingCalendar } from "@/features/workshops/components/BookingCalendar
 export { BookingCard } from "@/features/workshops/components/BookingCard";
 export { BookingDetail } from "@/features/workshops/components/BookingDetail";
 export { BookingSummary } from "@/features/workshops/components/BookingSummary";
-export { CancellationPolicy } from "@/features/workshops/components/CancellationPolicy";
 export { CancelBookingDialog } from "@/features/workshops/components/CancelBookingDialog";
 export { DurationPicker } from "@/features/workshops/components/DurationPicker";
 export { EmptyBookings } from "@/features/workshops/components/EmptyBookings";
 export { ParticipantsStepper } from "@/features/workshops/components/ParticipantsStepper";
 export { PickedSlots } from "@/features/workshops/components/PickedSlots";
-export { RescheduleDialog } from "@/features/workshops/components/RescheduleDialog";
 export { SlotList } from "@/features/workshops/components/SlotList";
 export { WorkshopIntro } from "@/features/workshops/components/WorkshopIntro";
 export { BookingDetailContainer } from "@/features/workshops/containers/BookingDetailContainer";

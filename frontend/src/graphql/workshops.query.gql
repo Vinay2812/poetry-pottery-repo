@@ -38,7 +38,6 @@ fragment WorkshopBookingFields on WorkshopBooking {
   note
   cancel_reason
   can_cancel
-  can_reschedule
   created_at
   approved_at
   confirmed_at
@@ -80,12 +79,6 @@ query WorkshopAvailability($input: WorkshopAvailabilityInput!) {
 
 mutation BookWorkshop($input: BookWorkshopInput!) {
   bookWorkshop(input: $input) {
-    ...WorkshopBookingFields
-  }
-}
-
-mutation RescheduleWorkshopBooking($input: RescheduleWorkshopInput!) {
-  rescheduleWorkshopBooking(input: $input) {
     ...WorkshopBookingFields
   }
 }

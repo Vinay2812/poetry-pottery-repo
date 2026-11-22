@@ -14,7 +14,6 @@ fragment AdminReviewRow on AdminReview {
     subject_href
     author {
       name
-      image
     }
   }
 }

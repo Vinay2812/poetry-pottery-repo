@@ -243,6 +243,7 @@ describe("OrdersService", () => {
   describe("place", () => {
     it("takes each line from the shelf, snapshots the address, clears the cart and emails both sides", async () => {
       const order = await service.place(1, {
+        accepted_terms: true,
         address_id: 5,
         expected_total: 1850,
       });
@@ -267,22 +268,45 @@ describe("OrdersService", () => {
       expect(order.can_cancel).toBe(true);
     });
 
+    it("refuses an order without the terms ticked, before reading the cart", async () => {
+      await expect(
+        service.place(1, {
+          address_id: 5,
+          expected_total: 1850,
+          accepted_terms: false,
+        }),
+      ).rejects.toThrow("Please agree to the terms to continue.");
+      expect(prismaMock.order.create).not.toHaveBeenCalled();
+    });
+
     it("refuses to bill a total the shopper was not shown", async () => {
       await expect(
-        service.place(1, { address_id: 5, expected_total: 1250 }),
+        service.place(1, {
+          address_id: 5,
+          expected_total: 1250,
+          accepted_terms: true,
+        }),
       ).rejects.toThrow("Your cart changed since you opened checkout");
       expect(shelfMock.take).not.toHaveBeenCalled();
       expect(prismaMock.order.create).not.toHaveBeenCalled();
 
       await expect(
-        service.place(1, { address_id: 5, expected_total: 1850 }),
+        service.place(1, {
+          address_id: 5,
+          expected_total: 1850,
+          accepted_terms: true,
+        }),
       ).resolves.toMatchObject({ total: 1850 });
     });
 
     it("refuses an order with no total, as an old storefront tab sends, with the cart-changed conflict", async () => {
       for (const expected_total of [null, undefined]) {
         await expect(
-          service.place(1, { address_id: 5, expected_total }),
+          service.place(1, {
+            address_id: 5,
+            expected_total,
+            accepted_terms: true,
+          }),
         ).rejects.toBeInstanceOf(ConflictException);
       }
       expect(shelfMock.take).not.toHaveBeenCalled();
@@ -293,7 +317,11 @@ describe("OrdersService", () => {
       shelfMock.take.mockResolvedValue(false);
 
       await expect(
-        service.place(1, { address_id: 5, expected_total: 1850 }),
+        service.place(1, {
+          address_id: 5,
+          expected_total: 1850,
+          accepted_terms: true,
+        }),
       ).rejects.toThrow("sold out while you were checking out");
       expect(prismaMock.order.create).not.toHaveBeenCalled();
     });
@@ -303,6 +331,7 @@ describe("OrdersService", () => {
 
       await expect(
         service.place(1, {
+          accepted_terms: true,
           address_id: 5,
           coupon_code: "BOGUS",
           expected_total: 1850,
@@ -318,7 +347,11 @@ describe("OrdersService", () => {
       });
 
       await expect(
-        service.place(1, { address_id: 5, expected_total: 1850 }),
+        service.place(1, {
+          address_id: 5,
+          expected_total: 1850,
+          accepted_terms: true,
+        }),
       ).rejects.toThrow("no longer available");
     });
   });
@@ -346,6 +379,7 @@ describe("OrdersService", () => {
 
       const { total } = await service.quote(1, "studio500");
       await service.place(1, {
+        accepted_terms: true,
         address_id: 5,
         coupon_code: "studio500",
         expected_total: total,
@@ -361,6 +395,7 @@ describe("OrdersService", () => {
       prismaMock.coupon.updateMany.mockResolvedValueOnce({ count: 0 });
       await expect(
         service.place(1, {
+          accepted_terms: true,
           address_id: 5,
           coupon_code: "STUDIO500",
           expected_total: total,
@@ -424,7 +459,7 @@ describe("OrdersService", () => {
       );
 
       await expect(service.cancel(1, "ORD123", null)).rejects.toThrow(
-        "no longer be cancelled",
+        "Paid orders can't be cancelled",
       );
       expect(prismaMock.order.updateMany).not.toHaveBeenCalled();
     });

@@ -14,6 +14,7 @@ import { toRepeatedPhrases } from "@/lib/testing/timeline";
 import { toTimelineSteps } from "@/lib/timeline";
 
 import {
+  toSeatPolicy,
   toEventsFilterKey,
   applyRegistrationCancellation,
   DEFAULT_EVENT_FILTERS,
@@ -723,5 +724,30 @@ describe("start-time helpers", () => {
     expect(isSeatPriceShown({ ...booked, hasStarted: true })).toBe(false);
     expect(isSeatPriceShown({ ...ahead, state: "started" })).toBe(false);
     expect(isSeatPriceShown({ ...ahead, state: "past" })).toBe(false);
+  });
+});
+
+describe("toSeatPolicy", () => {
+  it("keeps a paid seat final and offers a refund or another event if the studio cancels", () => {
+    const points = toSeatPolicy(false);
+    expect(points.map((point) => point.term)).toEqual([
+      "Before you pay",
+      "Once paid, it's final",
+      "Sending someone else",
+      "Missed events",
+      "If we cancel",
+      "If it isn't as agreed",
+    ]);
+    expect(points[4]?.detail).toContain(
+      "full refund or a seat at another event",
+    );
+  });
+
+  it("drops every payment line for a free seat and asks for a withdrawal instead", () => {
+    const points = toSeatPolicy(true);
+    const text = points.map((point) => point.detail).join(" ");
+    expect(text).not.toMatch(/pay|refund/i);
+    expect(text).toContain("please withdraw so someone else can have the seat");
+    expect(points.some((point) => /break/i.test(point.detail))).toBe(false);
   });
 });

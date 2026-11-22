@@ -9,7 +9,6 @@ fragment ReviewFields on Review {
   subject_href
   author {
     name
-    image
   }
 }
 

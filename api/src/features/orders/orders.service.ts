@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { OrderStatus, Prisma } from "@prisma/client";
 
+import { assertAcceptedTerms } from "@/common/terms/terms";
 import { newPublicId } from "@/common/ids/public-id";
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { env } from "@/config/env";
@@ -199,6 +200,7 @@ export class OrdersService {
   }
 
   async place(userId: number, input: PlaceOrderInput): Promise<Order> {
+    assertAcceptedTerms(input.accepted_terms);
     const note = input.customer_note?.trim().slice(0, 500) || null;
     const gift = readGift(input.gift_note, input.hide_prices);
 
@@ -368,7 +370,7 @@ export class OrdersService {
       }
       if (!CUSTOMER_CANCELLABLE.includes(current.status)) {
         throw new BadRequestException(
-          "This order can no longer be cancelled online. Message us on WhatsApp and we will sort it out.",
+          "Paid orders can't be cancelled. If something is wrong with your order, message us on WhatsApp.",
         );
       }
       return this.applyStatus(current, OrderStatus.CANCELLED, {

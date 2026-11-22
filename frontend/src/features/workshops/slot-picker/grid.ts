@@ -268,16 +268,6 @@ export function toReachReason(
     : toSpanRule(allowedSpanDays);
 }
 
-export function isSameSelection(
-  picked: readonly SlotInterval[],
-  current: readonly SlotInterval[],
-): boolean {
-  if (picked.length !== current.length) return false;
-  const pickedStarts = picked.map((slot) => slot.starts_at).sort();
-  const currentStarts = current.map((slot) => slot.starts_at).sort();
-  return pickedStarts.every((start, index) => start === currentStarts[index]);
-}
-
 export interface WeeksInput {
   monthKey: string;
   dayByKey: ReadonlyMap<string, WorkshopDayData>;

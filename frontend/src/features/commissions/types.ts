@@ -95,7 +95,7 @@ export const COMMISSION_STEPS: CommissionStep[] = [
       "Bisque, then the glaze firing at 1225°C. The kiln decides the rest.",
   },
   {
-    title: "It ships, about ten days in",
+    title: "It ships, three to four weeks in",
     detail: "Packed in straw and paper, tracked, to the address you give us.",
   },
 ];
@@ -114,6 +114,7 @@ export function toCommissionInput(
     email: values.email,
     phone: values.phone.length > 0 ? values.phone : null,
     reference_image_urls: referenceImageUrls,
+    accepted_terms: values.acceptedTerms,
   };
 }
 

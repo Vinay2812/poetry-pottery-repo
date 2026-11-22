@@ -91,3 +91,6 @@ ${blocks}${cta}
 
   return { html, text };
 }
+
+// Who closed the booking, and whether money had changed hands, decide what a cancellation offers.
+export type ClosingContext = { byStudio: boolean; wasPaid: boolean };
