@@ -128,7 +128,19 @@ describe("useEvents", () => {
     expect(call?.fetchPolicy).toBe("network-only");
     expect(ids(result.current.events)).toEqual([1, 2, 3, 4]);
     expect(result.current.pageInfo?.page).toBe(2);
-    expect(result.current.isFetchingMore).toBe(false);
+    expect(result.current.isNextPageLoading).toBe(false);
+  });
+
+  it("asks for the next dates once, however fast the button is pressed", async () => {
+    const { result } = renderEvents();
+
+    await act(async () => {
+      result.current.loadMore();
+      result.current.loadMore();
+    });
+
+    expect(clientQueryMock).toHaveBeenCalledTimes(1);
+    expect(ids(result.current.events)).toEqual([1, 2, 3, 4]);
   });
 
   it("keeps the cards and offers the same dates again after a failure", async () => {
@@ -136,7 +148,7 @@ describe("useEvents", () => {
     const { result } = renderEvents();
 
     await act(async () => result.current.loadMore());
-    expect(result.current.hasMoreFailed).toBe(true);
+    expect(result.current.hasNextPageFailed).toBe(true);
     expect(ids(result.current.events)).toEqual([1, 2]);
 
     await act(async () => result.current.loadMore());
@@ -145,7 +157,7 @@ describe("useEvents", () => {
         variables: { filter: expect.objectContaining({ page: 2 }) },
       }),
     );
-    expect(result.current.hasMoreFailed).toBe(false);
+    expect(result.current.hasNextPageFailed).toBe(false);
     expect(ids(result.current.events)).toEqual([1, 2, 3, 4]);
   });
 
@@ -173,14 +185,14 @@ describe("useEvents", () => {
     );
     const { result, rerender } = renderEvents();
     act(() => result.current.loadMore());
-    expect(result.current.isFetchingMore).toBe(true);
+    expect(result.current.isNextPageLoading).toBe(true);
 
     setQuery({ data: answer(page([9], 1, 1)) });
     rerender({ filters: OPEN_MICS });
     await act(async () => release());
 
     expect(ids(result.current.events)).toEqual([9]);
-    expect(result.current.isFetchingMore).toBe(false);
+    expect(result.current.isNextPageLoading).toBe(false);
   });
 
   it("starts again from the first page when it is read again", async () => {

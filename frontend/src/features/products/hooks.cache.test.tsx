@@ -204,7 +204,7 @@ describe("useShelfResults against a real cache", () => {
     await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
 
     act(() => result.current.loadMore());
-    await waitFor(() => expect(result.current.hasAppendFailed).toBe(true));
+    await waitFor(() => expect(result.current.hasNextPageFailed).toBe(true));
 
     expect(result.current.result?.items).toHaveLength(24);
     expect(result.current.isNextPageLoading).toBe(false);

@@ -251,7 +251,7 @@ describe("useShelfResults", () => {
 
     await act(async () => result.current.loadMore());
 
-    expect(result.current.hasAppendFailed).toBe(true);
+    expect(result.current.hasNextPageFailed).toBe(true);
     expect(result.current.isNextPageLoading).toBe(false);
     expect(result.current.result?.items).toHaveLength(2);
 
@@ -262,7 +262,7 @@ describe("useShelfResults", () => {
         variables: { filter: expect.objectContaining({ page: 2 }) },
       }),
     );
-    expect(result.current.hasAppendFailed).toBe(false);
+    expect(result.current.hasNextPageFailed).toBe(false);
     expect(result.current.result?.items.map((item) => item.id)).toEqual([
       1, 2, 3, 4,
     ]);
