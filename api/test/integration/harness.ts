@@ -585,6 +585,7 @@ export async function placeAtQuote(
 ): Promise<Order> {
   const { total } = await harness.orders.quote(userId, input.coupon_code);
   return harness.orders.place(userId, {
+    accepted_terms: true,
     address_id: input.address_id,
     coupon_code: input.coupon_code,
     expected_total: total,

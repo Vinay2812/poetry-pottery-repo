@@ -178,6 +178,7 @@ describe("WorkshopsService", () => {
     const second = fromWallClock(addDays(day, 2), 17 * 60, config.timezone);
 
     const booking = await service.book(1, {
+      accepted_terms: true,
       config_slug: "open-studio",
       slot_starts: [second, first],
       hours: 2,
@@ -219,11 +220,25 @@ describe("WorkshopsService", () => {
     expect(booking.can_cancel).toBe(true);
   });
 
+  it("refuses a booking without the terms ticked", async () => {
+    await expect(
+      service.book(1, {
+        accepted_terms: false,
+        config_slug: "open-studio",
+        slot_starts: [fromWallClock(nextSunday(), 14 * 60, config.timezone)],
+        hours: 1,
+        participants: 1,
+      }),
+    ).rejects.toThrow("Please agree to the terms to continue.");
+    expect(prismaMock.workshopBooking.create).not.toHaveBeenCalled();
+  });
+
   it("rejects durations without a tier, wrong hour counts, wide spans and full hours", async () => {
     const day = nextSunday();
     const first = fromWallClock(day, 14 * 60, config.timezone);
     await expect(
       service.book(1, {
+        accepted_terms: true,
         config_slug: "open-studio",
         slot_starts: [first],
         hours: 3,
@@ -233,6 +248,7 @@ describe("WorkshopsService", () => {
 
     await expect(
       service.book(1, {
+        accepted_terms: true,
         config_slug: "open-studio",
         slot_starts: [first],
         hours: 2,
@@ -242,6 +258,7 @@ describe("WorkshopsService", () => {
 
     await expect(
       service.book(1, {
+        accepted_terms: true,
         config_slug: "open-studio",
         slot_starts: [
           first,
@@ -261,6 +278,7 @@ describe("WorkshopsService", () => {
     ]);
     await expect(
       service.book(1, {
+        accepted_terms: true,
         config_slug: "open-studio",
         slot_starts: [first],
         hours: 1,

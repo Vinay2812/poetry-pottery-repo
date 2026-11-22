@@ -55,6 +55,7 @@ function makeInput(
     glaze: "Ocean Blue",
     name: "Maya",
     email: "maya@example.com",
+    accepted_terms: true,
     ...overrides,
   };
 }

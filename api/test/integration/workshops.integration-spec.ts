@@ -38,6 +38,7 @@ describe("open-studio booking under concurrency", () => {
       users.map(
         (user) => () =>
           harness.workshops.book(user.id, {
+            accepted_terms: true,
             config_slug: studio.slug,
             slot_starts: [hour],
             hours: 1,
@@ -60,6 +61,7 @@ describe("open-studio booking under concurrency", () => {
       users.map(
         (user) => () =>
           harness.workshops.book(user.id, {
+            accepted_terms: true,
             config_slug: studio.slug,
             slot_starts: [hour],
             hours: 1,
@@ -81,6 +83,7 @@ describe("open-studio booking under concurrency", () => {
     const full = studioHour(studio, 3, 0);
     const free = studioHour(studio, 3, 1);
     await harness.workshops.book(holder.id, {
+      accepted_terms: true,
       config_slug: studio.slug,
       slot_starts: [full],
       hours: 1,
@@ -91,6 +94,7 @@ describe("open-studio booking under concurrency", () => {
       users.slice(1).map(
         (user) => () =>
           harness.workshops.book(user.id, {
+            accepted_terms: true,
             config_slug: studio.slug,
             slot_starts: [full, free],
             hours: 2,
@@ -116,12 +120,14 @@ describe("open-studio booking under concurrency", () => {
     if (!first || !second) throw new Error("no users");
     const target = studioHour(studio, 3, 2);
     const one = await harness.workshops.book(first.id, {
+      accepted_terms: true,
       config_slug: studio.slug,
       slot_starts: [studioHour(studio, 3, 0)],
       hours: 1,
       participants: 1,
     });
     const two = await harness.workshops.book(second.id, {
+      accepted_terms: true,
       config_slug: studio.slug,
       slot_starts: [studioHour(studio, 3, 1)],
       hours: 1,
@@ -157,6 +163,7 @@ describe("open-studio booking under concurrency", () => {
     if (!owner || !stranger) throw new Error("no users");
     const hour = studioHour(studio, 3, 0);
     const booking = await harness.workshops.book(owner.id, {
+      accepted_terms: true,
       config_slug: studio.slug,
       slot_starts: [hour],
       hours: 1,
@@ -190,6 +197,7 @@ describe("open-studio booking under concurrency", () => {
     if (!owner || !next) throw new Error("no users");
     const hour = studioHour(studio, 3, 0);
     const booking = await harness.workshops.book(owner.id, {
+      accepted_terms: true,
       config_slug: studio.slug,
       slot_starts: [hour],
       hours: 1,
@@ -210,6 +218,7 @@ describe("open-studio booking under concurrency", () => {
     expect(row.status).toBe(RegistrationStatus.CANCELLED);
     // The wheel is free again, and free exactly once.
     await harness.workshops.book(next.id, {
+      accepted_terms: true,
       config_slug: studio.slug,
       slot_starts: [hour],
       hours: 1,
@@ -217,6 +226,7 @@ describe("open-studio booking under concurrency", () => {
     });
     await expect(
       harness.workshops.book(owner.id, {
+        accepted_terms: true,
         config_slug: studio.slug,
         slot_starts: [hour],
         hours: 1,

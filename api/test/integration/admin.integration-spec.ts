@@ -63,7 +63,11 @@ describe("admin writes against the storefront", () => {
       () => harness.adminEvents.update(event.id, eventInput(15)),
       ...users.map(
         (user) => () =>
-          harness.events.register(user.id, { event_id: event.id, seats: 1 }),
+          harness.events.register(user.id, {
+            event_id: event.id,
+            seats: 1,
+            accepted_terms: true,
+          }),
       ),
     ]);
 
@@ -95,7 +99,11 @@ describe("admin writes against the storefront", () => {
     const event = await makeEvent(harness.prisma, 10);
     const guests = await makeUsers(harness.prisma, 2);
     for (const guest of guests) {
-      await harness.events.register(guest.id, { event_id: event.id, seats: 4 });
+      await harness.events.register(guest.id, {
+        event_id: event.id,
+        seats: 4,
+        accepted_terms: true,
+      });
     }
 
     await expect(
@@ -170,7 +178,11 @@ describe("admin writes against the storefront", () => {
     const event = await makeEvent(harness.prisma, 10);
     const [user] = await makeUsers(harness.prisma, 1);
     if (!user) throw new Error("no user");
-    await harness.events.register(user.id, { event_id: event.id, seats: 2 });
+    await harness.events.register(user.id, {
+      event_id: event.id,
+      seats: 2,
+      accepted_terms: true,
+    });
     await harness.adminEvents.setStatus(event.id, EventStatus.COMPLETED);
 
     await expect(
@@ -193,14 +205,22 @@ describe("admin writes against the storefront", () => {
     const early = users.slice(0, 4);
     const late = users.slice(4);
     for (const guest of early) {
-      await harness.events.register(guest.id, { event_id: event.id, seats: 1 });
+      await harness.events.register(guest.id, {
+        event_id: event.id,
+        seats: 1,
+        accepted_terms: true,
+      });
     }
 
     await race<unknown>([
       () => harness.adminEvents.cancel(event.id, "Kiln repair"),
       ...late.map(
         (user) => () =>
-          harness.events.register(user.id, { event_id: event.id, seats: 1 }),
+          harness.events.register(user.id, {
+            event_id: event.id,
+            seats: 1,
+            accepted_terms: true,
+          }),
       ),
     ]);
 
@@ -217,7 +237,11 @@ describe("admin writes against the storefront", () => {
     const event = await makeEvent(harness.prisma, 10);
     const guests = await makeUsers(harness.prisma, 3);
     for (const guest of guests) {
-      await harness.events.register(guest.id, { event_id: event.id, seats: 2 });
+      await harness.events.register(guest.id, {
+        event_id: event.id,
+        seats: 2,
+        accepted_terms: true,
+      });
     }
 
     const outcome = await race<unknown>([
@@ -247,6 +271,7 @@ describe("admin writes against the storefront", () => {
     for (const guest of guests) {
       placed.push(
         await harness.events.register(guest.id, {
+          accepted_terms: true,
           event_id: event.id,
           seats: 1,
         }),

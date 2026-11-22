@@ -405,6 +405,13 @@ describe("EventsService", () => {
     expect(prismaMock.eventRegistration.findMany).not.toHaveBeenCalled();
   });
 
+  it("refuses a seat request without the terms ticked, before touching the event", async () => {
+    await expect(
+      service.register(1, { event_id: 1, seats: 1, accepted_terms: false }),
+    ).rejects.toThrow("Please agree to the terms to continue.");
+    expect(prismaMock.event.findUnique).not.toHaveBeenCalled();
+  });
+
   it("answers a double-submitted first request as a conflict, not a server error", async () => {
     prismaMock.eventRegistration.create.mockRejectedValueOnce(
       new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
@@ -414,12 +421,16 @@ describe("EventsService", () => {
     );
 
     await expect(
-      service.register(1, { event_id: 1, seats: 1 }),
+      service.register(1, { event_id: 1, seats: 1, accepted_terms: true }),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
   it("holds seats with a conditional decrement and emails both sides", async () => {
-    const registration = await service.register(1, { event_id: 1, seats: 2 });
+    const registration = await service.register(1, {
+      event_id: 1,
+      seats: 2,
+      accepted_terms: true,
+    });
 
     expect(prismaMock.event.updateMany).toHaveBeenCalledWith({
       where: {
@@ -451,7 +462,7 @@ describe("EventsService", () => {
       registrationRow(),
     );
 
-    await service.register(1, { event_id: 1, seats: 1 });
+    await service.register(1, { event_id: 1, seats: 1, accepted_terms: true });
 
     expect(prismaMock.eventRegistration.create).not.toHaveBeenCalled();
     expect(prismaMock.eventRegistration.updateMany).toHaveBeenCalledWith(
@@ -474,7 +485,7 @@ describe("EventsService", () => {
     prismaMock.eventRegistration.updateMany.mockResolvedValue({ count: 0 });
 
     await expect(
-      service.register(1, { event_id: 1, seats: 1 }),
+      service.register(1, { event_id: 1, seats: 1, accepted_terms: true }),
     ).rejects.toBeInstanceOf(ConflictException);
   });
 
@@ -483,24 +494,24 @@ describe("EventsService", () => {
       registrationRow(),
     );
     await expect(
-      service.register(1, { event_id: 1, seats: 1 }),
+      service.register(1, { event_id: 1, seats: 1, accepted_terms: true }),
     ).rejects.toThrow("already have a seat request");
 
     prismaMock.eventRegistration.findUnique.mockResolvedValue(null);
     prismaMock.event.updateMany.mockResolvedValue({ count: 0 });
     await expect(
-      service.register(1, { event_id: 1, seats: 4 }),
+      service.register(1, { event_id: 1, seats: 4, accepted_terms: true }),
     ).rejects.toThrow("Only 3 seats left");
 
     prismaMock.event.findUnique.mockResolvedValue(
       eventRow({ starts_at: new Date(Date.now() - 1000) }),
     );
     await expect(
-      service.register(1, { event_id: 1, seats: 1 }),
+      service.register(1, { event_id: 1, seats: 1, accepted_terms: true }),
     ).rejects.toThrow("closed");
 
     await expect(
-      service.register(1, { event_id: 1, seats: 9 }),
+      service.register(1, { event_id: 1, seats: 9, accepted_terms: true }),
     ).rejects.toThrow("between 1 and 4");
   });
 
@@ -512,7 +523,7 @@ describe("EventsService", () => {
       .mockResolvedValueOnce(eventRow({ status: EventStatus.CANCELLED }));
 
     await expect(
-      service.register(1, { event_id: 1, seats: 1 }),
+      service.register(1, { event_id: 1, seats: 1, accepted_terms: true }),
     ).rejects.toThrow("Registrations for this event have closed");
   });
 

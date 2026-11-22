@@ -35,7 +35,11 @@ describe("event registration under concurrency", () => {
     const outcome = await race(
       users.map(
         (user) => () =>
-          harness.events.register(user.id, { event_id: event.id, seats: 1 }),
+          harness.events.register(user.id, {
+            event_id: event.id,
+            seats: 1,
+            accepted_terms: true,
+          }),
       ),
     );
 
@@ -55,7 +59,11 @@ describe("event registration under concurrency", () => {
     const outcome = await race(
       users.map(
         (user) => () =>
-          harness.events.register(user.id, { event_id: event.id, seats: 2 }),
+          harness.events.register(user.id, {
+            event_id: event.id,
+            seats: 2,
+            accepted_terms: true,
+          }),
       ),
     );
 
@@ -71,6 +79,7 @@ describe("event registration under concurrency", () => {
     const [user] = await makeUsers(harness.prisma, 1);
     if (!user) throw new Error("no user");
     const registration = await harness.events.register(user.id, {
+      accepted_terms: true,
       event_id: event.id,
       seats: 2,
     });
@@ -98,6 +107,7 @@ describe("event registration under concurrency", () => {
     const [user] = await makeUsers(harness.prisma, 1);
     if (!user) throw new Error("no user");
     const placed = await harness.events.register(user.id, {
+      accepted_terms: true,
       event_id: event.id,
       seats: 2,
     });

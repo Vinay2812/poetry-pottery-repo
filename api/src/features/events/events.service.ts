@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { EventStatus, Prisma, RegistrationStatus } from "@prisma/client";
 
+import { assertAcceptedTerms } from "@/common/terms/terms";
 import { newPublicId } from "@/common/ids/public-id";
 import {
   canReturnRows,
@@ -209,6 +210,7 @@ export class EventsService {
     userId: number,
     input: RegisterForEventInput,
   ): Promise<Registration> {
+    assertAcceptedTerms(input.accepted_terms);
     const seats = Math.trunc(input.seats);
     if (seats < 1 || seats > MAX_SEATS_PER_REGISTRATION) {
       throw new BadRequestException(

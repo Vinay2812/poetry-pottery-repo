@@ -57,6 +57,7 @@ function input(
     name: "Maya",
     email: "Maya@Example.com",
     phone: "+91 91234-56789",
+    accepted_terms: true,
     ...overrides,
   };
 }
@@ -153,6 +154,13 @@ describe("CommissionsService", () => {
     expect(mailMock.enqueue).toHaveBeenCalledWith(
       containing({ to: "studio@example.com" }),
     );
+  });
+
+  it("refuses a brief without the terms ticked", async () => {
+    await expect(
+      service.create(input({ accepted_terms: false }), null),
+    ).rejects.toThrow("Please agree to the terms to continue.");
+    expect(prismaMock.commissionRequest.create).not.toHaveBeenCalled();
   });
 
   it("refuses reference photos that did not come from the studio's uploader", async () => {

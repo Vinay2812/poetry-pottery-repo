@@ -235,6 +235,10 @@ export class BookWorkshopInput {
 
   @Field(() => String, { nullable: true })
   note?: string | null;
+
+  // The shopper ticked the terms box; refused unless true.
+  @Field(() => Boolean)
+  accepted_terms!: boolean;
 }
 
 @InputType()

@@ -65,6 +65,7 @@ describe("event seat accounting under concurrency", () => {
       users.map(
         (user, index) => () =>
           harness.events.register(user.id, {
+            accepted_terms: true,
             event_id: event.id,
             seats: (index % 3) + 1,
           }),
@@ -88,6 +89,7 @@ describe("event seat accounting under concurrency", () => {
     for (const user of seated) {
       placed.push(
         await harness.events.register(user.id, {
+          accepted_terms: true,
           event_id: event.id,
           seats: 2,
         }),
@@ -106,6 +108,7 @@ describe("event seat accounting under concurrency", () => {
       ...waiting.map(
         (user, index) => () =>
           harness.events.register(user.id, {
+            accepted_terms: true,
             event_id: event.id,
             seats: (index % 3) + 1,
           }),
@@ -127,6 +130,7 @@ describe("event seat accounting under concurrency", () => {
     const [user] = await makeUsers(harness.prisma, 1);
     if (!user) throw new Error("no user");
     const placed = await harness.events.register(user.id, {
+      accepted_terms: true,
       event_id: event.id,
       seats: 2,
     });
@@ -140,8 +144,18 @@ describe("event seat accounting under concurrency", () => {
       event.id,
     ]);
     const rebooking = race([
-      () => harness.events.register(user.id, { event_id: event.id, seats: 2 }),
-      () => harness.events.register(user.id, { event_id: event.id, seats: 2 }),
+      () =>
+        harness.events.register(user.id, {
+          event_id: event.id,
+          seats: 2,
+          accepted_terms: true,
+        }),
+      () =>
+        harness.events.register(user.id, {
+          event_id: event.id,
+          seats: 2,
+          accepted_terms: true,
+        }),
     ]);
     await settle(300);
     await writer.query("COMMIT");
@@ -169,6 +183,7 @@ describe("event seat accounting under concurrency", () => {
     for (const user of users) {
       placed.push(
         await harness.events.register(user.id, {
+          accepted_terms: true,
           event_id: event.id,
           seats: 2,
         }),
@@ -184,6 +199,7 @@ describe("event seat accounting under concurrency", () => {
             () => harness.events.cancel(user.id, registration.id, "again"),
             () =>
               harness.events.register(user.id, {
+                accepted_terms: true,
                 event_id: event.id,
                 seats: 2,
               }),
@@ -215,7 +231,11 @@ describe("event seat accounting under concurrency", () => {
     const outcome = await race(
       users.map(
         (user) => () =>
-          harness.events.register(user.id, { event_id: event.id, seats: 2 }),
+          harness.events.register(user.id, {
+            event_id: event.id,
+            seats: 2,
+            accepted_terms: true,
+          }),
       ),
     );
 
@@ -234,10 +254,12 @@ describe("event seat accounting under concurrency", () => {
     const [first, second] = users;
     if (!first || !second) throw new Error("no users");
     const mine = await harness.events.register(first.id, {
+      accepted_terms: true,
       event_id: event.id,
       seats: 3,
     });
     await harness.events.register(second.id, {
+      accepted_terms: true,
       event_id: event.id,
       seats: 4,
     });

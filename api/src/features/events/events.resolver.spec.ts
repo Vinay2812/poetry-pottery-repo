@@ -125,7 +125,7 @@ function makeRegistrationsResult(
 function makeRegisterInput(
   overrides: Partial<RegisterForEventInput> = {},
 ): RegisterForEventInput {
-  return { event_id: 4, seats: 2, ...overrides };
+  return { event_id: 4, seats: 2, accepted_terms: true, ...overrides };
 }
 
 const eventsMock = {

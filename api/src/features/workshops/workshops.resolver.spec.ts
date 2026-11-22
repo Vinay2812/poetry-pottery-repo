@@ -152,6 +152,7 @@ function makeBookInput(
     slot_starts: [new Date("2026-02-01T07:30:00.000Z")],
     hours: 1,
     participants: 2,
+    accepted_terms: true,
     ...overrides,
   };
 }

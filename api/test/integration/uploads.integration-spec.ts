@@ -381,6 +381,7 @@ describe("the upload lifecycle", () => {
       });
 
     const checkout = harness.orders.place(buyer.id, {
+      accepted_terms: true,
       address_id: buyer.address_id,
       expected_total: total,
     });
@@ -444,14 +445,22 @@ describe("the upload lifecycle", () => {
 
     await expect(
       harness.commissions.create(
-        { ...brief, reference_image_urls: [theirs.public_url] },
+        {
+          accepted_terms: true,
+          ...brief,
+          reference_image_urls: [theirs.public_url],
+        },
         sender.id,
       ),
     ).rejects.toThrow(NOT_OWN_UPLOAD);
     expect(await harness.prisma.commissionRequest.count()).toBe(0);
 
     await harness.commissions.create(
-      { ...brief, reference_image_urls: [own.public_url] },
+      {
+        accepted_terms: true,
+        ...brief,
+        reference_image_urls: [own.public_url],
+      },
       sender.id,
     );
     expect(await claimedAt(own.key)).not.toBeNull();

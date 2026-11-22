@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { OrderStatus, Prisma } from "@prisma/client";
 
+import { assertAcceptedTerms } from "@/common/terms/terms";
 import { newPublicId } from "@/common/ids/public-id";
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { env } from "@/config/env";
@@ -199,6 +200,7 @@ export class OrdersService {
   }
 
   async place(userId: number, input: PlaceOrderInput): Promise<Order> {
+    assertAcceptedTerms(input.accepted_terms);
     const note = input.customer_note?.trim().slice(0, 500) || null;
     const gift = readGift(input.gift_note, input.hide_prices);
 

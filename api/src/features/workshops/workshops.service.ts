@@ -6,6 +6,7 @@ import {
 } from "@nestjs/common";
 import { Prisma, RegistrationStatus } from "@prisma/client";
 
+import { assertAcceptedTerms } from "@/common/terms/terms";
 import { newPublicId } from "@/common/ids/public-id";
 import {
   canReturnRows,
@@ -193,6 +194,7 @@ export class WorkshopsService {
     userId: number,
     input: BookWorkshopInput,
   ): Promise<WorkshopBooking> {
+    assertAcceptedTerms(input.accepted_terms);
     const note = input.note?.trim().slice(0, 500) || null;
     const row = await this.prisma.withTransaction(async () => {
       const config = await this.configBySlug(input.config_slug);
