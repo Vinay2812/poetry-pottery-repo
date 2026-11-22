@@ -26,7 +26,7 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
-  describeClosing,
+  describeRegistrationStatusNote,
   registrationActionNeedsReason,
   registrationClosingDialog,
   registrationHoldNote,
@@ -53,11 +53,13 @@ interface StatusPatch {
 
 export interface EventRegistrationsContainerProps {
   eventId: number;
+  eventStartsAt: string;
   isEventCancelled: boolean;
 }
 
 export function EventRegistrationsContainer({
   eventId,
+  eventStartsAt,
   isEventCancelled,
 }: EventRegistrationsContainerProps) {
   const { values, isPending, patch } = useAdminQueryState();
@@ -116,7 +118,11 @@ export function EventRegistrationsContainer({
           entry.registration.total === 0,
         ),
         statusTone: registrationStatusTone(entry.registration.status),
-        closingNote: describeClosing(entry.registration.cancel_reason),
+        statusNote: describeRegistrationStatusNote(
+          entry.registration.status,
+          eventStartsAt,
+          entry.registration.cancel_reason,
+        ),
         note: entry.registration.note,
         actions: toRegistrationActions(
           entry.registration.status,
@@ -125,7 +131,7 @@ export function EventRegistrationsContainer({
           entry.registration.total === 0,
         ),
       })),
-    [optimisticItems],
+    [eventStartsAt, optimisticItems],
   );
 
   const move = useReasonAction({

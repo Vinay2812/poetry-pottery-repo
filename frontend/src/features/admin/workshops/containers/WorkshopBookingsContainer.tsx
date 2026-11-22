@@ -23,7 +23,7 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
-  describeClosing,
+  describeRegistrationStatusNote,
   registrationActionNeedsReason,
   registrationClosingDialog,
   registrationHoldNote,
@@ -48,13 +48,17 @@ import {
   BOOKINGS_PAGE_SIZE,
   describeSessionDays,
   describeSessionSize,
+  toAwaitingFilterPatch,
   toRangeEnd,
   toRangeStart,
+  toStatusFilterPatch,
 } from "@/features/admin/workshops/types";
 
 export interface WorkshopBookingsContainerProps {
-  configId: number;
+  // Null spans every setup; each row then names its setup and reads in that setup's zone.
+  configId: number | null;
   timezone: string;
+  setupTimezones: ReadonlyMap<number, string> | null;
 }
 
 interface BookingMove {
@@ -63,16 +67,20 @@ interface BookingMove {
 }
 
 const STATUS_OPTIONS = registrationStatusOptions();
+const REQUEST_OPTIONS = [{ value: "1", label: "Waiting on you" }];
 
 export function WorkshopBookingsContainer({
   configId,
   timezone,
+  setupTimezones,
 }: WorkshopBookingsContainerProps) {
   const { values, page, isPending: isNavigating, patch } = useAdminQueryState();
   const search = values.search ?? "";
   const status = values.status ?? "";
   const from = values.from ?? "";
   const to = values.to ?? "";
+  // The dashboard's request tile opens this, so the list holds exactly what it counts.
+  const isAwaitingFilter = values.awaiting === "1";
   const { personId, personName } = usePersonFilter(values.user);
 
   const { data, previousData, loading, error, refetch } = useQuery(
@@ -82,6 +90,7 @@ export function WorkshopBookingsContainer({
         filter: {
           config_id: configId,
           user_id: personId,
+          awaiting_approval: isAwaitingFilter || null,
           status: toRegistrationStatus(status),
           search: search || null,
           from: toRangeStart(from, timezone) || null,
@@ -115,7 +124,11 @@ export function WorkshopBookingsContainer({
         id: item.booking.id,
         personName: toPersonName(item.customer.name, item.customer.email),
         personEmail: item.customer.email,
-        sessionLines: describeSessionDays(item.booking.slots, timezone),
+        setupName: setupTimezones ? item.booking.config.name : null,
+        sessionLines: describeSessionDays(
+          item.booking.slots,
+          setupTimezones?.get(item.booking.config.id) ?? timezone,
+        ),
         sizeLabel: describeSessionSize(
           item.booking.hours,
           item.booking.participants,
@@ -126,7 +139,11 @@ export function WorkshopBookingsContainer({
           item.booking.total === 0,
         ),
         statusTone: registrationStatusTone(item.booking.status),
-        closingNote: describeClosing(item.booking.cancel_reason),
+        statusNote: describeRegistrationStatusNote(
+          item.booking.status,
+          item.booking.starts_at,
+          item.booking.cancel_reason,
+        ),
         note: item.booking.note,
         requestedLabel: formatDate(item.booking.created_at),
         actions: toRegistrationActions(
@@ -136,7 +153,7 @@ export function WorkshopBookingsContainer({
           item.booking.total === 0,
         ),
       })),
-    [optimisticItems, timezone],
+    [optimisticItems, setupTimezones, timezone],
   );
 
   const move = useReasonAction({
@@ -206,7 +223,15 @@ export function WorkshopBookingsContainer({
           anyLabel="Any status"
           options={STATUS_OPTIONS}
           value={status}
-          onChange={(value) => patch({ status: value || null })}
+          onChange={(value) => patch(toStatusFilterPatch(value))}
+        />
+        <AdminSelectFilter
+          id="bookings-requests"
+          label="Requests"
+          anyLabel="All sessions"
+          options={REQUEST_OPTIONS}
+          value={isAwaitingFilter ? "1" : ""}
+          onChange={(value) => patch(toAwaitingFilterPatch(value, status))}
         />
         <AdminDateFilter
           id="bookings-from"

@@ -16,6 +16,7 @@ import {
 } from "@/features/events/events.service";
 import { canTransition as canEventTransition } from "@/features/events/event-status";
 import {
+  assertNotLateAdmission,
   assertNotPaymentStepForFreeSeat,
   nextAdminStatuses,
   SEAT_HOLDING,
@@ -56,7 +57,22 @@ export function toAdminRegistration(
   return {
     registration: toRegistration(row, now),
     customer: toUserRef(row.user),
-    next_statuses: nextAdminStatuses(row.status, row.total),
+    next_statuses: nextAdminStatuses(
+      row.status,
+      row.total,
+      row.event.starts_at,
+      now,
+    ),
+  };
+}
+
+// Waiting on the studio means a seat request for an evening that has not begun; the dashboard counts the same.
+export function waitingRegistrationWhere(
+  now: Date,
+): Prisma.EventRegistrationWhereInput {
+  return {
+    status: RegistrationStatus.PENDING,
+    event: { starts_at: { gte: now } },
   };
 }
 
@@ -86,7 +102,10 @@ export class AdminEventsService {
     private readonly uploads: UploadsService,
   ) {}
 
-  async list(filter: AdminEventsFilterInput): Promise<AdminEventsResult> {
+  async list(
+    filter: AdminEventsFilterInput,
+    now = new Date(),
+  ): Promise<AdminEventsResult> {
     const bounds = clampPage(filter.page, filter.limit, MAX_LIMIT);
     const term = searchTerm(filter.search);
     const registrationFilters: Prisma.EventWhereInput[] = [
@@ -95,11 +114,7 @@ export class AdminEventsService {
         ? [{ registrations: { some: { user_id: filter.user_id } } }]
         : []),
       ...(filter.awaiting_approval
-        ? [
-            {
-              registrations: { some: { status: RegistrationStatus.PENDING } },
-            },
-          ]
+        ? [{ registrations: { some: waitingRegistrationWhere(now) } }]
         : []),
     ];
     const where: Prisma.EventWhereInput = {
@@ -119,7 +134,11 @@ export class AdminEventsService {
     const [rows, total] = await Promise.all([
       this.prisma.event.findMany({
         where,
-        orderBy: { starts_at: "desc" },
+        // The waiting queue reads soonest first, the way the wheel requests do.
+        orderBy: [
+          { starts_at: filter.awaiting_approval ? "asc" : "desc" },
+          { id: "asc" },
+        ],
         skip: bounds.skip,
         take: bounds.limit,
       }),
@@ -373,6 +392,7 @@ export class AdminEventsService {
       throw new NotFoundException("Registration not found");
     }
     assertNotPaymentStepForFreeSeat(status, current.total);
+    assertNotLateAdmission(current.status, status, current.event.starts_at);
     const updated = await this.events.applyStatus(
       current,
       status,

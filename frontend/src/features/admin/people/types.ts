@@ -4,6 +4,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import type { AdminStatusTone } from "@/features/admin/ui";
+import { toWheelSessionsHref } from "@/features/admin/workshops/types";
 
 export type AdminPersonData = AdminUserFieldsFragment;
 
@@ -26,7 +27,7 @@ export function toPersonLinks(personId: number): PersonLinks {
   return {
     orders: `/dashboard/orders${query}`,
     registrations: `/dashboard/events${query}`,
-    bookings: `/dashboard/workshops${query}`,
+    bookings: toWheelSessionsHref({ user: String(personId) }),
     reviews: `/dashboard/reviews${query}`,
   };
 }

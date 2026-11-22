@@ -1,4 +1,8 @@
-import { BadRequestException, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { OptionGroupKind } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,8 +15,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ShelfService } from "@/features/products/shelf.service";
 import { UploadsService } from "@/uploads/uploads.service";
 import {
-  assertFeaturedIsLive,
-  assertFeaturedIsReadyToShip,
+  studioPickRefusal,
   assertSecond,
   cleanList,
   AdminProductsService,
@@ -32,6 +35,13 @@ const row = {
   collection: null,
   height_cm: null,
   diameter_cm: null,
+};
+
+const pickFacts = {
+  is_active: true,
+  is_customizable: false,
+  stock: 4,
+  collection: null,
 };
 
 const prismaMock = {
@@ -55,7 +65,7 @@ const prismaMock = {
   },
   productOption: { create: vi.fn(), update: vi.fn(), delete: vi.fn() },
   category: { count: vi.fn() },
-  collection: { count: vi.fn() },
+  collection: { count: vi.fn(), findUnique: vi.fn() },
   glaze: { count: vi.fn() },
 };
 const productsMock = { invalidateCatalogCache: vi.fn() };
@@ -94,23 +104,62 @@ describe("assertSecond", () => {
   });
 });
 
-describe("assertFeaturedIsLive", () => {
-  it("keeps a piece off the home page while it is off the shelf", () => {
-    expect(() => assertFeaturedIsLive(false, true)).toThrow(
-      BadRequestException,
-    );
-    expect(() => assertFeaturedIsLive(true, true)).not.toThrow();
-    expect(() => assertFeaturedIsLive(false, false)).not.toThrow();
-  });
-});
+describe("studioPickRefusal", () => {
+  const now = new Date("2026-11-22T10:00:00.000Z");
+  const ready = {
+    is_active: true,
+    is_customizable: false,
+    stock: 2,
+    collection: null,
+  };
 
-describe("assertFeaturedIsReadyToShip", () => {
-  it("keeps made-to-order work off the home page", () => {
-    expect(() => assertFeaturedIsReadyToShip(true, true)).toThrow(
-      BadRequestException,
+  it("lets a piece the shop shows and can ship today take the mark", () => {
+    expect(studioPickRefusal(ready, now)).toBeNull();
+    expect(
+      studioPickRefusal(
+        {
+          ...ready,
+          collection: {
+            starts_at: new Date("2026-11-01"),
+            ends_at: new Date("2026-12-01"),
+          },
+        },
+        now,
+      ),
+    ).toBeNull();
+  });
+
+  // Worded exactly as the editor's notes (frontend admin pieces STUDIO_PICK_BLOCK_NOTES).
+  it("refuses a retired, made-to-order, sold-out or out-of-window piece", () => {
+    expect(studioPickRefusal({ ...ready, is_active: false }, now)).toBe(
+      "Only a piece on the shelf can be a studio pick",
     );
-    expect(() => assertFeaturedIsReadyToShip(true, false)).not.toThrow();
-    expect(() => assertFeaturedIsReadyToShip(false, true)).not.toThrow();
+    expect(studioPickRefusal({ ...ready, is_customizable: true }, now)).toBe(
+      "Studio picks are pieces ready to ship, not made to order",
+    );
+    expect(studioPickRefusal({ ...ready, stock: 0 }, now)).toBe(
+      "Studio picks are pieces in stock. Add stock to mark it",
+    );
+    expect(
+      studioPickRefusal(
+        {
+          ...ready,
+          collection: { starts_at: new Date("2026-12-01"), ends_at: null },
+        },
+        now,
+      ),
+    ).toBe(
+      "Its collection has not opened yet, so the shop leaves it out until then",
+    );
+    expect(
+      studioPickRefusal(
+        {
+          ...ready,
+          collection: { starts_at: null, ends_at: new Date("2026-11-01") },
+        },
+        now,
+      ),
+    ).toBe("Its collection has closed, so the shop leaves it out");
   });
 });
 
@@ -124,7 +173,10 @@ describe("AdminProductsService", () => {
     prismaMock.product.update.mockResolvedValue(row);
     prismaMock.product.findUnique.mockResolvedValue(row);
     prismaMock.category.count.mockResolvedValue(2);
-    prismaMock.collection.count.mockResolvedValue(1);
+    prismaMock.collection.findUnique.mockResolvedValue({
+      starts_at: null,
+      ends_at: null,
+    });
     prismaMock.glaze.count.mockResolvedValue(1);
     shelfMock.adjust.mockResolvedValue(2);
     shelfMock.setListed.mockResolvedValue(true);
@@ -277,23 +329,125 @@ describe("AdminProductsService", () => {
     expect(prismaMock.product.create).not.toHaveBeenCalled();
 
     prismaMock.product.updateMany.mockResolvedValueOnce({ count: 0 });
+    prismaMock.product.findUnique.mockResolvedValueOnce({
+      ...pickFacts,
+      is_customizable: true,
+    });
     await expect(service.setFeatured(1, true)).rejects.toThrow(
       "ready to ship, not made to order",
     );
     expect(prismaMock.product.update).not.toHaveBeenCalled();
   });
 
-  it("marks only while the row is still ready to ship, in one conditional write", async () => {
+  it("marks only while the shop still shows the piece, in one conditional write", async () => {
+    const now = new Date("2026-11-22T10:00:00.000Z");
     prismaMock.product.updateMany.mockResolvedValueOnce({ count: 1 });
 
-    await service.setFeatured(1, true);
+    await service.setFeatured(1, true, now);
 
     expect(prismaMock.product.updateMany).toHaveBeenCalledWith({
-      where: { id: 1, is_customizable: false },
+      where: {
+        AND: [
+          { id: 1 },
+          {
+            AND: [
+              {
+                AND: [
+                  {
+                    is_active: true,
+                    OR: [
+                      { collection_id: null },
+                      {
+                        collection: {
+                          OR: [
+                            { starts_at: null },
+                            { starts_at: { lte: now } },
+                          ],
+                          AND: [
+                            {
+                              OR: [
+                                { ends_at: null },
+                                { ends_at: { gte: now } },
+                              ],
+                            },
+                          ],
+                        },
+                      },
+                    ],
+                  },
+                  { OR: [{ stock: { gt: 0 } }, { is_customizable: true }] },
+                ],
+              },
+              { is_customizable: false },
+            ],
+          },
+        ],
+      },
       data: { is_featured: true },
     });
     expect(prismaMock.product.findUnique).toHaveBeenCalledTimes(1);
     expect(productsMock.invalidateCatalogCache).toHaveBeenCalled();
+  });
+
+  it.each([
+    ["retired", { is_active: false }, "on the shelf"],
+    ["sold out", { stock: 0 }, "in stock"],
+    [
+      "out of its collection window",
+      { collection: { starts_at: null, ends_at: new Date("2026-01-01") } },
+      "has closed",
+    ],
+  ])(
+    "refuses to mark a piece a stale editor still shows as eligible: %s",
+    async (_label, change, message) => {
+      prismaMock.product.updateMany.mockResolvedValueOnce({ count: 0 });
+      prismaMock.product.findUnique.mockResolvedValueOnce({
+        ...pickFacts,
+        ...change,
+      });
+
+      await expect(service.setFeatured(1, true)).rejects.toThrow(message);
+      expect(productsMock.invalidateCatalogCache).not.toHaveBeenCalled();
+    },
+  );
+
+  it("answers a refresh when the mark missed but the piece now qualifies", async () => {
+    prismaMock.product.updateMany.mockResolvedValueOnce({ count: 0 });
+    prismaMock.product.findUnique.mockResolvedValueOnce(pickFacts);
+
+    await expect(service.setFeatured(1, true)).rejects.toBeInstanceOf(
+      ConflictException,
+    );
+  });
+
+  it("refuses to create a sold-out or closed-collection piece as a studio pick", async () => {
+    await expect(
+      service.create(input({ stock: 0, is_featured: true })),
+    ).rejects.toThrow("in stock");
+
+    prismaMock.collection.findUnique.mockResolvedValueOnce({
+      starts_at: null,
+      ends_at: new Date("2026-01-01"),
+    });
+    await expect(
+      service.create(input({ collection_id: 4, is_featured: true })),
+    ).rejects.toThrow("has closed");
+    expect(prismaMock.product.create).not.toHaveBeenCalled();
+  });
+
+  it("creates a piece in stock in an open collection as a studio pick", async () => {
+    prismaMock.collection.findUnique.mockResolvedValueOnce({
+      starts_at: null,
+      ends_at: null,
+    });
+
+    await service.create(input({ collection_id: 4, is_featured: true }));
+
+    // One read both proves the collection exists and supplies its dates.
+    expect(prismaMock.collection.findUnique).toHaveBeenCalledTimes(1);
+    expect(prismaMock.product.create).toHaveBeenCalledWith(
+      containing({ data: containing({ is_featured: true }) }),
+    );
   });
 
   it("lets a marked made-to-order piece be unmarked", async () => {
@@ -527,7 +681,7 @@ describe("AdminProductsService", () => {
     );
 
     prismaMock.category.count.mockResolvedValue(2);
-    prismaMock.collection.count.mockResolvedValue(0);
+    prismaMock.collection.findUnique.mockResolvedValue(null);
     await expect(service.update(1, { collection_id: 4 })).rejects.toThrow(
       /collection no longer exists/,
     );

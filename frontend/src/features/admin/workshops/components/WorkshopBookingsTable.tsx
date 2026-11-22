@@ -22,13 +22,15 @@ export interface WorkshopBookingRow {
   personName: string;
   personEmail: string;
   requestedLabel: string;
+  // Named only when the list spans more than one setup.
+  setupName: string | null;
   sessionLines: string[];
   sizeLabel: string;
   totalLabel: string;
   statusLabel: string;
   statusTone: AdminStatusTone;
-  // Who closed it, or why, once it is cancelled or turned down.
-  closingNote: string | null;
+  // Who closed it or why, or that a request went unanswered past its date.
+  statusNote: string | null;
   note: string | null;
   actions: RegistrationAction[];
 }
@@ -68,6 +70,7 @@ export function WorkshopBookingsTable({
                 requestedLabel={row.requestedLabel}
               />
               <WorkshopSessionSummary
+                setupName={row.setupName}
                 sessionLines={row.sessionLines}
                 sizeLabel={row.sizeLabel}
                 totalLabel={row.totalLabel}
@@ -75,7 +78,7 @@ export function WorkshopBookingsTable({
               <AdminRegistrationState
                 statusLabel={row.statusLabel}
                 statusTone={row.statusTone}
-                closingNote={row.closingNote}
+                statusNote={row.statusNote}
               />
               {row.note && (
                 <p className="text-muted-foreground">Note: {row.note}</p>
@@ -117,6 +120,7 @@ export function WorkshopBookingsTable({
                 </td>
                 <td className={ADMIN_TD}>
                   <WorkshopSessionSummary
+                    setupName={row.setupName}
                     sessionLines={row.sessionLines}
                     sizeLabel={row.sizeLabel}
                     totalLabel={row.totalLabel}
@@ -126,7 +130,7 @@ export function WorkshopBookingsTable({
                   <AdminRegistrationState
                     statusLabel={row.statusLabel}
                     statusTone={row.statusTone}
-                    closingNote={row.closingNote}
+                    statusNote={row.statusNote}
                   />
                 </td>
                 <td

@@ -9,16 +9,21 @@ import {
   applyTierPatch,
   describeClosedDays,
   describeSessionDays,
+  toAwaitingFilterPatch,
+  toStatusFilterPatch,
   describeSessionSize,
   formatHoursLabel,
   formatParticipantsLabel,
   fromDateTimeLocal,
   minutesToTimeInput,
+  readSetupChoice,
   timeInputToMinutes,
   toDateTimeLocal,
   toggleWeekday,
   toRangeEnd,
   toRangeStart,
+  toSetupOptions,
+  toWheelSessionsHref,
   toWeekdayLabels,
   toWeekdayNumbers,
   type WorkshopBlackoutData,
@@ -500,5 +505,89 @@ describe("applyBlackoutPatch", () => {
     );
 
     expect(next.map((row) => row.id)).toEqual([1]);
+  });
+});
+
+describe("readSetupChoice", () => {
+  it("spans every setup only when there is more than one", () => {
+    expect(readSetupChoice([1, 2], "all")).toEqual({ kind: "all" });
+    expect(readSetupChoice([1], "all")).toEqual({ kind: "one", id: 1 });
+  });
+
+  it("opens the named setup, or the first when the URL names none or a stale one", () => {
+    expect(readSetupChoice([1, 2], "2")).toEqual({ kind: "one", id: 2 });
+    expect(readSetupChoice([1, 2], undefined)).toEqual({ kind: "one", id: 1 });
+    expect(readSetupChoice([1, 2], "9")).toEqual({ kind: "one", id: 1 });
+  });
+
+  it("has nothing to choose before a setup exists", () => {
+    expect(readSetupChoice([], "all")).toBeNull();
+  });
+});
+
+describe("toSetupOptions", () => {
+  it("leads with the whole queue when there are several setups", () => {
+    expect(
+      toSetupOptions([
+        { id: 1, name: "Wheel session" },
+        { id: 2, name: "Hand building" },
+      ]),
+    ).toEqual([
+      { value: "all", label: "All setups" },
+      { value: "1", label: "Wheel session" },
+      { value: "2", label: "Hand building" },
+    ]);
+  });
+
+  it("offers no queue-wide choice for a single setup", () => {
+    expect(toSetupOptions([{ id: 1, name: "Wheel session" }])).toEqual([
+      { value: "1", label: "Wheel session" },
+    ]);
+  });
+});
+
+describe("toWheelSessionsHref", () => {
+  it("opens the list across every setup, with any filters in the URL", () => {
+    expect(toWheelSessionsHref()).toBe("/dashboard/workshops?config=all");
+    expect(toWheelSessionsHref({ status: "PENDING" })).toBe(
+      "/dashboard/workshops?config=all&status=PENDING",
+    );
+    expect(toWheelSessionsHref({ search: "WS-1" })).toBe(
+      "/dashboard/workshops?config=all&search=WS-1",
+    );
+  });
+});
+
+describe("toStatusFilterPatch", () => {
+  it("turns the waiting queue off when another status is picked", () => {
+    expect(toStatusFilterPatch(RegistrationStatus.Confirmed)).toEqual({
+      status: RegistrationStatus.Confirmed,
+      awaiting: null,
+    });
+  });
+
+  it("keeps the queue for Awaiting approval or Any status", () => {
+    expect(toStatusFilterPatch(RegistrationStatus.Pending)).toEqual({
+      status: RegistrationStatus.Pending,
+    });
+    expect(toStatusFilterPatch("")).toEqual({ status: null });
+  });
+});
+
+describe("toAwaitingFilterPatch", () => {
+  it("drops a status the queue could never match", () => {
+    expect(toAwaitingFilterPatch("1", RegistrationStatus.Cancelled)).toEqual({
+      awaiting: "1",
+      status: null,
+    });
+  });
+
+  it("leaves a matching status alone and clears the queue when turned off", () => {
+    expect(toAwaitingFilterPatch("1", RegistrationStatus.Pending)).toEqual({
+      awaiting: "1",
+    });
+    expect(toAwaitingFilterPatch("", RegistrationStatus.Cancelled)).toEqual({
+      awaiting: null,
+    });
   });
 });

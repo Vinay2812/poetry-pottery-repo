@@ -18,7 +18,7 @@ const meta = {
       },
       {
         id: "WS-1",
-        href: "/dashboard/workshops",
+        href: "/dashboard/workshops?config=all&search=WS-HJN2NGS3UP",
         kindLabel: "Wheel",
         timeLabel: "3:00 pm",
         title: "Maya Iyer",

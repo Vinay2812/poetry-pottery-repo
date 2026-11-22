@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   NotFoundException,
@@ -11,6 +12,7 @@ import type { Logger } from "winston";
 import { clampPage, toPageInfo } from "@/common/pagination/pagination";
 import { PrismaService } from "@/prisma/prisma.service";
 import {
+  availableProductWhere,
   productListInclude,
   ProductsService,
   toProduct,
@@ -62,28 +64,52 @@ export function assertCanBeLive(stock: number, isCustomizable: boolean): void {
   }
 }
 
-// Studio picks only show pieces on the shelf, so a new piece cannot start marked and hidden.
-export function assertFeaturedIsLive(
-  isActive: boolean,
-  isFeatured: boolean,
+export interface StudioPickFacts {
+  is_active: boolean;
+  is_customizable: boolean;
+  stock: number;
+  collection: { starts_at: Date | null; ends_at: Date | null } | null;
+}
+
+// The picks show only what the shop shows and can ship today: the storefront's availability rule,
+// less made-to-order work. Checked in the editor's order and worded as its notes
+// (admin pieces/types.ts findStudioPickBlock, STUDIO_PICK_BLOCK_NOTES).
+export function studioPickRefusal(
+  facts: StudioPickFacts,
+  now = new Date(),
+): string | null {
+  if (!facts.is_active) {
+    return "Only a piece on the shelf can be a studio pick";
+  }
+  if (facts.is_customizable) {
+    return "Studio picks are pieces ready to ship, not made to order";
+  }
+  const window = facts.collection;
+  if (window?.starts_at && window.starts_at > now) {
+    return "Its collection has not opened yet, so the shop leaves it out until then";
+  }
+  if (window?.ends_at && window.ends_at < now) {
+    return "Its collection has closed, so the shop leaves it out";
+  }
+  if (facts.stock <= 0) {
+    return "Studio picks are pieces in stock. Add stock to mark it";
+  }
+  return null;
+}
+
+export function assertCanBeStudioPick(
+  facts: StudioPickFacts,
+  now = new Date(),
 ): void {
-  if (isFeatured && !isActive) {
-    throw new BadRequestException(
-      "Put the piece on the shelf before making it a studio pick",
-    );
+  const refusal = studioPickRefusal(facts, now);
+  if (refusal) {
+    throw new BadRequestException(refusal);
   }
 }
 
-// Studio picks are pieces ready to ship, so made-to-order work never takes the mark.
-export function assertFeaturedIsReadyToShip(
-  isFeatured: boolean,
-  isCustomizable: boolean,
-): void {
-  if (isFeatured && isCustomizable) {
-    throw new BadRequestException(
-      "Studio picks are pieces ready to ship, not made to order",
-    );
-  }
+// The same rule as studioPickRefusal, for the conditional mark.
+export function studioPickWhere(now: Date): Prisma.ProductWhereInput {
+  return { AND: [availableProductWhere(now), { is_customizable: false }] };
 }
 
 // A measurement is either a positive number or missing; zero is never a real piece.
@@ -200,16 +226,19 @@ export class AdminProductsService {
     if (input.is_active ?? true) {
       assertCanBeLive(input.stock ?? 0, input.is_customizable ?? false);
     }
-    assertFeaturedIsLive(input.is_active ?? true, input.is_featured ?? false);
-    assertFeaturedIsReadyToShip(
-      input.is_featured ?? false,
-      input.is_customizable ?? false,
-    );
-    await this.assertLinks(
+    const collection = await this.assertLinks(
       input.category_ids,
       input.collection_id,
       input.glaze_id,
     );
+    if (input.is_featured) {
+      assertCanBeStudioPick({
+        is_active: input.is_active ?? true,
+        is_customizable: input.is_customizable ?? false,
+        stock: input.stock ?? 0,
+        collection,
+      });
+    }
     const image_urls = cleanList(input.image_urls);
     await this.uploads.claimConfirmed(image_urls, [], UploadPurpose.PRODUCT);
 
@@ -374,16 +403,20 @@ export class AdminProductsService {
     return this.byId(id);
   }
 
-  // Marking is conditional on the row still being ready to ship, so a concurrent made-to-order save cannot slip past it.
-  async setFeatured(id: number, isFeatured: boolean): Promise<Product> {
+  // Marking is conditional on the row still qualifying, so a stale editor or a concurrent save
+  // (retired, sold out, made to order, collection closed) cannot slip a piece onto the picks.
+  async setFeatured(
+    id: number,
+    isFeatured: boolean,
+    now = new Date(),
+  ): Promise<Product> {
     if (isFeatured) {
       const marked = await this.prisma.product.updateMany({
-        where: { id, is_customizable: false },
+        where: { AND: [{ id }, studioPickWhere(now)] },
         data: { is_featured: true },
       });
       if (marked.count === 0) {
-        await this.byId(id);
-        assertFeaturedIsReadyToShip(true, true);
+        await this.refuseStudioPick(id, now);
       }
     } else {
       // Unmarking always lands, whatever keeps the piece off the picks.
@@ -585,13 +618,33 @@ export class AdminProductsService {
     });
   }
 
+  // Reached only when the conditional mark matched nothing, to say which rule held.
+  private async refuseStudioPick(id: number, now: Date): Promise<never> {
+    const facts = await this.prisma.product.findUnique({
+      where: { id },
+      select: {
+        is_active: true,
+        is_customizable: true,
+        stock: true,
+        collection: { select: { starts_at: true, ends_at: true } },
+      },
+    });
+    if (!facts) {
+      throw new NotFoundException("Product not found");
+    }
+    assertCanBeStudioPick(facts, now);
+    throw new ConflictException(
+      "This piece was just updated, refresh and try again",
+    );
+  }
+
   // Checked before the write so a stale picker answers "that category is gone" instead of
-  // a foreign key error from the database.
+  // a foreign key error from the database. Hands back the collection's dates for the studio-pick check.
   private async assertLinks(
     categoryIds: number[] | null | undefined,
     collectionId: number | null | undefined,
     glazeId: number | null | undefined,
-  ): Promise<void> {
+  ): Promise<StudioPickFacts["collection"]> {
     const wanted = new Set(categoryIds ?? []);
     if (wanted.size > 0) {
       const found = await this.prisma.category.count({
@@ -603,13 +656,15 @@ export class AdminProductsService {
         );
       }
     }
-    if (collectionId != null) {
-      const found = await this.prisma.collection.count({
-        where: { id: collectionId },
-      });
-      if (found === 0) {
-        throw new BadRequestException("That collection no longer exists");
-      }
+    const collection =
+      collectionId == null
+        ? null
+        : await this.prisma.collection.findUnique({
+            where: { id: collectionId },
+            select: { starts_at: true, ends_at: true },
+          });
+    if (collectionId != null && !collection) {
+      throw new BadRequestException("That collection no longer exists");
     }
     if (glazeId != null) {
       const found = await this.prisma.glaze.count({ where: { id: glazeId } });
@@ -617,6 +672,7 @@ export class AdminProductsService {
         throw new BadRequestException("That glaze no longer exists");
       }
     }
+    return collection;
   }
 
   private async freeSlug(name: string): Promise<string> {

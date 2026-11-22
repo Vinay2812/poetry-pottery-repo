@@ -8,6 +8,8 @@ import {
 import { formatShortDay } from "@/lib/format";
 import { safeTimeZone } from "@/lib/timezones";
 
+import type { QueryPatch } from "@/features/admin/shell/types";
+
 export type WorkshopConfigData = AdminWorkshopConfigFieldsFragment;
 export type WorkshopTierData = WorkshopConfigData["tiers"][number];
 export type WorkshopBlackoutData = AdminWorkshopBlackoutFieldsFragment;
@@ -334,4 +336,62 @@ export function applyBookingStatus(
       },
     };
   });
+}
+
+// The request queue can span every setup; settings, sessions and closed days are always one setup's.
+export const ALL_SETUPS = "all";
+
+export type SetupChoice = { kind: "all" } | { kind: "one"; id: number };
+
+// "all" only means something with two or more setups; an unknown id falls back to the first setup.
+export function readSetupChoice(
+  configIds: readonly number[],
+  wanted: string | undefined,
+): SetupChoice | null {
+  const first = configIds[0];
+  if (first === undefined) return null;
+  if (wanted === ALL_SETUPS && configIds.length > 1) return { kind: "all" };
+  const id = configIds.find((configId) => String(configId) === wanted);
+  return { kind: "one", id: id ?? first };
+}
+
+// The picker leads with the whole queue when there is more than one setup to span.
+export function toSetupOptions(
+  configs: readonly { id: number; name: string }[],
+): { value: string; label: string }[] {
+  const setups = configs.map((config) => ({
+    value: String(config.id),
+    label: config.name,
+  }));
+  return setups.length > 1
+    ? [{ value: ALL_SETUPS, label: "All setups" }, ...setups]
+    : setups;
+}
+
+// Links into the wheel list from elsewhere span every setup, since the counts behind them do.
+export function toWheelSessionsHref(
+  filters: Readonly<Record<string, string>> = {},
+): string {
+  const query = new URLSearchParams(filters);
+  query.set("config", ALL_SETUPS);
+  query.sort();
+  return `/dashboard/workshops?${query.toString()}`;
+}
+
+// "Waiting on you" only ever holds requests still awaiting approval, so another status turns it off.
+export function toStatusFilterPatch(status: string): QueryPatch {
+  const isOtherStatus = status !== "" && status !== RegistrationStatus.Pending;
+  return isOtherStatus
+    ? { status, awaiting: null }
+    : { status: status || null };
+}
+
+// Turning the queue on drops a status it could never match.
+export function toAwaitingFilterPatch(
+  awaiting: string,
+  status: string,
+): QueryPatch {
+  const clashes =
+    awaiting !== "" && status !== "" && status !== RegistrationStatus.Pending;
+  return clashes ? { awaiting, status: null } : { awaiting: awaiting || null };
 }

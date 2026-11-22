@@ -9,7 +9,7 @@ const meta = {
   args: {
     statusLabel: "Approved, awaiting payment",
     statusTone: "neutral",
-    closingNote: null,
+    statusNote: null,
   },
 } satisfies Meta<typeof AdminRegistrationState>;
 
@@ -23,7 +23,7 @@ export const CancelledWithReason: Story = {
   args: {
     statusLabel: "Cancelled",
     statusTone: "quiet",
-    closingNote: "Reason: Work came up that afternoon, sorry",
+    statusNote: "Reason: Work came up that afternoon, sorry",
   },
 };
 
@@ -31,7 +31,16 @@ export const CancelledByGuest: Story = {
   args: {
     statusLabel: "Cancelled",
     statusTone: "quiet",
-    closingNote: "Cancelled by the guest",
+    statusNote: "Cancelled by the guest",
+  },
+};
+
+// A request left unanswered past its date can only be turned down; the note says why.
+export const DatePassed: Story = {
+  args: {
+    statusLabel: "Awaiting approval",
+    statusTone: "warn",
+    statusNote: "Date passed",
   },
 };
 

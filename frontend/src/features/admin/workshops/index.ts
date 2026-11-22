@@ -28,6 +28,7 @@ export {
   toRangeStart,
   toWeekdayLabels,
   toWeekdayNumbers,
+  toWheelSessionsHref,
   WEEKDAY_LABELS,
   weekdayLabel,
   weekdayNumber,

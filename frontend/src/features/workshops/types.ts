@@ -12,6 +12,7 @@ import type { TimelineStage } from "@/lib/timeline";
 import {
   isRegistrationClosed,
   toRequestStages,
+  withRequestedLine,
 } from "@/lib/registration-status";
 
 export type WorkshopData = WorkshopConfigFieldsFragment;
@@ -295,20 +296,27 @@ interface WhatsAppSessionInput {
   total: string;
   guestName: string;
   isFree: boolean;
+  // The date passed before the studio answered, so the guest asks for a new one, not approval.
+  isLapsed: boolean;
 }
 
 export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
   return [
-    "Hi! I booked a wheel session on Poetry & Pottery.",
+    // Nothing was booked if the studio never answered, so the opening says what was asked for.
+    input.isLapsed
+      ? "Hi! I asked for a wheel session on Poetry & Pottery."
+      : "Hi! I booked a wheel session on Poetry & Pottery.",
     `Booking: ${input.bookingId}`,
     `When: ${input.when}`,
     `${input.hours} ${input.hours === 1 ? "hour" : "hours"} for ${input.participants} ${input.participants === 1 ? "person" : "people"}`,
-    // A free booking has nothing to pay, so a ₹0 total line would only read like a bill.
-    input.isFree ? null : `Total: ${input.total}`,
+    // A free or lapsed booking has nothing to pay, so a total line would only read like a bill.
+    input.isFree || input.isLapsed ? null : `Total: ${input.total}`,
     `Name: ${input.guestName}`,
-    input.isFree
-      ? "Could you confirm my session?"
-      : "Could you approve my request and share payment details?",
+    input.isLapsed
+      ? "My date passed before you could answer. Could we pick a new one?"
+      : input.isFree
+        ? "Could you confirm my session?"
+        : "Could you approve my request and share payment details?",
   ]
     .filter((line) => line !== null)
     .join("\n");
@@ -321,11 +329,16 @@ const SESSION_STAGES = toRequestStages(
 
 export const BOOKING_STAGES = SESSION_STAGES.paid;
 
+const SESSION_LAPSED_LINE =
+  "Your date passed before we answered. Message us to pick a new one.";
+
 // The saved total decides the steps, so a free session never promises payment details.
 export function toBookingStages(
   total: number,
+  isLapsed: boolean,
 ): TimelineStage<RegistrationStatus>[] {
-  return total === 0 ? SESSION_STAGES.free : SESSION_STAGES.paid;
+  const stages = total === 0 ? SESSION_STAGES.free : SESSION_STAGES.paid;
+  return isLapsed ? withRequestedLine(stages, SESSION_LAPSED_LINE) : stages;
 }
 
 type BookingGroup = "upcoming" | "past";
@@ -346,11 +359,13 @@ export function toBookingGroup(
 }
 
 // The "we have your request" note is only true until the studio answers, however the page was reached.
+// A saved "just placed" link to a request whose date has since passed would promise a reply too late.
 export function isRequestBannerShown(
   isJustPlaced: boolean,
   status: RegistrationStatus,
+  isLapsed: boolean,
 ): boolean {
-  return isJustPlaced && status === RegistrationStatus.Pending;
+  return isJustPlaced && status === RegistrationStatus.Pending && !isLapsed;
 }
 
 export function formatHours(hours: number): string {

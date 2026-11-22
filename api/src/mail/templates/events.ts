@@ -78,7 +78,7 @@ export function registrationStatusMail(
       title: "Your booking is approved",
       intro:
         registration.total === 0
-          ? `We have approved your booking for ${registration.event.title}. There is nothing to pay, and we will confirm your seat shortly.`
+          ? `We have approved your booking for ${registration.event.title} and will confirm your seat shortly.`
           : `We have approved your booking for ${registration.event.title} and will send payment details next. Once payment reaches us it is confirmed.`,
     },
     CONFIRMED: {

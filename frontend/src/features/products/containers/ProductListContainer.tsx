@@ -86,7 +86,7 @@ export function ProductListContainer({
     isRefreshing,
     isNextPageLoading,
     canAskNextPage,
-    hasAppendFailed,
+    hasNextPageFailed,
     loadMore: handleLoadMore,
     retry: handleRetry,
   } = useShelfResults({
@@ -174,7 +174,7 @@ export function ProductListContainer({
   // Observed afresh each time a next page becomes askable, so a shopper already at the
   // bottom still sets it off: the observer reports the current position when it starts.
   // After a failure only "Try again" asks; re-arming then would retry in a tight loop.
-  const isSentinelArmed = canAskNextPage && !hasAppendFailed;
+  const isSentinelArmed = canAskNextPage && !hasNextPageFailed;
   const sentinelRef = useCallback(
     (node: HTMLDivElement | null) => {
       if (!node || !isSentinelArmed) return;
@@ -336,7 +336,7 @@ export function ProductListContainer({
                   hasMore={pageInfo.has_more}
                   isLoading={isNextPageLoading}
                   canAsk={canAskNextPage}
-                  hasFailed={hasAppendFailed}
+                  hasFailed={hasNextPageFailed}
                   loadedCount={items.length}
                   total={pageInfo.total}
                   onLoadMore={handleLoadMore}

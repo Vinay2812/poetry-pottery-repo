@@ -15,7 +15,7 @@ const ROWS = [
     totalLabel: "₹2,400",
     statusLabel: "Awaiting approval",
     statusTone: "warn" as const,
-    closingNote: null,
+    statusNote: null,
     note: "Coming with my sister",
     actions: [
       {
@@ -41,7 +41,7 @@ const ROWS = [
     totalLabel: "₹1,200",
     statusLabel: "Approved, awaiting payment",
     statusTone: "neutral" as const,
-    closingNote: null,
+    statusNote: null,
     note: null,
     actions: [
       {
@@ -67,7 +67,7 @@ const ROWS = [
     totalLabel: "₹2,400",
     statusLabel: "Cancelled",
     statusTone: "quiet" as const,
-    closingNote: "Reason: Travelling that weekend after all",
+    statusNote: "Reason: Travelling that weekend after all",
     note: null,
     actions: [],
   },

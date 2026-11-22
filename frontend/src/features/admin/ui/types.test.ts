@@ -9,6 +9,7 @@ import {
 import {
   adminFieldMessageId,
   describeClosing,
+  describeRegistrationStatusNote,
   enumOptions,
   eventStatusTone,
   fromDateTimeLocal,
@@ -344,5 +345,50 @@ describe("retryQuery", () => {
     retryQuery(refetch)();
     await Promise.resolve();
     expect(refetch).toHaveBeenCalledOnce();
+  });
+});
+
+describe("describeRegistrationStatusNote", () => {
+  const now = new Date("2026-06-10T10:00:00Z");
+
+  it("says a request left unanswered past its date has lapsed", () => {
+    expect(
+      describeRegistrationStatusNote(
+        RegistrationStatus.Pending,
+        "2026-06-09T10:00:00Z",
+        null,
+        now,
+      ),
+    ).toBe("Date passed");
+  });
+
+  it("says nothing of a request still ahead or an answered one whose date passed", () => {
+    expect(
+      describeRegistrationStatusNote(
+        RegistrationStatus.Pending,
+        "2026-06-11T10:00:00Z",
+        null,
+        now,
+      ),
+    ).toBeNull();
+    expect(
+      describeRegistrationStatusNote(
+        RegistrationStatus.Confirmed,
+        "2026-06-09T10:00:00Z",
+        null,
+        now,
+      ),
+    ).toBeNull();
+  });
+
+  it("gives a closed booking its reason", () => {
+    expect(
+      describeRegistrationStatusNote(
+        RegistrationStatus.Rejected,
+        "2026-06-09T10:00:00Z",
+        "Away that week",
+        now,
+      ),
+    ).toBe("Reason: Away that week");
   });
 });

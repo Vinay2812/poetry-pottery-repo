@@ -116,16 +116,23 @@ describe("AdminDashboardService", () => {
     });
   });
 
-  it("counts pending bookings and registrations", async () => {
+  it("counts only requests whose session or evening is still ahead", async () => {
+    const now = new Date("2026-11-22T10:00:00.000Z");
     prismaMock.workshopBooking.count.mockResolvedValue(4);
     prismaMock.eventRegistration.count.mockResolvedValue(2);
 
-    const summary = await service.summary();
+    const summary = await service.summary(now);
 
     expect(summary.pending_bookings).toBe(4);
     expect(summary.pending_registrations).toBe(2);
     expect(prismaMock.workshopBooking.count).toHaveBeenCalledWith({
-      where: { status: RegistrationStatus.PENDING },
+      where: { status: RegistrationStatus.PENDING, starts_at: { gte: now } },
+    });
+    expect(prismaMock.eventRegistration.count).toHaveBeenCalledWith({
+      where: {
+        status: RegistrationStatus.PENDING,
+        event: { starts_at: { gte: now } },
+      },
     });
   });
 

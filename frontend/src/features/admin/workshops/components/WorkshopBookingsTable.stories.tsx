@@ -15,12 +15,13 @@ const meta = {
         personName: "Maya Iyer",
         personEmail: "maya@example.com",
         requestedLabel: "Tue, 1 Sep, 2026",
+        setupName: null,
         sessionLines: ["Mon, 14 Sep · 9–11 am"],
         sizeLabel: "2 hours · 1 person",
         totalLabel: "₹1,400",
         statusLabel: "Awaiting approval",
         statusTone: "warn",
-        closingNote: null,
+        statusNote: null,
         note: "First time on a wheel",
         actions: [
           {
@@ -48,12 +49,13 @@ const meta = {
         personName: "Arjun Rao",
         personEmail: "arjun.rao.weekend.pottery.club.member@example.com",
         requestedLabel: "Wed, 2 Sep, 2026",
+        setupName: null,
         sessionLines: ["Wed 25 Nov · 3–4 pm", "Sat 28 Nov · 4–5 pm"],
         sizeLabel: "2 hours · 2 people",
         totalLabel: "₹4,000",
         statusLabel: "Approved, awaiting payment",
         statusTone: "neutral",
-        closingNote: null,
+        statusNote: null,
         note: null,
         actions: [
           {
@@ -75,14 +77,37 @@ const meta = {
         personName: "Leela Menon",
         personEmail: "leela@example.com",
         requestedLabel: "Thu, 3 Sep, 2026",
+        setupName: null,
         sessionLines: ["Fri 27 Nov · 4–5 pm"],
         sizeLabel: "1 hour · 1 person",
         totalLabel: "₹1,100",
         statusLabel: "Cancelled",
         statusTone: "quiet",
-        closingNote: "Cancelled by the guest",
+        statusNote: "Cancelled by the guest",
         note: null,
         actions: [],
+      },
+      {
+        id: "WS-Q7RT4KD2MW",
+        personName: "Kabir Shah",
+        personEmail: "kabir@example.com",
+        requestedLabel: "Mon, 1 Jun, 2026",
+        setupName: null,
+        sessionLines: ["Sat 13 Jun · 10–11 am"],
+        sizeLabel: "1 hour · 1 person",
+        totalLabel: "₹1,100",
+        statusLabel: "Awaiting approval",
+        statusTone: "warn",
+        statusNote: "Date passed",
+        note: null,
+        actions: [
+          {
+            status: RegistrationStatus.Rejected,
+            label: "Turn down",
+            isPrimary: false,
+            isDestructive: true,
+          },
+        ],
       },
     ],
     isBusy: false,
@@ -96,6 +121,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Bookings: Story = {};
+
+// Opened from the dashboard's request tile, the list spans every setup and names each one.
+export const AcrossSetups: Story = {
+  args: {
+    rows: meta.args.rows.map((row, index) => ({
+      ...row,
+      setupName: index === 1 ? "Hand building" : "Wheel session",
+    })),
+  },
+};
 
 export const Empty: Story = {
   args: { rows: [] },

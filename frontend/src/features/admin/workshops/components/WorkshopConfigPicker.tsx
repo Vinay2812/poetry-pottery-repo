@@ -27,7 +27,7 @@ export function WorkshopConfigPicker({
         htmlFor="workshop-config"
         className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase"
       >
-        Editing
+        Setup
       </Label>
       <select
         id="workshop-config"

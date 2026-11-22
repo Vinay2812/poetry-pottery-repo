@@ -11,6 +11,8 @@ import {
 import { formatDate, formatDateTime, formatTime } from "@/lib/format";
 import type { EventFormValues } from "@/lib/validations/admin/event";
 
+import type { QueryPatch } from "@/features/admin/shell/types";
+
 // The studio runs on IST all year, so the console shows studio time wherever the admin sits.
 const IST_OFFSET_MINUTES = 330;
 const MINUTE_MS = 60_000;
@@ -240,4 +242,25 @@ export function applyRegistrationStatus(
       },
     };
   });
+}
+
+// "Waiting on you" holds any event with a request still ahead, including one unpublished or marked
+// done early; only cancelling an event closes its requests, so Cancelled is the one status it can't share.
+function clashesWithWaiting(status: string): boolean {
+  return status === EventStatus.Cancelled;
+}
+
+export function toEventStatusFilterPatch(status: string): QueryPatch {
+  return clashesWithWaiting(status)
+    ? { status, awaiting: null }
+    : { status: status || null };
+}
+
+export function toEventAwaitingFilterPatch(
+  awaiting: string,
+  status: string,
+): QueryPatch {
+  return awaiting !== "" && clashesWithWaiting(status)
+    ? { awaiting, status: null }
+    : { awaiting: awaiting || null };
 }
