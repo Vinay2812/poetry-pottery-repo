@@ -24,7 +24,7 @@ export interface RegistrationTableRow {
   totalLabel: string;
   statusLabel: string;
   statusTone: AdminStatusTone;
-  // Who closed it, or why, once it is cancelled or turned down.
+  // Why it can only be turned down once the event began unanswered, or who closed it and why.
   statusNote: string | null;
   note: string | null;
   actions: RegistrationAction[];

@@ -37,6 +37,7 @@ export { AdminToolbar } from "@/features/admin/ui/components/AdminToolbar";
 export {
   adminFieldMessageId,
   describeClosing,
+  describeRegistrationStatusNote,
   enumOptions,
   eventStatusTone,
   fromDateTimeLocal,

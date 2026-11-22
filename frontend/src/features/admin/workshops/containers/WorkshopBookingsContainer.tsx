@@ -23,6 +23,7 @@ import {
   AdminSearchField,
   AdminSelectFilter,
   AdminToolbar,
+  describeRegistrationStatusNote,
   registrationActionNeedsReason,
   registrationClosingDialog,
   registrationHoldNote,
@@ -45,7 +46,6 @@ import {
 import {
   applyBookingStatus,
   BOOKINGS_PAGE_SIZE,
-  describeBookingStatusNote,
   describeSessionDays,
   describeSessionSize,
   toRangeEnd,
@@ -65,7 +65,7 @@ interface BookingMove {
 }
 
 const STATUS_OPTIONS = registrationStatusOptions();
-const REQUEST_OPTIONS = [{ value: "1", label: "Awaiting approval" }];
+const REQUEST_OPTIONS = [{ value: "1", label: "Waiting on you" }];
 
 export function WorkshopBookingsContainer({
   configId,
@@ -137,7 +137,7 @@ export function WorkshopBookingsContainer({
           item.booking.total === 0,
         ),
         statusTone: registrationStatusTone(item.booking.status),
-        statusNote: describeBookingStatusNote(
+        statusNote: describeRegistrationStatusNote(
           item.booking.status,
           item.booking.starts_at,
           item.booking.cancel_reason,

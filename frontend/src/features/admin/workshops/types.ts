@@ -6,10 +6,7 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { formatShortDay } from "@/lib/format";
-import { isRequestLapsed } from "@/lib/registration-status";
 import { safeTimeZone } from "@/lib/timezones";
-
-import { describeClosing } from "@/features/admin/ui/types";
 
 export type WorkshopConfigData = AdminWorkshopConfigFieldsFragment;
 export type WorkshopTierData = WorkshopConfigData["tiers"][number];
@@ -377,15 +374,4 @@ export function toWheelSessionsHref(
   query.set("config", ALL_SETUPS);
   query.sort();
   return `/dashboard/workshops?${query.toString()}`;
-}
-
-// A request left unanswered past its date can only be turned down, so its row says why.
-export function describeBookingStatusNote(
-  status: RegistrationStatus,
-  startsAt: string,
-  cancelReason: string | null,
-  now = new Date(),
-): string | null {
-  if (isRequestLapsed(status, startsAt, now)) return "Date passed";
-  return describeClosing(cancelReason);
 }

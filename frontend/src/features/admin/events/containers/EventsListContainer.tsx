@@ -50,7 +50,7 @@ import {
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS = enumOptions(EventStatus);
 const TYPE_OPTIONS = enumOptions(EventType);
-const REQUEST_OPTIONS = [{ value: "1", label: "Awaiting approval" }];
+const REQUEST_OPTIONS = [{ value: "1", label: "Waiting on you" }];
 
 export function EventsListContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();

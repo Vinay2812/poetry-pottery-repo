@@ -159,6 +159,7 @@ export function EventDetailContainer({ eventId }: EventDetailContainerProps) {
       />
       <EventRegistrationsContainer
         eventId={event.id}
+        eventStartsAt={event.starts_at}
         isEventCancelled={status === EventStatus.Cancelled}
       />
       <AdminReasonDialog
