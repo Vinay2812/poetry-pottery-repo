@@ -413,9 +413,7 @@ describe("AdminWorkshopsService", () => {
   });
 
   it("narrows to the requests still waiting on the studio, the ones the dashboard counts", async () => {
-    prismaMock.workshopBooking.count
-      .mockResolvedValueOnce(1)
-      .mockResolvedValueOnce(0);
+    prismaMock.workshopBooking.count.mockResolvedValueOnce(1);
     prismaMock.workshopBooking.findMany.mockResolvedValue([bookingRow]);
 
     await service.bookings({ awaiting_approval: true, limit: 20 }, NOW);
@@ -427,7 +425,8 @@ describe("AdminWorkshopsService", () => {
     expect(prismaMock.workshopBooking.count).toHaveBeenNthCalledWith(1, {
       where: { AND: [{ AND: [{}, waiting] }, waiting] },
     });
-    // A lapsed request is never waiting, so nothing is left for the rest.
+    // A lapsed request is never waiting, so the rest is neither counted nor read.
+    expect(prismaMock.workshopBooking.count).toHaveBeenCalledTimes(1);
     expect(prismaMock.workshopBooking.findMany).toHaveBeenCalledTimes(1);
   });
 

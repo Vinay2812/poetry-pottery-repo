@@ -362,9 +362,12 @@ export class AdminWorkshopsService {
     // One snapshot for the counts and both reads, so a request answered in between cannot shift the page.
     return this.prisma.withTransaction(
       async () => {
+        // The queue holds only waiting requests, so there is no rest to count.
         const [waitingTotal, restTotal] = await Promise.all([
           this.prisma.workshopBooking.count({ where: waiting }),
-          this.prisma.workshopBooking.count({ where: rest }),
+          filter.awaiting_approval
+            ? 0
+            : this.prisma.workshopBooking.count({ where: rest }),
         ]);
         const slices = splitPage(bounds, waitingTotal);
         const [waitingRows, restRows] = await Promise.all([
