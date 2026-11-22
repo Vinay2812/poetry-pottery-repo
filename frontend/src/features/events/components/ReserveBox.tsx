@@ -4,20 +4,29 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { formatInr, pluralize } from "@/lib/format";
-
-import { SEAT_NOTE } from "@/features/events/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
+import { formatInr, pluralize } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+import { TEXT_LINK } from "@/features/events/components/styles";
+import {
+  type ReserveState,
+  SEAT_NOTE,
+  toRequestSeatsLabel,
+} from "@/features/events/types";
 
 export interface ReserveBoxProps {
+  state: ReserveState;
   eventId: number;
   price: number;
   seats: number;
   maxSeats: number;
   note: string;
+  notePlaceholder: string;
   seatsLabel: string;
-  isSoldOut: boolean;
-  isPast: boolean;
+  seatPriceNote: string | null;
+  isPriceShown: boolean;
+  hasGallery: boolean;
   isReserving: boolean;
   bookingHref: string | null;
   bookingStatusLabel: string;
@@ -30,18 +39,20 @@ export interface ReserveBoxProps {
 
 const STEPPER_BUTTON =
   "flex size-11 items-center justify-center transition-colors hover:text-primary disabled:opacity-40";
-const TEXT_LINK =
-  "w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary";
 
+// One box for every state of a date: open, full, under way, done, called off, or already yours.
 export function ReserveBox({
+  state,
   eventId,
   price,
   seats,
   maxSeats,
   note,
+  notePlaceholder,
   seatsLabel,
-  isSoldOut,
-  isPast,
+  seatPriceNote,
+  isPriceShown,
+  hasGallery,
   isReserving,
   bookingHref,
   bookingStatusLabel,
@@ -52,37 +63,80 @@ export function ReserveBox({
   onReserve,
 }: ReserveBoxProps) {
   return (
-    <div className="flex flex-col gap-5 border border-ash bg-white p-5 md:p-6">
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="flex items-baseline gap-2">
-          <span className="font-heading text-3xl tnum">{formatInr(price)}</span>
-          <span className="text-[13px] text-muted-foreground">per seat</span>
-        </p>
-        <span className="text-[13px] text-muted-foreground">
-          {isPast ? "Wrapped up" : seatsLabel}
-        </span>
-      </div>
+    <section
+      aria-label="Your seat"
+      className="flex flex-col gap-5 border border-ash bg-white p-5 md:p-6"
+    >
+      {isPriceShown && (
+        <div className="flex items-baseline justify-between gap-3 text-[15px]">
+          <p className="tnum">
+            {formatInr(price)}{" "}
+            <span className="text-[13px] text-muted-foreground">a seat</span>
+          </p>
+          {/* Your own seat may be the one that filled the room. */}
+          {state !== "booked" && (
+            <p className="text-[13px] text-muted-foreground">{seatsLabel}</p>
+          )}
+        </div>
+      )}
 
-      {bookingHref ? (
-        <div className="flex flex-col gap-3 border-t border-ash pt-4">
-          <p className="text-sm">
-            You have {pluralize(bookingSeats, "seat")} here.{" "}
+      {state === "cancelled" && (
+        <div className="flex flex-col gap-2">
+          <p className="font-heading text-xl tracking-tight">
+            This one was called off
+          </p>
+          <p className="text-sm text-muted-foreground">
+            The studio cancelled this session. Anyone with a seat has been told,
+            and nothing is owed.
+          </p>
+          <Link href="/events" className={TEXT_LINK}>
+            See upcoming dates
+          </Link>
+        </div>
+      )}
+
+      {state === "past" && (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">
+            This date is done.
+            {hasGallery && " The photographs below are from the day."}
+          </p>
+          <Link href="/events" className={TEXT_LINK}>
+            See upcoming dates
+          </Link>
+        </div>
+      )}
+
+      {state === "started" && (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-muted-foreground">
+            Registration closed when this one began.
+          </p>
+          <Link href="/events" className={TEXT_LINK}>
+            See upcoming dates
+          </Link>
+        </div>
+      )}
+
+      {state === "booked" && bookingHref && (
+        <div
+          className={cn(
+            "flex flex-col gap-3",
+            // The rule only separates the booking from a price line above it.
+            isPriceShown && "border-t border-ash pt-4",
+          )}
+        >
+          <p className="flex flex-col gap-0.5 text-sm">
+            <span>Your booking · {pluralize(bookingSeats, "seat")}</span>
             <span className="text-muted-foreground">{bookingStatusLabel}</span>
           </p>
           <Link href={bookingHref} className={TEXT_LINK}>
             View your booking
           </Link>
         </div>
-      ) : isPast ? (
-        <div className="flex flex-col gap-3 border-t border-ash pt-4">
-          <p className="text-sm text-muted-foreground">
-            This date is done. The photographs below are from the evening.
-          </p>
-          <Link href="/events" className={TEXT_LINK}>
-            See upcoming dates
-          </Link>
-        </div>
-      ) : isSoldOut ? (
+      )}
+
+      {state === "soldOut" && (
         <div className="flex flex-col gap-3 border-t border-ash pt-4">
           <p className="text-sm text-muted-foreground">
             Every seat is taken. Write to us and we will tell you if one opens
@@ -99,7 +153,9 @@ export function ReserveBox({
             </WhatsAppLink>
           )}
         </div>
-      ) : (
+      )}
+
+      {state === "open" && (
         <>
           <div className="flex items-center justify-between gap-3 border-t border-ash pt-4">
             <span className="text-sm">Seats</span>
@@ -145,31 +201,34 @@ export function ReserveBox({
               onChange={(event) => onNoteChange(event.target.value)}
               maxLength={300}
               rows={3}
-              placeholder="Left-handed, coming with a friend, first time on the wheel…"
+              placeholder={notePlaceholder}
             />
           </div>
 
-          <div className="flex items-baseline justify-between border-t border-ash pt-4 text-sm">
-            <span className="text-muted-foreground">
-              {pluralize(seats, "seat")} × {formatInr(price)}
-            </span>
-            <span className="font-heading text-2xl tnum">
-              {formatInr(price * seats)}
-            </span>
-          </div>
+          {/* One seat is the price above; a total only earns a row once it differs. */}
+          {seats > 1 && (
+            <dl className="flex items-baseline justify-between gap-3 border-t border-ash pt-4 text-[15px]">
+              <dt className="text-[13px] text-muted-foreground">
+                Total for {seats} seats
+              </dt>
+              <dd className="tnum">{formatInr(price * seats)}</dd>
+            </dl>
+          )}
 
           <div className="flex flex-col gap-3">
             <Button size="lg" onClick={onReserve} disabled={isReserving}>
-              {isReserving ? "Reserving…" : "Reserve a seat"}
+              {isReserving ? "Sending…" : toRequestSeatsLabel(seats)}
             </Button>
             <p className="text-[13px] text-muted-foreground">{SEAT_NOTE}</p>
           </div>
         </>
       )}
 
-      <p className="border-t border-ash pt-4 text-[13px] text-muted-foreground">
-        Clay, tools and firing are part of the seat price.
-      </p>
-    </div>
+      {isPriceShown && seatPriceNote && (
+        <p className="border-t border-ash pt-4 text-[13px] text-muted-foreground">
+          {seatPriceNote}
+        </p>
+      )}
+    </section>
   );
 }

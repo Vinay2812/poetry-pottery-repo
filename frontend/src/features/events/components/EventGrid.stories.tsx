@@ -61,6 +61,7 @@ const meta = {
         typeLabel={listing.typeLabel}
         seatsLabel={listing.seatsLabel}
         price={listing.price}
+        hasStarted={false}
         isPast={false}
       />
     )),

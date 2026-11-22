@@ -1,25 +1,42 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
 import { cn } from "@/lib/utils";
-import { toEventWhenLabel } from "@/features/events/types";
 
 import { SignInWall } from "@/features/auth/components/SignInWall";
 import { EmptyRegistrations } from "@/features/events/components/EmptyRegistrations";
 import { RegistrationCard } from "@/features/events/components/RegistrationCard";
 import { useMyRegistrations } from "@/features/events/hooks";
 import {
+  isRegistrationClosed,
   toEventTypeLabel,
+  toEventWhenLabel,
+  toRegistrationGroups,
   toRegistrationPath,
   toRegistrationStatusLabel,
 } from "@/features/events/types";
 
-export function RegistrationsListContainer() {
+export interface RegistrationsListContainerProps {
+  // ISO time the server rendered at. Fixed on purpose: a list does not need to regroup itself live.
+  now: string;
+}
+
+export function RegistrationsListContainer({
+  now: renderedAt,
+}: RegistrationsListContainerProps) {
+  const now = new Date(renderedAt);
   const [page, setPage] = useState(1);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+
+  // The old page stays on screen while the next loads, so jumping to the top at once is safe.
+  const handlePageChange = useCallback((next: number) => {
+    setPage(next);
+    headingRef.current?.scrollIntoView({ block: "start" });
+  }, []);
   const {
     registrations,
     pageInfo,
@@ -45,7 +62,10 @@ export function RegistrationsListContainer() {
 
   return (
     <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
-      <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
+      <h1
+        ref={headingRef}
+        className="font-heading text-4xl leading-tight tracking-tight md:text-6xl"
+      >
         Your bookings
       </h1>
       {isLoading ? (
@@ -73,42 +93,57 @@ export function RegistrationsListContainer() {
           <div
             aria-busy={isPaging}
             className={cn(
-              "flex flex-col border-t border-ash transition-opacity duration-200",
+              "flex flex-col gap-10 transition-opacity duration-200",
               isPaging && "opacity-60",
             )}
           >
-            {registrations.map((registration) => (
-              <RegistrationCard
-                key={registration.id}
-                href={toRegistrationPath(registration.id)}
-                eventTitle={registration.event.title}
-                imageUrl={registration.event.image_url}
-                typeLabel={toEventTypeLabel(registration.event.event_type)}
-                dateLabel={toEventWhenLabel(registration.event.starts_at)}
-                seats={registration.seats}
-                total={registration.total}
-                statusLabel={toRegistrationStatusLabel(registration.status)}
-              />
+            {toRegistrationGroups(registrations, now).map((group) => (
+              <section key={group.key} className="flex flex-col gap-3">
+                <h2 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+                  {group.heading}
+                </h2>
+                <div className="flex flex-col border-t border-ash">
+                  {group.registrations.map((registration) => (
+                    <RegistrationCard
+                      key={registration.id}
+                      href={toRegistrationPath(registration.id)}
+                      eventTitle={registration.event.title}
+                      imageUrl={registration.event.image_url}
+                      typeLabel={toEventTypeLabel(
+                        registration.event.event_type,
+                      )}
+                      dateLabel={toEventWhenLabel(registration.event.starts_at)}
+                      seats={registration.seats}
+                      total={registration.total}
+                      statusLabel={toRegistrationStatusLabel(
+                        registration.status,
+                      )}
+                      isClosed={isRegistrationClosed(registration.status)}
+                    />
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
+          {/* The API sends bookings still ahead first, soonest first, then the record, so page one holds what is next. */}
           {pageInfo && pageInfo.total > pageInfo.limit && (
             <div className="flex items-center justify-center gap-3">
               <Button
                 variant="outline"
                 disabled={page <= 1}
-                onClick={() => setPage((current) => current - 1)}
+                onClick={() => handlePageChange(page - 1)}
               >
-                Newer
+                Previous
               </Button>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-[13px] text-muted-foreground tnum">
                 Page {page} of {pageCount}
               </span>
               <Button
                 variant="outline"
                 disabled={page >= pageCount}
-                onClick={() => setPage((current) => current + 1)}
+                onClick={() => handlePageChange(page + 1)}
               >
-                Older
+                Next
               </Button>
             </div>
           )}

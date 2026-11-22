@@ -7,7 +7,11 @@ import {
 import { EventStatus, Prisma, RegistrationStatus } from "@prisma/client";
 
 import { newPublicId } from "@/common/ids/public-id";
-import { clampPage, toPageInfo } from "@/common/pagination/pagination";
+import {
+  clampPage,
+  type PageBounds,
+  toPageInfo,
+} from "@/common/pagination/pagination";
 import { env } from "@/config/env";
 import { MailService } from "@/mail/mail.service";
 import {
@@ -21,6 +25,7 @@ import {
   canTransition,
   CUSTOMER_CANCELLABLE,
   releasesSeats,
+  SEAT_HOLDING,
   STATUS_TIMESTAMP,
   takesSeats,
 } from "./registration-status";
@@ -46,11 +51,50 @@ type RegistrationRow = Prisma.EventRegistrationGetPayload<{
   include: typeof registrationInclude;
 }>;
 
+// aheadRegistrationWhere must mirror this rule in its event clause; the spec checks the two agree.
 export function isPastEvent(
   event: Pick<EventRow, "status" | "ends_at">,
   now = new Date(),
 ): boolean {
   return event.status === EventStatus.COMPLETED || event.ends_at < now;
+}
+
+// Ahead means a seat still held at a date that has not ended: the bookings a shopper comes to check.
+export function aheadRegistrationWhere(
+  now: Date,
+): Prisma.EventRegistrationWhereInput {
+  return {
+    status: { in: [...SEAT_HOLDING] },
+    event: { status: { not: EventStatus.COMPLETED }, ends_at: { gte: now } },
+  };
+}
+
+interface Slice {
+  skip: number;
+  take: number;
+}
+
+// A read is only worth sending when its slice starts inside the list.
+function canReturnRows(slice: Slice, total: number): boolean {
+  return slice.take > 0 && slice.skip < total;
+}
+
+// One page laid over two lists read back to back: how much of it each list fills.
+export function splitPage(
+  bounds: PageBounds,
+  firstTotal: number,
+): { first: Slice; second: Slice } {
+  const firstTake = Math.max(
+    0,
+    Math.min(bounds.limit, firstTotal - bounds.skip),
+  );
+  return {
+    first: { skip: Math.min(bounds.skip, firstTotal), take: firstTake },
+    second: {
+      skip: Math.max(0, bounds.skip - firstTotal),
+      take: bounds.limit - firstTake,
+    },
+  };
 }
 
 export function toEvent(row: EventRow, now = new Date()): Event {
@@ -325,20 +369,41 @@ export class EventsService {
     limit: number | null,
   ): Promise<RegistrationsResult> {
     const bounds = clampPage(page, limit, 20);
-    const where = { user_id: userId };
-    const [rows, total] = await Promise.all([
-      this.prisma.eventRegistration.findMany({
-        where,
-        include: registrationInclude,
-        orderBy: { event: { starts_at: "desc" } },
-        skip: bounds.skip,
-        take: bounds.limit,
-      }),
-      this.prisma.eventRegistration.count({ where }),
+    const now = new Date();
+    // Dates still ahead come first, soonest first; the record follows, latest first.
+    // Two reads keep that order whole across pages, so page one always holds what is next.
+    const ahead = { user_id: userId, ...aheadRegistrationWhere(now) };
+    const behind = { user_id: userId, NOT: aheadRegistrationWhere(now) };
+    const [aheadTotal, behindTotal] = await Promise.all([
+      this.prisma.eventRegistration.count({ where: ahead }),
+      this.prisma.eventRegistration.count({ where: behind }),
+    ]);
+    const slices = splitPage(bounds, aheadTotal);
+    const [aheadRows, behindRows] = await Promise.all([
+      canReturnRows(slices.first, aheadTotal)
+        ? this.prisma.eventRegistration.findMany({
+            where: ahead,
+            include: registrationInclude,
+            orderBy: [{ event: { starts_at: "asc" } }, { id: "asc" }],
+            skip: slices.first.skip,
+            take: slices.first.take,
+          })
+        : [],
+      canReturnRows(slices.second, behindTotal)
+        ? this.prisma.eventRegistration.findMany({
+            where: behind,
+            include: registrationInclude,
+            orderBy: [{ event: { starts_at: "desc" } }, { id: "asc" }],
+            skip: slices.second.skip,
+            take: slices.second.take,
+          })
+        : [],
     ]);
     return {
-      items: rows.map((row) => toRegistration(row)),
-      page_info: toPageInfo(bounds, total),
+      items: [...aheadRows, ...behindRows].map((row) =>
+        toRegistration(row, now),
+      ),
+      page_info: toPageInfo(bounds, aheadTotal + behindTotal),
     };
   }
 

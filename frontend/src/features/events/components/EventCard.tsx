@@ -14,6 +14,7 @@ export interface EventCardProps {
   seatsLabel: string;
   price: number;
   isPast: boolean;
+  hasStarted: boolean;
   isPriority?: boolean;
 }
 
@@ -29,6 +30,7 @@ export function EventCard({
   seatsLabel,
   price,
   isPast,
+  hasStarted,
   isPriority = false,
 }: EventCardProps) {
   return (
@@ -67,9 +69,15 @@ export function EventCard({
         </Link>
         <div className="flex flex-col gap-0.5 md:flex-row md:items-baseline md:justify-between md:gap-3">
           <p className="text-[13px] text-muted-foreground">
-            {typeLabel} · {seatsLabel}
+            {typeLabel} ·{" "}
+            <span className="whitespace-nowrap">{seatsLabel}</span>
           </p>
-          <span className="shrink-0 text-[13px] tnum">{formatInr(price)}</span>
+          {/* A date under way or done has no seat left to price. */}
+          {!isPast && !hasStarted && (
+            <span className="shrink-0 text-[13px] tnum">
+              {formatInr(price)}
+            </span>
+          )}
         </div>
       </div>
     </article>

@@ -4,6 +4,7 @@ import { fn } from "storybook/test";
 import { atViewport } from "@/lib/storybook/viewports";
 import { CancellationPolicy } from "@/features/workshops";
 import { EventDetail } from "./EventDetail";
+import type { ReserveState } from "@/features/events/types";
 import { ReserveBox } from "./ReserveBox";
 
 const IMAGE =
@@ -13,47 +14,31 @@ const GALLERY_SECOND =
 const GALLERY_THIRD =
   "https://images.pexels.com/photos/15028227/pexels-photo-15028227.jpeg";
 
-const reserveBox = (
-  <ReserveBox
-    eventId={42}
-    price={1800}
-    seats={1}
-    maxSeats={4}
-    note=""
-    seatsLabel="3 seats left"
-    isSoldOut={false}
-    isPast={false}
-    isReserving={false}
-    bookingHref={null}
-    bookingStatusLabel=""
-    bookingSeats={0}
-    whatsappUrl="https://wa.me/919876543210?text=Hi"
-    onSeatsChange={fn()}
-    onNoteChange={fn()}
-    onReserve={fn()}
-  />
-);
-
-const pastReserveBox = (
-  <ReserveBox
-    eventId={42}
-    price={400}
-    seats={1}
-    maxSeats={4}
-    note=""
-    seatsLabel="Sold out"
-    isSoldOut
-    isPast
-    isReserving={false}
-    bookingHref={null}
-    bookingStatusLabel=""
-    bookingSeats={0}
-    whatsappUrl="https://wa.me/919876543210?text=Hi"
-    onSeatsChange={fn()}
-    onNoteChange={fn()}
-    onReserve={fn()}
-  />
-);
+function reserveBoxIn(state: ReserveState, price = 1800) {
+  return (
+    <ReserveBox
+      state={state}
+      eventId={42}
+      price={price}
+      seats={1}
+      maxSeats={4}
+      note=""
+      notePlaceholder="Left-handed, coming with a friend, first time on the wheel…"
+      seatsLabel="3 seats left"
+      seatPriceNote="Clay, tools and firing are part of the seat price."
+      isPriceShown={state === "open"}
+      hasGallery={state === "past"}
+      isReserving={false}
+      bookingHref={null}
+      bookingStatusLabel=""
+      bookingSeats={0}
+      whatsappUrl="https://wa.me/919876543210?text=Hi"
+      onSeatsChange={fn()}
+      onNoteChange={fn()}
+      onReserve={fn()}
+    />
+  );
+}
 
 const meta = {
   title: "Features/Events/EventDetail",
@@ -63,17 +48,14 @@ const meta = {
     title: "Wheel throwing for beginners",
     imageUrl: IMAGE,
     typeLabel: "Pottery workshop",
+    whenLabel: "Sat 19 Sep · 3 pm – 6 pm",
     facts: [
-      { label: "Date", value: "Sat, 19 Sept, 2026" },
-      { label: "Time", value: "3:00 pm – 6:00 pm" },
       {
         label: "Where",
         value: "Poetry & Pottery studio, 3rd Lane, Vishrambag, Sangli",
       },
       { label: "Level", value: "Beginner" },
       { label: "Instructor", value: "Ananya Kulkarni" },
-      { label: "Price", value: "₹1,800 a seat" },
-      { label: "Seats", value: "3 of 8 seats left" },
     ],
     paragraphs: [
       "Three hours at the wheel with clay we dug and wedged ourselves. You centre, open and pull walls until two pieces feel worth keeping.",
@@ -86,9 +68,8 @@ const meta = {
     ],
     highlights: ["Throw two pieces", "Glaze one to take home"],
     gallery: [],
-    isPast: false,
-    isCancelled: false,
-    reserveBox,
+    galleryHeading: "From the workshop",
+    reserveBox: reserveBoxIn("open"),
     reviews: null,
     policy: <CancellationPolicy />,
   },
@@ -104,16 +85,13 @@ export const OpenMic: Story = {
   args: {
     title: "Verses and vases evening",
     typeLabel: "Open mic",
+    whenLabel: "Sun 12 Jul · 7 pm – 9:30 pm",
     facts: [
-      { label: "Date", value: "Sun, 12 Jul, 2026" },
-      { label: "Time", value: "7:00 pm – 9:30 pm" },
       {
         label: "Where",
         value: "Poetry & Pottery studio, 3rd Lane, Vishrambag, Sangli",
       },
       { label: "Line-up", value: "Ananya Kulkarni, Rohit Deshpande" },
-      { label: "Price", value: "₹400 a seat" },
-      { label: "Seats", value: "6 of 20 seats left" },
     ],
     paragraphs: [
       "An open mic in the studio, surrounded by half-finished pots. Read your own work or somebody else's; five minutes each, no theme.",
@@ -127,21 +105,16 @@ export const PastWithGallery: Story = {
     title: "Verses and vases evening",
     typeLabel: "Open mic",
     gallery: [IMAGE, GALLERY_SECOND, GALLERY_THIRD],
-    isPast: true,
-    reserveBox: pastReserveBox,
+    galleryHeading: "From the evening",
+    reserveBox: reserveBoxIn("past", 400),
+    policy: null,
   },
 };
 
 export const NoPhoto: Story = { args: { imageUrl: null } };
 
 export const Cancelled: Story = {
-  args: {
-    isCancelled: true,
-    facts: [
-      { label: "Date", value: "Sat, 19 Sept, 2026" },
-      { label: "Seats", value: "Cancelled" },
-    ],
-  },
+  args: { reserveBox: reserveBoxIn("cancelled"), policy: null },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

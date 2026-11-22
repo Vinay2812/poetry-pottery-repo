@@ -9,7 +9,7 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
-import { formatTime } from "@/lib/format";
+import { formatDate, formatDateTime, formatTime } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
 import type { StatusTone } from "@/features/orders/types";
@@ -20,7 +20,7 @@ export type EventDetailData = EventQuery["event"];
 const PAGE_SIZE = 12;
 export const MAX_SEATS = 4;
 export const SEAT_NOTE =
-  "Seats are confirmed by hand on WhatsApp, usually within a day";
+  "We confirm every seat by hand on WhatsApp, usually within a day.";
 
 export interface EventFact {
   label: string;
@@ -69,23 +69,40 @@ const WHEN_DATE = new Intl.DateTimeFormat("en-IN", {
   timeZone: "Asia/Kolkata",
 });
 
+const WHEN_YEAR = new Intl.DateTimeFormat("en-IN", {
+  year: "numeric",
+  timeZone: "Asia/Kolkata",
+});
+
 const WHEN_HOUR = new Intl.DateTimeFormat("en-IN", {
   hour: "numeric",
   minute: "2-digit",
   timeZone: "Asia/Kolkata",
 });
 
-// "Thu 17 Sep · 4 pm": one line, no zero minutes, no comma clutter.
-export function toEventWhenLabel(startsAt: string | Date): string {
-  const date = new Date(startsAt);
-  const day = WHEN_DATE.format(date).replace(/,/g, "").replace("Sept", "Sep");
-  const time = WHEN_HOUR.format(date).replace(":00", "");
-  return `${day} · ${time}`;
+function toHourLabel(date: Date): string {
+  return WHEN_HOUR.format(date).replace(":00", "");
 }
 
-export function toSeatsOfTotalLabel(available: number, total: number): string {
-  if (available <= 0) return "Sold out";
-  return `${available} of ${total} seats left`;
+// "Thu 17 Sep · 4 pm": one line, no zero minutes, no comma clutter. Other years say which.
+export function toEventWhenLabel(
+  startsAt: string | Date,
+  now: Date = new Date(),
+): string {
+  const date = new Date(startsAt);
+  const day = WHEN_DATE.format(date).replace(/,/g, "").replace("Sept", "Sep");
+  const year = WHEN_YEAR.format(date);
+  const dayLabel = year === WHEN_YEAR.format(now) ? day : `${day} ${year}`;
+  return `${dayLabel} · ${toHourLabel(date)}`;
+}
+
+// "Sun 6 Dec · 4 pm – 7 pm": the line under an event's title.
+export function toEventWhenRangeLabel(
+  startsAt: string | Date,
+  endsAt: string | Date,
+  now: Date = new Date(),
+): string {
+  return `${toEventWhenLabel(startsAt, now)} – ${toHourLabel(new Date(endsAt))}`;
 }
 
 export function toTimeRange(
@@ -93,6 +110,145 @@ export function toTimeRange(
   endsAt: string | Date,
 ): string {
   return `${formatTime(startsAt)} – ${formatTime(endsAt)}`;
+}
+
+const MAX_PARAGRAPHS = 3;
+
+export function toParagraphs(description: string): string[] {
+  return description
+    .split(/\n+/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .slice(0, MAX_PARAGRAPHS);
+}
+
+type EventFactsInput = Pick<
+  EventDetailData,
+  "location" | "address" | "level" | "instructor" | "performers"
+>;
+
+// Place and who leads it. The date sits under the title; price and seats live in the reserve box.
+export function toEventFacts(event: EventFactsInput): EventFact[] {
+  const levelLabel = toLevelLabel(event.level);
+  return [
+    { label: "Where", value: `${event.location}, ${event.address}` },
+    ...(levelLabel ? [{ label: "Level", value: levelLabel }] : []),
+    ...(event.instructor
+      ? [{ label: "Instructor", value: event.instructor }]
+      : []),
+    ...(event.performers.length > 0
+      ? [{ label: "Line-up", value: event.performers.join(", ") }]
+      : []),
+  ];
+}
+
+// The one start-time rule: the API stops taking seats at the start, so every surface closes then too.
+export function hasEventStarted(startsAt: string | Date, now: Date): boolean {
+  return now.getTime() >= new Date(startsAt).getTime();
+}
+
+// setTimeout overflows past about 24.8 days and fires at once, so long waits go in steps.
+const MAX_TIMEOUT_MS = 2_147_483_647;
+
+export function toStartDelayMs(startsAt: string | Date, now: Date): number {
+  const delay = new Date(startsAt).getTime() - now.getTime();
+  return Math.min(Math.max(delay, 0), MAX_TIMEOUT_MS);
+}
+
+type EventCardTimingInput = Pick<
+  EventCardData,
+  "is_past" | "starts_at" | "available_seats" | "total_seats"
+>;
+
+// The card's second line: seats while a date is ahead, then what became of it.
+export function toEventCardSeatsLabel(
+  event: EventCardTimingInput,
+  now: Date,
+): string {
+  if (event.is_past) return "Wrapped up";
+  if (hasEventStarted(event.starts_at, now)) return "Under way";
+  return toSeatsLabel(event.available_seats, event.total_seats);
+}
+
+export type ReserveState =
+  "cancelled" | "booked" | "past" | "started" | "soldOut" | "open";
+
+interface ReserveStateInput {
+  isCancelled: boolean;
+  hasBooking: boolean;
+  isPast: boolean;
+  hasStarted: boolean;
+  availableSeats: number;
+}
+
+// A booking outranks the date: a past evening still links to the seat you had.
+export function toReserveState(input: ReserveStateInput): ReserveState {
+  if (input.isCancelled) return "cancelled";
+  if (input.hasBooking) return "booked";
+  if (input.isPast) return "past";
+  if (input.hasStarted) return "started";
+  if (input.availableSeats <= 0) return "soldOut";
+  return "open";
+}
+
+export function toRequestSeatsLabel(seats: number): string {
+  return seats === 1 ? "Request a seat" : `Request ${seats} seats`;
+}
+
+interface SeatPriceShownInput {
+  state: ReserveState;
+  isPast: boolean;
+  hasStarted: boolean;
+  bookingStatus: RegistrationStatus | null;
+}
+
+const UNPAID_STATUSES = new Set<RegistrationStatus>([
+  RegistrationStatus.Pending,
+  RegistrationStatus.Approved,
+]);
+
+// A price only matters while a seat can still be had, or is still to be paid for.
+export function isSeatPriceShown(input: SeatPriceShownInput): boolean {
+  if (input.state === "open" || input.state === "soldOut") return true;
+  if (input.state !== "booked" || input.isPast || input.hasStarted) {
+    return false;
+  }
+  return (
+    input.bookingStatus !== null && UNPAID_STATUSES.has(input.bookingStatus)
+  );
+}
+
+const SEAT_PRICE_NOTE: Record<EventType, string | null> = {
+  [EventType.PotteryWorkshop]:
+    "Clay, tools and firing are part of the seat price.",
+  [EventType.OpenMic]: null,
+};
+
+// The editor's own includes list is the truth when there is one, so the stock line steps aside.
+export function toSeatPriceNote(
+  eventType: EventType,
+  includes: string[],
+): string | null {
+  return includes.length > 0 ? null : SEAT_PRICE_NOTE[eventType];
+}
+
+const NOTE_PLACEHOLDER: Record<EventType, string> = {
+  [EventType.PotteryWorkshop]:
+    "Left-handed, coming with a friend, first time on the wheel…",
+  [EventType.OpenMic]: "Hoping to read, coming with a friend, need a chair…",
+};
+
+export function toReserveNotePlaceholder(eventType: EventType): string {
+  return NOTE_PLACEHOLDER[eventType];
+}
+
+const GALLERY_HEADING: Record<EventType, string> = {
+  [EventType.PotteryWorkshop]: "From the workshop",
+  [EventType.OpenMic]: "From the evening",
+};
+
+export function toGalleryHeading(eventType: EventType): string {
+  return GALLERY_HEADING[eventType];
 }
 
 export interface RegistrationStep {
@@ -105,7 +261,7 @@ export const REGISTRATION_STEPS: RegistrationStep[] = [
   {
     key: RegistrationStatus.Pending,
     label: "Requested",
-    description: "We have your request and will hold a seat if one is free.",
+    description: "We have your request and are keeping your seat.",
   },
   {
     key: RegistrationStatus.Approved,
@@ -119,11 +275,12 @@ export const REGISTRATION_STEPS: RegistrationStep[] = [
   },
 ];
 
+// Same words as wheel sessions: a seat is a request until the studio confirms it.
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting approval",
+  [RegistrationStatus.Pending]: "Awaiting confirmation",
   [RegistrationStatus.Approved]: "Seat held, awaiting payment",
   [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not approved",
+  [RegistrationStatus.Rejected]: "Not confirmed",
   [RegistrationStatus.Cancelled]: "Cancelled",
 };
 
@@ -144,11 +301,34 @@ export function toRegistrationStatusTone(
   return "active";
 }
 
+export type RegistrationStepDates = Partial<
+  Record<RegistrationStatus, string | null>
+>;
+
+type StepDatesInput = Pick<
+  RegistrationData,
+  "created_at" | "approved_at" | "confirmed_at"
+>;
+
+export function toRegistrationStepDates(
+  registration: StepDatesInput,
+): RegistrationStepDates {
+  return {
+    [RegistrationStatus.Pending]: formatDateTime(registration.created_at),
+    [RegistrationStatus.Approved]: registration.approved_at
+      ? formatDateTime(registration.approved_at)
+      : null,
+    [RegistrationStatus.Confirmed]: registration.confirmed_at
+      ? formatDateTime(registration.confirmed_at)
+      : null,
+  };
+}
+
 // Index of the current step. Cancelled and rejected bookings are not steps of their own,
 // so they freeze at the last step that actually carries a date.
 export function toRegistrationStepIndex(
   status: RegistrationStatus,
-  stepDates: Record<string, string | null> = {},
+  stepDates: RegistrationStepDates = {},
 ): number {
   const index = REGISTRATION_STEPS.findIndex((step) => step.key === status);
   if (index !== -1) return index;
@@ -163,6 +343,121 @@ export function isRegistrationClosed(status: RegistrationStatus): boolean {
     status === RegistrationStatus.Cancelled ||
     status === RegistrationStatus.Rejected
   );
+}
+
+type ClosedLabelInput = Pick<
+  RegistrationData,
+  "status" | "cancelled_at" | "rejected_at" | "cancel_reason"
+>;
+
+// "Cancelled on 12 Sept, 2026, 2:30 pm · Away that week", or null while the booking is open.
+export function toRegistrationClosedLabel(
+  registration: ClosedLabelInput,
+): string | null {
+  if (!isRegistrationClosed(registration.status)) return null;
+  const closedOn = registration.cancelled_at ?? registration.rejected_at;
+  return [
+    toRegistrationStatusLabel(registration.status) +
+      (closedOn ? ` on ${formatDateTime(closedOn)}` : ""),
+    registration.cancel_reason,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+type RegistrationFactsInput = Pick<
+  RegistrationData["event"],
+  "event_type" | "starts_at" | "ends_at" | "location" | "address"
+>;
+
+export function toRegistrationFacts(
+  event: RegistrationFactsInput,
+): EventFact[] {
+  return [
+    { label: "Kind", value: toEventTypeLabel(event.event_type) },
+    { label: "Date", value: formatDate(event.starts_at) },
+    { label: "Time", value: toTimeRange(event.starts_at, event.ends_at) },
+    { label: "Where", value: `${event.location}, ${event.address}` },
+  ];
+}
+
+// The receipt speaks for a request, so it goes once the studio has answered.
+export function isRequestBannerShown(
+  isJustPlaced: boolean,
+  status: RegistrationStatus,
+): boolean {
+  return isJustPlaced && status === RegistrationStatus.Pending;
+}
+
+// Seats are taken off the count the moment a request lands, so the receipt says so.
+export function toRequestReceiptLine(seats: number): string {
+  const kept =
+    seats === 1
+      ? "Your seat is kept for you while we confirm."
+      : "Your seats are kept for you while we confirm.";
+  return `${kept} Send us a message and we will share payment details, or wait for ours within a day.`;
+}
+
+type RegistrationGroupKey = "underWay" | "upcoming" | "past";
+
+type GroupableRegistration = Pick<RegistrationData, "status"> & {
+  event: Pick<RegistrationData["event"], "is_past" | "starts_at">;
+};
+
+export interface RegistrationGroup<T extends GroupableRegistration> {
+  key: RegistrationGroupKey;
+  heading: string;
+  registrations: T[];
+}
+
+// Like wheel sessions: a date that has run, or a seat that will never be taken, sits under Past.
+// A date that has begun but not ended is neither ahead nor done, so it gets its own group.
+function toRegistrationGroupKey(
+  registration: GroupableRegistration,
+  now: Date,
+): RegistrationGroupKey {
+  if (isRegistrationClosed(registration.status)) return "past";
+  if (registration.event.is_past) return "past";
+  return hasEventStarted(registration.event.starts_at, now)
+    ? "underWay"
+    : "upcoming";
+}
+
+function byStart(a: GroupableRegistration, b: GroupableRegistration): number {
+  return (
+    new Date(a.event.starts_at).getTime() -
+    new Date(b.event.starts_at).getTime()
+  );
+}
+
+// Soonest first for what is ahead, latest first for the record; empty groups are left out.
+// The API pages in the same order, so the groups hold across pages.
+export function toRegistrationGroups<T extends GroupableRegistration>(
+  registrations: T[],
+  now: Date,
+): RegistrationGroup<T>[] {
+  const inGroup = (key: RegistrationGroupKey) =>
+    registrations.filter(
+      (registration) => toRegistrationGroupKey(registration, now) === key,
+    );
+  const groups: RegistrationGroup<T>[] = [
+    {
+      key: "underWay",
+      heading: "Under way",
+      registrations: inGroup("underWay").sort(byStart),
+    },
+    {
+      key: "upcoming",
+      heading: "Upcoming",
+      registrations: inGroup("upcoming").sort(byStart),
+    },
+    {
+      key: "past",
+      heading: "Past and cancelled",
+      registrations: inGroup("past").sort((a, b) => byStart(b, a)),
+    },
+  ];
+  return groups.filter((group) => group.registrations.length > 0);
 }
 
 export interface WhatsAppBookingInput {

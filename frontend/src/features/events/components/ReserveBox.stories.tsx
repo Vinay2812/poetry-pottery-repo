@@ -15,14 +15,18 @@ const meta = {
     ),
   ],
   args: {
+    state: "open",
     eventId: 42,
     price: 1800,
     seats: 1,
     maxSeats: 4,
     note: "",
+    notePlaceholder:
+      "Left-handed, coming with a friend, first time on the wheel…",
     seatsLabel: "3 seats left",
-    isSoldOut: false,
-    isPast: false,
+    seatPriceNote: "Clay, tools and firing are part of the seat price.",
+    isPriceShown: true,
+    hasGallery: false,
     isReserving: false,
     bookingHref: null,
     bookingStatusLabel: "",
@@ -46,18 +50,47 @@ export const TwoSeats: Story = {
 
 export const Reserving: Story = { args: { isReserving: true } };
 
-export const SoldOut: Story = {
-  args: { isSoldOut: true, seatsLabel: "Sold out" },
+export const OpenMic: Story = {
+  args: {
+    price: 300,
+    notePlaceholder: "Hoping to read, coming with a friend, need a chair…",
+    seatPriceNote: null,
+  },
 };
 
-export const Past: Story = {
-  args: { isPast: true, seatsLabel: "Sold out" },
+export const SoldOut: Story = {
+  args: { state: "soldOut", seatsLabel: "Sold out" },
+};
+
+export const Past: Story = { args: { state: "past", isPriceShown: false } };
+
+export const PastWithPhotos: Story = {
+  args: { state: "past", isPriceShown: false, hasGallery: true },
+};
+
+export const UnderWay: Story = {
+  args: { state: "started", isPriceShown: false },
+};
+
+export const CalledOff: Story = {
+  args: { state: "cancelled", isPriceShown: false },
 };
 
 export const AlreadyBooked: Story = {
   args: {
+    state: "booked",
     bookingHref: "/registrations/REG7Q2X9M1KD",
     bookingStatusLabel: "Seat held, awaiting payment",
+    bookingSeats: 2,
+  },
+};
+
+export const BookedAndPaid: Story = {
+  args: {
+    state: "booked",
+    isPriceShown: false,
+    bookingHref: "/registrations/REG7Q2X9M1KD",
+    bookingStatusLabel: "Confirmed",
     bookingSeats: 2,
   },
 };

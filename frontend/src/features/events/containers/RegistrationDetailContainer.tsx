@@ -12,20 +12,24 @@ import { PageShell } from "@/components/layout/PageShell";
 import { SignInWall } from "@/features/auth/components/SignInWall";
 import { CancelRegistrationDialog } from "@/features/events/components/CancelRegistrationDialog";
 import { RegistrationDetail } from "@/features/events/components/RegistrationDetail";
+import { TEXT_LINK } from "@/features/events/components/styles";
 import {
   useCancelRegistration,
   useRegistration,
 } from "@/features/events/hooks";
 import {
   applyRegistrationCancellation,
-  type EventFact,
   isRegistrationClosed,
+  isRequestBannerShown,
   REGISTRATION_STEPS,
   toEventPath,
-  toEventTypeLabel,
+  toRegistrationClosedLabel,
+  toRegistrationFacts,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
+  toRegistrationStepDates,
   toRegistrationStepIndex,
+  toRequestReceiptLine,
   toTimeRange,
   toWhatsAppBookingMessage,
 } from "@/features/events/types";
@@ -96,7 +100,7 @@ export function RegistrationDetailContainer({
         <button
           type="button"
           onClick={() => void refetch()}
-          className="border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
+          className={TEXT_LINK}
         >
           Try again
         </button>
@@ -105,21 +109,8 @@ export function RegistrationDetailContainer({
   }
 
   const event = optimisticRegistration.event;
-  const dates: Record<string, string | null> = {
-    PENDING: formatDateTime(optimisticRegistration.created_at),
-    APPROVED: optimisticRegistration.approved_at
-      ? formatDateTime(optimisticRegistration.approved_at)
-      : null,
-    CONFIRMED: optimisticRegistration.confirmed_at
-      ? formatDateTime(optimisticRegistration.confirmed_at)
-      : null,
-  };
-  const closed = isRegistrationClosed(optimisticRegistration.status);
-  const closedOn =
-    optimisticRegistration.cancelled_at ?? optimisticRegistration.rejected_at;
-  const closedLabel = closed
-    ? `${toRegistrationStatusLabel(optimisticRegistration.status)}${closedOn ? ` on ${formatDateTime(closedOn)}` : ""}${optimisticRegistration.cancel_reason ? ` · ${optimisticRegistration.cancel_reason}` : ""}`
-    : null;
+  const stepDates = toRegistrationStepDates(optimisticRegistration);
+  const isClosed = isRegistrationClosed(optimisticRegistration.status);
   const whatsappUrl = whatsappNumber
     ? buildWhatsAppUrl(
         whatsappNumber,
@@ -133,18 +124,10 @@ export function RegistrationDetailContainer({
         }),
       )
     : null;
-
   // Only a seat that was taken at a finished session can carry a review.
   const canReview =
     optimisticRegistration.status === RegistrationStatus.Confirmed &&
     event.is_past;
-
-  const facts: EventFact[] = [
-    { label: "Kind", value: toEventTypeLabel(event.event_type) },
-    { label: "Date", value: formatDate(event.starts_at) },
-    { label: "Time", value: toTimeRange(event.starts_at, event.ends_at) },
-    { label: "Where", value: `${event.location}, ${event.address}` },
-  ];
 
   return (
     <>
@@ -152,23 +135,27 @@ export function RegistrationDetailContainer({
         registrationId={optimisticRegistration.id}
         eventTitle={event.title}
         eventHref={toEventPath(event.slug)}
-        bookedOn={formatDateTime(optimisticRegistration.created_at)}
+        requestedOn={formatDateTime(optimisticRegistration.created_at)}
         statusLabel={toRegistrationStatusLabel(optimisticRegistration.status)}
         statusTone={toRegistrationStatusTone(optimisticRegistration.status)}
-        isJustPlaced={isJustPlaced && !closed}
+        isRequestShown={isRequestBannerShown(
+          isJustPlaced,
+          optimisticRegistration.status,
+        )}
+        requestLine={toRequestReceiptLine(optimisticRegistration.seats)}
         steps={REGISTRATION_STEPS.map((step) => ({
           key: step.key,
           label: step.label,
           description: step.description,
-          date: dates[step.key] ?? null,
+          date: stepDates[step.key] ?? null,
         }))}
         currentStepIndex={toRegistrationStepIndex(
           optimisticRegistration.status,
-          dates,
+          stepDates,
         )}
-        isClosed={closed}
-        closedLabel={closedLabel}
-        facts={facts}
+        isClosed={isClosed}
+        closedLabel={toRegistrationClosedLabel(optimisticRegistration)}
+        facts={toRegistrationFacts(event)}
         seats={optimisticRegistration.seats}
         unitPrice={optimisticRegistration.unit_price}
         discount={optimisticRegistration.discount}
