@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { formatInr } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
+import { toFreeShippingThreshold } from "@/features/cart/types";
 import { GlazeChip } from "@/features/products/components/GlazeChip";
 import { PriceTag } from "@/features/products/components/PriceTag";
 import { QuantityStepper } from "@/features/products/components/QuantityStepper";
@@ -168,7 +169,7 @@ export function ProductBuyBox({
           <p>{STUDIO_NOTE}</p>
           <p>
             {freeShippingAbove !== null
-              ? `Packed by hand in Sangli, free shipping above ${formatInr(freeShippingAbove)}.`
+              ? `Packed by hand in Sangli, free shipping ${toFreeShippingThreshold(freeShippingAbove, formatInr)}.`
               : "Packed by hand in Sangli and shipped across India."}
           </p>
         </div>

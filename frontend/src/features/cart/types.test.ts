@@ -4,10 +4,11 @@ import {
   applyCartAction,
   canPredictShipping,
   type CartData,
-  toFreeShippingProgress,
   toMaxQuantity,
   toStockNotice,
   toSelectionSummary,
+  toFreeShippingThreshold,
+  toShippingNote,
 } from "./types";
 
 describe("toSelectionSummary", () => {
@@ -219,23 +220,26 @@ describe("applyCartAction", () => {
   });
 });
 
-describe("toFreeShippingProgress", () => {
+describe("toFreeShippingThreshold", () => {
+  it("counts the threshold amount itself as qualifying", () => {
+    expect(toFreeShippingThreshold(2500, (amount) => `Rs${amount}`)).toBe(
+      "on orders of Rs2500 or more",
+    );
+  });
+});
+
+describe("toShippingNote", () => {
   const rupees = (amount: number) => `Rs${amount}`;
 
-  it("names the gap left to close", () => {
-    expect(toFreeShippingProgress(600, 2500, rupees)).toEqual({
-      hasEarnedIt: false,
-      percent: 24,
-      label: "Rs1900 more for free shipping.",
-    });
+  it("names the threshold while a fee applies", () => {
+    expect(toShippingNote(150, 2500, rupees)).toBe(
+      "Free on orders of Rs2500 or more.",
+    );
   });
 
-  it("confirms free shipping in one line once the threshold is met", () => {
-    expect(toFreeShippingProgress(2500, 2500, rupees)).toEqual({
-      hasEarnedIt: true,
-      percent: 100,
-      label: "Shipping is free on this order.",
-    });
-    expect(toFreeShippingProgress(0, 0, rupees).hasEarnedIt).toBe(true);
+  it("says nothing once shipping is free or when there is no threshold", () => {
+    expect(toShippingNote(0, 2500, rupees)).toBeNull();
+    expect(toShippingNote(150, null, rupees)).toBeNull();
+    expect(toShippingNote(150, 0, rupees)).toBeNull();
   });
 });

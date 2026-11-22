@@ -36,6 +36,10 @@ export const DiscountPending: Story = {
   args: { couponCode: "WELCOME10", isDiscountPending: true },
 };
 
+export const WithShippingNote: Story = {
+  args: { shippingNote: "Free on orders of ₹2,500 or more." },
+};
+
 export const FreeShipping: Story = {
   args: { shippingFee: 0, total: 2300 },
 };

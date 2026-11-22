@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+
 import { EMPTY_ADDRESS_FORM } from "@/features/addresses/types";
 import {
   type AddressFormValues,
@@ -19,6 +21,9 @@ interface TextFieldProps {
   autoComplete: string;
   error: string | undefined;
   registration: UseFormRegisterReturn;
+  type?: "text" | "tel";
+  inputMode?: "text" | "tel" | "numeric";
+  className?: string;
 }
 
 function TextField({
@@ -27,20 +32,27 @@ function TextField({
   autoComplete,
   error,
   registration,
+  type = "text",
+  inputMode,
+  className,
 }: TextFieldProps) {
+  const errorId = `${id}-error`;
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={cn("flex flex-col gap-1.5", className)}>
       <Label htmlFor={id} className="text-[13px] text-muted-foreground">
         {label}
       </Label>
       <Input
         id={id}
+        type={type}
+        inputMode={inputMode}
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
         {...registration}
       />
       {error && (
-        <p role="alert" className="text-[13px] text-destructive">
+        <p id={errorId} role="alert" className="text-[13px] text-destructive">
           {error}
         </p>
       )}
@@ -92,12 +104,12 @@ export function AddressForm({
         <TextField
           id="address-phone"
           label="Phone"
+          type="tel"
+          inputMode="tel"
           autoComplete="tel"
           error={errors.phone?.message}
           registration={register("phone")}
         />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
         <TextField
           id="address-line1"
           label="Flat, house or building"
@@ -112,24 +124,25 @@ export function AddressForm({
           error={errors.line2?.message}
           registration={register("line2")}
         />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
         <TextField
           id="address-landmark"
           label="Landmark (optional)"
           autoComplete="off"
           error={errors.landmark?.message}
           registration={register("landmark")}
+          className="md:col-span-2"
         />
+      </div>
+      {/* City takes a full row on a phone so State and the short PIN code can share one. */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
         <TextField
           id="address-city"
           label="City"
           autoComplete="address-level2"
           error={errors.city?.message}
           registration={register("city")}
+          className="col-span-2 md:col-span-1"
         />
-      </div>
-      <div className="grid gap-4 md:grid-cols-2">
         <TextField
           id="address-state"
           label="State"
@@ -139,7 +152,8 @@ export function AddressForm({
         />
         <TextField
           id="address-pincode"
-          label="Pincode"
+          label="PIN code"
+          inputMode="numeric"
           autoComplete="postal-code"
           error={errors.pincode?.message}
           registration={register("pincode")}

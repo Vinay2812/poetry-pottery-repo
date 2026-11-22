@@ -19,15 +19,18 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { describeError } from "@/lib/apollo/errors";
+import { formatInr } from "@/lib/format";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
 
 import { PageShell } from "@/components/layout/PageShell";
 
 import { AddressPickerContainer } from "@/features/addresses";
-import { EmptyCart } from "@/features/cart/components/EmptyCart";
-import { useCart } from "@/features/cart/hooks";
-import { toSelectionSummary } from "@/features/cart/types";
+import { CartLoadFailed, EmptyCart, useCart } from "@/features/cart";
+import { toSelectionSummary, toShippingNote } from "@/features/cart/types";
+import { CheckoutLayout } from "@/features/checkout/components/CheckoutLayout";
 import { CheckoutLineItem } from "@/features/checkout/components/CheckoutLineItem";
+import { CheckoutSection } from "@/features/checkout/components/CheckoutSection";
+import { CheckoutSkeleton } from "@/features/checkout/components/CheckoutSkeleton";
 import { CheckoutSummary } from "@/features/checkout/components/CheckoutSummary";
 import { CouponField } from "@/features/checkout/components/CouponField";
 import { GiftNoteField } from "@/features/checkout/components/GiftNoteField";
@@ -41,6 +44,7 @@ export function CheckoutContainer() {
   const {
     cart,
     isLoading: isCartLoading,
+    hasError: hasCartError,
     isSignedIn,
     resync: resyncCart,
   } = useCart();
@@ -172,20 +176,25 @@ export function CheckoutContainer() {
           ? "Remove the unavailable pieces from your cart first."
           : null;
 
+  const shippingFee = quote?.shipping_fee ?? cart?.shipping_fee ?? 0;
+
   if (isCartLoading || isPlaced) {
     return (
       <PageShell column="wide" className="py-8 md:py-12" isBusy>
-        <div className="h-8 w-40 animate-pulse bg-ash" />
-        <div className="mt-8 h-64 animate-pulse bg-ash" />
+        <CheckoutSkeleton />
       </PageShell>
     );
   }
 
-  if (!isSignedIn || (cart?.items.length ?? 0) === 0) {
+  if (!isSignedIn || !cart || cart.items.length === 0) {
     return (
       <PageShell column="wide" className="flex flex-col gap-6 py-8 md:py-12">
         <h1 className="font-heading text-3xl md:text-5xl">Checkout</h1>
-        <EmptyCart isSignedIn={isSignedIn} onSignIn={() => openSignIn()} />
+        {isSignedIn && hasCartError && !cart ? (
+          <CartLoadFailed onRetry={() => void resyncCart()} />
+        ) : (
+          <EmptyCart isSignedIn={isSignedIn} onSignIn={() => openSignIn()} />
+        )}
       </PageShell>
     );
   }
@@ -193,53 +202,59 @@ export function CheckoutContainer() {
   return (
     <PageShell column="wide" className="flex flex-col gap-6 py-8 md:py-12">
       <h1 className="font-heading text-3xl md:text-5xl">Checkout</h1>
-      <div className="grid gap-8 lg:grid-cols-[1fr_380px] lg:items-start">
-        <div className="flex flex-col gap-8">
-          <section className="flex flex-col gap-4">
-            <h2 className="border-b border-ash pb-3 font-heading text-xl tracking-tight">
-              Deliver to
-            </h2>
-            <AddressPickerContainer
-              selectedId={addressId}
-              onSelect={setAddressId}
-            />
-          </section>
-          <section className="flex flex-col gap-4">
-            <h2 className="border-b border-ash pb-3 font-heading text-xl tracking-tight">
-              Your pieces
-            </h2>
-            <ul className="flex flex-col">
-              {items.map((item) => (
-                <CheckoutLineItem
-                  key={item.id}
-                  name={item.product.name}
-                  imageUrl={item.product.image_urls[0] ?? null}
-                  quantity={item.quantity}
-                  lineTotal={item.line_total}
-                  selectionSummary={toSelectionSummary(item.selections)}
-                  referenceImageUrls={item.reference_image_urls}
+      <CheckoutLayout
+        details={
+          <>
+            <CheckoutSection title="Deliver to">
+              <AddressPickerContainer
+                selectedId={addressId}
+                onSelect={setAddressId}
+              />
+            </CheckoutSection>
+            <CheckoutSection title="Your pieces">
+              <ul className="flex flex-col">
+                {items.map((item) => (
+                  <CheckoutLineItem
+                    key={item.id}
+                    name={item.product.name}
+                    imageUrl={item.product.image_urls[0] ?? null}
+                    quantity={item.quantity}
+                    unitPrice={item.unit_price}
+                    lineTotal={item.line_total}
+                    selectionSummary={toSelectionSummary(item.selections)}
+                    referenceImageUrls={item.reference_image_urls}
+                  />
+                ))}
+              </ul>
+            </CheckoutSection>
+            <CheckoutSection title="Gift and notes">
+              <div className="flex flex-col gap-8">
+                <GiftNoteField
+                  isGift={isGift}
+                  note={giftNote}
+                  hasHiddenPrices={hasHiddenPrices}
+                  onIsGiftChange={setIsGift}
+                  onNoteChange={setGiftNote}
+                  onHiddenPricesChange={setHasHiddenPrices}
                 />
-              ))}
-            </ul>
-            <OrderNoteField value={note} onChange={setNote} />
-            <GiftNoteField
-              isGift={isGift}
-              note={giftNote}
-              hasHiddenPrices={hasHiddenPrices}
-              onIsGiftChange={setIsGift}
-              onNoteChange={setGiftNote}
-              onHiddenPricesChange={setHasHiddenPrices}
-            />
-          </section>
-        </div>
-        <div className="lg:sticky lg:top-24">
+                <OrderNoteField value={note} onChange={setNote} />
+              </div>
+            </CheckoutSection>
+          </>
+        }
+        summary={
           <CheckoutSummary
             itemCount={quote?.item_count ?? availableItemCount}
-            subtotal={quote?.subtotal ?? cart?.subtotal ?? 0}
+            subtotal={quote?.subtotal ?? cart.subtotal}
             discount={coupon.discount}
             couponCode={coupon.code}
-            shippingFee={quote?.shipping_fee ?? cart?.shipping_fee ?? 0}
-            total={quote?.total ?? cart?.total ?? 0}
+            shippingFee={shippingFee}
+            shippingNote={toShippingNote(
+              shippingFee,
+              cart.free_shipping_above,
+              formatInr,
+            )}
+            total={quote?.total ?? cart.total}
             problems={quote?.problems ?? []}
             isDiscountPending={coupon.isPending}
             isQuotePending={isCouponPending}
@@ -267,8 +282,8 @@ export function CheckoutContainer() {
               />
             }
           />
-        </div>
-      </div>
+        }
+      />
     </PageShell>
   );
 }

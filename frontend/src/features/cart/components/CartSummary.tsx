@@ -10,7 +10,7 @@ export interface CartSummaryProps {
   itemCount: number;
   canCheckout: boolean;
   checkoutHref: string;
-  meter?: React.ReactNode;
+  shippingNote: string | null;
 }
 
 const ROW = "flex justify-between border-b border-ash py-3 text-sm";
@@ -22,12 +22,11 @@ export function CartSummary({
   itemCount,
   canCheckout,
   checkoutHref,
-  meter,
+  shippingNote,
 }: CartSummaryProps) {
   return (
-    // The free-shipping meter shares this block's rule rather than drawing its own.
-    <div className="flex flex-col gap-5 border-t border-ash pt-5">
-      {meter}
+    // Below lg the last cart line's rule already sits above the summary, so it draws its own only beside the lines.
+    <div className="flex flex-col gap-5 lg:border-t lg:border-ash lg:pt-5">
       <h2 className="font-heading text-xl tracking-tight">Summary</h2>
       <dl className="flex flex-col">
         <div className={ROW}>
@@ -37,7 +36,12 @@ export function CartSummary({
           <dd className="tnum">{formatInr(subtotal)}</dd>
         </div>
         <div className={ROW}>
-          <dt className="text-muted-foreground">Shipping</dt>
+          <dt className="flex flex-col gap-0.5 text-muted-foreground">
+            Shipping
+            {shippingNote && (
+              <span className="text-[13px]">{shippingNote}</span>
+            )}
+          </dt>
           <dd className="tnum">
             {shippingFee === 0 ? "Free" : formatInr(shippingFee)}
           </dd>

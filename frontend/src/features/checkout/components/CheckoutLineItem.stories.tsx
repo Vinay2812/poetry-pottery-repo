@@ -18,6 +18,7 @@ const meta = {
     imageUrl:
       "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
     quantity: 1,
+    unitPrice: 850,
     lineTotal: 850,
     selectionSummary: null,
     referenceImageUrls: [],

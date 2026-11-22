@@ -8,10 +8,17 @@ function normalisePhone(value: string): string | null {
   return TEN_DIGITS.exec(compact)?.[1] ?? null;
 }
 
-function requiredText(label: string, min: number, max: number) {
+// Messages name the field by its label on the form, and an empty field asks for it plainly.
+function requiredText(
+  label: string,
+  emptyMessage: string,
+  min: number,
+  max: number,
+) {
   return z
     .string()
     .trim()
+    .min(1, emptyMessage)
     .min(min, `${label} must be at least ${min} characters`)
     .max(max, `${label} must be ${max} characters or fewer`);
 }
@@ -24,24 +31,30 @@ function optionalText(label: string, max: number) {
 }
 
 export const addressSchema = z.object({
-  name: requiredText("Name", 2, 80),
+  name: requiredText("Full name", "Enter your full name", 2, 80),
   phone: z
     .string()
     .trim()
+    .min(1, "Enter a phone number")
     .refine(
       (value) => normalisePhone(value) !== null,
       "Enter a valid 10-digit phone number",
     )
     .transform((value) => normalisePhone(value) ?? value),
-  line1: requiredText("Address line 1", 3, 120),
-  line2: optionalText("Address line 2", 120),
+  line1: requiredText(
+    "Flat, house or building",
+    "Enter the flat, house or building",
+    3,
+    120,
+  ),
+  line2: optionalText("Area or street", 120),
   landmark: optionalText("Landmark", 120),
-  city: requiredText("City", 2, 60),
-  state: requiredText("State", 2, 60),
+  city: requiredText("City", "Enter the city", 2, 60),
+  state: requiredText("State", "Enter the state", 2, 60),
   pincode: z
     .string()
     .trim()
-    .regex(/^\d{6}$/, "Pincode must be 6 digits"),
+    .regex(/^\d{6}$/, "Enter a 6-digit PIN code"),
   is_default: z.boolean(),
 });
 

@@ -1,4 +1,6 @@
 export const GIFT_NOTE_MAX_LENGTH = 200;
+// The server keeps the first 500 characters of the order note.
+export const ORDER_NOTE_MAX_LENGTH = 500;
 
 export interface GiftView {
   gift_note: string | null;

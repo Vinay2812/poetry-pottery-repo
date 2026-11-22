@@ -57,16 +57,22 @@ describe("parseAddressInput", () => {
 
   it("reports the first problem with a human message", () => {
     expect(() => parseAddressInput(input({ name: "M" }))).toThrow(
-      "Name must be at least 2 characters",
+      "Full name must be at least 2 characters",
+    );
+    expect(() => parseAddressInput(input({ name: " " }))).toThrow(
+      "Enter your full name",
+    );
+    expect(() => parseAddressInput(input({ phone: "" }))).toThrow(
+      "Enter a phone number",
     );
     expect(() => parseAddressInput(input({ phone: "12345" }))).toThrow(
       "valid 10-digit phone number",
     );
     expect(() => parseAddressInput(input({ pincode: "56001" }))).toThrow(
-      "Pincode must be 6 digits",
+      "Enter a 6-digit PIN code",
     );
     expect(() => parseAddressInput(input({ line1: "12" }))).toThrow(
-      "Address line 1 must be at least 3 characters",
+      "Flat, house or building must be at least 3 characters",
     );
     expect(() =>
       parseAddressInput(input({ landmark: "x".repeat(121) })),

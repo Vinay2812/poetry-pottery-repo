@@ -132,6 +132,15 @@ export function toDeliveredCareLines(
   return status === OrderStatus.Delivered ? careNotes : [];
 }
 
+// The thank-you and its next steps only make sense until the studio confirms; a reopened
+// link to a paid or shipped order shows the order as it stands.
+export function showsPlacedBanner(
+  isJustPlaced: boolean,
+  status: OrderStatus,
+): boolean {
+  return isJustPlaced && status === OrderStatus.Pending;
+}
+
 export function isClosed(status: OrderStatus): boolean {
   return status === OrderStatus.Cancelled || status === OrderStatus.Refunded;
 }
