@@ -56,7 +56,7 @@ export function NextBatchForm({
       <p role="alert" className="min-h-4 text-[13px] text-destructive">
         {state === "error" ? message : null}
       </p>
-      <PrivacyNote lead="We'll only email you about this piece." />
+      <PrivacyNote lead="We'll email you when this piece is back." />
     </form>
   );
 }

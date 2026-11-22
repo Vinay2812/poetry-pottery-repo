@@ -130,7 +130,7 @@ export function VisitForm({
       >
         {isSubmitting ? "Booking…" : "Book the visit"}
       </Button>
-      <PrivacyNote lead="We use these details only to reply to you." />
+      <PrivacyNote lead="We use your details to arrange your visit." />
     </form>
   );
 }

@@ -147,7 +147,7 @@ export function ContactForm({
       <Button type="submit" className="w-fit" disabled={isSubmitting}>
         {isSubmitting ? "Sending…" : "Send message"}
       </Button>
-      <PrivacyNote lead="We use these details only to reply to you." />
+      <PrivacyNote lead="We use your details to reply to your message." />
     </form>
   );
 }

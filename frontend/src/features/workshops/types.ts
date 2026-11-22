@@ -54,12 +54,12 @@ export const SESSION_POLICY: readonly PolicyPoint[] = [
   {
     term: "Breakage",
     detail:
-      "Clay can crack while drying or in the kiln. If a piece breaks because of how we handled it, we'll put it right.",
+      "Clay can crack while drying or in the kiln. If a piece breaks because of how we handled it, you can ask for a refund or agree another way for us to put it right.",
   },
   {
     term: "If it isn't as agreed",
     detail:
-      "If we don't run your session the way we agreed, tell us and we'll put it right or refund you.",
+      "If we don't run your session the way we agreed, you can ask for a refund or agree another way for us to put it right.",
   },
 ];
 

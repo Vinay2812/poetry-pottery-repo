@@ -547,7 +547,7 @@ const PAID_SEAT_POLICY: readonly PolicyPoint[] = [
   {
     term: "If it isn't as agreed",
     detail:
-      "If we don't run the event the way we agreed, tell us and we'll put it right or refund you.",
+      "If we don't run the event the way we agreed, you can ask for a refund or agree another way for us to put it right.",
   },
 ];
 
@@ -571,7 +571,7 @@ const FREE_SEAT_POLICY: readonly PolicyPoint[] = [
   {
     term: "If it isn't as agreed",
     detail:
-      "If we don't run the event the way we agreed, tell us and we'll put it right.",
+      "If we don't run the event the way we agreed, tell us and we'll agree a way to put it right.",
   },
 ];
 

@@ -57,7 +57,7 @@ export function NewsletterForm({
       <p role="alert" className="min-h-4 text-[13px] text-destructive">
         {state === "error" ? message : null}
       </p>
-      <PrivacyNote lead="Unsubscribe any time." />
+      <PrivacyNote lead="Studio news by email. Unsubscribe any time." />
     </form>
   );
 }
