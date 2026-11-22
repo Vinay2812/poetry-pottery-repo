@@ -528,7 +528,7 @@ const PAID_SEAT_POLICY: readonly PolicyPoint[] = [
   {
     term: "Once paid, it's final",
     detail:
-      "Your seat stays yours. It can't be cancelled or refunded if your plans change.",
+      "Once paid, your seat can't be cancelled or refunded if your plans change.",
   },
   {
     term: "Sending someone else",
@@ -543,6 +543,11 @@ const PAID_SEAT_POLICY: readonly PolicyPoint[] = [
     term: "If we cancel",
     detail:
       "If we have to cancel or move the event, you choose a full refund or a seat at another event.",
+  },
+  {
+    term: "If it isn't as agreed",
+    detail:
+      "If we don't run the event the way we agreed, tell us and we'll put it right or refund you.",
   },
 ];
 
@@ -562,6 +567,11 @@ const FREE_SEAT_POLICY: readonly PolicyPoint[] = [
     term: "If we cancel",
     detail:
       "If we have to cancel or move the event, we'll let you know as soon as we can.",
+  },
+  {
+    term: "If it isn't as agreed",
+    detail:
+      "If we don't run the event the way we agreed, tell us and we'll put it right.",
   },
 ];
 

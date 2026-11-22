@@ -736,8 +736,9 @@ describe("toSeatPolicy", () => {
       "Sending someone else",
       "Missed events",
       "If we cancel",
+      "If it isn't as agreed",
     ]);
-    expect(points.at(-1)?.detail).toContain(
+    expect(points[4]?.detail).toContain(
       "full refund or a seat at another event",
     );
   });

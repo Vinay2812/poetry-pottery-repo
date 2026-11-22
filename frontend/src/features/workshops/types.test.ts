@@ -717,7 +717,7 @@ describe("studio asks", () => {
 });
 
 describe("SESSION_POLICY", () => {
-  it("reads in the owner's order, from withdrawing before payment to breakage", () => {
+  it("reads in the owner's order, from withdrawing before payment to a session not run as agreed", () => {
     expect(SESSION_POLICY.map((point) => point.term)).toEqual([
       "Before you pay",
       "Once paid, it's final",
@@ -725,6 +725,7 @@ describe("SESSION_POLICY", () => {
       "Missed sessions",
       "If we cancel",
       "Breakage",
+      "If it isn't as agreed",
     ]);
   });
 });
