@@ -328,7 +328,7 @@ export function toStockStatus(
 
 // The product page counts what is left of the batch, in the same words as the card and the cart.
 export function toBatchLabel(stock: number, isCustomizable: boolean): string {
-  if (isCustomizable) return "Made to order, thrown in about ten days";
+  if (isCustomizable) return "Made to order, takes three to four weeks";
   if (stock <= 0) return "Sold out \u00b7 next batch soon";
   return `${stock} left in this batch`;
 }
@@ -621,7 +621,7 @@ function toShipsIn(
 ): string | null {
   // An archived piece is not for sale, so it has nothing to ship.
   if (isArchived) return null;
-  return isCustomizable ? "About ten days" : "Three working days";
+  return isCustomizable ? "Three to four weeks" : "About two weeks";
 }
 
 // The kiln card: clay body, glaze and size always have something to say, the

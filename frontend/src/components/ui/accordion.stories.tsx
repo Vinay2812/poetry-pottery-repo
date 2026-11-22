@@ -23,7 +23,8 @@ const gallery = (
               When will my piece ship?
             </AccordionTrigger>
             <AccordionContent className="pb-4 text-[15px] leading-relaxed text-muted-foreground">
-              Pieces on the shelf leave the studio in three working days.
+              Pieces on the shelf usually reach you within two weeks of payment,
+              depending on where you are.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="care">

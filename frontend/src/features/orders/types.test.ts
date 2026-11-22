@@ -250,9 +250,9 @@ describe("toDeliveredCareLines", () => {
 describe("toArrivalWindow", () => {
   const PLACED = "2026-09-12T09:00:00.000Z";
 
-  it("adds the throwing time when a piece is made to order", () => {
+  it("adds three to four weeks of making when a piece is made to order", () => {
     expect(toArrivalWindow(PLACED, 7, 12, true)).toBe(
-      "Should reach you between 29 September and 4 October",
+      "Should reach you between 10 October and 22 October",
     );
   });
 

@@ -371,7 +371,7 @@ describe("toBatchLabel", () => {
     expect(toBatchLabel(1, false)).toBe("1 left in this batch");
     expect(toBatchLabel(0, false)).toBe("Sold out \u00b7 next batch soon");
     expect(toBatchLabel(0, true)).toBe(
-      "Made to order, thrown in about ten days",
+      "Made to order, takes three to four weeks",
     );
   });
 });
@@ -818,7 +818,7 @@ describe("toFactRows", () => {
       { label: "Capacity", value: "250 ml" },
       { label: "Weight", value: "320 g" },
       { label: "Made in", value: "Sangli, Maharashtra" },
-      { label: "Ships in", value: "Three working days" },
+      { label: "Ships in", value: "About two weeks" },
     ]);
     const bare = toFactRows({
       ...FACTS,
@@ -850,7 +850,7 @@ describe("toFactRows", () => {
     expect(rows).toContainEqual({ label: "Size", value: "Small, Large" });
     expect(rows).toContainEqual({
       label: "Ships in",
-      value: "About ten days",
+      value: "Three to four weeks",
     });
   });
 

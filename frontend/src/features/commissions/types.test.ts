@@ -41,7 +41,7 @@ describe("COMMISSION_STEPS", () => {
     expect(COMMISSION_STEPS).toHaveLength(5);
     expect(COMMISSION_STEPS[0]?.title).toContain("brief");
     expect(COMMISSION_STEPS[1]?.detail).toContain("price");
-    expect(COMMISSION_STEPS[4]?.title).toContain("ten days");
+    expect(COMMISSION_STEPS[4]?.title).toContain("three to four weeks");
   });
 });
 

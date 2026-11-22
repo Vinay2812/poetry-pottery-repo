@@ -71,8 +71,9 @@ const ARRIVAL_DATE = new Intl.DateTimeFormat("en-IN", {
   timeZone: "Asia/Kolkata",
 });
 
-// The "thrown in about ten days" the product page promises for a piece made to order.
-const MADE_TO_ORDER_DAYS = 10;
+// The "three to four weeks" the product page promises for making a piece to order.
+const MADE_TO_ORDER_DAYS_MIN = 21;
+const MADE_TO_ORDER_DAYS_MAX = 28;
 
 // Every piece is thrown, fired and packed before it leaves, so the studio promises a
 // window rather than a day. Both ends are counted from when the order was placed, and a
@@ -84,12 +85,13 @@ export function toArrivalWindow(
   isMadeToOrder = false,
 ): string {
   const placed = new Date(placedAt);
-  const lead = isMadeToOrder ? MADE_TO_ORDER_DAYS : 0;
   const earliest =
-    lead + Math.max(1, Math.min(dispatchDaysMin, dispatchDaysMax));
+    (isMadeToOrder ? MADE_TO_ORDER_DAYS_MIN : 0) +
+    Math.max(1, Math.min(dispatchDaysMin, dispatchDaysMax));
   const latest = Math.max(
     earliest,
-    lead + Math.max(dispatchDaysMin, dispatchDaysMax),
+    (isMadeToOrder ? MADE_TO_ORDER_DAYS_MAX : 0) +
+      Math.max(dispatchDaysMin, dispatchDaysMax),
   );
   const from = addDays(placed, earliest);
   const to = addDays(placed, latest);

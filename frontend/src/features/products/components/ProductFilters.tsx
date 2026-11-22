@@ -255,7 +255,7 @@ export function ProductFilters({
             id={`${scope}-filter-custom-note`}
             className="text-[13px] text-muted-foreground"
           >
-            Thrown once you order, ready in about ten days.
+            Thrown once you order, and takes three to four weeks to make.
           </p>
         </div>
         {/* The seconds shelf is listed on the shelf and in the archive alike, count and all. */}
