@@ -69,7 +69,6 @@ const meta = {
     maxQuantity: 10,
     isWishlisted: false,
     isAddingToCart: false,
-    canAddToCart: true,
     freeShippingAbove: 2999,
     onQuantityChange: fn(),
     onAddToCart: fn(),
@@ -95,7 +94,6 @@ export const SoldOut: Story = {
   args: {
     stockTone: "sold_out",
     stockLabel: "Sold out · next batch soon",
-    canAddToCart: false,
   },
 };
 

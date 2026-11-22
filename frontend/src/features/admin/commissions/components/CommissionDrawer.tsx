@@ -17,6 +17,8 @@ import { COMMISSION_FLOW } from "@/features/admin/commissions/types";
 
 export interface CommissionDrawerProps {
   isOpen: boolean;
+  // The id the person sees after sending and quotes on WhatsApp.
+  reference: string;
   name: string;
   email: string;
   phone: string | null;
@@ -34,6 +36,7 @@ export interface CommissionDrawerProps {
 
 export function CommissionDrawer({
   isOpen,
+  reference,
   name,
   email,
   phone,
@@ -58,6 +61,10 @@ export function CommissionDrawer({
 
         <div className="flex flex-col gap-5">
           <dl className="flex flex-col gap-1.5 text-[13px]">
+            <div className="flex gap-2">
+              <dt className="w-20 text-muted-foreground">Reference</dt>
+              <dd className="tnum">{reference}</dd>
+            </div>
             <div className="flex gap-2">
               <dt className="w-20 text-muted-foreground">Email</dt>
               <dd>{email}</dd>

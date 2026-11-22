@@ -14,7 +14,7 @@ const rows: ContactRow[] = [
     subject: "Custom glaze",
     message:
       "Could you throw six mugs in the sage glaze before Diwali? I would like them a little shorter than the ones on the shop page.",
-    receivedLabel: "Tue, 1 Sept, 2026, 3:30 pm",
+    receivedLabel: "Tue, 1 Sep, 2026, 3:30 pm",
     isRead: false,
   },
   {

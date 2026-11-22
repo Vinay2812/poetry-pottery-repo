@@ -19,7 +19,7 @@ const rows: ReviewRow[] = [
       "https://images.pexels.com/photos/18426654/pexels-photo-18426654.jpeg",
     ],
     photosLabel: "1 photo",
-    leftLabel: "Tue, 1 Sept, 2026",
+    leftLabel: "Tue, 1 Sep, 2026",
     isHidden: false,
   },
   {

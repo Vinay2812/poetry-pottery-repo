@@ -12,6 +12,7 @@ export {
   applyQueryPatch,
   formatEnumLabel,
   formatRange,
+  toPreviousPage,
   isNavLinkActive,
   type QueryPatch,
   type QueryValues,

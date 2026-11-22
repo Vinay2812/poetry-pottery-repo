@@ -17,7 +17,6 @@ import {
   formatPickedProgress,
   formatWheels,
   groupSlotsByDay,
-  isBookingClosed,
   isRequestBannerShown,
   pickTier,
   quoteSession,
@@ -30,8 +29,6 @@ import {
   toUnavailableMessage,
   toBookingPath,
   toBookingGroup,
-  toBookingStatusLabel,
-  toBookingStatusTone,
   toBookingWhenLines,
   toDateKey,
   toDayNote,
@@ -73,7 +70,7 @@ describe("studio calendar keys", () => {
     expect(toDateKey("2026-09-12T20:30:00.000Z", "Asia/Kolkata")).toBe(
       "2026-09-13",
     );
-    expect(formatDateKey("2026-09-13")).toBe("Sun, 13 Sept");
+    expect(formatDateKey("2026-09-13")).toBe("Sun 13 Sep");
   });
 });
 
@@ -178,18 +175,18 @@ describe("session helpers", () => {
     expect(groupSlotsByDay(slots, IST)).toEqual([
       {
         dateKey: "2026-09-13",
-        dayLabel: "Sun, 13 Sept",
+        dayLabel: "Sun 13 Sep",
         timesLabel: "2–4 pm",
       },
-      { dateKey: "2026-09-15", dayLabel: "Tue, 15 Sept", timesLabel: "3–4 pm" },
+      { dateKey: "2026-09-15", dayLabel: "Tue 15 Sep", timesLabel: "3–4 pm" },
     ]);
-    expect(formatDayRange(slots, IST)).toBe("Sun, 13 Sept – Tue, 15 Sept");
+    expect(formatDayRange(slots, IST)).toBe("Sun 13 Sep – Tue 15 Sep");
     expect(toBookingWhenLines(slots, IST)).toEqual([
-      "Sun, 13 Sept · 2–4 pm",
-      "Tue, 15 Sept · 3–4 pm",
+      "Sun 13 Sep · 2–4 pm",
+      "Tue 15 Sep · 3–4 pm",
     ]);
     expect(toBookingWhenLines(slots.slice(0, 2), IST)).toEqual(["2–4 pm"]);
-    expect(formatDayRange(slots.slice(0, 2), IST)).toBe("Sun, 13 Sept");
+    expect(formatDayRange(slots.slice(0, 2), IST)).toBe("Sun 13 Sep");
   });
 
   it("keeps hours with a gap between them apart", () => {
@@ -254,29 +251,6 @@ describe("session helpers", () => {
 });
 
 describe("booking status helpers", () => {
-  it("maps statuses to labels, tones and steps", () => {
-    expect(toBookingStatusLabel(RegistrationStatus.Pending)).toBe(
-      "Awaiting approval",
-    );
-    expect(toBookingStatusLabel(RegistrationStatus.Approved)).toBe(
-      "Approved, awaiting payment",
-    );
-    expect(toBookingStatusLabel(RegistrationStatus.Confirmed)).toBe(
-      "Confirmed",
-    );
-    expect(toBookingStatusLabel(RegistrationStatus.Rejected)).toBe(
-      "Not approved",
-    );
-    expect(toBookingStatusLabel(RegistrationStatus.Cancelled)).toBe(
-      "Cancelled",
-    );
-    expect(toBookingStatusTone(RegistrationStatus.Pending)).toBe("pending");
-    expect(toBookingStatusTone(RegistrationStatus.Approved)).toBe("active");
-    expect(toBookingStatusTone(RegistrationStatus.Confirmed)).toBe("done");
-    expect(toBookingStatusTone(RegistrationStatus.Rejected)).toBe("off");
-    expect(toBookingStatusTone(RegistrationStatus.Cancelled)).toBe("off");
-  });
-
   const readTimeline = (
     status: RegistrationStatus,
     dates: Partial<Record<RegistrationStatus, string | null>>,
@@ -288,12 +262,12 @@ describe("booking status helpers", () => {
 
   it("promises approval and payment while a request waits", () => {
     expect(
-      readTimeline(RegistrationStatus.Pending, { PENDING: "12 Sept" }),
+      readTimeline(RegistrationStatus.Pending, { PENDING: "12 Sep" }),
     ).toEqual([
       [
         "Requested",
         "current",
-        "12 Sept",
+        "12 Sep",
         "We have your request and are holding the wheel for you.",
       ],
       [
@@ -314,12 +288,12 @@ describe("booking status helpers", () => {
   it("asks for payment once approved", () => {
     expect(
       readTimeline(RegistrationStatus.Approved, {
-        PENDING: "12 Sept",
-        APPROVED: "13 Sept",
+        PENDING: "12 Sep",
+        APPROVED: "13 Sep",
       }),
     ).toEqual([
-      ["Requested", "done", "12 Sept", null],
-      ["Approved", "current", "13 Sept", "Payment details are on WhatsApp."],
+      ["Requested", "done", "12 Sep", null],
+      ["Approved", "current", "13 Sep", "Payment details are on WhatsApp."],
       [
         "Confirmed",
         "upcoming",
@@ -332,40 +306,33 @@ describe("booking status helpers", () => {
   it("gives the arrival instructions once confirmed, as a finished step", () => {
     expect(
       readTimeline(RegistrationStatus.Confirmed, {
-        PENDING: "12 Sept",
-        APPROVED: "13 Sept",
-        CONFIRMED: "14 Sept",
+        PENDING: "12 Sep",
+        APPROVED: "13 Sep",
+        CONFIRMED: "14 Sep",
       }).at(-1),
     ).toEqual([
       "Confirmed",
       "done",
-      "14 Sept",
+      "14 Sep",
       "Paid and confirmed. Come in ten minutes early.",
     ]);
   });
 
   it("stops a closed booking at the stage it reached", () => {
-    const dates = { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null };
+    const dates = { PENDING: "12 Sep", APPROVED: "13 Sep", CONFIRMED: null };
     for (const status of [
       RegistrationStatus.Cancelled,
       RegistrationStatus.Rejected,
     ]) {
       expect(readTimeline(status, dates, true)).toEqual([
-        ["Requested", "done", "12 Sept", null],
-        ["Approved", "done", "13 Sept", null],
+        ["Requested", "done", "12 Sep", null],
+        ["Approved", "done", "13 Sep", null],
       ]);
     }
   });
 
   it("never repeats the line above it in a promise", () => {
     expect(toRepeatedPhrases(BOOKING_STAGES)).toEqual([]);
-  });
-
-  it("knows which bookings are closed", () => {
-    expect(isBookingClosed(RegistrationStatus.Cancelled)).toBe(true);
-    expect(isBookingClosed(RegistrationStatus.Rejected)).toBe(true);
-    expect(isBookingClosed(RegistrationStatus.Approved)).toBe(false);
-    expect(isBookingClosed(RegistrationStatus.Confirmed)).toBe(false);
   });
 
   it("counts hours and free wheels", () => {

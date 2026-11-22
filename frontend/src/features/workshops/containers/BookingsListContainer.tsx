@@ -6,6 +6,10 @@ import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
 import { cn } from "@/lib/utils";
+import {
+  isRegistrationClosed,
+  toRegistrationStatusLabel,
+} from "@/lib/registration-status";
 
 import { SignInWall } from "@/features/auth";
 import { BookingCard } from "@/features/workshops/components/BookingCard";
@@ -15,11 +19,9 @@ import { NoUpcomingBookings } from "@/features/workshops/components/NoUpcomingBo
 import { useMyWorkshopBookings } from "@/features/workshops/hooks";
 import {
   formatDayRange,
-  isBookingClosed,
   toBookingGroup,
   toBookingWhenLines,
   toBookingPath,
-  toBookingStatusLabel,
 } from "@/features/workshops/types";
 import { SectionLabel } from "@/components/layout/SectionLabel";
 
@@ -125,8 +127,8 @@ export function BookingsListContainer() {
                         hours={booking.hours}
                         participants={booking.participants}
                         total={booking.total}
-                        statusLabel={toBookingStatusLabel(booking.status)}
-                        isCancelled={isBookingClosed(booking.status)}
+                        statusLabel={toRegistrationStatusLabel(booking.status)}
+                        isClosed={isRegistrationClosed(booking.status)}
                       />
                     ))}
                   </div>

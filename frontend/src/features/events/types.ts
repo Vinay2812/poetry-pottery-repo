@@ -9,7 +9,7 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
-import { formatDate, formatTime } from "@/lib/format";
+import { formatDate, formatShortDay, formatTime } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
 import {
@@ -17,8 +17,10 @@ import {
   toClosedLabel,
   toTimelineDate,
 } from "@/lib/timeline";
-
-import type { StatusTone } from "@/features/orders/types";
+import {
+  isRegistrationClosed,
+  toRegistrationStatusLabel,
+} from "@/lib/registration-status";
 
 export type EventCardData = EventCardFragment;
 export type EventDetailData = EventQuery["event"];
@@ -68,13 +70,6 @@ export function toEventTypeLabel(eventType: EventType): string {
   return EVENT_TYPE_LABEL[eventType];
 }
 
-const WHEN_DATE = new Intl.DateTimeFormat("en-IN", {
-  weekday: "short",
-  day: "numeric",
-  month: "short",
-  timeZone: "Asia/Kolkata",
-});
-
 const WHEN_YEAR = new Intl.DateTimeFormat("en-IN", {
   year: "numeric",
   timeZone: "Asia/Kolkata",
@@ -96,7 +91,7 @@ export function toEventWhenLabel(
   now: Date = new Date(),
 ): string {
   const date = new Date(startsAt);
-  const day = WHEN_DATE.format(date).replace(/,/g, "").replace("Sept", "Sep");
+  const day = formatShortDay(date, "Asia/Kolkata");
   const year = WHEN_YEAR.format(date);
   const dayLabel = year === WHEN_YEAR.format(now) ? day : `${day} ${year}`;
   return `${dayLabel} · ${toHourLabel(date)}`;
@@ -279,32 +274,6 @@ export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
   },
 ];
 
-// Same words as wheel sessions: a seat is a request until the studio approves it.
-const STATUS_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting approval",
-  [RegistrationStatus.Approved]: "Approved, awaiting payment",
-  [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not approved",
-  [RegistrationStatus.Cancelled]: "Cancelled",
-};
-
-export function toRegistrationStatusLabel(status: RegistrationStatus): string {
-  return STATUS_LABEL[status];
-}
-
-export function toRegistrationStatusTone(
-  status: RegistrationStatus,
-): StatusTone {
-  if (
-    status === RegistrationStatus.Cancelled ||
-    status === RegistrationStatus.Rejected
-  )
-    return "off";
-  if (status === RegistrationStatus.Confirmed) return "done";
-  if (status === RegistrationStatus.Pending) return "pending";
-  return "active";
-}
-
 export type RegistrationStepDates = Partial<
   Record<RegistrationStatus, string | null>
 >;
@@ -324,19 +293,12 @@ export function toRegistrationStepDates(
   };
 }
 
-export function isRegistrationClosed(status: RegistrationStatus): boolean {
-  return (
-    status === RegistrationStatus.Cancelled ||
-    status === RegistrationStatus.Rejected
-  );
-}
-
 type ClosedLabelInput = Pick<
   RegistrationData,
   "status" | "cancelled_at" | "rejected_at" | "cancel_reason"
 >;
 
-// "Cancelled on 12 Sept, 2026, 2:30 pm · Away that week", or null while the booking is open.
+// "Cancelled on 12 Sep, 2026, 2:30 pm · Away that week", or null while the booking is open.
 export function toRegistrationClosedLabel(
   registration: ClosedLabelInput,
 ): string | null {

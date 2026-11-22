@@ -325,7 +325,22 @@ describe("CommissionsService", () => {
     )?.[0] as {
       where: { OR: unknown[] };
     };
-    expect(call.where.OR).toHaveLength(3);
+    expect(call.where.OR).toHaveLength(4);
+  });
+
+  it("finds a brief by the reference the shopper quotes", async () => {
+    prismaMock.commissionRequest.findMany.mockResolvedValue([row]);
+    prismaMock.commissionRequest.count.mockResolvedValue(1);
+
+    await service.list({ search: ` ${row.id} ` });
+
+    expect(prismaMock.commissionRequest.findMany).toHaveBeenCalledWith(
+      containing({
+        where: containing({
+          OR: expect.arrayContaining([{ id: row.id }]),
+        }),
+      }),
+    );
   });
 
   it("counts a brief as read once it leaves NEW", async () => {

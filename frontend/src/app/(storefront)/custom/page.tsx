@@ -87,14 +87,17 @@ export default async function CustomPage({
               </p>
             </div>
             <ProductGrid>
-              {pieces.map((piece, index) => (
-                <ProductCardContainer
-                  key={piece.id}
-                  product={piece}
-                  isPriority={toCardPhotoLoading(index).isPriority}
-                  isEager={toCardPhotoLoading(index).isEager}
-                />
-              ))}
+              {pieces.map((piece, index) => {
+                const photoLoading = toCardPhotoLoading(index);
+                return (
+                  <ProductCardContainer
+                    key={piece.id}
+                    product={piece}
+                    isPriority={photoLoading.isPriority}
+                    isEager={photoLoading.isEager}
+                  />
+                );
+              })}
             </ProductGrid>
           </section>
         </Reveal>

@@ -50,7 +50,7 @@ export default async function WorkshopsPage() {
             href="/events"
             className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
           >
-            See workshops and open mics
+            See events
           </Link>
         </div>
       ) : (

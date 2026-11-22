@@ -14,10 +14,10 @@ import {
 import Loading from "./loading";
 
 export const metadata: Metadata = pageMetadata({
-  title: "Workshops and open mics",
+  title: "Events",
   path: "/events",
   description:
-    "Wheel workshops and open mic evenings at the Poetry & Pottery studio in Sangli. Small groups, clay and tools included.",
+    "Pottery workshops and open mic evenings at the Poetry & Pottery studio in Sangli. Small groups, clay and tools included.",
 });
 
 export default async function EventsPage({
@@ -33,8 +33,8 @@ export default async function EventsPage({
   return (
     <Suspense fallback={<Loading />}>
       <EventListContainer
-        heading="Workshops and open mics"
-        description="Small groups at the studio. Most workshop seats include clay, tools and firing, and we confirm every seat on WhatsApp."
+        heading="Events"
+        description="Workshops and open mics in small groups at the studio. Most workshop seats include clay, tools and firing, and we confirm every seat on WhatsApp."
         initialEvents={firstPage}
         initialFilterKey={toEventsFilterKey(filterInput)}
         now={new Date().toISOString()}

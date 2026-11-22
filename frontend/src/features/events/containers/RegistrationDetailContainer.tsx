@@ -5,7 +5,7 @@ import { useCallback, useOptimistic, useState } from "react";
 
 import { RegistrationStatus } from "@/graphql/generated/graphql";
 
-import { formatDate, formatDateTime, formatInr } from "@/lib/format";
+import { formatDate, formatInr } from "@/lib/format";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -19,20 +19,22 @@ import {
 } from "@/features/events/hooks";
 import {
   applyRegistrationCancellation,
-  isRegistrationClosed,
   isRequestBannerShown,
   REGISTRATION_STAGES,
   toEventPath,
   toRegistrationClosedLabel,
   toRegistrationFacts,
-  toRegistrationStatusLabel,
-  toRegistrationStatusTone,
   toRegistrationStepDates,
   toTimeRange,
   toWhatsAppBookingMessage,
 } from "@/features/events/types";
 import { buildWhatsAppUrl } from "@/features/layout/types";
 import { toTimelineSteps } from "@/lib/timeline";
+import {
+  isRegistrationClosed,
+  toRegistrationStatusLabel,
+  toRegistrationStatusTone,
+} from "@/lib/registration-status";
 import { ReviewActionContainer } from "@/features/reviews";
 
 export interface RegistrationDetailContainerProps {
@@ -134,7 +136,6 @@ export function RegistrationDetailContainer({
         registrationId={optimisticRegistration.id}
         eventTitle={event.title}
         eventHref={toEventPath(event.slug)}
-        requestedOn={formatDateTime(optimisticRegistration.created_at)}
         statusLabel={toRegistrationStatusLabel(optimisticRegistration.status)}
         statusTone={toRegistrationStatusTone(optimisticRegistration.status)}
         isRequestShown={isRequestBannerShown(

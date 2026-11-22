@@ -15,12 +15,12 @@ import {
   formatTime,
 } from "@/lib/format";
 import { useOptimisticAction } from "@/lib/use-optimistic-action";
+import { toRegistrationStatusLabel } from "@/lib/registration-status";
 
 import {
   AdminPageHeader,
   orderStatusLabel,
   orderStatusTone,
-  registrationStatusLabel,
   registrationStatusTone,
 } from "@/features/admin/ui";
 
@@ -40,6 +40,7 @@ import {
   describeStock,
   formatCount,
   stockTone,
+  toAgendaDetail,
   toAgendaHref,
   toAgendaKindLabel,
 } from "@/features/admin/dashboard/types";
@@ -120,7 +121,7 @@ export function DashboardContainer() {
         kindLabel: toAgendaKindLabel(item.kind),
         timeLabel: formatTime(item.starts_at),
         title: item.title,
-        detail: item.detail,
+        detail: toAgendaDetail(item.detail, item.booking_status),
       })),
     [dashboard],
   );
@@ -130,7 +131,7 @@ export function DashboardContainer() {
       (dashboard?.recent_bookings ?? []).map((booking) => ({
         id: booking.id,
         customerName: booking.customer.name ?? booking.customer.email,
-        statusLabel: registrationStatusLabel(booking.status),
+        statusLabel: toRegistrationStatusLabel(booking.status),
         statusTone: registrationStatusTone(booking.status),
         shapeLabel: describeBooking(booking.hours, booking.participants),
         totalLabel: formatInr(booking.total),
@@ -207,9 +208,9 @@ export function DashboardContainer() {
         <RecentOrdersTable rows={orderRows} />
       </DashboardSection>
       <DashboardSection
-        title="Recent bookings"
+        title="Recent wheel sessions"
         moreHref="/dashboard/workshops"
-        moreLabel="All bookings"
+        moreLabel="All wheel sessions"
       >
         <RecentBookingsTable rows={bookingRows} />
       </DashboardSection>

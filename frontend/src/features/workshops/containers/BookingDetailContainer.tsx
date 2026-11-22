@@ -5,7 +5,7 @@ import { useCallback, useOptimistic, useState, useTransition } from "react";
 
 import { RegistrationStatus } from "@/graphql/generated/graphql";
 
-import { formatDateTime, formatInr, pluralize } from "@/lib/format";
+import { formatInr, pluralize } from "@/lib/format";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -22,16 +22,18 @@ import {
 import { useSlotPicker } from "@/features/workshops/slot-picker";
 import { toClosedLabel, toTimelineDate, toTimelineSteps } from "@/lib/timeline";
 import {
+  isRegistrationClosed,
+  toRegistrationStatusLabel,
+  toRegistrationStatusTone,
+} from "@/lib/registration-status";
+import {
   applyBookingAction,
   BOOKING_STAGES,
   formatDayRange,
   formatHours,
   groupSlotsByDay,
-  isBookingClosed,
   isRequestBannerShown,
   type SessionFact,
-  toBookingStatusLabel,
-  toBookingStatusTone,
   toWhatsAppSessionMessage,
 } from "@/features/workshops/types";
 
@@ -157,12 +159,12 @@ export function BookingDetailContainer({
       optimisticBooking.confirmed_at,
     ),
   };
-  const closed = isBookingClosed(optimisticBooking.status);
+  const closed = isRegistrationClosed(optimisticBooking.status);
   const closedOn =
     optimisticBooking.cancelled_at ?? optimisticBooking.rejected_at;
   const closedLabel = closed
     ? toClosedLabel(
-        toBookingStatusLabel(optimisticBooking.status),
+        toRegistrationStatusLabel(optimisticBooking.status),
         toTimelineDate(closedOn),
         optimisticBooking.cancel_reason,
       )
@@ -206,9 +208,8 @@ export function BookingDetailContainer({
       <BookingDetail
         bookingId={optimisticBooking.id}
         dateLabel={formatDayRange(optimisticBooking.slots, timezone)}
-        bookedOn={formatDateTime(optimisticBooking.created_at)}
-        statusLabel={toBookingStatusLabel(optimisticBooking.status)}
-        statusTone={toBookingStatusTone(optimisticBooking.status)}
+        statusLabel={toRegistrationStatusLabel(optimisticBooking.status)}
+        statusTone={toRegistrationStatusTone(optimisticBooking.status)}
         isJustPlaced={isRequestBannerShown(
           isJustPlaced,
           optimisticBooking.status,

@@ -67,6 +67,9 @@ export function CommissionsTable({
               <span className="block text-[12px] wrap-anywhere text-muted-foreground">
                 {row.email}
               </span>
+              <span className="block text-[12px] text-muted-foreground tnum">
+                {row.id}
+              </span>
             </td>
             <td className={`${ADMIN_TD} min-w-56 text-muted-foreground`}>
               {describeBrief(row.pieceType, row.size, row.glaze)}

@@ -102,7 +102,7 @@ export function isDayWithinSpan(
   return spanDays([...pickedDateKeys, dateKey]) <= allowedSpanDays;
 }
 
-// Picked hours are always shown and sent in the order they happen, as "Sat, 20 Sept · 3–4 pm".
+// Picked hours are always shown and sent in the order they happen, as "Sat 20 Sep · 3–4 pm".
 export function toPickedSlots(
   picked: readonly SlotInterval[],
   timezone: string,

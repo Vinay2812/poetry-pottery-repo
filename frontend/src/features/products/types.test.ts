@@ -21,6 +21,7 @@ import {
   toDefaultSelections,
   validateReferencePhoto,
   countActiveFilters,
+  toBelowFoldCardPhotoLoading,
   toCardPhotoLoading,
   EMPTY_FILTERS,
   parseFilters,
@@ -627,6 +628,23 @@ describe("toCardPhotoLoading", () => {
 
   it("leaves everything below the first row lazy", () => {
     expect(toCardPhotoLoading(4)).toEqual({
+      isPriority: false,
+      isEager: false,
+    });
+  });
+});
+
+describe("toBelowFoldCardPhotoLoading", () => {
+  it("un-lazies only a phone's first row and never asks for priority", () => {
+    expect(toBelowFoldCardPhotoLoading(0)).toEqual({
+      isPriority: false,
+      isEager: true,
+    });
+    expect(toBelowFoldCardPhotoLoading(1)).toEqual({
+      isPriority: false,
+      isEager: true,
+    });
+    expect(toBelowFoldCardPhotoLoading(2)).toEqual({
       isPriority: false,
       isEager: false,
     });

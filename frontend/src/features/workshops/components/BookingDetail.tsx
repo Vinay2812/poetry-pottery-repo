@@ -8,7 +8,7 @@ import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge"
 import { Timeline } from "@/components/timeline/Timeline";
 import type { TimelineStep } from "@/lib/timeline";
 
-import type { StatusTone } from "@/features/orders/types";
+import type { StatusTone } from "@/lib/status-tone";
 import type { SessionFact } from "@/features/workshops/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 import { SectionLabel } from "@/components/layout/SectionLabel";
@@ -16,7 +16,6 @@ import { SectionLabel } from "@/components/layout/SectionLabel";
 export interface BookingDetailProps {
   bookingId: string;
   dateLabel: string;
-  bookedOn: string;
   statusLabel: string;
   statusTone: StatusTone;
   isJustPlaced: boolean;
@@ -42,7 +41,6 @@ const TEXT_BUTTON =
 export function BookingDetail({
   bookingId,
   dateLabel,
-  bookedOn,
   statusLabel,
   statusTone,
   isJustPlaced,
@@ -71,7 +69,6 @@ export function BookingDetail({
           <h1 className="font-heading text-3xl tracking-tight md:text-5xl">
             {dateLabel}
           </h1>
-          <p className="text-[13px] text-muted-foreground">Booked {bookedOn}</p>
         </div>
         <OrderStatusBadge tone={statusTone} label={statusLabel} />
       </header>

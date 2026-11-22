@@ -41,6 +41,7 @@ input AddressInput {
 }
 
 type AdminAgendaItem {
+  booking_status: RegistrationStatus
   detail: String!
   ends_at: DateTime!
   id: String!

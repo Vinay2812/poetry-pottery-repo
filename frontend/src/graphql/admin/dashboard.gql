@@ -46,6 +46,7 @@ query AdminDashboard {
       ends_at
       title
       detail
+      booking_status
     }
   }
 }

@@ -11,6 +11,7 @@ import {
 
 import { formatDate, formatInr, pluralize } from "@/lib/format";
 import { useReasonAction } from "@/lib/use-reason-action";
+import { toRegistrationStatusLabel } from "@/lib/registration-status";
 
 import {
   toPageNumber,
@@ -27,7 +28,6 @@ import {
   registrationActionNeedsReason,
   registrationClosingDialog,
   registrationHoldNote,
-  registrationStatusLabel,
   registrationStatusOptions,
   registrationStatusTone,
   toPersonName,
@@ -105,10 +105,10 @@ export function EventRegistrationsContainer({
         id: entry.registration.id,
         personName: toPersonName(entry.customer.name, entry.customer.email),
         personEmail: entry.customer.email,
-        bookedLabel: formatDate(entry.registration.created_at),
+        requestedLabel: formatDate(entry.registration.created_at),
         seatsLabel: pluralize(entry.registration.seats, "seat"),
         totalLabel: formatInr(entry.registration.total),
-        statusLabel: registrationStatusLabel(entry.registration.status),
+        statusLabel: toRegistrationStatusLabel(entry.registration.status),
         statusTone: registrationStatusTone(entry.registration.status),
         closingNote: describeClosing(entry.registration.cancel_reason),
         note: entry.registration.note,
@@ -136,7 +136,7 @@ export function EventRegistrationsContainer({
     requiredMessage: "Say why, in a sentence the person can read",
     messages: {
       success: ({ target }) =>
-        `Registration updated: ${registrationStatusLabel(target.status)}`,
+        `Registration updated: ${toRegistrationStatusLabel(target.status)}`,
       failure: "The registration could not be moved",
     },
   });

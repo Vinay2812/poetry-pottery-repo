@@ -144,7 +144,9 @@ export function ProductDetailContainer({
     [product.description],
   );
   const askUrl = toGlazeAskUrl(whatsappNumber, product.name);
+  // The server archives retired and sold-out pieces, so anything else can go in the bag.
   const isArchived = product.is_archived;
+  const isStickyBarOffered = !isArchived;
   const archiveAskUrl = toArchiveAskUrl(whatsappNumber, product.name, pageUrl);
 
   // The device only reads over the drawn placeholder; a real photo keeps the frame clean
@@ -196,7 +198,7 @@ export function ProductDetailContainer({
   // Row, header and footer edges are read each scroll frame below lg, where the bar lives; an observer misses jumps.
   useEffect(() => {
     const node = actionsRef.current;
-    if (!node) return;
+    if (!isStickyBarOffered || !node) return;
     const wide = window.matchMedia(LG_MEDIA_QUERY);
     const header = document.querySelector(SITE_HEADER_SELECTOR);
     const footer = document.querySelector(SITE_FOOTER_SELECTOR);
@@ -256,10 +258,10 @@ export function ProductDetailContainer({
       wide.removeEventListener("change", sync);
       detach();
     };
-  }, []);
+  }, [isStickyBarOffered]);
 
   // While the bar is up, focused and scrolled-to controls stop above it rather than under it.
-  const isStickyBarShown = !isArchived && isBarWanted;
+  const isStickyBarShown = isStickyBarOffered && isBarWanted;
   useEffect(() => {
     if (!isStickyBarShown) return;
     const root = document.documentElement;
@@ -415,7 +417,6 @@ export function ProductDetailContainer({
               maxQuantity={Math.max(1, maxQuantity)}
               isWishlisted={isWishlisted(product.id)}
               isAddingToCart={isAdding}
-              canAddToCart={product.stock > 0 || product.is_customizable}
               freeShippingAbove={freeShippingAbove}
               askUrl={askUrl}
               onQuantityChange={setQuantity}
@@ -593,17 +594,17 @@ export function ProductDetailContainer({
         </div>
       )}
 
-      <StickyBuyBar
-        barRef={stickyBarRef}
-        isVisible={isStickyBarShown}
-        name={product.name}
-        quantity={quantity}
-        total={unitPrice * quantity}
-        isSoldOut={stock.tone === "sold_out"}
-        isAddingToCart={isAdding}
-        canAddToCart={product.stock > 0 || product.is_customizable}
-        onAddToCart={handleStickyAddToCart}
-      />
+      {isStickyBarOffered && (
+        <StickyBuyBar
+          barRef={stickyBarRef}
+          isVisible={isStickyBarShown}
+          name={product.name}
+          quantity={quantity}
+          total={unitPrice * quantity}
+          isAddingToCart={isAdding}
+          onAddToCart={handleStickyAddToCart}
+        />
+      )}
     </PageShell>
   );
 }

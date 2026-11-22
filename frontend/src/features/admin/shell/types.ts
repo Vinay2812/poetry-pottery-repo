@@ -11,7 +11,7 @@ export const ADMIN_NAV_LINKS: AdminNavLink[] = [
   { href: "/dashboard/orders", label: "Orders" },
   { href: "/dashboard/people", label: "People" },
   { href: "/dashboard/events", label: "Events" },
-  { href: "/dashboard/workshops", label: "Workshops" },
+  { href: "/dashboard/workshops", label: "Wheel sessions" },
   { href: "/dashboard/visits", label: "Visits" },
   { href: "/dashboard/commissions", label: "Commissions" },
   { href: "/dashboard/reviews", label: "Reviews" },
@@ -84,13 +84,23 @@ export function formatEnumLabel(value: string): string {
   return words.join(" ").replace(/^./, (first) => first.toUpperCase());
 }
 
+// A page with no rows on it (an empty list, or one past the end) shows no count line.
 export function formatRange(
   page: number,
   limit: number,
   total: number,
-): string {
-  if (total === 0) return "Nothing here yet";
+): string | null {
   const first = (page - 1) * limit + 1;
+  if (first > total) return null;
   const last = Math.min(page * limit, total);
   return `${first}–${last} of ${total}`;
+}
+
+// A page past the end (rows approved away under it, or a stale link) steps back to the last real page.
+export function toPreviousPage(
+  page: number,
+  limit: number,
+  total: number,
+): number {
+  return Math.max(1, Math.min(page - 1, Math.ceil(total / limit)));
 }

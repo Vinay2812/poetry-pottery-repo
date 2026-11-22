@@ -71,7 +71,7 @@ function buildContactRow(overrides: Partial<ContactRow> = {}): ContactRow {
     phone: null,
     subject: "No subject",
     message: "Hello.",
-    receivedLabel: "Tue, 1 Sept, 2026, 3:30 pm",
+    receivedLabel: "Tue, 1 Sep, 2026, 3:30 pm",
     isRead: false,
     ...overrides,
   };
@@ -84,7 +84,7 @@ function buildSubscriberRow(
     id: 1,
     email: "ira@example.com",
     accountLabel: "Yes",
-    subscribedLabel: "Tue, 1 Sept, 2026",
+    subscribedLabel: "Tue, 1 Sep, 2026",
     unsubscribedLabel: "—",
     isActive: true,
     ...overrides,
@@ -216,7 +216,7 @@ describe("toContactRow", () => {
       phone: "+91 98765 43210",
       subject: "Custom glaze",
       message: "Could you throw six mugs in the sage glaze by Diwali?",
-      receivedLabel: "Tue, 1 Sept, 2026, 3:30 pm",
+      receivedLabel: "Tue, 1 Sep, 2026, 3:30 pm",
       isRead: false,
     });
   });
@@ -233,7 +233,7 @@ describe("toUnsubscribedLabel", () => {
   it("leaves a dash while someone is still subscribed", () => {
     expect(toUnsubscribedLabel(null)).toBe("—");
     expect(toUnsubscribedLabel("2026-09-01T10:00:00.000Z")).toBe(
-      "Tue, 1 Sept, 2026",
+      "Tue, 1 Sep, 2026",
     );
   });
 });
@@ -258,7 +258,7 @@ describe("toSubscriberRow", () => {
       id: 3,
       email: "ira@example.com",
       accountLabel: "Yes",
-      subscribedLabel: "Tue, 1 Sept, 2026",
+      subscribedLabel: "Tue, 1 Sep, 2026",
       unsubscribedLabel: "—",
       isActive: true,
     });

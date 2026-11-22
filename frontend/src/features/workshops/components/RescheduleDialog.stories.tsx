@@ -76,7 +76,7 @@ const meta = {
     canGoForward: true,
     slots: SLOTS,
     pickedSlots: [
-      { startsAt: "2026-09-19T09:30:00.000Z", label: "Sat, 19 Sept · 3–4 pm" },
+      { startsAt: "2026-09-19T09:30:00.000Z", label: "Sat 19 Sep · 3–4 pm" },
     ],
     progress: "1 of 2 hours picked",
     isComplete: false,
@@ -118,8 +118,8 @@ export const SameHoursAsBooked: Story = { args: { isUnchanged: true } };
 export const AllTimesPickedAcrossDays: Story = {
   args: {
     pickedSlots: [
-      { startsAt: "2026-09-19T09:30:00.000Z", label: "Sat, 19 Sept · 3–4 pm" },
-      { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue, 22 Sept · 3–4 pm" },
+      { startsAt: "2026-09-19T09:30:00.000Z", label: "Sat 19 Sep · 3–4 pm" },
+      { startsAt: "2026-09-22T09:30:00.000Z", label: "Tue 22 Sep · 3–4 pm" },
     ],
     progress: "All 2 hours picked",
     isComplete: true,

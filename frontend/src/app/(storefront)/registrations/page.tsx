@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { RegistrationsListContainer } from "@/features/events";
 
 export const metadata: Metadata = {
-  title: "Your bookings",
+  title: "Your events",
   robots: { index: false },
 };
 

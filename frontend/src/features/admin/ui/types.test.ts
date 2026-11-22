@@ -18,7 +18,6 @@ import {
   registrationActionNeedsReason,
   registrationClosingDialog,
   registrationHoldNote,
-  registrationStatusLabel,
   registrationStatusOptions,
   registrationStatusTone,
   toDateTimeLocal,
@@ -55,21 +54,6 @@ describe("status labels", () => {
       "Confirmed, awaiting payment",
     );
     expect(orderStatusLabel(OrderStatus.Refunded)).toBe("Refunded");
-  });
-
-  it("reads a booking the way the guest does", () => {
-    expect(registrationStatusLabel(RegistrationStatus.Pending)).toBe(
-      "Awaiting approval",
-    );
-    expect(registrationStatusLabel(RegistrationStatus.Approved)).toBe(
-      "Approved, awaiting payment",
-    );
-    expect(registrationStatusLabel(RegistrationStatus.Confirmed)).toBe(
-      "Confirmed",
-    );
-    expect(registrationStatusLabel(RegistrationStatus.Rejected)).toBe(
-      "Not approved",
-    );
   });
 
   it("explains that a request already holds its place", () => {

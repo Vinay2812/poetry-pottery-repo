@@ -95,15 +95,15 @@ describe("toTimelineDate", () => {
 
 describe("toClosedLabel", () => {
   it("says what closed it, when and why", () => {
-    expect(toClosedLabel("Cancelled", "16 Sept", "Changed my mind")).toBe(
-      "Cancelled on 16 Sept · Changed my mind",
+    expect(toClosedLabel("Cancelled", "16 Sep", "Changed my mind")).toBe(
+      "Cancelled on 16 Sep · Changed my mind",
     );
   });
 
   it("leaves out what it does not know", () => {
     expect(toClosedLabel("Refunded", null, null)).toBe("Refunded");
-    expect(toClosedLabel("Cancelled", "16 Sept", "  ")).toBe(
-      "Cancelled on 16 Sept",
+    expect(toClosedLabel("Cancelled", "16 Sep", "  ")).toBe(
+      "Cancelled on 16 Sep",
     );
   });
 });

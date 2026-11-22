@@ -11,6 +11,7 @@ import {
 
 import { formatDate, formatInr } from "@/lib/format";
 import { useReasonAction } from "@/lib/use-reason-action";
+import { toRegistrationStatusLabel } from "@/lib/registration-status";
 
 import { useAdminQueryState, useSearchDraft } from "@/features/admin/shell";
 import {
@@ -24,7 +25,6 @@ import {
   registrationActionNeedsReason,
   registrationClosingDialog,
   registrationHoldNote,
-  registrationStatusLabel,
   registrationStatusOptions,
   registrationStatusTone,
   toPersonName,
@@ -118,11 +118,11 @@ export function WorkshopBookingsContainer({
           item.booking.participants,
         ),
         totalLabel: formatInr(item.booking.total),
-        statusLabel: registrationStatusLabel(item.booking.status),
+        statusLabel: toRegistrationStatusLabel(item.booking.status),
         statusTone: registrationStatusTone(item.booking.status),
         closingNote: describeClosing(item.booking.cancel_reason),
         note: item.booking.note,
-        bookedLabel: formatDate(item.booking.created_at),
+        requestedLabel: formatDate(item.booking.created_at),
         actions: toRegistrationActions(
           item.booking.status,
           item.next_statuses,
@@ -146,7 +146,7 @@ export function WorkshopBookingsContainer({
     requiredMessage: "Tell them why, in a line",
     messages: {
       success: ({ target }) =>
-        `Booking updated: ${registrationStatusLabel(target.status)}`,
+        `Booking updated: ${toRegistrationStatusLabel(target.status)}`,
       failure: "The booking could not be moved",
     },
   });

@@ -10,7 +10,7 @@ const meta = {
     name: "Maya Iyer",
     email: "maya@example.com",
     reference: "WS-HJN2NGS3UP",
-    bookedLabel: "Sat, 21 Nov, 2026",
+    requestedLabel: "Sat, 21 Nov, 2026",
   },
 } satisfies Meta<typeof AdminRegistrationWho>;
 

@@ -246,13 +246,18 @@ describe("AdminDashboardService", () => {
 
       const items = await service.today(now);
 
-      expect(items.map((item) => [item.kind, item.title, item.detail])).toEqual(
-        [
-          ["VISIT", "Rohan", "Studio visit"],
-          ["BOOKING", "Maya", "Open studio · 2 at the wheel · confirmed"],
-          ["EVENT", "Open mic", "15 of 20 seats taken"],
-        ],
-      );
+      expect(
+        items.map((item) => [
+          item.kind,
+          item.title,
+          item.detail,
+          item.booking_status,
+        ]),
+      ).toEqual([
+        ["VISIT", "Rohan", "Studio visit", null],
+        ["BOOKING", "Maya", "Open studio · 2 at the wheel", "CONFIRMED"],
+        ["EVENT", "Open mic", "15 of 20 seats taken", null],
+      ]);
       expect(prismaMock.event.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({

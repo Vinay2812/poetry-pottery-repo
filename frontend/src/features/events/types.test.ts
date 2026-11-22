@@ -18,7 +18,6 @@ import {
   applyRegistrationCancellation,
   DEFAULT_EVENT_FILTERS,
   type RegistrationData,
-  isRegistrationClosed,
   parseEventFilters,
   toEventPath,
   toEventSearchParams,
@@ -26,8 +25,6 @@ import {
   toEventTypeLabel,
   toLevelLabel,
   toRegistrationPath,
-  toRegistrationStatusLabel,
-  toRegistrationStatusTone,
   REGISTRATION_STAGES,
   toEventWhenLabel,
   toEventWhenRangeLabel,
@@ -112,28 +109,6 @@ describe("dates", () => {
 });
 
 describe("registration status helpers", () => {
-  it("maps statuses to labels, tones and steps", () => {
-    expect(toRegistrationStatusLabel(RegistrationStatus.Pending)).toBe(
-      "Awaiting approval",
-    );
-    expect(toRegistrationStatusLabel(RegistrationStatus.Approved)).toBe(
-      "Approved, awaiting payment",
-    );
-    expect(toRegistrationStatusLabel(RegistrationStatus.Rejected)).toBe(
-      "Not approved",
-    );
-    expect(toRegistrationStatusTone(RegistrationStatus.Pending)).toBe(
-      "pending",
-    );
-    expect(toRegistrationStatusTone(RegistrationStatus.Approved)).toBe(
-      "active",
-    );
-    expect(toRegistrationStatusTone(RegistrationStatus.Confirmed)).toBe("done");
-    expect(toRegistrationStatusTone(RegistrationStatus.Rejected)).toBe("off");
-    expect(isRegistrationClosed(RegistrationStatus.Cancelled)).toBe(true);
-    expect(isRegistrationClosed(RegistrationStatus.Approved)).toBe(false);
-  });
-
   it("keys every stage by a registration status", () => {
     expect(REGISTRATION_STAGES.map((stage) => stage.key)).toEqual([
       RegistrationStatus.Pending,
@@ -156,12 +131,12 @@ describe("registration status helpers", () => {
 
   it("promises approval and payment while a request waits", () => {
     expect(
-      readTimeline(RegistrationStatus.Pending, { PENDING: "12 Sept" }),
+      readTimeline(RegistrationStatus.Pending, { PENDING: "12 Sep" }),
     ).toEqual([
       [
         "Requested",
         "current",
-        "12 Sept",
+        "12 Sep",
         "We have your request and are holding your seat.",
       ],
       [
@@ -182,12 +157,12 @@ describe("registration status helpers", () => {
   it("asks for payment once approved", () => {
     expect(
       readTimeline(RegistrationStatus.Approved, {
-        PENDING: "12 Sept",
-        APPROVED: "13 Sept",
+        PENDING: "12 Sep",
+        APPROVED: "13 Sep",
       }),
     ).toEqual([
-      ["Requested", "done", "12 Sept", null],
-      ["Approved", "current", "13 Sept", "Payment details are on WhatsApp."],
+      ["Requested", "done", "12 Sep", null],
+      ["Approved", "current", "13 Sep", "Payment details are on WhatsApp."],
       [
         "Confirmed",
         "upcoming",
@@ -200,27 +175,27 @@ describe("registration status helpers", () => {
   it("gives the arrival instructions once confirmed, as a finished step", () => {
     expect(
       readTimeline(RegistrationStatus.Confirmed, {
-        PENDING: "12 Sept",
-        APPROVED: "13 Sept",
-        CONFIRMED: "14 Sept",
+        PENDING: "12 Sep",
+        APPROVED: "13 Sep",
+        CONFIRMED: "14 Sep",
       }).at(-1),
     ).toEqual([
       "Confirmed",
       "done",
-      "14 Sept",
+      "14 Sep",
       "Paid and confirmed. Come in ten minutes early.",
     ]);
   });
 
   it("stops a closed registration at the stage it reached", () => {
-    const dates = { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null };
+    const dates = { PENDING: "12 Sep", APPROVED: "13 Sep", CONFIRMED: null };
     for (const status of [
       RegistrationStatus.Cancelled,
       RegistrationStatus.Rejected,
     ]) {
       expect(readTimeline(status, dates, true)).toEqual([
-        ["Requested", "done", "12 Sept", null],
-        ["Approved", "done", "13 Sept", null],
+        ["Requested", "done", "12 Sep", null],
+        ["Approved", "done", "13 Sep", null],
       ]);
     }
   });
@@ -235,7 +210,7 @@ describe("toWhatsAppBookingMessage", () => {
     const message = toWhatsAppBookingMessage({
       registrationId: "REG123",
       eventTitle: "Wheel Throwing for Beginners",
-      when: "Sat, 19 Sept, 2026, 3:00 pm",
+      when: "Sat, 19 Sep, 2026, 3:00 pm",
       seats: 2,
       total: "₹3,600",
       guestName: "Maya",

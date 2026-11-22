@@ -6,7 +6,7 @@ import { PlaceholderImage } from "@/components/media/PlaceholderImage";
 import { formatInr, pluralize } from "@/lib/format";
 
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
-import type { StatusTone } from "@/features/orders/types";
+import type { StatusTone } from "@/lib/status-tone";
 
 export interface OrderCardProps {
   href: string;

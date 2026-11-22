@@ -6,7 +6,10 @@ import { getArchiveProducts } from "@/lib/data/catalog";
 import { PageShell } from "@/components/layout/PageShell";
 import { Button } from "@/components/ui/button";
 
-import { ProductCardContainer } from "@/features/products";
+import {
+  ProductCardContainer,
+  toBelowFoldCardPhotoLoading,
+} from "@/features/products";
 
 export const metadata: Metadata = {
   title: "Page not found",
@@ -53,9 +56,17 @@ export default async function NotFound() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-x-3 gap-y-8 md:grid-cols-4 lg:gap-x-6">
-            {pieces.map((piece) => (
-              <ProductCardContainer key={piece.id} product={piece} />
-            ))}
+            {pieces.map((piece, index) => {
+              const photoLoading = toBelowFoldCardPhotoLoading(index);
+              return (
+                <ProductCardContainer
+                  key={piece.id}
+                  product={piece}
+                  isPriority={photoLoading.isPriority}
+                  isEager={photoLoading.isEager}
+                />
+              );
+            })}
           </div>
         </section>
       )}

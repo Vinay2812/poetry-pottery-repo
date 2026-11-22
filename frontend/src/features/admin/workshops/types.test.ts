@@ -201,7 +201,7 @@ describe("booking copy", () => {
         ],
         IST,
       ),
-    ).toEqual(["Wed, 25 Nov · 3–5 pm"]);
+    ).toEqual(["Wed 25 Nov · 3–5 pm"]);
   });
 
   it("lists each day of a split booking on its own line", () => {
@@ -219,7 +219,7 @@ describe("booking copy", () => {
         ],
         IST,
       ),
-    ).toEqual(["Wed, 25 Nov · 3–4 pm", "Sat, 28 Nov · 4–5 pm"]);
+    ).toEqual(["Wed 25 Nov · 3–4 pm", "Sat 28 Nov · 4–5 pm"]);
   });
 
   it("names both meridiems when a stretch crosses noon", () => {
@@ -233,7 +233,7 @@ describe("booking copy", () => {
         ],
         IST,
       ),
-    ).toEqual(["Wed, 25 Nov · 11 am–1 pm"]);
+    ).toEqual(["Wed 25 Nov · 11 am–1 pm"]);
   });
 
   it("keeps the minutes of a half-hour start", () => {
@@ -247,7 +247,7 @@ describe("booking copy", () => {
         ],
         IST,
       ),
-    ).toEqual(["Wed, 25 Nov · 2:30–3:30 pm"]);
+    ).toEqual(["Wed 25 Nov · 2:30–3:30 pm"]);
   });
 
   it("reads the clock from parts, whatever space ICU puts before pm", () => {
@@ -273,7 +273,7 @@ describe("booking copy", () => {
         ],
         IST,
       ),
-    ).toEqual(["Wed, 25 Nov · 3–4 pm"]);
+    ).toEqual(["Wed 25 Nov · 3–4 pm"]);
     spy.mockRestore();
   });
 
@@ -292,7 +292,7 @@ describe("booking copy", () => {
         ],
         IST,
       ),
-    ).toEqual(["Wed, 25 Nov · 12–1 pm, 4–5 pm"]);
+    ).toEqual(["Wed 25 Nov · 12–1 pm, 4–5 pm"]);
   });
 });
 

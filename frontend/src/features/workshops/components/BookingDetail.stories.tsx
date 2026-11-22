@@ -18,7 +18,7 @@ function toSteps(reachedThrough: number, isClosed = false) {
     dates: Object.fromEntries(
       BOOKING_STAGES.map((stage, index) => [
         stage.key,
-        index <= reachedThrough ? "Sat, 12 Sept, 2026, 3:00 pm" : null,
+        index <= reachedThrough ? "Sat, 12 Sep, 2026, 3:00 pm" : null,
       ]),
     ),
     isClosed,
@@ -31,8 +31,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     bookingId: "WSB7Q2X9M1KD",
-    dateLabel: "Sat, 19 Sept – Tue, 22 Sept",
-    bookedOn: "Sat, 12 Sept, 2026, 3:00 pm",
+    dateLabel: "Sat 19 Sep – Tue 22 Sep",
     statusLabel: "Awaiting approval",
     statusTone: "pending",
     isJustPlaced: true,
@@ -40,8 +39,8 @@ const meta = {
     closedLabel: null,
     facts: [
       { label: "Session", value: "Open studio, a wheel of your own" },
-      { label: "Sat, 19 Sept", value: "2–3 pm" },
-      { label: "Tue, 22 Sept", value: "3–4 pm" },
+      { label: "Sat 19 Sep", value: "2–3 pm" },
+      { label: "Tue 22 Sep", value: "3–4 pm" },
       { label: "Hours", value: "2 hours" },
       { label: "People", value: "2 people" },
       { label: "You take home", value: "4 pieces, fired and glazed" },
@@ -95,7 +94,7 @@ export const Cancelled: Story = {
     statusTone: "off",
     isJustPlaced: false,
     steps: toSteps(0, true),
-    closedLabel: "Cancelled on Wed, 16 Sept, 2026 · Travelling that week",
+    closedLabel: "Cancelled on Wed, 16 Sep, 2026 · Travelling that week",
     canCancel: false,
     canReschedule: false,
   },

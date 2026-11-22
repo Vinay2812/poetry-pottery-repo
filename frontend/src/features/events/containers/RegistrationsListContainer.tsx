@@ -6,18 +6,20 @@ import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
 import { cn } from "@/lib/utils";
+import {
+  isRegistrationClosed,
+  toRegistrationStatusLabel,
+} from "@/lib/registration-status";
 
 import { SignInWall } from "@/features/auth/components/SignInWall";
 import { EmptyRegistrations } from "@/features/events/components/EmptyRegistrations";
 import { RegistrationCard } from "@/features/events/components/RegistrationCard";
 import { useMyRegistrations } from "@/features/events/hooks";
 import {
-  isRegistrationClosed,
   toEventTypeLabel,
   toEventWhenLabel,
   toRegistrationGroups,
   toRegistrationPath,
-  toRegistrationStatusLabel,
 } from "@/features/events/types";
 
 export interface RegistrationsListContainerProps {
@@ -54,7 +56,7 @@ export function RegistrationsListContainer({
   if (!isLoading && !isSignedIn) {
     return (
       <SignInWall
-        message="Sign in to see your bookings"
+        message="Sign in to see your events"
         onSignIn={() => openSignIn()}
       />
     );
@@ -66,7 +68,7 @@ export function RegistrationsListContainer({
         ref={headingRef}
         className="font-heading text-4xl leading-tight tracking-tight md:text-6xl"
       >
-        Your bookings
+        Your events
       </h1>
       {isLoading ? (
         <div className="flex flex-col" aria-busy="true">
@@ -80,7 +82,7 @@ export function RegistrationsListContainer({
       ) : hasError ? (
         <div className="flex flex-col items-start gap-4 border-t border-ash py-16">
           <h2 className="font-heading text-2xl tracking-tight">
-            Your bookings did not load
+            Your events did not load
           </h2>
           <Button variant="outline" onClick={() => void refetch()}>
             Try again

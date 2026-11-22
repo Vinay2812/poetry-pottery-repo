@@ -4,6 +4,10 @@ import { useCallback, useState } from "react";
 
 import { EventStatus } from "@/graphql/generated/graphql";
 import { formatDate } from "@/lib/format";
+import {
+  isRegistrationClosed,
+  toRegistrationStatusLabel,
+} from "@/lib/registration-status";
 
 import { EventDetail } from "@/features/events/components/EventDetail";
 import { ReserveBox } from "@/features/events/components/ReserveBox";
@@ -11,7 +15,6 @@ import { useEventClock, useRegisterForEvent } from "@/features/events/hooks";
 import {
   type EventDetailData,
   hasEventStarted,
-  isRegistrationClosed,
   isSeatPriceShown,
   MAX_SEATS,
   toEventFacts,
@@ -20,7 +23,6 @@ import {
   toGalleryHeading,
   toParagraphs,
   toRegistrationPath,
-  toRegistrationStatusLabel,
   toReserveNotePlaceholder,
   toReserveState,
   toSeatPriceNote,

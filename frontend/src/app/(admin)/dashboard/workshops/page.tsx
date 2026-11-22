@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { WorkshopsContainer } from "@/features/admin/workshops";
 
 export const metadata: Metadata = {
-  title: "Workshops",
+  title: "Wheel sessions",
 };
 
 export default function AdminWorkshopsPage() {

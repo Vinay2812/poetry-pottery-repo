@@ -20,7 +20,7 @@ import {
 } from "@/features/orders/components/StudioNote";
 import type { TimelineStep } from "@/lib/timeline";
 
-import type { StatusTone } from "@/features/orders/types";
+import type { StatusTone } from "@/lib/status-tone";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
 
 export interface OrderDetailProps {

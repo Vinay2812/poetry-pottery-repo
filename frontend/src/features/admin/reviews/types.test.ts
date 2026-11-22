@@ -59,7 +59,7 @@ function buildRow(overrides: Partial<ReviewRow> = {}): ReviewRow {
     body: "Lovely.",
     photoUrls: [],
     photosLabel: "No photos",
-    leftLabel: "Tue, 1 Sept, 2026",
+    leftLabel: "Tue, 1 Sep, 2026",
     isHidden: false,
     ...overrides,
   };
@@ -125,7 +125,7 @@ describe("toReviewRow", () => {
       body: "The glaze pools exactly where the photos said it would.",
       photoUrls: ["https://cdn.example.com/a.jpg"],
       photosLabel: "1 photo",
-      leftLabel: "Tue, 1 Sept, 2026",
+      leftLabel: "Tue, 1 Sep, 2026",
       isHidden: false,
     });
   });

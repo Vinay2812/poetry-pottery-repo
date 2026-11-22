@@ -22,7 +22,7 @@ const meta = {
         kindLabel: "Wheel",
         timeLabel: "3:00 pm",
         title: "Maya Iyer",
-        detail: "Open studio · 2 at the wheel · confirmed",
+        detail: "Open studio · 2 at the wheel · Confirmed",
       },
       {
         id: "3",

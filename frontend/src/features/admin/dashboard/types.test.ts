@@ -1,4 +1,7 @@
-import { AdminAgendaKind } from "@/graphql/generated/graphql";
+import {
+  AdminAgendaKind,
+  RegistrationStatus,
+} from "@/graphql/generated/graphql";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -9,6 +12,7 @@ import {
   formatCount,
   stockTone,
   toAgendaHref,
+  toAgendaDetail,
   toAgendaKindLabel,
 } from "./types";
 
@@ -67,5 +71,20 @@ describe("today's agenda", () => {
       "/dashboard/events/3",
     );
     expect(toAgendaKindLabel(AdminAgendaKind.Event)).toBe("Evening");
+  });
+});
+
+describe("toAgendaDetail", () => {
+  it("words a wheel session's status the way the guest reads it", () => {
+    expect(
+      toAgendaDetail(
+        "Open studio · 2 at the wheel",
+        RegistrationStatus.Pending,
+      ),
+    ).toBe("Open studio · 2 at the wheel · Awaiting approval");
+  });
+
+  it("leaves visits and events as they are", () => {
+    expect(toAgendaDetail("Studio visit", null)).toBe("Studio visit");
   });
 });

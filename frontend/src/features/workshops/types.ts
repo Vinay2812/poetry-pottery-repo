@@ -7,9 +7,9 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { buildWhatsAppUrl } from "@/features/layout/types";
+import { formatShortDay } from "@/lib/format";
 import type { TimelineStage } from "@/lib/timeline";
-
-import type { StatusTone } from "@/features/orders/types";
+import { isRegistrationClosed } from "@/lib/registration-status";
 
 export type WorkshopData = WorkshopConfigFieldsFragment;
 export type WorkshopTierData = WorkshopData["tiers"][number];
@@ -59,12 +59,10 @@ export function toDateKey(instant: string | Date, timezone: string): string {
 
 export function formatDateKey(dateKey: string): string {
   const [year, month, day] = dateKey.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-IN", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  }).format(new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1)));
+  return formatShortDay(
+    new Date(Date.UTC(year ?? 1970, (month ?? 1) - 1, day ?? 1)),
+    "UTC",
+  );
 }
 
 function formatSlotTime(instant: string | Date, timezone: string): string {
@@ -91,15 +89,6 @@ export function formatHourRange(
     return `${fromTime}–${toTime} ${toMeridiem}`;
   }
   return `${from}–${to}`;
-}
-
-function formatDayLabel(instant: string | Date, timezone: string): string {
-  return new Intl.DateTimeFormat("en-IN", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    timeZone: timezone,
-  }).format(new Date(instant));
 }
 
 export interface SlotInterval {
@@ -137,7 +126,7 @@ export function groupSlotsByDay(
   }
   return [...groups.entries()].map(([dateKey, stretches]) => ({
     dateKey,
-    dayLabel: formatDayLabel(`${dateKey}T12:00:00.000Z`, "UTC"),
+    dayLabel: formatShortDay(`${dateKey}T12:00:00.000Z`, "UTC"),
     timesLabel: stretches
       .map((stretch) =>
         formatHourRange(stretch.starts_at, stretch.ends_at, timezone),
@@ -338,29 +327,6 @@ export const BOOKING_STAGES: TimelineStage<RegistrationStatus>[] = [
   },
 ];
 
-const STATUS_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting approval",
-  [RegistrationStatus.Approved]: "Approved, awaiting payment",
-  [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not approved",
-  [RegistrationStatus.Cancelled]: "Cancelled",
-};
-
-export function toBookingStatusLabel(status: RegistrationStatus): string {
-  return STATUS_LABEL[status];
-}
-
-export function toBookingStatusTone(status: RegistrationStatus): StatusTone {
-  if (
-    status === RegistrationStatus.Cancelled ||
-    status === RegistrationStatus.Rejected
-  )
-    return "off";
-  if (status === RegistrationStatus.Confirmed) return "done";
-  if (status === RegistrationStatus.Pending) return "pending";
-  return "active";
-}
-
 type BookingGroup = "upcoming" | "past";
 
 // A session that has run, or one the studio will never run, belongs behind the ones
@@ -370,7 +336,7 @@ export function toBookingGroup(
   status: RegistrationStatus,
   now = new Date(),
 ): BookingGroup {
-  if (isBookingClosed(status)) return "past";
+  if (isRegistrationClosed(status)) return "past";
   const last = slots.reduce(
     (latest, slot) => (slot.ends_at > latest ? slot.ends_at : latest),
     "",
@@ -384,13 +350,6 @@ export function isRequestBannerShown(
   status: RegistrationStatus,
 ): boolean {
   return isJustPlaced && status === RegistrationStatus.Pending;
-}
-
-export function isBookingClosed(status: RegistrationStatus): boolean {
-  return (
-    status === RegistrationStatus.Cancelled ||
-    status === RegistrationStatus.Rejected
-  );
 }
 
 export function formatHours(hours: number): string {

@@ -50,17 +50,21 @@ export function RegistrationCard({
           <PlaceholderImage kind="vase" />
         )}
       </span>
-      <span className="flex min-w-0 flex-1 flex-col gap-1">
+      {/* Same rows as a wheel-session booking: date and price, what, how many, status. */}
+      <span className="grid min-w-0 flex-1 grid-cols-[1fr_auto] items-baseline gap-x-4 gap-y-1">
         <span className="text-[13px] text-muted-foreground tnum">
           {dateLabel}
         </span>
-        <span className="text-[15px] leading-snug underline-offset-4 group-hover:underline">
+        <span className="text-[13px] tnum">{formatInr(total)}</span>
+        <span className="col-span-2 text-[15px] leading-snug wrap-anywhere underline-offset-4 group-hover:underline">
           {eventTitle}
         </span>
-        <span className="text-[13px] text-muted-foreground">
-          {typeLabel} · {pluralize(seats, "seat")} · {formatInr(total)}
+        <span className="col-span-2 text-[13px] text-muted-foreground">
+          {typeLabel} · {pluralize(seats, "seat")}
         </span>
-        <span className="text-[13px] text-muted-foreground">{statusLabel}</span>
+        <span className="col-span-2 text-[13px] text-muted-foreground">
+          {statusLabel}
+        </span>
       </span>
     </Link>
   );

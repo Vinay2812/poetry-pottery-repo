@@ -15,13 +15,13 @@ const meta = {
   ],
   args: {
     href: "/workshops/bookings/WSB7Q2X9M1KD",
-    dateLabel: "Sat, 19 Sept – Tue, 22 Sept",
-    whenLines: ["Sat, 19 Sept · 2–3 pm", "Tue, 22 Sept · 3–4 pm"],
+    dateLabel: "Sat 19 Sep – Tue 22 Sep",
+    whenLines: ["Sat 19 Sep · 2–3 pm", "Tue 22 Sep · 3–4 pm"],
     hours: 2,
     participants: 2,
     total: 3400,
     statusLabel: "Approved, awaiting payment",
-    isCancelled: false,
+    isClosed: false,
   },
 } satisfies Meta<typeof BookingCard>;
 
@@ -33,8 +33,8 @@ export const Default: Story = {};
 
 export const OnePerson: Story = {
   args: {
-    dateLabel: "Sat, 19 Sept",
-    whenLines: ["Sat, 19 Sept · 2–3 pm"],
+    dateLabel: "Sat 19 Sep",
+    whenLines: ["Sat 19 Sep · 2–3 pm"],
     hours: 1,
     participants: 1,
     total: 950,
@@ -43,7 +43,7 @@ export const OnePerson: Story = {
 };
 
 export const Cancelled: Story = {
-  args: { statusLabel: "Cancelled", isCancelled: true },
+  args: { statusLabel: "Cancelled", isClosed: true },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

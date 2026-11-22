@@ -4,6 +4,8 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
+import { toRegistrationStatusLabel } from "@/lib/registration-status";
+
 import { formatEnumLabel } from "@/features/admin/shell/types";
 
 import type { AdminStatusTone } from "./components/AdminStatusPill";
@@ -65,19 +67,6 @@ export function orderStatusLabel(status: OrderStatus): string {
 /** What a request holds from the moment it is made: a wheel for a session, seats for an event. */
 export type RegistrationHold = "wheel" | "seat";
 
-// A request already holds its wheel or seats, so approving only asks for payment.
-const REGISTRATION_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting approval",
-  [RegistrationStatus.Approved]: "Approved, awaiting payment",
-  [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not approved",
-  [RegistrationStatus.Cancelled]: "Cancelled",
-};
-
-export function registrationStatusLabel(status: RegistrationStatus): string {
-  return REGISTRATION_LABEL[status];
-}
-
 const HOLD_NOTE: Record<RegistrationHold, string> = {
   wheel:
     "A request holds its wheel from the moment it's made; turning it down frees it.",
@@ -117,7 +106,7 @@ export function registrationStatusOptions(): {
 }[] {
   return REGISTRATION_FLOW.map((value) => ({
     value,
-    label: registrationStatusLabel(value),
+    label: toRegistrationStatusLabel(value),
   }));
 }
 

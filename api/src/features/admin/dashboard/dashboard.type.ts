@@ -104,6 +104,10 @@ export class AdminAgendaItem {
 
   @Field()
   detail!: string;
+
+  // Set for wheel sessions only, so the console can word it the way the guest reads it.
+  @Field(() => RegistrationStatus, { nullable: true })
+  booking_status!: RegistrationStatus | null;
 }
 
 @ObjectType()
