@@ -58,7 +58,19 @@ function itemsPage(ids: number[], page: number, hasMore: boolean): ItemsPage {
 const PAGE_ONE = itemsPage([1, 2], 1, true);
 const PAGE_TWO = itemsPage([3, 4], 2, false);
 
+function readItemsVariables(
+  variables: Record<string, unknown>,
+): ItemsVariables {
+  const { list, page } = variables;
+  if (typeof list !== "string" || typeof page !== "number") {
+    throw new Error("Items was asked without a list and a page");
+  }
+  return { list, page };
+}
+
 // Each request waits until released, and the next one asked for page two can be made to fail.
+// Apollo's own deduplication is off, so a second identical request reaches the link and only the
+// hook's in-flight guard can stop it.
 function heldClient() {
   const log: string[] = [];
   const held: (() => void)[] = [];
@@ -66,7 +78,7 @@ function heldClient() {
   const link = new ApolloLink(
     (operation) =>
       new Observable((observer) => {
-        const { list, page } = operation.variables as ItemsVariables;
+        const { list, page } = readItemsVariables(operation.variables);
         log.push(`${list} p${page}`);
         const isFailing = failNext;
         failNext = false;
@@ -81,7 +93,11 @@ function heldClient() {
       }),
   );
   return {
-    client: new ApolloClient({ link, cache: new InMemoryCache() }),
+    client: new ApolloClient({
+      link,
+      cache: new InMemoryCache(),
+      queryDeduplication: false,
+    }),
     log,
     release: () => held.splice(0).forEach((finish) => finish()),
     failNextRequest: () => {
