@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type UseFormRegisterReturn } from "react-hook-form";
 
+import { PrivacyNote } from "@/components/legal/PrivacyNote";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -129,6 +130,7 @@ export function VisitForm({
       >
         {isSubmitting ? "Booking…" : "Book the visit"}
       </Button>
+      <PrivacyNote lead="We use these details only to reply to you." />
     </form>
   );
 }
