@@ -7,13 +7,13 @@ Subtitle: The agreement between you and the studio when you buy a piece, book a 
 
 ## Who we are
 
-Poetry & Pottery is the trading name of [LEGAL NAME], [a sole proprietorship owned by OWNER NAME]. Our studio is at [FULL POSTAL ADDRESS WITH PIN CODE], Sangli, Maharashtra, India. [OTHER BUSINESS LOCATIONS, IF ANY.] Our website is poetryandpottery.prodapp.club.
+This website is run by Poetry & Pottery, a small pottery studio at Plot no. 48, Above Shanti Kamal Bungalow, Ekta Colony, Sangli, Maharashtra [PIN CODE], India. We have no other locations. Our website is poetryandpottery.prodapp.club.
 
 We are a small studio and are not registered for GST.
 
 In these terms, "we", "us" and "the studio" mean Poetry & Pottery. "You" means the person using the site, placing an order or making a booking.
 
-For anything about an order or booking, email [CUSTOMER CARE EMAIL] or call or WhatsApp +91 83290 26762.
+For anything about an order or booking, email poetryandpottery.aj@gmail.com or call or WhatsApp +91 83290 26762.
 
 ## Agreeing to these terms
 
@@ -158,12 +158,12 @@ These terms do not limit any remedy or compensation you are entitled to by law.
 
 ## Complaints and grievances
 
-If something has gone wrong, contact our grievance officer. We acknowledge every complaint within 48 hours, give you a complaint number so you can follow it up, and send you a copy of your complaint as we recorded it. We resolve every complaint within one month of receiving it.
+If something has gone wrong, contact the studio's owner, who handles every complaint personally. We acknowledge every complaint within 48 hours, give you a complaint number so you can follow it up, and send you a copy of your complaint as we recorded it. We resolve every complaint within one month of receiving it.
 
-- **Grievance officer** — [GRIEVANCE OFFICER NAME], [DESIGNATION]
-- **Email** — [GRIEVANCE EMAIL]
-- **Phone** — [GRIEVANCE PHONE]
-- **Post** — [FULL POSTAL ADDRESS WITH PIN CODE]
+- **Grievance officer** — [OWNER NAME], Owner
+- **Email** — poetryandpottery.aj@gmail.com
+- **Phone** — +91 83290 26762
+- **Post** — Plot no. 48, Above Shanti Kamal Bungalow, Ekta Colony, Sangli, Maharashtra [PIN CODE], India
 - **National Consumer Helpline** — You can also call 1915 or visit consumerhelpline.gov.in.
 
 ## Law and disputes

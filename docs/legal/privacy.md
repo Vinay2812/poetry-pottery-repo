@@ -7,9 +7,9 @@ Subtitle: What we collect, why, who helps us handle it, and how to see or delete
 
 ## Who is responsible
 
-Poetry & Pottery, the trading name of [LEGAL NAME], [FULL POSTAL ADDRESS WITH PIN CODE], Sangli, Maharashtra, India, decides how your personal data is used on this site.
+Poetry & Pottery, a small pottery studio at Plot no. 48, Above Shanti Kamal Bungalow, Ekta Colony, Sangli, Maharashtra [PIN CODE], India, decides how your personal data is used on this site.
 
-Questions or requests about your data go to [PRIVACY CONTACT EMAIL], or to our grievance officer named at the end of this page.
+Questions or requests about your data go to poetryandpottery.aj@gmail.com, or to our grievance officer named at the end of this page.
 
 ## What we collect
 
@@ -24,7 +24,7 @@ Questions or requests about your data go to [PRIVACY CONTACT EMAIL], or to our g
 - **Photos at the studio** — Photos or videos of you at sessions and events, only if you agree when we ask, shared where we told you. For a child, we ask their parent or guardian first. Tell us any time and we delete it or take it down.
 - **Newsletter** — Your email address, if you sign up.
 - **Search** — What you type into search is sent to our server to find results. Your list of recent searches stays in your own browser.
-- **Technical data** — Your IP address, browser and device type, and the pages you request, which our servers record to keep the site secure and working. If the server hits an error, an error report may include details of the request.
+- **Technical data** — Your IP address, browser and device type, and the pages you request, which our servers record to keep the site secure and working. If the server hits an error, it records details of the request in the same logs.
 
 We only collect what we need for the purposes below. Please do not send us sensitive information such as medical details, ID numbers or bank details through the site.
 
@@ -43,13 +43,12 @@ We use the information you give us for the purpose you gave it for, or with your
 We share only what each service needs to do its job for us:
 
 - **Clerk** — Sign-in and account security (United States).
-- **Vercel** — Runs the website you see ([VERCEL REGION]).
+- **Vercel** — Runs the website you see (served from Mumbai, India).
 - **[SERVER PROVIDER]** — Runs our server and database ([COUNTRY]).
 - **Google (Gmail)** — Sends our emails.
-- **Cloudflare** — Stores images, including photos you upload with reviews, orders or briefs.
-- **Sentry** — Receives error reports from our server so we can fix problems ([SENTRY REGION]).
+- **Cloudflare** — Protects and speeds up the connection to our server, and stores images, including photos you upload with reviews, orders or briefs.
 - **WhatsApp (Meta)** — Carries the messages you choose to send us on WhatsApp.
-- **[COURIER PARTNER]** — Your name, phone number and address, to deliver your parcel.
+- **Our courier** — Your name, phone number and address, to deliver your parcel.
 
 We may also disclose information when the law requires it, for example in response to a lawful request from the police, a court or a tax authority.
 
@@ -71,7 +70,7 @@ Your recent searches are saved in your own browser so you can repeat them. You c
 - **Reviews** — Until you or we remove them.
 - **Studio photos** — Ones you agreed to share, until you ask us to take them down. Others we delete within a year.
 - **Newsletter** — Until you unsubscribe. After that we keep a note that you unsubscribed, so we never email you again by mistake.
-- **Security logs and error reports** — Security logs for as long as Indian law requires (currently 180 days, and one year from May 2027), then deleted. Error reports for up to 90 days.
+- **Security logs** — For as long as Indian law requires (currently 180 days, and one year from May 2027), then deleted.
 
 ## How we protect it
 
@@ -89,7 +88,7 @@ You can ask us to:
 - **Stop using it for something you agreed to** — For example, unsubscribe from the newsletter. This does not affect what we did before.
 - **Let someone act for you** — Name a person who can use these rights for you if you die or cannot act yourself.
 
-Write to [PRIVACY CONTACT EMAIL], if possible from the email you use with us. We may ask you to confirm who you are. We reply within one month.
+Write to poetryandpottery.aj@gmail.com, if possible from the email you use with us. We may ask you to confirm who you are. We reply within one month.
 
 If we have not resolved your request, contact our grievance officer below. If it is still unresolved after that, you can take it to the Data Protection Board of India at [BOARD COMPLAINT LINK — leave this sentence out until the Board's complaint page is live].
 
@@ -101,10 +100,10 @@ You must be 18 or older to create an account or book. Children can come to sessi
 
 We acknowledge privacy complaints within 48 hours and resolve them within one month.
 
-- **Name** — [GRIEVANCE OFFICER NAME], [DESIGNATION]
-- **Email** — [GRIEVANCE EMAIL]
-- **Phone** — [GRIEVANCE PHONE]
-- **Post** — [FULL POSTAL ADDRESS WITH PIN CODE]
+- **Name** — [OWNER NAME], Owner
+- **Email** — poetryandpottery.aj@gmail.com
+- **Phone** — +91 83290 26762
+- **Post** — Plot no. 48, Above Shanti Kamal Bungalow, Ekta Colony, Sangli, Maharashtra [PIN CODE], India
 
 ## Changes to this policy
 
