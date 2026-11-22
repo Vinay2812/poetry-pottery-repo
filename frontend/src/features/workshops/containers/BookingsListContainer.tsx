@@ -1,11 +1,14 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { useCallback, useRef, useState } from "react";
+import { useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/layout/PageShell";
 import { PageTurnFailed } from "@/components/layout/PageTurnFailed";
+import { PAGE_CODEC } from "@/lib/page-turn";
+import { useFocusAfterTurn } from "@/lib/use-focus-after-turn";
+import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 import {
   isRegistrationClosed,
@@ -32,8 +35,11 @@ const GROUPS: { key: ReturnType<typeof toBookingGroup>; heading: string }[] = [
 ];
 
 export function BookingsListContainer() {
-  const [page, setPage] = useState(1);
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const {
+    value: page,
+    isPending: isTurning,
+    dispatch: goToPage,
+  } = useUrlState(PAGE_CODEC);
 
   const {
     bookings,
@@ -46,15 +52,20 @@ export function BookingsListContainer() {
     isSignedIn,
     refetch,
   } = useMyWorkshopBookings(page);
+  const { headingRef, startTurn } = useFocusAfterTurn<HTMLHeadingElement>(
+    !isPaging && !isTurning,
+    shownPage,
+    failedPage,
+  );
   // The old page stays on screen while the next loads, so jumping to the top at once is safe.
   // Asking again for the page that failed reads it again rather than doing nothing.
   const handlePageChange = useCallback(
     (next: number) => {
       if (next === page) void refetch();
-      else setPage(next);
-      headingRef.current?.scrollIntoView({ block: "start" });
+      else goToPage(next);
+      startTurn();
     },
-    [page, refetch],
+    [goToPage, page, refetch, startTurn],
   );
   const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
@@ -72,7 +83,8 @@ export function BookingsListContainer() {
     <PageShell column="wide" className="flex flex-col gap-8 py-8 md:py-12">
       <h1
         ref={headingRef}
-        className="font-heading text-4xl leading-tight tracking-tight md:text-6xl"
+        tabIndex={-1}
+        className="font-heading text-3xl tracking-tight focus:outline-none md:text-5xl"
       >
         Your wheel sessions
       </h1>
@@ -104,10 +116,10 @@ export function BookingsListContainer() {
             />
           )}
           <div
-            aria-busy={isPaging}
+            aria-busy={isPaging || isTurning}
             className={cn(
               "flex flex-col gap-10 transition-opacity duration-200",
-              isPaging && "opacity-60",
+              (isPaging || isTurning) && "opacity-60",
             )}
           >
             {GROUPS.map(({ key, heading }) => {

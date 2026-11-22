@@ -32,6 +32,7 @@ import {
   toBookingWhenLines,
   toDateKey,
   toDayNote,
+  toBookingStages,
   toWhatsAppSessionMessage,
   toWorkshopPath,
   type WorkshopDayData,
@@ -231,6 +232,7 @@ describe("session helpers", () => {
       participants: 1,
       total: "₹1,700",
       guestName: "Maya",
+      isFree: false,
     });
     expect(message).toContain("Booking: WS-ABC");
     expect(message).toContain("2 hours for 1 person");
@@ -245,8 +247,23 @@ describe("session helpers", () => {
         participants: 3,
         total: "₹2,850",
         guestName: "Ravi",
+        isFree: false,
       }),
     ).toContain("1 hour for 3 people");
+  });
+
+  it("asks only for a confirmation when the session is free", () => {
+    const message = toWhatsAppSessionMessage({
+      bookingId: "WS-FREE",
+      when: "Sun 22 Nov, 10:00 am",
+      hours: 1,
+      participants: 1,
+      total: "₹0",
+      guestName: "Maya",
+      isFree: true,
+    });
+    expect(message).toContain("Could you confirm my session?");
+    expect(message).not.toMatch(/payment/i);
   });
 });
 
@@ -333,6 +350,20 @@ describe("booking status helpers", () => {
 
   it("never repeats the line above it in a promise", () => {
     expect(toRepeatedPhrases(BOOKING_STAGES)).toEqual([]);
+  });
+
+  it("keeps the payment step for a paid session", () => {
+    expect(toBookingStages(1700)).toBe(BOOKING_STAGES);
+  });
+
+  it("goes straight from requested to confirmed for a free session", () => {
+    const stages = toBookingStages(0);
+    expect(stages.map((stage) => stage.key)).toEqual([
+      RegistrationStatus.Pending,
+      RegistrationStatus.Confirmed,
+    ]);
+    expect(JSON.stringify(stages)).not.toMatch(/pay/i);
+    expect(toRepeatedPhrases(stages)).toEqual([]);
   });
 
   it("counts hours and free wheels", () => {

@@ -1,5 +1,3 @@
-import { toWhatsAppDigits } from "@/lib/whatsapp";
-
 // Pages that sit content under the sticky SiteHeader find its live edge through this.
 export const SITE_HEADER_SELECTOR = "[data-site-header]";
 export const SITE_FOOTER_SELECTOR = "[data-site-footer]";
@@ -71,23 +69,6 @@ export function toFocusedHeader(pathname: string): NavLink | null {
 // Focused routes drop the nav and the phone tab bar, leaving one way back.
 export function isFocusedPath(pathname: string): boolean {
   return toFocusedHeader(pathname) !== null;
-}
-
-export function buildWhatsAppUrl(number: string, text: string): string {
-  return toWaMeUrl(toWhatsAppDigits(number), text);
-}
-
-// The same link, or null when the number has no digits to send to, read once either way.
-export function buildOptionalWhatsAppUrl(
-  number: string,
-  text: string,
-): string | null {
-  const digits = toWhatsAppDigits(number);
-  return digits ? toWaMeUrl(digits, text) : null;
-}
-
-function toWaMeUrl(digits: string, text: string): string {
-  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
 export function formatBadgeCount(count: number): string {

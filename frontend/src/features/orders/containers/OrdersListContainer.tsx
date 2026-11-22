@@ -1,13 +1,15 @@
 "use client";
 
 import { useClerk } from "@clerk/nextjs";
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 
 import { Button } from "@/components/ui/button";
 import { LoadFailed } from "@/components/layout/LoadFailed";
 import { PageShell } from "@/components/layout/PageShell";
 import { PageTurnFailed } from "@/components/layout/PageTurnFailed";
 import { formatDate } from "@/lib/format";
+import { PAGE_CODEC } from "@/lib/page-turn";
+import { useFocusAfterTurn } from "@/lib/use-focus-after-turn";
 import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +18,6 @@ import { EmptyOrders } from "@/features/orders/components/EmptyOrders";
 import { OrderCard } from "@/features/orders/components/OrderCard";
 import { useOrders } from "@/features/orders/hooks";
 import {
-  ORDERS_PAGE_CODEC,
   toOrderPath,
   toStatusLabel,
   toStatusTone,
@@ -27,7 +28,7 @@ export function OrdersListContainer() {
     value: page,
     isPending: isTurning,
     dispatch: goToPage,
-  } = useUrlState(ORDERS_PAGE_CODEC);
+  } = useUrlState(PAGE_CODEC);
   const {
     orders,
     pageInfo,
@@ -41,7 +42,11 @@ export function OrdersListContainer() {
   } = useOrders(page);
   const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const { headingRef, startTurn } = useFocusAfterTurn<HTMLHeadingElement>(
+    !isPaging && !isTurning,
+    shownPage,
+    failedPage,
+  );
 
   // The buttons sit under the list, so a new page starts back at the heading.
   // Asking again for the page that failed reads it again rather than doing nothing.
@@ -49,9 +54,9 @@ export function OrdersListContainer() {
     (next: number) => {
       if (next === page) void refetch();
       else goToPage(next);
-      headingRef.current?.scrollIntoView({ block: "start" });
+      startTurn();
     },
-    [goToPage, page, refetch],
+    [goToPage, page, refetch, startTurn],
   );
 
   // The wall is the whole page when it shows, so it carries the h1 rather than
@@ -69,7 +74,8 @@ export function OrdersListContainer() {
     <PageShell column="wide" className="flex flex-col gap-6 py-8 md:py-12">
       <h1
         ref={headingRef}
-        className="font-heading text-3xl tracking-tight md:text-5xl"
+        tabIndex={-1}
+        className="font-heading text-3xl tracking-tight focus:outline-none md:text-5xl"
       >
         Your orders
       </h1>

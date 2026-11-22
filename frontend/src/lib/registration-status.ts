@@ -1,6 +1,7 @@
 import { RegistrationStatus } from "@/graphql/generated/graphql";
 
 import type { StatusTone } from "./status-tone";
+import type { TimelineStage } from "./timeline";
 
 // Wheel sessions and event seats share one status, so the shopper and the studio read the same words.
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
@@ -35,4 +36,52 @@ export function toRegistrationStatusTone(
   if (status === RegistrationStatus.Confirmed) return "done";
   if (status === RegistrationStatus.Pending) return "pending";
   return "active";
+}
+
+type RequestStage = TimelineStage<RegistrationStatus>;
+
+export interface RequestStages {
+  paid: RequestStage[];
+  free: RequestStage[];
+}
+
+// Wheel sessions and event seats walk the same steps; only what is held and what is confirmed differ.
+// A pending request already holds it, so for a paid one the step after is about payment;
+// a free one skips payment and the studio confirms it straight away.
+export function toRequestStages(
+  heldLine: string,
+  thing: string,
+): RequestStages {
+  const requested: RequestStage = {
+    key: RegistrationStatus.Pending,
+    label: "Requested",
+    description: heldLine,
+  };
+  return {
+    paid: [
+      requested,
+      {
+        key: RegistrationStatus.Approved,
+        label: "Approved",
+        description: "Payment details are on WhatsApp.",
+        upcoming:
+          "We look over each request, then approve it and share payment details on WhatsApp.",
+      },
+      {
+        key: RegistrationStatus.Confirmed,
+        label: "Confirmed",
+        description: "Paid and confirmed. Come in ten minutes early.",
+        upcoming: "Confirmed as soon as your payment lands.",
+      },
+    ],
+    free: [
+      requested,
+      {
+        key: RegistrationStatus.Confirmed,
+        label: "Confirmed",
+        description: `Your ${thing} is confirmed. Come in ten minutes early.`,
+        upcoming: `We look over each request, then confirm your ${thing}.`,
+      },
+    ],
+  };
 }

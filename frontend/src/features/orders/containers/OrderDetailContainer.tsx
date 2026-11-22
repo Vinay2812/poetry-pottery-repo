@@ -11,7 +11,7 @@ import { toClosedLabel, toTimelineDate, toTimelineSteps } from "@/lib/timeline";
 import { PageShell } from "@/components/layout/PageShell";
 
 import { toSelectionSummary } from "@/features/cart/types";
-import { buildWhatsAppUrl } from "@/features/layout/types";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { CancelOrderDialog } from "@/features/orders/components/CancelOrderDialog";
 import { OrderDetail } from "@/features/orders/components/OrderDetail";
 import { SignInWall } from "@/features/auth/components/SignInWall";

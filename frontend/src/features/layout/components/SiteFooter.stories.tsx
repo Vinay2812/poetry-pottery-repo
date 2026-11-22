@@ -6,8 +6,8 @@ import {
   FOOTER_LEGAL_LINKS,
   FOOTER_SHOP_LINKS,
   FOOTER_STUDIO_LINKS,
-  buildWhatsAppUrl,
 } from "@/features/layout/types";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { SiteFooter } from "./SiteFooter";
 
 const meta = {

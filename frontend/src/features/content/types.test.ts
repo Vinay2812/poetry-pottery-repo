@@ -7,6 +7,7 @@ import {
   type NewsletterResult,
   pickActiveSection,
   splitParagraphs,
+  toAboutItemLayout,
   toAboutSections,
   toAnchorId,
   toSectionHeadingId,
@@ -160,6 +161,39 @@ describe("toAboutSections", () => {
       ["How it is made", ["Slowly."], 1, "steps"],
       ["Visit", ["Saturdays."], 0, "values"],
     ]);
+  });
+
+  it("numbers the process section wherever the editor moves it", () => {
+    const views = toAboutSections([
+      section("How a piece is made", "", [step]),
+      section("Our story", "Founded in 2025."),
+      section("What we believe", "", [value]),
+    ]);
+    expect(views.map((view) => view.itemLayout)).toEqual([
+      "steps",
+      "values",
+      "values",
+    ]);
+  });
+
+  it("reads a process from the heading alone", () => {
+    for (const heading of [
+      "How a piece is made",
+      "how we fire",
+      "Our process",
+      "Steps",
+      "From clay to kiln, step by step",
+    ]) {
+      expect(toAboutItemLayout(heading)).toBe("steps");
+    }
+    for (const heading of [
+      "What we believe",
+      "Our story",
+      "Showroom",
+      "Howrah",
+    ]) {
+      expect(toAboutItemLayout(heading)).toBe("values");
+    }
   });
 
   it("gives repeated headings distinct keys", () => {

@@ -6,7 +6,7 @@ import { ContactDetails } from "@/features/content/components/ContactDetails";
 import { ContactPanel } from "@/features/content/components/ContactPanel";
 import { ContentHeader } from "@/features/content/components/ContentHeader";
 import { ContactFormContainer } from "@/features/content/containers/ContactFormContainer";
-import { buildWhatsAppUrl } from "@/features/layout";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { StudioVisitContainer, VisitIntro } from "@/features/visits";
 
 // Both rows share one grid, so the visit picker starts where the form starts; the picker caps its own width.

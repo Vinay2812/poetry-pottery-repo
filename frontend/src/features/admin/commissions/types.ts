@@ -1,6 +1,6 @@
 import { CommissionStatus } from "@/graphql/generated/graphql";
 
-import { toWhatsAppDigits } from "@/lib/whatsapp";
+import { buildWhatsAppUrl, toWhatsAppDigits } from "@/lib/whatsapp";
 
 import { formatEnumLabel } from "@/features/admin/shell";
 import type { AdminStatusTone } from "@/features/admin/ui";
@@ -104,7 +104,7 @@ export function toWhatsAppHref(
   const number = toWhatsAppDigits(phone ?? "");
   if (number.length < 10) return null;
   const text = `Hi ${name}, thanks for the ${pieceType.toLowerCase()} brief. A few thoughts from the studio:`;
-  return `https://wa.me/${number}?text=${encodeURIComponent(text)}`;
+  return buildWhatsAppUrl(number, text);
 }
 
 export type CommissionPatch =

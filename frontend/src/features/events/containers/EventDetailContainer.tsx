@@ -28,7 +28,7 @@ import {
   toSeatPriceNote,
   toSeatsLabel,
 } from "@/features/events/types";
-import { buildWhatsAppUrl } from "@/features/layout/types";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { ReviewsPanelContainer } from "@/features/reviews";
 import { CancellationPolicy } from "@/features/workshops";
 

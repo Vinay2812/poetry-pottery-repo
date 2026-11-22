@@ -10,7 +10,7 @@ import { formatInr, pluralize } from "@/lib/format";
 import { PageShell } from "@/components/layout/PageShell";
 
 import { SignInWall } from "@/features/auth";
-import { buildWhatsAppUrl } from "@/features/layout/types";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { BookingDetail } from "@/features/workshops/components/BookingDetail";
 import { CancelBookingDialog } from "@/features/workshops/components/CancelBookingDialog";
 import { RescheduleDialog } from "@/features/workshops/components/RescheduleDialog";
@@ -28,12 +28,12 @@ import {
 } from "@/lib/registration-status";
 import {
   applyBookingAction,
-  BOOKING_STAGES,
   formatDayRange,
   formatHours,
   groupSlotsByDay,
   isRequestBannerShown,
   type SessionFact,
+  toBookingStages,
   toWhatsAppSessionMessage,
 } from "@/features/workshops/types";
 
@@ -159,15 +159,13 @@ export function BookingDetailContainer({
       optimisticBooking.confirmed_at,
     ),
   };
+  const isFree = optimisticBooking.total === 0;
   const closed = isRegistrationClosed(optimisticBooking.status);
   const closedOn =
     optimisticBooking.cancelled_at ?? optimisticBooking.rejected_at;
   const closedLabel = closed
     ? toClosedLabel(
-        toRegistrationStatusLabel(
-          optimisticBooking.status,
-          optimisticBooking.total === 0,
-        ),
+        toRegistrationStatusLabel(optimisticBooking.status, isFree),
         toTimelineDate(closedOn),
         optimisticBooking.cancel_reason,
       )
@@ -202,6 +200,7 @@ export function BookingDetailContainer({
           participants: optimisticBooking.participants,
           total: formatInr(optimisticBooking.total),
           guestName: user?.fullName ?? "",
+          isFree,
         }),
       )
     : null;
@@ -213,7 +212,7 @@ export function BookingDetailContainer({
         dateLabel={formatDayRange(optimisticBooking.slots, timezone)}
         statusLabel={toRegistrationStatusLabel(
           optimisticBooking.status,
-          optimisticBooking.total === 0,
+          isFree,
         )}
         statusTone={toRegistrationStatusTone(optimisticBooking.status)}
         isJustPlaced={isRequestBannerShown(
@@ -221,7 +220,7 @@ export function BookingDetailContainer({
           optimisticBooking.status,
         )}
         steps={toTimelineSteps({
-          stages: BOOKING_STAGES,
+          stages: toBookingStages(optimisticBooking.total),
           status: optimisticBooking.status,
           dates,
           isClosed: closed,

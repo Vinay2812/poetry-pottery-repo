@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { SectionLabel } from "@/components/layout/SectionLabel";
+import { BackLink } from "@/components/layout/BackLink";
 import { PageShell } from "@/components/layout/PageShell";
 import { formatInr, pluralize } from "@/lib/format";
 
@@ -61,6 +62,7 @@ export function RegistrationDetail({
 }: RegistrationDetailProps) {
   return (
     <PageShell column="wide" className="flex flex-col gap-10 py-8 md:py-12">
+      <BackLink href="/registrations" label="All event bookings" />
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-2">
           <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
@@ -153,14 +155,16 @@ export function RegistrationDetail({
 
           <div className="flex flex-col items-start gap-3">
             {whatsappUrl && !isRequestShown && (
-              <WhatsAppLink
-                href={whatsappUrl}
-                kind="event"
-                reference={registrationId}
-                className={TEXT_LINK}
-              >
-                Message us about this booking
-              </WhatsAppLink>
+              <Button variant="outline" asChild>
+                <WhatsAppLink
+                  href={whatsappUrl}
+                  kind="event"
+                  reference={registrationId}
+                >
+                  <MessageCircle className="size-4" strokeWidth={1.5} />
+                  Message us about this booking
+                </WhatsAppLink>
+              </Button>
             )}
             {canCancel && (
               <button

@@ -9,7 +9,7 @@ import {
 import { formatInr } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
 
-import { buildOptionalWhatsAppUrl } from "@/features/layout/types";
+import { buildOptionalWhatsAppUrl } from "@/lib/whatsapp";
 
 export type ProductCardData = ProductCardFragment;
 export type ProductDetailData = ProductQuery["product"];

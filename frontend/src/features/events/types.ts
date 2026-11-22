@@ -20,6 +20,7 @@ import {
 import {
   isRegistrationClosed,
   toRegistrationStatusLabel,
+  toRequestStages,
 } from "@/lib/registration-status";
 
 export type EventCardData = EventCardFragment;
@@ -252,43 +253,18 @@ export function toGalleryHeading(eventType: EventType): string {
   return GALLERY_HEADING[eventType];
 }
 
-// A pending request already holds the seat, so the step after it is about payment.
-export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
-  {
-    key: RegistrationStatus.Pending,
-    label: "Requested",
-    description: "We have your request and are holding your seat.",
-  },
-  {
-    key: RegistrationStatus.Approved,
-    label: "Approved",
-    description: "Payment details are on WhatsApp.",
-    upcoming:
-      "We look over each request, then approve it and share payment details on WhatsApp.",
-  },
-  {
-    key: RegistrationStatus.Confirmed,
-    label: "Confirmed",
-    description: "Paid and confirmed. Come in ten minutes early.",
-    upcoming: "Confirmed as soon as your payment lands.",
-  },
-];
+const SEAT_STAGES = toRequestStages(
+  "We have your request and are holding your seat.",
+  "seat",
+);
 
-// A free seat skips payment: the studio confirms the request straight away.
-const FREE_REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
-  REGISTRATION_STAGES[0],
-  {
-    key: RegistrationStatus.Confirmed,
-    label: "Confirmed",
-    description: "Your seat is confirmed. Come in ten minutes early.",
-    upcoming: "We look over each request, then confirm your seat.",
-  },
-];
+export const REGISTRATION_STAGES = SEAT_STAGES.paid;
 
+// The saved total decides the steps, so a seat made free later keeps the steps it was booked with.
 export function toRegistrationStages(
   total: number,
 ): TimelineStage<RegistrationStatus>[] {
-  return total === 0 ? FREE_REGISTRATION_STAGES : REGISTRATION_STAGES;
+  return total === 0 ? SEAT_STAGES.free : SEAT_STAGES.paid;
 }
 
 export type RegistrationStepDates = Partial<

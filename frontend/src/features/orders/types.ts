@@ -5,22 +5,8 @@ import {
 
 import type { StatusTone } from "@/lib/status-tone";
 import type { TimelineStage } from "@/lib/timeline";
-import type { UrlCodec } from "@/lib/use-url-state";
 
 export type OrderData = OrderFieldsFragment;
-
-// Anything that is not a whole page number past the first means the first page.
-export function toPageNumber(raw: string | null): number {
-  const page = Number(raw);
-  return Number.isInteger(page) && page > 1 ? page : 1;
-}
-
-// The orders list keeps its page in the address bar, so a refresh or a shared link opens the same page.
-export const ORDERS_PAGE_CODEC: UrlCodec<number, number> = {
-  parse: (search) => toPageNumber(search.get("page")),
-  serialize: (page) => (page > 1 ? `page=${page}` : ""),
-  apply: (_current, next) => next,
-};
 
 // How long the courier usually takes, said the same way wherever it appears.
 const TRANSIT_WINDOW = "five to seven days";

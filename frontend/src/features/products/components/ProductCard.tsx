@@ -148,7 +148,8 @@ export function ProductCard({
         )}
 
         {hasMany && (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex justify-center">
+          // Stops at the corner button (size-9 at right-2, so 44px), so no dot's hit area runs under it.
+          <div className="pointer-events-none absolute right-11 bottom-0 left-0 z-20 flex justify-center">
             {photos.map((url, index) => (
               <button
                 key={`${url}-${index}`}
@@ -156,7 +157,8 @@ export function ProductCard({
                 onClick={() => handlePickPhoto(index)}
                 aria-label={toPhotoLabel(index, photos.length)}
                 aria-current={index === selectedIndex}
-                className="pointer-events-auto p-1.5"
+                // Each dot gets a 24px hit area so neighbouring dots are not overlapping tiny targets.
+                className="pointer-events-auto flex size-6 items-center justify-center"
               >
                 <span
                   className={cn(

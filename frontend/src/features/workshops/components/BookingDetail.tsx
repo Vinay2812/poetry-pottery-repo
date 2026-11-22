@@ -1,6 +1,7 @@
 import { MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { BackLink } from "@/components/layout/BackLink";
 import { PageShell } from "@/components/layout/PageShell";
 import { formatInr, pluralize } from "@/lib/format";
 
@@ -61,6 +62,7 @@ export function BookingDetail({
 }: BookingDetailProps) {
   return (
     <PageShell column="wide" className="flex flex-col gap-10 py-8 md:py-12">
+      <BackLink href="/workshops/bookings" label="All wheel sessions" />
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-2">
           <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
@@ -152,14 +154,16 @@ export function BookingDetail({
 
           <div className="flex flex-col items-start gap-3">
             {whatsappUrl && !isJustPlaced && (
-              <WhatsAppLink
-                href={whatsappUrl}
-                kind="booking"
-                reference={bookingId}
-                className="w-fit border-b border-ink pb-0.5 text-[13px] hover:border-primary hover:text-primary"
-              >
-                Message us about this session
-              </WhatsAppLink>
+              <Button variant="outline" asChild>
+                <WhatsAppLink
+                  href={whatsappUrl}
+                  kind="booking"
+                  reference={bookingId}
+                >
+                  <MessageCircle className="size-4" strokeWidth={1.5} />
+                  Message us about this session
+                </WhatsAppLink>
+              </Button>
             )}
             {canReschedule && (
               <button

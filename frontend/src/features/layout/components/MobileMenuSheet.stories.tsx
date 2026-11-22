@@ -2,7 +2,8 @@ import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
 import { atViewport } from "@/lib/storybook/viewports";
-import { MOBILE_MENU_LINKS, buildWhatsAppUrl } from "@/features/layout/types";
+import { MOBILE_MENU_LINKS } from "@/features/layout/types";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { MobileMenuSheet } from "./MobileMenuSheet";
 
 const meta = {
