@@ -302,7 +302,7 @@ export class WorkshopsService {
       }
       if (!toBooking(current).can_cancel) {
         throw new BadRequestException(
-          "This booking can no longer be cancelled online. Message us on WhatsApp and we will help.",
+          "This booking can no longer be cancelled online. If you've already sent a payment and it still shows as unpaid, message us on WhatsApp.",
         );
       }
       return this.applyStatus(
