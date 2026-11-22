@@ -16,6 +16,7 @@ const meta = {
     cropWidth: 1200,
     cropHeight: 1200,
     isBusy: false,
+    error: null,
     onConfirm: fn(),
     onOpenChange: fn(),
   },
@@ -28,6 +29,10 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Uploading: Story = { args: { isBusy: true } };
+
+export const UploadFailed: Story = {
+  args: { error: "The image did not reach storage" },
+};
 
 export const Landscape: Story = {
   args: {

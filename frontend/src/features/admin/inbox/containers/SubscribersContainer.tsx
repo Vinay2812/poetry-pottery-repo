@@ -161,6 +161,7 @@ export function SubscribersContainer() {
         title="Take this address off the list?"
         description={`${pendingEmail ?? ""} stops receiving the newsletter. They can sign up again themselves.`}
         confirmLabel="Unsubscribe"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={busyEmail !== null && busyEmail === pendingEmail}
         onConfirm={handleConfirmUnsubscribe}

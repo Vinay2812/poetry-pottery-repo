@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { OptionGroupKind } from "@/graphql/generated/graphql";
 
+import { pluralize } from "@/lib/format";
+
 const MAX_CARE_NOTES = 2000;
 const MAX_MAKER_NOTE = 500;
 const MAX_DESCRIPTION = 4000;
@@ -59,8 +61,8 @@ export const productSchema = z
     material: z
       .string()
       .trim()
-      .min(1, "Material is required")
-      .max(80, "Material must be 80 characters or fewer"),
+      .min(1, "Clay body is required")
+      .max(80, "Clay body must be 80 characters or fewer"),
     dimensions: z
       .string()
       .trim()
@@ -151,11 +153,13 @@ export const productOptionSchema = z.object({
 
 export type ProductOptionFormValues = z.infer<typeof productOptionSchema>;
 
-export const stockAdjustSchema = z.object({
-  delta: z
-    .number({ error: "Enter a whole number" })
+// A direction and a count, because a phone's number pad has no minus key.
+const stockAdjustSchema = z.object({
+  direction: z.enum(["add", "remove"]),
+  count: z
+    .number({ error: "Enter how many pieces" })
     .int("Enter a whole number")
-    .refine((value) => value !== 0, "Enter a number other than zero"),
+    .min(1, "Enter at least one piece"),
   reason: z
     .string()
     .trim()
@@ -164,3 +168,16 @@ export const stockAdjustSchema = z.object({
 });
 
 export type StockAdjustFormValues = z.infer<typeof stockAdjustSchema>;
+
+// Built from the count in stock, so removing more than there is fails like any other field.
+export function stockAdjustSchemaFor(stock: number) {
+  return stockAdjustSchema.superRefine((values, context) => {
+    if (values.direction === "remove" && values.count > stock) {
+      context.addIssue({
+        code: "custom",
+        path: ["count"],
+        message: `Only ${pluralize(stock, "piece")} in stock to remove`,
+      });
+    }
+  });
+}

@@ -1,15 +1,35 @@
 "use client";
 
-import { Toaster as Sonner } from "sonner";
+import { Toaster as Sonner, type ToasterProps } from "sonner";
 
-// Bottom-right on a desktop so a toast lands under the cart it talks about;
-// sonner goes full width on a phone, clear of the bottom nav.
-export function Toaster() {
+type ToasterPlacement = "storefront" | "admin";
+
+type Placement = Pick<ToasterProps, "position" | "offset" | "mobileOffset">;
+
+// Storefront sits above the cart and bottom nav; admin sits on top, clear of pinned save bars.
+const PLACEMENTS: Record<ToasterPlacement, Placement> = {
+  storefront: {
+    position: "bottom-right",
+    offset: { bottom: 24, right: 24 },
+    mobileOffset: { bottom: 80 },
+  },
+  admin: {
+    position: "top-center",
+    offset: { top: 16 },
+    mobileOffset: { top: 16 },
+  },
+};
+
+export interface ToasterComponentProps {
+  placement: ToasterPlacement;
+}
+
+export function Toaster({ placement }: ToasterComponentProps) {
   return (
     <Sonner
-      position="bottom-right"
-      offset={{ bottom: 24, right: 24 }}
-      mobileOffset={{ bottom: 80 }}
+      position={PLACEMENTS[placement].position}
+      offset={PLACEMENTS[placement].offset}
+      mobileOffset={PLACEMENTS[placement].mobileOffset}
       duration={3500}
       containerAriaLabel="Studio notices"
       toastOptions={{

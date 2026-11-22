@@ -168,6 +168,7 @@ export function WorkshopTiersContainer({
         title="Remove this length?"
         description="People will no longer be able to book a session of this length."
         confirmLabel="Remove"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={busyId !== null}
         onConfirm={handleDelete}

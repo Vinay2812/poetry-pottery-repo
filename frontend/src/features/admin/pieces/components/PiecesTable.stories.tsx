@@ -41,6 +41,7 @@ const meta = {
     rows: ROWS,
     isBusy: false,
     busyId: null,
+    emptyMessage: "No pieces match those filters.",
     onActiveChange: fn(),
     onFeaturedChange: fn(),
     onAdjustStock: fn(),
@@ -63,6 +64,13 @@ export const RowBusy: Story = {
 
 export const Empty: Story = {
   args: { rows: [] },
+};
+
+export const NothingYet: Story = {
+  args: {
+    rows: [],
+    emptyMessage: "No pieces yet. Add the first with New piece.",
+  },
 };
 
 export const Mobile: Story = { ...atViewport("mobile") };

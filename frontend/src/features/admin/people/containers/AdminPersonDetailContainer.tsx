@@ -164,6 +164,7 @@ export function AdminPersonDetailContainer({
         title={`${toRoleConfirmLabel(nextRole)}?`}
         description={describeRoleChange(nextRole)}
         confirmLabel={toRoleConfirmLabel(nextRole)}
+        cancelLabel="Keep as is"
         isDestructive={nextRole === UserRole.User}
         isBusy={isSaving}
         onConfirm={handleConfirm}

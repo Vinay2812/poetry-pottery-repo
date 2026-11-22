@@ -34,10 +34,13 @@ import { PiecesToolbar } from "@/features/admin/pieces/components/PiecesToolbar"
 import { StockAdjustDialog } from "@/features/admin/pieces/components/StockAdjustDialog";
 import {
   applyStockDelta,
+  canGoLive,
+  countFoldedFilters,
   describeCategories,
+  describeFiltersToggle,
+  describePiecesEmpty,
   formatStock,
   toProductsFilter,
-  canGoLive,
 } from "@/features/admin/pieces/types";
 
 // The filter lists every glaze the studio fires; there are never many.
@@ -89,8 +92,9 @@ export function PiecesListContainer() {
   const [setFeatured] = useMutation(SetProductFeaturedDocument);
   const [adjustStock] = useMutation(AdjustProductStockDocument);
 
-  const [archiveId, setArchiveId] = useState<number | null>(null);
+  const [retireId, setRetireId] = useState<number | null>(null);
   const [stockId, setStockId] = useState<number | null>(null);
+  const [isFiltersOpen, setIsFiltersOpen] = useState(false);
 
   const result = data?.adminProducts ?? previousData?.adminProducts;
 
@@ -176,7 +180,7 @@ export function PiecesListContainer() {
     refresh: refetch,
     messages: {
       success: (change) =>
-        change.isActive ? "Back on the shelf" : "Moved to the archive",
+        change.isActive ? "Back on the shelf" : "Retired to the archive",
       failure: "The piece could not be moved",
     },
   });
@@ -187,14 +191,14 @@ export function PiecesListContainer() {
     [saveActive],
   );
 
-  // Hiding a piece takes it off the storefront, so it asks first; showing one does not.
+  // Retiring takes a piece off the storefront, so it asks first; putting it back does not.
   const handleActiveChange = useCallback(
     (id: number, isActive: boolean) => {
       if (isActive) {
         runActive(id, true);
         return;
       }
-      setArchiveId(id);
+      setRetireId(id);
     },
     [runActive],
   );
@@ -230,7 +234,7 @@ export function PiecesListContainer() {
   const busyId =
     pendingFeatured?.id ?? pendingActive?.id ?? pendingStock?.id ?? null;
 
-  const archiveRow = optimisticRows.find((row) => row.id === archiveId);
+  const retireRow = optimisticRows.find((row) => row.id === retireId);
   const stockRow = optimisticRows.find((row) => row.id === stockId);
   const pageInfo = result?.page_info;
   const isFirstLoad = !result && loading;
@@ -240,7 +244,7 @@ export function PiecesListContainer() {
       <AdminPageHeader
         eyebrow="Studio"
         title="Pieces"
-        description="Everything on the shelf, live or archived."
+        description="Everything on the shelf, and everything retired from it."
         actions={
           <Button asChild size="sm">
             <Link href="/dashboard/pieces/new">New piece</Link>
@@ -259,6 +263,12 @@ export function PiecesListContainer() {
         categoryOptions={categoryOptions}
         collectionOptions={collectionOptions}
         glazeOptions={glazeOptions}
+        isFiltersOpen={isFiltersOpen}
+        filtersLabel={describeFiltersToggle(
+          isFiltersOpen,
+          countFoldedFilters(values),
+        )}
+        onFiltersToggle={() => setIsFiltersOpen((isOpen) => !isOpen)}
         onSearchChange={setSearchDraft}
         onCategoryChange={(value) => patch({ category_id: value || null })}
         onCollectionChange={(value) => patch({ collection_id: value || null })}
@@ -275,6 +285,7 @@ export function PiecesListContainer() {
           rows={optimisticRows}
           isBusy={loading || isPending}
           busyId={busyId}
+          emptyMessage={describePiecesEmpty(values)}
           onActiveChange={handleActiveChange}
           onFeaturedChange={runFeatured}
           onAdjustStock={setStockId}
@@ -290,25 +301,26 @@ export function PiecesListContainer() {
         />
       )}
       <AdminConfirmDialog
-        isOpen={archiveId !== null}
-        title="Archive this piece?"
-        description={`${archiveRow?.name ?? "This piece"} comes off the shelf at once. You can bring it back later.`}
-        confirmLabel="Archive"
+        isOpen={retireId !== null}
+        title="Retire this piece?"
+        description={`${retireRow?.name ?? "This piece"} comes off the shelf and moves to the archive. You can put it back later.`}
+        confirmLabel="Retire"
+        cancelLabel="Keep as is"
         isDestructive
-        isBusy={busyId === archiveId}
+        isBusy={busyId === retireId}
         onConfirm={() => {
-          if (archiveId !== null) runActive(archiveId, false);
-          setArchiveId(null);
+          if (retireId !== null) runActive(retireId, false);
+          setRetireId(null);
         }}
         onOpenChange={(isOpen) => {
-          if (!isOpen) setArchiveId(null);
+          if (!isOpen) setRetireId(null);
         }}
       />
       <StockAdjustDialog
         key={stockId ?? "none"}
         isOpen={stockId !== null}
         pieceName={stockRow?.name ?? "This piece"}
-        stockLabel={stockRow?.stockLabel ?? "0"}
+        stock={stockRow?.stock ?? 0}
         isBusy={busyId === stockId}
         onSubmit={handleStockSubmit}
         onOpenChange={(isOpen) => {

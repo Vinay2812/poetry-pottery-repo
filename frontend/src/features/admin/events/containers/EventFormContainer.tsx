@@ -73,6 +73,7 @@ export function EventFormContainer({
         <ImageUploaderContainer
           id="event-cover"
           label="Cover photo"
+          hasPreview
           purpose={UploadPurpose.Event}
           value={value || null}
           onChange={onChange}

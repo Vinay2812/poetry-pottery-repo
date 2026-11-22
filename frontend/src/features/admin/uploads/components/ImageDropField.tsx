@@ -1,7 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 export interface ImageDropFieldProps {
   id: string;
@@ -10,6 +11,8 @@ export interface ImageDropFieldProps {
   rendersAt: string;
   accept: string;
   previewUrl: string | null;
+  // A gallery shows its photos in a strip above, so its picker has no preview box.
+  hasPreview: boolean;
   isBusy: boolean;
   error: string | null;
   onFilePick: (file: File) => void;
@@ -23,6 +26,7 @@ export function ImageDropField({
   rendersAt,
   accept,
   previewUrl,
+  hasPreview,
   isBusy,
   error,
   onFilePick,
@@ -30,37 +34,58 @@ export function ImageDropField({
 }: ImageDropFieldProps) {
   return (
     <div className="flex flex-col gap-2">
-      <Label
-        htmlFor={id}
-        className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase"
-      >
+      <span className="text-[11px] tracking-[0.14em] text-muted-foreground uppercase">
         {label}
-      </Label>
-      <p className="text-[12px] text-muted-foreground">
+      </span>
+      <p id={`${id}-requirement`} className="text-[12px] text-muted-foreground">
         {requirementLine} · shows on {rendersAt}
       </p>
       <div className="flex items-start gap-3">
-        <div className="flex size-20 shrink-0 items-center justify-center border border-ash bg-white">
-          {previewUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={previewUrl} alt="" className="size-full object-cover" />
-          ) : (
-            <span className="text-[11px] text-muted-foreground">No photo</span>
-          )}
-        </div>
+        {hasPreview && (
+          <div className="flex size-20 shrink-0 items-center justify-center border border-ash bg-white">
+            {previewUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={previewUrl} alt="" className="size-full object-cover" />
+            ) : (
+              <span
+                role="img"
+                aria-label="No image yet"
+                className="text-muted-foreground"
+              >
+                —
+              </span>
+            )}
+          </div>
+        )}
         <div className="flex min-w-0 flex-col gap-2">
+          {/* The real input stays focusable but hidden; its label is the button people see. */}
           <input
             id={id}
             type="file"
             accept={accept}
             disabled={isBusy}
-            className="w-full min-w-0 text-[13px] file:mr-3 file:border file:border-ash file:bg-transparent file:px-3 file:py-1.5 file:text-[13px]"
+            aria-label={label}
+            aria-describedby={`${id}-requirement`}
+            className="peer sr-only"
             onChange={(event) => {
               const file = event.target.files?.[0];
               if (file) onFilePick(file);
               event.target.value = "";
             }}
           />
+          <Label
+            htmlFor={id}
+            className={cn(
+              buttonVariants({ variant: "secondary", size: "sm" }),
+              "w-fit cursor-pointer peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-disabled:pointer-events-none peer-disabled:opacity-50",
+            )}
+          >
+            {isBusy
+              ? "Uploading…"
+              : previewUrl
+                ? "Replace image"
+                : "Choose an image"}
+          </Label>
           {previewUrl && (
             <Button
               type="button"
@@ -74,9 +99,6 @@ export function ImageDropField({
           )}
         </div>
       </div>
-      {isBusy && (
-        <p className="text-[12px] text-muted-foreground">Uploading…</p>
-      )}
       {error && (
         <p role="alert" className="text-[12px] text-destructive">
           {error}

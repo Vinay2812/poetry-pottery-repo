@@ -386,6 +386,7 @@ export function CatalogContainer() {
                     key={categoryEditorKey}
                     id={`${categoryEditorKey}-image`}
                     label="Category image"
+                    hasPreview
                     purpose={UploadPurpose.Category}
                     value={imageUrl}
                     onChange={setImageUrl}
@@ -431,6 +432,7 @@ export function CatalogContainer() {
                     key={collectionEditorKey}
                     id={`${collectionEditorKey}-image`}
                     label="Collection image"
+                    hasPreview
                     purpose={UploadPurpose.Collection}
                     value={imageUrl}
                     onChange={setImageUrl}
@@ -458,6 +460,7 @@ export function CatalogContainer() {
         }
         description={deleteDescription}
         confirmLabel="Delete"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={isDeleting}
         onConfirm={handleDeleteConfirm}

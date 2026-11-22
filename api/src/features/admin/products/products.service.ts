@@ -62,6 +62,18 @@ export function assertCanBeLive(stock: number, isCustomizable: boolean): void {
   }
 }
 
+// The home page only shows pieces on the shelf, so a new piece cannot start featured and hidden.
+export function assertFeaturedIsLive(
+  isActive: boolean,
+  isFeatured: boolean,
+): void {
+  if (isFeatured && !isActive) {
+    throw new BadRequestException(
+      "Put the piece on the shelf before showing it on the home page",
+    );
+  }
+}
+
 // A measurement is either a positive number or missing; zero is never a real piece.
 export function assertMeasure(
   value: number | null | undefined,
@@ -176,6 +188,7 @@ export class AdminProductsService {
     if (input.is_active ?? true) {
       assertCanBeLive(input.stock ?? 0, input.is_customizable ?? false);
     }
+    assertFeaturedIsLive(input.is_active ?? true, input.is_featured ?? false);
     await this.assertLinks(
       input.category_ids,
       input.collection_id,

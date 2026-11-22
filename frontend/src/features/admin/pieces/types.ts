@@ -32,14 +32,70 @@ export function formatCareNotes(notes: readonly string[]): string {
   return notes.join("\n");
 }
 
-/** A count on a shelf is never negative, whatever a pending adjustment says. */
 // Only stock or a made-to-order flag can put a piece on the shelf; the API refuses otherwise.
 export function canGoLive(stock: number, isCustomizable: boolean): boolean {
   return isCustomizable || stock > 0;
 }
 
+// A retired piece is never offered for the home page, but one still there can be taken off.
+export function canFeature(isActive: boolean, isFeatured: boolean): boolean {
+  return isActive || isFeatured;
+}
+
 export const LIVE_BLOCKED_NOTE = "Add stock first, or mark it made to order";
 
+export const FEATURE_BLOCKED_NOTE = "Put it back on the shelf first";
+
+export const NEW_FEATURE_BLOCKED_NOTE =
+  "Only a piece on the shelf can be on the home page";
+
+// The storefront calls an inactive piece "Retired from the shelf" and lists it in the archive.
+export function describeShelfState(isActive: boolean): string {
+  return isActive ? "On the shelf" : "Retired";
+}
+
+export function describeShelfStateHint(
+  isActive: boolean,
+  isLiveAllowed: boolean,
+  isFeatured: boolean,
+): string | null {
+  if (isActive) return isFeatured ? "Also on the home page" : null;
+  // Retired but still marked, so "Take off the home page" has something to take off.
+  if (isFeatured) return "Still marked for the home page";
+  return isLiveAllowed ? "Shown in the archive" : LIVE_BLOCKED_NOTE;
+}
+
+export function describeKiln(isSecond: boolean): string {
+  return isSecond ? "Second" : "First";
+}
+
+export function describeKilnHint(isSecond: boolean): string {
+  return isSecond ? "Sold with its flaw named" : "Sold as a first";
+}
+
+export type StockDirection = "add" | "remove";
+
+export function toStockDelta(direction: StockDirection, count: number): number {
+  return direction === "add" ? count : -count;
+}
+
+/** The line under the stock form, so the owner sees the new count before saving. */
+export function describeStockAfter(
+  stock: number,
+  direction: StockDirection,
+  count: number,
+): string {
+  if (
+    !Number.isInteger(count) ||
+    count <= 0 ||
+    (direction === "remove" && count > stock)
+  ) {
+    return `${pluralize(stock, "piece")} in stock now.`;
+  }
+  return `Stock goes from ${stock} to ${stock + toStockDelta(direction, count)}.`;
+}
+
+/** A count on a shelf is never negative, whatever a pending adjustment says. */
 export function clampStock(stock: number): number {
   return Math.max(0, Math.round(stock));
 }
@@ -104,6 +160,33 @@ function readBooleanValue(value: string | undefined): boolean | null {
   return null;
 }
 
+// The search box stays in view on a phone; these fold behind the Filters button.
+const FOLDED_FILTER_KEYS = [
+  "category_id",
+  "collection_id",
+  "is_active",
+  "is_featured",
+  "is_second",
+  "glaze_id",
+  "low_stock",
+] as const;
+
+export function countFoldedFilters(values: QueryValues): number {
+  return FOLDED_FILTER_KEYS.filter((key) => Boolean(values[key])).length;
+}
+
+export function describeFiltersToggle(isOpen: boolean, count: number): string {
+  if (isOpen) return "Hide filters";
+  return count === 0 ? "Filters" : `Filters · ${count} on`;
+}
+
+export function describePiecesEmpty(values: QueryValues): string {
+  const isNarrowed = Boolean(values.search) || countFoldedFilters(values) > 0;
+  return isNarrowed
+    ? "No pieces match those filters. Clear one to see more."
+    : "No pieces yet. Add the first with New piece.";
+}
+
 export function toProductsFilter(
   values: QueryValues,
   page: number,
@@ -122,28 +205,24 @@ export function toProductsFilter(
   };
 }
 
-/** Empty is a measurement the studio has not taken, not a zero. */
-export function describeMeasurement(
-  value: number | null,
-  unit: string,
-): string {
-  return value === null ? "—" : `${value} ${unit}`;
+/** What was sent in a save: the form's values and the photo order. */
+export interface PieceDraft {
+  values: ProductFormValues;
+  imageUrls: string[];
 }
 
-/** The one line under the photos: what the piece is in the hand. */
-export function describeSizeAndWeight(size: {
-  capacityMl: number | null;
-  heightCm: number | null;
-  diameterCm: number | null;
-  weightG: number | null;
-}): string {
-  const parts = [
-    size.capacityMl === null ? null : `${size.capacityMl} ml`,
-    size.heightCm === null ? null : `${size.heightCm} cm tall`,
-    size.diameterCm === null ? null : `${size.diameterCm} cm across`,
-    size.weightG === null ? null : `${size.weightG} g`,
-  ].filter((part): part is string => part !== null);
-  return parts.length === 0 ? "Not measured yet" : parts.join(" · ");
+// A save whose read-back failed keeps what was sent on screen, so a second save never writes old values.
+export function toFormBaseline(
+  isRefreshed: boolean,
+  submitted: PieceDraft,
+): PieceDraft | null {
+  return isRefreshed ? null : submitted;
+}
+
+export function describeUnsavedChanges(hasPhotoChanges: boolean): string {
+  return hasPhotoChanges
+    ? "Your changes to this piece, photos included, are not saved yet."
+    : "Your changes to this piece are not saved yet.";
 }
 
 export const EMPTY_PRODUCT_FORM: ProductFormValues = {
@@ -213,6 +292,9 @@ export function toProductInput(
   values: ProductFormValues,
   imageUrls: readonly string[],
 ): AdminProductInput {
+  // What the boxes show is what is sent: never live without stock, never featured while hidden.
+  const isActive =
+    values.is_active && canGoLive(values.stock, values.is_customizable);
   return {
     name: values.name.trim(),
     description: values.description.trim(),
@@ -237,8 +319,8 @@ export function toProductInput(
     is_second: values.is_second,
     flaw_note: optionalText(values.flaw_note),
     is_commission: values.is_commission,
-    is_featured: values.is_featured,
-    is_active: values.is_active,
+    is_featured: values.is_featured && isActive,
+    is_active: isActive,
   };
 }
 

@@ -5,7 +5,6 @@ import {
   clerkAppearance,
   clerkLocalization,
 } from "@/components/providers/clerk-appearance";
-import { Toaster } from "@/components/providers/toaster";
 import { WebVitalsReporter } from "@/components/web-vitals-reporter";
 import { clientEnv } from "@/config/env";
 import { ApolloProvider } from "@/lib/apollo";
@@ -56,10 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <html lang="en" className={`${fontVariables} h-full antialiased`}>
         <body className="flex min-h-full flex-col">
-          <ApolloProvider>
-            {children}
-            <Toaster />
-          </ApolloProvider>
+          <ApolloProvider>{children}</ApolloProvider>
           <WebVitalsReporter />
         </body>
       </html>

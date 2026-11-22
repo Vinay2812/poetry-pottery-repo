@@ -68,9 +68,9 @@ export function useReasonAction<TTarget, TRun extends Promise<unknown>>(
   >({
     ...actionOptions,
     // Only the dialog this write came from closes; one opened for another row meanwhile stays.
-    onSuccess: (result, input) => {
+    onSuccess: (result, input, isRefreshed) => {
       if (targetRef.current === input.target) close();
-      onSuccess?.(result, input);
+      onSuccess?.(result, input, isRefreshed);
     },
   });
 

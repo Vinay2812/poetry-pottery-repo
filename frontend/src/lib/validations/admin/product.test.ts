@@ -6,7 +6,7 @@ import {
   optionGroupSchema,
   productOptionSchema,
   productSchema,
-  stockAdjustSchema,
+  stockAdjustSchemaFor,
   type ProductFormValues,
 } from "./product";
 
@@ -151,24 +151,66 @@ describe("productOptionSchema", () => {
 });
 
 describe("stockAdjustSchema", () => {
-  it("takes a positive or negative move", () => {
+  it("takes pieces added or taken off", () => {
     expect(
-      stockAdjustSchema.safeParse({ delta: 4, reason: "New batch" }).success,
+      stockAdjustSchemaFor(10).safeParse({
+        direction: "add",
+        count: 4,
+        reason: "New batch",
+      }).success,
     ).toBe(true);
     expect(
-      stockAdjustSchema.safeParse({ delta: -2, reason: "Broken in the kiln" })
-        .success,
+      stockAdjustSchemaFor(10).safeParse({
+        direction: "remove",
+        count: 2,
+        reason: "Broken in the kiln",
+      }).success,
     ).toBe(true);
   });
 
-  it("rejects a move of zero", () => {
-    const parsed = stockAdjustSchema.safeParse({ delta: 0, reason: "Nothing" });
-    expect(parsed.success).toBe(false);
+  it("rejects a count of zero or a fraction", () => {
+    for (const count of [0, 1.5]) {
+      const parsed = stockAdjustSchemaFor(10).safeParse({
+        direction: "add",
+        count,
+        reason: "Nothing",
+      });
+      expect(parsed.success).toBe(false);
+    }
   });
 
   it("needs a reason", () => {
-    const parsed = stockAdjustSchema.safeParse({ delta: 2, reason: "" });
+    const parsed = stockAdjustSchemaFor(10).safeParse({
+      direction: "add",
+      count: 2,
+      reason: "",
+    });
     expect(parsed.success).toBe(false);
+  });
+
+  it("refuses to remove more than is in stock, on the count field", () => {
+    const parsed = stockAdjustSchemaFor(1).safeParse({
+      direction: "remove",
+      count: 2,
+      reason: "Broken in the kiln",
+    });
+    expect(parsed.success).toBe(false);
+    expect(parsed.error?.issues[0]).toMatchObject({
+      path: ["count"],
+      message: "Only 1 piece in stock to remove",
+    });
+  });
+
+  it("lets every piece in stock be removed, and any number be added", () => {
+    const schema = stockAdjustSchemaFor(2);
+    expect(
+      schema.safeParse({ direction: "remove", count: 2, reason: "Sold" })
+        .success,
+    ).toBe(true);
+    expect(
+      schema.safeParse({ direction: "add", count: 20, reason: "New batch" })
+        .success,
+    ).toBe(true);
   });
 });
 

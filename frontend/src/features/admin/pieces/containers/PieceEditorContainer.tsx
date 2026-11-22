@@ -1,7 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useMemo, useOptimistic, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useState,
+} from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 
@@ -35,14 +42,21 @@ import { StockAdjustDialog } from "@/features/admin/pieces/components/StockAdjus
 import { OptionGroupsContainer } from "@/features/admin/pieces/containers/OptionGroupsContainer";
 import {
   applyStockDelta,
-  describeSizeAndWeight,
+  canFeature,
+  canGoLive,
+  describeKiln,
+  describeKilnHint,
+  describeShelfState,
+  describeShelfStateHint,
+  describeUnsavedChanges,
   EMPTY_PRODUCT_FORM,
   formatStock,
+  LIVE_BLOCKED_NOTE,
+  type PieceDraft,
+  toFormBaseline,
   toProductFormValues,
   toProductInput,
   toProductUpdateInput,
-  canGoLive,
-  LIVE_BLOCKED_NOTE,
 } from "@/features/admin/pieces/types";
 
 // The picker lists every glaze the studio fires; there are never many.
@@ -88,11 +102,6 @@ interface StockChange {
   reason: string;
 }
 
-interface PieceSave {
-  values: ProductFormValues;
-  imageUrls: string[];
-}
-
 export interface PieceEditorContainerProps {
   productId: number | null;
 }
@@ -123,9 +132,15 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   const [setFeatured] = useMutation(SetProductFeaturedDocument);
   const [adjustStock] = useMutation(AdjustProductStockDocument);
 
-  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
+  const [isRetireOpen, setIsRetireOpen] = useState(false);
+  const [isLeaveOpen, setIsLeaveOpen] = useState(false);
   const [isStockOpen, setIsStockOpen] = useState(false);
   const [imageDraft, setImageDraft] = useState<string[] | null>(null);
+  // Bumped after each save so the form remounts clean from its new baseline.
+  const [savedVersion, setSavedVersion] = useState(0);
+  // Set only when a save landed but its read-back failed; the form keeps what was sent.
+  const [baseline, setBaseline] = useState<PieceDraft | null>(null);
+  const [isFormDirty, setIsFormDirty] = useState(false);
 
   const product = data?.adminProduct ?? null;
 
@@ -145,9 +160,20 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
 
   // The draft wins until a save clears it; before that the saved gallery is the truth.
   const imageUrls = useMemo(
-    () => imageDraft ?? product?.image_urls ?? [],
-    [imageDraft, product],
+    () => imageDraft ?? baseline?.imageUrls ?? product?.image_urls ?? [],
+    [baseline, imageDraft, product],
   );
+  const hasUnsavedChanges = isFormDirty || imageDraft !== null;
+
+  // Reloading or closing the tab asks too; in-app links are not guarded.
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const categoryOptions = useMemo(
     () =>
@@ -175,7 +201,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
   );
 
   const createPiece = useCallback(
-    async (save: PieceSave) => {
+    async (save: PieceDraft) => {
       const created = await createProduct({
         variables: { input: toProductInput(save.values, save.imageUrls) },
       });
@@ -188,7 +214,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
 
   // A new piece has no query to read back; it navigates to its own page instead.
   const { execute: savePiece, isPending: isSaving } = useOptimisticAction({
-    run: (save: PieceSave) =>
+    run: (save: PieceDraft) =>
       productId === null
         ? createPiece(save)
         : updateProduct({
@@ -202,12 +228,14 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       success: isCreate ? "Piece created" : "Piece saved",
       failure: "The piece could not be saved",
     },
-    onSuccess: (result) => {
+    onSuccess: (result, save, isRefreshed) => {
       if (typeof result === "number") {
         router.push(`/dashboard/pieces/${result}`);
         return;
       }
+      setBaseline(toFormBaseline(isRefreshed, save));
       setImageDraft(null);
+      setSavedVersion((version) => version + 1);
     },
   });
 
@@ -224,7 +252,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     refresh: refetch,
     messages: {
       success: (change) =>
-        change.isActive ? "Back on the shelf" : "Moved to the archive",
+        change.isActive ? "Back on the shelf" : "Retired to the archive",
       failure: "The piece could not be moved",
     },
   });
@@ -286,9 +314,20 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
     [productId, saveStock],
   );
 
-  const handleCancel = useCallback(
-    () => router.push("/dashboard/pieces"),
-    [router],
+  const leave = useCallback(() => router.push("/dashboard/pieces"), [router]);
+
+  // Unsaved fields or photos ask first; a clean form just goes back.
+  const handleCancel = useCallback(() => {
+    if (hasUnsavedChanges) {
+      setIsLeaveOpen(true);
+      return;
+    }
+    leave();
+  }, [hasUnsavedChanges, leave]);
+
+  const handleInvalid = useCallback(
+    () => toast.error("Some fields need a look before this can be saved"),
+    [],
   );
 
   if (!isCreate && !product) {
@@ -330,7 +369,7 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
         title={isCreate ? "New piece" : (product?.name ?? "Piece")}
         description={
           isCreate
-            ? "A piece goes live once it has a photo and a price."
+            ? "It goes on the shelf once it has stock, or is made to order."
             : "Edit the piece, its photos and its options."
         }
         actions={
@@ -343,17 +382,21 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
                 disabled={isBusy}
                 onClick={() => setIsStockOpen(true)}
               >
-                Adjust stock
+                Change the stock
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={isBusy}
-                onClick={() => runFeatured(!state.isFeatured)}
-              >
-                {state.isFeatured ? "Unfeature" : "Feature"}
-              </Button>
+              {canFeature(state.isActive, state.isFeatured) && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={isBusy}
+                  onClick={() => runFeatured(!state.isFeatured)}
+                >
+                  {state.isFeatured
+                    ? "Take off the home page"
+                    : "Show on the home page"}
+                </Button>
+              )}
               <Button
                 type="button"
                 variant="secondary"
@@ -366,13 +409,13 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
                 }
                 onClick={() => {
                   if (state.isActive) {
-                    setIsArchiveOpen(true);
+                    setIsRetireOpen(true);
                     return;
                   }
                   runActive(true);
                 }}
               >
-                {state.isActive ? "Archive" : "Restore"}
+                {state.isActive ? "Retire" : "Put back on the shelf"}
               </Button>
             </>
           )
@@ -380,22 +423,20 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
       />
 
       {!isCreate && (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <AdminStatTile
             label="Stock"
             value={formatStock(state.stock)}
-            hint="On the shelf right now"
+            hint={product?.is_customizable ? "Made to order" : "In this batch"}
           />
           <AdminStatTile
             label="State"
-            value={state.isActive ? "Live" : "Archived"}
-            hint={
-              !state.isActive && !isLiveAllowed
-                ? LIVE_BLOCKED_NOTE
-                : state.isFeatured
-                  ? "Featured on the home page"
-                  : null
-            }
+            value={describeShelfState(state.isActive)}
+            hint={describeShelfStateHint(
+              state.isActive,
+              isLiveAllowed,
+              state.isFeatured,
+            )}
           />
           <AdminStatTile
             label="Sold"
@@ -403,22 +444,18 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
             hint="All time"
           />
           <AdminStatTile
-            label="In the hand"
-            value={product?.is_second ? "Second" : "First"}
-            hint={describeSizeAndWeight({
-              capacityMl: product?.capacity_ml ?? null,
-              heightCm: product?.height_cm ?? null,
-              diameterCm: product?.diameter_cm ?? null,
-              weightG: product?.weight_g ?? null,
-            })}
+            label="Kiln"
+            value={describeKiln(product?.is_second ?? false)}
+            hint={describeKilnHint(product?.is_second ?? false)}
           />
         </div>
       )}
 
       <PieceForm
-        key={product?.id ?? "new"}
+        key={`${product?.id ?? "new"}-${savedVersion}`}
         defaultValues={
-          product ? toProductFormValues(product) : EMPTY_PRODUCT_FORM
+          baseline?.values ??
+          (product ? toProductFormValues(product) : EMPTY_PRODUCT_FORM)
         }
         isCreate={isCreate}
         isSubmitting={isSaving}
@@ -428,30 +465,45 @@ export function PieceEditorContainer({ productId }: PieceEditorContainerProps) {
         glazeOptions={glazeOptions}
         gallery={gallery}
         onSubmit={handleSubmit}
+        onInvalid={handleInvalid}
+        onDirtyChange={setIsFormDirty}
         onCancel={handleCancel}
       />
 
       {productId !== null && <OptionGroupsContainer productId={productId} />}
 
       <AdminConfirmDialog
-        isOpen={isArchiveOpen}
-        title="Archive this piece?"
-        description="It comes off the shelf at once. You can bring it back later."
-        confirmLabel="Archive"
+        isOpen={isRetireOpen}
+        title="Retire this piece?"
+        description="It comes off the shelf and moves to the archive. You can put it back later."
+        confirmLabel="Retire"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={isBusy}
         onConfirm={() => {
           runActive(false);
-          setIsArchiveOpen(false);
+          setIsRetireOpen(false);
         }}
-        onOpenChange={setIsArchiveOpen}
+        onOpenChange={setIsRetireOpen}
+      />
+
+      <AdminConfirmDialog
+        isOpen={isLeaveOpen}
+        title="Leave without saving?"
+        description={describeUnsavedChanges(imageDraft !== null)}
+        confirmLabel="Leave without saving"
+        cancelLabel="Keep editing"
+        isDestructive
+        isBusy={false}
+        onConfirm={leave}
+        onOpenChange={setIsLeaveOpen}
       />
 
       <StockAdjustDialog
         key={isStockOpen ? "stock-open" : "stock-closed"}
         isOpen={isStockOpen}
         pieceName={product?.name ?? "This piece"}
-        stockLabel={formatStock(state.stock)}
+        stock={state.stock}
         isBusy={isBusy}
         onSubmit={handleStockSubmit}
         onOpenChange={setIsStockOpen}

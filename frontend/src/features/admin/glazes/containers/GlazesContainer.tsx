@@ -203,6 +203,7 @@ export function GlazesContainer() {
         <ImageUploaderContainer
           id={`glaze-${editorId ?? "new"}-swatch`}
           label="Swatch"
+          hasPreview
           purpose={UploadPurpose.Glaze}
           value={swatchUrl}
           onChange={setSwatchUrl}
@@ -231,7 +232,6 @@ export function GlazesContainer() {
         actions={
           <Button
             type="button"
-            variant="secondary"
             size="sm"
             disabled={isEditorOpen}
             onClick={handleNew}
@@ -245,7 +245,7 @@ export function GlazesContainer() {
         <AdminSearchField
           id="glazes-search"
           label="Search"
-          placeholder="Name"
+          placeholder="Name of a glaze"
           value={searchDraft}
           onChange={setSearchDraft}
         />
@@ -286,6 +286,7 @@ export function GlazesContainer() {
             : ""
         }
         confirmLabel="Delete"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={isDeleting}
         onConfirm={handleDeleteConfirm}

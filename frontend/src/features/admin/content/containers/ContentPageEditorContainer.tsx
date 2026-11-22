@@ -140,6 +140,7 @@ export function ContentPageEditorContainer({
           <ImageUploaderContainer
             id="page-hero-image"
             label="Hero image"
+            hasPreview
             purpose={UploadPurpose.Content}
             value={heroUrl}
             onChange={setHeroDraft}

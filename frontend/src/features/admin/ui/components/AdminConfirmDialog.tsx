@@ -15,6 +15,8 @@ export interface AdminConfirmDialogProps {
   title: string;
   description: string;
   confirmLabel: string;
+  // The safe way out, worded for the moment: "Keep as is", "Keep editing".
+  cancelLabel: string;
   isDestructive: boolean;
   isBusy: boolean;
   onConfirm: () => void;
@@ -26,6 +28,7 @@ export function AdminConfirmDialog({
   title,
   description,
   confirmLabel,
+  cancelLabel,
   isDestructive,
   isBusy,
   onConfirm,
@@ -45,7 +48,7 @@ export function AdminConfirmDialog({
             size="sm"
             onClick={() => onOpenChange(false)}
           >
-            Keep as is
+            {cancelLabel}
           </Button>
           <Button
             type="button"

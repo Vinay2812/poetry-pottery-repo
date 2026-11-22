@@ -24,6 +24,8 @@ export interface ImageUploaderContainerProps {
   label: string;
   purpose: UploadPurpose;
   value: string | null;
+  // A gallery shows its photos in a strip, so its picker skips the preview box.
+  hasPreview: boolean;
   onChange: (url: string | null) => void;
 }
 
@@ -44,6 +46,7 @@ export function ImageUploaderContainer({
   label,
   purpose,
   value,
+  hasPreview,
   onChange,
 }: ImageUploaderContainerProps) {
   const requirement = useImageRequirement(purpose);
@@ -162,6 +165,7 @@ export function ImageUploaderContainer({
         rendersAt={requirement.rendersAt}
         accept={requirement.contentTypes.join(",")}
         previewUrl={value}
+        hasPreview={hasPreview}
         isBusy={isBusy}
         error={error}
         onFilePick={(file) => void handleFilePick(file)}
@@ -175,6 +179,7 @@ export function ImageUploaderContainer({
         cropWidth={pending?.width ?? 0}
         cropHeight={pending?.height ?? 0}
         isBusy={isBusy}
+        error={pending ? error : null}
         onConfirm={() => void handleCropConfirm()}
         onOpenChange={(isOpen) => {
           if (!isOpen) setPending(null);

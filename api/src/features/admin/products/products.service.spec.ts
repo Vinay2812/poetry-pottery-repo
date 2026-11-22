@@ -11,6 +11,7 @@ import { WINSTON_MODULE_PROVIDER } from "nest-winston";
 import { ShelfService } from "@/features/products/shelf.service";
 import { UploadsService } from "@/uploads/uploads.service";
 import {
+  assertFeaturedIsLive,
   assertSecond,
   cleanList,
   AdminProductsService,
@@ -89,6 +90,16 @@ describe("assertSecond", () => {
     expect(() => assertSecond(true, "  ")).toThrow(BadRequestException);
     expect(() => assertSecond(true, "Glaze crawl on the foot")).not.toThrow();
     expect(() => assertSecond(false, null)).not.toThrow();
+  });
+});
+
+describe("assertFeaturedIsLive", () => {
+  it("keeps a piece off the home page while it is off the shelf", () => {
+    expect(() => assertFeaturedIsLive(false, true)).toThrow(
+      BadRequestException,
+    );
+    expect(() => assertFeaturedIsLive(true, true)).not.toThrow();
+    expect(() => assertFeaturedIsLive(false, false)).not.toThrow();
   });
 });
 
@@ -246,6 +257,13 @@ describe("AdminProductsService", () => {
       BadRequestException,
     );
     expect(shelfMock.setListed).not.toHaveBeenCalled();
+  });
+
+  it("refuses to create a piece featured but off the shelf", async () => {
+    await expect(
+      service.create(input({ is_active: false, is_featured: true })),
+    ).rejects.toBeInstanceOf(BadRequestException);
+    expect(prismaMock.product.create).not.toHaveBeenCalled();
   });
 
   it("lets a made-to-order piece go live with nothing in stock", async () => {

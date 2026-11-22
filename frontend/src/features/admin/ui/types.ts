@@ -115,3 +115,11 @@ export function fromDateTimeLocal(value: string): string | null {
   const date = new Date(trimmed);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
+
+const HEX_COLOUR = /^#[0-9a-f]{6}$/i;
+
+/** A swatch beside a hex field only paints once the value is a real colour. */
+export function toPreviewColour(value: string): string | null {
+  const trimmed = value.trim();
+  return HEX_COLOUR.test(trimmed) ? trimmed : null;
+}

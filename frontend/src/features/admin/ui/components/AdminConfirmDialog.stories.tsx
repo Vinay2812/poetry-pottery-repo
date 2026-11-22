@@ -10,10 +10,11 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     isOpen: true,
-    title: "Archive this piece?",
+    title: "Retire this piece?",
     description:
-      "It leaves the shelf and moves to the archive. You can bring it back later.",
-    confirmLabel: "Archive",
+      "It comes off the shelf and moves to the archive. You can put it back later.",
+    confirmLabel: "Retire",
+    cancelLabel: "Keep as is",
     isDestructive: false,
     isBusy: false,
     onConfirm: fn(),
@@ -37,6 +38,17 @@ export const Destructive: Story = {
 };
 
 export const Busy: Story = { args: { isBusy: true } };
+
+export const LeaveWithoutSaving: Story = {
+  args: {
+    title: "Leave without saving?",
+    description:
+      "The changes on this page, photos included, are not saved yet.",
+    confirmLabel: "Leave without saving",
+    cancelLabel: "Keep editing",
+    isDestructive: true,
+  },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

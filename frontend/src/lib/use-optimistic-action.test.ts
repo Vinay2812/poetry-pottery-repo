@@ -22,7 +22,9 @@ function deferred<T>() {
 interface Harness {
   run: ReturnType<typeof vi.fn<(input: number) => Promise<string>>>;
   refresh?: ReturnType<typeof vi.fn<() => Promise<unknown>>>;
-  onSuccess?: ReturnType<typeof vi.fn<(result: string, input: number) => void>>;
+  onSuccess?: ReturnType<
+    typeof vi.fn<(result: string, input: number, isRefreshed: boolean) => void>
+  >;
 }
 
 // The hook is exercised through a real `useOptimistic` so the rollback is React's, not a mock's.
@@ -57,7 +59,8 @@ describe("useOptimisticAction", () => {
     const refresh = vi.fn<() => Promise<unknown>>(async () => ({
       data: {},
     }));
-    const onSuccess = vi.fn<(result: string, input: number) => void>();
+    const onSuccess =
+      vi.fn<(result: string, input: number, isRefreshed: boolean) => void>();
     const { result } = renderAction({ run, refresh, onSuccess });
 
     act(() => result.current.action.execute(7));
@@ -65,7 +68,7 @@ describe("useOptimisticAction", () => {
     await waitFor(() => expect(result.current.action.isPending).toBe(false));
     expect(run).toHaveBeenCalledWith(7);
     expect(refresh).toHaveBeenCalledTimes(1);
-    expect(onSuccess).toHaveBeenCalledWith("ok", 7);
+    expect(onSuccess).toHaveBeenCalledWith("ok", 7, true);
     expect(toast.success).toHaveBeenCalledWith("Saved 7");
     expect(toast.error).not.toHaveBeenCalled();
     expect(result.current.action.pending).toBeNull();
@@ -91,7 +94,8 @@ describe("useOptimisticAction", () => {
       throw new Error("BadRequestException: That name is taken");
     });
     const refresh = vi.fn<() => Promise<unknown>>(async () => ({}));
-    const onSuccess = vi.fn<(result: string, input: number) => void>();
+    const onSuccess =
+      vi.fn<(result: string, input: number, isRefreshed: boolean) => void>();
     const { result } = renderAction({ run, refresh, onSuccess });
 
     act(() => result.current.action.execute(5));
@@ -124,7 +128,8 @@ describe("useOptimisticAction", () => {
       .mockResolvedValueOnce({ error: new Error("offline") })
       .mockRejectedValueOnce(new TypeError("Failed to fetch"))
       .mockResolvedValue({ data: {} });
-    const onSuccess = vi.fn<(result: string, input: number) => void>();
+    const onSuccess =
+      vi.fn<(result: string, input: number, isRefreshed: boolean) => void>();
     const { result } = renderAction({ run, refresh, onSuccess });
 
     await act(async () => {
@@ -134,7 +139,7 @@ describe("useOptimisticAction", () => {
 
     expect(toast.error).not.toHaveBeenCalled();
     expect(toast.success).toHaveBeenCalledWith("Saved 2");
-    expect(onSuccess).toHaveBeenCalledWith("ok", 2);
+    expect(onSuccess).toHaveBeenCalledWith("ok", 2, false);
     expect(refresh).toHaveBeenCalledTimes(1);
 
     // The read-back is retried quietly until the server answers.

@@ -361,6 +361,7 @@ export function OptionGroupsContainer({
         }
         description={`${doomed?.name ?? "It"} goes away for good.`}
         confirmLabel="Delete"
+        cancelLabel="Keep as is"
         isDestructive
         isBusy={busyId !== null}
         onConfirm={handleDelete}

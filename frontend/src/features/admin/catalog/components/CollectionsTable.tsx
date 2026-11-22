@@ -6,6 +6,7 @@ import {
   ADMIN_TD,
   ADMIN_TH,
   ADMIN_TR,
+  ADMIN_FROM_LAPTOP,
   AdminEmptyRow,
   AdminTableFrame,
 } from "@/features/admin/ui";
@@ -47,9 +48,11 @@ export function CollectionsTable({
         <tr>
           <th className={ADMIN_TH}>Image</th>
           <th className={ADMIN_TH}>Name</th>
-          <th className={ADMIN_TH}>Window</th>
+          <th className={`${ADMIN_TH} ${ADMIN_FROM_LAPTOP}`}>Window</th>
           <th className={ADMIN_TH}>Pieces</th>
-          <th className={ADMIN_TH}>Actions</th>
+          <th className={ADMIN_TH}>
+            <span className="sr-only">Actions</span>
+          </th>
         </tr>
       </thead>
       <tbody>
@@ -71,24 +74,29 @@ export function CollectionsTable({
               <td className={ADMIN_TD}>
                 {row.name}
                 {row.description !== "" && (
-                  <span className="block max-w-80 truncate text-[11px] text-muted-foreground">
+                  <span className="hidden truncate text-[12px] text-muted-foreground md:block md:max-w-60 xl:max-w-80">
                     {row.description}
                   </span>
                 )}
               </td>
-              <td className={`${ADMIN_TD} text-muted-foreground tnum`}>
+              <td
+                className={`${ADMIN_TD} ${ADMIN_FROM_LAPTOP} text-muted-foreground tnum`}
+              >
                 {describeWindow(row.startsAt, row.endsAt)}
               </td>
-              <td className={`${ADMIN_TD} text-muted-foreground tnum`}>
+              <td
+                className={`${ADMIN_TD} whitespace-nowrap text-muted-foreground tnum`}
+              >
                 {describePieces(row.productCount)}
               </td>
               <td className={ADMIN_TD}>
-                <div className="flex gap-2">
+                <div className="flex flex-col gap-2 md:flex-row">
                   <Button
                     type="button"
                     variant="secondary"
                     size="sm"
                     disabled={isEditorOpen}
+                    aria-label={`Edit ${row.name}`}
                     onClick={() => onEdit(row.id)}
                   >
                     Edit
@@ -98,6 +106,7 @@ export function CollectionsTable({
                     variant="ghost"
                     size="sm"
                     disabled={isEditorOpen}
+                    aria-label={`Delete ${row.name}`}
                     onClick={() => onDelete(row.id)}
                   >
                     Delete

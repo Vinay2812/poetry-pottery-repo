@@ -83,6 +83,13 @@ export function describeGlazeDeletion(name: string, count: number): string {
   return `${pluralize(count, "piece")} still wear ${name}. Move them to another glaze first.`;
 }
 
+/** Why Delete does nothing for this glaze, or null when it can go. */
+export function describeGlazeDeleteBlock(count: number): string | null {
+  return canDeleteGlaze(count)
+    ? null
+    : `On ${pluralize(count, "piece")}, so it cannot be deleted yet`;
+}
+
 export function canDeleteGlaze(count: number): boolean {
   return count === 0;
 }

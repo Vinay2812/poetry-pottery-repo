@@ -22,7 +22,11 @@ const POLICIES: Record<Move, ReasonPolicy> = {
 
 function renderReason(
   run: (input: ReasonInput<Move>) => Promise<string>,
-  onSuccess?: (result: string, input: ReasonInput<Move>) => void,
+  onSuccess?: (
+    result: string,
+    input: ReasonInput<Move>,
+    isRefreshed: boolean,
+  ) => void,
 ) {
   return renderHook(() =>
     useReasonAction<Move, Promise<string>>({
@@ -70,10 +74,11 @@ describe("useReasonAction", () => {
       target: "ship",
       reason: "Delhivery 7712445901",
     });
-    expect(onSuccess).toHaveBeenCalledWith("ok", {
-      target: "ship",
-      reason: "Delhivery 7712445901",
-    });
+    expect(onSuccess).toHaveBeenCalledWith(
+      "ok",
+      { target: "ship", reason: "Delhivery 7712445901" },
+      true,
+    );
     expect(result.current.reason).toBe("");
   });
 
