@@ -1,5 +1,5 @@
 import { Test } from "@nestjs/testing";
-import { RegistrationStatus } from "@prisma/client";
+import { Prisma, RegistrationStatus } from "@prisma/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { MailService } from "@/mail/mail.service";
@@ -454,6 +454,46 @@ describe("WorkshopsService", () => {
       prismaMock.workshopBooking.count.mockReset();
       prismaMock.workshopBooking.findMany.mockReset();
       prismaMock.workshopBooking.findMany.mockResolvedValue([]);
+    });
+
+    it("reads both counts and both slices from one repeatable-read snapshot", async () => {
+      let isInSnapshot = false;
+      const readsInSnapshot: boolean[] = [];
+      prismaMock.withTransaction.mockImplementationOnce(
+        async (fn: () => Promise<unknown>) => {
+          isInSnapshot = true;
+          try {
+            return await fn();
+          } finally {
+            isInSnapshot = false;
+          }
+        },
+      );
+      prismaMock.workshopBooking.count.mockImplementation(
+        (query: { where: Record<string, unknown> }) => {
+          readsInSnapshot.push(isInSnapshot);
+          return Promise.resolve(
+            isBehind(query) ? behind.length : ahead.length,
+          );
+        },
+      );
+      prismaMock.workshopBooking.findMany.mockImplementation((query: Query) => {
+        readsInSnapshot.push(isInSnapshot);
+        return Promise.resolve(
+          (isBehind(query) ? behind : ahead).slice(
+            query.skip,
+            query.skip + query.take,
+          ),
+        );
+      });
+
+      await service.myBookings(7, 1, 12);
+
+      expect(prismaMock.withTransaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+      );
+      expect(readsInSnapshot).toEqual([true, true, true, true]);
     });
 
     it("puts every session still ahead on page one, then the record", async () => {

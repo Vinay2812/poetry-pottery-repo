@@ -32,6 +32,7 @@ function reserveBoxIn(state: ReserveState, price = 1800) {
       bookingHref={null}
       bookingStatusLabel=""
       bookingSeats={0}
+      bookingTotal={0}
       whatsappUrl="https://wa.me/919876543210?text=Hi"
       onSeatsChange={fn()}
       onNoteChange={fn()}

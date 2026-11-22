@@ -58,11 +58,27 @@ describe("toTimelineSteps", () => {
     ]);
   });
 
-  it("leaves a reached stage nobody dated as its label alone", () => {
+  it("leaves out a stage that was skipped on the way", () => {
     expect(read("SENT", { PLACED: "day 1", SENT: "day 3" })).toEqual([
       ["PLACED", "done", "day 1", null],
-      ["PACKED", "done", null, null],
       ["SENT", "done", "day 3", "On its way."],
+    ]);
+  });
+
+  it("leaves out a skipped stage on a closed item too", () => {
+    expect(read("CANCELLED", { PLACED: "day 1", SENT: "day 3" }, true)).toEqual(
+      [
+        ["PLACED", "done", "day 1", null],
+        ["SENT", "done", "day 3", null],
+      ],
+    );
+  });
+
+  it("still lists an undated stage the item is on or has ahead of it", () => {
+    expect(read("PACKED", { PLACED: "day 1" })).toEqual([
+      ["PLACED", "done", "day 1", null],
+      ["PACKED", "current", null, "Wrapped by hand."],
+      ["SENT", "upcoming", null, "Goes by courier."],
     ]);
   });
 

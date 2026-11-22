@@ -36,6 +36,7 @@ const meta = {
     onNoteChange: fn(),
     onBook: fn(),
     onRemoveSlot: fn(),
+    onRetryPickCheck: null,
   },
 } satisfies Meta<typeof BookingSummary>;
 

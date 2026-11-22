@@ -49,3 +49,40 @@ export function toCouponView({
     isPending: code !== null && !isSettled,
   };
 }
+
+export type QuoteState = "checking" | "ready" | "failed";
+
+// Only a quote that came back for the current cart and coupon may be billed.
+export function toQuoteState(
+  hasQuote: boolean,
+  hasError: boolean,
+  isLoading: boolean,
+): QuoteState {
+  if (isLoading) return "checking";
+  return hasQuote && !hasError ? "ready" : "failed";
+}
+
+export interface CheckoutBlockInput {
+  hasAddress: boolean;
+  itemCount: number;
+  problemCount: number;
+  quoteState: QuoteState;
+}
+
+export const QUOTE_FAILED_REASON = "We could not check your total just now.";
+
+// Why Place order is off, most pressing first; null when nothing stands in the way.
+export function toBlockedReason({
+  hasAddress,
+  itemCount,
+  problemCount,
+  quoteState,
+}: CheckoutBlockInput): string | null {
+  if (quoteState === "failed") return QUOTE_FAILED_REASON;
+  if (!hasAddress) return "Choose a delivery address to continue.";
+  if (itemCount === 0) return "Your cart is empty.";
+  if (problemCount > 0) {
+    return "Remove the unavailable pieces from your cart first.";
+  }
+  return null;
+}

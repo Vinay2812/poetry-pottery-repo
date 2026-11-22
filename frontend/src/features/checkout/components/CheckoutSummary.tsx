@@ -19,6 +19,8 @@ export interface CheckoutSummaryProps {
   isPlacing: boolean;
   blockedReason: string | null;
   onPlaceOrder: () => void;
+  // Set when the total could not be checked, so the shopper can ask again.
+  onRetryQuote: (() => void) | null;
   coupon: React.ReactNode;
 }
 
@@ -37,6 +39,7 @@ export function CheckoutSummary({
   isPlacing,
   blockedReason,
   onPlaceOrder,
+  onRetryQuote,
   coupon,
 }: CheckoutSummaryProps) {
   return (
@@ -75,7 +78,24 @@ export function CheckoutSummary({
           : `Place order · ${formatInr(total)}`}
       </Button>
       {blockedReason && !canPlaceOrder && (
-        <p className="text-[13px] text-muted-foreground">{blockedReason}</p>
+        <p
+          role={onRetryQuote ? "alert" : undefined}
+          className="text-[13px] text-muted-foreground"
+        >
+          {blockedReason}
+          {onRetryQuote && (
+            <>
+              {" "}
+              <button
+                type="button"
+                onClick={onRetryQuote}
+                className="border-b border-ink pb-0.5 text-ink hover:border-primary hover:text-primary"
+              >
+                Try again
+              </button>
+            </>
+          )}
+        </p>
       )}
       <p className="text-[13px] text-muted-foreground">
         Nothing to pay now. We confirm your order on WhatsApp within a day, then

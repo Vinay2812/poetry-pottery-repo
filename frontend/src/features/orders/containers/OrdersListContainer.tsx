@@ -6,6 +6,7 @@ import { useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { LoadFailed } from "@/components/layout/LoadFailed";
 import { PageShell } from "@/components/layout/PageShell";
+import { PageTurnFailed } from "@/components/layout/PageTurnFailed";
 import { formatDate } from "@/lib/format";
 import { useUrlState } from "@/lib/use-url-state";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,8 @@ export function OrdersListContainer() {
   const {
     orders,
     pageInfo,
+    shownPage,
+    failedPage,
     isLoading,
     isPaging,
     hasError,
@@ -41,12 +44,14 @@ export function OrdersListContainer() {
   const headingRef = useRef<HTMLHeadingElement>(null);
 
   // The buttons sit under the list, so a new page starts back at the heading.
+  // Asking again for the page that failed reads it again rather than doing nothing.
   const handleTurnPage = useCallback(
     (next: number) => {
-      goToPage(next);
+      if (next === page) void refetch();
+      else goToPage(next);
       headingRef.current?.scrollIntoView({ block: "start" });
     },
-    [goToPage],
+    [goToPage, page, refetch],
   );
 
   // The wall is the whole page when it shows, so it carries the h1 rather than
@@ -92,6 +97,13 @@ export function OrdersListContainer() {
         <EmptyOrders />
       ) : (
         <>
+          {/* A page turn scrolls back to the heading, so the notice sits right under it. */}
+          {failedPage !== null && (
+            <PageTurnFailed
+              page={failedPage}
+              onRetry={() => handleTurnPage(failedPage)}
+            />
+          )}
           <div
             aria-busy={isPaging || isTurning}
             className={cn(
@@ -122,18 +134,18 @@ export function OrdersListContainer() {
             >
               <Button
                 variant="outline"
-                disabled={page <= 1}
-                onClick={() => handleTurnPage(page - 1)}
+                disabled={shownPage <= 1}
+                onClick={() => handleTurnPage(shownPage - 1)}
               >
                 Newer
               </Button>
               <span className="text-sm text-muted-foreground tnum">
-                Page {page} of {pageCount}
+                Page {shownPage} of {pageCount}
               </span>
               <Button
                 variant="outline"
-                disabled={page >= pageCount}
-                onClick={() => handleTurnPage(page + 1)}
+                disabled={shownPage >= pageCount}
+                onClick={() => handleTurnPage(shownPage + 1)}
               >
                 Older
               </Button>

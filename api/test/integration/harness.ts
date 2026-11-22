@@ -14,6 +14,7 @@ import { EventsService } from "@/features/events/events.service";
 import { NewsletterService } from "@/features/newsletter/newsletter.service";
 import { NotificationsService } from "@/features/notifications/notifications.service";
 import { OrdersService } from "@/features/orders/orders.service";
+import type { Order, PlaceOrderInput } from "@/features/orders/orders.type";
 import { ProductsService } from "@/features/products/products.service";
 import { ShelfService } from "@/features/products/shelf.service";
 import { ReviewsService } from "@/features/reviews/reviews.service";
@@ -574,6 +575,20 @@ export async function openWriter(): Promise<Client> {
   const client = new Client({ connectionString: process.env.DATABASE_URL });
   await client.connect();
   return client;
+}
+
+// Checkout always sends the total it showed, so tests quote first the way the page does.
+export async function placeAtQuote(
+  harness: Harness,
+  userId: number,
+  input: Pick<PlaceOrderInput, "address_id" | "coupon_code">,
+): Promise<Order> {
+  const { total } = await harness.orders.quote(userId, input.coupon_code);
+  return harness.orders.place(userId, {
+    address_id: input.address_id,
+    coupon_code: input.coupon_code,
+    expected_total: total,
+  });
 }
 
 export interface RaceOutcome<T> {

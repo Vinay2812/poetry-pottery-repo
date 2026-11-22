@@ -28,10 +28,10 @@ export function CartContainer() {
   const { toggle } = useToggleWishlist();
   const { openSignIn } = useClerk();
 
+  // The line leaves the cart only once the piece is safely saved; a failed save toasts and keeps it.
   const handleSaveForLater = useCallback(
     (itemId: number, productId: number, productName: string) => {
-      toggle(productId, productName, true);
-      remove(itemId);
+      toggle(productId, productName, true, () => remove(itemId));
     },
     [remove, toggle],
   );

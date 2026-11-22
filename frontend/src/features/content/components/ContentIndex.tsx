@@ -13,13 +13,13 @@ export interface ContentIndexProps {
   activeId: string | null;
   isMenuOpen: boolean;
   onMenuOpenChange: (isOpen: boolean) => void;
-  onJump: () => void;
+  onJump: (id: string) => void;
 }
 
 interface IndexLinksProps {
   entries: ContentIndexEntry[];
   activeId: string | null;
-  onJump: () => void;
+  onJump: (id: string) => void;
 }
 
 function IndexLinks({ entries, activeId, onJump }: IndexLinksProps) {
@@ -32,7 +32,7 @@ function IndexLinks({ entries, activeId, onJump }: IndexLinksProps) {
             <a
               href={`#${entry.id}`}
               aria-current={isActive ? "location" : undefined}
-              onClick={onJump}
+              onClick={() => onJump(entry.id)}
               className={cn(
                 "-ml-px flex min-h-12 items-center border-l pl-4 text-[15px] leading-snug transition-colors md:min-h-0 md:py-1.5 md:text-[13px]",
                 isActive

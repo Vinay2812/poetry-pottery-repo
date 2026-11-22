@@ -35,6 +35,7 @@ export interface BookingSummaryProps {
   onNoteChange: (note: string) => void;
   onBook: () => void;
   onRemoveSlot: (startsAt: string) => void;
+  onRetryPickCheck: (() => void) | null;
 }
 
 export function BookingSummary({
@@ -55,6 +56,7 @@ export function BookingSummary({
   onNoteChange,
   onBook,
   onRemoveSlot,
+  onRetryPickCheck,
 }: BookingSummaryProps) {
   // What the time at the wheel is first; the money closes the list.
   const rows = [
@@ -77,6 +79,7 @@ export function BookingSummary({
         progress={progress}
         emptyMessage={emptyMessage}
         onRemoveSlot={onRemoveSlot}
+        onRetryCheck={onRetryPickCheck}
       />
       {hint && <p className="text-[13px] text-muted-foreground">{hint}</p>}
       {isSwapHintShown && (

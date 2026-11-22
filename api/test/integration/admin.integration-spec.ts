@@ -11,6 +11,7 @@ import {
   makeUsers,
   race,
   resetData,
+  placeAtQuote,
 } from "./harness";
 
 const RACERS = 12;
@@ -121,7 +122,7 @@ describe("admin writes against the storefront", () => {
     const outcome = await race<unknown>([
       () => harness.adminProducts.adjustStock(product.id, -3, "Three cracked"),
       () =>
-        harness.orders.place(user.id, {
+        placeAtQuote(harness, user.id, {
           address_id: user.address_id,
           coupon_code: null,
         }),
@@ -149,7 +150,7 @@ describe("admin writes against the storefront", () => {
       () => harness.adminProducts.adjustStock(product.id, 4, "Four more fired"),
       ...users.map(
         (user) => () =>
-          harness.orders.place(user.id, {
+          placeAtQuote(harness, user.id, {
             address_id: user.address_id,
             coupon_code: null,
           }),

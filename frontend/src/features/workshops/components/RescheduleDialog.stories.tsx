@@ -89,6 +89,7 @@ const meta = {
     onSelectDate: fn(),
     onToggleSlot: fn(),
     onRemoveSlot: fn(),
+    onRetryPickCheck: null,
     onConfirm: fn(),
     onRetry: fn(),
   },

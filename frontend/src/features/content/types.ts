@@ -44,6 +44,12 @@ export function splitParagraphs(body: string): string[] {
     .filter((paragraph) => paragraph.length > 0);
 }
 
+// The heading a jump lands focus on, so keyboard reading carries on from the section.
+// The underscore is something toAnchorId never emits, so no section anchor can take a heading's id.
+export function toSectionHeadingId(sectionId: string): string {
+  return `${sectionId}__heading`;
+}
+
 export function toAnchorId(heading: string): string {
   const slug = heading
     .toLowerCase()
@@ -52,32 +58,57 @@ export function toAnchorId(heading: string): string {
   return slug.length > 0 ? slug : "section";
 }
 
-// Two sections can share a heading, so repeated anchors get a counter suffix.
+// Two sections can share a heading, and a heading can already read like a suffixed one
+// ("Care 2"), so the suffix climbs until the anchor is free.
+function toUniqueAnchorId(heading: string, taken: Set<string>): string {
+  const base = toAnchorId(heading);
+  let id = base;
+  for (let suffix = 2; taken.has(id); suffix += 1) {
+    id = `${base}-${suffix}`;
+  }
+  taken.add(id);
+  return id;
+}
+
 export function toSectionViews(
   sections: readonly ContentSectionData[],
 ): ContentSectionView[] {
-  const seen = new Map<string, number>();
-  return sections.map((section) => {
-    const base = toAnchorId(section.heading);
-    const count = (seen.get(base) ?? 0) + 1;
-    seen.set(base, count);
-    return {
-      id: count > 1 ? `${base}-${count}` : base,
-      heading: section.heading,
-      paragraphs: splitParagraphs(section.body),
-      items: section.items.map((item) => ({
-        title: item.title,
-        paragraphs: splitParagraphs(item.body),
-      })),
-    };
-  });
+  const taken = new Set<string>();
+  return sections.map((section) => ({
+    id: toUniqueAnchorId(section.heading, taken),
+    heading: section.heading,
+    paragraphs: splitParagraphs(section.body),
+    items: section.items.map((item) => ({
+      title: item.title,
+      paragraphs: splitParagraphs(item.body),
+    })),
+  }));
 }
 
-export function sectionAt(
+type AboutItemLayout = "values" | "steps";
+
+export interface AboutSectionView {
+  key: string;
+  heading: string;
+  paragraphs: string[];
+  items: ContentSectionData["items"];
+  itemLayout: AboutItemLayout;
+}
+
+// The third section tells how a piece is made, so its items read as numbered steps.
+const ABOUT_STEPS_INDEX = 2;
+
+// Every section shows whatever the editor saved, body and items alike, in the editor's order.
+export function toAboutSections(
   sections: readonly ContentSectionData[],
-  index: number,
-): ContentSectionData | null {
-  return sections[index] ?? null;
+): AboutSectionView[] {
+  return sections.map((section, index) => ({
+    key: `${index}-${section.heading}`,
+    heading: section.heading,
+    paragraphs: splitParagraphs(section.body),
+    items: section.items,
+    itemLayout: index === ABOUT_STEPS_INDEX ? "steps" : "values",
+  }));
 }
 
 // One label-column width for the page index and the definition rows, so the two never drift apart.

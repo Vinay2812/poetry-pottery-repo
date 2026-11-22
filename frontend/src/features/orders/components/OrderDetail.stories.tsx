@@ -76,7 +76,6 @@ const meta = {
     arrivalLine: "Should reach you between 24 September and 29 September",
     transitLine:
       "Everything is packed by hand and goes by courier, so a day either way is normal.",
-    emailedTo: "maya@example.com",
     steps: toSteps(0),
     closedLabel: null,
     items,

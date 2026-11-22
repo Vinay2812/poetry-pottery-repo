@@ -347,37 +347,44 @@ export class EventsService {
     // Two reads keep that order whole across pages, so page one always holds what is next.
     const ahead = { user_id: userId, ...aheadRegistrationWhere(now) };
     const behind = { user_id: userId, NOT: aheadRegistrationWhere(now) };
-    const [aheadTotal, behindTotal] = await Promise.all([
-      this.prisma.eventRegistration.count({ where: ahead }),
-      this.prisma.eventRegistration.count({ where: behind }),
-    ]);
-    const slices = splitPage(bounds, aheadTotal);
-    const [aheadRows, behindRows] = await Promise.all([
-      canReturnRows(slices.first, aheadTotal)
-        ? this.prisma.eventRegistration.findMany({
-            where: ahead,
-            include: registrationInclude,
-            orderBy: [{ event: { starts_at: "asc" } }, { id: "asc" }],
-            skip: slices.first.skip,
-            take: slices.first.take,
-          })
-        : [],
-      canReturnRows(slices.second, behindTotal)
-        ? this.prisma.eventRegistration.findMany({
-            where: behind,
-            include: registrationInclude,
-            orderBy: [{ event: { starts_at: "desc" } }, { id: "asc" }],
-            skip: slices.second.skip,
-            take: slices.second.take,
-          })
-        : [],
-    ]);
-    return {
-      items: [...aheadRows, ...behindRows].map((row) =>
-        toRegistration(row, now),
-      ),
-      page_info: toPageInfo(bounds, aheadTotal + behindTotal),
-    };
+    // One snapshot for the counts and both reads, so a booking that moves in between
+    // cannot shift the page boundary inside a single answer.
+    return this.prisma.withTransaction(
+      async () => {
+        const [aheadTotal, behindTotal] = await Promise.all([
+          this.prisma.eventRegistration.count({ where: ahead }),
+          this.prisma.eventRegistration.count({ where: behind }),
+        ]);
+        const slices = splitPage(bounds, aheadTotal);
+        const [aheadRows, behindRows] = await Promise.all([
+          canReturnRows(slices.first, aheadTotal)
+            ? this.prisma.eventRegistration.findMany({
+                where: ahead,
+                include: registrationInclude,
+                orderBy: [{ event: { starts_at: "asc" } }, { id: "asc" }],
+                skip: slices.first.skip,
+                take: slices.first.take,
+              })
+            : [],
+          canReturnRows(slices.second, behindTotal)
+            ? this.prisma.eventRegistration.findMany({
+                where: behind,
+                include: registrationInclude,
+                orderBy: [{ event: { starts_at: "desc" } }, { id: "asc" }],
+                skip: slices.second.skip,
+                take: slices.second.take,
+              })
+            : [],
+        ]);
+        return {
+          items: [...aheadRows, ...behindRows].map((row) =>
+            toRegistration(row, now),
+          ),
+          page_info: toPageInfo(bounds, aheadTotal + behindTotal),
+        };
+      },
+      { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+    );
   }
 
   async registrationById(userId: number, id: string): Promise<Registration> {

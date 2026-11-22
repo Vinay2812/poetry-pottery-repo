@@ -265,6 +265,7 @@ export function BookingDetailContainer({
         onSelectDate={picker.onSelectDate}
         onToggleSlot={picker.onToggleSlot}
         onRemoveSlot={picker.onRemoveSlot}
+        onRetryPickCheck={picker.onRetryPickCheck}
         onConfirm={() => void handleConfirmMove()}
         onRetry={picker.refresh}
       />

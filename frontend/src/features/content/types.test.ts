@@ -6,9 +6,10 @@ import {
   IDLE_NEWSLETTER,
   type NewsletterResult,
   pickActiveSection,
-  sectionAt,
   splitParagraphs,
+  toAboutSections,
   toAnchorId,
+  toSectionHeadingId,
   toGridClass,
   toGridColumns,
   toSectionViews,
@@ -101,6 +102,22 @@ describe("toSectionViews", () => {
     ]);
   });
 
+  it("never hands out an anchor a later heading already reads as", () => {
+    const views = toSectionViews([
+      section("Care"),
+      section("Care"),
+      section("Care 2"),
+      section("Care 2"),
+    ]);
+
+    expect(views.map((view) => view.id)).toEqual([
+      "care",
+      "care-2",
+      "care-2-2",
+      "care-2-3",
+    ]);
+  });
+
   it("splits each item body into paragraphs", () => {
     const items = [
       {
@@ -118,15 +135,36 @@ describe("toSectionViews", () => {
   });
 });
 
-describe("sectionAt", () => {
-  const sections = [section("One"), section("Two")];
+describe("toAboutSections", () => {
+  const value = { title: "Made with love", body: "By hand." };
+  const step = { title: "Throwing", body: "On the wheel." };
 
-  it("returns the section at the index", () => {
-    expect(sectionAt(sections, 1)?.heading).toBe("Two");
+  it("keeps every section's body and items, whatever their order", () => {
+    const views = toAboutSections([
+      section("What we believe", "", [value]),
+      section("Our story", "Founded in 2025.\n\nIn Sangli.", [value]),
+      section("How it is made", "Slowly.", [step]),
+      section("Visit", "Saturdays."),
+    ]);
+
+    expect(
+      views.map((view) => [
+        view.heading,
+        view.paragraphs,
+        view.items.length,
+        view.itemLayout,
+      ]),
+    ).toEqual([
+      ["What we believe", [], 1, "values"],
+      ["Our story", ["Founded in 2025.", "In Sangli."], 1, "values"],
+      ["How it is made", ["Slowly."], 1, "steps"],
+      ["Visit", ["Saturdays."], 0, "values"],
+    ]);
   });
 
-  it("returns null when the CMS has fewer sections", () => {
-    expect(sectionAt(sections, 5)).toBeNull();
+  it("gives repeated headings distinct keys", () => {
+    const views = toAboutSections([section("Notes"), section("Notes")]);
+    expect(new Set(views.map((view) => view.key)).size).toBe(2);
   });
 });
 
@@ -200,5 +238,27 @@ describe("toStepNumber", () => {
   it("counts from one with a leading zero", () => {
     expect(toStepNumber(0)).toBe("01");
     expect(toStepNumber(11)).toBe("12");
+  });
+});
+
+describe("toSectionHeadingId", () => {
+  it("names the heading inside a section's anchor", () => {
+    expect(toSectionHeadingId("care-2")).toBe("care-2__heading");
+  });
+
+  it("never matches a section anchor, even for a heading that reads like one", () => {
+    const views = toSectionViews([
+      section("Care"),
+      section("Care heading"),
+      section("Care__heading"),
+      section("Care"),
+      section("Care 2 heading"),
+      section(""),
+    ]);
+    const anchors = views.map((view) => view.id);
+    const headingIds = anchors.map(toSectionHeadingId);
+    const every = [...anchors, ...headingIds];
+
+    expect(new Set(every).size).toBe(every.length);
   });
 });

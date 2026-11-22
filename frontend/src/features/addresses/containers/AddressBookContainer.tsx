@@ -11,6 +11,7 @@ import { AddressPicker } from "@/features/addresses/components/AddressPicker";
 import { EmptyAddresses } from "@/features/addresses/components/EmptyAddresses";
 import { useAddressBook } from "@/features/addresses/hooks";
 import { toFormValues } from "@/features/addresses/types";
+import { useEditorReturnFocus } from "@/features/addresses/useEditorReturnFocus";
 
 export function AddressBookContainer() {
   const {
@@ -31,6 +32,9 @@ export function AddressBookContainer() {
     submit,
   } = useAddressBook();
   const { openSignIn } = useClerk();
+
+  const { addButtonRef, toEditButtonRef, handleEdit, handleAddNew } =
+    useEditorReturnFocus(isFormOpen, openEdit, openNew);
 
   return (
     <PageShell column="narrow" className="flex flex-col gap-6 py-8 md:py-12">
@@ -65,7 +69,8 @@ export function AddressBookContainer() {
         <AddressPicker
           isEmpty={addresses.length === 0}
           isAdding={isFormOpen}
-          onAddClick={openNew}
+          onAddClick={handleAddNew}
+          addButtonRef={addButtonRef}
           form={
             isFormOpen ? (
               <AddressForm
@@ -95,7 +100,8 @@ export function AddressBookContainer() {
                 isDefault={address.is_default}
                 isSelected={false}
                 isSelectable={false}
-                onEdit={() => openEdit(address.id)}
+                onEdit={() => handleEdit(address.id)}
+                editButtonRef={toEditButtonRef(address.id)}
                 onDelete={() => void remove(address.id)}
                 onMakeDefault={() => void setDefault(address.id)}
               />

@@ -274,6 +274,48 @@ describe("EventsService", () => {
       prismaMock.eventRegistration.findMany.mockReset();
     });
 
+    it("reads both counts and both slices from one repeatable-read snapshot", async () => {
+      let isInSnapshot = false;
+      const readsInSnapshot: boolean[] = [];
+      prismaMock.withTransaction.mockImplementationOnce(
+        async (fn: () => Promise<unknown>) => {
+          isInSnapshot = true;
+          try {
+            return await fn();
+          } finally {
+            isInSnapshot = false;
+          }
+        },
+      );
+      prismaMock.eventRegistration.count.mockImplementation(
+        (query: { where: Record<string, unknown> }) => {
+          readsInSnapshot.push(isInSnapshot);
+          return Promise.resolve(
+            isBehind(query) ? behind.length : ahead.length,
+          );
+        },
+      );
+      prismaMock.eventRegistration.findMany.mockImplementation(
+        (query: Query) => {
+          readsInSnapshot.push(isInSnapshot);
+          return Promise.resolve(
+            (isBehind(query) ? behind : ahead).slice(
+              query.skip,
+              query.skip + query.take,
+            ),
+          );
+        },
+      );
+
+      await service.myRegistrations(7, 1, 12);
+
+      expect(prismaMock.withTransaction).toHaveBeenCalledWith(
+        expect.any(Function),
+        { isolationLevel: Prisma.TransactionIsolationLevel.RepeatableRead },
+      );
+      expect(readsInSnapshot).toEqual([true, true, true, true]);
+    });
+
     it("puts every booking still ahead on page one, then the record", async () => {
       const first = await service.myRegistrations(7, 1, 12);
 

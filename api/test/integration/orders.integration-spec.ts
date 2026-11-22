@@ -1,7 +1,7 @@
 import { CouponKind, OrderStatus, UploadPurpose } from "@prisma/client";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
-import { orderInclude } from "@/features/orders/orders.service";
+import { CART_CHANGED, orderInclude } from "@/features/orders/orders.service";
 import {
   createHarness,
   type Harness,
@@ -13,6 +13,7 @@ import {
   resetData,
   STUDIO_CDN,
   type TestUser,
+  placeAtQuote,
 } from "./harness";
 
 const settle = (ms: number): Promise<void> =>
@@ -53,7 +54,7 @@ describe("order placement under concurrency", () => {
     return race(
       users.map(
         (user) => () =>
-          harness.orders.place(user.id, {
+          placeAtQuote(harness, user.id, {
             address_id: user.address_id,
             coupon_code: couponCode ?? null,
           }),
@@ -128,7 +129,7 @@ describe("order placement under concurrency", () => {
     const [user] = await makeUsers(harness.prisma, 1);
     if (!user) throw new Error("no user");
     await fillCarts([user], product.id, 2);
-    const order = await harness.orders.place(user.id, {
+    const order = await placeAtQuote(harness, user.id, {
       address_id: user.address_id,
     });
 
@@ -156,7 +157,7 @@ describe("order placement under concurrency", () => {
     const [user] = await makeUsers(harness.prisma, 1);
     if (!user) throw new Error("no user");
     await fillCarts([user], product.id, 1);
-    const placed = await harness.orders.place(user.id, {
+    const placed = await placeAtQuote(harness, user.id, {
       address_id: user.address_id,
     });
     const current = await harness.prisma.order.findUniqueOrThrow({
@@ -187,7 +188,7 @@ describe("order placement under concurrency", () => {
     );
   });
 
-  it("prices an order from the shelf as it stands when the take commits", async () => {
+  it("refuses an order whose price moved while checkout was in flight", async () => {
     const product = await makeProduct(harness.prisma, {
       stock: 5,
       price: 1000,
@@ -196,15 +197,15 @@ describe("order placement under concurrency", () => {
     if (!user) throw new Error("no user");
     await fillCarts([user], product.id, 1);
 
-    // The writer holds the row while checkout runs, so the quote cannot read a price
-    // that is already on its way out.
+    // The writer holds the row while checkout runs, so the order prices from the committed
+    // shelf and the total the shopper was shown no longer matches it.
     const writer = await openWriter();
     await writer.query("BEGIN");
     await writer.query("UPDATE products SET price = $1 WHERE id = $2", [
       4000,
       product.id,
     ]);
-    const placing = harness.orders.place(user.id, {
+    const placing = placeAtQuote(harness, user.id, {
       address_id: user.address_id,
     });
     void placing.catch(() => undefined);
@@ -212,17 +213,12 @@ describe("order placement under concurrency", () => {
     await writer.query("COMMIT");
     await writer.end();
 
-    const order = await placing;
-    expect(order.items[0]?.unit_price).toBe(4000);
-    expect(order.items[0]?.line_total).toBe(4000);
-    expect(order.subtotal).toBe(4000);
-    expect(order.total).toBe(
-      order.subtotal - order.discount + order.shipping_fee,
-    );
-    const line = await harness.prisma.orderItem.findFirstOrThrow({
-      where: { order_id: order.id },
+    await expect(placing).rejects.toThrow(CART_CHANGED);
+    expect(await harness.prisma.order.count()).toBe(0);
+    const after = await harness.prisma.product.findUniqueOrThrow({
+      where: { id: product.id },
     });
-    expect(line.unit_price).toBe(4000);
+    expect(after.stock).toBe(5);
   });
 
   it("refuses an order when a piece is retired while checkout is in flight", async () => {
@@ -242,7 +238,7 @@ describe("order placement under concurrency", () => {
     await writer.query("UPDATE products SET is_active = false WHERE id = $1", [
       retiring.id,
     ]);
-    const placing = harness.orders.place(user.id, {
+    const placing = placeAtQuote(harness, user.id, {
       address_id: user.address_id,
     });
     void placing.catch(() => undefined);
@@ -281,7 +277,7 @@ describe("studio notes on an order", () => {
     if (!buyer) throw new Error("no user");
     const piece = await makeProduct(harness.prisma, { stock: 2 });
     await harness.cart.add(buyer.id, { product_id: piece.id, quantity: 1 });
-    const order = await harness.orders.place(buyer.id, {
+    const order = await placeAtQuote(harness, buyer.id, {
       address_id: buyer.address_id,
     });
     const row = await harness.prisma.user.findUniqueOrThrow({

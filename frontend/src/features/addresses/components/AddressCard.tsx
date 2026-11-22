@@ -1,3 +1,5 @@
+import type { Ref } from "react";
+
 import { Button } from "@/components/ui/button";
 import {
   toAddressLines,
@@ -21,6 +23,8 @@ export interface AddressCardProps {
   onEdit: () => void;
   onDelete: () => void;
   onMakeDefault: () => void;
+  // Lets the page hand focus back to Edit once the editor that replaced this card closes.
+  editButtonRef?: Ref<HTMLButtonElement>;
 }
 
 // The padding gives each action a full-height tap target; the negative margin keeps the row tight.
@@ -43,6 +47,7 @@ export function AddressCard({
   onEdit,
   onDelete,
   onMakeDefault,
+  editButtonRef,
 }: AddressCardProps) {
   // Visible text stays first so voice control still matches "Edit" or "Remove".
   const addressSuffix = `: ${toAddressShortLabel(line1, city)}`;
@@ -76,7 +81,12 @@ export function AddressCard({
               Deliver here<span className="sr-only">{addressSuffix}</span>
             </Button>
           ))}
-        <button type="button" onClick={onEdit} className={TEXT_LINK}>
+        <button
+          ref={editButtonRef}
+          type="button"
+          onClick={onEdit}
+          className={TEXT_LINK}
+        >
           Edit<span className="sr-only">{addressSuffix}</span>
         </button>
         {!isDefault && (

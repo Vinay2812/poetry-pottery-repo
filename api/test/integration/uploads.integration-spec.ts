@@ -25,6 +25,7 @@ import {
   QueueRecorder,
   resetData,
   StorageRecorder,
+  placeAtQuote,
 } from "./harness";
 
 const storage = new StorageRecorder();
@@ -320,7 +321,7 @@ describe("the upload lifecycle", () => {
     expect(await rowCount(shared.key)).toBe(1);
 
     // Checkout moves the photo onto the order item, so converting the line keeps it.
-    await harness.orders.place(buyer.id, { address_id: buyer.address_id });
+    await placeAtQuote(harness, buyer.id, { address_id: buyer.address_id });
     expect(await harness.prisma.cartItem.count()).toBe(0);
     expect(queue.keysFor("storage.delete-object")).toEqual([single.key]);
     expect(await rowCount(shared.key)).toBe(1);
@@ -368,6 +369,7 @@ describe("the upload lifecycle", () => {
     const read = new Promise<void>((resolve) => {
       hasRead = resolve;
     });
+    const { total } = await harness.orders.quote(buyer.id, null);
     const readCart = harness.cart.get.bind(harness.cart);
     const spy = vi
       .spyOn(harness.cart, "get")
@@ -380,6 +382,7 @@ describe("the upload lifecycle", () => {
 
     const checkout = harness.orders.place(buyer.id, {
       address_id: buyer.address_id,
+      expected_total: total,
     });
     await read;
     const removal = harness.cart.remove(buyer.id, line.id);

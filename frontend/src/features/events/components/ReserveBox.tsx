@@ -31,6 +31,8 @@ export interface ReserveBoxProps {
   bookingHref: string | null;
   bookingStatusLabel: string;
   bookingSeats: number;
+  // What the booking was quoted at, which stays put if the date's price later moves.
+  bookingTotal: number;
   whatsappUrl: string | null;
   onSeatsChange: (seats: number) => void;
   onNoteChange: (note: string) => void;
@@ -57,6 +59,7 @@ export function ReserveBox({
   bookingHref,
   bookingStatusLabel,
   bookingSeats,
+  bookingTotal,
   whatsappUrl,
   onSeatsChange,
   onNoteChange,
@@ -127,7 +130,15 @@ export function ReserveBox({
           )}
         >
           <p className="flex flex-col gap-0.5 text-sm">
-            <span>Your booking · {pluralize(bookingSeats, "seat")}</span>
+            <span>
+              Your booking · {pluralize(bookingSeats, "seat")}
+              {isPriceShown && (
+                <span className="tnum">
+                  {" "}
+                  · {formatInr(bookingTotal)} in all
+                </span>
+              )}
+            </span>
             <span className="text-muted-foreground">{bookingStatusLabel}</span>
           </p>
           <Link href={bookingHref} className={TEXT_LINK}>

@@ -48,6 +48,7 @@ export interface RescheduleDialogProps {
   onSelectDate: (dateKey: string) => void;
   onToggleSlot: (startsAt: string) => void;
   onRemoveSlot: (startsAt: string) => void;
+  onRetryPickCheck: (() => void) | null;
   onConfirm: () => void;
   onRetry: () => void;
 }
@@ -75,6 +76,7 @@ export function RescheduleDialog({
   onSelectDate,
   onToggleSlot,
   onRemoveSlot,
+  onRetryPickCheck,
   onConfirm,
   onRetry,
 }: RescheduleDialogProps) {
@@ -128,6 +130,7 @@ export function RescheduleDialog({
           progress={progress}
           emptyMessage="Pick your times from the calendar."
           onRemoveSlot={onRemoveSlot}
+          onRetryCheck={onRetryPickCheck}
         />
         {isSwapHintShown && (
           <p className="text-[13px] text-muted-foreground">

@@ -44,6 +44,7 @@ const meta = {
     isPlacing: false,
     blockedReason: null,
     onPlaceOrder: fn(),
+    onRetryQuote: null,
     coupon,
   },
 } satisfies Meta<typeof CheckoutSummary>;
@@ -58,6 +59,14 @@ export const Blocked: Story = {
   args: {
     canPlaceOrder: false,
     blockedReason: "Add a delivery address to place this order.",
+  },
+};
+
+export const QuoteFailed: Story = {
+  args: {
+    canPlaceOrder: false,
+    blockedReason: "We could not check your total just now.",
+    onRetryQuote: fn(),
   },
 };
 

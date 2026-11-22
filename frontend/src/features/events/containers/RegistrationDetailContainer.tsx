@@ -20,10 +20,10 @@ import {
 import {
   applyRegistrationCancellation,
   isRequestBannerShown,
-  REGISTRATION_STAGES,
   toEventPath,
   toRegistrationClosedLabel,
   toRegistrationFacts,
+  toRegistrationStages,
   toRegistrationStepDates,
   toTimeRange,
   toWhatsAppBookingMessage,
@@ -122,6 +122,7 @@ export function RegistrationDetailContainer({
           seats: optimisticRegistration.seats,
           total: formatInr(optimisticRegistration.total),
           guestName: user?.fullName ?? "",
+          isFree: optimisticRegistration.total === 0,
         }),
       )
     : null;
@@ -143,7 +144,7 @@ export function RegistrationDetailContainer({
           optimisticRegistration.status,
         )}
         steps={toTimelineSteps({
-          stages: REGISTRATION_STAGES,
+          stages: toRegistrationStages(optimisticRegistration.total),
           status: optimisticRegistration.status,
           dates: stepDates,
           isClosed,

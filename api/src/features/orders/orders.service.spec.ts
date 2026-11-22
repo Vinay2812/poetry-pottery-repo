@@ -1,4 +1,4 @@
-import { BadRequestException } from "@nestjs/common";
+import { BadRequestException, ConflictException } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { OrderStatus } from "@prisma/client";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -242,7 +242,10 @@ describe("OrdersService", () => {
 
   describe("place", () => {
     it("takes each line from the shelf, snapshots the address, clears the cart and emails both sides", async () => {
-      const order = await service.place(1, { address_id: 5 });
+      const order = await service.place(1, {
+        address_id: 5,
+        expected_total: 1850,
+      });
 
       expect(shelfMock.take).toHaveBeenCalledWith(containing({ id: 10 }), 2);
       expect(prismaMock.order.create).toHaveBeenCalledWith(
@@ -276,12 +279,22 @@ describe("OrdersService", () => {
       ).resolves.toMatchObject({ total: 1850 });
     });
 
+    it("refuses an order with no total, as an old storefront tab sends, with the cart-changed conflict", async () => {
+      for (const expected_total of [null, undefined]) {
+        await expect(
+          service.place(1, { address_id: 5, expected_total }),
+        ).rejects.toBeInstanceOf(ConflictException);
+      }
+      expect(shelfMock.take).not.toHaveBeenCalled();
+      expect(prismaMock.order.create).not.toHaveBeenCalled();
+    });
+
     it("fails when another buyer took the last piece", async () => {
       shelfMock.take.mockResolvedValue(false);
 
-      await expect(service.place(1, { address_id: 5 })).rejects.toThrow(
-        "sold out while you were checking out",
-      );
+      await expect(
+        service.place(1, { address_id: 5, expected_total: 1850 }),
+      ).rejects.toThrow("sold out while you were checking out");
       expect(prismaMock.order.create).not.toHaveBeenCalled();
     });
 
@@ -289,7 +302,11 @@ describe("OrdersService", () => {
       prismaMock.coupon.findUnique.mockResolvedValue(null);
 
       await expect(
-        service.place(1, { address_id: 5, coupon_code: "BOGUS" }),
+        service.place(1, {
+          address_id: 5,
+          coupon_code: "BOGUS",
+          expected_total: 1850,
+        }),
       ).rejects.toThrow("not valid");
     });
 
@@ -300,9 +317,9 @@ describe("OrdersService", () => {
         ],
       });
 
-      await expect(service.place(1, { address_id: 5 })).rejects.toThrow(
-        "no longer available",
-      );
+      await expect(
+        service.place(1, { address_id: 5, expected_total: 1850 }),
+      ).rejects.toThrow("no longer available");
     });
   });
 
@@ -327,7 +344,12 @@ describe("OrdersService", () => {
       prismaMock.coupon.findUnique.mockResolvedValue(coupon);
       prismaMock.coupon.updateMany.mockResolvedValueOnce({ count: 1 });
 
-      await service.place(1, { address_id: 5, coupon_code: "studio500" });
+      const { total } = await service.quote(1, "studio500");
+      await service.place(1, {
+        address_id: 5,
+        coupon_code: "studio500",
+        expected_total: total,
+      });
 
       expect(prismaMock.coupon.updateMany).toHaveBeenCalledWith(
         containing({ where: containing({ id: 2, is_active: true }) }),
@@ -338,7 +360,11 @@ describe("OrdersService", () => {
 
       prismaMock.coupon.updateMany.mockResolvedValueOnce({ count: 0 });
       await expect(
-        service.place(1, { address_id: 5, coupon_code: "STUDIO500" }),
+        service.place(1, {
+          address_id: 5,
+          coupon_code: "STUDIO500",
+          expected_total: total,
+        }),
       ).rejects.toThrow("fully redeemed");
     });
 

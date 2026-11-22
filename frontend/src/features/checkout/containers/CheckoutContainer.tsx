@@ -35,7 +35,12 @@ import { CheckoutSummary } from "@/features/checkout/components/CheckoutSummary"
 import { CouponField } from "@/features/checkout/components/CouponField";
 import { GiftNoteField } from "@/features/checkout/components/GiftNoteField";
 import { OrderNoteField } from "@/features/checkout/components/OrderNoteField";
-import { toCouponView, toGiftView } from "@/features/checkout/types";
+import {
+  toBlockedReason,
+  toCouponView,
+  toGiftView,
+  toQuoteState,
+} from "@/features/checkout/types";
 import { toOrderPath } from "@/features/orders/types";
 
 export function CheckoutContainer() {
@@ -77,6 +82,7 @@ export function CheckoutContainer() {
     data: quoteData,
     previousData: previousQuote,
     loading: isQuoting,
+    error: quoteError,
     refetch: refetchQuote,
   } = useQuery(CheckoutQuoteDocument, {
     variables: { input: { coupon_code: appliedCoupon } },
@@ -87,8 +93,14 @@ export function CheckoutContainer() {
     nextFetchPolicy: (currentPolicy, { reason }) =>
       reason === "variables-changed" ? "cache-first" : currentPolicy,
   });
-  const quote =
-    quoteData?.checkoutQuote ?? previousQuote?.checkoutQuote ?? null;
+  // The current quote is what gets billed; an older one only keeps the totals on screen.
+  const currentQuote = quoteData?.checkoutQuote ?? null;
+  const quote = currentQuote ?? previousQuote?.checkoutQuote ?? null;
+  const quoteState = toQuoteState(
+    currentQuote !== null,
+    Boolean(quoteError),
+    isQuoting,
+  );
   const coupon = toCouponView({
     code: optimisticCoupon,
     quoteCode: quote?.coupon_code ?? null,
@@ -149,32 +161,44 @@ export function CheckoutContainer() {
     });
   }, [applyOptimisticCoupon, refetchQuote, startCouponTransition]);
 
+  const handleRetryQuote = useCallback(() => {
+    // A failed retry leaves the error on the query, which keeps the retry on screen.
+    refetchQuote().catch(() => undefined);
+  }, [refetchQuote]);
+
   const handlePlaceOrder = useCallback(() => {
-    if (addressId === null) return;
+    if (addressId === null || quoteError || !currentQuote) return;
     const gift = toGiftView(isGift, giftNote, hasHiddenPrices);
     submitOrder({
       address_id: addressId,
-      coupon_code: quote?.coupon_code ?? null,
+      coupon_code: currentQuote.coupon_code,
       customer_note: note.trim() || null,
       gift_note: gift.gift_note,
       hide_prices: gift.hide_prices,
-      expected_total: quote?.total ?? null,
+      expected_total: currentQuote.total,
     });
-  }, [addressId, giftNote, hasHiddenPrices, isGift, note, quote, submitOrder]);
+  }, [
+    addressId,
+    currentQuote,
+    giftNote,
+    hasHiddenPrices,
+    isGift,
+    note,
+    quoteError,
+    submitOrder,
+  ]);
 
   const items = cart?.items.filter((item) => item.is_available) ?? [];
   const availableItemCount = items.reduce(
     (sum, item) => sum + item.quantity,
     0,
   );
-  const blockedReason =
-    addressId === null
-      ? "Choose a delivery address to continue."
-      : items.length === 0
-        ? "Your cart is empty."
-        : quote && quote.problems.length > 0
-          ? "Remove the unavailable pieces from your cart first."
-          : null;
+  const blockedReason = toBlockedReason({
+    hasAddress: addressId !== null,
+    itemCount: items.length,
+    problemCount: currentQuote?.problems.length ?? 0,
+    quoteState,
+  });
 
   const shippingFee = quote?.shipping_fee ?? cart?.shipping_fee ?? 0;
 
@@ -259,11 +283,14 @@ export function CheckoutContainer() {
             isDiscountPending={coupon.isPending}
             isQuotePending={isCouponPending}
             canPlaceOrder={
-              blockedReason === null && !isQuoting && !isCouponPending
+              blockedReason === null &&
+              quoteState === "ready" &&
+              !isCouponPending
             }
             isPlacing={isPlacing}
             blockedReason={blockedReason}
             onPlaceOrder={handlePlaceOrder}
+            onRetryQuote={quoteState === "failed" ? handleRetryQuote : null}
             coupon={
               <CouponField
                 value={couponDraft}

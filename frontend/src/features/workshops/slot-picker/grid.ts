@@ -86,10 +86,77 @@ function dayDelta(later: string, earlier: string): number {
 }
 
 // Calendar days covered by a set of day keys, counting both ends.
-export function spanDays(dateKeys: string[]): number {
+export function spanDays(dateKeys: readonly string[]): number {
   if (dateKeys.length === 0) return 0;
   const sorted = [...dateKeys].sort();
   return dayDelta(sorted[sorted.length - 1] ?? "", sorted[0] ?? "") + 1;
+}
+
+export interface DateRange {
+  from: string;
+  days: number;
+}
+
+// The days holding picks outside the month on screen, so their capacity can be read too.
+export function toOffMonthRange(
+  pickedDateKeys: readonly string[],
+  monthKey: string,
+): DateRange | null {
+  const offMonth = pickedDateKeys.filter((key) => toMonthKey(key) !== monthKey);
+  const from = [...offMonth].sort()[0];
+  return from ? { from, days: spanDays(offMonth) } : null;
+}
+
+// What the latest read said about a picked time: its slot, or null once a read of its day no longer has it.
+export type PickReads = ReadonlyMap<string, WorkshopSlotData | null>;
+
+function isSameRead(
+  a: WorkshopSlotData | null | undefined,
+  b: WorkshopSlotData | null | undefined,
+): boolean {
+  if (!a || !b) return a === b;
+  return a.remaining === b.remaining && a.is_available === b.is_available;
+}
+
+// Folds fresh reads into what earlier reads said, so a month being read again does not forget a pick.
+export function rememberPickReads(
+  remembered: PickReads,
+  picked: readonly SlotInterval[],
+  freshDays: readonly WorkshopDayData[],
+  timezone: string,
+): PickReads {
+  const freshDayKeys = new Set(freshDays.map((day) => day.date));
+  const freshSlots = new Map(
+    freshDays.flatMap((day) => day.slots).map((slot) => [slot.starts_at, slot]),
+  );
+  const next = new Map<string, WorkshopSlotData | null>();
+  for (const pick of picked) {
+    const isDayFresh = freshDayKeys.has(toDateKey(pick.starts_at, timezone));
+    const read = isDayFresh
+      ? (freshSlots.get(pick.starts_at) ?? null)
+      : remembered.get(pick.starts_at);
+    if (read !== undefined) next.set(pick.starts_at, read);
+  }
+  const isUnchanged =
+    next.size === remembered.size &&
+    [...next].every(
+      ([start, read]) =>
+        remembered.has(start) && isSameRead(read, remembered.get(start)),
+    );
+  return isUnchanged ? remembered : next;
+}
+
+// A pick stays while its time has room for the group; one never read stays for now, one read as gone leaves.
+export function keepFittingPicks(
+  picked: readonly SlotInterval[],
+  reads: PickReads,
+  participants: number,
+): SlotInterval[] {
+  return picked.filter((pick) => {
+    const read = reads.get(pick.starts_at);
+    if (read === undefined) return true;
+    return read !== null && isSlotPickable(read, participants);
+  });
 }
 
 // A day stays open while adding it keeps the whole set inside the allowed span.

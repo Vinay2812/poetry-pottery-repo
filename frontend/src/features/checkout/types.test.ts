@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { GIFT_NOTE_MAX_LENGTH, toCouponView, toGiftView } from "./types";
+import {
+  GIFT_NOTE_MAX_LENGTH,
+  QUOTE_FAILED_REASON,
+  toBlockedReason,
+  toCouponView,
+  toGiftView,
+  toQuoteState,
+} from "./types";
 
 describe("toCouponView", () => {
   it("shows nothing when no code is in play", () => {
@@ -93,5 +100,55 @@ describe("toGiftView", () => {
       gift_note: null,
       hide_prices: true,
     });
+  });
+});
+
+describe("toQuoteState", () => {
+  it("is checking while the quote is in flight, even with an older one on screen", () => {
+    expect(toQuoteState(true, false, true)).toBe("checking");
+  });
+
+  it("is ready only when a quote came back without an error", () => {
+    expect(toQuoteState(true, false, false)).toBe("ready");
+  });
+
+  it("fails when the quote errored or never arrived", () => {
+    expect(toQuoteState(false, true, false)).toBe("failed");
+    expect(toQuoteState(false, false, false)).toBe("failed");
+  });
+});
+
+describe("toBlockedReason", () => {
+  const ready = {
+    hasAddress: true,
+    itemCount: 2,
+    problemCount: 0,
+    quoteState: "ready",
+  } as const;
+
+  it("lets a quoted cart with an address through", () => {
+    expect(toBlockedReason(ready)).toBeNull();
+  });
+
+  it("puts a failed quote ahead of everything else", () => {
+    expect(
+      toBlockedReason({ ...ready, hasAddress: false, quoteState: "failed" }),
+    ).toBe(QUOTE_FAILED_REASON);
+  });
+
+  it("asks for an address, then pieces, then a clean cart", () => {
+    expect(toBlockedReason({ ...ready, hasAddress: false })).toBe(
+      "Choose a delivery address to continue.",
+    );
+    expect(toBlockedReason({ ...ready, itemCount: 0 })).toBe(
+      "Your cart is empty.",
+    );
+    expect(toBlockedReason({ ...ready, problemCount: 1 })).toBe(
+      "Remove the unavailable pieces from your cart first.",
+    );
+  });
+
+  it("has no reason while the quote is still checking", () => {
+    expect(toBlockedReason({ ...ready, quoteState: "checking" })).toBeNull();
   });
 });

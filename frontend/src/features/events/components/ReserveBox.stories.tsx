@@ -31,6 +31,7 @@ const meta = {
     bookingHref: null,
     bookingStatusLabel: "",
     bookingSeats: 0,
+    bookingTotal: 0,
     whatsappUrl: "https://wa.me/919876543210?text=Hi",
     onSeatsChange: fn(),
     onNoteChange: fn(),
@@ -82,6 +83,7 @@ export const AlreadyBooked: Story = {
     bookingHref: "/registrations/REG7Q2X9M1KD",
     bookingStatusLabel: "Approved, awaiting payment",
     bookingSeats: 2,
+    bookingTotal: 3600,
   },
 };
 
@@ -92,6 +94,7 @@ export const BookedAndPaid: Story = {
     bookingHref: "/registrations/REG7Q2X9M1KD",
     bookingStatusLabel: "Confirmed",
     bookingSeats: 2,
+    bookingTotal: 3600,
   },
 };
 

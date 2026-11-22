@@ -9,6 +9,7 @@ import { AddressPicker } from "@/features/addresses/components/AddressPicker";
 import { EmptyAddresses } from "@/features/addresses/components/EmptyAddresses";
 import { useAddressBook } from "@/features/addresses/hooks";
 import { toFormValues, toPreferredAddressId } from "@/features/addresses/types";
+import { useEditorReturnFocus } from "@/features/addresses/useEditorReturnFocus";
 import type { AddressFormValues } from "@/lib/validations/address";
 
 export interface AddressPickerContainerProps {
@@ -36,6 +37,8 @@ export function AddressPickerContainer({
     submit,
   } = useAddressBook();
   const { openSignIn } = useClerk();
+  const { addButtonRef, toEditButtonRef, handleEdit, handleAddNew } =
+    useEditorReturnFocus(isFormOpen, openEdit, openNew);
 
   const preferredId = toPreferredAddressId(addresses);
   const hasSelection = addresses.some((address) => address.id === selectedId);
@@ -79,7 +82,8 @@ export function AddressPickerContainer({
     <AddressPicker
       isEmpty={addresses.length === 0}
       isAdding={isFormOpen}
-      onAddClick={openNew}
+      onAddClick={handleAddNew}
+      addButtonRef={addButtonRef}
       form={
         isFormOpen ? (
           <AddressForm
@@ -110,7 +114,8 @@ export function AddressPickerContainer({
             isSelected={address.id === selectedId}
             isSelectable
             onSelect={() => onSelect(address.id)}
-            onEdit={() => openEdit(address.id)}
+            onEdit={() => handleEdit(address.id)}
+            editButtonRef={toEditButtonRef(address.id)}
             onDelete={() => void remove(address.id)}
             onMakeDefault={() => void setDefault(address.id)}
           />
