@@ -68,6 +68,12 @@ export function RegistrationsListContainer({
     },
     [goToPage, page, refetch, startTurn],
   );
+
+  // A page past the end is a dead link, so leaving it replaces it rather than adding a Back step.
+  const handleSeeLatest = useCallback(() => {
+    goToPage(1);
+    startTurn();
+  }, [goToPage, startTurn]);
   const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
 
@@ -113,7 +119,7 @@ export function RegistrationsListContainer({
         <PastLastPage
           message="There are no events this far back."
           actionLabel="See your latest events"
-          onLatest={() => handlePageChange(1)}
+          onLatest={handleSeeLatest}
         />
       ) : registrations.length === 0 ? (
         <EmptyRegistrations />

@@ -60,6 +60,12 @@ export function OrdersListContainer() {
     [goToPage, page, refetch, startTurn],
   );
 
+  // A page past the end is a dead link, so leaving it replaces it rather than adding a Back step.
+  const handleSeeLatest = useCallback(() => {
+    goToPage(1);
+    startTurn();
+  }, [goToPage, startTurn]);
+
   // The wall is the whole page when it shows, so it carries the h1 rather than
   // sitting under a heading for a list that is not there.
   if (!isLoading && !isSignedIn) {
@@ -95,7 +101,7 @@ export function OrdersListContainer() {
         <PastLastPage
           message="There are no orders this far back."
           actionLabel="See your latest orders"
-          onLatest={() => handleTurnPage(1)}
+          onLatest={handleSeeLatest}
         />
       ) : orders.length === 0 ? (
         <EmptyOrders />

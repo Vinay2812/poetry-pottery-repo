@@ -68,6 +68,12 @@ export function BookingsListContainer() {
     },
     [goToPage, page, refetch, startTurn],
   );
+
+  // A page past the end is a dead link, so leaving it replaces it rather than adding a Back step.
+  const handleSeeLatest = useCallback(() => {
+    goToPage(1);
+    startTurn();
+  }, [goToPage, startTurn]);
   const pageCount = pageInfo ? Math.ceil(pageInfo.total / pageInfo.limit) : 1;
   const { openSignIn } = useClerk();
 
@@ -109,7 +115,7 @@ export function BookingsListContainer() {
         <PastLastPage
           message="There are no wheel sessions this far back."
           actionLabel="See your latest wheel sessions"
-          onLatest={() => handlePageChange(1)}
+          onLatest={handleSeeLatest}
         />
       ) : bookings.length === 0 ? (
         <EmptyBookings />
