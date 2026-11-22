@@ -46,7 +46,7 @@ function reviewRow(overrides: Record<string, unknown> = {}) {
     image_urls: [],
     created_at: new Date(),
     updated_at: new Date(),
-    user: { name: "Maya Iyer", image: null },
+    user: { name: "Maya Iyer" },
     product: { name: "Mug", slug: "mug" },
     event: null,
     ...overrides,

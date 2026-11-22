@@ -1340,7 +1340,6 @@ type Review {
 }
 
 type ReviewAuthor {
-  image: String
   name: String!
 }
 

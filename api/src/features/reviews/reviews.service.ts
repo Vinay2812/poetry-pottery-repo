@@ -32,7 +32,7 @@ const ALREADY_REVIEWED =
   "You have already reviewed this. Edit your review instead.";
 
 export const reviewInclude = {
-  user: { select: { name: true, image: true } },
+  user: { select: { name: true } },
   product: { select: { name: true, slug: true } },
   event: { select: { title: true, slug: true } },
 } satisfies Prisma.ReviewInclude;
@@ -69,7 +69,7 @@ export function toReview(row: ReviewRow, viewerId: number | null): Review {
     body: row.body,
     image_urls: row.image_urls,
     created_at: row.created_at,
-    author: { name: displayName(row.user.name), image: row.user.image },
+    author: { name: displayName(row.user.name) },
     is_mine: viewerId !== null && row.user_id === viewerId,
     subject_name: row.product?.name ?? row.event?.title ?? null,
     subject_href: row.product

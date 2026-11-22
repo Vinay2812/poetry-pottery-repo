@@ -41,7 +41,7 @@ function buildFragment(
       created_at: "2026-09-01T10:00:00.000Z",
       subject_name: "Slate morning mug",
       subject_href: "/products/slate-morning-mug",
-      author: { name: "Maya", image: null },
+      author: { name: "Maya" },
     },
     ...overrides,
   };
