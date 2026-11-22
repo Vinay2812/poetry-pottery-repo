@@ -43,6 +43,7 @@ const meta = {
     value: "mug",
     activeIndex: -1,
     isLoading: false,
+    hint: "Press Enter to search the shelf.",
     recents: [
       { key: "r1", label: "sage green", note: null },
       { key: "r2", label: "kulhad", note: null },
@@ -76,7 +77,13 @@ type Story = StoryObj<typeof meta>;
 export const WithSuggestions: Story = {};
 
 export const RecentsOnly: Story = {
-  args: { value: "", pieces: [], events: [], workshops: [] },
+  args: {
+    value: "",
+    hint: "Type a glaze, a clay body or what you want to use it for.",
+    pieces: [],
+    events: [],
+    workshops: [],
+  },
 };
 
 export const FirstPieceHighlighted: Story = { args: { activeIndex: 2 } };
@@ -84,6 +91,7 @@ export const FirstPieceHighlighted: Story = { args: { activeIndex: 2 } };
 export const NothingYet: Story = {
   args: {
     value: "",
+    hint: "Type a glaze, a clay body or what you want to use it for.",
     recents: [],
     pieces: [],
     events: [],
@@ -91,7 +99,53 @@ export const NothingYet: Story = {
   },
 };
 
-export const Loading: Story = { args: { isLoading: true } };
+export const Loading: Story = {
+  args: {
+    isLoading: true,
+    hint: "Looking…",
+    recents: [],
+    pieces: [],
+    events: [],
+    workshops: [],
+  },
+};
+
+export const NoMatches: Story = {
+  args: {
+    value: "zzqx",
+    hint: "No suggestions for “zzqx”. Press Enter to search the shelf.",
+    recents: [],
+    pieces: [],
+    events: [],
+    workshops: [],
+  },
+};
+
+export const StaleWhileLooking: Story = {
+  args: { value: "mugs", isStale: true, isLoading: true, hint: "Looking…" },
+};
+
+export const SuggestionsFailed: Story = {
+  args: {
+    hint: "Suggestions did not load. Press Enter to search the shelf.",
+    recents: [],
+    pieces: [],
+    events: [],
+    workshops: [],
+  },
+};
+
+// A pasted run with no spaces must wrap, not push "Clear recent searches" off a phone.
+export const LongQuery: Story = {
+  args: {
+    value: "x".repeat(160),
+    hint: `No suggestions for “${"x".repeat(32)}…”. Press Enter to search the shelf.`,
+    pieces: [],
+    events: [],
+    workshops: [],
+  },
+  ...atViewport("mobile"),
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

@@ -2,12 +2,18 @@ import { describe, expect, it } from "vitest";
 
 import {
   addRecentSearch,
+  filterRecentSearches,
+  isSuggestPending,
   MAX_RECENT_SEARCHES,
   nextActiveIndex,
   parseRecentSearches,
+  toInputId,
   toOptionId,
+  toActiveHint,
   toOptionOrder,
+  toSearchHint,
   toSearchHref,
+  toSelectableLists,
 } from "./types";
 
 function option(id: string) {
@@ -91,8 +97,124 @@ describe("nextActiveIndex", () => {
   });
 });
 
+describe("toInputId", () => {
+  it("names the field after its panel", () => {
+    expect(toInputId("panel")).toBe("panel-input");
+  });
+});
+
 describe("toOptionId", () => {
   it("names an option after its panel and its place in the list", () => {
     expect(toOptionId("panel", 3)).toBe("panel-option-3");
+  });
+});
+
+describe("isSuggestPending", () => {
+  it("is pending from the first keystroke until the answer for that term lands", () => {
+    expect(isSuggestPending("zzqx", "mug", false)).toBe(true);
+    expect(isSuggestPending("zzqx", "zzqx", true)).toBe(true);
+    expect(isSuggestPending(" zzqx ", "zzqx", false)).toBe(false);
+  });
+});
+
+describe("toSelectableLists", () => {
+  const lists = {
+    recents: [option("r1")],
+    pieces: [option("p1")],
+    events: [option("e1")],
+    workshops: [option("w1")],
+  };
+
+  it("keeps every row once the answer matches the field", () => {
+    expect(toSelectableLists(lists, false)).toBe(lists);
+  });
+
+  it("leaves only recents reachable while the answer is stale", () => {
+    // Typing "mug", then replacing it and pressing Down and Enter must not land on a mug.
+    const order = toOptionOrder(toSelectableLists(lists, true));
+    expect(order.map((entry) => entry.id)).toEqual(["r1"]);
+  });
+});
+
+describe("toSearchHint", () => {
+  const base = { value: "", isPending: false, isError: false, resultCount: 0 };
+
+  it("invites a first word on an empty field", () => {
+    expect(toSearchHint(base)).toBe(
+      "Type a glaze, a clay body or what you want to use it for.",
+    );
+  });
+
+  it("offers the full search once there are rows or the word is too short to suggest", () => {
+    expect(toSearchHint({ ...base, value: "m" })).toBe(
+      "Press Enter to search the shelf.",
+    );
+    expect(toSearchHint({ ...base, value: "mug", resultCount: 3 })).toBe(
+      "Press Enter to search the shelf.",
+    );
+  });
+
+  it("waits while the answer is on its way, even with old rows showing", () => {
+    expect(
+      toSearchHint({ ...base, value: "mug", isPending: true, resultCount: 3 }),
+    ).toBe("Looking…");
+  });
+
+  it("says the suggestions failed rather than that nothing matched", () => {
+    expect(toSearchHint({ ...base, value: "mug", isError: true })).toBe(
+      "Suggestions did not load. Press Enter to search the shelf.",
+    );
+  });
+
+  it("names the word that found nothing and keeps Enter on offer", () => {
+    expect(toSearchHint({ ...base, value: " zzqx " })).toBe(
+      "No suggestions for “zzqx”. Press Enter to search the shelf.",
+    );
+  });
+
+  it("cuts a long pasted run short", () => {
+    expect(toSearchHint({ ...base, value: "x".repeat(160) })).toBe(
+      `No suggestions for “${"x".repeat(32)}…”. Press Enter to search the shelf.`,
+    );
+  });
+});
+
+describe("toActiveHint", () => {
+  it("names the piece, event or session Enter will open", () => {
+    expect(toActiveHint({ label: "The Kalyug Mug", isRecent: false })).toBe(
+      "Press Enter to open The Kalyug Mug.",
+    );
+  });
+
+  it("names the recent search Enter will run", () => {
+    expect(toActiveHint({ label: "sage green", isRecent: true })).toBe(
+      "Press Enter to search the shelf for “sage green”.",
+    );
+  });
+
+  it("wins over the shelf line once a row is highlighted", () => {
+    expect(
+      toSearchHint({
+        value: "mug",
+        isPending: false,
+        isError: false,
+        resultCount: 3,
+        active: { label: "Custom mug", isRecent: false },
+      }),
+    ).toBe("Press Enter to open Custom mug.");
+  });
+});
+
+describe("filterRecentSearches", () => {
+  const recents = ["Sage green", "zzqx", "mug rack"];
+
+  it("keeps every recent search on an empty field", () => {
+    expect(filterRecentSearches(recents, "  ")).toBe(recents);
+  });
+
+  it("keeps only the ones that contain the typed text, ignoring case", () => {
+    expect(filterRecentSearches(recents, "MUG")).toEqual(["mug rack"]);
+    expect(filterRecentSearches(recents, " green ")).toEqual(["Sage green"]);
+    expect(filterRecentSearches(recents, "bowl")).toEqual([]);
   });
 });

@@ -19,23 +19,26 @@ export default async function NotFound() {
   return (
     <PageShell className="flex flex-col gap-16 py-20 md:py-28">
       <div className="flex max-w-xl flex-col items-start gap-4">
-        <p className="text-[13px] tracking-widest text-muted-foreground uppercase">
-          404
+        <p className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
+          Page not found
         </p>
         <h1 className="font-heading text-4xl leading-tight tracking-tight md:text-6xl">
           This shelf is empty
         </h1>
         <p className="max-w-sm text-[15px] text-muted-foreground">
-          The page you were looking for has been moved or never existed. The
-          rest of the studio is still here.
+          This page has moved, or it never existed. The rest of the studio is
+          still here.
         </p>
-        <div className="flex flex-wrap gap-3">
-          <Button variant="outline" asChild>
+        <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <Button asChild>
             <Link href="/products">Browse pieces</Link>
           </Button>
-          <Button variant="outline" asChild>
-            <Link href="/">Back to the studio</Link>
-          </Button>
+          <Link
+            href="/"
+            className="border-b border-ink pb-0.5 text-sm hover:border-primary hover:text-primary"
+          >
+            Back to the studio
+          </Link>
         </div>
       </div>
 

@@ -16,6 +16,7 @@ export interface SiteFooterProps {
   shopLinks: NavLink[];
   studioLinks: NavLink[];
   helpLinks: NavLink[];
+  legalLinks: NavLink[];
   address: string;
   openingHours: string;
   contactEmail: string;
@@ -54,6 +55,7 @@ export function SiteFooter({
   shopLinks,
   studioLinks,
   helpLinks,
+  legalLinks,
   address,
   openingHours,
   contactEmail,
@@ -75,7 +77,8 @@ export function SiteFooter({
   return (
     <footer
       data-print="hide"
-      className="mt-20 border-t border-ash bg-background pb-20 lg:pb-0"
+      data-site-footer=""
+      className="mt-20 border-t border-ash bg-background"
     >
       <PageShell className="py-12 md:py-16">
         {/* The column headings are h3s; this is the h2 they hang from. */}
@@ -133,9 +136,18 @@ export function SiteFooter({
           <div className="mt-12 border-t border-ash pt-8">{newsletter}</div>
         )}
 
-        <p className="mt-12 border-t border-ash pt-6 text-[13px] text-muted-foreground">
-          © {year} Poetry &amp; Pottery, Sangli.
-        </p>
+        <div className="mt-12 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-ash pt-6 text-[13px] text-muted-foreground">
+          <p>© {year} Poetry &amp; Pottery, Sangli.</p>
+          <ul className="flex gap-5">
+            {legalLinks.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href} className="link-underline">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
       </PageShell>
     </footer>
   );

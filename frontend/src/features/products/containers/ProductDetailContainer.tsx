@@ -100,6 +100,7 @@ export function ProductDetailContainer({
   );
   const [showErrors, setShowErrors] = useState(false);
   const [isBuyBoxVisible, setIsBuyBoxVisible] = useState(true);
+  const [isFooterVisible, setIsFooterVisible] = useState(false);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [activeFact, setActiveFact] = useState<string | null>(null);
   const buyBoxRef = useRef<HTMLDivElement>(null);
@@ -183,6 +184,17 @@ export function ProductDetailContainer({
       setIsBuyBoxVisible(entry?.isIntersecting ?? true),
     );
     observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  // The bar steps aside at the footer, so its last line (privacy, terms) stays tappable.
+  useEffect(() => {
+    const footer = document.querySelector("[data-site-footer]");
+    if (!footer) return;
+    const observer = new IntersectionObserver(([entry]) =>
+      setIsFooterVisible(entry?.isIntersecting ?? false),
+    );
+    observer.observe(footer);
     return () => observer.disconnect();
   }, []);
 
@@ -489,7 +501,7 @@ export function ProductDetailContainer({
       )}
 
       <StickyBuyBar
-        isVisible={!isArchived && !isBuyBoxVisible}
+        isVisible={!isArchived && !isBuyBoxVisible && !isFooterVisible}
         name={product.name}
         total={unitPrice * quantity}
         isSoldOut={stock.tone === "sold_out"}

@@ -147,7 +147,11 @@ export function SiteHeader({
               >
                 <Search className="size-5" strokeWidth={1.5} />
               </button>
-              <IconLink href="/wishlist" label="Wishlist" count={wishlistCount}>
+              <IconLink
+                href="/wishlist"
+                label="Saved pieces"
+                count={wishlistCount}
+              >
                 <Heart className="size-5" strokeWidth={1.5} />
               </IconLink>
               <span className="hidden lg:contents">
@@ -167,7 +171,7 @@ export function SiteHeader({
                 type="button"
                 onClick={onMenuClick}
                 aria-label="Menu"
-                className="ml-1 flex size-10 items-center justify-center border border-ash ghost-hover hover:border-ink lg:hidden"
+                className="flex size-10 items-center justify-center ghost-hover hover:text-primary lg:hidden"
               >
                 <Menu className="size-5" strokeWidth={1.5} />
               </button>

@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import {
   buildWhatsAppUrl,
   formatBadgeCount,
-  isActiveLink,
   isActivePath,
+  isFocusedPath,
   toCartAnnouncement,
   toFocusedHeader,
   toWhatsAppBody,
@@ -26,29 +26,6 @@ describe("isActivePath", () => {
   it("only matches home exactly", () => {
     expect(isActivePath("/", "/")).toBe(true);
     expect(isActivePath("/cart", "/")).toBe(false);
-  });
-});
-
-describe("isActiveLink", () => {
-  it("tells the shelf and the archive apart", () => {
-    expect(isActiveLink("/products", "archive", "/products")).toBe(false);
-    expect(isActiveLink("/products", "archive", "/products?view=archive")).toBe(
-      true,
-    );
-    expect(isActiveLink("/products", null, "/products")).toBe(true);
-    expect(isActiveLink("/products", null, "/products?view=archive")).toBe(
-      false,
-    );
-  });
-
-  it("ignores query keys other than the view", () => {
-    expect(isActiveLink("/products", null, "/products?sort=NEWEST")).toBe(true);
-  });
-
-  it("still requires the path to match", () => {
-    expect(isActiveLink("/custom", "archive", "/products?view=archive")).toBe(
-      false,
-    );
   });
 });
 
@@ -78,6 +55,14 @@ describe("formatBadgeCount", () => {
   it("caps at 9+", () => {
     expect(formatBadgeCount(3)).toBe("3");
     expect(formatBadgeCount(12)).toBe("9+");
+  });
+});
+
+describe("isFocusedPath", () => {
+  it("is true on checkout only", () => {
+    expect(isFocusedPath("/checkout")).toBe(true);
+    expect(isFocusedPath("/cart")).toBe(false);
+    expect(isFocusedPath("/")).toBe(false);
   });
 });
 

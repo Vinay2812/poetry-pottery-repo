@@ -9,6 +9,7 @@ import {
   AnnouncementBar,
   buildWhatsAppUrl,
   FOOTER_HELP_LINKS,
+  FOOTER_LEGAL_LINKS,
   FOOTER_SHOP_LINKS,
   FOOTER_STUDIO_LINKS,
   MobileNavContainer,
@@ -44,7 +45,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
         <main
           id="main"
           tabIndex={-1}
-          className="flex flex-1 flex-col pb-16 focus:outline-none lg:pb-0"
+          className="flex flex-1 flex-col focus:outline-none"
         >
           {children}
         </main>
@@ -52,6 +53,7 @@ export default async function StorefrontLayout({ children }: LayoutProps<"/">) {
           shopLinks={FOOTER_SHOP_LINKS}
           studioLinks={FOOTER_STUDIO_LINKS}
           helpLinks={FOOTER_HELP_LINKS}
+          legalLinks={FOOTER_LEGAL_LINKS}
           address={settings.address}
           openingHours={settings.opening_hours}
           contactEmail={settings.contact_email}

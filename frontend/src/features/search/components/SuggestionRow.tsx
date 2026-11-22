@@ -13,11 +13,13 @@ export interface SuggestionRowProps {
   imageUrl?: string | null;
   hasThumbnail?: boolean;
   isActive: boolean;
+  isDisabled?: boolean;
+  isFirst?: boolean;
   onSelect: () => void;
   onHover: () => void;
 }
 
-// One option in the listbox. Mouse down rather than click, so the field never loses focus first.
+// One option in the listbox.
 export function SuggestionRow({
   id,
   label,
@@ -25,6 +27,8 @@ export function SuggestionRow({
   imageUrl,
   hasThumbnail = false,
   isActive,
+  isDisabled = false,
+  isFirst = false,
   onSelect,
   onHover,
 }: SuggestionRowProps) {
@@ -33,13 +37,17 @@ export function SuggestionRow({
       id={id}
       role="option"
       aria-selected={isActive}
-      onMouseDown={(event) => {
-        event.preventDefault();
-        onSelect();
-      }}
-      onMouseEnter={onHover}
+      aria-disabled={isDisabled || undefined}
+      // Mouse down keeps focus in the field; the pick waits for a full click, so a right click opens nothing.
+      onMouseDown={(event) => event.preventDefault()}
+      onClick={isDisabled ? undefined : onSelect}
+      // Only a pointer that really moves takes the highlight, so a list scrolled by arrow keys keeps their pick.
+      onPointerMove={isDisabled ? undefined : onHover}
       className={cn(
-        "flex cursor-pointer items-center gap-3 px-4 py-2.5",
+        "flex items-center gap-3 px-4 py-2.5 transition-opacity",
+        // 40px clears the ~37px section heading in SearchPanel, so arrow keys never hide it; change both together.
+        isFirst && "scroll-mt-10",
+        isDisabled ? "opacity-50" : "cursor-pointer",
         isActive && "bg-ash/60",
       )}
     >

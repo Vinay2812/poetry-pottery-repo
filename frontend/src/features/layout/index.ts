@@ -10,10 +10,10 @@ export { SiteHeaderContainer } from "@/features/layout/containers/SiteHeaderCont
 export {
   buildWhatsAppUrl,
   FOOTER_HELP_LINKS,
+  FOOTER_LEGAL_LINKS,
   FOOTER_SHOP_LINKS,
   FOOTER_STUDIO_LINKS,
   formatBadgeCount,
-  isActiveLink,
   isActivePath,
   MOBILE_MENU_LINKS,
   NAV_LINKS,

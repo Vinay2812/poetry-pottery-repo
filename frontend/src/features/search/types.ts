@@ -68,6 +68,91 @@ export function nextActiveIndex(
   return (current + step + count) % count;
 }
 
+export function toInputId(panelId: string): string {
+  return `${panelId}-input`;
+}
+
 export function toOptionId(panelId: string, index: number): string {
   return `${panelId}-option-${index}`;
+}
+
+// Suggestions belong to the term they were asked for; until the field and the answer agree they are stale.
+export function isSuggestPending(
+  value: string,
+  term: string,
+  isLoading: boolean,
+): boolean {
+  return isLoading || value.trim() !== term;
+}
+
+// Stale suggestions stay painted but drop out of what arrow keys, Enter and clicks can reach.
+export function toSelectableLists(
+  lists: SuggestOptionLists,
+  isPending: boolean,
+): SuggestOptionLists {
+  if (!isPending) return lists;
+  return { recents: lists.recents, pieces: [], events: [], workshops: [] };
+}
+
+// Enough of a pasted run to recognise it, short enough that the hint never pushes the row wide.
+const HINT_EXCERPT_LENGTH = 32;
+
+function toExcerpt(text: string): string {
+  return text.length > HINT_EXCERPT_LENGTH
+    ? `${text.slice(0, HINT_EXCERPT_LENGTH)}…`
+    : text;
+}
+
+const SEARCH_SHELF_LINE = "Press Enter to search the shelf.";
+
+export interface ActiveHintRow {
+  label: string;
+  isRecent: boolean;
+}
+
+export interface SearchHintInput {
+  value: string;
+  isPending: boolean;
+  isError: boolean;
+  resultCount: number;
+  active?: ActiveHintRow | null;
+}
+
+// With a row highlighted, Enter acts on that row, so the hint names it.
+export function toActiveHint({ label, isRecent }: ActiveHintRow): string {
+  const name = toExcerpt(label);
+  return isRecent
+    ? `Press Enter to search the shelf for “${name}”.`
+    : `Press Enter to open ${name}.`;
+}
+
+// Once something is typed, only the recent searches that contain it stay, so they never crowd the matches.
+export function filterRecentSearches(
+  recents: string[],
+  value: string,
+): string[] {
+  const typed = value.trim().toLowerCase();
+  if (typed.length === 0) return recents;
+  return recents.filter((entry) => entry.toLowerCase().includes(typed));
+}
+
+// The line under the list says what the panel is doing, so an empty list never looks broken.
+export function toSearchHint({
+  value,
+  isPending,
+  isError,
+  resultCount,
+  active = null,
+}: SearchHintInput): string {
+  if (active) return toActiveHint(active);
+  const typed = value.trim();
+  if (typed.length === 0) {
+    return "Type a glaze, a clay body or what you want to use it for.";
+  }
+  // Enter opens the piece search, so every hint names the shelf rather than promising everything.
+  if (typed.length < MIN_SUGGEST_LENGTH) return SEARCH_SHELF_LINE;
+  if (isPending) return "Looking…";
+  if (isError) return `Suggestions did not load. ${SEARCH_SHELF_LINE}`;
+  if (resultCount > 0) return SEARCH_SHELF_LINE;
+  return `No suggestions for “${toExcerpt(typed)}”. ${SEARCH_SHELF_LINE}`;
 }

@@ -2,14 +2,7 @@
 
 import { useClerk, useUser } from "@clerk/nextjs";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { UserRole } from "@/graphql/generated/graphql";
 
@@ -67,20 +60,12 @@ export function SiteHeaderContainer({
   );
   // Checkout keeps the wordmark and one way back, nothing else to wander into.
   const focused = toFocusedHeader(pathname);
-  // The search panel unmounts on close, so the button that opened it takes focus back.
-  const searchOpenerRef = useRef<HTMLElement | null>(null);
+  // The search sheet hands focus back to the button that opened it.
   const handleSearchClick = useCallback(() => {
-    const opener = document.activeElement;
-    searchOpenerRef.current = opener instanceof HTMLElement ? opener : null;
     setIsMenuOpen(false);
     setIsSearchOpen(true);
   }, []);
-  const handleCloseSearch = useCallback(() => {
-    setIsSearchOpen(false);
-    requestAnimationFrame(() => {
-      if (searchOpenerRef.current?.isConnected) searchOpenerRef.current.focus();
-    });
-  }, []);
+  const handleCloseSearch = useCallback(() => setIsSearchOpen(false), []);
 
   const handleAccountClick = useCallback(() => {
     setIsMenuOpen(false);
@@ -119,19 +104,17 @@ export function SiteHeaderContainer({
         onMenuClick={() => setIsMenuOpen(true)}
       />
       <SearchMenuContainer isOpen={isSearchOpen} onClose={handleCloseSearch} />
-      <Suspense>
-        <MobileMenuContainer
-          isOpen={isMenuOpen}
-          isSignedIn={Boolean(isSignedIn)}
-          wishlistCount={wishlistCount}
-          contactPhone={contactPhone}
-          whatsappUrl={whatsappUrl}
-          onOpenChange={setIsMenuOpen}
-          onNavigate={handleCloseMenu}
-          onAccountClick={handleAccountClick}
-          onSignOut={handleSignOut}
-        />
-      </Suspense>
+      <MobileMenuContainer
+        isOpen={isMenuOpen}
+        isSignedIn={Boolean(isSignedIn)}
+        wishlistCount={wishlistCount}
+        contactPhone={contactPhone}
+        whatsappUrl={whatsappUrl}
+        onOpenChange={setIsMenuOpen}
+        onNavigate={handleCloseMenu}
+        onAccountClick={handleAccountClick}
+        onSignOut={handleSignOut}
+      />
     </>
   );
 }

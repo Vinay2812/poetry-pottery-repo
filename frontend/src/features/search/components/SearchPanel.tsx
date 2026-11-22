@@ -3,7 +3,7 @@
 import { Search, X } from "lucide-react";
 
 import { SuggestionRow } from "@/features/search/components/SuggestionRow";
-import { toOptionId } from "@/features/search/types";
+import { toInputId, toOptionId } from "@/features/search/types";
 
 export interface SearchPanelEntry {
   key: string;
@@ -17,6 +17,9 @@ export interface SearchPanelProps {
   value: string;
   activeIndex: number;
   isLoading: boolean;
+  // Rows answer an older word while the new one is looked up; they show but cannot be picked.
+  isStale?: boolean;
+  hint: string;
   recents: SearchPanelEntry[];
   pieces: SearchPanelEntry[];
   events: SearchPanelEntry[];
@@ -37,6 +40,7 @@ interface SectionProps {
   panelId: string;
   activeIndex: number;
   hasThumbnails?: boolean;
+  isDisabled?: boolean;
   onSelectIndex: (index: number) => void;
   onHoverIndex: (index: number) => void;
 }
@@ -48,6 +52,7 @@ function Section({
   panelId,
   activeIndex,
   hasThumbnails = false,
+  isDisabled = false,
   onSelectIndex,
   onHoverIndex,
 }: SectionProps) {
@@ -56,6 +61,7 @@ function Section({
     <>
       <li
         role="presentation"
+        // About 37px tall (16 + an 11px line + 6); SuggestionRow's scroll-mt-10 clears it, so change both together.
         className="px-4 pt-4 pb-1.5 text-[11px] tracking-[0.18em] text-muted-foreground uppercase"
       >
         {title}
@@ -68,7 +74,9 @@ function Section({
           note={entry.note}
           imageUrl={entry.imageUrl}
           hasThumbnail={hasThumbnails}
-          isActive={activeIndex === offset + index}
+          isActive={!isDisabled && activeIndex === offset + index}
+          isDisabled={isDisabled}
+          isFirst={index === 0}
           onSelect={() => onSelectIndex(offset + index)}
           onHover={() => onHoverIndex(offset + index)}
         />
@@ -86,6 +94,8 @@ export function SearchPanel({
   value,
   activeIndex,
   isLoading,
+  isStale = false,
+  hint,
   recents,
   pieces,
   events,
@@ -105,39 +115,44 @@ export function SearchPanel({
   const total = workshopsOffset + workshops.length;
 
   return (
-    <div className="border-b border-ash bg-background">
-      <div className="mx-auto flex w-full max-w-7xl flex-col px-4 md:px-8">
+    // On a short screen the list gives up height first, so the field and the hint stay on screen.
+    <div className="flex min-h-0 flex-col border-b border-ash bg-background">
+      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-col px-4 md:px-8">
         <form
           role="search"
           onSubmit={(event) => {
             event.preventDefault();
             onSubmit();
           }}
-          className="flex h-16 items-center gap-3"
+          className="flex h-16 shrink-0 items-center gap-3"
         >
-          <Search
-            className="size-5 shrink-0 text-muted-foreground"
-            strokeWidth={1.5}
-            aria-hidden
-          />
-          <input
-            autoFocus
-            type="search"
-            role="combobox"
-            value={value}
-            aria-label="Search the studio"
-            aria-expanded={total > 0}
-            aria-controls={listboxId}
-            aria-autocomplete="list"
-            aria-activedescendant={
-              activeIndex >= 0 ? toOptionId(panelId, activeIndex) : undefined
-            }
-            placeholder="Try “tea cup”, “sage green” or “wheel session”"
-            autoComplete="off"
-            onChange={(event) => onChange(event.target.value)}
-            onKeyDown={onKeyDown}
-            className="h-10 w-full min-w-0 bg-transparent text-[15px] outline-none placeholder:text-muted-foreground"
-          />
+          {/* The outline wraps the icon and the field together, the way the shelf's search box does. */}
+          <div className="flex h-10 min-w-0 flex-1 items-center gap-3 has-[input:focus-visible]:outline-2 has-[input:focus-visible]:outline-offset-2 has-[input:focus-visible]:outline-ink">
+            <Search
+              className="size-5 shrink-0 text-muted-foreground"
+              strokeWidth={1.5}
+              aria-hidden
+            />
+            <input
+              autoFocus
+              id={toInputId(panelId)}
+              type="search"
+              role="combobox"
+              value={value}
+              aria-label="Search the studio"
+              aria-expanded={total > 0}
+              aria-controls={listboxId}
+              aria-autocomplete="list"
+              aria-activedescendant={
+                activeIndex >= 0 ? toOptionId(panelId, activeIndex) : undefined
+              }
+              placeholder="Try “tea cup”, “sage green” or “wheel session”"
+              autoComplete="off"
+              onChange={(event) => onChange(event.target.value)}
+              onKeyDown={onKeyDown}
+              className="h-10 w-full min-w-0 bg-transparent text-[15px] placeholder:text-muted-foreground focus-visible:outline-none"
+            />
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -154,7 +169,8 @@ export function SearchPanel({
           role="listbox"
           aria-label="Suggestions"
           aria-busy={isLoading}
-          className="max-h-[60vh] overflow-y-auto pb-3"
+          // Rows bleed 16px past the column so their text lines up with the field's icon.
+          className="-mx-4 max-h-[60vh] min-h-0 overflow-y-auto pb-3"
         >
           <Section
             title="Recent searches"
@@ -167,6 +183,7 @@ export function SearchPanel({
           />
           <Section
             title="Pieces"
+            isDisabled={isStale}
             entries={pieces}
             offset={piecesOffset}
             panelId={panelId}
@@ -176,7 +193,8 @@ export function SearchPanel({
             onHoverIndex={onHoverIndex}
           />
           <Section
-            title="Evenings"
+            title="Events"
+            isDisabled={isStale}
             entries={events}
             offset={eventsOffset}
             panelId={panelId}
@@ -185,7 +203,8 @@ export function SearchPanel({
             onHoverIndex={onHoverIndex}
           />
           <Section
-            title="At the wheel"
+            title="Wheel sessions"
+            isDisabled={isStale}
             entries={workshops}
             offset={workshopsOffset}
             panelId={panelId}
@@ -195,18 +214,19 @@ export function SearchPanel({
           />
         </ul>
 
-        <div className="flex items-center justify-between gap-4 border-t border-ash py-3">
-          <p className="text-[13px] text-muted-foreground">
-            {value.trim().length > 0
-              ? "Press Enter to search everything."
-              : "Type a glaze, a clay body or what you want to use it for."}
+        <div className="flex shrink-0 items-start justify-between gap-4 border-t border-ash py-3">
+          <p
+            aria-live="polite"
+            className="min-w-0 text-[13px] [overflow-wrap:anywhere] text-muted-foreground"
+          >
+            {hint}
           </p>
           {recents.length > 0 && (
             <button
               type="button"
               onMouseDown={(event) => event.preventDefault()}
               onClick={onClearRecents}
-              className="link-underline text-[13px] text-muted-foreground"
+              className="shrink-0 link-underline text-[13px] text-muted-foreground"
             >
               Clear recent searches
             </button>
