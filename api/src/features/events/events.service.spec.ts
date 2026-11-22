@@ -11,6 +11,7 @@ import {
   EventsService,
   eventWhenWhere,
   isPastEvent,
+  PAID_SEAT_FINAL,
 } from "./events.service";
 import { SEAT_HOLDING } from "./registration-status";
 import { EventWhen } from "./events.type";
@@ -552,12 +553,12 @@ describe("EventsService", () => {
     );
   });
 
-  it("refuses cancellation once confirmed or after the event started", async () => {
+  it("keeps a paid seat final and refuses any seat once the event has started", async () => {
     prismaMock.eventRegistration.findFirst.mockResolvedValue(
       registrationRow({ status: RegistrationStatus.CONFIRMED }),
     );
     await expect(service.cancel(1, "EV-1", null)).rejects.toThrow(
-      "no longer be cancelled",
+      PAID_SEAT_FINAL,
     );
 
     prismaMock.eventRegistration.findFirst.mockResolvedValue(
@@ -567,6 +568,27 @@ describe("EventsService", () => {
     );
     await expect(service.cancel(1, "EV-1", null)).rejects.toThrow(
       "no longer be cancelled",
+    );
+    expect(prismaMock.eventRegistration.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("lets a confirmed free seat go before the event", async () => {
+    prismaMock.eventRegistration.findFirst.mockResolvedValue(
+      registrationRow({
+        status: RegistrationStatus.CONFIRMED,
+        unit_price: 0,
+        total: 0,
+      }),
+    );
+    prismaMock.eventRegistration.findUniqueOrThrow.mockResolvedValue(
+      registrationRow({ status: RegistrationStatus.CANCELLED, total: 0 }),
+    );
+
+    await service.cancel(1, "EV-1", null);
+    expect(prismaMock.eventRegistration.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "EV-1", status: RegistrationStatus.CONFIRMED },
+      }),
     );
   });
 

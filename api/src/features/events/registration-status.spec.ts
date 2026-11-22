@@ -7,6 +7,8 @@ import {
   assertNotLateAdmission,
   assertNotPaymentStepForFreeSeat,
   canTransition,
+  customerCanCancel,
+  isPaidPlace,
   nextAdminStatuses,
   releasesSeats,
   takesSeats,
@@ -129,5 +131,29 @@ describe("registration status rules", () => {
     expect(
       takesSeats(RegistrationStatus.PENDING, RegistrationStatus.APPROVED),
     ).toBe(false);
+  });
+});
+
+describe("customer cancellation", () => {
+  it("treats only a confirmed place with money taken as paid", () => {
+    expect(isPaidPlace(RegistrationStatus.CONFIRMED, 1800)).toBe(true);
+    expect(isPaidPlace(RegistrationStatus.CONFIRMED, 0)).toBe(false);
+    expect(isPaidPlace(RegistrationStatus.APPROVED, 1800)).toBe(false);
+  });
+
+  it("lets a guest withdraw before the date while nothing is paid", () => {
+    const cases: [RegistrationStatus, number, Date, boolean][] = [
+      [RegistrationStatus.PENDING, 1800, AHEAD, true],
+      [RegistrationStatus.APPROVED, 1800, AHEAD, true],
+      [RegistrationStatus.CONFIRMED, 1800, AHEAD, false],
+      [RegistrationStatus.CONFIRMED, 0, AHEAD, true],
+      [RegistrationStatus.CONFIRMED, 0, BEGUN, false],
+      [RegistrationStatus.APPROVED, 1800, BEGUN, false],
+      [RegistrationStatus.CANCELLED, 0, AHEAD, false],
+      [RegistrationStatus.REJECTED, 1800, AHEAD, false],
+    ];
+    for (const [status, total, startsAt, expected] of cases) {
+      expect(customerCanCancel(status, total, startsAt, NOW)).toBe(expected);
+    }
   });
 });

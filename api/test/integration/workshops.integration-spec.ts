@@ -10,7 +10,6 @@ import {
   resetData,
   studioHour,
 } from "./harness";
-import { toWallClock } from "@/features/workshops/schedule";
 
 const RACERS = 20;
 
@@ -111,83 +110,6 @@ describe("open-studio booking under concurrency", () => {
         where: { starts_at: free },
       }),
     ).toBe(0);
-  });
-
-  it("moves only one booking into the last free hour", async () => {
-    const studio = await makeStudio(harness.prisma, 1);
-    const users = await makeUsers(harness.prisma, 2);
-    const [first, second] = users;
-    if (!first || !second) throw new Error("no users");
-    const target = studioHour(studio, 3, 2);
-    const one = await harness.workshops.book(first.id, {
-      accepted_terms: true,
-      config_slug: studio.slug,
-      slot_starts: [studioHour(studio, 3, 0)],
-      hours: 1,
-      participants: 1,
-    });
-    const two = await harness.workshops.book(second.id, {
-      accepted_terms: true,
-      config_slug: studio.slug,
-      slot_starts: [studioHour(studio, 3, 1)],
-      hours: 1,
-      participants: 1,
-    });
-
-    const outcome = await race([
-      () =>
-        harness.workshops.reschedule(first.id, {
-          booking_id: one.id,
-          slot_starts: [target],
-        }),
-      () =>
-        harness.workshops.reschedule(second.id, {
-          booking_id: two.id,
-          slot_starts: [target],
-        }),
-    ]);
-
-    expect(outcome.wins).toHaveLength(1);
-    expect(
-      await harness.prisma.workshopBookingSlot.count({
-        where: { starts_at: target },
-      }),
-    ).toBe(1);
-    expect(await harness.prisma.workshopBookingSlot.count()).toBe(2);
-  });
-
-  it("shows a booking's own hours as free only to the guest who holds it", async () => {
-    const studio = await makeStudio(harness.prisma, 1);
-    const users = await makeUsers(harness.prisma, 2);
-    const [owner, stranger] = users;
-    if (!owner || !stranger) throw new Error("no users");
-    const hour = studioHour(studio, 3, 0);
-    const booking = await harness.workshops.book(owner.id, {
-      accepted_terms: true,
-      config_slug: studio.slug,
-      slot_starts: [hour],
-      hours: 1,
-      participants: 1,
-    });
-    const from = toWallClock(hour, studio.timezone).date;
-    const remainingFor = async (viewerId: number | null) => {
-      const [day] = await harness.workshops.availability(
-        {
-          config_slug: studio.slug,
-          from,
-          days: 1,
-          exclude_booking_id: booking.id,
-        },
-        viewerId,
-      );
-      return day?.slots.find(
-        (slot) => slot.starts_at.getTime() === hour.getTime(),
-      )?.remaining;
-    };
-
-    expect(await remainingFor(owner.id)).toBe(1);
-    expect(await remainingFor(stranger.id)).toBe(0);
-    expect(await remainingFor(null)).toBe(0);
   });
 
   it("cancels a booking once and frees the hour exactly once", async () => {

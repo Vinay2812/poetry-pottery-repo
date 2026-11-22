@@ -459,7 +459,7 @@ describe("OrdersService", () => {
       );
 
       await expect(service.cancel(1, "ORD123", null)).rejects.toThrow(
-        "no longer be cancelled",
+        "Paid orders can't be cancelled",
       );
       expect(prismaMock.order.updateMany).not.toHaveBeenCalled();
     });

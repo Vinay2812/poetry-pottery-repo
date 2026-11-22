@@ -370,7 +370,7 @@ export class OrdersService {
       }
       if (!CUSTOMER_CANCELLABLE.includes(current.status)) {
         throw new BadRequestException(
-          "This order can no longer be cancelled online. Message us on WhatsApp and we will sort it out.",
+          "Paid orders can't be cancelled. If something is wrong with your order, message us on WhatsApp.",
         );
       }
       return this.applyStatus(current, OrderStatus.CANCELLED, {

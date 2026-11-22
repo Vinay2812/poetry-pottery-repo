@@ -176,9 +176,6 @@ export class WorkshopBooking {
   can_cancel!: boolean;
 
   @Field()
-  can_reschedule!: boolean;
-
-  @Field()
   created_at!: Date;
 
   @Field(() => Date, { nullable: true })
@@ -213,10 +210,6 @@ export class WorkshopAvailabilityInput {
 
   @Field(() => Int, { nullable: true, defaultValue: 14 })
   days!: number;
-
-  // Counts that booking's own hours as free, honoured only for the booking's owner.
-  @Field(() => String, { nullable: true })
-  exclude_booking_id?: string | null;
 }
 
 @InputType()
@@ -239,13 +232,4 @@ export class BookWorkshopInput {
   // The shopper ticked the terms box; refused unless true.
   @Field(() => Boolean)
   accepted_terms!: boolean;
-}
-
-@InputType()
-export class RescheduleWorkshopInput {
-  @Field()
-  booking_id!: string;
-
-  @Field(() => [Date])
-  slot_starts!: Date[];
 }

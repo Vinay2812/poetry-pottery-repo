@@ -16,6 +16,7 @@ import {
 } from "@/common/pagination/pagination";
 import { env } from "@/config/env";
 import { MailService } from "@/mail/mail.service";
+import type { ClosingContext } from "@/mail/templates/layout";
 import {
   bookingPlacedCustomerMail,
   bookingPlacedStudioMail,
@@ -25,7 +26,8 @@ import { LockNamespace } from "@/prisma/lock";
 import { PrismaService } from "@/prisma/prisma.service";
 import {
   canTransition,
-  CUSTOMER_CANCELLABLE,
+  customerCanCancel,
+  isPaidPlace,
   SEAT_HOLDING,
   STATUS_TIMESTAMP,
 } from "@/features/events/registration-status";
@@ -39,7 +41,6 @@ import {
 } from "./schedule";
 import type {
   BookWorkshopInput,
-  RescheduleWorkshopInput,
   WorkshopAvailabilityInput,
   WorkshopBooking,
   WorkshopBookingsResult,
@@ -48,6 +49,9 @@ import type {
 } from "./workshops.type";
 
 const MAX_AVAILABILITY_DAYS = 31;
+
+export const PAID_SESSION_FINAL =
+  "Paid sessions can't be cancelled. If you can't come, someone else can take your place. Message us on WhatsApp.";
 const DATE_KEY = /^\d{4}-\d{2}-\d{2}$/;
 
 export const configInclude = {
@@ -77,8 +81,6 @@ export function toConfig(row: ConfigRow): WorkshopConfig {
 }
 
 export function toBooking(row: BookingRow, now = new Date()): WorkshopBooking {
-  const changeable =
-    CUSTOMER_CANCELLABLE.includes(row.status) && row.starts_at > now;
   return {
     id: row.id,
     config: toConfig(row.config),
@@ -98,10 +100,7 @@ export function toBooking(row: BookingRow, now = new Date()): WorkshopBooking {
     status: row.status,
     note: row.note,
     cancel_reason: row.cancel_reason,
-    can_cancel: changeable,
-    can_reschedule:
-      changeable ||
-      (row.status === RegistrationStatus.CONFIRMED && row.starts_at > now),
+    can_cancel: customerCanCancel(row.status, row.total, row.starts_at, now),
     created_at: row.created_at,
     approved_at: row.approved_at,
     confirmed_at: row.confirmed_at,
@@ -138,10 +137,7 @@ export class WorkshopsService {
   }
 
   // A foreign or unknown booking id is ignored, so the answer is never more than the public view.
-  async availability(
-    input: WorkshopAvailabilityInput,
-    viewerId: number | null = null,
-  ): Promise<WorkshopDay[]> {
+  async availability(input: WorkshopAvailabilityInput): Promise<WorkshopDay[]> {
     if (!DATE_KEY.test(input.from)) {
       throw new BadRequestException("from must be a YYYY-MM-DD date");
     }
@@ -154,17 +150,6 @@ export class WorkshopsService {
     const rangeStart = new Date(`${input.from}T00:00:00.000Z`);
     rangeStart.setUTCDate(rangeStart.getUTCDate() - 1);
     const rangeEnd = new Date(`${addDays(input.from, days + 1)}T00:00:00.000Z`);
-    const excluded =
-      input.exclude_booking_id && viewerId !== null
-        ? await this.prisma.workshopBooking.findFirst({
-            where: {
-              id: input.exclude_booking_id,
-              user_id: viewerId,
-              config_id: config.id,
-            },
-            select: { id: true },
-          })
-        : null;
     const [blackouts, occupants] = await Promise.all([
       this.prisma.workshopBlackout.findMany({
         where: {
@@ -173,12 +158,7 @@ export class WorkshopsService {
           ends_at: { gt: rangeStart },
         },
       }),
-      this.activeBookings(
-        config.id,
-        rangeStart,
-        rangeEnd,
-        excluded?.id ?? null,
-      ),
+      this.activeBookings(config.id, rangeStart, rangeEnd),
     ]);
     return buildAvailability({
       config,
@@ -239,65 +219,6 @@ export class WorkshopsService {
     });
     const booking = toBooking(row);
     await this.notifyPlaced(userId, booking);
-    return booking;
-  }
-
-  async reschedule(
-    userId: number,
-    input: RescheduleWorkshopInput,
-  ): Promise<WorkshopBooking> {
-    const row = await this.prisma.withTransaction(async () => {
-      const current = await this.prisma.workshopBooking.findFirst({
-        where: { id: input.booking_id, user_id: userId },
-        include: bookingInclude,
-      });
-      if (!current) {
-        throw new NotFoundException("Booking not found");
-      }
-      if (!toBooking(current).can_reschedule) {
-        throw new BadRequestException(
-          "This booking can no longer be moved online. Message us on WhatsApp and we will help.",
-        );
-      }
-      await this.lock(current.config_id);
-      const request = {
-        slot_starts: [...input.slot_starts].sort(
-          (a, b) => a.getTime() - b.getTime(),
-        ),
-        hours: current.hours,
-        participants: current.participants,
-      };
-      await this.assertSlots(current.config, request, current.id);
-      const bounds = slotBounds(
-        request.slot_starts,
-        current.config.slot_minutes,
-      );
-      // Predicated on the status we read, so a cancellation landing mid-move is not overwritten.
-      const moved = await this.prisma.workshopBooking.updateMany({
-        where: { id: current.id, status: current.status },
-        data: { starts_at: bounds.starts_at, ends_at: bounds.ends_at },
-      });
-      if (moved.count === 0) {
-        throw new ConflictException(
-          "This booking was just updated, refresh and try again",
-        );
-      }
-      // The whole set is replaced, so a move can drop, add or shuffle days at once.
-      await this.prisma.workshopBookingSlot.deleteMany({
-        where: { booking_id: current.id },
-      });
-      return this.prisma.workshopBooking.update({
-        where: { id: current.id },
-        data: {
-          slots: {
-            create: this.toSlotRows(request.slot_starts, current.config),
-          },
-        },
-        include: bookingInclude,
-      });
-    });
-    const booking = toBooking(row);
-    await this.notifyStatus(userId, booking, "rescheduled");
     return booking;
   }
 
@@ -376,6 +297,9 @@ export class WorkshopsService {
       if (!current) {
         throw new NotFoundException("Booking not found");
       }
+      if (isPaidPlace(current.status, current.total)) {
+        throw new BadRequestException(PAID_SESSION_FINAL);
+      }
       if (!toBooking(current).can_cancel) {
         throw new BadRequestException(
           "This booking can no longer be cancelled online. Message us on WhatsApp and we will help.",
@@ -448,7 +372,10 @@ export class WorkshopsService {
         include: bookingInclude,
       });
       // Queued on the transaction, so the guest hears only about a move that committed.
-      await this.notifyStatus(current.user_id, toBooking(row), "status");
+      await this.notifyStatus(current.user_id, toBooking(row), {
+        byStudio: cancelledBy !== "USER",
+        wasPaid: isPaidPlace(current.status, current.total),
+      });
       return row;
     });
   }
@@ -456,9 +383,9 @@ export class WorkshopsService {
   private async notifyStatus(
     userId: number,
     booking: WorkshopBooking,
-    kind: "status" | "rescheduled",
+    closing: ClosingContext,
   ): Promise<void> {
-    const mail = bookingStatusMail(booking, kind);
+    const mail = bookingStatusMail(booking, closing);
     if (!mail) return;
     const user = await this.prisma.user.findUnique({
       where: { id: userId },

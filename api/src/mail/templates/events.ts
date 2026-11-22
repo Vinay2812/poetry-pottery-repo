@@ -1,5 +1,5 @@
 import type { Registration } from "@/features/events/events.type";
-import { renderMail } from "./layout";
+import { type ClosingContext, renderMail } from "./layout";
 
 const inr = (value: number): string => `₹${value.toLocaleString("en-IN")}`;
 const when = (date: Date): string =>
@@ -68,8 +68,22 @@ export function registrationPlacedStudioMail(
   return { subject: `New seat request · ${registration.event.title}`, ...body };
 }
 
+function cancelledIntro(
+  registration: Registration,
+  closing: ClosingContext,
+): string {
+  const base = registration.cancel_reason
+    ? `Your booking ${registration.id} for ${registration.event.title} was cancelled: ${registration.cancel_reason}`
+    : `Your booking ${registration.id} for ${registration.event.title} has been cancelled.`;
+  if (!closing.byStudio) return base;
+  return closing.wasPaid
+    ? `${base} Sorry for the change. You can choose a full refund or a seat at another event. Message us on WhatsApp and tell us which you would like.`
+    : `${base} Sorry for the change.`;
+}
+
 export function registrationStatusMail(
   registration: Registration,
+  closing: ClosingContext = { byStudio: false, wasPaid: false },
 ): { subject: string; html: string; text: string } | null {
   const copy: Partial<
     Record<Registration["status"], { title: string; intro: string }>
@@ -93,7 +107,7 @@ export function registrationStatusMail(
     },
     CANCELLED: {
       title: "Booking cancelled",
-      intro: `Your booking ${registration.id} for ${registration.event.title} has been cancelled.`,
+      intro: cancelledIntro(registration, closing),
     },
   };
   const entry = copy[registration.status];

@@ -5,16 +5,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AuthUser } from "@/common/clerk/clerk.type";
 import { AuthGuard } from "@/common/guards/auth.guard";
-import type {
-  AppRequest,
-  AppResponse,
-  GqlContext,
-} from "@/common/types/express";
 import { configInclude, WorkshopsService } from "./workshops.service";
 import { WorkshopsResolver } from "./workshops.resolver";
 import type {
   BookWorkshopInput,
-  RescheduleWorkshopInput,
   WorkshopAvailabilityInput,
   WorkshopBooking,
   WorkshopBookingsResult,
@@ -45,11 +39,6 @@ function session(dbUserId: number): AuthUser {
     role: UserRole.USER,
     auth_id: `user_${dbUserId}`,
   };
-}
-
-// The resolver only hands the request to the guard, so a bare stub stands in for express's.
-function gqlContext(request: Partial<AppRequest> = {}): GqlContext {
-  return { req: request as AppRequest, res: {} as AppResponse };
 }
 
 function makeConfig(overrides: Partial<WorkshopConfig> = {}): WorkshopConfig {
@@ -112,7 +101,6 @@ function makeBooking(
     note: null,
     cancel_reason: null,
     can_cancel: true,
-    can_reschedule: true,
     created_at: new Date("2026-01-01T00:00:00.000Z"),
     approved_at: null,
     confirmed_at: null,
@@ -162,7 +150,6 @@ const workshopsMock = {
   configBySlug: vi.fn<WorkshopsService["configBySlug"]>(),
   availability: vi.fn<WorkshopsService["availability"]>(),
   book: vi.fn<WorkshopsService["book"]>(),
-  reschedule: vi.fn<WorkshopsService["reschedule"]>(),
   myBookings: vi.fn<WorkshopsService["myBookings"]>(),
   bookingById: vi.fn<WorkshopsService["bookingById"]>(),
   cancel: vi.fn<WorkshopsService["cancel"]>(),
@@ -217,30 +204,16 @@ describe("WorkshopsResolver", () => {
     const days = [makeDay()];
     workshopsMock.availability.mockResolvedValue(days);
 
-    await expect(
-      resolver.workshopAvailability(input, gqlContext()),
-    ).resolves.toBe(days);
-    expect(workshopsMock.availability).toHaveBeenCalledWith(input, null);
-    // Without a booking to exclude, a public read never touches the session.
+    await expect(resolver.workshopAvailability(input)).resolves.toBe(days);
+    expect(workshopsMock.availability).toHaveBeenCalledWith(input);
+    // A public read never touches the session.
     expect(authGuardMock.tryAuthenticate).not.toHaveBeenCalled();
   });
 
-  it("names the session's own user, never one from the input, when excluding a booking", async () => {
-    const input: WorkshopAvailabilityInput = {
-      config_slug: "open-studio",
-      from: "2026-02-01",
-      days: 14,
-      exclude_booking_id: "WS-1",
-    };
-    workshopsMock.availability.mockResolvedValue([]);
-    authGuardMock.tryAuthenticate.mockResolvedValueOnce(session(7));
-
-    await resolver.workshopAvailability(input, gqlContext());
-    expect(workshopsMock.availability).toHaveBeenCalledWith(input, 7);
-
-    authGuardMock.tryAuthenticate.mockResolvedValueOnce(null);
-    await resolver.workshopAvailability(input, gqlContext());
-    expect(workshopsMock.availability).toHaveBeenLastCalledWith(input, null);
+  it("offers customers no way to move a booking", () => {
+    expect(
+      Object.getOwnPropertyNames(WorkshopsResolver.prototype),
+    ).not.toContain("rescheduleWorkshopBooking");
   });
 
   it("books for the session, not for anyone named in the input", async () => {
@@ -252,21 +225,6 @@ describe("WorkshopsResolver", () => {
       booking,
     );
     expect(workshopsMock.book).toHaveBeenCalledWith(7, input);
-  });
-
-  it("reschedules under the session, not under the booking id in the input", async () => {
-    const input: RescheduleWorkshopInput = {
-      booking_id: "bk_1",
-      slot_starts: [new Date("2026-02-08T07:30:00.000Z")],
-    };
-    const booking = makeBooking();
-    workshopsMock.reschedule.mockResolvedValue(booking);
-
-    await expect(
-      resolver.rescheduleWorkshopBooking(session(7), input),
-    ).resolves.toBe(booking);
-    expect(workshopsMock.reschedule).toHaveBeenCalledWith(7, input);
-    expect(workshopsMock.reschedule).not.toHaveBeenCalledWith("bk_1", input);
   });
 
   it("lists the session's bookings with the page ahead of the limit", async () => {
@@ -340,7 +298,6 @@ describe("WorkshopsResolver", () => {
   it("guards every field about a visitor's own bookings", () => {
     const fields = [
       "bookWorkshop",
-      "rescheduleWorkshopBooking",
       "myWorkshopBookings",
       "workshopBooking",
       "cancelWorkshopBooking",

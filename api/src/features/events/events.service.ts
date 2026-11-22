@@ -16,6 +16,7 @@ import {
 } from "@/common/pagination/pagination";
 import { env } from "@/config/env";
 import { MailService } from "@/mail/mail.service";
+import type { ClosingContext } from "@/mail/templates/layout";
 import {
   registrationPlacedCustomerMail,
   registrationPlacedStudioMail,
@@ -26,6 +27,8 @@ import { SearchService } from "@/features/search/search.service";
 import {
   canTransition,
   CUSTOMER_CANCELLABLE,
+  customerCanCancel,
+  isPaidPlace,
   releasesSeats,
   SEAT_HOLDING,
   STATUS_TIMESTAMP,
@@ -43,6 +46,9 @@ import {
 
 export const MAX_SEATS_PER_REGISTRATION = 4;
 const SEARCH_CANDIDATES = 100;
+
+export const PAID_SEAT_FINAL =
+  "Paid seats can't be cancelled. If you can't come, someone else can take your place. Message us on WhatsApp.";
 
 type EventRow = Prisma.EventGetPayload<Record<string, never>>;
 
@@ -89,8 +95,12 @@ export function toRegistration(
     status: row.status,
     note: row.note,
     cancel_reason: row.cancel_reason,
-    can_cancel:
-      CUSTOMER_CANCELLABLE.includes(row.status) && row.event.starts_at > now,
+    can_cancel: customerCanCancel(
+      row.status,
+      row.total,
+      row.event.starts_at,
+      now,
+    ),
     created_at: row.created_at,
     approved_at: row.approved_at,
     confirmed_at: row.confirmed_at,
@@ -413,6 +423,9 @@ export class EventsService {
       if (!current) {
         throw new NotFoundException("Registration not found");
       }
+      if (isPaidPlace(current.status, current.total)) {
+        throw new BadRequestException(PAID_SEAT_FINAL);
+      }
       if (!toRegistration(current).can_cancel) {
         throw new BadRequestException(
           "This registration can no longer be cancelled online. Message us on WhatsApp and we will help.",
@@ -423,6 +436,7 @@ export class EventsService {
         RegistrationStatus.CANCELLED,
         // The admin console reads this exact text as who cancelled (frontend admin/ui/types.ts).
         reason?.trim().slice(0, 300) || "Cancelled by the guest",
+        true,
       );
     });
     return toRegistration(row);
@@ -433,6 +447,7 @@ export class EventsService {
     current: RegistrationRow,
     next: RegistrationStatus,
     cancelReason: string | null = null,
+    byGuest = false,
   ): Promise<RegistrationRow> {
     if (!canTransition(current.status, next)) {
       throw new BadRequestException(
@@ -482,7 +497,10 @@ export class EventsService {
         include: registrationInclude,
       });
       // Queued on the transaction, so the guest hears only about a move that committed.
-      await this.notifyStatus(current.user_id, toRegistration(row));
+      await this.notifyStatus(current.user_id, toRegistration(row), {
+        byStudio: !byGuest,
+        wasPaid: isPaidPlace(current.status, current.total),
+      });
       return row;
     });
   }
@@ -490,8 +508,9 @@ export class EventsService {
   private async notifyStatus(
     userId: number,
     registration: Registration,
+    closing: ClosingContext,
   ): Promise<void> {
-    const mail = registrationStatusMail(registration);
+    const mail = registrationStatusMail(registration, closing);
     if (!mail) return;
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
