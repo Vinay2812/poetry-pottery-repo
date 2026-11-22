@@ -6,6 +6,7 @@ import { useCallback, useOptimistic, useState } from "react";
 import { OrderStatus } from "@/graphql/generated/graphql";
 
 import { formatDateTime, formatInr } from "@/lib/format";
+import { toClosedLabel, toTimelineDate, toTimelineSteps } from "@/lib/timeline";
 
 import { PageShell } from "@/components/layout/PageShell";
 
@@ -18,14 +19,13 @@ import { useCancelOrder, useOrder, useReorder } from "@/features/orders/hooks";
 import {
   applyOrderCancellation,
   isClosed,
-  ORDER_STEPS,
+  ORDER_STAGES,
   showsPlacedBanner,
   toArrivalWindow,
   toDeliveredCareLines,
   toFirstName,
   toStatusLabel,
   toStatusTone,
-  toStepIndex,
   toWhatsAppOrderMessage,
 } from "@/features/orders/types";
 import { toProductPath } from "@/features/products/types";
@@ -103,25 +103,25 @@ export function OrderDetailContainer({
     );
   }
 
-  const dates: Record<string, string | null> = {
-    PENDING: formatDateTime(optimisticOrder.created_at),
-    CONFIRMED: optimisticOrder.confirmed_at
-      ? formatDateTime(optimisticOrder.confirmed_at)
-      : null,
-    PAID: optimisticOrder.paid_at
-      ? formatDateTime(optimisticOrder.paid_at)
-      : null,
-    SHIPPED: optimisticOrder.shipped_at
-      ? formatDateTime(optimisticOrder.shipped_at)
-      : null,
-    DELIVERED: optimisticOrder.delivered_at
-      ? formatDateTime(optimisticOrder.delivered_at)
-      : null,
+  const dates: Partial<Record<OrderStatus, string | null>> = {
+    [OrderStatus.Pending]: toTimelineDate(optimisticOrder.created_at),
+    [OrderStatus.Confirmed]: toTimelineDate(optimisticOrder.confirmed_at),
+    [OrderStatus.Paid]: toTimelineDate(optimisticOrder.paid_at),
+    [OrderStatus.Shipped]: toTimelineDate(optimisticOrder.shipped_at),
+    [OrderStatus.Delivered]: toTimelineDate(optimisticOrder.delivered_at),
   };
   const closed = isClosed(optimisticOrder.status);
+  const closedAt =
+    optimisticOrder.status === OrderStatus.Refunded
+      ? optimisticOrder.refunded_at
+      : optimisticOrder.cancelled_at;
   const isDelivered = optimisticOrder.status === OrderStatus.Delivered;
   const closedLabel = closed
-    ? `${toStatusLabel(optimisticOrder.status)}${optimisticOrder.cancelled_at ? ` on ${formatDateTime(optimisticOrder.cancelled_at)}` : ""}${optimisticOrder.cancel_reason ? ` · ${optimisticOrder.cancel_reason}` : ""}`
+    ? toClosedLabel(
+        toStatusLabel(optimisticOrder.status),
+        toTimelineDate(closedAt),
+        optimisticOrder.cancel_reason,
+      )
     : null;
   const whatsappUrl = whatsappNumber
     ? buildWhatsAppUrl(
@@ -156,14 +156,12 @@ export function OrderDetailContainer({
         )}
         transitLine={TRANSIT_LINE}
         emailedTo={user?.primaryEmailAddress?.emailAddress ?? null}
-        steps={ORDER_STEPS.map((step) => ({
-          key: step.key,
-          label: step.label,
-          description: step.description,
-          date: dates[step.key] ?? null,
-        }))}
-        currentStepIndex={toStepIndex(optimisticOrder.status, dates)}
-        isClosed={closed}
+        steps={toTimelineSteps({
+          stages: ORDER_STAGES,
+          status: optimisticOrder.status,
+          dates,
+          isClosed: closed,
+        })}
         closedLabel={closedLabel}
         items={optimisticOrder.items.map((item) => ({
           id: item.id,
@@ -211,7 +209,7 @@ export function OrderDetailContainer({
         customerNote={optimisticOrder.customer_note}
         giftNote={optimisticOrder.gift_note}
         hasHiddenPrices={optimisticOrder.hide_prices}
-        trackingNote={optimisticOrder.tracking_note}
+        trackingNote={closed ? null : optimisticOrder.tracking_note}
         whatsappUrl={whatsappUrl}
         canCancel={optimisticOrder.can_cancel}
         isCancelling={isCancelling}

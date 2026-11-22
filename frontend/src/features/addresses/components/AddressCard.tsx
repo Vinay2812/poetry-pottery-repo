@@ -1,5 +1,8 @@
 import { Button } from "@/components/ui/button";
-import { toAddressLines } from "@/features/addresses/types";
+import {
+  toAddressLines,
+  toAddressShortLabel,
+} from "@/features/addresses/types";
 import { cn } from "@/lib/utils";
 
 export interface AddressCardProps {
@@ -20,8 +23,9 @@ export interface AddressCardProps {
   onMakeDefault: () => void;
 }
 
+// The padding gives each action a full-height tap target; the negative margin keeps the row tight.
 const TEXT_LINK =
-  "text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
+  "-my-2 py-2 text-[13px] text-muted-foreground underline-offset-4 hover:text-foreground hover:underline";
 
 export function AddressCard({
   name,
@@ -40,6 +44,8 @@ export function AddressCard({
   onDelete,
   onMakeDefault,
 }: AddressCardProps) {
+  // Visible text stays first so voice control still matches "Edit" or "Remove".
+  const addressSuffix = `: ${toAddressShortLabel(line1, city)}`;
   return (
     <div
       className={cn(
@@ -67,24 +73,19 @@ export function AddressCard({
             <span className="text-[13px]">Delivering here</span>
           ) : (
             <Button variant="outline" size="sm" onClick={onSelect}>
-              Deliver here
+              Deliver here<span className="sr-only">{addressSuffix}</span>
             </Button>
           ))}
         <button type="button" onClick={onEdit} className={TEXT_LINK}>
-          Edit
+          Edit<span className="sr-only">{addressSuffix}</span>
         </button>
         {!isDefault && (
           <button type="button" onClick={onMakeDefault} className={TEXT_LINK}>
-            Make default
+            Make default<span className="sr-only">{addressSuffix}</span>
           </button>
         )}
-        <button
-          type="button"
-          onClick={onDelete}
-          aria-label={`Remove the address for ${name}`}
-          className={TEXT_LINK}
-        >
-          Remove
+        <button type="button" onClick={onDelete} className={TEXT_LINK}>
+          Remove<span className="sr-only">{addressSuffix}</span>
         </button>
       </div>
     </div>

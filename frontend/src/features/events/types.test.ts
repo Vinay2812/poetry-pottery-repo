@@ -10,6 +10,9 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
+import { toRepeatedPhrases } from "@/lib/testing/timeline";
+import { toTimelineSteps } from "@/lib/timeline";
+
 import {
   toEventsFilterKey,
   applyRegistrationCancellation,
@@ -25,7 +28,7 @@ import {
   toRegistrationPath,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
-  toRegistrationStepIndex,
+  REGISTRATION_STAGES,
   toEventWhenLabel,
   toEventWhenRangeLabel,
   toEventFacts,
@@ -38,7 +41,6 @@ import {
   isRequestBannerShown,
   isSeatPriceShown,
   toEventCardSeatsLabel,
-  toRequestReceiptLine,
   toStartDelayMs,
   toRegistrationStepDates,
   toRequestSeatsLabel,
@@ -112,13 +114,13 @@ describe("dates", () => {
 describe("registration status helpers", () => {
   it("maps statuses to labels, tones and steps", () => {
     expect(toRegistrationStatusLabel(RegistrationStatus.Pending)).toBe(
-      "Awaiting confirmation",
+      "Awaiting approval",
     );
     expect(toRegistrationStatusLabel(RegistrationStatus.Approved)).toBe(
-      "Seat held, awaiting payment",
+      "Approved, awaiting payment",
     );
     expect(toRegistrationStatusLabel(RegistrationStatus.Rejected)).toBe(
-      "Not confirmed",
+      "Not approved",
     );
     expect(toRegistrationStatusTone(RegistrationStatus.Pending)).toBe(
       "pending",
@@ -128,18 +130,103 @@ describe("registration status helpers", () => {
     );
     expect(toRegistrationStatusTone(RegistrationStatus.Confirmed)).toBe("done");
     expect(toRegistrationStatusTone(RegistrationStatus.Rejected)).toBe("off");
-    expect(toRegistrationStepIndex(RegistrationStatus.Confirmed)).toBe(2);
-    expect(toRegistrationStepIndex(RegistrationStatus.Cancelled)).toBe(0);
     expect(isRegistrationClosed(RegistrationStatus.Cancelled)).toBe(true);
     expect(isRegistrationClosed(RegistrationStatus.Approved)).toBe(false);
   });
 
-  it("freezes a cancelled booking at the last step it actually reached", () => {
+  it("keys every stage by a registration status", () => {
+    expect(REGISTRATION_STAGES.map((stage) => stage.key)).toEqual([
+      RegistrationStatus.Pending,
+      RegistrationStatus.Approved,
+      RegistrationStatus.Confirmed,
+    ]);
+  });
+
+  const readTimeline = (
+    status: RegistrationStatus,
+    dates: Partial<Record<RegistrationStatus, string | null>>,
+    isClosed = false,
+  ) =>
+    toTimelineSteps({
+      stages: REGISTRATION_STAGES,
+      status,
+      dates,
+      isClosed,
+    }).map((step) => [step.label, step.state, step.date, step.note]);
+
+  it("promises approval and payment while a request waits", () => {
+    expect(
+      readTimeline(RegistrationStatus.Pending, { PENDING: "12 Sept" }),
+    ).toEqual([
+      [
+        "Requested",
+        "current",
+        "12 Sept",
+        "We have your request and are holding your seat.",
+      ],
+      [
+        "Approved",
+        "upcoming",
+        null,
+        "We look over each request, then approve it and share payment details on WhatsApp.",
+      ],
+      [
+        "Confirmed",
+        "upcoming",
+        null,
+        "Confirmed as soon as your payment lands.",
+      ],
+    ]);
+  });
+
+  it("asks for payment once approved", () => {
+    expect(
+      readTimeline(RegistrationStatus.Approved, {
+        PENDING: "12 Sept",
+        APPROVED: "13 Sept",
+      }),
+    ).toEqual([
+      ["Requested", "done", "12 Sept", null],
+      ["Approved", "current", "13 Sept", "Payment details are on WhatsApp."],
+      [
+        "Confirmed",
+        "upcoming",
+        null,
+        "Confirmed as soon as your payment lands.",
+      ],
+    ]);
+  });
+
+  it("gives the arrival instructions once confirmed, as a finished step", () => {
+    expect(
+      readTimeline(RegistrationStatus.Confirmed, {
+        PENDING: "12 Sept",
+        APPROVED: "13 Sept",
+        CONFIRMED: "14 Sept",
+      }).at(-1),
+    ).toEqual([
+      "Confirmed",
+      "done",
+      "14 Sept",
+      "Paid and confirmed. Come in ten minutes early.",
+    ]);
+  });
+
+  it("stops a closed registration at the stage it reached", () => {
     const dates = { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null };
-    expect(toRegistrationStepIndex(RegistrationStatus.Cancelled, dates)).toBe(
-      1,
-    );
-    expect(toRegistrationStepIndex(RegistrationStatus.Rejected, dates)).toBe(1);
+    for (const status of [
+      RegistrationStatus.Cancelled,
+      RegistrationStatus.Rejected,
+    ]) {
+      expect(readTimeline(status, dates, true)).toEqual([
+        ["Requested", "done", "12 Sept", null],
+        ["Approved", "done", "13 Sept", null],
+      ]);
+    }
+  });
+
+  it("never repeats the line above it in a promise", () => {
+    expect(toRepeatedPhrases(REGISTRATION_STAGES)).toEqual([]);
   });
 });
 
@@ -425,7 +512,7 @@ describe("registration detail helpers", () => {
       toRegistrationClosedLabel(
         registration({ status: RegistrationStatus.Rejected }),
       ),
-    ).toBe("Not confirmed");
+    ).toBe("Not approved");
   });
 
   it("lists the event facts for a booking", () => {
@@ -525,12 +612,6 @@ describe("registration detail helpers", () => {
       false,
     );
     expect(isRequestBannerShown(false, RegistrationStatus.Pending)).toBe(false);
-  });
-
-  it("says the seats are kept, in the right number", () => {
-    expect(toRequestReceiptLine(1)).toMatch(/^Your seat is kept for you/);
-    expect(toRequestReceiptLine(2)).toMatch(/^Your seats are kept for you/);
-    expect(toRequestReceiptLine(2)).toContain("share payment details");
   });
 });
 

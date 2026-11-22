@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { DayClosedKind, RegistrationStatus } from "@/graphql/generated/graphql";
 
+import { toRepeatedPhrases } from "@/lib/testing/timeline";
+import { toTimelineSteps } from "@/lib/timeline";
+
 import {
+  BOOKING_STAGES,
   applyBookingAction,
   type BookingData,
   formatDayRange,
@@ -28,7 +32,6 @@ import {
   toBookingGroup,
   toBookingStatusLabel,
   toBookingStatusTone,
-  toBookingStepIndex,
   toBookingWhenLines,
   toDateKey,
   toDayNote,
@@ -253,16 +256,16 @@ describe("session helpers", () => {
 describe("booking status helpers", () => {
   it("maps statuses to labels, tones and steps", () => {
     expect(toBookingStatusLabel(RegistrationStatus.Pending)).toBe(
-      "Awaiting confirmation",
+      "Awaiting approval",
     );
     expect(toBookingStatusLabel(RegistrationStatus.Approved)).toBe(
-      "Wheel held, awaiting payment",
+      "Approved, awaiting payment",
     );
     expect(toBookingStatusLabel(RegistrationStatus.Confirmed)).toBe(
       "Confirmed",
     );
     expect(toBookingStatusLabel(RegistrationStatus.Rejected)).toBe(
-      "Not confirmed",
+      "Not approved",
     );
     expect(toBookingStatusLabel(RegistrationStatus.Cancelled)).toBe(
       "Cancelled",
@@ -272,14 +275,93 @@ describe("booking status helpers", () => {
     expect(toBookingStatusTone(RegistrationStatus.Confirmed)).toBe("done");
     expect(toBookingStatusTone(RegistrationStatus.Rejected)).toBe("off");
     expect(toBookingStatusTone(RegistrationStatus.Cancelled)).toBe("off");
-    expect(toBookingStepIndex(RegistrationStatus.Pending)).toBe(0);
-    expect(toBookingStepIndex(RegistrationStatus.Approved)).toBe(1);
-    expect(toBookingStepIndex(RegistrationStatus.Confirmed)).toBe(2);
   });
 
-  it("freezes a closed booking on the first step", () => {
-    expect(toBookingStepIndex(RegistrationStatus.Cancelled)).toBe(0);
-    expect(toBookingStepIndex(RegistrationStatus.Rejected)).toBe(0);
+  const readTimeline = (
+    status: RegistrationStatus,
+    dates: Partial<Record<RegistrationStatus, string | null>>,
+    isClosed = false,
+  ) =>
+    toTimelineSteps({ stages: BOOKING_STAGES, status, dates, isClosed }).map(
+      (step) => [step.label, step.state, step.date, step.note],
+    );
+
+  it("promises approval and payment while a request waits", () => {
+    expect(
+      readTimeline(RegistrationStatus.Pending, { PENDING: "12 Sept" }),
+    ).toEqual([
+      [
+        "Requested",
+        "current",
+        "12 Sept",
+        "We have your request and are holding the wheel for you.",
+      ],
+      [
+        "Approved",
+        "upcoming",
+        null,
+        "We look over each request, then approve it and share payment details on WhatsApp.",
+      ],
+      [
+        "Confirmed",
+        "upcoming",
+        null,
+        "Confirmed as soon as your payment lands.",
+      ],
+    ]);
+  });
+
+  it("asks for payment once approved", () => {
+    expect(
+      readTimeline(RegistrationStatus.Approved, {
+        PENDING: "12 Sept",
+        APPROVED: "13 Sept",
+      }),
+    ).toEqual([
+      ["Requested", "done", "12 Sept", null],
+      ["Approved", "current", "13 Sept", "Payment details are on WhatsApp."],
+      [
+        "Confirmed",
+        "upcoming",
+        null,
+        "Confirmed as soon as your payment lands.",
+      ],
+    ]);
+  });
+
+  it("gives the arrival instructions once confirmed, as a finished step", () => {
+    expect(
+      readTimeline(RegistrationStatus.Confirmed, {
+        PENDING: "12 Sept",
+        APPROVED: "13 Sept",
+        CONFIRMED: "14 Sept",
+      }).at(-1),
+    ).toEqual([
+      "Confirmed",
+      "done",
+      "14 Sept",
+      "Paid and confirmed. Come in ten minutes early.",
+    ]);
+  });
+
+  it("stops a closed booking at the stage it reached", () => {
+    const dates = { PENDING: "12 Sept", APPROVED: "13 Sept", CONFIRMED: null };
+    for (const status of [
+      RegistrationStatus.Cancelled,
+      RegistrationStatus.Rejected,
+    ]) {
+      expect(readTimeline(status, dates, true)).toEqual([
+        ["Requested", "done", "12 Sept", null],
+        ["Approved", "done", "13 Sept", null],
+      ]);
+    }
+  });
+
+  it("never repeats the line above it in a promise", () => {
+    expect(toRepeatedPhrases(BOOKING_STAGES)).toEqual([]);
+  });
+
+  it("knows which bookings are closed", () => {
     expect(isBookingClosed(RegistrationStatus.Cancelled)).toBe(true);
     expect(isBookingClosed(RegistrationStatus.Rejected)).toBe(true);
     expect(isBookingClosed(RegistrationStatus.Approved)).toBe(false);

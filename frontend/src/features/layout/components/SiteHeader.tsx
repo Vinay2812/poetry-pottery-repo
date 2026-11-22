@@ -90,7 +90,7 @@ export function SiteHeader({
       )}
     >
       <PageShell className="flex h-16 items-center gap-5">
-        {/* Cart and wishlist changes are spoken here, not read off the badges. */}
+        {/* Cart and saved-piece changes are spoken here, not read off the badges. */}
         <p aria-live="polite" aria-atomic="true" className="sr-only">
           {countAnnouncement}
         </p>

@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { fn } from "storybook/test";
 
+import { OrderStatus } from "@/graphql/generated/graphql";
+
 import { atViewport } from "@/lib/storybook/viewports";
-import { ORDER_STEPS } from "@/features/orders/types";
+import { toTimelineSteps } from "@/lib/timeline";
+import { ORDER_STAGES } from "@/features/orders/types";
 import { OrderDetail } from "./OrderDetail";
-import type { OrderTimelineStep } from "./OrderTimeline";
 
 const items = [
   {
@@ -43,13 +45,21 @@ const addressLines = [
   "Phone: 9876543210",
 ];
 
-function toSteps(doneThrough: number): OrderTimelineStep[] {
-  return ORDER_STEPS.map((step, index) => ({
-    key: step.key,
-    label: step.label,
-    description: step.description,
-    date: index <= doneThrough ? "Sat, 12 Sep 2026, 3:00 pm" : null,
-  }));
+// Every stage up to `reachedThrough` carries a date; a closed one stops there.
+function toSteps(reachedThrough: number, isClosed = false) {
+  return toTimelineSteps({
+    stages: ORDER_STAGES,
+    status: isClosed
+      ? OrderStatus.Cancelled
+      : (ORDER_STAGES[reachedThrough]?.key ?? OrderStatus.Pending),
+    dates: Object.fromEntries(
+      ORDER_STAGES.map((stage, index) => [
+        stage.key,
+        index <= reachedThrough ? "Sat, 12 Sept, 2026, 3:00 pm" : null,
+      ]),
+    ),
+    isClosed,
+  });
 }
 
 const meta = {
@@ -68,8 +78,6 @@ const meta = {
       "Everything is packed by hand and goes by courier, so a day either way is normal.",
     emailedTo: "maya@example.com",
     steps: toSteps(0),
-    currentStepIndex: 0,
-    isClosed: false,
     closedLabel: null,
     items,
     studioNotes: [],
@@ -108,7 +116,6 @@ export const InProgress: Story = {
     statusTone: "active",
     isJustPlaced: false,
     steps: toSteps(3),
-    currentStepIndex: 3,
     trackingNote: "Courier: Delhivery · AWB 1234567890",
     studioNotes: [
       {
@@ -128,7 +135,6 @@ export const Delivered: Story = {
     statusTone: "done",
     isJustPlaced: false,
     steps: toSteps(4),
-    currentStepIndex: 4,
     canCancel: false,
     careLines: [
       "Hand wash with a soft cloth, no scouring pad",
@@ -142,9 +148,7 @@ export const Cancelled: Story = {
     statusLabel: "Cancelled",
     statusTone: "off",
     isJustPlaced: false,
-    steps: toSteps(1),
-    currentStepIndex: 1,
-    isClosed: true,
+    steps: toSteps(1, true),
     closedLabel: "Cancelled on Wed, 16 Sep 2026",
     canCancel: false,
     customerNote: "Please deliver after 5 pm.",

@@ -135,7 +135,9 @@ export function ProductBuyBox({
               onClick={onToggleWishlist}
               aria-pressed={isWishlisted}
               aria-label={
-                isWishlisted ? "Remove from wishlist" : "Save to wishlist"
+                isWishlisted
+                  ? "Remove from saved pieces"
+                  : "Add to saved pieces"
               }
             >
               <Heart

@@ -16,7 +16,9 @@ const meta = {
     ),
   ],
   args: {
+    isSignedIn: true,
     onAddClick: fn(),
+    onSignIn: fn(),
   },
 } satisfies Meta<typeof EmptyAddresses>;
 
@@ -25,6 +27,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const SignedOut: Story = {
+  args: { isSignedIn: false },
+};
 
 export const Mobile: Story = { ...atViewport("mobile") };
 

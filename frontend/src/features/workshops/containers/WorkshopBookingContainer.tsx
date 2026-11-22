@@ -25,7 +25,7 @@ import {
   toUnavailableMessage,
   type WorkshopData,
 } from "@/features/workshops/types";
-import { SectionLabel } from "@/features/workshops/components/SectionLabel";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 export interface WorkshopBookingContainerProps {
   workshop: WorkshopData;

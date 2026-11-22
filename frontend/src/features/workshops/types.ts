@@ -7,6 +7,8 @@ import {
 } from "@/graphql/generated/graphql";
 
 import { buildWhatsAppUrl } from "@/features/layout/types";
+import type { TimelineStage } from "@/lib/timeline";
+
 import type { StatusTone } from "@/features/orders/types";
 
 export type WorkshopData = WorkshopConfigFieldsFragment;
@@ -310,39 +312,37 @@ export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
     `${input.hours} ${input.hours === 1 ? "hour" : "hours"} for ${input.participants} ${input.participants === 1 ? "person" : "people"}`,
     `Total: ${input.total}`,
     `Name: ${input.guestName}`,
-    "Could you confirm it and share payment details?",
+    "Could you approve my request and share payment details?",
   ].join("\n");
 }
 
-interface BookingStep {
-  key: RegistrationStatus;
-  label: string;
-  description: string;
-}
-
-export const BOOKING_STEPS: BookingStep[] = [
+// A pending request already holds the wheel, so the step after it is about payment.
+export const BOOKING_STAGES: TimelineStage<RegistrationStatus>[] = [
   {
     key: RegistrationStatus.Pending,
     label: "Requested",
-    description: "We have your request and are checking the wheel.",
+    description: "We have your request and are holding the wheel for you.",
   },
   {
     key: RegistrationStatus.Approved,
-    label: "Wheel held",
-    description: "Your wheel is held. We share payment details on WhatsApp.",
+    label: "Approved",
+    description: "Payment details are on WhatsApp.",
+    upcoming:
+      "We look over each request, then approve it and share payment details on WhatsApp.",
   },
   {
     key: RegistrationStatus.Confirmed,
     label: "Confirmed",
     description: "Paid and confirmed. Come in ten minutes early.",
+    upcoming: "Confirmed as soon as your payment lands.",
   },
 ];
 
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting confirmation",
-  [RegistrationStatus.Approved]: "Wheel held, awaiting payment",
+  [RegistrationStatus.Pending]: "Awaiting approval",
+  [RegistrationStatus.Approved]: "Approved, awaiting payment",
   [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not confirmed",
+  [RegistrationStatus.Rejected]: "Not approved",
   [RegistrationStatus.Cancelled]: "Cancelled",
 };
 
@@ -359,12 +359,6 @@ export function toBookingStatusTone(status: RegistrationStatus): StatusTone {
   if (status === RegistrationStatus.Confirmed) return "done";
   if (status === RegistrationStatus.Pending) return "pending";
   return "active";
-}
-
-// Closed bookings freeze on the step they stopped at.
-export function toBookingStepIndex(status: RegistrationStatus): number {
-  const index = BOOKING_STEPS.findIndex((step) => step.key === status);
-  return index === -1 ? 0 : index;
 }
 
 type BookingGroup = "upcoming" | "past";

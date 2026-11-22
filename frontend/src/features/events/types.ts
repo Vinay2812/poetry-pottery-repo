@@ -9,8 +9,14 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
-import { formatDate, formatDateTime, formatTime } from "@/lib/format";
+import { formatDate, formatTime } from "@/lib/format";
 import type { UrlCodec } from "@/lib/use-url-state";
+
+import {
+  type TimelineStage,
+  toClosedLabel,
+  toTimelineDate,
+} from "@/lib/timeline";
 
 import type { StatusTone } from "@/features/orders/types";
 
@@ -20,7 +26,7 @@ export type EventDetailData = EventQuery["event"];
 const PAGE_SIZE = 12;
 export const MAX_SEATS = 4;
 export const SEAT_NOTE =
-  "We confirm every seat by hand on WhatsApp, usually within a day.";
+  "We approve each request by hand on WhatsApp, usually within a day.";
 
 export interface EventFact {
   label: string;
@@ -251,36 +257,34 @@ export function toGalleryHeading(eventType: EventType): string {
   return GALLERY_HEADING[eventType];
 }
 
-export interface RegistrationStep {
-  key: RegistrationStatus;
-  label: string;
-  description: string;
-}
-
-export const REGISTRATION_STEPS: RegistrationStep[] = [
+// A pending request already holds the seat, so the step after it is about payment.
+export const REGISTRATION_STAGES: TimelineStage<RegistrationStatus>[] = [
   {
     key: RegistrationStatus.Pending,
     label: "Requested",
-    description: "We have your request and are keeping your seat.",
+    description: "We have your request and are holding your seat.",
   },
   {
     key: RegistrationStatus.Approved,
-    label: "Seat held",
-    description: "Your seat is held. We share payment details on WhatsApp.",
+    label: "Approved",
+    description: "Payment details are on WhatsApp.",
+    upcoming:
+      "We look over each request, then approve it and share payment details on WhatsApp.",
   },
   {
     key: RegistrationStatus.Confirmed,
     label: "Confirmed",
     description: "Paid and confirmed. Come in ten minutes early.",
+    upcoming: "Confirmed as soon as your payment lands.",
   },
 ];
 
-// Same words as wheel sessions: a seat is a request until the studio confirms it.
+// Same words as wheel sessions: a seat is a request until the studio approves it.
 const STATUS_LABEL: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.Pending]: "Awaiting confirmation",
-  [RegistrationStatus.Approved]: "Seat held, awaiting payment",
+  [RegistrationStatus.Pending]: "Awaiting approval",
+  [RegistrationStatus.Approved]: "Approved, awaiting payment",
   [RegistrationStatus.Confirmed]: "Confirmed",
-  [RegistrationStatus.Rejected]: "Not confirmed",
+  [RegistrationStatus.Rejected]: "Not approved",
   [RegistrationStatus.Cancelled]: "Cancelled",
 };
 
@@ -314,28 +318,10 @@ export function toRegistrationStepDates(
   registration: StepDatesInput,
 ): RegistrationStepDates {
   return {
-    [RegistrationStatus.Pending]: formatDateTime(registration.created_at),
-    [RegistrationStatus.Approved]: registration.approved_at
-      ? formatDateTime(registration.approved_at)
-      : null,
-    [RegistrationStatus.Confirmed]: registration.confirmed_at
-      ? formatDateTime(registration.confirmed_at)
-      : null,
+    [RegistrationStatus.Pending]: toTimelineDate(registration.created_at),
+    [RegistrationStatus.Approved]: toTimelineDate(registration.approved_at),
+    [RegistrationStatus.Confirmed]: toTimelineDate(registration.confirmed_at),
   };
-}
-
-// Index of the current step. Cancelled and rejected bookings are not steps of their own,
-// so they freeze at the last step that actually carries a date.
-export function toRegistrationStepIndex(
-  status: RegistrationStatus,
-  stepDates: RegistrationStepDates = {},
-): number {
-  const index = REGISTRATION_STEPS.findIndex((step) => step.key === status);
-  if (index !== -1) return index;
-  return REGISTRATION_STEPS.reduce(
-    (reached, step, at) => (stepDates[step.key] ? at : reached),
-    0,
-  );
 }
 
 export function isRegistrationClosed(status: RegistrationStatus): boolean {
@@ -355,14 +341,11 @@ export function toRegistrationClosedLabel(
   registration: ClosedLabelInput,
 ): string | null {
   if (!isRegistrationClosed(registration.status)) return null;
-  const closedOn = registration.cancelled_at ?? registration.rejected_at;
-  return [
-    toRegistrationStatusLabel(registration.status) +
-      (closedOn ? ` on ${formatDateTime(closedOn)}` : ""),
+  return toClosedLabel(
+    toRegistrationStatusLabel(registration.status),
+    toTimelineDate(registration.cancelled_at ?? registration.rejected_at),
     registration.cancel_reason,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  );
 }
 
 type RegistrationFactsInput = Pick<
@@ -387,15 +370,6 @@ export function isRequestBannerShown(
   status: RegistrationStatus,
 ): boolean {
   return isJustPlaced && status === RegistrationStatus.Pending;
-}
-
-// Seats are taken off the count the moment a request lands, so the receipt says so.
-export function toRequestReceiptLine(seats: number): string {
-  const kept =
-    seats === 1
-      ? "Your seat is kept for you while we confirm."
-      : "Your seats are kept for you while we confirm.";
-  return `${kept} Send us a message and we will share payment details, or wait for ours within a day.`;
 }
 
 type RegistrationGroupKey = "underWay" | "upcoming" | "past";
@@ -477,7 +451,7 @@ export function toWhatsAppBookingMessage(input: WhatsAppBookingInput): string {
     `Seats: ${input.seats}`,
     `Total: ${input.total}`,
     `Name: ${input.guestName}`,
-    "Could you confirm my seat and share payment details?",
+    "Could you approve my request and share payment details?",
   ].join("\n");
 }
 

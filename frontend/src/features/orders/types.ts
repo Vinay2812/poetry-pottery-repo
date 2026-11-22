@@ -3,15 +3,28 @@ import {
   OrderStatus,
 } from "@/graphql/generated/graphql";
 
+import type { TimelineStage } from "@/lib/timeline";
+import type { UrlCodec } from "@/lib/use-url-state";
+
 export type OrderData = OrderFieldsFragment;
 
-export interface StatusStep {
-  key: OrderStatus;
-  label: string;
-  description: string;
+// Anything that is not a whole page number past the first means the first page.
+export function toPageNumber(raw: string | null): number {
+  const page = Number(raw);
+  return Number.isInteger(page) && page > 1 ? page : 1;
 }
 
-export const ORDER_STEPS: StatusStep[] = [
+// The orders list keeps its page in the address bar, so a refresh or a shared link opens the same page.
+export const ORDERS_PAGE_CODEC: UrlCodec<number, number> = {
+  parse: (search) => toPageNumber(search.get("page")),
+  serialize: (page) => (page > 1 ? `page=${page}` : ""),
+  apply: (_current, next) => next,
+};
+
+// How long the courier usually takes, said the same way wherever it appears.
+const TRANSIT_WINDOW = "five to seven days";
+
+export const ORDER_STAGES: TimelineStage<OrderStatus>[] = [
   {
     key: OrderStatus.Pending,
     label: "Order placed",
@@ -20,22 +33,26 @@ export const ORDER_STEPS: StatusStep[] = [
   {
     key: OrderStatus.Confirmed,
     label: "Confirmed",
-    description: "Payment details shared; we start packing once it lands.",
+    description: "Payment details are on WhatsApp.",
+    upcoming: "Payment details follow with the confirmation.",
   },
   {
     key: OrderStatus.Paid,
     label: "Paid",
     description: "Payment received. Wrapping every piece by hand.",
+    upcoming: "After payment, each piece is wrapped by hand.",
   },
   {
     key: OrderStatus.Shipped,
     label: "Shipped",
-    description: "On its way, usually five to seven days.",
+    description: `On its way, usually ${TRANSIT_WINDOW}.`,
+    upcoming: `Goes by courier once packed, usually ${TRANSIT_WINDOW} on the road.`,
   },
   {
     key: OrderStatus.Delivered,
     label: "Delivered",
     description: "Enjoy. Tell us how it looks in your home.",
+    upcoming: "We mark it here once it reaches you.",
   },
 ];
 
@@ -61,20 +78,6 @@ export function toStatusTone(status: OrderStatus): StatusTone {
   if (status === OrderStatus.Delivered) return "done";
   if (status === OrderStatus.Pending) return "pending";
   return "active";
-}
-
-// Index of the current step on the timeline. Cancelled and refunded orders are not steps of
-// their own, so they freeze at the last step that actually carries a date.
-export function toStepIndex(
-  status: OrderStatus,
-  stepDates: Record<string, string | null> = {},
-): number {
-  const index = ORDER_STEPS.findIndex((step) => step.key === status);
-  if (index !== -1) return index;
-  return ORDER_STEPS.reduce(
-    (reached, step, at) => (stepDates[step.key] ? at : reached),
-    0,
-  );
 }
 
 const ARRIVAL_DATE = new Intl.DateTimeFormat("en-IN", {

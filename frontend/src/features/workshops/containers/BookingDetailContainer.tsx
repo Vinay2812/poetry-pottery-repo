@@ -3,6 +3,8 @@
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useCallback, useOptimistic, useState, useTransition } from "react";
 
+import { RegistrationStatus } from "@/graphql/generated/graphql";
+
 import { formatDateTime, formatInr, pluralize } from "@/lib/format";
 
 import { PageShell } from "@/components/layout/PageShell";
@@ -18,9 +20,10 @@ import {
   useWorkshopBooking,
 } from "@/features/workshops/hooks";
 import { useSlotPicker } from "@/features/workshops/slot-picker";
+import { toClosedLabel, toTimelineDate, toTimelineSteps } from "@/lib/timeline";
 import {
   applyBookingAction,
-  BOOKING_STEPS,
+  BOOKING_STAGES,
   formatDayRange,
   formatHours,
   groupSlotsByDay,
@@ -29,7 +32,6 @@ import {
   type SessionFact,
   toBookingStatusLabel,
   toBookingStatusTone,
-  toBookingStepIndex,
   toWhatsAppSessionMessage,
 } from "@/features/workshops/types";
 
@@ -146,20 +148,24 @@ export function BookingDetailContainer({
     );
   }
 
-  const dates: Record<string, string | null> = {
-    PENDING: formatDateTime(optimisticBooking.created_at),
-    APPROVED: optimisticBooking.approved_at
-      ? formatDateTime(optimisticBooking.approved_at)
-      : null,
-    CONFIRMED: optimisticBooking.confirmed_at
-      ? formatDateTime(optimisticBooking.confirmed_at)
-      : null,
+  const dates: Partial<Record<RegistrationStatus, string | null>> = {
+    [RegistrationStatus.Pending]: toTimelineDate(optimisticBooking.created_at),
+    [RegistrationStatus.Approved]: toTimelineDate(
+      optimisticBooking.approved_at,
+    ),
+    [RegistrationStatus.Confirmed]: toTimelineDate(
+      optimisticBooking.confirmed_at,
+    ),
   };
   const closed = isBookingClosed(optimisticBooking.status);
   const closedOn =
     optimisticBooking.cancelled_at ?? optimisticBooking.rejected_at;
   const closedLabel = closed
-    ? `${toBookingStatusLabel(optimisticBooking.status)}${closedOn ? ` on ${formatDateTime(closedOn)}` : ""}${optimisticBooking.cancel_reason ? ` · ${optimisticBooking.cancel_reason}` : ""}`
+    ? toClosedLabel(
+        toBookingStatusLabel(optimisticBooking.status),
+        toTimelineDate(closedOn),
+        optimisticBooking.cancel_reason,
+      )
     : null;
   const dayGroups = groupSlotsByDay(optimisticBooking.slots, timezone);
   const when = dayGroups
@@ -207,14 +213,12 @@ export function BookingDetailContainer({
           isJustPlaced,
           optimisticBooking.status,
         )}
-        steps={BOOKING_STEPS.map((step) => ({
-          key: step.key,
-          label: step.label,
-          description: step.description,
-          date: dates[step.key] ?? null,
-        }))}
-        currentStepIndex={toBookingStepIndex(optimisticBooking.status)}
-        isClosed={closed}
+        steps={toTimelineSteps({
+          stages: BOOKING_STAGES,
+          status: optimisticBooking.status,
+          dates,
+          isClosed: closed,
+        })}
         closedLabel={closedLabel}
         facts={facts}
         participants={optimisticBooking.participants}

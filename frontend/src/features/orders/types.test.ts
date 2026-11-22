@@ -2,8 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import { OrderStatus } from "@/graphql/generated/graphql";
 
+import { toRepeatedPhrases } from "@/lib/testing/timeline";
+import { toTimelineSteps } from "@/lib/timeline";
+
 import {
   applyOrderCancellation,
+  ORDER_STAGES,
+  ORDERS_PAGE_CODEC,
   isClosed,
   showsPlacedBanner,
   type OrderData,
@@ -13,7 +18,7 @@ import {
   toStatusLabel,
   toStatusTone,
   toOrderPath,
-  toStepIndex,
+  toPageNumber,
   toWhatsAppOrderMessage,
 } from "./types";
 
@@ -26,23 +31,124 @@ describe("order status helpers", () => {
     expect(toStatusTone(OrderStatus.Shipped)).toBe("active");
     expect(toStatusTone(OrderStatus.Delivered)).toBe("done");
     expect(toStatusTone(OrderStatus.Refunded)).toBe("off");
-    expect(toStepIndex(OrderStatus.Paid)).toBe(2);
-    expect(toStepIndex(OrderStatus.Cancelled)).toBe(0);
     expect(isClosed(OrderStatus.Cancelled)).toBe(true);
     expect(isClosed(OrderStatus.Paid)).toBe(false);
   });
+});
 
-  it("freezes a cancelled order at the last step it actually reached", () => {
-    const dates = {
-      PENDING: "12 Sept",
-      CONFIRMED: "13 Sept",
-      PAID: "14 Sept",
-      SHIPPED: null,
-      DELIVERED: null,
-    };
-    expect(toStepIndex(OrderStatus.Cancelled, dates)).toBe(2);
-    expect(toStepIndex(OrderStatus.Refunded, dates)).toBe(2);
-    expect(toStepIndex(OrderStatus.Shipped, dates)).toBe(3);
+describe("order timeline", () => {
+  const DATES = {
+    PENDING: "12 Sept",
+    CONFIRMED: "13 Sept",
+    PAID: "14 Sept",
+    SHIPPED: "15 Sept",
+    DELIVERED: null,
+  };
+  const reachedThrough = (index: number) =>
+    Object.fromEntries(
+      Object.entries(DATES).map(([key, date], at) => [
+        key,
+        at <= index ? date : null,
+      ]),
+    );
+  const read = (status: OrderStatus, index: number, isClosed = false) =>
+    toTimelineSteps({
+      stages: ORDER_STAGES,
+      status,
+      dates: reachedThrough(index),
+      isClosed,
+    }).map((step) => [step.label, step.state, step.date, step.note]);
+
+  it("promises every later stage of a new order", () => {
+    expect(read(OrderStatus.Pending, 0)).toEqual([
+      [
+        "Order placed",
+        "current",
+        "12 Sept",
+        "We have your order and will confirm it on WhatsApp.",
+      ],
+      [
+        "Confirmed",
+        "upcoming",
+        null,
+        "Payment details follow with the confirmation.",
+      ],
+      [
+        "Paid",
+        "upcoming",
+        null,
+        "After payment, each piece is wrapped by hand.",
+      ],
+      [
+        "Shipped",
+        "upcoming",
+        null,
+        "Goes by courier once packed, usually five to seven days on the road.",
+      ],
+      ["Delivered", "upcoming", null, "We mark it here once it reaches you."],
+    ]);
+  });
+
+  it("points to payment once the order is confirmed", () => {
+    expect(read(OrderStatus.Confirmed, 1)).toEqual([
+      ["Order placed", "done", "12 Sept", null],
+      ["Confirmed", "current", "13 Sept", "Payment details are on WhatsApp."],
+      [
+        "Paid",
+        "upcoming",
+        null,
+        "After payment, each piece is wrapped by hand.",
+      ],
+      [
+        "Shipped",
+        "upcoming",
+        null,
+        "Goes by courier once packed, usually five to seven days on the road.",
+      ],
+      ["Delivered", "upcoming", null, "We mark it here once it reaches you."],
+    ]);
+  });
+
+  it("dates what happened once the order has shipped", () => {
+    expect(read(OrderStatus.Shipped, 3)).toEqual([
+      ["Order placed", "done", "12 Sept", null],
+      ["Confirmed", "done", "13 Sept", null],
+      ["Paid", "done", "14 Sept", null],
+      [
+        "Shipped",
+        "current",
+        "15 Sept",
+        "On its way, usually five to seven days.",
+      ],
+      ["Delivered", "upcoming", null, "We mark it here once it reaches you."],
+    ]);
+  });
+
+  it("stops a refunded order at the last dated stage", () => {
+    expect(read(OrderStatus.Refunded, 2, true)).toEqual([
+      ["Order placed", "done", "12 Sept", null],
+      ["Confirmed", "done", "13 Sept", null],
+      ["Paid", "done", "14 Sept", null],
+    ]);
+  });
+
+  it("never repeats the line above it in a promise", () => {
+    expect(toRepeatedPhrases(ORDER_STAGES)).toEqual([]);
+  });
+});
+
+describe("orders page in the URL", () => {
+  it("reads only whole page numbers past the first", () => {
+    expect(toPageNumber("3")).toBe(3);
+    for (const raw of [null, "", "1", "0", "-2", "2.5", "two"]) {
+      expect(toPageNumber(raw)).toBe(1);
+    }
+  });
+
+  it("leaves the first page off the query string", () => {
+    expect(ORDERS_PAGE_CODEC.serialize(1)).toBe("");
+    expect(ORDERS_PAGE_CODEC.serialize(2)).toBe("page=2");
+    expect(ORDERS_PAGE_CODEC.parse(new URLSearchParams("page=2"))).toBe(2);
   });
 });
 

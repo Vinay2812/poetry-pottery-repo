@@ -21,19 +21,18 @@ import {
   applyRegistrationCancellation,
   isRegistrationClosed,
   isRequestBannerShown,
-  REGISTRATION_STEPS,
+  REGISTRATION_STAGES,
   toEventPath,
   toRegistrationClosedLabel,
   toRegistrationFacts,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
   toRegistrationStepDates,
-  toRegistrationStepIndex,
-  toRequestReceiptLine,
   toTimeRange,
   toWhatsAppBookingMessage,
 } from "@/features/events/types";
 import { buildWhatsAppUrl } from "@/features/layout/types";
+import { toTimelineSteps } from "@/lib/timeline";
 import { ReviewActionContainer } from "@/features/reviews";
 
 export interface RegistrationDetailContainerProps {
@@ -142,18 +141,12 @@ export function RegistrationDetailContainer({
           isJustPlaced,
           optimisticRegistration.status,
         )}
-        requestLine={toRequestReceiptLine(optimisticRegistration.seats)}
-        steps={REGISTRATION_STEPS.map((step) => ({
-          key: step.key,
-          label: step.label,
-          description: step.description,
-          date: stepDates[step.key] ?? null,
-        }))}
-        currentStepIndex={toRegistrationStepIndex(
-          optimisticRegistration.status,
-          stepDates,
-        )}
-        isClosed={isClosed}
+        steps={toTimelineSteps({
+          stages: REGISTRATION_STAGES,
+          status: optimisticRegistration.status,
+          dates: stepDates,
+          isClosed,
+        })}
         closedLabel={toRegistrationClosedLabel(optimisticRegistration)}
         facts={toRegistrationFacts(event)}
         seats={optimisticRegistration.seats}

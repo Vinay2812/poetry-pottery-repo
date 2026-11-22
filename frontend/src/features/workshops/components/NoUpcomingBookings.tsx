@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SectionLabel } from "@/features/workshops/components/SectionLabel";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 // Sits where upcoming sessions would be, so a list of old ones still leads back to the wheel.
 export function NoUpcomingBookings() {

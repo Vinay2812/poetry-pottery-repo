@@ -10,7 +10,7 @@ import { PageShell } from "@/components/layout/PageShell";
 
 import { AccountMenu } from "@/features/account/components/AccountMenu";
 import { SignInWall } from "@/features/auth/components/SignInWall";
-import { toDisplayName, toMemberSince } from "@/features/account/types";
+import { toDisplayName, toMemberSinceLine } from "@/features/account/types";
 
 export function AccountContainer() {
   const { isLoaded, isSignedIn, user } = useUser();
@@ -45,7 +45,7 @@ export function AccountContainer() {
       displayName={toDisplayName(user.fullName, email)}
       email={email}
       imageUrl={user.hasImage ? user.imageUrl : null}
-      memberSince={toMemberSince(user.createdAt)}
+      memberSinceLine={toMemberSinceLine(user.createdAt)}
       isAdmin={user.publicMetadata.role === UserRole.Admin}
       onManageProfile={() => openUserProfile()}
       onSignOut={handleSignOut}

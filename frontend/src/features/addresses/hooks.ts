@@ -36,17 +36,21 @@ interface AddressSave {
 // Signed-out visitors have no address book; the query is skipped rather than failing auth.
 export function useAddresses() {
   const { isSignedIn, isLoaded } = useAuth();
-  const { data, previousData, loading, error } = useQuery(AddressesDocument, {
-    skip: !isSignedIn,
-    fetchPolicy: "cache-and-network",
-    nextFetchPolicy: "cache-first",
-  });
-  const saved = data?.addresses ?? previousData?.addresses ?? [];
+  const { data, previousData, loading, error, refetch } = useQuery(
+    AddressesDocument,
+    {
+      skip: !isSignedIn,
+      fetchPolicy: "cache-and-network",
+      nextFetchPolicy: "cache-first",
+    },
+  );
+  const saved = data?.addresses ?? previousData?.addresses;
   return {
-    addresses: isSignedIn ? sortByDefaultFirst(saved) : [],
-    isLoading: !isLoaded || (loading && !data && !previousData),
-    hasError: Boolean(error),
+    addresses: isSignedIn && saved ? sortByDefaultFirst(saved) : [],
+    isLoading: !isLoaded || (loading && !saved),
+    hasError: Boolean(error) && !saved,
     isSignedIn: Boolean(isSignedIn),
+    refetch,
   };
 }
 
@@ -109,7 +113,8 @@ export function useAddressMutations(
 // One address book's worth of state: which form is open and what saving it does.
 // Deleting a card and moving the default show at once; the refetched list settles behind them.
 export function useAddressBook() {
-  const { addresses, isLoading } = useAddresses();
+  const { addresses, isLoading, hasError, isSignedIn, refetch } =
+    useAddresses();
   const [optimisticAddresses, applyAction] = useOptimistic(
     addresses,
     applyAddressAction,
@@ -159,7 +164,10 @@ export function useAddressBook() {
     editingId,
     isFormOpen: isAdding || editingId !== null,
     isLoading,
+    hasError,
+    isSignedIn,
     isSaving,
+    refetch,
     closeForm,
     openEdit,
     openNew,

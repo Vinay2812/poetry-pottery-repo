@@ -176,8 +176,8 @@ export function ProductCard({
             aria-pressed={isWishlisted}
             aria-label={
               isWishlisted
-                ? `Remove ${name} from wishlist`
-                : `Save ${name} to wishlist`
+                ? `Remove ${name} from saved pieces`
+                : `Add ${name} to saved pieces`
             }
             // The heart is how a phone fills the wishlist, so it only fades at rest
             // where there is a hover to bring it back.

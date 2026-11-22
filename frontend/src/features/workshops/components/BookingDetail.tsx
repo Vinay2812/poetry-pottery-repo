@@ -5,14 +5,13 @@ import { PageShell } from "@/components/layout/PageShell";
 import { formatInr, pluralize } from "@/lib/format";
 
 import { OrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
-import {
-  OrderTimeline,
-  type OrderTimelineStep,
-} from "@/features/orders/components/OrderTimeline";
+import { Timeline } from "@/components/timeline/Timeline";
+import type { TimelineStep } from "@/lib/timeline";
+
 import type { StatusTone } from "@/features/orders/types";
 import type { SessionFact } from "@/features/workshops/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
-import { SectionLabel } from "@/features/workshops/components/SectionLabel";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 export interface BookingDetailProps {
   bookingId: string;
@@ -21,9 +20,7 @@ export interface BookingDetailProps {
   statusLabel: string;
   statusTone: StatusTone;
   isJustPlaced: boolean;
-  steps: OrderTimelineStep[];
-  currentStepIndex: number;
-  isClosed: boolean;
+  steps: TimelineStep[];
   closedLabel: string | null;
   facts: SessionFact[];
   participants: number;
@@ -50,8 +47,6 @@ export function BookingDetail({
   statusTone,
   isJustPlaced,
   steps,
-  currentStepIndex,
-  isClosed,
   closedLabel,
   facts,
   participants,
@@ -87,9 +82,7 @@ export function BookingDetail({
             We have your request
           </h2>
           <p className="max-w-xl text-[15px] text-muted-foreground">
-            Your hours are kept for you while we confirm. Send us a message and
-            we will confirm the session and share payment details, or wait for
-            ours within a day.
+            Message us now, or we will write within a day.
           </p>
           {whatsappUrl && (
             <Button className="w-fit" asChild>
@@ -110,12 +103,7 @@ export function BookingDetail({
         <div className="flex flex-col gap-10">
           <section className="flex flex-col gap-4">
             <SectionLabel>Progress</SectionLabel>
-            <OrderTimeline
-              steps={steps}
-              currentIndex={currentStepIndex}
-              isClosed={isClosed}
-              closedLabel={closedLabel}
-            />
+            <Timeline steps={steps} closedLabel={closedLabel} />
           </section>
 
           <section className="flex flex-col gap-4">

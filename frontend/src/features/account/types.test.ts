@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toDisplayName, toInitials, toMemberSince } from "./types";
+import { toDisplayName, toInitials, toMemberSinceLine } from "./types";
 
 describe("account helpers", () => {
   it("falls back from name to email to a default", () => {
@@ -17,8 +17,10 @@ describe("account helpers", () => {
   });
 
   it("formats the join month", () => {
-    expect(toMemberSince("2026-03-15T00:00:00.000Z")).toBe("March 2026");
-    expect(toMemberSince(null)).toBe("recently");
-    expect(toMemberSince("nope")).toBe("recently");
+    expect(toMemberSinceLine("2026-03-15T00:00:00.000Z")).toBe(
+      "With us since March 2026",
+    );
+    expect(toMemberSinceLine(null)).toBeNull();
+    expect(toMemberSinceLine("nope")).toBeNull();
   });
 });

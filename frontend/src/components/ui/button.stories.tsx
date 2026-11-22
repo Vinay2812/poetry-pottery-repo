@@ -46,7 +46,7 @@ const gallery = (
     </GallerySection>
     <GallerySection title="Icon sizes">
       <Specimen label="Icon small">
-        <Button size="icon-sm" aria-label="Add to wishlist">
+        <Button size="icon-sm" aria-label="Add to saved pieces">
           <Heart />
         </Button>
       </Specimen>

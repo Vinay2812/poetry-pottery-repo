@@ -1,5 +1,5 @@
 import { CANCELLING_RULE } from "@/features/workshops/types";
-import { SectionLabel } from "@/features/workshops/components/SectionLabel";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 const POLICY_POINTS = [
   {

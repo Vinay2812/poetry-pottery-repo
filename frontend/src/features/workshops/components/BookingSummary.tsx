@@ -14,7 +14,7 @@ import {
   REPLACE_TIME_HINT,
   SESSION_NOTE,
 } from "@/features/workshops/types";
-import { SectionLabel } from "@/features/workshops/components/SectionLabel";
+import { SectionLabel } from "@/components/layout/SectionLabel";
 
 export interface BookingSummaryProps {
   pickedSlots: PickedSlot[];
@@ -127,7 +127,7 @@ export function BookingSummary({
           {isBooking ? "Booking…" : "Book this wheel session"}
         </Button>
         <p className="text-[13px] text-muted-foreground">
-          We confirm the wheel by hand on WhatsApp, usually within a day.
+          We approve each request by hand on WhatsApp, usually within a day.
         </p>
         <p className="border-t border-ash pt-4 text-[13px] text-muted-foreground">
           {SESSION_NOTE}
