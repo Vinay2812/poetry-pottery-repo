@@ -352,13 +352,11 @@ export class AdminWorkshopsService {
           }
         : {}),
     };
-    const where = filter.awaiting_approval
-      ? { AND: [filtered, waitingBookingWhere(now)] }
-      : filtered;
     // Requests still ahead lead, soonest first; everything else follows, newest session first, so a
     // request whose date slipped by sorts with the past rather than heading the queue for ever.
-    const waiting = { AND: [where, waitingBookingWhere(now)] };
-    const rest = { AND: [where, { NOT: waitingBookingWhere(now) }] };
+    // The waiting queue is just the first of these two parts.
+    const waiting = { AND: [filtered, waitingBookingWhere(now)] };
+    const rest = { AND: [filtered, { NOT: waitingBookingWhere(now) }] };
     // One snapshot for the counts and both reads, so a request answered in between cannot shift the page.
     return this.prisma.withTransaction(
       async () => {

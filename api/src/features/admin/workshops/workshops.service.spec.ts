@@ -423,7 +423,7 @@ describe("AdminWorkshopsService", () => {
       starts_at: { gte: NOW },
     };
     expect(prismaMock.workshopBooking.count).toHaveBeenNthCalledWith(1, {
-      where: { AND: [{ AND: [{}, waiting] }, waiting] },
+      where: { AND: [{}, waiting] },
     });
     // A lapsed request is never waiting, so the rest is neither counted nor read.
     expect(prismaMock.workshopBooking.count).toHaveBeenCalledTimes(1);
