@@ -49,6 +49,8 @@ vi.mock("@/config/env", async () => {
       R2_BUCKET: "poetry-media",
       // The trailing slash is deliberate: the service has to trim it.
       R2_PUBLIC_URL: "https://media.poetry.test/",
+      // A local .env may point at an emulator; these specs start from Cloudflare.
+      R2_ENDPOINT: "",
     }),
   };
 });
@@ -101,6 +103,7 @@ describe("StorageService", () => {
     env.R2_ACCOUNT_ID = r2.accountId;
     env.R2_BUCKET = r2.bucket;
     env.R2_PUBLIC_URL = r2.publicUrl;
+    env.R2_ENDPOINT = undefined;
   });
 
   afterAll(() => {
@@ -113,6 +116,20 @@ describe("StorageService", () => {
     expect(clientMock).toHaveBeenCalledWith({
       region: "auto",
       endpoint: "https://acc-1.r2.cloudflarestorage.com",
+      forcePathStyle: false,
+      credentials: { accessKeyId: "key-1", secretAccessKey: "secret-1" },
+    });
+  });
+
+  it("points the client at a local emulator by path when R2_ENDPOINT is set", () => {
+    env.R2_ENDPOINT = "http://localhost:4566";
+
+    new StorageService();
+
+    expect(clientMock).toHaveBeenCalledWith({
+      region: "auto",
+      endpoint: "http://localhost:4566",
+      forcePathStyle: true,
       credentials: { accessKeyId: "key-1", secretAccessKey: "secret-1" },
     });
   });
