@@ -2,12 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-interface VisitDayOption {
-  date: string;
-  dayLabel: string;
-  dayNumber: string;
-  openCount: number;
-}
+import type { VisitDayOption } from "@/features/visits/types";
 
 export interface VisitDayStripProps {
   days: VisitDayOption[];
@@ -15,7 +10,7 @@ export interface VisitDayStripProps {
   onSelectDate: (date: string) => void;
 }
 
-// A fortnight of days in one scrollable row; a day with nothing left is visibly shut.
+// The fortnight sits as two rows of seven, so every day is on screen at once; a day with nothing left is visibly shut.
 export function VisitDayStrip({
   days,
   selectedDate,
@@ -25,7 +20,7 @@ export function VisitDayStrip({
     <div
       role="group"
       aria-label="Pick a day"
-      className="flex gap-2 overflow-x-auto pb-1"
+      className="grid grid-cols-7 gap-1.5 sm:gap-2"
     >
       {days.map((day) => {
         const isOpen = day.openCount > 0;
@@ -38,14 +33,15 @@ export function VisitDayStrip({
             aria-pressed={isSelected}
             onClick={() => onSelectDate(day.date)}
             className={cn(
-              "flex min-w-14 shrink-0 flex-col items-center gap-0.5 border px-3 py-2.5 transition-colors",
+              "flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 border transition-colors",
               isSelected
                 ? "border-ink bg-ink text-white"
                 : "border-ash hover:border-ink",
-              !isOpen && "text-muted-foreground line-through opacity-50",
+              !isOpen &&
+                "cursor-not-allowed text-muted-foreground line-through opacity-50 hover:border-ash",
             )}
           >
-            <span className="text-[11px] tracking-[0.18em] uppercase">
+            <span className="text-[10px] tracking-[0.12em] uppercase sm:text-[11px] sm:tracking-[0.18em]">
               {day.dayLabel}
             </span>
             <span className="text-lg leading-none tnum">{day.dayNumber}</span>

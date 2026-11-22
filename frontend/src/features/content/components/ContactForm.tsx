@@ -36,10 +36,11 @@ function TextField({
         id={id}
         autoComplete={autoComplete}
         aria-invalid={Boolean(error)}
+        aria-describedby={error ? `${id}-error` : undefined}
         {...registration}
       />
       {error && (
-        <p role="alert" className="text-xs text-destructive">
+        <p id={`${id}-error`} role="alert" className="text-xs text-destructive">
           {error}
         </p>
       )}
@@ -48,12 +49,14 @@ function TextField({
 }
 
 export interface ContactFormProps {
+  isSent: boolean;
   isSubmitting: boolean;
   errorMessage: string | null;
   onSubmit: (values: ContactFormValues) => void;
 }
 
 export function ContactForm({
+  isSent,
   isSubmitting,
   errorMessage,
   onSubmit,
@@ -66,6 +69,14 @@ export function ContactForm({
     resolver: zodResolver(contactSchema),
     defaultValues: EMPTY_CONTACT_FORM,
   });
+
+  if (isSent) {
+    return (
+      <p role="status" className="max-w-prose text-[15px] leading-relaxed">
+        Thank you, your message is with us. We reply within a day.
+      </p>
+    );
+  }
 
   return (
     <form
@@ -110,12 +121,20 @@ export function ContactForm({
         <Textarea
           id="contact-message"
           rows={6}
+          className="min-h-40"
           maxLength={MAX_MESSAGE}
           aria-invalid={Boolean(errors.message)}
+          aria-describedby={
+            errors.message ? "contact-message-error" : undefined
+          }
           {...register("message")}
         />
         {errors.message?.message && (
-          <p role="alert" className="text-xs text-destructive">
+          <p
+            id="contact-message-error"
+            role="alert"
+            className="text-xs text-destructive"
+          >
             {errors.message.message}
           </p>
         )}

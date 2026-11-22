@@ -29,7 +29,7 @@ type Story = StoryObj<typeof meta>;
 
 export const WindowPicked: Story = {};
 
-export const NothingPicked: Story = { args: { pickedLabel: null } };
+export const NoWindowPicked: Story = { args: { pickedLabel: null } };
 
 export const Submitting: Story = { args: { isSubmitting: true } };
 

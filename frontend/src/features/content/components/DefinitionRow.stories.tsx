@@ -18,7 +18,9 @@ const meta = {
   ],
   args: {
     title: "Thermal shock",
-    body: "Do not move a piece straight from the fridge into a hot oven, or pour boiling water into a cold mug.",
+    paragraphs: [
+      "Do not move a piece straight from the fridge into a hot oven, or pour boiling water into a cold mug.",
+    ],
   },
 } satisfies Meta<typeof DefinitionRow>;
 

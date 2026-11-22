@@ -5,10 +5,14 @@ import {
   type ContentSectionData,
   IDLE_NEWSLETTER,
   type NewsletterResult,
+  pickActiveSection,
   sectionAt,
   splitParagraphs,
   toAnchorId,
+  toGridClass,
+  toGridColumns,
   toSectionViews,
+  toStepNumber,
 } from "./types";
 
 function section(
@@ -97,10 +101,20 @@ describe("toSectionViews", () => {
     ]);
   });
 
-  it("passes items through untouched", () => {
-    const items = [{ title: "Can I cancel?", body: "Yes, before payment." }];
+  it("splits each item body into paragraphs", () => {
+    const items = [
+      {
+        title: "Can I cancel?",
+        body: "Yes, before payment.\n\nAfter that, write to us.",
+      },
+    ];
     const views = toSectionViews([section("Orders", "", items)]);
-    expect(views[0]?.items).toEqual(items);
+    expect(views[0]?.items).toEqual([
+      {
+        title: "Can I cancel?",
+        paragraphs: ["Yes, before payment.", "After that, write to us."],
+      },
+    ]);
   });
 });
 
@@ -113,5 +127,78 @@ describe("sectionAt", () => {
 
   it("returns null when the CMS has fewer sections", () => {
     expect(sectionAt(sections, 5)).toBeNull();
+  });
+});
+
+describe("pickActiveSection", () => {
+  // Tops are distances from the top of the screen; the reading line sits at 180px.
+  function at(...tops: number[]) {
+    return {
+      sections: ["first-wash", "everyday-use", "storing"].map((id, index) => ({
+        id,
+        top: tops[index] ?? 0,
+      })),
+      readingLine: 180,
+      isAtBottom: false,
+    };
+  }
+
+  // There is no memory of what was lit, so jumping back to the top lands here too.
+  it("starts on the first section before any top reaches the line", () => {
+    expect(pickActiveSection(at(400, 900, 1400))).toBe("first-wash");
+  });
+
+  it("picks the last section whose top has passed the line", () => {
+    expect(pickActiveSection(at(-600, 120, 700))).toBe("everyday-use");
+  });
+
+  it("counts a top exactly on the line as passed", () => {
+    expect(pickActiveSection(at(-600, -100, 180))).toBe("storing");
+  });
+
+  it("picks the last section at the foot of the page", () => {
+    expect(
+      pickActiveSection({ ...at(-1200, -600, 400), isAtBottom: true }),
+    ).toBe("storing");
+  });
+
+  it("has nothing to pick on an empty page", () => {
+    expect(
+      pickActiveSection({ sections: [], readingLine: 180, isAtBottom: true }),
+    ).toBeNull();
+  });
+});
+
+describe("toGridColumns", () => {
+  it("uses two columns for one or two items", () => {
+    expect(toGridColumns(1)).toBe(2);
+    expect(toGridColumns(2)).toBe(2);
+  });
+
+  it("fills whole rows where it can", () => {
+    expect(toGridColumns(3)).toBe(3);
+    expect(toGridColumns(4)).toBe(4);
+    expect(toGridColumns(6)).toBe(3);
+    expect(toGridColumns(8)).toBe(4);
+  });
+
+  it("leaves the fewest empty cells otherwise, preferring four on a tie", () => {
+    expect(toGridColumns(5)).toBe(3);
+    expect(toGridColumns(7)).toBe(4);
+    expect(toGridColumns(10)).toBe(4);
+  });
+});
+
+describe("toGridClass", () => {
+  it("maps a count to its responsive column classes", () => {
+    expect(toGridClass(4)).toBe("sm:grid-cols-2 lg:grid-cols-4");
+    expect(toGridClass(6)).toBe("md:grid-cols-3");
+  });
+});
+
+describe("toStepNumber", () => {
+  it("counts from one with a leading zero", () => {
+    expect(toStepNumber(0)).toBe("01");
+    expect(toStepNumber(11)).toBe("12");
   });
 });

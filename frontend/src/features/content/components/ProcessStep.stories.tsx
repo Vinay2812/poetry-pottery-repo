@@ -17,7 +17,7 @@ const meta = {
     ),
   ],
   args: {
-    index: 0,
+    stepNumber: "01",
     title: "Wedging",
     body: "Air bubbles are worked out of the clay so it fires evenly.",
   },

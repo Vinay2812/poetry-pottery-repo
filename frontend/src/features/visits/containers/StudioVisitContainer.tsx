@@ -8,6 +8,7 @@ import {
   StudioVisitAvailabilityDocument,
 } from "@/graphql/generated/graphql";
 import { describeError } from "@/lib/apollo/errors";
+import { useFocusOnShow } from "@/lib/use-focus-on-show";
 import type { VisitFormValues } from "@/lib/validations/visit";
 
 import { ConfirmationLine } from "@/features/content/components/ConfirmationLine";
@@ -15,14 +16,13 @@ import { VisitDayStrip } from "@/features/visits/components/VisitDayStrip";
 import { VisitForm } from "@/features/visits/components/VisitForm";
 import { VisitWindowPicker } from "@/features/visits/components/VisitWindowPicker";
 import {
-  countOpen,
   firstOpenDate,
-  toDateKey,
-  toDayLabel,
-  toDayNumber,
-  toLongDayLabel,
   toConfirmationLine,
+  toDateKey,
+  toDayOptions,
+  toLongDayLabel,
   toWindowLabel,
+  toWindowOptions,
   VISIT_DAYS,
   windowsFor,
 } from "@/features/visits/types";
@@ -32,8 +32,9 @@ export function StudioVisitContainer() {
   const [pickedWindow, setPickedWindow] = useState<string | null>(null);
   const [confirmation, setConfirmation] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const confirmationRef = useFocusOnShow<HTMLDivElement>(confirmation !== null);
 
-  const { data, previousData, loading, refetch } = useQuery(
+  const { data, previousData, loading, error, refetch } = useQuery(
     StudioVisitAvailabilityDocument,
     {
       variables: { from: null, days: VISIT_DAYS },
@@ -54,26 +55,8 @@ export function StudioVisitContainer() {
     () => windowsFor(days, activeDate),
     [activeDate, days],
   );
-  const dayOptions = useMemo(
-    () =>
-      days.map((day) => ({
-        date: day.date,
-        dayLabel: toDayLabel(day.date),
-        dayNumber: toDayNumber(day.date),
-        openCount: countOpen(day),
-      })),
-    [days],
-  );
-  const windowOptions = useMemo(
-    () =>
-      windows.map((window) => ({
-        startsAt: window.starts_at,
-        label: toWindowLabel(window.starts_at, window.ends_at),
-        isAvailable: window.is_available,
-        reason: window.reason,
-      })),
-    [windows],
-  );
+  const dayOptions = useMemo(() => toDayOptions(days), [days]);
+  const windowOptions = useMemo(() => toWindowOptions(windows), [windows]);
 
   const picked = windows.find(
     (window) => window.starts_at === pickedWindow && window.is_available,
@@ -128,49 +111,63 @@ export function StudioVisitContainer() {
   );
 
   if (confirmation) {
-    return <ConfirmationLine text={confirmation} />;
+    return (
+      <div
+        ref={confirmationRef}
+        tabIndex={-1}
+        className="max-w-xl focus:outline-none"
+      >
+        <ConfirmationLine text={confirmation} />
+      </div>
+    );
   }
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <h2 className="font-heading text-2xl tracking-tight">Come by</h2>
-        <p className="max-w-md text-[15px] text-muted-foreground">
-          Pick a half hour in the next fortnight and we will keep the wheel
-          quiet for it.
-        </p>
-      </div>
+  if (loading && days.length === 0) {
+    return (
+      <p className="text-[15px] text-muted-foreground">
+        Looking at the calendar…
+      </p>
+    );
+  }
 
-      {loading && days.length === 0 ? (
-        <p className="text-[15px] text-muted-foreground">
-          Looking at the calendar…
-        </p>
-      ) : dayOptions.every((day) => day.openCount === 0) ? (
-        <p className="text-[15px] text-muted-foreground">
-          Nothing free in the next fortnight. Write to us instead and we will
-          find a time.
-        </p>
-      ) : (
-        <>
-          <VisitDayStrip
-            days={dayOptions}
-            selectedDate={activeDate}
-            onSelectDate={handleSelectDate}
-          />
-          <VisitWindowPicker
-            dayLabel={activeDate ? toLongDayLabel(activeDate) : ""}
-            windows={windowOptions}
-            selectedStartsAt={pickedWindow}
-            onSelectWindow={handleSelectWindow}
-          />
-          <VisitForm
-            pickedLabel={pickedLabel}
-            isSubmitting={isBooking}
-            errorMessage={errorMessage}
-            onSubmit={(values) => void handleSubmit(values)}
-          />
-        </>
-      )}
+  if (error && days.length === 0) {
+    return (
+      <p role="alert" className="max-w-prose text-[15px] text-muted-foreground">
+        We could not open the calendar just now. Write to us and we will find a
+        time.
+      </p>
+    );
+  }
+
+  if (dayOptions.every((day) => day.openCount === 0)) {
+    return (
+      <p className="max-w-prose text-[15px] text-muted-foreground">
+        Nothing free in the next fortnight. Write to us instead and we will find
+        a time.
+      </p>
+    );
+  }
+
+  // Capped narrower than a wide column on purpose, so the seven day cells stay close to square.
+  return (
+    <div className="flex max-w-xl flex-col gap-6">
+      <VisitDayStrip
+        days={dayOptions}
+        selectedDate={activeDate}
+        onSelectDate={handleSelectDate}
+      />
+      <VisitWindowPicker
+        dayLabel={activeDate ? toLongDayLabel(activeDate) : ""}
+        windows={windowOptions}
+        selectedStartsAt={pickedWindow}
+        onSelectWindow={handleSelectWindow}
+      />
+      <VisitForm
+        pickedLabel={pickedLabel}
+        isSubmitting={isBooking}
+        errorMessage={errorMessage}
+        onSubmit={(values) => void handleSubmit(values)}
+      />
     </div>
   );
 }

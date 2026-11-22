@@ -7,6 +7,7 @@ import {
   isContentSlug,
   isHref,
   isHttpUrl,
+  isSectionBodyOptional,
   siteSettingsSchema,
 } from "./content";
 
@@ -92,6 +93,16 @@ describe("contentSlugSchema", () => {
   });
 });
 
+describe("isSectionBodyOptional", () => {
+  it("lets a section with items go without a body", () => {
+    expect(isSectionBodyOptional(1)).toBe(true);
+  });
+
+  it("needs a body when a section has no items", () => {
+    expect(isSectionBodyOptional(0)).toBe(false);
+  });
+});
+
 describe("contentPageSchema", () => {
   it("accepts a page with one full section", () => {
     expect(contentPageSchema.safeParse(pageValues()).success).toBe(true);
@@ -117,6 +128,31 @@ describe("contentPageSchema", () => {
         ),
       ),
     ).toBe("A section heading is required");
+  });
+
+  it("lets a section with items leave its body empty", () => {
+    const result = contentPageSchema.safeParse(
+      pageValues({
+        sections: [
+          {
+            heading: "What to avoid",
+            body: "  ",
+            items: [{ title: "Open flame", body: "Not for the stovetop." }],
+          },
+        ],
+      }),
+    );
+    expect(result.success).toBe(true);
+  });
+
+  it("needs a body when a section has no items", () => {
+    expect(
+      firstError(
+        contentPageSchema.safeParse(
+          pageValues({ sections: [{ heading: "Care", body: " ", items: [] }] }),
+        ),
+      ),
+    ).toBe("Write a body or add at least one item");
   });
 
   it("needs a title and a body on every item", () => {

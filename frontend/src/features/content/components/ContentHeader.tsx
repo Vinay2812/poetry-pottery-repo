@@ -10,7 +10,7 @@ export function ContentHeader({ title, subtitle }: ContentHeaderProps) {
         {title}
       </h1>
       {subtitle && (
-        <p className="text-[15px] text-muted-foreground md:text-base">
+        <p className="max-w-xl text-[15px] leading-relaxed text-muted-foreground md:text-base">
           {subtitle}
         </p>
       )}

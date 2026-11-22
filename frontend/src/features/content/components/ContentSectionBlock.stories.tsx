@@ -23,11 +23,13 @@ const meta = {
     items: [
       {
         title: "Thermal shock",
-        body: "Do not move a piece straight from the fridge into a hot oven.",
+        paragraphs: [
+          "Do not move a piece straight from the fridge into a hot oven.",
+        ],
       },
       {
         title: "Abrasive scrubbers",
-        body: "Steel wool scratches glaze. A soft sponge is enough.",
+        paragraphs: ["Steel wool scratches glaze. A soft sponge is enough."],
       },
     ],
     isAccordion: false,

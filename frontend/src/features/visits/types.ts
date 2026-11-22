@@ -84,6 +84,39 @@ export function countOpen(day: VisitDayData): number {
   return day.windows.filter((window) => window.is_available).length;
 }
 
+export interface VisitDayOption {
+  date: string;
+  dayLabel: string;
+  dayNumber: string;
+  openCount: number;
+}
+
+export function toDayOptions(days: VisitDayData[]): VisitDayOption[] {
+  return days.map((day) => ({
+    date: day.date,
+    dayLabel: toDayLabel(day.date),
+    dayNumber: toDayNumber(day.date),
+    openCount: countOpen(day),
+  }));
+}
+
+export interface VisitWindowOption {
+  startsAt: string;
+  label: string;
+}
+
+// Only free windows are offered; a taken one is not a choice, so it is not shown.
+export function toWindowOptions(
+  windows: VisitWindowData[],
+): VisitWindowOption[] {
+  return windows
+    .filter((window) => window.is_available)
+    .map((window) => ({
+      startsAt: window.starts_at,
+      label: toWindowLabel(window.starts_at, window.ends_at),
+    }));
+}
+
 export function toConfirmationLine(
   name: string,
   startsAt: string,

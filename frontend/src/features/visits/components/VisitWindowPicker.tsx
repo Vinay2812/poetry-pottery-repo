@@ -2,12 +2,7 @@
 
 import { cn } from "@/lib/utils";
 
-interface VisitWindowOption {
-  startsAt: string;
-  label: string;
-  isAvailable: boolean;
-  reason: string | null;
-}
+import type { VisitWindowOption } from "@/features/visits/types";
 
 export interface VisitWindowPickerProps {
   dayLabel: string;
@@ -22,14 +17,12 @@ export function VisitWindowPicker({
   selectedStartsAt,
   onSelectWindow,
 }: VisitWindowPickerProps) {
-  const open = windows.filter((window) => window.isAvailable);
-
   return (
     <div className="flex flex-col gap-3">
       <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
         {dayLabel}
       </h3>
-      {open.length === 0 ? (
+      {windows.length === 0 ? (
         <p className="text-[15px] text-muted-foreground">
           Nothing free that day. Try another.
         </p>
@@ -37,24 +30,27 @@ export function VisitWindowPicker({
         <div
           role="group"
           aria-label={`Half-hour windows on ${dayLabel}`}
-          className="flex flex-wrap gap-2"
+          className="grid grid-cols-2 gap-2 sm:grid-cols-3"
         >
-          {open.map((window) => (
-            <button
-              key={window.startsAt}
-              type="button"
-              aria-pressed={window.startsAt === selectedStartsAt}
-              onClick={() => onSelectWindow(window.startsAt)}
-              className={cn(
-                "border px-3 py-2 text-[13px] whitespace-nowrap tnum transition-colors",
-                window.startsAt === selectedStartsAt
-                  ? "border-ink bg-ink text-white"
-                  : "border-ash hover:border-ink",
-              )}
-            >
-              {window.label}
-            </button>
-          ))}
+          {windows.map((window) => {
+            const isSelected = window.startsAt === selectedStartsAt;
+            return (
+              <button
+                key={window.startsAt}
+                type="button"
+                aria-pressed={isSelected}
+                onClick={() => onSelectWindow(window.startsAt)}
+                className={cn(
+                  "min-h-11 border px-2 text-[13px] whitespace-nowrap tnum transition-colors",
+                  isSelected
+                    ? "border-ink bg-ink text-white"
+                    : "border-ash hover:border-ink",
+                )}
+              >
+                {window.label}
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

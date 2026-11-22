@@ -2,14 +2,12 @@ export interface StoryColumnsProps {
   paragraphs: string[];
 }
 
+// Text flows down the first column and on into the second, so it reads in order.
 export function StoryColumns({ paragraphs }: StoryColumnsProps) {
   return (
-    <div className="grid gap-6 md:grid-cols-2 md:gap-16">
-      {paragraphs.map((paragraph) => (
-        <p
-          key={paragraph}
-          className="max-w-prose text-[15px] leading-relaxed md:text-base"
-        >
+    <div className="gap-16 text-[15px] leading-relaxed md:columns-2 md:text-base">
+      {paragraphs.map((paragraph, index) => (
+        <p key={index} className="mb-5 max-w-prose break-inside-avoid">
           {paragraph}
         </p>
       ))}

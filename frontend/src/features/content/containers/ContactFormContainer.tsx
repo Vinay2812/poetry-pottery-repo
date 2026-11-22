@@ -5,15 +5,16 @@ import { useCallback, useState } from "react";
 import { useMutation } from "@apollo/client/react";
 import { SendContactMessageDocument } from "@/graphql/generated/graphql";
 import { describeError } from "@/lib/apollo/errors";
+import { useFocusOnShow } from "@/lib/use-focus-on-show";
 import type { ContactFormValues } from "@/lib/validations/contact";
 
-import { ConfirmationLine } from "@/features/content/components/ConfirmationLine";
 import { ContactForm } from "@/features/content/components/ContactForm";
 
 export function ContactFormContainer() {
   const [isSent, setIsSent] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [send, { loading }] = useMutation(SendContactMessageDocument);
+  const panelRef = useFocusOnShow<HTMLDivElement>(isSent);
 
   const handleSubmit = useCallback(
     async (values: ContactFormValues) => {
@@ -43,17 +44,14 @@ export function ContactFormContainer() {
     [send],
   );
 
-  if (isSent) {
-    return (
-      <ConfirmationLine text="Thank you, your message is with us. We reply within a day." />
-    );
-  }
-
   return (
-    <ContactForm
-      isSubmitting={loading}
-      errorMessage={errorMessage}
-      onSubmit={(values) => void handleSubmit(values)}
-    />
+    <div ref={panelRef} tabIndex={-1} className="focus:outline-none">
+      <ContactForm
+        isSent={isSent}
+        isSubmitting={loading}
+        errorMessage={errorMessage}
+        onSubmit={(values) => void handleSubmit(values)}
+      />
+    </div>
   );
 }

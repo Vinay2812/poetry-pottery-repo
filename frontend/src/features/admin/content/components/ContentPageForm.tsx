@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import {
   contentPageSchema,
   type ContentPageFormValues,
+  isSectionBodyOptional,
 } from "@/lib/validations/admin/content";
 
 import { EMPTY_ITEM, EMPTY_SECTION, nextIndex } from "../types";
@@ -102,7 +103,11 @@ function SectionFields({
       />
       <ContentTextField
         id={`section-${index}-body`}
-        label="Body"
+        label={
+          isSectionBodyOptional(items.fields.length)
+            ? "Body (optional)"
+            : "Body"
+        }
         hint="Blank lines start a new paragraph on the site."
         error={sectionErrors?.body?.message}
         isMultiline
