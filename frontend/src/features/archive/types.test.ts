@@ -74,15 +74,15 @@ describe("toAskLabel", () => {
 });
 
 describe("toProvenance", () => {
-  it("says when it was made, what it is, and where it went", () => {
+  it("says when it was made and what it is", () => {
     expect(
-      toProvenance("2026-09-17T06:00:00.000Z", "Ocean Blue", "Stoneware", 0),
-    ).toBe("Made September 2026 · Ocean Blue · Stoneware · has found a home");
+      toProvenance("2026-09-17T06:00:00.000Z", "Ocean Blue", "Stoneware"),
+    ).toBe("Made September 2026 · Ocean Blue · Stoneware");
   });
 
-  it("does not claim a home for a piece that was only retired", () => {
-    expect(
-      toProvenance("2026-09-17T06:00:00.000Z", null, "Terracotta", 4),
-    ).toBe("Made September 2026 · Terracotta · no longer on the shelf");
+  it("leaves out a glaze nobody named", () => {
+    expect(toProvenance("2026-09-17T06:00:00.000Z", null, "Terracotta")).toBe(
+      "Made September 2026 · Terracotta",
+    );
   });
 });

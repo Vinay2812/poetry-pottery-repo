@@ -1,3 +1,7 @@
+// Pages that sit content under the sticky SiteHeader find its live edge through this.
+export const SITE_HEADER_SELECTOR = "[data-site-header]";
+export const SITE_FOOTER_SELECTOR = "[data-site-footer]";
+
 export interface NavLink {
   href: string;
   label: string;

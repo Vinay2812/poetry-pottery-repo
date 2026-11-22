@@ -17,9 +17,14 @@ import { PageShell } from "@/components/layout/PageShell";
 
 import { toProvenance } from "@/features/archive/types";
 import { useAddToCart } from "@/features/cart/hooks";
+import {
+  SITE_FOOTER_SELECTOR,
+  SITE_HEADER_SELECTOR,
+} from "@/features/layout/types";
 import { canWatchPiece, NextBatchContainer } from "@/features/notify";
 import { useReferencePhotos } from "@/features/products/hooks";
 import { ArchiveNotice } from "@/features/products/components/ArchiveNotice";
+import { CareNotes } from "@/features/products/components/CareNotes";
 import { GlazeNote } from "@/features/products/components/GlazeNote";
 import { KilnCard } from "@/features/products/components/KilnCard";
 import { MakerNote } from "@/features/products/components/MakerNote";
@@ -35,6 +40,10 @@ import { ProductCardContainer } from "@/features/products/containers/ProductCard
 import {
   computeUnitPrice,
   hasFailedPhoto,
+  isStickyBarWanted,
+  isTuckedUnderHeader,
+  LG_MEDIA_QUERY,
+  STICKY_BAR_SCROLL_PADDING,
   isPhotoUploadPending,
   MAX_REFERENCE_PHOTOS,
   type ProductDetailData,
@@ -65,6 +74,10 @@ export interface ProductDetailContainerProps {
 }
 
 const MAX_QUANTITY = 10;
+
+// The first control a reader needs to fix: an invalid text field, an unanswered choice, or the photo picker.
+const FIRST_ISSUE_SELECTOR =
+  '[aria-invalid="true"], [role="radiogroup"][aria-describedby] [tabindex="0"], button[aria-describedby]';
 
 // The drawing names three facts. Each leader leaves its dot at the same 25 degrees,
 // and each dot is read off the piece itself so "Clay body" never lands on the glaze.
@@ -99,11 +112,14 @@ export function ProductDetailContainer({
     toDefaultSelections(product.option_groups),
   );
   const [showErrors, setShowErrors] = useState(false);
-  const [isBuyBoxVisible, setIsBuyBoxVisible] = useState(true);
-  const [isFooterVisible, setIsFooterVisible] = useState(false);
+  const [isBarWanted, setIsBarWanted] = useState(false);
+  const isBarWantedRef = useRef(false);
   const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
   const [activeFact, setActiveFact] = useState<string | null>(null);
-  const buyBoxRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
+  const addToCartRef = useRef<HTMLButtonElement>(null);
+  const stickyBarRef = useRef<HTMLDivElement>(null);
+  const optionsRef = useRef<HTMLDivElement>(null);
 
   const { data: relatedData } = useQuery(RelatedProductsDocument, {
     variables: { slug: product.slug, limit: 8 },
@@ -147,6 +163,7 @@ export function ProductDetailContainer({
         capacityMl: product.capacity_ml,
         weightG: product.weight_g,
         isCustomizable: product.is_customizable,
+        isArchived: product.is_archived,
         sizeChoices: groups.flatMap((group) =>
           group.options.map((option) => option.name),
         ),
@@ -177,26 +194,81 @@ export function ProductDetailContainer({
       });
   }, [factRows, product.name]);
 
+  // Row, header and footer edges are read each scroll frame below lg, where the bar lives; an observer misses jumps.
   useEffect(() => {
-    const node = buyBoxRef.current;
+    const node = actionsRef.current;
     if (!node) return;
-    const observer = new IntersectionObserver(([entry]) =>
-      setIsBuyBoxVisible(entry?.isIntersecting ?? true),
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
+    const wide = window.matchMedia(LG_MEDIA_QUERY);
+    const header = document.querySelector(SITE_HEADER_SELECTOR);
+    const footer = document.querySelector(SITE_FOOTER_SELECTOR);
+    let frame = 0;
+    const want = (isWanted: boolean, isRowInView: boolean) => {
+      if (isBarWantedRef.current === isWanted) return;
+      isBarWantedRef.current = isWanted;
+      // The bar is about to go inert; a reader on its button lands on the main one.
+      const main = addToCartRef.current;
+      if (
+        !isWanted &&
+        main &&
+        stickyBarRef.current?.contains(document.activeElement)
+      ) {
+        main.focus({ preventScroll: true });
+        // Shown in full when the row is back (scroll-padding-top clears the header); at the footer, stay put.
+        if (isRowInView) main.scrollIntoView({ block: "nearest" });
+      }
+      setIsBarWanted(isWanted);
+    };
+    const measure = () => {
+      frame = 0;
+      const rowBottom = node.getBoundingClientRect().bottom;
+      const headerBottom = header?.getBoundingClientRect().bottom ?? 0;
+      want(
+        isStickyBarWanted({
+          rowBottom,
+          headerBottom,
+          footerTop: footer?.getBoundingClientRect().top ?? Infinity,
+          viewportHeight: window.innerHeight,
+        }),
+        !isTuckedUnderHeader(rowBottom, headerBottom),
+      );
+    };
+    const schedule = () => {
+      if (frame === 0) frame = window.requestAnimationFrame(measure);
+    };
+    const detach = () => {
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+      window.cancelAnimationFrame(frame);
+      frame = 0;
+    };
+    const sync = () => {
+      detach();
+      if (wide.matches) {
+        want(false, true);
+        return;
+      }
+      measure();
+      window.addEventListener("scroll", schedule, { passive: true });
+      window.addEventListener("resize", schedule);
+    };
+    sync();
+    wide.addEventListener("change", sync);
+    return () => {
+      wide.removeEventListener("change", sync);
+      detach();
+    };
   }, []);
 
-  // The bar steps aside at the footer, so its last line (privacy, terms) stays tappable.
+  // While the bar is up, focused and scrolled-to controls stop above it rather than under it.
+  const isStickyBarShown = !isArchived && isBarWanted;
   useEffect(() => {
-    const footer = document.querySelector("[data-site-footer]");
-    if (!footer) return;
-    const observer = new IntersectionObserver(([entry]) =>
-      setIsFooterVisible(entry?.isIntersecting ?? false),
-    );
-    observer.observe(footer);
-    return () => observer.disconnect();
-  }, []);
+    if (!isStickyBarShown) return;
+    const root = document.documentElement;
+    root.style.scrollPaddingBottom = STICKY_BAR_SCROLL_PADDING;
+    return () => {
+      root.style.scrollPaddingBottom = "";
+    };
+  }, [isStickyBarShown]);
 
   const handleSelectOption = useCallback(
     (groupId: number, optionId: number) => {
@@ -208,19 +280,32 @@ export function ProductDetailContainer({
     setSelections((current) => ({ ...current, [groupId]: { text } }));
   }, []);
 
-  const handleAddToCart = useCallback(() => {
+  // The message sits beside the field, which can be a screen away from the button pressed.
+  const revealFirstIssue = useCallback((block: ScrollLogicalPosition) => {
+    window.requestAnimationFrame(() => {
+      const options = optionsRef.current;
+      if (!options) return;
+      options.scrollIntoView({ block });
+      options
+        .querySelector<HTMLElement>(FIRST_ISSUE_SELECTOR)
+        ?.focus({ preventScroll: true });
+    });
+  }, []);
+
+  // False when something in the options has to be fixed first.
+  const tryAddToCart = useCallback((): boolean => {
     if (issues.length > 0) {
       setShowErrors(true);
-      return;
+      return false;
     }
     if (isPhotoUploadPending(photos)) {
       setPhotoError("Wait for the photos to finish uploading");
-      return;
+      return false;
     }
     // A failed photo would otherwise be dropped from the line without a word.
     if (hasFailedPhoto(photos)) {
       setPhotoError("Remove the photo that did not upload, or try it again");
-      return;
+      return false;
     }
     addToCart(
       {
@@ -236,6 +321,7 @@ export function ProductDetailContainer({
       product.name,
     );
     clearPhotos();
+    return true;
   }, [
     addToCart,
     clearPhotos,
@@ -247,6 +333,14 @@ export function ProductDetailContainer({
     selections,
     setPhotoError,
   ]);
+
+  const handleAddToCart = useCallback(() => {
+    if (!tryAddToCart()) revealFirstIssue("nearest");
+  }, [revealFirstIssue, tryAddToCart]);
+
+  const handleStickyAddToCart = useCallback(() => {
+    if (!tryAddToCart()) revealFirstIssue("center");
+  }, [revealFirstIssue, tryAddToCart]);
 
   const handleToggleWishlist = useCallback(() => {
     toggle(product.id, product.name);
@@ -267,25 +361,28 @@ export function ProductDetailContainer({
   }));
 
   return (
-    <PageShell className="flex flex-col gap-16 py-8 md:py-12">
+    <PageShell className="flex flex-col gap-16 pb-8 sm:pt-8 md:py-12">
       {/* minmax(0, …) keeps a tall buy box from widening the gallery column through its square ratio. */}
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
-        <ProductGallery
-          images={product.image_urls}
-          name={product.name}
-          overlay={
-            hasKilnDiagram ? (
-              <KilnLabels
-                labels={kilnLabels}
-                isAnimated
-                activeText={activeFact}
-                onActivate={setActiveFact}
-                className="hidden text-ink lg:block"
-              />
-            ) : undefined
-          }
-        />
-        <div ref={buyBoxRef} className="lg:sticky lg:top-24 lg:self-start">
+      <div className="grid gap-6 md:grid-cols-2 md:gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
+        {/* Edge to edge on a phone; on a tablet the photo, the shorter column, stays put. */}
+        <div className="-mx-4 sm:mx-0 md:sticky md:top-24 md:self-start lg:static lg:self-auto">
+          <ProductGallery
+            images={product.image_urls}
+            name={product.name}
+            overlay={
+              hasKilnDiagram ? (
+                <KilnLabels
+                  labels={kilnLabels}
+                  isAnimated
+                  activeText={activeFact}
+                  onActivate={setActiveFact}
+                  className="hidden text-ink lg:block"
+                />
+              ) : undefined
+            }
+          />
+        </div>
+        <div className="lg:sticky lg:top-24 lg:self-start">
           {isArchived ? (
             <ArchiveNotice
               name={product.name}
@@ -295,7 +392,6 @@ export function ProductDetailContainer({
                 product.created_at,
                 product.color_name,
                 product.material,
-                product.stock,
               )}
               note={toArchiveNote(product.stock)}
               commissionHref={toArchiveCommissionPath(product.slug)}
@@ -329,9 +425,14 @@ export function ProductDetailContainer({
               onQuantityChange={setQuantity}
               onAddToCart={handleAddToCart}
               onToggleWishlist={handleToggleWishlist}
+              actionsRef={actionsRef}
+              addToCartRef={addToCartRef}
               options={
                 groups.length > 0 || product.is_customizable ? (
-                  <div className="flex flex-col gap-5 border-y border-ash py-6">
+                  <div
+                    ref={optionsRef}
+                    className="flex flex-col gap-5 border-y border-ash py-6"
+                  >
                     {groups.map((group) => {
                       const selection = selections[group.id];
                       const issue = showErrors
@@ -411,12 +512,12 @@ export function ProductDetailContainer({
         </div>
       </div>
 
-      <div className="grid gap-10 border-t border-ash pt-12 lg:grid-cols-[1.1fr_1fr] lg:gap-16">
+      <div className="grid gap-12 border-t border-ash pt-12 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:gap-16">
         <div className="flex flex-col gap-4">
           <h2 className="font-heading text-2xl tracking-tight">
             About this piece
           </h2>
-          <p className="text-[15px] leading-relaxed whitespace-pre-line">
+          <p className="max-w-[62ch] text-[15px] leading-relaxed whitespace-pre-line">
             {isDescriptionOpen ? product.description : description.short}
           </p>
           {description.hasMore && (
@@ -429,20 +530,9 @@ export function ProductDetailContainer({
               {isDescriptionOpen ? "Read less" : "Read more"}
             </button>
           )}
+          {product.maker_note && <MakerNote note={product.maker_note} />}
           {product.is_second && (
             <SecondNotice flawNote={toFlawNote(product.flaw_note)} />
-          )}
-          {product.care_notes.length > 0 && (
-            <div className="flex flex-col gap-2 pt-4">
-              <h3 className="text-[11px] tracking-[0.18em] text-muted-foreground uppercase">
-                Care
-              </h3>
-              <ul className="flex flex-col gap-1 text-[13px] text-muted-foreground">
-                {product.care_notes.map((note) => (
-                  <li key={note}>{note}</li>
-                ))}
-              </ul>
-            </div>
           )}
         </div>
         <div className="flex flex-col">
@@ -465,7 +555,6 @@ export function ProductDetailContainer({
               />
             )}
           </div>
-          {product.maker_note && <MakerNote note={product.maker_note} />}
           {glaze && (
             <GlazeNote
               name={glaze.name}
@@ -475,6 +564,9 @@ export function ProductDetailContainer({
               variationNote={glaze.variation_note}
               href={toGlazePath(glaze.slug)}
             />
+          )}
+          {product.care_notes.length > 0 && (
+            <CareNotes notes={product.care_notes} />
           )}
         </div>
       </div>
@@ -487,27 +579,34 @@ export function ProductDetailContainer({
       />
 
       {related.length > 0 && (
-        <Reveal isGroup>
-          <ProductCarousel title="From the same shelf" viewAllHref="/products">
-            {related.map((item) => (
-              <ProductCardContainer
-                key={item.id}
-                product={item}
-                hasPhotoCarousel={false}
-              />
-            ))}
-          </ProductCarousel>
-        </Reveal>
+        <div className="border-t border-ash pt-12">
+          <Reveal isGroup>
+            <ProductCarousel
+              title="From the same shelf"
+              viewAllHref="/products"
+            >
+              {related.map((item) => (
+                <ProductCardContainer
+                  key={item.id}
+                  product={item}
+                  hasPhotoCarousel={false}
+                />
+              ))}
+            </ProductCarousel>
+          </Reveal>
+        </div>
       )}
 
       <StickyBuyBar
-        isVisible={!isArchived && !isBuyBoxVisible && !isFooterVisible}
+        barRef={stickyBarRef}
+        isVisible={isStickyBarShown}
         name={product.name}
+        quantity={quantity}
         total={unitPrice * quantity}
         isSoldOut={stock.tone === "sold_out"}
         isAddingToCart={isAdding}
         canAddToCart={product.stock > 0 || product.is_customizable}
-        onAddToCart={handleAddToCart}
+        onAddToCart={handleStickyAddToCart}
       />
     </PageShell>
   );

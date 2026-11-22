@@ -19,7 +19,7 @@ export function PriceTag({
     <span
       className={cn(
         "flex shrink-0 items-baseline gap-1.5 tnum",
-        size === "lg" ? "text-2xl" : "text-sm",
+        size === "lg" ? "text-xl" : "text-sm",
       )}
     >
       {prefix && (

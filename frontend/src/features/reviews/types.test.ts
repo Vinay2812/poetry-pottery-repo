@@ -8,11 +8,14 @@ import {
   DRAFT_REVIEW_ID,
   type ReviewData,
   type ReviewsResultData,
+  shouldFocusReviewsAfterRetry,
   toDistributionRows,
   toDraftReview,
   toOneLine,
   toRatingLabel,
   toReviewInput,
+  toReviewListStatus,
+  toReviewSubmitLabel,
   toSubjectHref,
   toSummaryLine,
   withReviewAdded,
@@ -233,5 +236,76 @@ describe("review drafts", () => {
       created_at: previous.created_at,
       author: previous.author,
     });
+  });
+});
+
+describe("toReviewSubmitLabel", () => {
+  it("posts a first review and saves an edit", () => {
+    expect(toReviewSubmitLabel(false, false)).toBe("Post review");
+    expect(toReviewSubmitLabel(false, true)).toBe("Posting\u2026");
+    expect(toReviewSubmitLabel(true, false)).toBe("Save changes");
+    expect(toReviewSubmitLabel(true, true)).toBe("Saving\u2026");
+  });
+});
+
+describe("toReviewListStatus", () => {
+  const idle = {
+    hasResult: false,
+    isLoading: false,
+    hasError: false,
+    isRetrying: false,
+  };
+
+  it("is ready as soon as the server has answered, even with no reviews", () => {
+    expect(toReviewListStatus({ ...idle, hasResult: true })).toBe("ready");
+    expect(
+      toReviewListStatus({
+        hasResult: true,
+        isLoading: true,
+        hasError: true,
+        isRetrying: true,
+      }),
+    ).toBe("ready");
+  });
+
+  it("says the request failed instead of claiming there are no reviews", () => {
+    expect(toReviewListStatus({ ...idle, hasError: true })).toBe("failed");
+  });
+
+  it("keeps the failed line up, marked as retrying, while a retry runs", () => {
+    expect(
+      toReviewListStatus({
+        ...idle,
+        isLoading: true,
+        hasError: true,
+        isRetrying: true,
+      }),
+    ).toBe("retrying");
+  });
+
+  it("loads while the first answer is on its way", () => {
+    expect(toReviewListStatus({ ...idle, isLoading: true })).toBe("loading");
+    expect(
+      toReviewListStatus({ ...idle, isLoading: true, hasError: true }),
+    ).toBe("loading");
+  });
+});
+
+describe("shouldFocusReviewsAfterRetry", () => {
+  it("moves focus to the reviews when a retry lands while the button still has it", () => {
+    expect(shouldFocusReviewsAfterRetry("retrying", "ready", true)).toBe(true);
+  });
+
+  it("leaves focus alone once the reader has moved on", () => {
+    expect(shouldFocusReviewsAfterRetry("retrying", "ready", false)).toBe(
+      false,
+    );
+  });
+
+  it("does nothing on a failure or outside a retry", () => {
+    expect(shouldFocusReviewsAfterRetry("retrying", "failed", true)).toBe(
+      false,
+    );
+    expect(shouldFocusReviewsAfterRetry("loading", "ready", true)).toBe(false);
   });
 });

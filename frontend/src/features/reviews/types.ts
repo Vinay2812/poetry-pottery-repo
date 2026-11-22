@@ -32,6 +32,46 @@ export const PRODUCT_REVIEW_NOTE =
 export const EVENT_REVIEW_NOTE =
   "Reviews come from people who sat at the wheel";
 
+export type ReviewListStatus = "loading" | "failed" | "retrying" | "ready";
+
+interface ReviewListState {
+  hasResult: boolean;
+  isLoading: boolean;
+  hasError: boolean;
+  isRetrying: boolean;
+}
+
+// Only an answer can say there are no reviews; a failure says so, and stays up while a retry runs.
+export function toReviewListStatus({
+  hasResult,
+  isLoading,
+  hasError,
+  isRetrying,
+}: ReviewListState): ReviewListStatus {
+  if (hasResult) return "ready";
+  if (isRetrying) return "retrying";
+  if (hasError && !isLoading) return "failed";
+  return "loading";
+}
+
+// A successful retry hands focus to the reviews only if the reader was still on the retry button.
+export function shouldFocusReviewsAfterRetry(
+  previous: ReviewListStatus,
+  next: ReviewListStatus,
+  isRetryFocused: boolean,
+): boolean {
+  return previous === "retrying" && next === "ready" && isRetryFocused;
+}
+
+// An edit is saved, a first review is posted; the button says which while it works.
+export function toReviewSubmitLabel(
+  isEditing: boolean,
+  isSubmitting: boolean,
+): string {
+  if (isEditing) return isSubmitting ? "Saving…" : "Save changes";
+  return isSubmitting ? "Posting…" : "Post review";
+}
+
 export function toRatingLabel(rating: number): string {
   return rating === 1 ? "1 star" : `${rating} stars`;
 }

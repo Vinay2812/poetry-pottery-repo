@@ -20,7 +20,7 @@ const meta = {
     defaultPhotoUrls: [],
     isSubmitting: false,
     isUploading: false,
-    submitLabel: "Post review",
+    isEditing: false,
     error: null,
     onSubmit: fn(),
     onUploadPhoto: fn(async () => null),
@@ -38,11 +38,15 @@ export const Editing: Story = {
   args: {
     defaultRating: 4,
     defaultBody: "Arrived well packed and the handle sits right in the hand.",
-    submitLabel: "Save changes",
+    isEditing: true,
   },
 };
 
 export const Posting: Story = { args: { isSubmitting: true } };
+
+export const SavingEdit: Story = {
+  args: { defaultRating: 4, isEditing: true, isSubmitting: true },
+};
 
 export const Refused: Story = {
   args: {

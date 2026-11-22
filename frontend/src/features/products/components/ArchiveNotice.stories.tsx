@@ -17,8 +17,7 @@ const meta = {
     name: "Drip sip mug",
     priceLabel: "₹850",
     collectionName: "Artisan classics",
-    provenance:
-      "Made September 2026 \u00b7 Ocean Blue \u00b7 Stoneware \u00b7 has found a home",
+    provenance: "Made September 2026 \u00b7 Ocean Blue \u00b7 Stoneware",
     note: "This piece has found a home.",
     commissionHref: "/custom?like=drip-sip-mug",
     askUrl: "https://wa.me/919876543210?text=Hi",

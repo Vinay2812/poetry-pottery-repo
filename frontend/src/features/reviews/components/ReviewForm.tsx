@@ -16,7 +16,10 @@ import {
 } from "@/lib/validations/review";
 
 import { RatingInput } from "@/features/reviews/components/RatingInput";
-import { REVIEW_IMAGE_TYPES } from "@/features/reviews/types";
+import {
+  REVIEW_IMAGE_TYPES,
+  toReviewSubmitLabel,
+} from "@/features/reviews/types";
 
 export interface ReviewFormProps {
   defaultRating: number;
@@ -24,7 +27,7 @@ export interface ReviewFormProps {
   defaultPhotoUrls: string[];
   isSubmitting: boolean;
   isUploading: boolean;
-  submitLabel: string;
+  isEditing: boolean;
   error: string | null;
   onSubmit: (values: ReviewFormValues) => void;
   onUploadPhoto: (file: File) => Promise<string | null>;
@@ -37,7 +40,7 @@ export function ReviewForm({
   defaultPhotoUrls,
   isSubmitting,
   isUploading,
-  submitLabel,
+  isEditing,
   error,
   onSubmit,
   onUploadPhoto,
@@ -185,7 +188,7 @@ export function ReviewForm({
 
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={isSubmitting || isUploading}>
-          {isSubmitting ? "Posting…" : submitLabel}
+          {toReviewSubmitLabel(isEditing, isSubmitting)}
         </Button>
         <Button type="button" variant="ghost" onClick={onCancel}>
           Cancel

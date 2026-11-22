@@ -29,6 +29,7 @@ import {
   type ReviewSubject,
   REVIEWS_PAGE_SIZE,
   toDraftReview,
+  toReviewListStatus,
   toReviewInput,
   toSubjectHref,
   toUploadSubject,
@@ -116,11 +117,27 @@ export function useReviewList(subject: ReviewSubject) {
     notifyOnNetworkStatusChange: true,
   });
 
+  const [isRetrying, setIsRetrying] = useState(false);
+  const refetchProduct = productQuery.refetch;
+  const refetchEvent = eventQuery.refetch;
+
   const result = isProduct
     ? (productQuery.data ?? productQuery.previousData)?.productReviews
     : (eventQuery.data ?? eventQuery.previousData)?.eventReviews;
   const loading = isProduct ? productQuery.loading : eventQuery.loading;
+  const error = isProduct ? productQuery.error : eventQuery.error;
   const pageInfo = result?.page_info;
+
+  const retry = useCallback(async () => {
+    setIsRetrying(true);
+    try {
+      await (isProduct ? refetchProduct() : refetchEvent());
+    } catch {
+      // The query keeps the error, so the failed line comes back on its own.
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [isProduct, refetchEvent, refetchProduct]);
 
   const loadMore = useCallback(() => {
     if (!pageInfo?.has_more || loading) return;
@@ -177,9 +194,15 @@ export function useReviewList(subject: ReviewSubject) {
 
   return {
     result: result ?? null,
-    isLoading: loading && !result,
+    status: toReviewListStatus({
+      hasResult: Boolean(result),
+      isLoading: loading,
+      hasError: Boolean(error),
+      isRetrying,
+    }),
     isLoadingMore: loading && Boolean(result),
     loadMore,
+    retry,
     refetchLoaded,
   };
 }

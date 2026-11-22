@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useMemo, useOptimistic, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useRef,
+  useState,
+} from "react";
 
 import { DeleteReviewDialog } from "@/features/reviews/components/DeleteReviewDialog";
 import { ReviewDialog } from "@/features/reviews/components/ReviewDialog";
@@ -14,6 +21,7 @@ import {
   EVENT_REVIEW_NOTE,
   PRODUCT_REVIEW_NOTE,
   type ReviewSubjectKind,
+  shouldFocusReviewsAfterRetry,
   toFormValues,
   toReviewDate,
 } from "@/features/reviews/types";
@@ -35,7 +43,7 @@ export function ReviewsPanelContainer({
     () => ({ kind, id: subjectId, slug }),
     [kind, slug, subjectId],
   );
-  const { result, isLoading, isLoadingMore, loadMore, refetchLoaded } =
+  const { result, status, isLoadingMore, loadMore, refetchLoaded, retry } =
     useReviewList(subject);
   const [optimisticResult, applyAction] = useOptimistic(
     result,
@@ -60,6 +68,27 @@ export function ReviewsPanelContainer({
   } = useReviewComposer(subject, subjectName, list);
   const [openPhoto, setOpenPhoto] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const previousStatus = useRef(status);
+  const hadRetryFocus = useRef(false);
+
+  // React detaches the ref just before it removes the button, so focus is read while it is still there.
+  const handleRetryRef = useCallback((node: HTMLButtonElement | null) => {
+    if (!node) return;
+    hadRetryFocus.current = false;
+    return () => {
+      hadRetryFocus.current = document.activeElement === node;
+    };
+  }, []);
+
+  // A failed retry keeps its button and focus; a successful one hands focus to the reviews.
+  useEffect(() => {
+    const previous = previousStatus.current;
+    previousStatus.current = status;
+    if (shouldFocusReviewsAfterRetry(previous, status, hadRetryFocus.current)) {
+      headingRef.current?.focus();
+    }
+  }, [status]);
 
   const handleClose = useCallback(() => setIsOpen(false), [setIsOpen]);
   const handleClosePhoto = useCallback(() => setOpenPhoto(null), []);
@@ -89,12 +118,15 @@ export function ReviewsPanelContainer({
         distribution={summary?.distribution ?? [0, 0, 0, 0, 0]}
         quietLine={quietLine}
         ctaLabel={ctaLabel}
-        isLoading={isLoading}
+        status={status}
         isPending={isSaving}
         hasMore={optimisticResult?.page_info.has_more ?? false}
         isLoadingMore={isLoadingMore}
         onWriteReview={open}
         onLoadMore={loadMore}
+        onRetry={retry}
+        headingRef={headingRef}
+        retryRef={handleRetryRef}
       >
         {(optimisticResult?.items ?? []).map((review) => (
           <ReviewItem
@@ -124,7 +156,7 @@ export function ReviewsPanelContainer({
           defaultPhotoUrls={defaults.image_urls}
           isSubmitting={isSaving}
           isUploading={isUploading}
-          submitLabel={hasMine ? "Save changes" : "Post review"}
+          isEditing={hasMine}
           error={error}
           onSubmit={submit}
           onUploadPhoto={upload}

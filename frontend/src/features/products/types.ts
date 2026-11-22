@@ -272,6 +272,53 @@ export function toFlawNote(flawNote: string | null): string {
 export const STUDIO_NOTE =
   "Each piece is thrown by hand, so expect small differences.";
 
+// Tailwind's lg breakpoint, where the buy box sits beside the gallery and the sticky bar is hidden.
+export const LG_MEDIA_QUERY = "(min-width: 64rem)";
+
+// The bottom nav with its rule, the sticky bar and the safe-area inset, plus a little air; sizes live in globals.css.
+export const STICKY_BAR_SCROLL_PADDING =
+  "calc(var(--mobile-nav-height) + 1px + var(--sticky-bar-height) + env(safe-area-inset-bottom) + 0.625rem)";
+
+// The buttons count as gone once their bottom edge has slid under the sticky header's bottom edge.
+export function isTuckedUnderHeader(
+  rowBottom: number,
+  headerBottom: number,
+): boolean {
+  return rowBottom <= headerBottom;
+}
+
+export interface StickyBarEdges {
+  rowBottom: number;
+  headerBottom: number;
+  footerTop: number;
+  viewportHeight: number;
+}
+
+// The bar stands in once the buttons slide under the header, and steps aside at the footer so privacy and terms stay tappable.
+export function isStickyBarWanted({
+  rowBottom,
+  headerBottom,
+  footerTop,
+  viewportHeight,
+}: StickyBarEdges): boolean {
+  return (
+    isTuckedUnderHeader(rowBottom, headerBottom) && footerTop >= viewportHeight
+  );
+}
+
+// The price already sits above the button, so the button only says what it does.
+export function toAddToCartLabel(quantity: number): string {
+  return quantity > 1 ? `Add ${quantity} to cart` : "Add to cart";
+}
+
+// More than one piece gets its total said once, quietly, under the button.
+export function toQuantityTotalLine(
+  quantity: number,
+  total: string,
+): string | null {
+  return quantity > 1 ? `${quantity} pieces, ${total} together` : null;
+}
+
 // Description copy is trimmed to three sentences; the rest sits behind a toggle.
 export function toShortDescription(description: string): {
   short: string;
@@ -467,7 +514,17 @@ export interface PieceFacts {
   capacityMl: number | null;
   weightG: number | null;
   isCustomizable: boolean;
+  isArchived: boolean;
   sizeChoices: string[];
+}
+
+function toShipsIn(
+  isCustomizable: boolean,
+  isArchived: boolean,
+): string | null {
+  // An archived piece is not for sale, so it has nothing to ship.
+  if (isArchived) return null;
+  return isCustomizable ? "About ten days" : "Three working days";
 }
 
 // The kiln card: clay body, glaze and size always have something to say, the
@@ -485,10 +542,7 @@ export function toFactRows(facts: PieceFacts): FactRow[] {
     ["Capacity", formatCapacity(facts.capacityMl)],
     ["Weight", formatWeight(facts.weightG)],
     ["Made in", "Sangli, Maharashtra"],
-    [
-      "Ships in",
-      facts.isCustomizable ? "About ten days" : "Three working days",
-    ],
+    ["Ships in", toShipsIn(facts.isCustomizable, facts.isArchived)],
   ];
   return rows.flatMap(([label, value]) => (value ? [{ label, value }] : []));
 }

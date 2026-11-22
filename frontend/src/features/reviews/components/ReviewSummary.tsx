@@ -21,7 +21,8 @@ export function ReviewSummary({
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-10">
       <div className="flex items-center gap-3">
-        <RatingMarkers rating={Math.round(average)} isLarge />
+        {/* Five empty squares would read as a zero rating, so none until someone rates it. */}
+        {count > 0 && <RatingMarkers rating={Math.round(average)} isLarge />}
         <p className="text-[15px] tnum">{toSummaryLine(average, count)}</p>
       </div>
       {count > 0 && (

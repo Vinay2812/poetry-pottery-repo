@@ -51,7 +51,7 @@ export function OptionGroupPicker({
 
   if (kind === "TEXT") {
     return (
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2.5">
         <Label
           htmlFor={inputId}
           className="flex items-baseline justify-between"
@@ -59,7 +59,10 @@ export function OptionGroupPicker({
           <span>
             {name}
             {!isRequired && (
-              <span className="text-muted-foreground"> (optional)</span>
+              <span className="font-normal text-muted-foreground">
+                {" "}
+                (optional)
+              </span>
             )}
           </span>
           {priceModifier > 0 && (
@@ -75,23 +78,24 @@ export function OptionGroupPicker({
           onChange={(event) => onTextChange(event.target.value)}
           aria-invalid={error !== null}
           aria-describedby={error ? errorId : undefined}
-          placeholder="Type it as you want it carved"
           className="h-11"
         />
-        <div className="flex justify-between text-xs">
-          {error ? (
-            <span id={errorId} className="text-destructive">
-              {error}
-            </span>
-          ) : (
-            <span />
-          )}
-          {maxLength !== null && (
-            <span className="text-muted-foreground">
-              {text.length}/{maxLength}
-            </span>
-          )}
-        </div>
+        {(error !== null || maxLength !== null) && (
+          <div className="flex justify-between gap-4 text-[13px]">
+            {error ? (
+              <span id={errorId} className="text-destructive">
+                {error}
+              </span>
+            ) : (
+              <span />
+            )}
+            {maxLength !== null && (
+              <span className="text-muted-foreground tnum">
+                {text.length}/{maxLength}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     );
   }
@@ -114,10 +118,10 @@ export function OptionGroupPicker({
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2.5">
       <span
         id={labelId}
-        className="mb-2 flex w-full items-baseline justify-between text-sm font-medium"
+        className="flex w-full items-baseline justify-between text-sm font-medium"
       >
         <span>
           {name}

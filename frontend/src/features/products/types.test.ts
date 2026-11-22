@@ -26,7 +26,11 @@ import {
   toFilterInput,
   toFilterKey,
   toSearchParams,
+  isStickyBarWanted,
+  isTuckedUnderHeader,
+  toAddToCartLabel,
   toBatchLabel,
+  toQuantityTotalLine,
   toCardStatusLine,
   toFlawNote,
   toGlazeAskUrl,
@@ -554,6 +558,7 @@ const FACTS: PieceFacts = {
   capacityMl: 250,
   weightG: 320,
   isCustomizable: false,
+  isArchived: false,
   sizeChoices: [],
 };
 
@@ -625,6 +630,15 @@ describe("toFactRows", () => {
     expect(rows).toContainEqual({
       label: "Ships in",
       value: "About ten days",
+    });
+  });
+
+  it("leaves shipping out for an archived piece that is no longer for sale", () => {
+    const rows = toFactRows({ ...FACTS, isArchived: true });
+    expect(rows.map((row) => row.label)).not.toContain("Ships in");
+    expect(rows).toContainEqual({
+      label: "Made in",
+      value: "Sangli, Maharashtra",
     });
   });
 });
@@ -708,5 +722,61 @@ describe("toFilterKey", () => {
     expect(toFilterKey(server)).not.toBe(
       toFilterKey(toFilterInput(parseFilters(new URLSearchParams()), 1)),
     );
+  });
+});
+
+describe("toAddToCartLabel", () => {
+  it("names the count only once there is more than one", () => {
+    expect(toAddToCartLabel(1)).toBe("Add to cart");
+    expect(toAddToCartLabel(3)).toBe("Add 3 to cart");
+  });
+});
+
+describe("toQuantityTotalLine", () => {
+  it("says the total only for more than one piece", () => {
+    expect(toQuantityTotalLine(1, "\u20b9500")).toBeNull();
+    expect(toQuantityTotalLine(2, "\u20b91,000")).toBe(
+      "2 pieces, \u20b91,000 together",
+    );
+  });
+});
+
+describe("isTuckedUnderHeader", () => {
+  it("counts the buttons gone once their bottom edge passes under the header", () => {
+    expect(isTuckedUnderHeader(66, 65)).toBe(false);
+    expect(isTuckedUnderHeader(65, 65)).toBe(true);
+    expect(isTuckedUnderHeader(-400, 65)).toBe(true);
+    // A larger root font makes a taller header, and the edge moves with it.
+    expect(isTuckedUnderHeader(70, 81)).toBe(true);
+  });
+
+  it("keeps them in play while they are still below the fold", () => {
+    expect(isTuckedUnderHeader(1200, 65)).toBe(false);
+  });
+});
+
+describe("isStickyBarWanted", () => {
+  const edges = {
+    rowBottom: 40,
+    headerBottom: 65,
+    footerTop: 2000,
+    viewportHeight: 844,
+  };
+
+  it("stands in once the buttons are under the header and the footer is still below", () => {
+    expect(isStickyBarWanted(edges)).toBe(true);
+  });
+
+  it("stays away while the buttons are on screen", () => {
+    expect(isStickyBarWanted({ ...edges, rowBottom: 300 })).toBe(false);
+  });
+
+  it("steps aside as soon as the footer reaches the screen", () => {
+    expect(isStickyBarWanted({ ...edges, footerTop: 843 })).toBe(false);
+    expect(isStickyBarWanted({ ...edges, footerTop: 844 })).toBe(true);
+  });
+
+  it("behaves as before on a page without a footer", () => {
+    expect(isStickyBarWanted({ ...edges, footerTop: Infinity })).toBe(true);
   });
 });
