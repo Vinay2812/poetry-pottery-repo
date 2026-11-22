@@ -327,11 +327,13 @@ export function toRegistrationFacts(
 }
 
 // The receipt speaks for a request, so it goes once the studio has answered.
+// A saved "just placed" link to a request whose date has since passed would promise a reply too late.
 export function isRequestBannerShown(
   isJustPlaced: boolean,
   status: RegistrationStatus,
+  isLapsed = false,
 ): boolean {
-  return isJustPlaced && status === RegistrationStatus.Pending;
+  return isJustPlaced && status === RegistrationStatus.Pending && !isLapsed;
 }
 
 type RegistrationGroupKey = "underWay" | "upcoming" | "past";
@@ -404,6 +406,8 @@ export interface WhatsAppBookingInput {
   total: string;
   guestName: string;
   isFree: boolean;
+  // The date passed before the studio answered, so the guest asks for a new one, not approval.
+  isLapsed: boolean;
 }
 
 export function toWhatsAppBookingMessage(input: WhatsAppBookingInput): string {
@@ -412,12 +416,14 @@ export function toWhatsAppBookingMessage(input: WhatsAppBookingInput): string {
     `Booking: ${input.registrationId}`,
     `When: ${input.when}`,
     `Seats: ${input.seats}`,
-    // A free booking has nothing to pay, so a ₹0 total line would only read like a bill.
-    input.isFree ? null : `Total: ${input.total}`,
+    // A free or lapsed booking has nothing to pay, so a total line would only read like a bill.
+    input.isFree || input.isLapsed ? null : `Total: ${input.total}`,
     `Name: ${input.guestName}`,
-    input.isFree
-      ? "Could you confirm my seat?"
-      : "Could you approve my request and share payment details?",
+    input.isLapsed
+      ? "The event began before you could answer. Could you find me another?"
+      : input.isFree
+        ? "Could you confirm my seat?"
+        : "Could you approve my request and share payment details?",
   ]
     .filter((line) => line !== null)
     .join("\n");

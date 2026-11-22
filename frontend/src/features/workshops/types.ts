@@ -296,6 +296,8 @@ interface WhatsAppSessionInput {
   total: string;
   guestName: string;
   isFree: boolean;
+  // The date passed before the studio answered, so the guest asks for a new one, not approval.
+  isLapsed: boolean;
 }
 
 export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
@@ -304,12 +306,14 @@ export function toWhatsAppSessionMessage(input: WhatsAppSessionInput): string {
     `Booking: ${input.bookingId}`,
     `When: ${input.when}`,
     `${input.hours} ${input.hours === 1 ? "hour" : "hours"} for ${input.participants} ${input.participants === 1 ? "person" : "people"}`,
-    // A free booking has nothing to pay, so a ₹0 total line would only read like a bill.
-    input.isFree ? null : `Total: ${input.total}`,
+    // A free or lapsed booking has nothing to pay, so a total line would only read like a bill.
+    input.isFree || input.isLapsed ? null : `Total: ${input.total}`,
     `Name: ${input.guestName}`,
-    input.isFree
-      ? "Could you confirm my session?"
-      : "Could you approve my request and share payment details?",
+    input.isLapsed
+      ? "My date passed before you could answer. Could we pick a new one?"
+      : input.isFree
+        ? "Could you confirm my session?"
+        : "Could you approve my request and share payment details?",
   ]
     .filter((line) => line !== null)
     .join("\n");
@@ -352,11 +356,13 @@ export function toBookingGroup(
 }
 
 // The "we have your request" note is only true until the studio answers, however the page was reached.
+// A saved "just placed" link to a request whose date has since passed would promise a reply too late.
 export function isRequestBannerShown(
   isJustPlaced: boolean,
   status: RegistrationStatus,
+  isLapsed = false,
 ): boolean {
-  return isJustPlaced && status === RegistrationStatus.Pending;
+  return isJustPlaced && status === RegistrationStatus.Pending && !isLapsed;
 }
 
 export function formatHours(hours: number): string {

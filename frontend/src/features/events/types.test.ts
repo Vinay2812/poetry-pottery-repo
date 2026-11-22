@@ -216,6 +216,7 @@ describe("toWhatsAppBookingMessage", () => {
       total: "₹3,600",
       guestName: "Maya",
       isFree: false,
+      isLapsed: false,
     });
     expect(message).toContain("Wheel Throwing for Beginners");
     expect(message).toContain("Booking: REG123");
@@ -233,6 +234,7 @@ describe("toWhatsAppBookingMessage", () => {
       total: "₹0",
       guestName: "Maya",
       isFree: true,
+      isLapsed: false,
     });
     expect(message).toContain("Could you confirm my seat?");
     expect(message).not.toContain("payment");
@@ -690,5 +692,30 @@ describe("start-time helpers", () => {
     expect(isSeatPriceShown({ ...booked, hasStarted: true })).toBe(false);
     expect(isSeatPriceShown({ ...ahead, state: "started" })).toBe(false);
     expect(isSeatPriceShown({ ...ahead, state: "past" })).toBe(false);
+  });
+});
+
+describe("toWhatsAppBookingMessage for a lapsed request", () => {
+  it("asks for a new date instead of approval or payment", () => {
+    const base = toWhatsAppBookingMessage({
+      registrationId: "ID-1",
+      eventTitle: "Open mic",
+      when: "Sun 22 Nov, 6:00 pm",
+      seats: 1,
+      total: "₹1,200",
+      guestName: "Maya",
+      isFree: false,
+      isLapsed: true,
+    });
+    expect(base).toContain("Could you find me another?");
+    expect(base).not.toMatch(/payment|Total:/);
+  });
+});
+
+describe("isRequestBannerShown once the date has passed", () => {
+  it("hides the just-placed receipt for a lapsed request", () => {
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending, true)).toBe(
+      false,
+    );
   });
 });

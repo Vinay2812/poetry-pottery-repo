@@ -233,6 +233,7 @@ describe("session helpers", () => {
       total: "₹1,700",
       guestName: "Maya",
       isFree: false,
+      isLapsed: false,
     });
     expect(message).toContain("Booking: WS-ABC");
     expect(message).toContain("2 hours for 1 person");
@@ -249,6 +250,7 @@ describe("session helpers", () => {
         total: "₹2,850",
         guestName: "Ravi",
         isFree: false,
+        isLapsed: false,
       }),
     ).toContain("1 hour for 3 people");
   });
@@ -262,6 +264,7 @@ describe("session helpers", () => {
       total: "₹0",
       guestName: "Maya",
       isFree: true,
+      isLapsed: false,
     });
     expect(message).toContain("Could you confirm my session?");
     expect(message).not.toMatch(/payment/i);
@@ -709,5 +712,30 @@ describe("studio asks", () => {
       "3 hours at the wheel for 2 people (Open Studio Sessions)",
     );
     expect(toArrangementAskUrl("", "Open Studio Sessions", 3, 2)).toBeNull();
+  });
+});
+
+describe("toWhatsAppSessionMessage for a lapsed request", () => {
+  it("asks for a new date instead of approval or payment", () => {
+    const base = toWhatsAppSessionMessage({
+      bookingId: "ID-1",
+      when: "Sun 22 Nov, 3–4 pm",
+      hours: 1,
+      participants: 2,
+      total: "₹1,200",
+      guestName: "Maya",
+      isFree: false,
+      isLapsed: true,
+    });
+    expect(base).toContain("Could we pick a new one?");
+    expect(base).not.toMatch(/payment|Total:/);
+  });
+});
+
+describe("isRequestBannerShown once the date has passed", () => {
+  it("hides the just-placed receipt for a lapsed request", () => {
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending, true)).toBe(
+      false,
+    );
   });
 });
