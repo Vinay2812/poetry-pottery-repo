@@ -129,14 +129,17 @@ describe("studioPickRefusal", () => {
     ).toBeNull();
   });
 
+  // Worded exactly as the editor's notes (frontend admin pieces STUDIO_PICK_BLOCK_NOTES).
   it("refuses a retired, made-to-order, sold-out or out-of-window piece", () => {
-    expect(studioPickRefusal({ ...ready, is_active: false }, now)).toMatch(
-      "on the shelf",
+    expect(studioPickRefusal({ ...ready, is_active: false }, now)).toBe(
+      "Only a piece on the shelf can be a studio pick",
     );
-    expect(studioPickRefusal({ ...ready, is_customizable: true }, now)).toMatch(
-      "not made to order",
+    expect(studioPickRefusal({ ...ready, is_customizable: true }, now)).toBe(
+      "Studio picks are pieces ready to ship, not made to order",
     );
-    expect(studioPickRefusal({ ...ready, stock: 0 }, now)).toMatch("in stock");
+    expect(studioPickRefusal({ ...ready, stock: 0 }, now)).toBe(
+      "Studio picks are pieces in stock. Add stock to mark it",
+    );
     expect(
       studioPickRefusal(
         {
@@ -145,7 +148,9 @@ describe("studioPickRefusal", () => {
         },
         now,
       ),
-    ).toMatch("not opened yet");
+    ).toBe(
+      "Its collection has not opened yet, so the shop leaves it out until then",
+    );
     expect(
       studioPickRefusal(
         {
@@ -154,7 +159,7 @@ describe("studioPickRefusal", () => {
         },
         now,
       ),
-    ).toMatch("has closed");
+    ).toBe("Its collection has closed, so the shop leaves it out");
   });
 });
 
@@ -168,7 +173,10 @@ describe("AdminProductsService", () => {
     prismaMock.product.update.mockResolvedValue(row);
     prismaMock.product.findUnique.mockResolvedValue(row);
     prismaMock.category.count.mockResolvedValue(2);
-    prismaMock.collection.count.mockResolvedValue(1);
+    prismaMock.collection.findUnique.mockResolvedValue({
+      starts_at: null,
+      ends_at: null,
+    });
     prismaMock.glaze.count.mockResolvedValue(1);
     shelfMock.adjust.mockResolvedValue(2);
     shelfMock.setListed.mockResolvedValue(true);
@@ -435,6 +443,8 @@ describe("AdminProductsService", () => {
 
     await service.create(input({ collection_id: 4, is_featured: true }));
 
+    // One read both proves the collection exists and supplies its dates.
+    expect(prismaMock.collection.findUnique).toHaveBeenCalledTimes(1);
     expect(prismaMock.product.create).toHaveBeenCalledWith(
       containing({ data: containing({ is_featured: true }) }),
     );
@@ -671,7 +681,7 @@ describe("AdminProductsService", () => {
     );
 
     prismaMock.category.count.mockResolvedValue(2);
-    prismaMock.collection.count.mockResolvedValue(0);
+    prismaMock.collection.findUnique.mockResolvedValue(null);
     await expect(service.update(1, { collection_id: 4 })).rejects.toThrow(
       /collection no longer exists/,
     );
