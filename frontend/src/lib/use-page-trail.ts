@@ -48,7 +48,7 @@ export interface PageTrailState<Page> {
 
 // "Show more" for a list whose page one comes from useQuery. Each next page is fetched on its own
 // and kept in this hook's state per filter key, never in Apollo's cache: a page that lands after
-// the filters moved on is dropped.
+// the filters moved on is dropped, and with no-cache it cannot rewrite a card already on screen.
 export function usePageTrail<
   Data,
   Variables extends OperationVariables,
@@ -92,7 +92,7 @@ export function usePageTrail<
       .query({
         query,
         variables: toVariables(page),
-        fetchPolicy: "network-only",
+        fetchPolicy: "no-cache",
       })
       .then(
         ({ data }) => (data ? toPage(data) : null),

@@ -125,7 +125,7 @@ describe("useEvents", () => {
 
     const call = clientQueryMock.mock.calls[0]?.[0];
     expect(call?.variables.filter.page).toBe(2);
-    expect(call?.fetchPolicy).toBe("network-only");
+    expect(call?.fetchPolicy).toBe("no-cache");
     expect(ids(result.current.events)).toEqual([1, 2, 3, 4]);
     expect(result.current.pageInfo?.page).toBe(2);
     expect(result.current.isNextPageLoading).toBe(false);

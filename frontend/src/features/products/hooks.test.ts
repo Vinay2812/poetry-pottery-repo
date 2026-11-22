@@ -276,7 +276,7 @@ describe("useShelfResults", () => {
 
     const call = clientQueryMock.mock.calls[0]?.[0];
     expect(call?.variables.filter.page).toBe(2);
-    expect(call?.fetchPolicy).toBe("network-only");
+    expect(call?.fetchPolicy).toBe("no-cache");
     expect(result.current.result?.items.map((item) => item.id)).toEqual([
       1, 2, 3, 4,
     ]);
