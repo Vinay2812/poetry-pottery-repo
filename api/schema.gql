@@ -526,6 +526,7 @@ type AdminWorkshopBooking {
 }
 
 input AdminWorkshopBookingsFilterInput {
+  awaiting_approval: Boolean
   config_id: Int
   from: DateTime
   limit: Int

@@ -42,15 +42,17 @@ import {
 import {
   describeSeats,
   describeWhen,
+  toEventAwaitingFilterPatch,
   toEventHref,
   toEventStatus,
+  toEventStatusFilterPatch,
   toEventType,
 } from "@/features/admin/events/types";
 
 const PAGE_SIZE = 20;
 const STATUS_OPTIONS = enumOptions(EventStatus);
 const TYPE_OPTIONS = enumOptions(EventType);
-const REQUEST_OPTIONS = [{ value: "1", label: "Awaiting approval" }];
+const REQUEST_OPTIONS = [{ value: "1", label: "Waiting on you" }];
 
 export function EventsListContainer() {
   const { values, page, isPending, patch } = useAdminQueryState();
@@ -141,7 +143,7 @@ export function EventsListContainer() {
           anyLabel="Any status"
           options={STATUS_OPTIONS}
           value={status}
-          onChange={(value) => patch({ status: value || null })}
+          onChange={(value) => patch(toEventStatusFilterPatch(value))}
         />
         <AdminSelectFilter
           id="events-type"
@@ -157,7 +159,7 @@ export function EventsListContainer() {
           anyLabel="All events"
           options={REQUEST_OPTIONS}
           value={isAwaitingFilter ? "1" : ""}
-          onChange={(value) => patch({ awaiting: value || null })}
+          onChange={(value) => patch(toEventAwaitingFilterPatch(value, status))}
         />
       </AdminToolbar>
       {personId !== null && (

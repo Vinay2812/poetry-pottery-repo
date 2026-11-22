@@ -4,7 +4,10 @@ import {
   RegistrationStatus,
 } from "@/graphql/generated/graphql";
 
-import { toRegistrationStatusLabel } from "@/lib/registration-status";
+import {
+  isRequestLapsed,
+  toRegistrationStatusLabel,
+} from "@/lib/registration-status";
 
 import { formatEnumLabel } from "@/features/admin/shell/types";
 
@@ -244,6 +247,17 @@ export function describeClosing(reason: string | null): string | null {
   const trimmed = reason?.trim() ?? "";
   if (trimmed === "") return null;
   return FILLED_IN_REASON[trimmed] ?? `Reason: ${trimmed}`;
+}
+
+// A request left unanswered past its date can only be turned down, so its row says why.
+export function describeRegistrationStatusNote(
+  status: RegistrationStatus,
+  startsAt: string,
+  cancelReason: string | null,
+  now = new Date(),
+): string | null {
+  if (isRequestLapsed(status, startsAt, now)) return "Date passed";
+  return describeClosing(cancelReason);
 }
 
 /** Turning someone away is worth a sentence; letting them in is not. */

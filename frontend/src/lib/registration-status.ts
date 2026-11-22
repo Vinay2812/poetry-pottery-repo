@@ -85,3 +85,23 @@ export function toRequestStages(
     ],
   };
 }
+
+// A request still unanswered once its date has come no longer holds anything, so the studio can only turn it down.
+export function isRequestLapsed(
+  status: RegistrationStatus,
+  startsAt: string,
+  now = new Date(),
+): boolean {
+  return status === RegistrationStatus.Pending && new Date(startsAt) < now;
+}
+
+// Once the date has passed unanswered, only the requested step remains, saying so: approval and
+// payment can no longer happen, so they are not shown as steps to come. Status words stay as they were.
+export function withRequestedLine(
+  stages: RequestStage[],
+  line: string,
+): RequestStage[] {
+  return stages
+    .filter((stage) => stage.key === RegistrationStatus.Pending)
+    .map((stage) => ({ ...stage, description: line }));
+}

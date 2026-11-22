@@ -2,7 +2,7 @@
 // cache. Apollo fetches the first page through the list's query and each later page on its own;
 // the trail joins them per filter key, so a page only ever joins the list that asked for it.
 
-interface PagedList {
+export interface PagedList {
   items: unknown[];
   page_info: { page: number; has_more: boolean };
 }

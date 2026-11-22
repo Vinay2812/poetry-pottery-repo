@@ -21,6 +21,7 @@ import {
   isRegistrationClosed,
   toRegistrationStatusLabel,
   toRequestStages,
+  withRequestedLine,
 } from "@/lib/registration-status";
 
 export type EventCardData = EventCardFragment;
@@ -260,11 +261,16 @@ const SEAT_STAGES = toRequestStages(
 
 export const REGISTRATION_STAGES = SEAT_STAGES.paid;
 
+const SEAT_LAPSED_LINE =
+  "The event began before we answered. Message us and we'll find you another.";
+
 // The saved total decides the steps, so a seat made free later keeps the steps it was booked with.
 export function toRegistrationStages(
   total: number,
+  isLapsed: boolean,
 ): TimelineStage<RegistrationStatus>[] {
-  return total === 0 ? SEAT_STAGES.free : SEAT_STAGES.paid;
+  const stages = total === 0 ? SEAT_STAGES.free : SEAT_STAGES.paid;
+  return isLapsed ? withRequestedLine(stages, SEAT_LAPSED_LINE) : stages;
 }
 
 export type RegistrationStepDates = Partial<
@@ -321,11 +327,13 @@ export function toRegistrationFacts(
 }
 
 // The receipt speaks for a request, so it goes once the studio has answered.
+// A saved "just placed" link to a request whose date has since passed would promise a reply too late.
 export function isRequestBannerShown(
   isJustPlaced: boolean,
   status: RegistrationStatus,
+  isLapsed: boolean,
 ): boolean {
-  return isJustPlaced && status === RegistrationStatus.Pending;
+  return isJustPlaced && status === RegistrationStatus.Pending && !isLapsed;
 }
 
 type RegistrationGroupKey = "underWay" | "upcoming" | "past";
@@ -398,20 +406,27 @@ export interface WhatsAppBookingInput {
   total: string;
   guestName: string;
   isFree: boolean;
+  // The date passed before the studio answered, so the guest asks for a new one, not approval.
+  isLapsed: boolean;
 }
 
 export function toWhatsAppBookingMessage(input: WhatsAppBookingInput): string {
   return [
-    `Hi! I booked ${input.eventTitle} on Poetry & Pottery.`,
+    // Nothing was booked if the studio never answered, so the opening says what was asked for.
+    input.isLapsed
+      ? `Hi! I asked for a seat at ${input.eventTitle} on Poetry & Pottery.`
+      : `Hi! I booked ${input.eventTitle} on Poetry & Pottery.`,
     `Booking: ${input.registrationId}`,
     `When: ${input.when}`,
     `Seats: ${input.seats}`,
-    // A free booking has nothing to pay, so a ₹0 total line would only read like a bill.
-    input.isFree ? null : `Total: ${input.total}`,
+    // A free or lapsed booking has nothing to pay, so a total line would only read like a bill.
+    input.isFree || input.isLapsed ? null : `Total: ${input.total}`,
     `Name: ${input.guestName}`,
-    input.isFree
-      ? "Could you confirm my seat?"
-      : "Could you approve my request and share payment details?",
+    input.isLapsed
+      ? "The event began before I heard back. Is there another one I could join?"
+      : input.isFree
+        ? "Could you confirm my seat?"
+        : "Could you approve my request and share payment details?",
   ]
     .filter((line) => line !== null)
     .join("\n");

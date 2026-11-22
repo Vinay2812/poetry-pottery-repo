@@ -58,12 +58,15 @@ export function EventListContainer({
     events,
     pageInfo,
     isInitialLoading,
-    isFetchingMore,
+    isNextPageLoading,
+    isRefreshing,
     hasError,
-    hasMoreFailed,
+    hasNextPageFailed,
     loadMore,
     refetch,
   } = useEvents(filters, initialEvents, initialFilterKey);
+  // The button waits on a next page, and on new filters still loading under the old cards.
+  const isMoreBusy = isNextPageLoading || isRefreshing;
 
   const handleWhenChange = useCallback(
     (when: EventWhen) => dispatch({ when }),
@@ -168,7 +171,7 @@ export function EventListContainer({
               <p className="text-[13px] text-muted-foreground tnum">
                 Showing {events.length} of {pageInfo.total}
               </p>
-              {hasMoreFailed && !isFetchingMore && (
+              {hasNextPageFailed && !isMoreBusy && (
                 <p role="alert" className="text-[13px] text-muted-foreground">
                   More dates did not load.
                 </p>
@@ -176,11 +179,11 @@ export function EventListContainer({
               <Button
                 variant="outline"
                 onClick={loadMore}
-                disabled={isFetchingMore}
+                disabled={isMoreBusy}
               >
-                {isFetchingMore
+                {isMoreBusy
                   ? "Loading…"
-                  : hasMoreFailed
+                  : hasNextPageFailed
                     ? "Try again"
                     : "Show more dates"}
               </Button>

@@ -216,6 +216,7 @@ describe("toWhatsAppBookingMessage", () => {
       total: "₹3,600",
       guestName: "Maya",
       isFree: false,
+      isLapsed: false,
     });
     expect(message).toContain("Wheel Throwing for Beginners");
     expect(message).toContain("Booking: REG123");
@@ -233,26 +234,57 @@ describe("toWhatsAppBookingMessage", () => {
       total: "₹0",
       guestName: "Maya",
       isFree: true,
+      isLapsed: false,
     });
     expect(message).toContain("Could you confirm my seat?");
     expect(message).not.toContain("payment");
     expect(message).not.toContain("Total");
   });
+
+  it("asks for a new date once the date has passed, free or paid", () => {
+    for (const isFree of [false, true]) {
+      const message = toWhatsAppBookingMessage({
+        registrationId: "ID-1",
+        eventTitle: "Open mic",
+        when: "Sun 22 Nov, 6:00 pm",
+        seats: 1,
+        total: "₹1,200",
+        guestName: "Maya",
+        isFree,
+        isLapsed: true,
+      });
+      expect(message).toContain("Is there another one I could join?");
+      expect(message).toContain("Hi! I asked for");
+      expect(message).not.toMatch(/payment|Total:|confirm my/);
+    }
+  });
 });
 
 describe("toRegistrationStages", () => {
   it("keeps the payment step for a paid seat", () => {
-    expect(toRegistrationStages(600)).toBe(REGISTRATION_STAGES);
+    expect(toRegistrationStages(600, false)).toBe(REGISTRATION_STAGES);
   });
 
   it("goes straight from requested to confirmed for a free seat", () => {
-    const stages = toRegistrationStages(0);
+    const stages = toRegistrationStages(0, false);
     expect(stages.map((stage) => stage.key)).toEqual([
       RegistrationStatus.Pending,
       RegistrationStatus.Confirmed,
     ]);
     expect(JSON.stringify(stages)).not.toMatch(/pay/i);
     expect(toRepeatedPhrases(stages)).toEqual([]);
+  });
+
+  it("tells a guest whose event began unanswered to message the studio", () => {
+    for (const total of [0, 600]) {
+      const stages = toRegistrationStages(total, true);
+      expect(stages[0]?.description).toMatch(/began before we answered/);
+      expect(stages[0]?.description).not.toMatch(/holding/);
+      // Approval and payment can no longer happen, so only the requested step is left.
+      expect(stages.map((stage) => stage.label)).toEqual([
+        toRegistrationStages(total, false)[0]?.label,
+      ]);
+    }
   });
 });
 
@@ -611,16 +643,28 @@ describe("registration detail helpers", () => {
   });
 
   it("shows the request receipt only while the studio has not answered", () => {
-    expect(isRequestBannerShown(true, RegistrationStatus.Pending)).toBe(true);
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending, false)).toBe(
+      true,
+    );
     // A reopened ?placed=1 link after approval must not ask to confirm again.
-    expect(isRequestBannerShown(true, RegistrationStatus.Approved)).toBe(false);
-    expect(isRequestBannerShown(true, RegistrationStatus.Confirmed)).toBe(
+    expect(isRequestBannerShown(true, RegistrationStatus.Approved, false)).toBe(
       false,
     );
-    expect(isRequestBannerShown(true, RegistrationStatus.Cancelled)).toBe(
+    expect(
+      isRequestBannerShown(true, RegistrationStatus.Confirmed, false),
+    ).toBe(false);
+    expect(
+      isRequestBannerShown(true, RegistrationStatus.Cancelled, false),
+    ).toBe(false);
+    expect(isRequestBannerShown(false, RegistrationStatus.Pending, false)).toBe(
       false,
     );
-    expect(isRequestBannerShown(false, RegistrationStatus.Pending)).toBe(false);
+  });
+
+  it("hides the just-placed receipt once the date has passed", () => {
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending, true)).toBe(
+      false,
+    );
   });
 });
 

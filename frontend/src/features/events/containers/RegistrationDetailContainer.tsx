@@ -32,6 +32,7 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { toTimelineSteps } from "@/lib/timeline";
 import {
   isRegistrationClosed,
+  isRequestLapsed,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
 } from "@/lib/registration-status";
@@ -112,6 +113,10 @@ export function RegistrationDetailContainer({
   const event = optimisticRegistration.event;
   const stepDates = toRegistrationStepDates(optimisticRegistration);
   const isClosed = isRegistrationClosed(optimisticRegistration.status);
+  const isLapsed = isRequestLapsed(
+    optimisticRegistration.status,
+    event.starts_at,
+  );
   const whatsappUrl = whatsappNumber
     ? buildWhatsAppUrl(
         whatsappNumber,
@@ -123,6 +128,7 @@ export function RegistrationDetailContainer({
           total: formatInr(optimisticRegistration.total),
           guestName: user?.fullName ?? "",
           isFree: optimisticRegistration.total === 0,
+          isLapsed,
         }),
       )
     : null;
@@ -145,9 +151,10 @@ export function RegistrationDetailContainer({
         isRequestShown={isRequestBannerShown(
           isJustPlaced,
           optimisticRegistration.status,
+          isLapsed,
         )}
         steps={toTimelineSteps({
-          stages: toRegistrationStages(optimisticRegistration.total),
+          stages: toRegistrationStages(optimisticRegistration.total, isLapsed),
           status: optimisticRegistration.status,
           dates: stepDates,
           isClosed,

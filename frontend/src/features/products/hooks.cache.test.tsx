@@ -204,7 +204,7 @@ describe("useShelfResults against a real cache", () => {
     await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
 
     act(() => result.current.loadMore());
-    await waitFor(() => expect(result.current.hasAppendFailed).toBe(true));
+    await waitFor(() => expect(result.current.hasNextPageFailed).toBe(true));
 
     expect(result.current.result?.items).toHaveLength(24);
     expect(result.current.isNextPageLoading).toBe(false);
@@ -312,6 +312,29 @@ describe("useShelfResults against a real cache", () => {
     expect(items).toHaveLength(48);
     expect(new Set(items.map((item) => item.id)).size).toBe(48);
     expect(log.filter((entry) => entry === "start mug p2")).toHaveLength(1);
+  });
+
+  it("lets a dropped page leave the cards now on screen as they are", async () => {
+    // The shelf's page two still carries an old name for a piece the mugs list shows.
+    const stalePiece = { ...piece(101), name: "Old name" };
+    const staleP2 = { ...ALL_P2, items: [...ALL_P2.items, stalePiece] };
+    const { client, releaseHeld } = shelfClient((filter) => {
+      if (filter.category_slugs?.includes("mugs")) return { page: MUGS_P1 };
+      return filter.page === 1
+        ? { page: ALL_P1 }
+        : { page: staleP2, isHeld: true };
+    });
+    const { result, rerender } = renderShelf(client, ALL_P1);
+    await waitFor(() => expect(result.current.canAskNextPage).toBe(true));
+
+    act(() => result.current.loadMore());
+    rerender({ filters: MUGS });
+    await waitFor(() => expect(result.current.phase).toBe("ready"));
+    await act(async () => releaseHeld("all p2"));
+    await pause(10);
+
+    const names = result.current.result?.items.map((item) => item.name);
+    expect(names).toEqual(["Piece 101", "Piece 102"]);
   });
 
   it("sends one request for two load-mores in the same frame or before an answer (G)", async () => {

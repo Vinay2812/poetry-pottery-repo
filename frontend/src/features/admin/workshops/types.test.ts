@@ -9,6 +9,8 @@ import {
   applyTierPatch,
   describeClosedDays,
   describeSessionDays,
+  toAwaitingFilterPatch,
+  toStatusFilterPatch,
   describeSessionSize,
   formatHoursLabel,
   formatParticipantsLabel,
@@ -553,5 +555,39 @@ describe("toWheelSessionsHref", () => {
     expect(toWheelSessionsHref({ search: "WS-1" })).toBe(
       "/dashboard/workshops?config=all&search=WS-1",
     );
+  });
+});
+
+describe("toStatusFilterPatch", () => {
+  it("turns the waiting queue off when another status is picked", () => {
+    expect(toStatusFilterPatch(RegistrationStatus.Confirmed)).toEqual({
+      status: RegistrationStatus.Confirmed,
+      awaiting: null,
+    });
+  });
+
+  it("keeps the queue for Awaiting approval or Any status", () => {
+    expect(toStatusFilterPatch(RegistrationStatus.Pending)).toEqual({
+      status: RegistrationStatus.Pending,
+    });
+    expect(toStatusFilterPatch("")).toEqual({ status: null });
+  });
+});
+
+describe("toAwaitingFilterPatch", () => {
+  it("drops a status the queue could never match", () => {
+    expect(toAwaitingFilterPatch("1", RegistrationStatus.Cancelled)).toEqual({
+      awaiting: "1",
+      status: null,
+    });
+  });
+
+  it("leaves a matching status alone and clears the queue when turned off", () => {
+    expect(toAwaitingFilterPatch("1", RegistrationStatus.Pending)).toEqual({
+      awaiting: "1",
+    });
+    expect(toAwaitingFilterPatch("", RegistrationStatus.Cancelled)).toEqual({
+      awaiting: null,
+    });
   });
 });

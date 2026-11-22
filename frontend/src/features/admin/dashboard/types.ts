@@ -71,10 +71,8 @@ export function toAgendaKindLabel(
   }
 }
 
-// The request tiles open their lists already narrowed to what is waiting on the studio.
-export const WAITING_SESSIONS_HREF = toWheelSessionsHref({
-  status: RegistrationStatus.Pending,
-});
+// The request tiles open their lists narrowed to exactly what they count: requests still ahead.
+export const WAITING_SESSIONS_HREF = toWheelSessionsHref({ awaiting: "1" });
 export const WAITING_EVENT_REQUESTS_HREF = "/dashboard/events?awaiting=1";
 
 // A wheel session ends with its status in the words the guest sees, e.g. "· Awaiting approval".

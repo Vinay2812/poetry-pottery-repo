@@ -233,10 +233,29 @@ describe("session helpers", () => {
       total: "₹1,700",
       guestName: "Maya",
       isFree: false,
+      isLapsed: false,
     });
     expect(message).toContain("Booking: WS-ABC");
     expect(message).toContain("2 hours for 1 person");
     expect(message).toContain("Total: ₹1,700");
+  });
+
+  it("asks for a new date once the date has passed, free or paid", () => {
+    for (const isFree of [false, true]) {
+      const message = toWhatsAppSessionMessage({
+        bookingId: "ID-1",
+        when: "Sun 22 Nov, 3–4 pm",
+        hours: 1,
+        participants: 2,
+        total: "₹1,200",
+        guestName: "Maya",
+        isFree,
+        isLapsed: true,
+      });
+      expect(message).toContain("Could we pick a new one?");
+      expect(message).toContain("Hi! I asked for");
+      expect(message).not.toMatch(/payment|Total:|confirm my/);
+    }
   });
 
   it("says one hour and several people the way a person would", () => {
@@ -249,6 +268,7 @@ describe("session helpers", () => {
         total: "₹2,850",
         guestName: "Ravi",
         isFree: false,
+        isLapsed: false,
       }),
     ).toContain("1 hour for 3 people");
   });
@@ -262,6 +282,7 @@ describe("session helpers", () => {
       total: "₹0",
       guestName: "Maya",
       isFree: true,
+      isLapsed: false,
     });
     expect(message).toContain("Could you confirm my session?");
     expect(message).not.toMatch(/payment/i);
@@ -355,17 +376,29 @@ describe("booking status helpers", () => {
   });
 
   it("keeps the payment step for a paid session", () => {
-    expect(toBookingStages(1700)).toBe(BOOKING_STAGES);
+    expect(toBookingStages(1700, false)).toBe(BOOKING_STAGES);
   });
 
   it("goes straight from requested to confirmed for a free session", () => {
-    const stages = toBookingStages(0);
+    const stages = toBookingStages(0, false);
     expect(stages.map((stage) => stage.key)).toEqual([
       RegistrationStatus.Pending,
       RegistrationStatus.Confirmed,
     ]);
     expect(JSON.stringify(stages)).not.toMatch(/pay/i);
     expect(toRepeatedPhrases(stages)).toEqual([]);
+  });
+
+  it("tells a guest whose date passed unanswered to message the studio", () => {
+    for (const total of [0, 1700]) {
+      const stages = toBookingStages(total, true);
+      expect(stages[0]?.description).toMatch(/passed before we answered/);
+      expect(stages[0]?.description).not.toMatch(/holding/);
+      // Approval and payment can no longer happen, so only the requested step is left.
+      expect(stages.map((stage) => stage.label)).toEqual([
+        toBookingStages(total, false)[0]?.label,
+      ]);
+    }
   });
 
   it("counts hours and free wheels", () => {
@@ -493,16 +526,28 @@ describe("applyBookingAction", () => {
 
 describe("isRequestBannerShown", () => {
   it("shows the request note only while the studio has not answered", () => {
-    expect(isRequestBannerShown(true, RegistrationStatus.Pending)).toBe(true);
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending, false)).toBe(
+      true,
+    );
     // A reopened ?placed=1 link after the studio confirms must not say "while we confirm".
-    expect(isRequestBannerShown(true, RegistrationStatus.Confirmed)).toBe(
+    expect(
+      isRequestBannerShown(true, RegistrationStatus.Confirmed, false),
+    ).toBe(false);
+    expect(isRequestBannerShown(true, RegistrationStatus.Approved, false)).toBe(
       false,
     );
-    expect(isRequestBannerShown(true, RegistrationStatus.Approved)).toBe(false);
-    expect(isRequestBannerShown(true, RegistrationStatus.Cancelled)).toBe(
+    expect(
+      isRequestBannerShown(true, RegistrationStatus.Cancelled, false),
+    ).toBe(false);
+    expect(isRequestBannerShown(false, RegistrationStatus.Pending, false)).toBe(
       false,
     );
-    expect(isRequestBannerShown(false, RegistrationStatus.Pending)).toBe(false);
+  });
+
+  it("hides the just-placed receipt once the date has passed", () => {
+    expect(isRequestBannerShown(true, RegistrationStatus.Pending, true)).toBe(
+      false,
+    );
   });
 });
 

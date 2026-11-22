@@ -23,6 +23,7 @@ import { useSlotPicker } from "@/features/workshops/slot-picker";
 import { toClosedLabel, toTimelineDate, toTimelineSteps } from "@/lib/timeline";
 import {
   isRegistrationClosed,
+  isRequestLapsed,
   toRegistrationStatusLabel,
   toRegistrationStatusTone,
 } from "@/lib/registration-status";
@@ -190,6 +191,10 @@ export function BookingDetailContainer({
       value: `${pluralize(optimisticBooking.pieces_per_person * optimisticBooking.participants, "piece")}, fired and glazed`,
     },
   ];
+  const isLapsed = isRequestLapsed(
+    optimisticBooking.status,
+    optimisticBooking.starts_at,
+  );
   const whatsappUrl = whatsappNumber
     ? buildWhatsAppUrl(
         whatsappNumber,
@@ -201,6 +206,7 @@ export function BookingDetailContainer({
           total: formatInr(optimisticBooking.total),
           guestName: user?.fullName ?? "",
           isFree,
+          isLapsed,
         }),
       )
     : null;
@@ -218,9 +224,10 @@ export function BookingDetailContainer({
         isJustPlaced={isRequestBannerShown(
           isJustPlaced,
           optimisticBooking.status,
+          isLapsed,
         )}
         steps={toTimelineSteps({
-          stages: toBookingStages(optimisticBooking.total),
+          stages: toBookingStages(optimisticBooking.total, isLapsed),
           status: optimisticBooking.status,
           dates,
           isClosed: closed,

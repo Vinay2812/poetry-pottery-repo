@@ -8,6 +8,8 @@ import {
 import { formatShortDay } from "@/lib/format";
 import { safeTimeZone } from "@/lib/timezones";
 
+import type { QueryPatch } from "@/features/admin/shell/types";
+
 export type WorkshopConfigData = AdminWorkshopConfigFieldsFragment;
 export type WorkshopTierData = WorkshopConfigData["tiers"][number];
 export type WorkshopBlackoutData = AdminWorkshopBlackoutFieldsFragment;
@@ -374,4 +376,22 @@ export function toWheelSessionsHref(
   query.set("config", ALL_SETUPS);
   query.sort();
   return `/dashboard/workshops?${query.toString()}`;
+}
+
+// "Waiting on you" only ever holds requests still awaiting approval, so another status turns it off.
+export function toStatusFilterPatch(status: string): QueryPatch {
+  const isOtherStatus = status !== "" && status !== RegistrationStatus.Pending;
+  return isOtherStatus
+    ? { status, awaiting: null }
+    : { status: status || null };
+}
+
+// Turning the queue on drops a status it could never match.
+export function toAwaitingFilterPatch(
+  awaiting: string,
+  status: string,
+): QueryPatch {
+  const clashes =
+    awaiting !== "" && status !== "" && status !== RegistrationStatus.Pending;
+  return clashes ? { awaiting, status: null } : { awaiting: awaiting || null };
 }

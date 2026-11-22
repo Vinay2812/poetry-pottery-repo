@@ -331,7 +331,7 @@ export class AdminWorkshopsService {
   ): Promise<AdminWorkshopBookingsResult> {
     const bounds = clampPage(filter.page, filter.limit, MAX_LIMIT);
     const term = searchTerm(filter.search);
-    const where: Prisma.WorkshopBookingWhereInput = {
+    const filtered: Prisma.WorkshopBookingWhereInput = {
       ...(filter.config_id ? { config_id: filter.config_id } : {}),
       ...(filter.user_id ? { user_id: filter.user_id } : {}),
       ...(filter.status ? { status: filter.status } : {}),
@@ -354,14 +354,18 @@ export class AdminWorkshopsService {
     };
     // Requests still ahead lead, soonest first; everything else follows, newest session first, so a
     // request whose date slipped by sorts with the past rather than heading the queue for ever.
-    const waiting = { AND: [where, waitingBookingWhere(now)] };
-    const rest = { AND: [where, { NOT: waitingBookingWhere(now) }] };
+    // The waiting queue is just the first of these two parts.
+    const waiting = { AND: [filtered, waitingBookingWhere(now)] };
+    const rest = { AND: [filtered, { NOT: waitingBookingWhere(now) }] };
     // One snapshot for the counts and both reads, so a request answered in between cannot shift the page.
     return this.prisma.withTransaction(
       async () => {
+        // The queue holds only waiting requests, so there is no rest to count.
         const [waitingTotal, restTotal] = await Promise.all([
           this.prisma.workshopBooking.count({ where: waiting }),
-          this.prisma.workshopBooking.count({ where: rest }),
+          filter.awaiting_approval
+            ? 0
+            : this.prisma.workshopBooking.count({ where: rest }),
         ]);
         const slices = splitPage(bounds, waitingTotal);
         const [waitingRows, restRows] = await Promise.all([
