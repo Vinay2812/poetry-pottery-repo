@@ -14,6 +14,7 @@ import type { TimelineStep } from "@/lib/timeline";
 
 import type { StatusTone } from "@/lib/status-tone";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
+import { WhatsAppCopyNote } from "@/components/whatsapp/WhatsAppCopyNote";
 
 import { TEXT_LINK } from "@/features/events/components/styles";
 
@@ -95,6 +96,7 @@ export function RegistrationDetail({
               </WhatsAppLink>
             </Button>
           )}
+          {whatsappUrl && <WhatsAppCopyNote />}
         </section>
       )}
 
@@ -166,6 +168,7 @@ export function RegistrationDetail({
                 </WhatsAppLink>
               </Button>
             )}
+            {whatsappUrl && !isRequestShown && <WhatsAppCopyNote />}
             {canCancel && (
               <button
                 type="button"

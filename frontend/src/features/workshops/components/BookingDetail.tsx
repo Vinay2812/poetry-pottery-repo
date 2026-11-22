@@ -12,6 +12,7 @@ import type { TimelineStep } from "@/lib/timeline";
 import type { StatusTone } from "@/lib/status-tone";
 import type { SessionFact } from "@/features/workshops/types";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
+import { WhatsAppCopyNote } from "@/components/whatsapp/WhatsAppCopyNote";
 import { SectionLabel } from "@/components/layout/SectionLabel";
 
 export interface BookingDetailProps {
@@ -91,6 +92,7 @@ export function BookingDetail({
               </WhatsAppLink>
             </Button>
           )}
+          {whatsappUrl && <WhatsAppCopyNote />}
         </section>
       )}
 
@@ -161,6 +163,7 @@ export function BookingDetail({
                 </WhatsAppLink>
               </Button>
             )}
+            {whatsappUrl && !isJustPlaced && <WhatsAppCopyNote />}
             {canCancel && (
               <button
                 type="button"

@@ -22,6 +22,7 @@ import type { TimelineStep } from "@/lib/timeline";
 
 import type { StatusTone } from "@/lib/status-tone";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
+import { WhatsAppCopyNote } from "@/components/whatsapp/WhatsAppCopyNote";
 
 export interface OrderDetailProps {
   orderId: string;
@@ -234,6 +235,7 @@ export function OrderDetail({
                 </WhatsAppLink>
               </Button>
             )}
+            {whatsappUrl && !isJustPlaced && <WhatsAppCopyNote />}
             <button
               type="button"
               onClick={onPrint}

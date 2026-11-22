@@ -1,5 +1,6 @@
 import { toPhoneHref } from "@/lib/format";
 import { WhatsAppLink } from "@/components/whatsapp/WhatsAppLink";
+import { WhatsAppCopyNote } from "@/components/whatsapp/WhatsAppCopyNote";
 
 export interface ContactDetailsProps {
   address: string;
@@ -73,6 +74,7 @@ export function ContactDetails({
             Message us on WhatsApp
           </WhatsAppLink>
         )}
+        {whatsappUrl && <WhatsAppCopyNote />}
       </DetailRow>
       {(instagramUrl.length > 0 || facebookUrl.length > 0) && (
         <DetailRow label="Follow">
