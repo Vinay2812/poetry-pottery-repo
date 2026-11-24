@@ -14,6 +14,12 @@ import { QueueService } from "@/queue/queue.service";
 const MAX_SEMANTIC_DISTANCE = 0.55;
 // word_similarity below this is a different word, not a typo or a prefix of this one.
 const MIN_NAME_SIMILARITY = 0.4;
+// Search is public and every character is parsed, trigram-compared against each row and embedded.
+export const MAX_SEARCH_TERM_LENGTH = 80;
+
+export function clampSearchTerm(term: string): string {
+  return term.trim().slice(0, MAX_SEARCH_TERM_LENGTH);
+}
 
 // "chaa" becomes "chaa:*" so a half-typed word matches; "blue mug" becomes "blue & mug:*".
 export function toPrefixTsQuery(term: string): string | null {
@@ -47,9 +53,11 @@ export class SearchService {
     limit: number,
     vector?: string | null,
   ): Promise<number[]> {
-    const embedded = vector === undefined ? await this.safeEmbed(term) : vector;
+    const clamped = clampSearchTerm(term);
+    const embedded =
+      vector === undefined ? await this.safeEmbed(clamped) : vector;
     const rows = await this.prisma.$queryRaw<RankedRow[]>(
-      rankQuery("products", term, embedded, limit),
+      rankQuery("products", clamped, embedded, limit),
     );
     return rows.map((row) => row.id);
   }
@@ -59,9 +67,11 @@ export class SearchService {
     limit: number,
     vector?: string | null,
   ): Promise<number[]> {
-    const embedded = vector === undefined ? await this.safeEmbed(term) : vector;
+    const clamped = clampSearchTerm(term);
+    const embedded =
+      vector === undefined ? await this.safeEmbed(clamped) : vector;
     const rows = await this.prisma.$queryRaw<RankedRow[]>(
-      rankQuery("events", term, embedded, limit),
+      rankQuery("events", clamped, embedded, limit),
     );
     return rows.map((row) => row.id);
   }
@@ -139,7 +149,9 @@ export class SearchService {
   // Search must keep working on keywords alone if the model is unavailable.
   async safeEmbed(term: string): Promise<string | null> {
     try {
-      return toVectorLiteral(await this.embeddings.embed(term));
+      return toVectorLiteral(
+        await this.embeddings.embed(clampSearchTerm(term)),
+      );
     } catch (error) {
       this.logger.warn("query embedding failed", {
         message: error instanceof Error ? error.message : String(error),
