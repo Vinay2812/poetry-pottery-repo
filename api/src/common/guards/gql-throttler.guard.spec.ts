@@ -14,6 +14,7 @@ import { createHttpExecutionContext } from "@test/helpers/execution-context";
 import { StrictThrottle } from "@/common/decorators/throttle.decorators";
 import { getRequest } from "@/common/graphql/execution-context";
 import type { AppRequest } from "@/common/types/express";
+import { VISITOR_IP_HEADER, VISITOR_KEY_HEADER } from "@/common/visitor-ip";
 import {
   GqlThrottlerGuard,
   isStrictThrottled,
@@ -156,6 +157,20 @@ describe("resolveClientIp", () => {
     expect(
       resolveClientIp(requestFrom({ socket: { remoteAddress: "10.0.0.9" } })),
     ).toBe("10.0.0.9");
+  });
+
+  it("takes the visitor the Next server names when it holds the key", () => {
+    const secret = "k".repeat(32);
+    const request = requestFrom({
+      ip: "198.51.100.4",
+      headers: {
+        [VISITOR_KEY_HEADER]: secret,
+        [VISITOR_IP_HEADER]: "203.0.113.7",
+      },
+    });
+    expect(resolveClientIp(request, secret)).toBe("203.0.113.7");
+    expect(resolveClientIp(request, "x".repeat(32))).toBe("198.51.100.4");
+    expect(resolveClientIp(request, undefined)).toBe("198.51.100.4");
   });
 
   it("returns a placeholder when neither is known", () => {

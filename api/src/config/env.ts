@@ -89,8 +89,13 @@ export const envSchema = z.object({
   // Points uploads at a local S3 emulator (e.g. Floci) instead of Cloudflare; unset in production.
   R2_ENDPOINT: optionalUrl,
   FRONTEND_URL: z.url().default("http://localhost:3030"),
-  // Reverse proxies (and the Next server) in front of the API whose X-Forwarded-For is trusted.
+  // Reverse proxies in front of the API (nginx) whose X-Forwarded-For is trusted.
   TRUSTED_PROXY_HOPS: z.coerce.number().int().min(0).default(1),
+  // Shared with the Next server so its server-side calls are rate limited per visitor, not as one client.
+  VISITOR_IP_SECRET: optionalString.refine(
+    (value) => value === undefined || value.length >= 32,
+    "must be at least 32 characters",
+  ),
 });
 
 export type RawEnv = z.infer<typeof envSchema>;
