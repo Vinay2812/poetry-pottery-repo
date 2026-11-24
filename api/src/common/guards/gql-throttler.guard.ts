@@ -5,6 +5,8 @@ import { ThrottlerException, ThrottlerGuard } from "@nestjs/throttler";
 import { readAuthId } from "@/common/clerk/clerk.util";
 import { getRequestResponse } from "@/common/graphql/execution-context";
 import type { AppRequest, AppResponse } from "@/common/types/express";
+import { forwardedVisitorIp } from "@/common/visitor-ip";
+import { env } from "@/config/env";
 
 export const STRICT_THROTTLER = "strict";
 export const STRICT_THROTTLE_KEY = "strict-throttle";
@@ -22,8 +24,16 @@ export function isStrictThrottled(context: ExecutionContext): boolean {
 }
 
 // request.ip honours express "trust proxy", so forwarded headers only count from trusted hops.
-export function resolveClientIp(request: AppRequest): string {
-  return request.ip ?? request.socket?.remoteAddress ?? "unknown";
+export function resolveClientIp(
+  request: AppRequest,
+  secret: string | undefined = env.VISITOR_IP_SECRET,
+): string {
+  return (
+    forwardedVisitorIp(request.headers, secret) ??
+    request.ip ??
+    request.socket?.remoteAddress ??
+    "unknown"
+  );
 }
 
 @Injectable()

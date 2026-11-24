@@ -7,6 +7,7 @@ const SENSITIVE_KEYS = new Set([
   "password",
   "token",
   "secret",
+  "x-visitor-key",
   "email",
   "phone",
   "name",

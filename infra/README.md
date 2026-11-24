@@ -40,7 +40,7 @@ Setup does, in order:
    Override the prefix with `ENV_PREFIX`. `BIND_HOST` is appended afterwards so the data services listen on the Tailscale address.
 5. Locks the firewall to 22, 80, 443 and the `tailscale0` interface, then restarts Docker: `ufw reset`/`enable` flushes the iptables rules Docker uses to publish ports, and running containers are not recreated on their own.
 6. Starts Postgres, Redis, RabbitMQ and the API, applies migrations through the one-off `migrate` service (the build stage of the API image, so the Prisma CLI is there), seeds the site scaffolding when `SEED=1`, and waits for `/health`.
-7. Writes an nginx server block for `API_DOMAIN` (default `api-pnp-v2.prodapp.club`) proxying to `127.0.0.1:6060`, then requests a Let's Encrypt certificate and turns on the HTTPS redirect. `SKIP_TLS=1` keeps plain HTTP for a first smoke test. The DNS A record must already point at the server, and `TRUSTED_PROXY_HOPS=1` belongs in the API env so client IPs come from nginx.
+7. Writes an nginx server block for `API_DOMAIN` (default `api-pnp-v2.prodapp.club`) proxying to `127.0.0.1:6060`, then requests a Let's Encrypt certificate and turns on the HTTPS redirect. `SKIP_TLS=1` keeps plain HTTP for a first smoke test. The DNS A record must already point at the server, and `TRUSTED_PROXY_HOPS=1` belongs in the API env so client IPs come from nginx. Set `VISITOR_IP_SECRET` (`openssl rand -hex 32`) to the same value in the API env and wherever the frontend runs, so server-side renders are rate limited per visitor instead of as one client.
 
 Every run ends by opening a TCP connection to Postgres, Redis and RabbitMQ on the Tailscale address and fails if one does not answer.
 

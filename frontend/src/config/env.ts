@@ -21,6 +21,15 @@ const clientSchema = z.object({
 const serverSchema = z.object({
   CLERK_SECRET_KEY: z.string().min(1, "must be a Clerk secret key"),
   LOG_LEVEL: logLevelSchema.default(isProduction ? "info" : "debug"),
+  // Matches the API's; lets server-side renders be rate limited per visitor. Empty means off.
+  VISITOR_IP_SECRET: z
+    .string()
+    .optional()
+    .transform((value) => (value === "" ? undefined : value))
+    .refine(
+      (value) => value === undefined || value.length >= 32,
+      "must be at least 32 characters",
+    ),
 });
 
 export type ClientEnv = z.infer<typeof clientSchema>;
@@ -74,6 +83,7 @@ export function getServerEnv(): ServerEnv {
   cachedServerEnv ??= parse("server", serverSchema, {
     CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
     LOG_LEVEL: process.env.LOG_LEVEL,
+    VISITOR_IP_SECRET: process.env.VISITOR_IP_SECRET,
   });
 
   return cachedServerEnv;
