@@ -17,6 +17,10 @@ import {
   depthLimitRule,
   MAX_QUERY_DEPTH,
 } from "./common/graphql/depth-limit.rule";
+import {
+  MAX_ROOT_FIELDS,
+  rootFieldLimitRule,
+} from "./common/graphql/root-field-limit.rule";
 import { createIntrospectionGuard } from "./common/graphql/introspection.plugin";
 import { createGraphqlLoggingPlugin } from "./common/graphql/logging.plugin";
 import { ApolloServerPluginLandingPageLocalDefault } from "@apollo/server/plugin/landingPage/default";
@@ -75,7 +79,10 @@ export const CustomGraphQLModule =
       // Introspection is gated per-request: open in dev, key-protected in production.
       introspection: true,
       includeStacktraceInErrorResponses: !env.isProduction,
-      validationRules: [depthLimitRule(MAX_QUERY_DEPTH)],
+      validationRules: [
+        depthLimitRule(MAX_QUERY_DEPTH),
+        rootFieldLimitRule(MAX_ROOT_FIELDS),
+      ],
       plugins: [
         createIntrospectionGuard(),
         createGraphqlLoggingPlugin(logger),

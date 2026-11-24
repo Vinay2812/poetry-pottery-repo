@@ -3,7 +3,10 @@ import { EventStatus } from "@prisma/client";
 
 import { PrismaService } from "@/prisma/prisma.service";
 import { RedisService } from "@/redis/redis.service";
-import { SearchService } from "@/features/search/search.service";
+import {
+  MAX_SEARCH_TERM_LENGTH,
+  SearchService,
+} from "@/features/search/search.service";
 import {
   isProductArchived,
   releasedProductWhere,
@@ -14,12 +17,11 @@ export const MAX_PIECES = 4;
 export const MAX_EVENTS = 3;
 export const MAX_WORKSHOPS = 2;
 export const MIN_TERM_LENGTH = 2;
-const MAX_TERM_LENGTH = 80;
 // Short enough that a new piece shows up almost at once, long enough to absorb a burst of typing.
 const SUGGEST_CACHE_SECONDS = 30;
 
 export function normaliseTerm(query: string): string {
-  return query.trim().replace(/\s+/g, " ").slice(0, MAX_TERM_LENGTH);
+  return query.trim().replace(/\s+/g, " ").slice(0, MAX_SEARCH_TERM_LENGTH);
 }
 
 const EMPTY: Suggestions = { pieces: [], events: [], workshops: [] };

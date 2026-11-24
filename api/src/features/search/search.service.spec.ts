@@ -6,7 +6,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EmbeddingsService } from "@/embeddings/embeddings.service";
 import { PrismaService } from "@/prisma/prisma.service";
 import { QueueService } from "@/queue/queue.service";
-import { SearchService, toPrefixTsQuery } from "./search.service";
+import {
+  MAX_SEARCH_TERM_LENGTH,
+  SearchService,
+  toPrefixTsQuery,
+} from "./search.service";
 
 const prismaMock = {
   $queryRaw: vi.fn(),
@@ -64,6 +68,18 @@ describe("SearchService", () => {
       "query embedding failed",
       expect.anything(),
     );
+  });
+
+  it("cuts an oversized term before it reaches the model or the database", async () => {
+    embeddingsMock.embed.mockResolvedValue([0.1]);
+    prismaMock.$queryRaw.mockResolvedValue([]);
+    const huge = "a".repeat(50_000);
+
+    await service.rankEvents(`  ${huge}`, 10);
+    const capped = "a".repeat(MAX_SEARCH_TERM_LENGTH);
+    expect(embeddingsMock.embed).toHaveBeenCalledWith(capped);
+    expect(lastSql().values).toContain(capped);
+    expect(lastSql().values).not.toContain(huge);
   });
 
   it("ranks products across both views so the archive can search too", async () => {
