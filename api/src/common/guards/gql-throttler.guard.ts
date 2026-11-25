@@ -5,22 +5,32 @@ import { ThrottlerException, ThrottlerGuard } from "@nestjs/throttler";
 import { readAuthId } from "@/common/clerk/clerk.util";
 import { getRequestResponse } from "@/common/graphql/execution-context";
 import type { AppRequest, AppResponse } from "@/common/types/express";
-import { forwardedVisitorIp } from "@/common/visitor-ip";
+import { clientBucket, forwardedVisitorIp } from "@/common/visitor-ip";
 import { env } from "@/config/env";
 
 export const STRICT_THROTTLER = "strict";
 export const STRICT_THROTTLE_KEY = "strict-throttle";
+export const FORM_THROTTLER = "form";
+export const FORM_THROTTLE_KEY = "form-throttle";
 
 const reflector = new Reflector();
 
-// The strict profile is opt-in, otherwise its low limit would apply to every route.
-export function isStrictThrottled(context: ExecutionContext): boolean {
+function isFlagged(context: ExecutionContext, key: string): boolean {
   return (
-    reflector.getAllAndOverride<boolean>(STRICT_THROTTLE_KEY, [
+    reflector.getAllAndOverride<boolean>(key, [
       context.getHandler(),
       context.getClass(),
     ]) === true
   );
+}
+
+// The strict and form profiles are opt-in, otherwise their low limits would apply to every route.
+export function isStrictThrottled(context: ExecutionContext): boolean {
+  return isFlagged(context, STRICT_THROTTLE_KEY);
+}
+
+export function isFormThrottled(context: ExecutionContext): boolean {
+  return isFlagged(context, FORM_THROTTLE_KEY);
 }
 
 // request.ip honours express "trust proxy", so forwarded headers only count from trusted hops.
@@ -66,7 +76,9 @@ export class GqlThrottlerGuard extends ThrottlerGuard {
   protected override getTracker(request: AppRequest): Promise<string> {
     const authId = readAuthId(request);
     return Promise.resolve(
-      authId !== null ? `user:${authId}` : `ip:${resolveClientIp(request)}`,
+      authId !== null
+        ? `user:${authId}`
+        : `ip:${clientBucket(resolveClientIp(request))}`,
     );
   }
 }

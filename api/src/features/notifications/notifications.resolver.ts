@@ -1,6 +1,9 @@
 import { Args, Context, Int, Mutation, Resolver } from "@nestjs/graphql";
 
-import { StrictThrottle } from "@/common/decorators/throttle.decorators";
+import {
+  PublicFormThrottle,
+  StrictThrottle,
+} from "@/common/decorators/throttle.decorators";
 import { AuthGuard } from "@/common/guards/auth.guard";
 import type { GqlContext } from "@/common/types/express";
 import { NotificationsService } from "./notifications.service";
@@ -14,7 +17,7 @@ export class NotificationsResolver {
   ) {}
 
   // Open to anyone, but a signed-in visitor gets the watch tied to their account.
-  @StrictThrottle()
+  @PublicFormThrottle()
   @Mutation(() => BatchNotificationResult)
   async notifyWhenBackInStock(
     @Args("product_id", { type: () => Int }) productId: number,

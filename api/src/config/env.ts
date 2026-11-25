@@ -63,6 +63,9 @@ export const envSchema = z.object({
   THROTTLE_SHORT_TTL_MS: count(1_000),
   THROTTLE_STRICT_LIMIT: count(5),
   THROTTLE_STRICT_TTL_MS: count(60_000),
+  // Forms anyone can send without signing in; each send stores a row and queues mail.
+  THROTTLE_FORM_LIMIT: count(10),
+  THROTTLE_FORM_TTL_MS: count(3_600_000),
   // An empty value in .env means "disabled" rather than "invalid url".
   SENTRY_DSN: optionalUrl,
   REDIS_URL: z.url(),

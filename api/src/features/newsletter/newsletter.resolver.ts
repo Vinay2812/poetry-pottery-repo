@@ -3,7 +3,10 @@ import { Args, Context, Mutation, Query, Resolver } from "@nestjs/graphql";
 import type { AuthUser } from "@/common/clerk/clerk.type";
 import { AuthRequired } from "@/common/decorators/auth.decorators";
 import { CurrentUser } from "@/common/decorators/current-user.decorator";
-import { StrictThrottle } from "@/common/decorators/throttle.decorators";
+import {
+  PublicFormThrottle,
+  StrictThrottle,
+} from "@/common/decorators/throttle.decorators";
 import { AuthGuard } from "@/common/guards/auth.guard";
 import type { GqlContext } from "@/common/types/express";
 import { NewsletterService } from "./newsletter.service";
@@ -17,7 +20,7 @@ export class NewsletterResolver {
   ) {}
 
   // Public, but a signed-in visitor gets the subscription tied to their account.
-  @StrictThrottle()
+  @PublicFormThrottle()
   @Mutation(() => NewsletterResult)
   async subscribeToNewsletter(
     @Args("email") email: string,

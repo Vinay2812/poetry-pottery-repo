@@ -21,6 +21,8 @@ describe("envSchema", () => {
     expect(parsed.THROTTLE_DEFAULT_LIMIT).toBe(100);
     expect(parsed.THROTTLE_SHORT_TTL_MS).toBe(1000);
     expect(parsed.THROTTLE_STRICT_LIMIT).toBe(5);
+    expect(parsed.THROTTLE_FORM_LIMIT).toBe(10);
+    expect(parsed.THROTTLE_FORM_TTL_MS).toBe(3_600_000);
     expect(parsed.SENTRY_DSN).toBeUndefined();
   });
 
