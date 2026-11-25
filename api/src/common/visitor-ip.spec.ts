@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  clientBucket,
   forwardedVisitorIp,
   VISITOR_IP_HEADER,
   VISITOR_KEY_HEADER,
@@ -54,5 +55,30 @@ describe("forwardedVisitorIp", () => {
       expect(forwardedVisitorIp(headers(SECRET, ip), SECRET)).toBeNull();
     }
     expect(forwardedVisitorIp(headers(SECRET, undefined), SECRET)).toBeNull();
+  });
+});
+
+describe("clientBucket", () => {
+  it("leaves IPv4 and unknown values alone", () => {
+    expect(clientBucket("203.0.113.7")).toBe("203.0.113.7");
+    expect(clientBucket("unknown")).toBe("unknown");
+  });
+
+  it("puts every address of one IPv6 /64 in the same bucket", () => {
+    const bucket = "2001:db8:abcd:12::/64";
+    expect(clientBucket("2001:db8:abcd:12::1")).toBe(bucket);
+    expect(clientBucket("2001:0db8:abcd:0012:ffff:1:2:3")).toBe(bucket);
+    expect(clientBucket("2001:DB8:ABCD:12:0:0:0:9")).toBe(bucket);
+    expect(clientBucket("2001:db8:abcd:13::1")).not.toBe(bucket);
+  });
+
+  it("expands a compressed head and drops a zone id", () => {
+    expect(clientBucket("::1")).toBe("0:0:0:0::/64");
+    expect(clientBucket("fe80::1%eth0")).toBe("fe80:0:0:0::/64");
+  });
+
+  it("reads an IPv4-mapped address as the IPv4 it carries", () => {
+    expect(clientBucket("::ffff:203.0.113.7")).toBe("203.0.113.7");
+    expect(clientBucket("::ffff:cb00:7107")).toBe("203.0.113.7");
   });
 });

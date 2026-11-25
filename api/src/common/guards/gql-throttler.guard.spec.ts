@@ -11,12 +11,16 @@ import { getAuth } from "@clerk/express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createHttpExecutionContext } from "@test/helpers/execution-context";
-import { StrictThrottle } from "@/common/decorators/throttle.decorators";
+import {
+  PublicFormThrottle,
+  StrictThrottle,
+} from "@/common/decorators/throttle.decorators";
 import { getRequest } from "@/common/graphql/execution-context";
 import type { AppRequest } from "@/common/types/express";
 import { VISITOR_IP_HEADER, VISITOR_KEY_HEADER } from "@/common/visitor-ip";
 import {
   GqlThrottlerGuard,
+  isFormThrottled,
   isStrictThrottled,
   resolveClientIp,
 } from "./gql-throttler.guard";
@@ -128,6 +132,14 @@ describe("GqlThrottlerGuard", () => {
     await expect(
       guard.getTracker(requestFrom({ ip: "203.0.113.7" })),
     ).resolves.toBe("ip:203.0.113.7");
+  });
+
+  it("counts an anonymous IPv6 visitor by their /64", async () => {
+    mockAuthId(null);
+
+    await expect(
+      guard.getTracker(requestFrom({ ip: "2001:db8:1:2:aaaa::5" })),
+    ).resolves.toBe("ip:2001:db8:1:2::/64");
   });
 
   it("treats a request without clerk middleware as anonymous", async () => {
@@ -257,5 +269,33 @@ describe("isStrictThrottled", () => {
         }),
       ),
     ).toBe(false);
+  });
+});
+
+class FormResolver {
+  @PublicFormThrottle()
+  send(): void {}
+
+  @StrictThrottle()
+  pay(): void {}
+}
+
+describe("isFormThrottled", () => {
+  function contextFor(field: "send" | "pay") {
+    return createHttpExecutionContext({
+      request: {},
+      classRef: FormResolver,
+      handler: handlerOf(FormResolver.prototype, field),
+    });
+  }
+
+  it("adds the hourly ceiling on top of the burst limit for public forms", () => {
+    expect(isFormThrottled(contextFor("send"))).toBe(true);
+    expect(isStrictThrottled(contextFor("send"))).toBe(true);
+  });
+
+  it("stays off for handlers that only opt into the strict profile", () => {
+    expect(isFormThrottled(contextFor("pay"))).toBe(false);
+    expect(isStrictThrottled(contextFor("pay"))).toBe(true);
   });
 });

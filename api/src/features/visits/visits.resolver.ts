@@ -1,6 +1,6 @@
 import { Args, Context, Int, Mutation, Query, Resolver } from "@nestjs/graphql";
 
-import { StrictThrottle } from "@/common/decorators/throttle.decorators";
+import { PublicFormThrottle } from "@/common/decorators/throttle.decorators";
 import { AuthGuard } from "@/common/guards/auth.guard";
 import type { GqlContext } from "@/common/types/express";
 
@@ -23,7 +23,7 @@ export class VisitsResolver {
   }
 
   // Anyone can say they are coming by; a signed-in visitor gets it filed against their account.
-  @StrictThrottle()
+  @PublicFormThrottle()
   @Mutation(() => StudioVisit)
   async bookStudioVisit(
     @Args("input") input: StudioVisitInput,

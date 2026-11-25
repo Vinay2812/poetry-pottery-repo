@@ -2,7 +2,7 @@ import { Args, Context, Int, Mutation, Query, Resolver } from "@nestjs/graphql";
 import { CommissionStatus } from "@prisma/client";
 
 import { AdminRequired } from "@/common/decorators/auth.decorators";
-import { StrictThrottle } from "@/common/decorators/throttle.decorators";
+import { PublicFormThrottle } from "@/common/decorators/throttle.decorators";
 import { AuthGuard } from "@/common/guards/auth.guard";
 import type { GqlContext } from "@/common/types/express";
 import { Product } from "@/features/products/products.type";
@@ -37,7 +37,7 @@ export class CommissionsResolver {
   }
 
   // Anyone can brief a piece; a signed-in visitor gets theirs filed against their account.
-  @StrictThrottle()
+  @PublicFormThrottle()
   @Mutation(() => CommissionRequest)
   async createCommissionRequest(
     @Args("input") input: CommissionRequestInput,

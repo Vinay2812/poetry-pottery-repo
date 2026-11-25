@@ -6,6 +6,8 @@ import { ThrottlerModule } from "@nestjs/throttler";
 import { ThrottlerStorageRedisService } from "@nest-lab/throttler-storage-redis";
 import { RedisService } from "@/redis/redis.service";
 import {
+  FORM_THROTTLER,
+  isFormThrottled,
   isStrictThrottled,
   STRICT_THROTTLER,
 } from "@/common/guards/gql-throttler.guard";
@@ -59,6 +61,12 @@ export const CustomThrottlerModule = ThrottlerModule.forRootAsync({
         limit: env.THROTTLE_STRICT_LIMIT,
         ttl: env.THROTTLE_STRICT_TTL_MS,
         skipIf: (context) => !isStrictThrottled(context),
+      },
+      {
+        name: FORM_THROTTLER,
+        limit: env.THROTTLE_FORM_LIMIT,
+        ttl: env.THROTTLE_FORM_TTL_MS,
+        skipIf: (context) => !isFormThrottled(context),
       },
     ],
   }),
